@@ -69,7 +69,7 @@ class Extra
      * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $product
      * @return Extra
      */
-    public function setProduct(\Sulu\Bundle\Product\BaseBundle\Entity\Product $product = null)
+    public function setProduct(\Sulu\Bundle\Product\BaseBundle\Entity\Product $product)
     {
         $this->product = $product;
     
@@ -92,7 +92,7 @@ class Extra
      * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $extra
      * @return Extra
      */
-    public function setExtra(\Sulu\Bundle\Product\BaseBundle\Entity\Product $extra = null)
+    public function setExtra(\Sulu\Bundle\Product\BaseBundle\Entity\Product $extra)
     {
         $this->extra = $extra;
     

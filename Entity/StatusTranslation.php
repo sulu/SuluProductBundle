@@ -5,9 +5,9 @@ namespace Sulu\Bundle\Product\BaseBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * ProductTypeTranslation
+ * StatusTranslation
  */
-class ProductTypeTranslation
+class StatusTranslation
 {
     /**
      * @var string
@@ -25,16 +25,16 @@ class ProductTypeTranslation
     private $id;
 
     /**
-     * @var \Sulu\Bundle\Product\BaseBundle\Entity\ProductType
+     * @var \Sulu\Bundle\Product\BaseBundle\Entity\Status
      */
-    private $productType;
+    private $status;
 
 
     /**
      * Set name
      *
      * @param string $name
-     * @return ProductTypeTranslation
+     * @return StatusTranslation
      */
     public function setName($name)
     {
@@ -57,7 +57,7 @@ class ProductTypeTranslation
      * Set languageCode
      *
      * @param string $languageCode
-     * @return ProductTypeTranslation
+     * @return StatusTranslation
      */
     public function setLanguageCode($languageCode)
     {
@@ -87,25 +87,25 @@ class ProductTypeTranslation
     }
 
     /**
-     * Set productType
+     * Set status
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductType $productType
-     * @return ProductTypeTranslation
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Status $status
+     * @return StatusTranslation
      */
-    public function setProductType(\Sulu\Bundle\Product\BaseBundle\Entity\ProductType $productType)
+    public function setStatus(\Sulu\Bundle\Product\BaseBundle\Entity\Status $status)
     {
-        $this->productType = $productType;
+        $this->status = $status;
     
         return $this;
     }
 
     /**
-     * Get productType
+     * Get status
      *
-     * @return \Sulu\Bundle\Product\BaseBundle\Entity\ProductType 
+     * @return \Sulu\Bundle\Product\BaseBundle\Entity\Status 
      */
-    public function getProductType()
+    public function getStatus()
     {
-        return $this->productType;
+        return $this->status;
     }
 }

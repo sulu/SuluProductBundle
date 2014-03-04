@@ -5,9 +5,9 @@ namespace Sulu\Bundle\Product\BaseBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * ProductType
+ * Status
  */
-class ProductType
+class Status
 {
     /**
      * @var integer
@@ -22,7 +22,7 @@ class ProductType
     /**
      * @var \Doctrine\Common\Collections\Collection
      */
-    private $productTypeTranslations;
+    private $translations;
 
     /**
      * Constructor
@@ -30,7 +30,7 @@ class ProductType
     public function __construct()
     {
         $this->products = new \Doctrine\Common\Collections\ArrayCollection();
-        $this->productTypeTranslations = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->translations = new \Doctrine\Common\Collections\ArrayCollection();
     }
     
     /**
@@ -47,7 +47,7 @@ class ProductType
      * Add products
      *
      * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $products
-     * @return ProductType
+     * @return Status
      */
     public function addProduct(\Sulu\Bundle\Product\BaseBundle\Entity\Product $products)
     {
@@ -77,35 +77,35 @@ class ProductType
     }
 
     /**
-     * Add productTypeTranslations
+     * Add translations
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductTypeTranslation $productTypeTranslations
-     * @return ProductType
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\StatusTranslation $translations
+     * @return Status
      */
-    public function addProductTypeTranslation(\Sulu\Bundle\Product\BaseBundle\Entity\ProductTypeTranslation $productTypeTranslations)
+    public function addTranslation(\Sulu\Bundle\Product\BaseBundle\Entity\StatusTranslation $translations)
     {
-        $this->productTypeTranslations[] = $productTypeTranslations;
+        $this->translations[] = $translations;
     
         return $this;
     }
 
     /**
-     * Remove productTypeTranslations
+     * Remove translations
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductTypeTranslation $productTypeTranslations
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\StatusTranslation $translations
      */
-    public function removeProductTypeTranslation(\Sulu\Bundle\Product\BaseBundle\Entity\ProductTypeTranslation $productTypeTranslations)
+    public function removeTranslation(\Sulu\Bundle\Product\BaseBundle\Entity\StatusTranslation $translations)
     {
-        $this->productTypeTranslations->removeElement($productTypeTranslations);
+        $this->translations->removeElement($translations);
     }
 
     /**
-     * Get productTypeTranslations
+     * Get translations
      *
      * @return \Doctrine\Common\Collections\Collection 
      */
-    public function getProductTypeTranslations()
+    public function getTranslations()
     {
-        return $this->productTypeTranslations;
+        return $this->translations;
     }
 }

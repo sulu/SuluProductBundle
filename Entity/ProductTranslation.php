@@ -148,7 +148,7 @@ class ProductTranslation
      * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $product
      * @return ProductTranslation
      */
-    public function setProduct(\Sulu\Bundle\Product\BaseBundle\Entity\Product $product = null)
+    public function setProduct(\Sulu\Bundle\Product\BaseBundle\Entity\Product $product)
     {
         $this->product = $product;
     

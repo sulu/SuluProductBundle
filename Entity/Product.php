@@ -12,17 +12,12 @@ class Product
     /**
      * @var string
      */
-    private $key;
+    private $code;
 
     /**
      * @var string
      */
     private $number;
-
-    /**
-     * @var boolean
-     */
-    private $active;
 
     /**
      * @var string
@@ -45,9 +40,19 @@ class Product
     private $id;
 
     /**
-     * @var \Sulu\Bundle\Product\BaseBundle\Entity\ProductType
+     * @var \Sulu\Bundle\Product\BaseBundle\Entity\Type
      */
-    private $productType;
+    private $type;
+
+    /**
+     * @var \Sulu\Bundle\Product\BaseBundle\Entity\Template
+     */
+    private $template;
+
+    /**
+     * @var \Sulu\Bundle\Product\BaseBundle\Entity\Status
+     */
+    private $status;
 
     /**
      * @var \Doctrine\Common\Collections\Collection
@@ -91,26 +96,26 @@ class Product
     }
     
     /**
-     * Set key
+     * Set code
      *
-     * @param string $key
+     * @param string $code
      * @return Product
      */
-    public function setKey($key)
+    public function setCode($code)
     {
-        $this->key = $key;
+        $this->code = $code;
     
         return $this;
     }
 
     /**
-     * Get key
+     * Get code
      *
      * @return string 
      */
-    public function getKey()
+    public function getCode()
     {
-        return $this->key;
+        return $this->code;
     }
 
     /**
@@ -134,29 +139,6 @@ class Product
     public function getNumber()
     {
         return $this->number;
-    }
-
-    /**
-     * Set active
-     *
-     * @param boolean $active
-     * @return Product
-     */
-    public function setActive($active)
-    {
-        $this->active = $active;
-    
-        return $this;
-    }
-
-    /**
-     * Get active
-     *
-     * @return boolean 
-     */
-    public function getActive()
-    {
-        return $this->active;
     }
 
     /**
@@ -239,26 +221,72 @@ class Product
     }
 
     /**
-     * Set productType
+     * Set type
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductType $productType
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Type $type
      * @return Product
      */
-    public function setProductType(\Sulu\Bundle\Product\BaseBundle\Entity\ProductType $productType = null)
+    public function setType(\Sulu\Bundle\Product\BaseBundle\Entity\Type $type)
     {
-        $this->productType = $productType;
+        $this->type = $type;
     
         return $this;
     }
 
     /**
-     * Get productType
+     * Get type
      *
-     * @return \Sulu\Bundle\Product\BaseBundle\Entity\ProductType 
+     * @return \Sulu\Bundle\Product\BaseBundle\Entity\Type 
      */
-    public function getProductType()
+    public function getType()
     {
-        return $this->productType;
+        return $this->type;
+    }
+
+    /**
+     * Set template
+     *
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Template $template
+     * @return Product
+     */
+    public function setTemplate(\Sulu\Bundle\Product\BaseBundle\Entity\Template $template)
+    {
+        $this->template = $template;
+    
+        return $this;
+    }
+
+    /**
+     * Get template
+     *
+     * @return \Sulu\Bundle\Product\BaseBundle\Entity\Template 
+     */
+    public function getTemplate()
+    {
+        return $this->template;
+    }
+
+    /**
+     * Set status
+     *
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Status $status
+     * @return Product
+     */
+    public function setStatus(\Sulu\Bundle\Product\BaseBundle\Entity\Status $status = null)
+    {
+        $this->status = $status;
+    
+        return $this;
+    }
+
+    /**
+     * Get status
+     *
+     * @return \Sulu\Bundle\Product\BaseBundle\Entity\Status 
+     */
+    public function getStatus()
+    {
+        return $this->status;
     }
 
     /**
@@ -437,33 +465,5 @@ class Product
     public function getCreator()
     {
         return $this->creator;
-    }
-    /**
-     * @var \Sulu\Bundle\Product\BaseBundle\Entity\Template
-     */
-    private $template;
-
-
-    /**
-     * Set template
-     *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Template $template
-     * @return Product
-     */
-    public function setTemplate(\Sulu\Bundle\Product\BaseBundle\Entity\Template $template = null)
-    {
-        $this->template = $template;
-    
-        return $this;
-    }
-
-    /**
-     * Get template
-     *
-     * @return \Sulu\Bundle\Product\BaseBundle\Entity\Template 
-     */
-    public function getTemplate()
-    {
-        return $this->template;
     }
 }

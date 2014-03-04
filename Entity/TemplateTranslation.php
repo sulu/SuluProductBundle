@@ -92,7 +92,7 @@ class TemplateTranslation
      * @param \Sulu\Bundle\Product\BaseBundle\Entity\Template $template
      * @return TemplateTranslation
      */
-    public function setTemplate(\Sulu\Bundle\Product\BaseBundle\Entity\Template $template = null)
+    public function setTemplate(\Sulu\Bundle\Product\BaseBundle\Entity\Template $template)
     {
         $this->template = $template;
     

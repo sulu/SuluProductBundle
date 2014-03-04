@@ -22,6 +22,11 @@ class Template
     /**
      * @var \Doctrine\Common\Collections\Collection
      */
+    private $products;
+
+    /**
+     * @var \Doctrine\Common\Collections\Collection
+     */
     private $attributes;
 
     /**
@@ -30,6 +35,7 @@ class Template
     public function __construct()
     {
         $this->translations = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->products = new \Doctrine\Common\Collections\ArrayCollection();
         $this->attributes = new \Doctrine\Common\Collections\ArrayCollection();
     }
     
@@ -77,44 +83,6 @@ class Template
     }
 
     /**
-     * Add attributes
-     *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Attributes $attributes
-     * @return Template
-     */
-    public function addAttribute(\Sulu\Bundle\Product\BaseBundle\Entity\Attributes $attributes)
-    {
-        $this->attributes[] = $attributes;
-    
-        return $this;
-    }
-
-    /**
-     * Remove attributes
-     *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Attributes $attributes
-     */
-    public function removeAttribute(\Sulu\Bundle\Product\BaseBundle\Entity\Attributes $attributes)
-    {
-        $this->attributes->removeElement($attributes);
-    }
-
-    /**
-     * Get attributes
-     *
-     * @return \Doctrine\Common\Collections\Collection 
-     */
-    public function getAttributes()
-    {
-        return $this->attributes;
-    }
-    /**
-     * @var \Doctrine\Common\Collections\Collection
-     */
-    private $products;
-
-
-    /**
      * Add products
      *
      * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $products
@@ -145,5 +113,38 @@ class Template
     public function getProducts()
     {
         return $this->products;
+    }
+
+    /**
+     * Add attributes
+     *
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Attribute $attributes
+     * @return Template
+     */
+    public function addAttribute(\Sulu\Bundle\Product\BaseBundle\Entity\Attribute $attributes)
+    {
+        $this->attributes[] = $attributes;
+    
+        return $this;
+    }
+
+    /**
+     * Remove attributes
+     *
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Attribute $attributes
+     */
+    public function removeAttribute(\Sulu\Bundle\Product\BaseBundle\Entity\Attribute $attributes)
+    {
+        $this->attributes->removeElement($attributes);
+    }
+
+    /**
+     * Get attributes
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getAttributes()
+    {
+        return $this->attributes;
     }
 }
