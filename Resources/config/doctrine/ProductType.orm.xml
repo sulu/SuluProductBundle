@@ -6,9 +6,10 @@
         <id name="id" type="integer" column="id">
             <generator strategy="AUTO"/>
         </id>
-        <!--one-to-many field="products" target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Product"
-                     mapped-by="productTypes"/-->
-        <one-to-many field="productTypeTranslations" target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductTypeTranslation"
+        <one-to-many field="products" target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Product"
+                     mapped-by="productType"/>
+        <one-to-many field="productTypeTranslations"
+                     target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductTypeTranslation"
                      mapped-by="productType"/>
     </entity>
 </doctrine-mapping>

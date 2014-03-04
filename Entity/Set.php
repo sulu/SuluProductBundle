@@ -10,9 +10,19 @@ use Doctrine\ORM\Mapping as ORM;
 class Set
 {
     /**
+     * @var string
+     */
+    private $discount;
+
+    /**
      * @var integer
      */
     private $id;
+
+    /**
+     * @var \Doctrine\Common\Collections\Collection
+     */
+    private $translations;
 
     /**
      * @var \Doctrine\Common\Collections\Collection
@@ -24,69 +34,17 @@ class Set
      */
     public function __construct()
     {
+        $this->translations = new \Doctrine\Common\Collections\ArrayCollection();
         $this->products = new \Doctrine\Common\Collections\ArrayCollection();
     }
     
     /**
-     * Get id
-     *
-     * @return integer 
-     */
-    public function getId()
-    {
-        return $this->id;
-    }
-
-    /**
-     * Add products
-     *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $products
-     * @return Set
-     */
-    public function addProduct(\Sulu\Bundle\Product\BaseBundle\Entity\Product $products)
-    {
-        $this->products[] = $products;
-    
-        return $this;
-    }
-
-    /**
-     * Remove products
-     *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $products
-     */
-    public function removeProduct(\Sulu\Bundle\Product\BaseBundle\Entity\Product $products)
-    {
-        $this->products->removeElement($products);
-    }
-
-    /**
-     * Get products
-     *
-     * @return \Doctrine\Common\Collections\Collection 
-     */
-    public function getProducts()
-    {
-        return $this->products;
-    }
-    /**
-     * @var double
-     */
-    private $discount;
-
-    /**
-     * @var \Doctrine\Common\Collections\Collection
-     */
-    private $translations;
-
-
-    /**
      * Set discount
      *
-     * @param \double $discount
+     * @param string $discount
      * @return Set
      */
-    public function setDiscount(\double $discount)
+    public function setDiscount($discount)
     {
         $this->discount = $discount;
     
@@ -96,11 +54,21 @@ class Set
     /**
      * Get discount
      *
-     * @return \double 
+     * @return string 
      */
     public function getDiscount()
     {
         return $this->discount;
+    }
+
+    /**
+     * Get id
+     *
+     * @return integer 
+     */
+    public function getId()
+    {
+        return $this->id;
     }
 
     /**
@@ -134,5 +102,38 @@ class Set
     public function getTranslations()
     {
         return $this->translations;
+    }
+
+    /**
+     * Add products
+     *
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $products
+     * @return Set
+     */
+    public function addProduct(\Sulu\Bundle\Product\BaseBundle\Entity\Product $products)
+    {
+        $this->products[] = $products;
+    
+        return $this;
+    }
+
+    /**
+     * Remove products
+     *
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $products
+     */
+    public function removeProduct(\Sulu\Bundle\Product\BaseBundle\Entity\Product $products)
+    {
+        $this->products->removeElement($products);
+    }
+
+    /**
+     * Get products
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getProducts()
+    {
+        return $this->products;
     }
 }

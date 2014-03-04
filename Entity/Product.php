@@ -10,180 +10,6 @@ use Doctrine\ORM\Mapping as ORM;
 class Product
 {
     /**
-     * @var integer
-     */
-    private $id;
-
-
-    /**
-     * Get id
-     *
-     * @return integer 
-     */
-    public function getId()
-    {
-        return $this->id;
-    }
-    /**
-     * @var \Doctrine\Common\Collections\Collection
-     */
-    private $relations;
-
-    /**
-     * Constructor
-     */
-    public function __construct()
-    {
-        $this->relations = new \Doctrine\Common\Collections\ArrayCollection();
-    }
-    
-    /**
-     * Add relations
-     *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $relations
-     * @return Product
-     */
-    public function addRelation(\Sulu\Bundle\Product\BaseBundle\Entity\Product $relations)
-    {
-        $this->relations[] = $relations;
-    
-        return $this;
-    }
-
-    /**
-     * Remove relations
-     *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $relations
-     */
-    public function removeRelation(\Sulu\Bundle\Product\BaseBundle\Entity\Product $relations)
-    {
-        $this->relations->removeElement($relations);
-    }
-
-    /**
-     * Get relations
-     *
-     * @return \Doctrine\Common\Collections\Collection 
-     */
-    public function getRelations()
-    {
-        return $this->relations;
-    }
-    /**
-     * @var \Doctrine\Common\Collections\Collection
-     */
-    private $upsells;
-
-
-    /**
-     * Add upsells
-     *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $upsells
-     * @return Product
-     */
-    public function addUpsell(\Sulu\Bundle\Product\BaseBundle\Entity\Product $upsells)
-    {
-        $this->upsells[] = $upsells;
-    
-        return $this;
-    }
-
-    /**
-     * Remove upsells
-     *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $upsells
-     */
-    public function removeUpsell(\Sulu\Bundle\Product\BaseBundle\Entity\Product $upsells)
-    {
-        $this->upsells->removeElement($upsells);
-    }
-
-    /**
-     * Get upsells
-     *
-     * @return \Doctrine\Common\Collections\Collection 
-     */
-    public function getUpsells()
-    {
-        return $this->upsells;
-    }
-    /**
-     * @var \Doctrine\Common\Collections\Collection
-     */
-    private $sets;
-
-    /**
-     * @var \Doctrine\Common\Collections\Collection
-     */
-    private $crosssells;
-
-
-    /**
-     * Add sets
-     *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Set $sets
-     * @return Product
-     */
-    public function addSet(\Sulu\Bundle\Product\BaseBundle\Entity\Set $sets)
-    {
-        $this->sets[] = $sets;
-    
-        return $this;
-    }
-
-    /**
-     * Remove sets
-     *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Set $sets
-     */
-    public function removeSet(\Sulu\Bundle\Product\BaseBundle\Entity\Set $sets)
-    {
-        $this->sets->removeElement($sets);
-    }
-
-    /**
-     * Get sets
-     *
-     * @return \Doctrine\Common\Collections\Collection 
-     */
-    public function getSets()
-    {
-        return $this->sets;
-    }
-
-    /**
-     * Add crosssells
-     *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $crosssells
-     * @return Product
-     */
-    public function addCrosssell(\Sulu\Bundle\Product\BaseBundle\Entity\Product $crosssells)
-    {
-        $this->crosssells[] = $crosssells;
-    
-        return $this;
-    }
-
-    /**
-     * Remove crosssells
-     *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $crosssells
-     */
-    public function removeCrosssell(\Sulu\Bundle\Product\BaseBundle\Entity\Product $crosssells)
-    {
-        $this->crosssells->removeElement($crosssells);
-    }
-
-    /**
-     * Get crosssells
-     *
-     * @return \Doctrine\Common\Collections\Collection 
-     */
-    public function getCrosssells()
-    {
-        return $this->crosssells;
-    }
-    /**
      * @var string
      */
     private $key;
@@ -214,6 +40,36 @@ class Product
     private $changed;
 
     /**
+     * @var integer
+     */
+    private $id;
+
+    /**
+     * @var \Sulu\Bundle\Product\BaseBundle\Entity\ProductType
+     */
+    private $productType;
+
+    /**
+     * @var \Doctrine\Common\Collections\Collection
+     */
+    private $sets;
+
+    /**
+     * @var \Doctrine\Common\Collections\Collection
+     */
+    private $relations;
+
+    /**
+     * @var \Doctrine\Common\Collections\Collection
+     */
+    private $upsells;
+
+    /**
+     * @var \Doctrine\Common\Collections\Collection
+     */
+    private $crosssells;
+
+    /**
      * @var \Sulu\Bundle\SecurityBundle\Entity\User
      */
     private $changer;
@@ -223,7 +79,17 @@ class Product
      */
     private $creator;
 
-
+    /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        $this->sets = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->relations = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->upsells = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->crosssells = new \Doctrine\Common\Collections\ArrayCollection();
+    }
+    
     /**
      * Set key
      *
@@ -360,6 +226,171 @@ class Product
     public function getChanged()
     {
         return $this->changed;
+    }
+
+    /**
+     * Get id
+     *
+     * @return integer 
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * Set productType
+     *
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductType $productType
+     * @return Product
+     */
+    public function setProductType(\Sulu\Bundle\Product\BaseBundle\Entity\ProductType $productType = null)
+    {
+        $this->productType = $productType;
+    
+        return $this;
+    }
+
+    /**
+     * Get productType
+     *
+     * @return \Sulu\Bundle\Product\BaseBundle\Entity\ProductType 
+     */
+    public function getProductType()
+    {
+        return $this->productType;
+    }
+
+    /**
+     * Add sets
+     *
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Set $sets
+     * @return Product
+     */
+    public function addSet(\Sulu\Bundle\Product\BaseBundle\Entity\Set $sets)
+    {
+        $this->sets[] = $sets;
+    
+        return $this;
+    }
+
+    /**
+     * Remove sets
+     *
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Set $sets
+     */
+    public function removeSet(\Sulu\Bundle\Product\BaseBundle\Entity\Set $sets)
+    {
+        $this->sets->removeElement($sets);
+    }
+
+    /**
+     * Get sets
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getSets()
+    {
+        return $this->sets;
+    }
+
+    /**
+     * Add relations
+     *
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $relations
+     * @return Product
+     */
+    public function addRelation(\Sulu\Bundle\Product\BaseBundle\Entity\Product $relations)
+    {
+        $this->relations[] = $relations;
+    
+        return $this;
+    }
+
+    /**
+     * Remove relations
+     *
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $relations
+     */
+    public function removeRelation(\Sulu\Bundle\Product\BaseBundle\Entity\Product $relations)
+    {
+        $this->relations->removeElement($relations);
+    }
+
+    /**
+     * Get relations
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getRelations()
+    {
+        return $this->relations;
+    }
+
+    /**
+     * Add upsells
+     *
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $upsells
+     * @return Product
+     */
+    public function addUpsell(\Sulu\Bundle\Product\BaseBundle\Entity\Product $upsells)
+    {
+        $this->upsells[] = $upsells;
+    
+        return $this;
+    }
+
+    /**
+     * Remove upsells
+     *
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $upsells
+     */
+    public function removeUpsell(\Sulu\Bundle\Product\BaseBundle\Entity\Product $upsells)
+    {
+        $this->upsells->removeElement($upsells);
+    }
+
+    /**
+     * Get upsells
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getUpsells()
+    {
+        return $this->upsells;
+    }
+
+    /**
+     * Add crosssells
+     *
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $crosssells
+     * @return Product
+     */
+    public function addCrosssell(\Sulu\Bundle\Product\BaseBundle\Entity\Product $crosssells)
+    {
+        $this->crosssells[] = $crosssells;
+    
+        return $this;
+    }
+
+    /**
+     * Remove crosssells
+     *
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $crosssells
+     */
+    public function removeCrosssell(\Sulu\Bundle\Product\BaseBundle\Entity\Product $crosssells)
+    {
+        $this->crosssells->removeElement($crosssells);
+    }
+
+    /**
+     * Get crosssells
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getCrosssells()
+    {
+        return $this->crosssells;
     }
 
     /**

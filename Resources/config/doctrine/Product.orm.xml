@@ -25,6 +25,15 @@
             </join-columns>
         </many-to-one>
 
+        <many-to-one target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductType" field="productType"
+                inversed-by="products">
+            <join-column name="idProductTypes" referenced-column-name="id"/>
+        </many-to-one>
+
+        <!-- Missing one to many associations -->
+        <!--one-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductAttribute" mapped-by="product"
+                     field="productAttributes"/-->
+
         <many-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Set" field="sets" inversed-by="products"/>
         
         <many-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Product" field="relations">

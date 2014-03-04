@@ -10,21 +10,6 @@ use Doctrine\ORM\Mapping as ORM;
 class ProductTypeTranslation
 {
     /**
-     * @var integer
-     */
-    private $id;
-
-
-    /**
-     * Get id
-     *
-     * @return integer 
-     */
-    public function getId()
-    {
-        return $this->id;
-    }
-    /**
      * @var string
      */
     private $name;
@@ -33,6 +18,11 @@ class ProductTypeTranslation
      * @var string
      */
     private $languageCode;
+
+    /**
+     * @var integer
+     */
+    private $id;
 
     /**
      * @var \Sulu\Bundle\Product\BaseBundle\Entity\ProductType
@@ -84,6 +74,16 @@ class ProductTypeTranslation
     public function getLanguageCode()
     {
         return $this->languageCode;
+    }
+
+    /**
+     * Get id
+     *
+     * @return integer 
+     */
+    public function getId()
+    {
+        return $this->id;
     }
 
     /**

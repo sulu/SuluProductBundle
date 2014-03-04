@@ -11,7 +11,7 @@
         <field name="name" type="string" length="255" nullable="true"/>
         <field name="description" type="text" nullable="true"/>
 
-        <many-to-one target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Set" field="set">
+        <many-to-one target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Set" field="set" inversed-by="translations">
             <join-columns>
                 <join-column name="idSets" referenced-column-name="id" nullable="false"/>
             </join-columns>
