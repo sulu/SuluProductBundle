@@ -92,4 +92,42 @@ class SimpleProduct extends Product
     {
         return $this->translations;
     }
+    /**
+     * @var \Doctrine\Common\Collections\Collection
+     */
+    private $extras;
+
+
+    /**
+     * Add extras
+     *
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductTranslation $extras
+     * @return SimpleProduct
+     */
+    public function addExtra(\Sulu\Bundle\Product\BaseBundle\Entity\ProductTranslation $extras)
+    {
+        $this->extras[] = $extras;
+    
+        return $this;
+    }
+
+    /**
+     * Remove extras
+     *
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductTranslation $extras
+     */
+    public function removeExtra(\Sulu\Bundle\Product\BaseBundle\Entity\ProductTranslation $extras)
+    {
+        $this->extras->removeElement($extras);
+    }
+
+    /**
+     * Get extras
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getExtras()
+    {
+        return $this->extras;
+    }
 }

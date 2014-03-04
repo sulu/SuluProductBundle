@@ -7,5 +7,7 @@
                      field="productAttributes"/>
         <one-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductTranslation" mapped-by="product"
                      field="translations"/>
+        <one-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Extra" mapped-by="product"
+                     field="extras"/>
     </entity>
 </doctrine-mapping>

@@ -108,4 +108,42 @@ class Template
     {
         return $this->attributes;
     }
+    /**
+     * @var \Doctrine\Common\Collections\Collection
+     */
+    private $products;
+
+
+    /**
+     * Add products
+     *
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $products
+     * @return Template
+     */
+    public function addProduct(\Sulu\Bundle\Product\BaseBundle\Entity\Product $products)
+    {
+        $this->products[] = $products;
+    
+        return $this;
+    }
+
+    /**
+     * Remove products
+     *
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $products
+     */
+    public function removeProduct(\Sulu\Bundle\Product\BaseBundle\Entity\Product $products)
+    {
+        $this->products->removeElement($products);
+    }
+
+    /**
+     * Get products
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getProducts()
+    {
+        return $this->products;
+    }
 }

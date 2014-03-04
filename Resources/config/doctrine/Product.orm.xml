@@ -30,11 +30,20 @@
             <join-column name="idProductTypes" referenced-column-name="id"/>
         </many-to-one>
 
+        <many-to-one target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Template" field="template"
+                     inversed-by="products">
+            <join-column name="idTemplates" referenced-column-name="id"/>
+        </many-to-one>
+
         <!-- Missing one to many associations -->
-        <!--one-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductAttribute" mapped-by="product"
-                     field="productAttributes"/-->
-        <!--one-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductTranslation" mapped-by="product"
-                     field="translations"/-->
+        <!--
+        <one-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductAttribute" mapped-by="product"
+                     field="productAttributes"/>
+        <one-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductTranslation" mapped-by="product"
+                     field="translations"/>
+        <one-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Extra" mapped-by="product"
+                     field="extras"/>
+        -->
 
         <many-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Set" field="sets" inversed-by="products"/>
         

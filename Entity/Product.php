@@ -438,4 +438,32 @@ class Product
     {
         return $this->creator;
     }
+    /**
+     * @var \Sulu\Bundle\Product\BaseBundle\Entity\Template
+     */
+    private $template;
+
+
+    /**
+     * Set template
+     *
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Template $template
+     * @return Product
+     */
+    public function setTemplate(\Sulu\Bundle\Product\BaseBundle\Entity\Template $template = null)
+    {
+        $this->template = $template;
+    
+        return $this;
+    }
+
+    /**
+     * Get template
+     *
+     * @return \Sulu\Bundle\Product\BaseBundle\Entity\Template 
+     */
+    public function getTemplate()
+    {
+        return $this->template;
+    }
 }
