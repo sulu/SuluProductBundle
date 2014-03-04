@@ -27,12 +27,12 @@
 
         <many-to-one target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductType" field="productType"
                 inversed-by="products">
-            <join-column name="idProductTypes" referenced-column-name="id"/>
+            <join-column name="idProductTypes" referenced-column-name="id" nullable="false"/>
         </many-to-one>
 
         <many-to-one target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Template" field="template"
                      inversed-by="products">
-            <join-column name="idTemplates" referenced-column-name="id"/>
+            <join-column name="idTemplates" referenced-column-name="id" nullable="false"/>
         </many-to-one>
 
         <!-- Missing one to many associations -->
@@ -50,30 +50,30 @@
         <many-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Product" field="relations">
             <join-table name="pr_relations">
                 <join-columns>
-                    <join-column name="idProducts" referenced-column-name="id"/>
+                    <join-column name="idProducts" referenced-column-name="id" nullable="false"/>
                 </join-columns>
                 <inverse-join-columns>
-                    <join-column name="idProductsRelated" referenced-column-name="id"/>
+                    <join-column name="idProductsRelated" referenced-column-name="id" nullable="false"/>
                 </inverse-join-columns>
             </join-table>
         </many-to-many>
         <many-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Product" field="upsells">
             <join-table name="pr_upsells">
                 <join-columns>
-                    <join-column name="idProducts" referenced-column-name="id"/>
+                    <join-column name="idProducts" referenced-column-name="id" nullable="false"/>
                 </join-columns>
                 <inverse-join-columns>
-                    <join-column name="idProductsUpsell" referenced-column-name="id"/>
+                    <join-column name="idProductsUpsell" referenced-column-name="id" nullable="false"/>
                 </inverse-join-columns>
             </join-table>
         </many-to-many>
         <many-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Product" field="crosssells">
             <join-table name="pr_crosssells">
                 <join-columns>
-                    <join-column name="idProducts" referenced-column-name="id"/>
+                    <join-column name="idProducts" referenced-column-name="id" nullable="false"/>
                 </join-columns>
                 <inverse-join-columns>
-                    <join-column name="idProductsCrosssell" referenced-column-name="id"/>
+                    <join-column name="idProductsCrosssell" referenced-column-name="id" nullable="false"/>
                 </inverse-join-columns>
             </join-table>
         </many-to-many>

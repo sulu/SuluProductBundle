@@ -10,10 +10,10 @@
         <field name="price" type="decimal" column="price" nullable="true"/>
         
         <many-to-one target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Product" field="product" inversed-by="extras">
-            <join-column name="idProducts" referenced-column-name="id"/>
+            <join-column name="idProducts" referenced-column-name="id" nullable="false"/>
         </many-to-one>
         <many-to-one target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Product" field="extra">
-            <join-column name="idProductsExtra" referenced-column-name="id"/>
+            <join-column name="idProductsExtra" referenced-column-name="id" nullable="false"/>
         </many-to-one>
     </entity>
 </doctrine-mapping>

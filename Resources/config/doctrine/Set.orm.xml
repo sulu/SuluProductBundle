@@ -15,10 +15,10 @@
         <many-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Product" field="products">
             <join-table name="pr_set_products">
                 <join-columns>
-                    <join-column name="idProducts" referenced-column-name="id"/>
+                    <join-column name="idProducts" referenced-column-name="id" nullable="false"/>
                 </join-columns>
                 <inverse-join-columns>
-                    <join-column name="idSets" referenced-column-name="id"/>
+                    <join-column name="idSets" referenced-column-name="id" nullable="false"/>
                 </inverse-join-columns>
             </join-table>
         </many-to-many>

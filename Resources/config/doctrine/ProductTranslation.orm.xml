@@ -13,7 +13,7 @@
 
         <many-to-one target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Product" field="product"
                      inversed-by="translations">
-            <join-column name="idProducts" referenced-column-name="id"/>
+            <join-column name="idProducts" referenced-column-name="id" nullable="false"/>
         </many-to-one>
     </entity>
 </doctrine-mapping>
