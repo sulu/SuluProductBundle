@@ -5,9 +5,9 @@ namespace Sulu\Bundle\Product\BaseBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * SetTranslation
+ * TemplateTranslation
  */
-class SetTranslation
+class TemplateTranslation
 {
     /**
      * @var string
@@ -20,26 +20,21 @@ class SetTranslation
     private $name;
 
     /**
-     * @var string
-     */
-    private $description;
-
-    /**
      * @var integer
      */
     private $id;
 
     /**
-     * @var \Sulu\Bundle\Product\BaseBundle\Entity\Set
+     * @var \Sulu\Bundle\Product\BaseBundle\Entity\Template
      */
-    private $set;
+    private $template;
 
 
     /**
      * Set languageCode
      *
      * @param string $languageCode
-     * @return SetTranslation
+     * @return TemplateTranslation
      */
     public function setLanguageCode($languageCode)
     {
@@ -62,7 +57,7 @@ class SetTranslation
      * Set name
      *
      * @param string $name
-     * @return SetTranslation
+     * @return TemplateTranslation
      */
     public function setName($name)
     {
@@ -82,29 +77,6 @@ class SetTranslation
     }
 
     /**
-     * Set description
-     *
-     * @param string $description
-     * @return SetTranslation
-     */
-    public function setDescription($description)
-    {
-        $this->description = $description;
-    
-        return $this;
-    }
-
-    /**
-     * Get description
-     *
-     * @return string 
-     */
-    public function getDescription()
-    {
-        return $this->description;
-    }
-
-    /**
      * Get id
      *
      * @return integer 
@@ -115,25 +87,25 @@ class SetTranslation
     }
 
     /**
-     * Set set
+     * Set template
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Set $set
-     * @return SetTranslation
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Template $template
+     * @return TemplateTranslation
      */
-    public function setSet(\Sulu\Bundle\Product\BaseBundle\Entity\Set $set)
+    public function setTemplate(\Sulu\Bundle\Product\BaseBundle\Entity\Template $template = null)
     {
-        $this->set = $set;
+        $this->template = $template;
     
         return $this;
     }
 
     /**
-     * Get set
+     * Get template
      *
-     * @return \Sulu\Bundle\Product\BaseBundle\Entity\Set 
+     * @return \Sulu\Bundle\Product\BaseBundle\Entity\Template 
      */
-    public function getSet()
+    public function getTemplate()
     {
-        return $this->set;
+        return $this->template;
     }
 }

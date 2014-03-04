@@ -33,6 +33,8 @@
         <!-- Missing one to many associations -->
         <!--one-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductAttribute" mapped-by="product"
                      field="productAttributes"/-->
+        <!--one-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductTranslation" mapped-by="product"
+                     field="translations"/-->
 
         <many-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Set" field="sets" inversed-by="products"/>
         

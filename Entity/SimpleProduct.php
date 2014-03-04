@@ -54,4 +54,42 @@ class SimpleProduct extends Product
     {
         return $this->productAttributes;
     }
+    /**
+     * @var \Doctrine\Common\Collections\Collection
+     */
+    private $translations;
+
+
+    /**
+     * Add translations
+     *
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductTranslation $translations
+     * @return SimpleProduct
+     */
+    public function addTranslation(\Sulu\Bundle\Product\BaseBundle\Entity\ProductTranslation $translations)
+    {
+        $this->translations[] = $translations;
+    
+        return $this;
+    }
+
+    /**
+     * Remove translations
+     *
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductTranslation $translations
+     */
+    public function removeTranslation(\Sulu\Bundle\Product\BaseBundle\Entity\ProductTranslation $translations)
+    {
+        $this->translations->removeElement($translations);
+    }
+
+    /**
+     * Get translations
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getTranslations()
+    {
+        return $this->translations;
+    }
 }

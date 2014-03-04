@@ -12,6 +12,11 @@
         <field name="created" type="datetime" length="255"/>
         <field name="changed" type="datetime" length="255"/>
 
+        <one-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\AttributeTranslation" mapped-by="attribute"
+                     field="translations"/>
+        <one-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductAttribute" mapped-by="attribute"
+                     field="productAttributes"/>
+
         <many-to-one field="changer" target-entity="Sulu\Component\Security\UserInterface">
             <join-columns>
                 <join-column name="idUsersChanger" referenced-column-name="id" on-delete="SET NULL" nullable="true"/>
@@ -22,8 +27,5 @@
                 <join-column name="idUsersCreator" referenced-column-name="id" on-delete="SET NULL" nullable="true"/>
             </join-columns>
         </many-to-one>
-
-        <one-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductAttribute" mapped-by="attribute"
-                     field="productAttributes"/>
     </entity>
 </doctrine-mapping>

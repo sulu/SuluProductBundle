@@ -37,6 +37,11 @@ class Attribute
     /**
      * @var \Doctrine\Common\Collections\Collection
      */
+    private $translations;
+
+    /**
+     * @var \Doctrine\Common\Collections\Collection
+     */
     private $productAttributes;
 
     /**
@@ -54,6 +59,7 @@ class Attribute
      */
     public function __construct()
     {
+        $this->translations = new \Doctrine\Common\Collections\ArrayCollection();
         $this->productAttributes = new \Doctrine\Common\Collections\ArrayCollection();
     }
     
@@ -157,6 +163,39 @@ class Attribute
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * Add translations
+     *
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\AttributeTranslation $translations
+     * @return Attribute
+     */
+    public function addTranslation(\Sulu\Bundle\Product\BaseBundle\Entity\AttributeTranslation $translations)
+    {
+        $this->translations[] = $translations;
+    
+        return $this;
+    }
+
+    /**
+     * Remove translations
+     *
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\AttributeTranslation $translations
+     */
+    public function removeTranslation(\Sulu\Bundle\Product\BaseBundle\Entity\AttributeTranslation $translations)
+    {
+        $this->translations->removeElement($translations);
+    }
+
+    /**
+     * Get translations
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getTranslations()
+    {
+        return $this->translations;
     }
 
     /**
