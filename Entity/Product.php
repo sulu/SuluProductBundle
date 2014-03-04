@@ -40,6 +40,11 @@ class Product
     private $id;
 
     /**
+     * @var \Sulu\Bundle\ContactBundle\Entity\Country
+     */
+    private $manufacturerCountry;
+
+    /**
      * @var \Sulu\Bundle\Product\BaseBundle\Entity\Type
      */
     private $type;
@@ -218,6 +223,29 @@ class Product
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * Set manufacturerCountry
+     *
+     * @param \Sulu\Bundle\ContactBundle\Entity\Country $manufacturerCountry
+     * @return Product
+     */
+    public function setManufacturerCountry(\Sulu\Bundle\ContactBundle\Entity\Country $manufacturerCountry = null)
+    {
+        $this->manufacturerCountry = $manufacturerCountry;
+    
+        return $this;
+    }
+
+    /**
+     * Get manufacturerCountry
+     *
+     * @return \Sulu\Bundle\ContactBundle\Entity\Country 
+     */
+    public function getManufacturerCountry()
+    {
+        return $this->manufacturerCountry;
     }
 
     /**

@@ -23,6 +23,9 @@
                 <join-column name="idUsersCreator" referenced-column-name="id" on-delete="SET NULL" nullable="true"/>
             </join-columns>
         </many-to-one>
+        <many-to-one target-entity="Sulu\Bundle\ContactBundle\Entity\Country" field="manufacturerCountry">
+            <join-column name="idCountriesManufacturer" referenced-column-name="id"/>
+        </many-to-one>
         <many-to-one target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Type" field="type"
                 inversed-by="products">
             <join-column name="idTypes" referenced-column-name="id" nullable="false"/>
