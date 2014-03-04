@@ -5,3 +5,7 @@ sulu_product_base:
 product_list:
     pattern: /template/product/list.html
     defaults: { _controller: SuluProductBaseBundle:Template:productList }
+
+product_import:
+    pattern: /template/product/import.html
+    defaults: { _controller: SuluProductBaseBundle:Template:productImport }

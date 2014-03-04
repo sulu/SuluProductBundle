@@ -14,8 +14,11 @@ define(function() {
     return {
 
         initialize: function() {
+            this.bindCustomEvents();
             if (this.options.display === 'list') {
                 this.renderList();
+            } else if (this.options.display === 'import') {
+                this.renderImport();
             }
         },
 
@@ -28,6 +31,26 @@ define(function() {
             this.sandbox.start([
                 {name: 'products/components/list@suluproductbase', options: { el: $list}}
             ]);
+        },
+
+        /**
+         * Creates the view for the product import
+         */
+        renderImport: function() {
+            var $container = this.sandbox.dom.createElement('<div id="products-import"/>');
+            this.html($container);
+            this.sandbox.start([
+                {name: 'products/components/import@suluproductbase', options: { el: $container}}
+            ]);
+        },
+
+        /**
+         * Binds custom-related events
+         */
+        bindCustomEvents: function() {
+            this.sandbox.on('sulu.pim.products.import', function() {
+                this.sandbox.emit('sulu.router.navigate', 'pim/products/import');
+            }.bind(this));
         }
     };
 });

@@ -1,0 +1,14 @@
+.import-info {
+    margin-top: 40px;
+    margin-bottom: 20px;
+    color: $gray;
+    .title {
+        font-size: $titleFontSize;
+    }
+    strong {
+        font-weight: bold;
+    }
+    p {
+        margin: 15px 0;
+    }
+}

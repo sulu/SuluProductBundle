@@ -15,4 +15,13 @@ class TemplateController extends Controller
     {
         return $this->render('SuluProductBaseBundle:Template:product.list.html.twig');
     }
+
+    /**
+     * Returns Template for product import
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function productImportAction()
+    {
+        return $this->render('SuluProductBaseBundle:Template:product.import.html.twig');
+    }
 }

@@ -22,37 +22,60 @@ define(function() {
         },
 
         render: function() {
-            var testData = {
-                items: [
-                    {id: 1, key: '677373774', name: 'Flachkopfwinkelschleifer WEF 9-125', manufacturer: 'Metabo', categories: 'asdf, jkdjkd, jdkkdjf', lastImported: '1900-21-12'},
-                    {id: 2, key: '677373774', name: 'Flachkopfwinkelschleifer WEF 9-125', manufacturer: 'Metabo', categories: 'asdf, jkdjkd, jdkkdjf', lastImported: '1900-21-12'}
-                ]
-            };
             this.html(this.renderTemplate('/admin/productbase/template/product/list'));
-            console.log(this.sandbox.dom.find('#products-list', this.$el));
+
             // init list-toolbar and datagrid
-            /*this.sandbox.sulu.initListToolbarAndList.call(this, 'contactsFields', '/admin/api/contacts/fields',
+            this.sandbox.sulu.initListToolbarAndList.call(this, 'productsFields', '/admin/productbase/api/products/fields',
                 {
-                    el: '#list-toolbar-container',
-                    instanceName: 'products'
+                    el: this.sandbox.dom.find('#list-toolbar-container', this.$el),
+                    instanceName: 'productsToolbar',
+                    template: [{
+                            'id': 1,
+                            'icon': 'user-add',
+                            'title': 'Add User',
+                            'class': 'highlight'
+                        },
+                        {
+                            'id': 2,
+                            'icon': 'bin',
+                            'title': 'Delete User',
+                            'group': '1',
+                            'disabled': true
+                        },
+                        {
+                            'id': 'import',
+                            'icon': 'file-import',
+                            'title': 'Import',
+                            'group': '2',
+                            callback: function() {
+                                this.sandbox.emit('sulu.pim.products.import');
+                            }.bind(this)
+                        },
+                        {
+                            'icon': 'file-export',
+                            'title': 'Export',
+                            'group': '2'
+                        }
+                    ]
                 },
                 {
                     el: this.sandbox.dom.find('#products-list', this.$el),
-                    data: testData,
+                    url: '/admin/productbase/api/products?flat=true',
+                    editable: false,
+                    validation: false,
+                    addRowTop: true,
+                    progressRow: true,
+                    paginationOptions: {
+                        pageSize: 4
+                    },
+                    pagination: true,
                     selectItem: {
                         type: 'checkbox'
                     },
-                    tableHead: [
-                        {content: 'name', width: "60%"},
-                        {content: 'artcle number', width: "20%"},
-                        {content: 'last imported', width: "10%"}
-                    ],
-                    excludeFields: ['id', 'translations'],
                     removeRow: false,
-                    searchInstanceName: 'products',
                     sortable: true
                 }
-            );*/
+            );
         }
     };
 });

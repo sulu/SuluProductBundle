@@ -32,5 +32,12 @@ define({
                 this.html('<div data-aura-component="products@suluproductbase" data-aura-display="list"/>');
             }
         });
+
+        sandbox.mvc.routes.push({
+            route: 'pim/products/import',
+            callback: function() {
+                this.html('<div data-aura-component="products@suluproductbase" data-aura-display="import"/>');
+            }
+        });
     }
 });
