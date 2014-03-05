@@ -1,0 +1,1 @@
+require.config({paths:{suluproductbase:"../../suluproductbase/js"}}),define({name:"SuluProductBaseBundle",initialize:function(a){"use strict";a.sandbox;a.components.addSource("suluproductbase","/bundles/suluproductbase/js/components")}});
