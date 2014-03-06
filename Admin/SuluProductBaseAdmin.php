@@ -20,6 +20,17 @@ class SuluProductBaseAdmin extends Admin
     public function __construct($title)
     {
         $rootNavigationItem = new NavigationItem($title);
+        $section = new NavigationItem('navigation.tools');
+
+        $pim = new NavigationItem('navigation.pim');
+        $pim->setIcon('star'); //todo set right icon
+
+        $products = new NavigationItem('navigation.pim.products', $pim);
+        $products->setAction('pim/products');
+
+        $section->addChild($pim);
+        $rootNavigationItem->addChild($section);
+
         $this->setNavigation(new Navigation($rootNavigationItem));
     }
 

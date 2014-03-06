@@ -1,0 +1,18 @@
+/* line 1, ../scss/modules/import.scss */
+.import-info {
+  margin-top: 40px;
+  margin-bottom: 20px;
+  color: #999999;
+}
+/* line 5, ../scss/modules/import.scss */
+.import-info .title {
+  font-size: 24px;
+}
+/* line 8, ../scss/modules/import.scss */
+.import-info strong {
+  font-weight: bold;
+}
+/* line 11, ../scss/modules/import.scss */
+.import-info p {
+  margin: 15px 0;
+}
