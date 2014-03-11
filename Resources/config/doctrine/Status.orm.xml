@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <entity name="Sulu\Bundle\Product\BaseBundle\Entity\Status" table="pr_status">
+        <id name="id" type="integer" column="id">
+            <generator strategy="AUTO"/>
+        </id>
+        <one-to-many field="products" target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Product"
+                     mapped-by="status"/>
+        <one-to-many field="translations"
+                     target-entity="Sulu\Bundle\Product\BaseBundle\Entity\StatusTranslation"
+                     mapped-by="status"/>
+    </entity>
+</doctrine-mapping>

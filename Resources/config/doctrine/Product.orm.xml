@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <mapped-superclass name="Sulu\Bundle\Product\BaseBundle\Entity\Product">
+        <id name="id" type="integer" column="id">
+            <generator strategy="AUTO"/>
+        </id>
+
+        <field name="code" type="string" length="255" nullable="true"/>
+        <field name="number" type="string" length="255"/>
+        <field name="manufacturer" type="string" length="255" nullable="true"/>
+        <field name="created" type="datetime" nullable="true"/>
+        <field name="changed" type="datetime" nullable="true"/>
+
+        <many-to-one field="changer" target-entity="Sulu\Component\Security\UserInterface">
+            <join-columns>
+                <join-column name="idUsersChanger" referenced-column-name="id" on-delete="SET NULL" nullable="true"/>
+            </join-columns>
+        </many-to-one>
+        <many-to-one field="creator" target-entity="Sulu\Component\Security\UserInterface">
+            <join-columns>
+                <join-column name="idUsersCreator" referenced-column-name="id" on-delete="SET NULL" nullable="true"/>
+            </join-columns>
+        </many-to-one>
+        <many-to-one target-entity="Sulu\Bundle\ContactBundle\Entity\Country" field="manufacturerCountry">
+            <join-column name="idCountriesManufacturer" referenced-column-name="id"/>
+        </many-to-one>
+        <many-to-one target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Type" field="type"
+                inversed-by="products">
+            <join-column name="idTypes" referenced-column-name="id" nullable="false"/>
+        </many-to-one>
+        <many-to-one target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Template" field="template"
+                     inversed-by="products">
+            <join-column name="idTemplates" referenced-column-name="id" nullable="false"/>
+        </many-to-one>
+        <many-to-one target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Status" field="status" inversed-by="products">
+            <join-column name="idStatus" referenced-column-name="id"/>
+        </many-to-one>
+
+        <!-- Missing one to many associations -->
+        <!--
+        <one-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductAttribute" mapped-by="product"
+                     field="attributes"/>
+        <one-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductTranslation" mapped-by="product"
+                     field="translations"/>
+        <one-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Extra" mapped-by="product"
+                     field="extras"/>
+        -->
+
+        <many-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Set" field="sets" inversed-by="products"/>
+        
+        <many-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Product" field="relations">
+            <join-table name="pr_relations">
+                <join-columns>
+                    <join-column name="idProducts" referenced-column-name="id" nullable="false"/>
+                </join-columns>
+                <inverse-join-columns>
+                    <join-column name="idProductsRelated" referenced-column-name="id" nullable="false"/>
+                </inverse-join-columns>
+            </join-table>
+        </many-to-many>
+        <many-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Product" field="upsells">
+            <join-table name="pr_upsells">
+                <join-columns>
+                    <join-column name="idProducts" referenced-column-name="id" nullable="false"/>
+                </join-columns>
+                <inverse-join-columns>
+                    <join-column name="idProductsUpsell" referenced-column-name="id" nullable="false"/>
+                </inverse-join-columns>
+            </join-table>
+        </many-to-many>
+        <many-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Product" field="crosssells">
+            <join-table name="pr_crosssells">
+                <join-columns>
+                    <join-column name="idProducts" referenced-column-name="id" nullable="false"/>
+                </join-columns>
+                <inverse-join-columns>
+                    <join-column name="idProductsCrosssell" referenced-column-name="id" nullable="false"/>
+                </inverse-join-columns>
+            </join-table>
+        </many-to-many>
+    </mapped-superclass>
+</doctrine-mapping>

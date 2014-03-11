@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <entity name="Sulu\Bundle\Product\BaseBundle\Entity\SetTranslation" table="pr_set_translations">
+        <id name="id" type="integer" column="id">
+            <generator strategy="AUTO"/>
+        </id>
+        
+        <field name="languageCode" type="string" length="10" />
+        <field name="name" type="string" length="255" nullable="true"/>
+        <field name="description" type="text" nullable="true"/>
+
+        <many-to-one target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Set" field="set" inversed-by="translations">
+            <join-columns>
+                <join-column name="idSets" referenced-column-name="id" nullable="false"/>
+            </join-columns>
+        </many-to-one>
+    </entity>
+</doctrine-mapping>

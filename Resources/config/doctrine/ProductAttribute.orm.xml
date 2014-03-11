@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <entity name="Sulu\Bundle\Product\BaseBundle\Entity\ProductAttribute" table="pr_product_attributes">
+        <id name="id" type="integer" column="id">
+            <generator strategy="AUTO"/>
+        </id>
+
+        <field name="value" type="text" />
+
+        <many-to-one target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Product" field="product"
+                     inversed-by="productAttributes">
+            <join-column name="idProducts" referenced-column-name="id" nullable="false"/>
+        </many-to-one>
+        <many-to-one target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Attribute" field="attribute"
+                     inversed-by="productAttributes">
+            <join-column name="idAttributes" referenced-column-name="id" nullable="false"/>
+        </many-to-one>
+    </entity>
+</doctrine-mapping>
