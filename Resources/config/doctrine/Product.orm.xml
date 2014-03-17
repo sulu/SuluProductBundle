@@ -37,9 +37,14 @@
         <many-to-one target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Status" field="status" inversed-by="products">
             <join-column name="idStatus" referenced-column-name="id"/>
         </many-to-one>
+        <many-to-one target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Product" field="parent" inversed-by="children">
+            <join-column name="idParent" referenced-column-name="id"/>
+        </many-to-one>
 
         <!-- Missing one to many associations -->
         <!--
+        <one-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Product" mapped-by="parent"
+                     field="children"/>
         <one-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductAttribute" mapped-by="product"
                      field="attributes"/>
         <one-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductTranslation" mapped-by="product"

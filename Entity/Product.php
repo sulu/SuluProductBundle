@@ -98,6 +98,11 @@ class Product
     private $creator;
 
     /**
+     * @var \Sulu\Bundle\Product\BaseBundle\Entity\Product
+     */
+    private $parent;
+
+    /**
      * Constructor
      */
     public function __construct()
@@ -501,5 +506,28 @@ class Product
     public function getCreator()
     {
         return $this->creator;
+    }
+
+    /**
+     * Set parent
+     *
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $parent
+     * @return Product
+     */
+    public function setParent(\Sulu\Bundle\Product\BaseBundle\Entity\Product $parent = null)
+    {
+        $this->parent = $parent;
+    
+        return $this;
+    }
+
+    /**
+     * Get parent
+     *
+     * @return \Sulu\Bundle\Product\BaseBundle\Entity\Product 
+     */
+    public function getParent()
+    {
+        return $this->parent;
     }
 }
