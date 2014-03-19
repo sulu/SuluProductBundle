@@ -25,7 +25,7 @@ define(function() {
             this.html(this.renderTemplate('/admin/productbase/template/product/list'));
 
             // init list-toolbar and datagrid
-            this.sandbox.sulu.initListToolbarAndList.call(this, 'productsFields', '/admin/productbase/api/products/fields',
+            this.sandbox.sulu.initListToolbarAndList.call(this, 'productsFields', '/admin/productbase/api/productbases/fields',
                 {
                     el: this.sandbox.dom.find('#list-toolbar-container', this.$el),
                     instanceName: 'productsToolbar',
@@ -60,7 +60,7 @@ define(function() {
                 },
                 {
                     el: this.sandbox.dom.find('#products-list', this.$el),
-                    url: '/admin/productbase/api/products?flat=true',
+                    url: '/admin/productbase/api/productbases?flat=true',
                     editable: false,
                     validation: false,
                     addRowTop: true,
