@@ -8,6 +8,7 @@ use FOS\RestBundle\Controller\Annotations\Put;
 use Sulu\Component\Rest\RestController;
 use Symfony\Component\HttpFoundation\Response;
 
+// ProductbaseController
 class ProductbaseController extends RestController implements ClassResourceInterface
 {
 
