@@ -8,7 +8,7 @@
         </id>
 
         <field name="code" type="string" length="255" nullable="true"/>
-        <field name="number" type="string" length="255"/>
+        <field name="number" type="string" length="255" nullable="false"/>
         <field name="manufacturer" type="string" length="255" nullable="true"/>
         <field name="created" type="datetime" nullable="true"/>
         <field name="changed" type="datetime" nullable="true"/>
