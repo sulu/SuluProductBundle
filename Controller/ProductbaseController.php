@@ -8,12 +8,13 @@ use FOS\RestBundle\Controller\Annotations\Put;
 use Sulu\Component\Rest\RestController;
 use Symfony\Component\HttpFoundation\Response;
 
-class ProductController extends RestController implements ClassResourceInterface
+// ProductbaseController
+class ProductbaseController extends RestController implements ClassResourceInterface
 {
 
     /**
      * returns all fields that can be used by list
-     * @Get("products/fields")
+     * @Get("productbases/fields")
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function getFieldsAction()
