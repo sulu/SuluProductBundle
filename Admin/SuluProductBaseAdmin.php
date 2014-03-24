@@ -23,7 +23,7 @@ class SuluProductBaseAdmin extends Admin
         $section = new NavigationItem('navigation.tools');
 
         $pim = new NavigationItem('navigation.pim');
-        $pim->setIcon('star'); //todo set right icon
+        $pim->setIcon('asterisk');
 
         $products = new NavigationItem('navigation.pim.products', $pim);
         $products->setAction('pim/products');
