@@ -39,7 +39,6 @@ define(function() {
                             'id': 2,
                             'icon': 'bin',
                             'title': 'Delete User',
-                            'group': '1',
                             'disabled': true
                         },
                         {
@@ -53,8 +52,7 @@ define(function() {
                         },
                         {
                             'icon': 'file-export',
-                            'title': 'Export',
-                            'group': '2'
+                            'title': 'Export'
                         }
                     ]
                 },
