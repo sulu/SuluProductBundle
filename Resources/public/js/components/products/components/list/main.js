@@ -45,7 +45,7 @@ define(function() {
                             'id': 1,
                             'icon': 'user-add',
                             'title': 'Add User',
-                            'class': 'highlight',
+                            'class': 'highlight-white',
                             disabled: true
                         },
                         {
