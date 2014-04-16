@@ -15,6 +15,21 @@ define(function() {
 
         view: true,
 
+        header: function() {
+            return {
+                title: 'pim.products.title',
+
+                toolbar: {
+                    template: []
+                },
+
+                breadcrumb: [
+                    {title: 'navigation.pim'},
+                    {title: 'pim.products.title'}
+                ]
+            };
+        },
+
         templates: ['/admin/productbase/template/product/list'],
 
         initialize: function() {
@@ -22,18 +37,20 @@ define(function() {
         },
 
         render: function() {
-            this.html(this.renderTemplate('/admin/productbase/template/product/list'));
+            this.sandbox.dom.html(this.$el, this.renderTemplate('/admin/productbase/template/product/list'));
 
             // init list-toolbar and datagrid
             this.sandbox.sulu.initListToolbarAndList.call(this, 'productsFields', '/admin/productbase/api/productbases/fields',
                 {
                     el: this.sandbox.dom.find('#list-toolbar-container', this.$el),
                     instanceName: 'productsToolbar',
+                    inHeader: true,
                     template: [{
                             'id': 1,
                             'icon': 'user-add',
                             'title': 'Add User',
-                            'class': 'highlight'
+                            'class': 'highlight',
+                            disabled: true
                         },
                         {
                             'id': 2,
@@ -52,7 +69,8 @@ define(function() {
                         },
                         {
                             'icon': 'file-export',
-                            'title': 'Export'
+                            'title': 'Export',
+                            disabled: true
                         }
                     ]
                 },
