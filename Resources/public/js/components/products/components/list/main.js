@@ -19,10 +19,6 @@ define(function() {
             return {
                 title: 'pim.products.title',
 
-                toolbar: {
-                    template: []
-                },
-
                 breadcrumb: [
                     {title: 'navigation.pim'},
                     {title: 'pim.products.title'}
