@@ -15,9 +15,14 @@ define(function() {
 
         view: true,
 
+        fullSize: {
+            width: true
+        },
+
         header: function() {
             return {
                 title: 'pim.products.title',
+                noBack: true,
 
                 breadcrumb: [
                     {title: 'navigation.pim'},
@@ -77,6 +82,7 @@ define(function() {
                     validation: false,
                     addRowTop: true,
                     progressRow: true,
+                    fullWidth: true,
                     paginationOptions: {
                         pageSize: 4
                     },
