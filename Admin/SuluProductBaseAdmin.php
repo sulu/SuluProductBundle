@@ -42,4 +42,11 @@ class SuluProductBaseAdmin extends Admin
         return array();
     }
 
+    /**
+     * {@inheritdoc}
+     */
+    public function getJsBundleName()
+    {
+        return 'suluproductbase';
+    }
 }
