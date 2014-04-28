@@ -20,7 +20,7 @@ class SuluProductBaseAdmin extends Admin
     public function __construct($title)
     {
         $rootNavigationItem = new NavigationItem($title);
-        $section = new NavigationItem('navigation.tools');
+        $section = new NavigationItem('');
 
         $pim = new NavigationItem('navigation.pim');
         $pim->setIcon('asterisk');
