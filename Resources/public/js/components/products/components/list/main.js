@@ -78,20 +78,11 @@ define(function() {
                 {
                     el: this.sandbox.dom.find('#products-list', this.$el),
                     url: '/admin/productbase/api/productbases?flat=true',
-                    editable: false,
-                    validation: false,
-                    addRowTop: true,
-                    progressRow: true,
-                    fullWidth: true,
-                    paginationOptions: {
-                        pageSize: 4
-                    },
-                    pagination: true,
-                    selectItem: {
-                        type: 'checkbox'
-                    },
-                    removeRow: false,
-                    sortable: true
+                    viewOptions: {
+                        table: {
+                            fullWidth: true
+                        }
+                    }
                 }
             );
         }
