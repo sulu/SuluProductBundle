@@ -48,20 +48,20 @@ define(function() {
                     inHeader: true,
                     template: [{
                             'id': 1,
-                            'icon': 'user-add',
+                            'icon': 'plus-circle',
                             'title': 'Add User',
                             'class': 'highlight-white',
                             disabled: true
                         },
                         {
                             'id': 2,
-                            'icon': 'bin',
+                            'icon': 'trash-o',
                             'title': 'Delete User',
                             'disabled': true
                         },
                         {
                             'id': 'import',
-                            'icon': 'file-import',
+                            'icon': 'cloud-upload',
                             'title': 'Import',
                             'group': '2',
                             callback: function() {
@@ -69,7 +69,7 @@ define(function() {
                             }.bind(this)
                         },
                         {
-                            'icon': 'file-export',
+                            'icon': 'cloud-download',
                             'title': 'Export',
                             disabled: true
                         }
