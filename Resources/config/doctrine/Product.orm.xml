@@ -2,7 +2,7 @@
 <doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
-    <mapped-superclass name="Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface" table="ap_products">
+    <mapped-superclass name="Sulu\Bundle\Product\BaseBundle\Entity\Product" table="ap_products">
         <id name="id" type="integer" column="id">
             <generator strategy="AUTO"/>
         </id>
@@ -54,7 +54,7 @@
         -->
 
         <many-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Set" field="sets" inversed-by="products"/>
-        
+
         <many-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface" field="relations">
             <join-table name="pr_relations">
                 <join-columns>
