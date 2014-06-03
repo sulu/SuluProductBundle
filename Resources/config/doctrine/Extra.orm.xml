@@ -9,7 +9,7 @@
         
         <field name="price" type="decimal" column="price" nullable="true"/>
         
-        <many-to-one target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductInterafce" field="product" inversed-by="extras">
+        <many-to-one target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface" field="product" inversed-by="extras">
             <join-column name="idProducts" referenced-column-name="id" nullable="false"/>
         </many-to-one>
         <many-to-one target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface" field="extra">
