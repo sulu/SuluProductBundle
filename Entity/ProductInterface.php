@@ -319,24 +319,24 @@ interface ProductInterface
     /**
      * Add attributes
      *
-     * @param ProductAttribute $attributes
+     * @param ProductAttribute $productAttributes
      * @return ProductInterface
      */
-    public function addAttribute(ProductAttribute $attributes);
+    public function addProductAttribute(ProductAttribute $productAttributes);
 
     /**
      * Remove attributes
      *
-     * @param ProductAttribute $attributes
+     * @param ProductAttribute $productAttributes
      */
-    public function removeAttribute(ProductAttribute $attributes);
+    public function removeProductAttribute(ProductAttribute $productAttributes);
 
     /**
      * Get attributes
      *
      * @return \Doctrine\Common\Collections\Collection
      */
-    public function getAttributes();
+    public function getProductAttributes();
 
     /**
      * Add translations
