@@ -60,19 +60,14 @@ abstract class Product implements ProductInterface
     private $type;
 
     /**
-     * @var Template
+     * @var AttributeSet
      */
-    private $template;
+    private $attributeSet;
 
     /**
      * @var Status
      */
     private $status;
-
-    /**
-     * @var \Doctrine\Common\Collections\Collection
-     */
-    private $sets;
 
     /**
      * @var \Doctrine\Common\Collections\Collection
@@ -103,6 +98,11 @@ abstract class Product implements ProductInterface
      * @var \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface
      */
     private $parent;
+
+    /**
+     * @var \Doctrine\Common\Collections\Collection
+     */
+    private $sets;
 
     /**
      * Constructor
@@ -289,12 +289,12 @@ abstract class Product implements ProductInterface
     /**
      * Set template
      *
-     * @param Template $template
+     * @param AttributeSet $template
      * @return Product
      */
-    public function setTemplate(Template $template)
+    public function setAttributeSet(AttributeSet $template)
     {
-        $this->template = $template;
+        $this->attributeSet = $template;
     
         return $this;
     }
@@ -302,11 +302,11 @@ abstract class Product implements ProductInterface
     /**
      * Get template
      *
-     * @return Template
+     * @return AttributeSet
      */
-    public function getTemplate()
+    public function getAttributeSet()
     {
-        return $this->template;
+        return $this->attributeSet;
     }
 
     /**
@@ -330,39 +330,6 @@ abstract class Product implements ProductInterface
     public function getStatus()
     {
         return $this->status;
-    }
-
-    /**
-     * Add sets
-     *
-     * @param Set $sets
-     * @return Product
-     */
-    public function addSet(Set $sets)
-    {
-        $this->sets[] = $sets;
-    
-        return $this;
-    }
-
-    /**
-     * Remove sets
-     *
-     * @param Set $sets
-     */
-    public function removeSet(Set $sets)
-    {
-        $this->sets->removeElement($sets);
-    }
-
-    /**
-     * Get sets
-     *
-     * @return \Doctrine\Common\Collections\Collection 
-     */
-    public function getSets()
-    {
-        return $this->sets;
     }
 
     /**
@@ -531,5 +498,38 @@ abstract class Product implements ProductInterface
     public function getParent()
     {
         return $this->parent;
+    }
+
+    /**
+     * Add sets
+     *
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $sets
+     * @return Product
+     */
+    public function addSet(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $sets)
+    {
+        $this->sets[] = $sets;
+    
+        return $this;
+    }
+
+    /**
+     * Remove sets
+     *
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $sets
+     */
+    public function removeSet(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $sets)
+    {
+        $this->sets->removeElement($sets);
+    }
+
+    /**
+     * Get sets
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getSets()
+    {
+        return $this->sets;
     }
 }

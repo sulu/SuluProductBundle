@@ -134,17 +134,17 @@ interface ProductInterface
     /**
      * Set template
      *
-     * @param Template $template
+     * @param AttributeSet $template
      * @return Product
      */
-    public function setTemplate(Template $template);
+    public function setAttributeSet(AttributeSet $template);
 
     /**
      * Get template
      *
-     * @return Template
+     * @return AttributeSet
      */
-    public function getTemplate();
+    public function getAttributeSet();
 
     /**
      * Set status
@@ -160,28 +160,6 @@ interface ProductInterface
      * @return Status
      */
     public function getStatus();
-
-    /**
-     * Add sets
-     *
-     * @param Set $sets
-     * @return Product
-     */
-    public function addSet(Set $sets);
-
-    /**
-     * Remove sets
-     *
-     * @param Set $sets
-     */
-    public function removeSet(Set $sets);
-
-    /**
-     * Get sets
-     *
-     * @return \Doctrine\Common\Collections\Collection
-     */
-    public function getSets();
 
     /**
      * Add relations
@@ -381,4 +359,26 @@ interface ProductInterface
      * @return \Doctrine\Common\Collections\Collection
      */
     public function getExtras();
+
+    /**
+     * Add setProducts
+     *
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $setProducts
+     * @return Product
+     */
+    public function addSetProduct(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $setProducts);
+
+    /**
+     * Remove setProducts
+     *
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $setProducts
+     */
+    public function removeSetProduct(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $setProducts);
+
+    /**
+     * Get setProducts
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getSetProducts();
 }

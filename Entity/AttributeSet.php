@@ -15,7 +15,7 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * Template
  */
-class Template
+class AttributeSet
 {
     /**
      * @var integer
@@ -60,10 +60,10 @@ class Template
     /**
      * Add translations
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\TemplateTranslation $translations
-     * @return Template
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\AttributeSetTranslation $translations
+     * @return AttributeSet
      */
-    public function addTranslation(\Sulu\Bundle\Product\BaseBundle\Entity\TemplateTranslation $translations)
+    public function addTranslation(\Sulu\Bundle\Product\BaseBundle\Entity\AttributeSetTranslation $translations)
     {
         $this->translations[] = $translations;
     
@@ -73,9 +73,9 @@ class Template
     /**
      * Remove translations
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\TemplateTranslation $translations
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\AttributeSetTranslation $translations
      */
-    public function removeTranslation(\Sulu\Bundle\Product\BaseBundle\Entity\TemplateTranslation $translations)
+    public function removeTranslation(\Sulu\Bundle\Product\BaseBundle\Entity\AttributeSetTranslation $translations)
     {
         $this->translations->removeElement($translations);
     }
@@ -94,7 +94,7 @@ class Template
      * Add products
      *
      * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $products
-     * @return Template
+     * @return AttributeSet
      */
     public function addProduct(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $products)
     {
@@ -127,7 +127,7 @@ class Template
      * Add attributes
      *
      * @param \Sulu\Bundle\Product\BaseBundle\Entity\Attribute $attributes
-     * @return Template
+     * @return AttributeSet
      */
     public function addAttribute(\Sulu\Bundle\Product\BaseBundle\Entity\Attribute $attributes)
     {

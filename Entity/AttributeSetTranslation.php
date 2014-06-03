@@ -13,9 +13,9 @@ namespace Sulu\Bundle\Product\BaseBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * SetTranslation
+ * TemplateTranslation
  */
-class SetTranslation
+class AttributeSetTranslation
 {
     /**
      * @var string
@@ -28,25 +28,20 @@ class SetTranslation
     private $name;
 
     /**
-     * @var string
-     */
-    private $description;
-
-    /**
      * @var integer
      */
     private $id;
 
     /**
-     * @var \Sulu\Bundle\Product\BaseBundle\Entity\Set
+     * @var \Sulu\Bundle\Product\BaseBundle\Entity\AttributeSet
      */
-    private $set;
+    private $attributeSet;
 
     /**
      * Set languageCode
      *
      * @param string $languageCode
-     * @return SetTranslation
+     * @return AttributeSetTranslation
      */
     public function setLanguageCode($languageCode)
     {
@@ -69,7 +64,7 @@ class SetTranslation
      * Set name
      *
      * @param string $name
-     * @return SetTranslation
+     * @return AttributeSetTranslation
      */
     public function setName($name)
     {
@@ -89,29 +84,6 @@ class SetTranslation
     }
 
     /**
-     * Set description
-     *
-     * @param string $description
-     * @return SetTranslation
-     */
-    public function setDescription($description)
-    {
-        $this->description = $description;
-    
-        return $this;
-    }
-
-    /**
-     * Get description
-     *
-     * @return string 
-     */
-    public function getDescription()
-    {
-        return $this->description;
-    }
-
-    /**
      * Get id
      *
      * @return integer 
@@ -122,25 +94,25 @@ class SetTranslation
     }
 
     /**
-     * Set set
+     * Set template
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Set $set
-     * @return SetTranslation
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\AttributeSet $template
+     * @return AttributeSetTranslation
      */
-    public function setSet(\Sulu\Bundle\Product\BaseBundle\Entity\Set $set)
+    public function setAttributeSet(\Sulu\Bundle\Product\BaseBundle\Entity\AttributeSet $template)
     {
-        $this->set = $set;
+        $this->attributeSet = $template;
     
         return $this;
     }
 
     /**
-     * Get set
+     * Get template
      *
-     * @return \Sulu\Bundle\Product\BaseBundle\Entity\Set 
+     * @return \Sulu\Bundle\Product\BaseBundle\Entity\AttributeSet
      */
-    public function getSet()
+    public function getAttributeSet()
     {
-        return $this->set;
+        return $this->attributeSet;
     }
 }
