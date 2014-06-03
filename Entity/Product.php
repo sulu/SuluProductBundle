@@ -11,12 +11,19 @@
 namespace Sulu\Bundle\Product\BaseBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Sulu\Bundle\ContactBundle\Entity\Country;
+use Sulu\Bundle\SecurityBundle\Entity\User;
 
 /**
  * Product
  */
-class Product
+abstract class Product implements ProductInterface
 {
+    /**
+     * @var integer
+     */
+    private $id;
+    
     /**
      * @var string
      */
@@ -43,27 +50,22 @@ class Product
     private $changed;
 
     /**
-     * @var integer
-     */
-    private $id;
-
-    /**
-     * @var \Sulu\Bundle\ContactBundle\Entity\Country
+     * @var Country
      */
     private $manufacturerCountry;
 
     /**
-     * @var \Sulu\Bundle\Product\BaseBundle\Entity\Type
+     * @var Type
      */
     private $type;
 
     /**
-     * @var \Sulu\Bundle\Product\BaseBundle\Entity\Template
+     * @var Template
      */
     private $template;
 
     /**
-     * @var \Sulu\Bundle\Product\BaseBundle\Entity\Status
+     * @var Status
      */
     private $status;
 
@@ -88,12 +90,12 @@ class Product
     private $crosssells;
 
     /**
-     * @var \Sulu\Bundle\SecurityBundle\Entity\User
+     * @var User
      */
     private $changer;
 
     /**
-     * @var \Sulu\Bundle\SecurityBundle\Entity\User
+     * @var User
      */
     private $creator;
 
@@ -241,10 +243,10 @@ class Product
     /**
      * Set manufacturerCountry
      *
-     * @param \Sulu\Bundle\ContactBundle\Entity\Country $manufacturerCountry
+     * @param Country $manufacturerCountry
      * @return Product
      */
-    public function setManufacturerCountry(\Sulu\Bundle\ContactBundle\Entity\Country $manufacturerCountry = null)
+    public function setManufacturerCountry(Country $manufacturerCountry = null)
     {
         $this->manufacturerCountry = $manufacturerCountry;
     
@@ -254,7 +256,7 @@ class Product
     /**
      * Get manufacturerCountry
      *
-     * @return \Sulu\Bundle\ContactBundle\Entity\Country 
+     * @return Country
      */
     public function getManufacturerCountry()
     {
@@ -264,10 +266,10 @@ class Product
     /**
      * Set type
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Type $type
+     * @param Type $type
      * @return Product
      */
-    public function setType(\Sulu\Bundle\Product\BaseBundle\Entity\Type $type)
+    public function setType(Type $type)
     {
         $this->type = $type;
     
@@ -277,7 +279,7 @@ class Product
     /**
      * Get type
      *
-     * @return \Sulu\Bundle\Product\BaseBundle\Entity\Type 
+     * @return Type
      */
     public function getType()
     {
@@ -287,10 +289,10 @@ class Product
     /**
      * Set template
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Template $template
+     * @param Template $template
      * @return Product
      */
-    public function setTemplate(\Sulu\Bundle\Product\BaseBundle\Entity\Template $template)
+    public function setTemplate(Template $template)
     {
         $this->template = $template;
     
@@ -300,7 +302,7 @@ class Product
     /**
      * Get template
      *
-     * @return \Sulu\Bundle\Product\BaseBundle\Entity\Template 
+     * @return Template
      */
     public function getTemplate()
     {
@@ -310,10 +312,10 @@ class Product
     /**
      * Set status
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Status $status
+     * @param Status $status
      * @return Product
      */
-    public function setStatus(\Sulu\Bundle\Product\BaseBundle\Entity\Status $status = null)
+    public function setStatus(Status $status = null)
     {
         $this->status = $status;
     
@@ -323,7 +325,7 @@ class Product
     /**
      * Get status
      *
-     * @return \Sulu\Bundle\Product\BaseBundle\Entity\Status 
+     * @return Status
      */
     public function getStatus()
     {
@@ -333,10 +335,10 @@ class Product
     /**
      * Add sets
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Set $sets
+     * @param Set $sets
      * @return Product
      */
-    public function addSet(\Sulu\Bundle\Product\BaseBundle\Entity\Set $sets)
+    public function addSet(Set $sets)
     {
         $this->sets[] = $sets;
     
@@ -346,9 +348,9 @@ class Product
     /**
      * Remove sets
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Set $sets
+     * @param Set $sets
      */
-    public function removeSet(\Sulu\Bundle\Product\BaseBundle\Entity\Set $sets)
+    public function removeSet(Set $sets)
     {
         $this->sets->removeElement($sets);
     }
@@ -366,10 +368,10 @@ class Product
     /**
      * Add relations
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $relations
+     * @param ProductInterface $relations
      * @return Product
      */
-    public function addRelation(\Sulu\Bundle\Product\BaseBundle\Entity\Product $relations)
+    public function addRelation(ProductInterface $relations)
     {
         $this->relations[] = $relations;
     
@@ -379,9 +381,9 @@ class Product
     /**
      * Remove relations
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $relations
+     * @param ProductInterface $relations
      */
-    public function removeRelation(\Sulu\Bundle\Product\BaseBundle\Entity\Product $relations)
+    public function removeRelation(ProductInterface $relations)
     {
         $this->relations->removeElement($relations);
     }
@@ -399,10 +401,10 @@ class Product
     /**
      * Add upsells
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $upsells
+     * @param ProductInterface $upsells
      * @return Product
      */
-    public function addUpsell(\Sulu\Bundle\Product\BaseBundle\Entity\Product $upsells)
+    public function addUpsell(ProductInterface $upsells)
     {
         $this->upsells[] = $upsells;
     
@@ -412,9 +414,9 @@ class Product
     /**
      * Remove upsells
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $upsells
+     * @param ProductInterface $upsells
      */
-    public function removeUpsell(\Sulu\Bundle\Product\BaseBundle\Entity\Product $upsells)
+    public function removeUpsell(ProductInterface $upsells)
     {
         $this->upsells->removeElement($upsells);
     }
@@ -432,10 +434,10 @@ class Product
     /**
      * Add crosssells
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $crosssells
+     * @param ProductInterface $crosssells
      * @return Product
      */
-    public function addCrosssell(\Sulu\Bundle\Product\BaseBundle\Entity\Product $crosssells)
+    public function addCrosssell(ProductInterface $crosssells)
     {
         $this->crosssells[] = $crosssells;
     
@@ -445,9 +447,9 @@ class Product
     /**
      * Remove crosssells
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $crosssells
+     * @param ProductInterface $crosssells
      */
-    public function removeCrosssell(\Sulu\Bundle\Product\BaseBundle\Entity\Product $crosssells)
+    public function removeCrosssell(ProductInterface $crosssells)
     {
         $this->crosssells->removeElement($crosssells);
     }
@@ -465,10 +467,10 @@ class Product
     /**
      * Set changer
      *
-     * @param \Sulu\Bundle\SecurityBundle\Entity\User $changer
+     * @param User $changer
      * @return Product
      */
-    public function setChanger(\Sulu\Bundle\SecurityBundle\Entity\User $changer = null)
+    public function setChanger(User $changer = null)
     {
         $this->changer = $changer;
     
@@ -478,7 +480,7 @@ class Product
     /**
      * Get changer
      *
-     * @return \Sulu\Bundle\SecurityBundle\Entity\User 
+     * @return User
      */
     public function getChanger()
     {
@@ -488,10 +490,10 @@ class Product
     /**
      * Set creator
      *
-     * @param \Sulu\Bundle\SecurityBundle\Entity\User $creator
+     * @param User $creator
      * @return Product
      */
-    public function setCreator(\Sulu\Bundle\SecurityBundle\Entity\User $creator = null)
+    public function setCreator(User $creator = null)
     {
         $this->creator = $creator;
     
@@ -501,7 +503,7 @@ class Product
     /**
      * Get creator
      *
-     * @return \Sulu\Bundle\SecurityBundle\Entity\User 
+     * @return User
      */
     public function getCreator()
     {
@@ -511,10 +513,10 @@ class Product
     /**
      * Set parent
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $parent
+     * @param ProductInterface $parent
      * @return Product
      */
-    public function setParent(\Sulu\Bundle\Product\BaseBundle\Entity\Product $parent = null)
+    public function setParent(ProductInterface $parent = null)
     {
         $this->parent = $parent;
     
