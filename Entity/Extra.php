@@ -73,10 +73,10 @@ class Extra
     /**
      * Set product
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $product
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $product
      * @return Extra
      */
-    public function setProduct(\Sulu\Bundle\Product\BaseBundle\Entity\Product $product)
+    public function setProduct(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $product)
     {
         $this->product = $product;
     
@@ -86,7 +86,7 @@ class Extra
     /**
      * Get product
      *
-     * @return \Sulu\Bundle\Product\BaseBundle\Entity\Product 
+     * @return \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface
      */
     public function getProduct()
     {
@@ -96,10 +96,10 @@ class Extra
     /**
      * Set extra
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $extra
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $extra
      * @return Extra
      */
-    public function setExtra(\Sulu\Bundle\Product\BaseBundle\Entity\Product $extra)
+    public function setExtra(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $extra)
     {
         $this->extra = $extra;
     
@@ -109,7 +109,7 @@ class Extra
     /**
      * Get extra
      *
-     * @return \Sulu\Bundle\Product\BaseBundle\Entity\Product 
+     * @return \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface
      */
     public function getExtra()
     {

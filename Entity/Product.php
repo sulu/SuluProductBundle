@@ -100,7 +100,7 @@ abstract class Product implements ProductInterface
     private $creator;
 
     /**
-     * @var \Sulu\Bundle\Product\BaseBundle\Entity\Product
+     * @var \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface
      */
     private $parent;
 
@@ -526,7 +526,7 @@ abstract class Product implements ProductInterface
     /**
      * Get parent
      *
-     * @return \Sulu\Bundle\Product\BaseBundle\Entity\Product 
+     * @return \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface
      */
     public function getParent()
     {

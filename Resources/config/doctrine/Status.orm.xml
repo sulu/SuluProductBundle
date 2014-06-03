@@ -6,7 +6,7 @@
         <id name="id" type="integer" column="id">
             <generator strategy="AUTO"/>
         </id>
-        <one-to-many field="products" target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Product"
+        <one-to-many field="products" target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface"
                      mapped-by="status"/>
         <one-to-many field="translations"
                      target-entity="Sulu\Bundle\Product\BaseBundle\Entity\StatusTranslation"

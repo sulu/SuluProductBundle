@@ -93,10 +93,10 @@ class Template
     /**
      * Add products
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $products
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $products
      * @return Template
      */
-    public function addProduct(\Sulu\Bundle\Product\BaseBundle\Entity\Product $products)
+    public function addProduct(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $products)
     {
         $this->products[] = $products;
     
@@ -106,9 +106,9 @@ class Template
     /**
      * Remove products
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $products
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $products
      */
-    public function removeProduct(\Sulu\Bundle\Product\BaseBundle\Entity\Product $products)
+    public function removeProduct(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $products)
     {
         $this->products->removeElement($products);
     }

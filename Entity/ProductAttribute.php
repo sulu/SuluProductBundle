@@ -73,10 +73,10 @@ class ProductAttribute
     /**
      * Set product
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $product
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $product
      * @return ProductAttribute
      */
-    public function setProduct(\Sulu\Bundle\Product\BaseBundle\Entity\Product $product)
+    public function setProduct(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $product)
     {
         $this->product = $product;
     
@@ -86,7 +86,7 @@ class ProductAttribute
     /**
      * Get product
      *
-     * @return \Sulu\Bundle\Product\BaseBundle\Entity\Product 
+     * @return \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface
      */
     public function getProduct()
     {

@@ -12,7 +12,7 @@
         <one-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\SetTranslation"
                      mapped-by="set" field="translations"/>
 
-        <many-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Product" field="products">
+        <many-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface" field="products">
             <join-table name="pr_set_products">
                 <join-columns>
                     <join-column name="idProducts" referenced-column-name="id" nullable="false"/>

@@ -54,10 +54,10 @@ class Type
     /**
      * Add products
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $products
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $products
      * @return Type
      */
-    public function addProduct(\Sulu\Bundle\Product\BaseBundle\Entity\Product $products)
+    public function addProduct(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $products)
     {
         $this->products[] = $products;
     
@@ -67,9 +67,9 @@ class Type
     /**
      * Remove products
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $products
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $products
      */
-    public function removeProduct(\Sulu\Bundle\Product\BaseBundle\Entity\Product $products)
+    public function removeProduct(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $products)
     {
         $this->products->removeElement($products);
     }

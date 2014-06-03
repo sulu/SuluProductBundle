@@ -8,7 +8,7 @@
 
         <one-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\TemplateTranslation" mapped-by="template"
                      field="translations"/>
-        <one-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Product" mapped-by="template"
+        <one-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface" mapped-by="template"
                      field="products"/>
 
         <many-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Attribute" field="attributes">

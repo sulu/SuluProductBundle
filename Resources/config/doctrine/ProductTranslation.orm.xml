@@ -11,7 +11,7 @@
         <field name="shortDescription" type="text" nullable="true"/>
         <field name="longDescription" type="text" nullable="true"/>
 
-        <many-to-one target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Product" field="product"
+        <many-to-one target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface" field="product"
                      inversed-by="translations">
             <join-column name="idProducts" referenced-column-name="id" nullable="false" on-delete="CASCADE"/>
         </many-to-one>
