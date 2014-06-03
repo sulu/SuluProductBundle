@@ -23,7 +23,7 @@ abstract class Product implements ProductInterface
      * @var integer
      */
     private $id;
-    
+
     /**
      * @var string
      */

@@ -2,7 +2,7 @@
 <doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
-    <mapped-superclass name="Sulu\Bundle\Product\BaseBundle\Entity\Product" table="ap_products">
+    <mapped-superclass name="Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface" table="ap_products">
         <id name="id" type="integer" column="id">
             <generator strategy="AUTO"/>
         </id>
@@ -37,13 +37,13 @@
         <many-to-one target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Status" field="status" inversed-by="products">
             <join-column name="idStatus" referenced-column-name="id"/>
         </many-to-one>
-        <many-to-one target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Product" field="parent" inversed-by="children">
+        <many-to-one target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface" field="parent" inversed-by="children">
             <join-column name="idParent" referenced-column-name="id"/>
         </many-to-one>
 
         <!-- Missing one to many associations -->
         <!--
-        <one-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Product" mapped-by="parent"
+        <one-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface" mapped-by="parent"
                      field="children"/>
         <one-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductAttribute" mapped-by="product"
                      field="attributes"/>
@@ -55,7 +55,7 @@
 
         <many-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Set" field="sets" inversed-by="products"/>
         
-        <many-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Product" field="relations">
+        <many-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface" field="relations">
             <join-table name="pr_relations">
                 <join-columns>
                     <join-column name="idProducts" referenced-column-name="id" nullable="false"/>
@@ -65,7 +65,7 @@
                 </inverse-join-columns>
             </join-table>
         </many-to-many>
-        <many-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Product" field="upsells">
+        <many-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface" field="upsells">
             <join-table name="pr_upsells">
                 <join-columns>
                     <join-column name="idProducts" referenced-column-name="id" nullable="false"/>
@@ -75,7 +75,7 @@
                 </inverse-join-columns>
             </join-table>
         </many-to-many>
-        <many-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Product" field="crosssells">
+        <many-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface" field="crosssells">
             <join-table name="pr_crosssells">
                 <join-columns>
                     <join-column name="idProducts" referenced-column-name="id" nullable="false"/>
