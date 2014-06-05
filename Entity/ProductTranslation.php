@@ -8,7 +8,7 @@
  * with this source code in the file LICENSE.
  */
 
-namespace Sulu\Bundle\Product\BaseBundle\Entity;
+namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -43,7 +43,7 @@ class ProductTranslation
     private $id;
 
     /**
-     * @var \Sulu\Bundle\Product\BaseBundle\Entity\Product
+     * @var \Sulu\Bundle\ProductBundle\Entity\ProductInterface
      */
     private $product;
 
@@ -152,10 +152,10 @@ class ProductTranslation
     /**
      * Set product
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $product
+     * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $product
      * @return ProductTranslation
      */
-    public function setProduct(\Sulu\Bundle\Product\BaseBundle\Entity\Product $product)
+    public function setProduct(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $product)
     {
         $this->product = $product;
     
@@ -165,7 +165,7 @@ class ProductTranslation
     /**
      * Get product
      *
-     * @return \Sulu\Bundle\Product\BaseBundle\Entity\Product 
+     * @return \Sulu\Bundle\ProductBundle\Entity\ProductInterface
      */
     public function getProduct()
     {

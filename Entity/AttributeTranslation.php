@@ -8,7 +8,7 @@
  * with this source code in the file LICENSE.
  */
 
-namespace Sulu\Bundle\Product\BaseBundle\Entity;
+namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -33,7 +33,7 @@ class AttributeTranslation
     private $id;
 
     /**
-     * @var \Sulu\Bundle\Product\BaseBundle\Entity\Attribute
+     * @var \Sulu\Bundle\ProductBundle\Entity\Attribute
      */
     private $attribute;
 
@@ -96,10 +96,10 @@ class AttributeTranslation
     /**
      * Set attribute
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Attribute $attribute
+     * @param \Sulu\Bundle\ProductBundle\Entity\Attribute $attribute
      * @return AttributeTranslation
      */
-    public function setAttribute(\Sulu\Bundle\Product\BaseBundle\Entity\Attribute $attribute)
+    public function setAttribute(\Sulu\Bundle\ProductBundle\Entity\Attribute $attribute)
     {
         $this->attribute = $attribute;
     
@@ -109,7 +109,7 @@ class AttributeTranslation
     /**
      * Get attribute
      *
-     * @return \Sulu\Bundle\Product\BaseBundle\Entity\Attribute 
+     * @return \Sulu\Bundle\ProductBundle\Entity\Attribute
      */
     public function getAttribute()
     {

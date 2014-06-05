@@ -8,14 +8,14 @@
  * with this source code in the file LICENSE.
  */
 
-namespace Sulu\Bundle\Product\BaseBundle\Entity;
+namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
 /**
  * Template
  */
-class Template
+class AttributeSet
 {
     /**
      * @var integer
@@ -60,10 +60,10 @@ class Template
     /**
      * Add translations
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\TemplateTranslation $translations
-     * @return Template
+     * @param \Sulu\Bundle\ProductBundle\Entity\AttributeSetTranslation $translations
+     * @return AttributeSet
      */
-    public function addTranslation(\Sulu\Bundle\Product\BaseBundle\Entity\TemplateTranslation $translations)
+    public function addTranslation(\Sulu\Bundle\ProductBundle\Entity\AttributeSetTranslation $translations)
     {
         $this->translations[] = $translations;
     
@@ -73,9 +73,9 @@ class Template
     /**
      * Remove translations
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\TemplateTranslation $translations
+     * @param \Sulu\Bundle\ProductBundle\Entity\AttributeSetTranslation $translations
      */
-    public function removeTranslation(\Sulu\Bundle\Product\BaseBundle\Entity\TemplateTranslation $translations)
+    public function removeTranslation(\Sulu\Bundle\ProductBundle\Entity\AttributeSetTranslation $translations)
     {
         $this->translations->removeElement($translations);
     }
@@ -93,10 +93,10 @@ class Template
     /**
      * Add products
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $products
-     * @return Template
+     * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $products
+     * @return AttributeSet
      */
-    public function addProduct(\Sulu\Bundle\Product\BaseBundle\Entity\Product $products)
+    public function addProduct(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $products)
     {
         $this->products[] = $products;
     
@@ -106,9 +106,9 @@ class Template
     /**
      * Remove products
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $products
+     * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $products
      */
-    public function removeProduct(\Sulu\Bundle\Product\BaseBundle\Entity\Product $products)
+    public function removeProduct(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $products)
     {
         $this->products->removeElement($products);
     }
@@ -126,10 +126,10 @@ class Template
     /**
      * Add attributes
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Attribute $attributes
-     * @return Template
+     * @param \Sulu\Bundle\ProductBundle\Entity\Attribute $attributes
+     * @return AttributeSet
      */
-    public function addAttribute(\Sulu\Bundle\Product\BaseBundle\Entity\Attribute $attributes)
+    public function addAttribute(\Sulu\Bundle\ProductBundle\Entity\Attribute $attributes)
     {
         $this->attributes[] = $attributes;
     
@@ -139,9 +139,9 @@ class Template
     /**
      * Remove attributes
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Attribute $attributes
+     * @param \Sulu\Bundle\ProductBundle\Entity\Attribute $attributes
      */
-    public function removeAttribute(\Sulu\Bundle\Product\BaseBundle\Entity\Attribute $attributes)
+    public function removeAttribute(\Sulu\Bundle\ProductBundle\Entity\Attribute $attributes)
     {
         $this->attributes->removeElement($attributes);
     }

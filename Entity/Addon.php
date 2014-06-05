@@ -1,26 +1,18 @@
 <?php
-/*
- * This file is part of the Sulu CMS.
- *
- * (c) MASSIVE ART WebServices GmbH
- *
- * This source file is subject to the MIT license that is bundled
- * with this source code in the file LICENSE.
- */
 
 namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * ProductAttribute
+ * Addon
  */
-class ProductAttribute
+class Addon
 {
     /**
      * @var string
      */
-    private $value;
+    private $price;
 
     /**
      * @var integer
@@ -28,36 +20,37 @@ class ProductAttribute
     private $id;
 
     /**
-     * @var \Sulu\Bundle\ProductBundle\Entity\BaseProduct
+     * @var \Sulu\Bundle\ProductBundle\Entity\ProductInterface
      */
     private $product;
 
     /**
-     * @var \Sulu\Bundle\ProductBundle\Entity\Attribute
+     * @var \Sulu\Bundle\ProductBundle\Entity\ProductInterface
      */
-    private $attribute;
+    private $addon;
+
 
     /**
-     * Set value
+     * Set price
      *
-     * @param string $value
-     * @return ProductAttribute
+     * @param string $price
+     * @return Addon
      */
-    public function setValue($value)
+    public function setPrice($price)
     {
-        $this->value = $value;
+        $this->price = $price;
     
         return $this;
     }
 
     /**
-     * Get value
+     * Get price
      *
      * @return string 
      */
-    public function getValue()
+    public function getPrice()
     {
-        return $this->value;
+        return $this->price;
     }
 
     /**
@@ -74,7 +67,7 @@ class ProductAttribute
      * Set product
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $product
-     * @return ProductAttribute
+     * @return Addon
      */
     public function setProduct(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $product)
     {
@@ -94,25 +87,25 @@ class ProductAttribute
     }
 
     /**
-     * Set attribute
+     * Set addon
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\Attribute $attribute
-     * @return ProductAttribute
+     * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $addon
+     * @return Addon
      */
-    public function setAttribute(\Sulu\Bundle\ProductBundle\Entity\Attribute $attribute)
+    public function setAddon(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $addon)
     {
-        $this->attribute = $attribute;
+        $this->addon = $addon;
     
         return $this;
     }
 
     /**
-     * Get attribute
+     * Get addon
      *
-     * @return \Sulu\Bundle\ProductBundle\Entity\Attribute
+     * @return \Sulu\Bundle\ProductBundle\Entity\ProductInterface
      */
-    public function getAttribute()
+    public function getAddon()
     {
-        return $this->attribute;
+        return $this->addon;
     }
 }

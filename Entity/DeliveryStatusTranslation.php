@@ -1,21 +1,13 @@
 <?php
-/*
- * This file is part of the Sulu CMS.
- *
- * (c) MASSIVE ART WebServices GmbH
- *
- * This source file is subject to the MIT license that is bundled
- * with this source code in the file LICENSE.
- */
 
-namespace Sulu\Bundle\Product\BaseBundle\Entity;
+namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * TemplateTranslation
+ * DeliveryStatusTranslation
  */
-class TemplateTranslation
+class DeliveryStatusTranslation
 {
     /**
      * @var string
@@ -33,15 +25,16 @@ class TemplateTranslation
     private $id;
 
     /**
-     * @var \Sulu\Bundle\Product\BaseBundle\Entity\Template
+     * @var \Sulu\Bundle\ProductBundle\Entity\DeliveryStatus
      */
-    private $template;
+    private $deliveryStatus;
+
 
     /**
      * Set languageCode
      *
      * @param string $languageCode
-     * @return TemplateTranslation
+     * @return DeliveryStatusTranslation
      */
     public function setLanguageCode($languageCode)
     {
@@ -64,7 +57,7 @@ class TemplateTranslation
      * Set name
      *
      * @param string $name
-     * @return TemplateTranslation
+     * @return DeliveryStatusTranslation
      */
     public function setName($name)
     {
@@ -94,25 +87,25 @@ class TemplateTranslation
     }
 
     /**
-     * Set template
+     * Set deliveryStatus
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Template $template
-     * @return TemplateTranslation
+     * @param \Sulu\Bundle\ProductBundle\Entity\DeliveryStatus $deliveryStatus
+     * @return DeliveryStatusTranslation
      */
-    public function setTemplate(\Sulu\Bundle\Product\BaseBundle\Entity\Template $template)
+    public function setDeliveryStatus(\Sulu\Bundle\ProductBundle\Entity\DeliveryStatus $deliveryStatus)
     {
-        $this->template = $template;
+        $this->deliveryStatus = $deliveryStatus;
     
         return $this;
     }
 
     /**
-     * Get template
+     * Get deliveryStatus
      *
-     * @return \Sulu\Bundle\Product\BaseBundle\Entity\Template 
+     * @return \Sulu\Bundle\ProductBundle\Entity\DeliveryStatus
      */
-    public function getTemplate()
+    public function getDeliveryStatus()
     {
-        return $this->template;
+        return $this->deliveryStatus;
     }
 }

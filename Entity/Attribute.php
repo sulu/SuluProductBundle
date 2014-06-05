@@ -8,7 +8,7 @@
  * with this source code in the file LICENSE.
  */
 
-namespace Sulu\Bundle\Product\BaseBundle\Entity;
+namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -176,10 +176,10 @@ class Attribute
     /**
      * Add translations
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\AttributeTranslation $translations
+     * @param \Sulu\Bundle\ProductBundle\Entity\AttributeTranslation $translations
      * @return Attribute
      */
-    public function addTranslation(\Sulu\Bundle\Product\BaseBundle\Entity\AttributeTranslation $translations)
+    public function addTranslation(\Sulu\Bundle\ProductBundle\Entity\AttributeTranslation $translations)
     {
         $this->translations[] = $translations;
     
@@ -189,9 +189,9 @@ class Attribute
     /**
      * Remove translations
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\AttributeTranslation $translations
+     * @param \Sulu\Bundle\ProductBundle\Entity\AttributeTranslation $translations
      */
-    public function removeTranslation(\Sulu\Bundle\Product\BaseBundle\Entity\AttributeTranslation $translations)
+    public function removeTranslation(\Sulu\Bundle\ProductBundle\Entity\AttributeTranslation $translations)
     {
         $this->translations->removeElement($translations);
     }
@@ -209,10 +209,10 @@ class Attribute
     /**
      * Add productAttributes
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductAttribute $productAttributes
+     * @param \Sulu\Bundle\ProductBundle\Entity\ProductAttribute $productAttributes
      * @return Attribute
      */
-    public function addProductAttribute(\Sulu\Bundle\Product\BaseBundle\Entity\ProductAttribute $productAttributes)
+    public function addProductAttribute(\Sulu\Bundle\ProductBundle\Entity\ProductAttribute $productAttributes)
     {
         $this->productAttributes[] = $productAttributes;
     
@@ -222,9 +222,9 @@ class Attribute
     /**
      * Remove productAttributes
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductAttribute $productAttributes
+     * @param \Sulu\Bundle\ProductBundle\Entity\ProductAttribute $productAttributes
      */
-    public function removeProductAttribute(\Sulu\Bundle\Product\BaseBundle\Entity\ProductAttribute $productAttributes)
+    public function removeProductAttribute(\Sulu\Bundle\ProductBundle\Entity\ProductAttribute $productAttributes)
     {
         $this->productAttributes->removeElement($productAttributes);
     }

@@ -8,10 +8,10 @@
  * with this source code in the file LICENSE.
  */
 
-namespace Sulu\Bundle\Product\BaseBundle;
+namespace Sulu\Bundle\ProductBundle;
 
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
-class SuluProductBaseBundle extends Bundle
+class SuluProductBundle extends Bundle
 {
 }

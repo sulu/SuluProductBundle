@@ -1,27 +1,14 @@
 <?php
-/*
- * This file is part of the Sulu CMS.
- *
- * (c) MASSIVE ART WebServices GmbH
- *
- * This source file is subject to the MIT license that is bundled
- * with this source code in the file LICENSE.
- */
 
-namespace Sulu\Bundle\Product\BaseBundle\Entity;
+namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Set
+ * DeliveryStatus
  */
-class Set
+class DeliveryStatus
 {
-    /**
-     * @var string
-     */
-    private $discount;
-
     /**
      * @var integer
      */
@@ -47,29 +34,6 @@ class Set
     }
     
     /**
-     * Set discount
-     *
-     * @param string $discount
-     * @return Set
-     */
-    public function setDiscount($discount)
-    {
-        $this->discount = $discount;
-    
-        return $this;
-    }
-
-    /**
-     * Get discount
-     *
-     * @return string 
-     */
-    public function getDiscount()
-    {
-        return $this->discount;
-    }
-
-    /**
      * Get id
      *
      * @return integer 
@@ -82,10 +46,10 @@ class Set
     /**
      * Add translations
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\SetTranslation $translations
-     * @return Set
+     * @param \Sulu\Bundle\ProductBundle\Entity\DeliveryStatusTranslation $translations
+     * @return DeliveryStatus
      */
-    public function addTranslation(\Sulu\Bundle\Product\BaseBundle\Entity\SetTranslation $translations)
+    public function addTranslation(\Sulu\Bundle\ProductBundle\Entity\DeliveryStatusTranslation $translations)
     {
         $this->translations[] = $translations;
     
@@ -95,9 +59,9 @@ class Set
     /**
      * Remove translations
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\SetTranslation $translations
+     * @param \Sulu\Bundle\ProductBundle\Entity\DeliveryStatusTranslation $translations
      */
-    public function removeTranslation(\Sulu\Bundle\Product\BaseBundle\Entity\SetTranslation $translations)
+    public function removeTranslation(\Sulu\Bundle\ProductBundle\Entity\DeliveryStatusTranslation $translations)
     {
         $this->translations->removeElement($translations);
     }
@@ -115,10 +79,10 @@ class Set
     /**
      * Add products
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $products
-     * @return Set
+     * @param \Sulu\Bundle\ProductBundle\Entity\Product $products
+     * @return DeliveryStatus
      */
-    public function addProduct(\Sulu\Bundle\Product\BaseBundle\Entity\Product $products)
+    public function addProduct(\Sulu\Bundle\ProductBundle\Entity\Product $products)
     {
         $this->products[] = $products;
     
@@ -128,9 +92,9 @@ class Set
     /**
      * Remove products
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $products
+     * @param \Sulu\Bundle\ProductBundle\Entity\Product $products
      */
-    public function removeProduct(\Sulu\Bundle\Product\BaseBundle\Entity\Product $products)
+    public function removeProduct(\Sulu\Bundle\ProductBundle\Entity\Product $products)
     {
         $this->products->removeElement($products);
     }

@@ -1,6 +1,6 @@
 <?php
 
-namespace Sulu\Bundle\Product\BaseBundle\Controller;
+namespace Sulu\Bundle\ProductBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 

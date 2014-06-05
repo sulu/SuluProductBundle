@@ -8,7 +8,7 @@
  * with this source code in the file LICENSE.
  */
 
-namespace Sulu\Bundle\Product\BaseBundle\Entity;
+namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -33,7 +33,7 @@ class TypeTranslation
     private $id;
 
     /**
-     * @var \Sulu\Bundle\Product\BaseBundle\Entity\Type
+     * @var \Sulu\Bundle\ProductBundle\Entity\Type
      */
     private $type;
 
@@ -96,10 +96,10 @@ class TypeTranslation
     /**
      * Set type
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Type $type
+     * @param \Sulu\Bundle\ProductBundle\Entity\Type $type
      * @return TypeTranslation
      */
-    public function setType(\Sulu\Bundle\Product\BaseBundle\Entity\Type $type)
+    public function setType(\Sulu\Bundle\ProductBundle\Entity\Type $type)
     {
         $this->type = $type;
     
@@ -109,7 +109,7 @@ class TypeTranslation
     /**
      * Get type
      *
-     * @return \Sulu\Bundle\Product\BaseBundle\Entity\Type 
+     * @return \Sulu\Bundle\ProductBundle\Entity\Type
      */
     public function getType()
     {
