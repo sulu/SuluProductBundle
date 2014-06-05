@@ -13,7 +13,7 @@ class TemplateController extends Controller
      */
     public function productListAction()
     {
-        return $this->render('SuluProductBaseBundle:Template:product.list.html.twig');
+        return $this->render('SuluProductBundle:Template:product.list.html.twig');
     }
 
     /**
@@ -22,6 +22,6 @@ class TemplateController extends Controller
      */
     public function productImportAction()
     {
-        return $this->render('SuluProductBaseBundle:Template:product.import.html.twig');
+        return $this->render('SuluProductBundle:Template:product.import.html.twig');
     }
 }

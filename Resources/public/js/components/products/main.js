@@ -29,7 +29,7 @@ define(function() {
             var $list = this.sandbox.dom.createElement('<div id="products-list-container"/>');
             this.html($list);
             this.sandbox.start([
-                {name: 'products/components/list@suluproductbase', options: { el: $list}}
+                {name: 'products/components/list@suluproduct', options: { el: $list}}
             ]);
         },
 
@@ -40,7 +40,7 @@ define(function() {
             var $container = this.sandbox.dom.createElement('<div id="products-import"/>');
             this.html($container);
             this.sandbox.start([
-                {name: 'products/components/import@suluproductbase', options: { el: $container}}
+                {name: 'products/components/import@suluproduct', options: { el: $container}}
             ]);
         },
 

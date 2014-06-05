@@ -47,6 +47,6 @@ class SuluProductAdmin extends Admin
      */
     public function getJsBundleName()
     {
-        return 'suluproductbase';
+        return 'suluproduct';
     }
 }

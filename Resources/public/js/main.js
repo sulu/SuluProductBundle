@@ -9,13 +9,13 @@
 
 require.config({
     paths: {
-        suluproductbase: '../suluproductbase/js'
+        suluproduct: '../suluproduct/js'
     }
 });
 
 define({
 
-    name: "SuluProductBaseBundle",
+    name: "SuluProductBundle",
 
     initialize: function(app) {
 
@@ -23,20 +23,20 @@ define({
 
         var sandbox = app.sandbox;
 
-        app.components.addSource('suluproductbase', '/bundles/suluproductbase/js/components');
+        app.components.addSource('suluproduct', '/bundles/suluproduct/js/components');
 
         //flat list of products
         sandbox.mvc.routes.push({
             route: 'pim/products',
             callback: function() {
-                this.html('<div data-aura-component="products@suluproductbase" data-aura-display="list"/>');
+                this.html('<div data-aura-component="products@suluproduct" data-aura-display="list"/>');
             }
         });
 
         sandbox.mvc.routes.push({
             route: 'pim/products/import',
             callback: function() {
-                this.html('<div data-aura-component="products@suluproductbase" data-aura-display="import"/>');
+                this.html('<div data-aura-component="products@suluproduct" data-aura-display="import"/>');
             }
         });
     }

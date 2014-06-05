@@ -1,5 +1,5 @@
 {
-    "name": "suluproductbase",
+    "name": "suluproduct",
     "version": "0.1.0",
     "devDependencies": {
         "grunt": "0.4.*",

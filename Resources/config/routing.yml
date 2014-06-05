@@ -1,11 +1,11 @@
-sulu_product_base:
-    resource: "@SuluProductBaseBundle/Resources/config/routing_api.yml"
+sulu_product:
+    resource: "@SuluProductBundle/Resources/config/routing_api.yml"
     prefix: /api
 
 product_list:
     pattern: /template/product/list.html
-    defaults: { _controller: SuluProductBaseBundle:Template:productList }
+    defaults: { _controller: SuluProductBundle:Template:productList }
 
 product_import:
     pattern: /template/product/import.html
-    defaults: { _controller: SuluProductBaseBundle:Template:productImport }
+    defaults: { _controller: SuluProductBundle:Template:productImport }
