@@ -12,8 +12,8 @@
         <many-to-one target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface" field="product" inversed-by="addons">
             <join-column name="idProducts" referenced-column-name="id" nullable="false"/>
         </many-to-one>
-        <many-to-one target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface" field="extra">
-            <join-column name="idProductsExtra" referenced-column-name="id" nullable="false"/>
+        <many-to-one target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface" field="addon">
+            <join-column name="idProductsAddon" referenced-column-name="id" nullable="false"/>
         </many-to-one>
     </entity>
 </doctrine-mapping>

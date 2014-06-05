@@ -30,7 +30,7 @@ interface ProductInterface
      * Set code
      *
      * @param string $code
-     * @return Product
+     * @return BaseProduct
      */
     public function setCode($code);
 
@@ -45,7 +45,7 @@ interface ProductInterface
      * Set number
      *
      * @param string $number
-     * @return Product
+     * @return BaseProduct
      */
     public function setNumber($number);
 
@@ -60,7 +60,7 @@ interface ProductInterface
      * Set manufacturer
      *
      * @param string $manufacturer
-     * @return Product
+     * @return BaseProduct
      */
     public function setManufacturer($manufacturer);
 
@@ -75,7 +75,7 @@ interface ProductInterface
      * Set created
      *
      * @param \DateTime $created
-     * @return Product
+     * @return BaseProduct
      */
     public function setCreated($created);
 
@@ -90,7 +90,7 @@ interface ProductInterface
      * Set changed
      *
      * @param \DateTime $changed
-     * @return Product
+     * @return BaseProduct
      */
     public function setChanged($changed);
 
@@ -105,7 +105,7 @@ interface ProductInterface
      * Set manufacturerCountry
      *
      * @param Country $manufacturerCountry
-     * @return Product
+     * @return BaseProduct
      */
     public function setManufacturerCountry(Country $manufacturerCountry = null);
 
@@ -120,7 +120,7 @@ interface ProductInterface
      * Set type
      *
      * @param Type $type
-     * @return Product
+     * @return BaseProduct
      */
     public function setType(Type $type);
 
@@ -135,7 +135,7 @@ interface ProductInterface
      * Set template
      *
      * @param AttributeSet $template
-     * @return Product
+     * @return BaseProduct
      */
     public function setAttributeSet(AttributeSet $template);
 
@@ -150,7 +150,7 @@ interface ProductInterface
      * Set status
      *
      * @param Status $status
-     * @return Product
+     * @return BaseProduct
      */
     public function setStatus(Status $status = null);
 
@@ -165,7 +165,7 @@ interface ProductInterface
      * Add relations
      *
      * @param ProductInterface $relations
-     * @return Product
+     * @return BaseProduct
      */
     public function addRelation(ProductInterface $relations);
 
@@ -187,7 +187,7 @@ interface ProductInterface
      * Add upsells
      *
      * @param ProductInterface $upsells
-     * @return Product
+     * @return BaseProduct
      */
     public function addUpsell(ProductInterface $upsells);
 
@@ -364,7 +364,7 @@ interface ProductInterface
      * Add setProducts
      *
      * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $setProducts
-     * @return Product
+     * @return BaseProduct
      */
     public function addSetProduct(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $setProducts);
 

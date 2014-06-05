@@ -1,535 +1,252 @@
 <?php
-/*
- * This file is part of the Sulu CMS.
- *
- * (c) MASSIVE ART WebServices GmbH
- *
- * This source file is subject to the MIT license that is bundled
- * with this source code in the file LICENSE.
- */
 
 namespace Sulu\Bundle\Product\BaseBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
-use Sulu\Bundle\ContactBundle\Entity\Country;
-use Sulu\Bundle\SecurityBundle\Entity\User;
 
 /**
  * Product
  */
-abstract class Product implements ProductInterface
+class Product extends BaseProduct
 {
     /**
-     * @var integer
+     * @var \Doctrine\Common\Collections\Collection
      */
-    private $id;
-
-    /**
-     * @var string
-     */
-    private $code;
-
-    /**
-     * @var string
-     */
-    private $number;
-
-    /**
-     * @var string
-     */
-    private $manufacturer;
-
-    /**
-     * @var \DateTime
-     */
-    private $created;
-
-    /**
-     * @var \DateTime
-     */
-    private $changed;
-
-    /**
-     * @var Country
-     */
-    private $manufacturerCountry;
-
-    /**
-     * @var Type
-     */
-    private $type;
-
-    /**
-     * @var AttributeSet
-     */
-    private $attributeSet;
-
-    /**
-     * @var Status
-     */
-    private $status;
+    private $productAttributes;
 
     /**
      * @var \Doctrine\Common\Collections\Collection
      */
-    private $relations;
+    private $translations;
 
     /**
      * @var \Doctrine\Common\Collections\Collection
      */
-    private $upsells;
+    private $addons;
 
     /**
      * @var \Doctrine\Common\Collections\Collection
      */
-    private $crosssells;
-
-    /**
-     * @var User
-     */
-    private $changer;
-
-    /**
-     * @var User
-     */
-    private $creator;
-
-    /**
-     * @var \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface
-     */
-    private $parent;
+    private $prices;
 
     /**
      * @var \Doctrine\Common\Collections\Collection
      */
-    private $sets;
+    private $children;
+
+    /**
+     * @var \Doctrine\Common\Collections\Collection
+     */
+    private $setProducts;
 
     /**
      * Constructor
      */
     public function __construct()
     {
-        $this->sets = new \Doctrine\Common\Collections\ArrayCollection();
-        $this->relations = new \Doctrine\Common\Collections\ArrayCollection();
-        $this->upsells = new \Doctrine\Common\Collections\ArrayCollection();
-        $this->crosssells = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->productAttributes = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->translations = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->addons = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->prices = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->children = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->setProducts = new \Doctrine\Common\Collections\ArrayCollection();
     }
     
     /**
-     * Set code
+     * Add productAttributes
      *
-     * @param string $code
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterfaceAttribute $productAttributes
      * @return Product
      */
-    public function setCode($code)
+    public function addProductAttribute(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterfaceAttribute $productAttributes)
     {
-        $this->code = $code;
+        $this->productAttributes[] = $productAttributes;
     
         return $this;
     }
 
     /**
-     * Get code
+     * Remove productAttributes
      *
-     * @return string 
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterfaceAttribute $productAttributes
      */
-    public function getCode()
+    public function removeProductAttribute(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterfaceAttribute $productAttributes)
     {
-        return $this->code;
+        $this->productAttributes->removeElement($productAttributes);
     }
 
     /**
-     * Set number
-     *
-     * @param string $number
-     * @return Product
-     */
-    public function setNumber($number)
-    {
-        $this->number = $number;
-    
-        return $this;
-    }
-
-    /**
-     * Get number
-     *
-     * @return string 
-     */
-    public function getNumber()
-    {
-        return $this->number;
-    }
-
-    /**
-     * Set manufacturer
-     *
-     * @param string $manufacturer
-     * @return Product
-     */
-    public function setManufacturer($manufacturer)
-    {
-        $this->manufacturer = $manufacturer;
-    
-        return $this;
-    }
-
-    /**
-     * Get manufacturer
-     *
-     * @return string 
-     */
-    public function getManufacturer()
-    {
-        return $this->manufacturer;
-    }
-
-    /**
-     * Set created
-     *
-     * @param \DateTime $created
-     * @return Product
-     */
-    public function setCreated($created)
-    {
-        $this->created = $created;
-    
-        return $this;
-    }
-
-    /**
-     * Get created
-     *
-     * @return \DateTime 
-     */
-    public function getCreated()
-    {
-        return $this->created;
-    }
-
-    /**
-     * Set changed
-     *
-     * @param \DateTime $changed
-     * @return Product
-     */
-    public function setChanged($changed)
-    {
-        $this->changed = $changed;
-    
-        return $this;
-    }
-
-    /**
-     * Get changed
-     *
-     * @return \DateTime 
-     */
-    public function getChanged()
-    {
-        return $this->changed;
-    }
-
-    /**
-     * Get id
-     *
-     * @return integer 
-     */
-    public function getId()
-    {
-        return $this->id;
-    }
-
-    /**
-     * Set manufacturerCountry
-     *
-     * @param Country $manufacturerCountry
-     * @return Product
-     */
-    public function setManufacturerCountry(Country $manufacturerCountry = null)
-    {
-        $this->manufacturerCountry = $manufacturerCountry;
-    
-        return $this;
-    }
-
-    /**
-     * Get manufacturerCountry
-     *
-     * @return Country
-     */
-    public function getManufacturerCountry()
-    {
-        return $this->manufacturerCountry;
-    }
-
-    /**
-     * Set type
-     *
-     * @param Type $type
-     * @return Product
-     */
-    public function setType(Type $type)
-    {
-        $this->type = $type;
-    
-        return $this;
-    }
-
-    /**
-     * Get type
-     *
-     * @return Type
-     */
-    public function getType()
-    {
-        return $this->type;
-    }
-
-    /**
-     * Set template
-     *
-     * @param AttributeSet $template
-     * @return Product
-     */
-    public function setAttributeSet(AttributeSet $template)
-    {
-        $this->attributeSet = $template;
-    
-        return $this;
-    }
-
-    /**
-     * Get template
-     *
-     * @return AttributeSet
-     */
-    public function getAttributeSet()
-    {
-        return $this->attributeSet;
-    }
-
-    /**
-     * Set status
-     *
-     * @param Status $status
-     * @return Product
-     */
-    public function setStatus(Status $status = null)
-    {
-        $this->status = $status;
-    
-        return $this;
-    }
-
-    /**
-     * Get status
-     *
-     * @return Status
-     */
-    public function getStatus()
-    {
-        return $this->status;
-    }
-
-    /**
-     * Add relations
-     *
-     * @param ProductInterface $relations
-     * @return Product
-     */
-    public function addRelation(ProductInterface $relations)
-    {
-        $this->relations[] = $relations;
-    
-        return $this;
-    }
-
-    /**
-     * Remove relations
-     *
-     * @param ProductInterface $relations
-     */
-    public function removeRelation(ProductInterface $relations)
-    {
-        $this->relations->removeElement($relations);
-    }
-
-    /**
-     * Get relations
+     * Get productAttributes
      *
      * @return \Doctrine\Common\Collections\Collection 
      */
-    public function getRelations()
+    public function getProductAttributes()
     {
-        return $this->relations;
+        return $this->productAttributes;
     }
 
     /**
-     * Add upsells
+     * Add translations
      *
-     * @param ProductInterface $upsells
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterfaceTranslation $translations
      * @return Product
      */
-    public function addUpsell(ProductInterface $upsells)
+    public function addTranslation(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterfaceTranslation $translations)
     {
-        $this->upsells[] = $upsells;
+        $this->translations[] = $translations;
     
         return $this;
     }
 
     /**
-     * Remove upsells
+     * Remove translations
      *
-     * @param ProductInterface $upsells
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterfaceTranslation $translations
      */
-    public function removeUpsell(ProductInterface $upsells)
+    public function removeTranslation(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterfaceTranslation $translations)
     {
-        $this->upsells->removeElement($upsells);
+        $this->translations->removeElement($translations);
     }
 
     /**
-     * Get upsells
+     * Get translations
      *
      * @return \Doctrine\Common\Collections\Collection 
      */
-    public function getUpsells()
+    public function getTranslations()
     {
-        return $this->upsells;
+        return $this->translations;
     }
 
     /**
-     * Add crosssells
+     * Add addons
      *
-     * @param ProductInterface $crosssells
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Addon $addons
      * @return Product
      */
-    public function addCrosssell(ProductInterface $crosssells)
+    public function addAddon(\Sulu\Bundle\Product\BaseBundle\Entity\Addon $addons)
     {
-        $this->crosssells[] = $crosssells;
+        $this->addons[] = $addons;
     
         return $this;
     }
 
     /**
-     * Remove crosssells
+     * Remove addons
      *
-     * @param ProductInterface $crosssells
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Addon $addons
      */
-    public function removeCrosssell(ProductInterface $crosssells)
+    public function removeAddon(\Sulu\Bundle\Product\BaseBundle\Entity\Addon $addons)
     {
-        $this->crosssells->removeElement($crosssells);
+        $this->addons->removeElement($addons);
     }
 
     /**
-     * Get crosssells
+     * Get addons
      *
      * @return \Doctrine\Common\Collections\Collection 
      */
-    public function getCrosssells()
+    public function getAddons()
     {
-        return $this->crosssells;
+        return $this->addons;
     }
 
     /**
-     * Set changer
+     * Add prices
      *
-     * @param User $changer
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterfacePrice $prices
      * @return Product
      */
-    public function setChanger(User $changer = null)
+    public function addPrice(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterfacePrice $prices)
     {
-        $this->changer = $changer;
+        $this->prices[] = $prices;
     
         return $this;
     }
 
     /**
-     * Get changer
+     * Remove prices
      *
-     * @return User
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterfacePrice $prices
      */
-    public function getChanger()
+    public function removePrice(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterfacePrice $prices)
     {
-        return $this->changer;
+        $this->prices->removeElement($prices);
     }
 
     /**
-     * Set creator
-     *
-     * @param User $creator
-     * @return Product
-     */
-    public function setCreator(User $creator = null)
-    {
-        $this->creator = $creator;
-    
-        return $this;
-    }
-
-    /**
-     * Get creator
-     *
-     * @return User
-     */
-    public function getCreator()
-    {
-        return $this->creator;
-    }
-
-    /**
-     * Set parent
-     *
-     * @param ProductInterface $parent
-     * @return Product
-     */
-    public function setParent(ProductInterface $parent = null)
-    {
-        $this->parent = $parent;
-    
-        return $this;
-    }
-
-    /**
-     * Get parent
-     *
-     * @return \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface
-     */
-    public function getParent()
-    {
-        return $this->parent;
-    }
-
-    /**
-     * Add sets
-     *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $sets
-     * @return Product
-     */
-    public function addSet(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $sets)
-    {
-        $this->sets[] = $sets;
-    
-        return $this;
-    }
-
-    /**
-     * Remove sets
-     *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $sets
-     */
-    public function removeSet(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $sets)
-    {
-        $this->sets->removeElement($sets);
-    }
-
-    /**
-     * Get sets
+     * Get prices
      *
      * @return \Doctrine\Common\Collections\Collection 
      */
-    public function getSets()
+    public function getPrices()
     {
-        return $this->sets;
+        return $this->prices;
+    }
+
+    /**
+     * Add children
+     *
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $children
+     * @return Product
+     */
+    public function addChildren(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $children)
+    {
+        $this->children[] = $children;
+    
+        return $this;
+    }
+
+    /**
+     * Remove children
+     *
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $children
+     */
+    public function removeChildren(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $children)
+    {
+        $this->children->removeElement($children);
+    }
+
+    /**
+     * Get children
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getChildren()
+    {
+        return $this->children;
+    }
+
+    /**
+     * Add setProducts
+     *
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $setProducts
+     * @return Product
+     */
+    public function addSetProduct(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $setProducts)
+    {
+        $this->setProducts[] = $setProducts;
+    
+        return $this;
+    }
+
+    /**
+     * Remove setProducts
+     *
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $setProducts
+     */
+    public function removeSetProduct(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $setProducts)
+    {
+        $this->setProducts->removeElement($setProducts);
+    }
+
+    /**
+     * Get setProducts
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getSetProducts()
+    {
+        return $this->setProducts;
     }
 }

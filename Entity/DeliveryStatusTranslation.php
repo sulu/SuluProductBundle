@@ -1,21 +1,13 @@
 <?php
-/*
- * This file is part of the Sulu CMS.
- *
- * (c) MASSIVE ART WebServices GmbH
- *
- * This source file is subject to the MIT license that is bundled
- * with this source code in the file LICENSE.
- */
 
 namespace Sulu\Bundle\Product\BaseBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * TemplateTranslation
+ * DeliveryStatusTranslation
  */
-class AttributeSetTranslation
+class DeliveryStatusTranslation
 {
     /**
      * @var string
@@ -33,15 +25,16 @@ class AttributeSetTranslation
     private $id;
 
     /**
-     * @var \Sulu\Bundle\Product\BaseBundle\Entity\AttributeSet
+     * @var \Sulu\Bundle\Product\BaseBundle\Entity\DeliveryStatus
      */
-    private $attributeSet;
+    private $deliveryStatus;
+
 
     /**
      * Set languageCode
      *
      * @param string $languageCode
-     * @return AttributeSetTranslation
+     * @return DeliveryStatusTranslation
      */
     public function setLanguageCode($languageCode)
     {
@@ -64,7 +57,7 @@ class AttributeSetTranslation
      * Set name
      *
      * @param string $name
-     * @return AttributeSetTranslation
+     * @return DeliveryStatusTranslation
      */
     public function setName($name)
     {
@@ -94,25 +87,25 @@ class AttributeSetTranslation
     }
 
     /**
-     * Set template
+     * Set deliveryStatus
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\AttributeSet $template
-     * @return AttributeSetTranslation
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\DeliveryStatus $deliveryStatus
+     * @return DeliveryStatusTranslation
      */
-    public function setAttributeSet(\Sulu\Bundle\Product\BaseBundle\Entity\AttributeSet $template)
+    public function setDeliveryStatus(\Sulu\Bundle\Product\BaseBundle\Entity\DeliveryStatus $deliveryStatus)
     {
-        $this->attributeSet = $template;
+        $this->deliveryStatus = $deliveryStatus;
     
         return $this;
     }
 
     /**
-     * Get template
+     * Get deliveryStatus
      *
-     * @return \Sulu\Bundle\Product\BaseBundle\Entity\AttributeSet
+     * @return \Sulu\Bundle\Product\BaseBundle\Entity\DeliveryStatus 
      */
-    public function getAttributeSet()
+    public function getDeliveryStatus()
     {
-        return $this->attributeSet;
+        return $this->deliveryStatus;
     }
 }

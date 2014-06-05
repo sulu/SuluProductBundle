@@ -1,19 +1,11 @@
 <?php
-/*
- * This file is part of the Sulu CMS.
- *
- * (c) MASSIVE ART WebServices GmbH
- *
- * This source file is subject to the MIT license that is bundled
- * with this source code in the file LICENSE.
- */
 
 namespace Sulu\Bundle\Product\BaseBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Extra
+ * Addon
  */
 class Addon
 {
@@ -28,14 +20,15 @@ class Addon
     private $id;
 
     /**
-     * @var \Sulu\Bundle\Product\BaseBundle\Entity\Product
+     * @var \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface
      */
     private $product;
 
     /**
-     * @var \Sulu\Bundle\Product\BaseBundle\Entity\Product
+     * @var \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface
      */
-    private $extra;
+    private $addon;
+
 
     /**
      * Set price
@@ -94,25 +87,25 @@ class Addon
     }
 
     /**
-     * Set extra
+     * Set addon
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $extra
+     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $addon
      * @return Addon
      */
-    public function setExtra(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $extra)
+    public function setAddon(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $addon)
     {
-        $this->extra = $extra;
+        $this->addon = $addon;
     
         return $this;
     }
 
     /**
-     * Get extra
+     * Get addon
      *
      * @return \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface
      */
-    public function getExtra()
+    public function getAddon()
     {
-        return $this->extra;
+        return $this->addon;
     }
 }

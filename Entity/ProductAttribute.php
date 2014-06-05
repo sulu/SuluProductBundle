@@ -28,7 +28,7 @@ class ProductAttribute
     private $id;
 
     /**
-     * @var \Sulu\Bundle\Product\BaseBundle\Entity\Product
+     * @var \Sulu\Bundle\Product\BaseBundle\Entity\BaseProduct
      */
     private $product;
 
