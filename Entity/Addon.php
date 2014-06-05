@@ -15,7 +15,7 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * Extra
  */
-class Extra
+class Addon
 {
     /**
      * @var string
@@ -41,7 +41,7 @@ class Extra
      * Set price
      *
      * @param string $price
-     * @return Extra
+     * @return Addon
      */
     public function setPrice($price)
     {
@@ -74,7 +74,7 @@ class Extra
      * Set product
      *
      * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $product
-     * @return Extra
+     * @return Addon
      */
     public function setProduct(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $product)
     {
@@ -97,7 +97,7 @@ class Extra
      * Set extra
      *
      * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $extra
-     * @return Extra
+     * @return Addon
      */
     public function setExtra(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $extra)
     {

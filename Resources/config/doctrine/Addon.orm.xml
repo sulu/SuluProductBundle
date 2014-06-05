@@ -2,14 +2,14 @@
 <doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
-    <entity name="Sulu\Bundle\Product\BaseBundle\Entity\Extra" table="pr_extras">
+    <entity name="Sulu\Bundle\Product\BaseBundle\Entity\Addon" table="pr_addons">
         <id name="id" type="integer" column="id">
             <generator strategy="AUTO"/>
         </id>
         
         <field name="price" type="decimal" column="price" nullable="true"/>
         
-        <many-to-one target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface" field="product" inversed-by="extras">
+        <many-to-one target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface" field="product" inversed-by="addons">
             <join-column name="idProducts" referenced-column-name="id" nullable="false"/>
         </many-to-one>
         <many-to-one target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface" field="extra">

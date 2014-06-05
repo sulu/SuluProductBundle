@@ -341,24 +341,24 @@ interface ProductInterface
     /**
      * Add extras
      *
-     * @param Extra $extras
+     * @param Addon $addon
      * @return ProductInterface
      */
-    public function addExtra(Extra $extras);
+    public function addAddon(Addon $addon);
 
     /**
      * Remove extras
      *
-     * @param Extra $extras
+     * @param Addon $addon
      */
-    public function removeExtra(Extra $extras);
+    public function removeAddon(Addon $addon);
 
     /**
      * Get extras
      *
      * @return \Doctrine\Common\Collections\Collection
      */
-    public function getExtras();
+    public function getAddons();
 
     /**
      * Add setProducts

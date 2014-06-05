@@ -50,8 +50,8 @@
                      field="attributes"/>
         <one-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductTranslation" mapped-by="product"
                      field="translations"/>
-        <one-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Extra" mapped-by="product"
-                     field="extras"/>
+        <one-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Addon" mapped-by="product"
+                     field="addons"/>
         <many-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface" field="setProducts"
                      mapped-by="sets"/>
         -->
