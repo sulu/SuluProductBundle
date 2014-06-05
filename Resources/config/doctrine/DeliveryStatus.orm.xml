@@ -2,15 +2,15 @@
 <doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
-    <entity name="Sulu\Bundle\Product\BaseBundle\Entity\DeliveryStatus" table="pr_delivery_status">
+    <entity name="Sulu\Bundle\ProductBundle\Entity\DeliveryStatus" table="pr_delivery_status">
         <id name="id" type="integer" column="id">
             <generator strategy="AUTO"/>
         </id>
 
-        <one-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\DeliveryStatusTranslation"
+        <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\DeliveryStatusTranslation"
                      mapped-by="deliveryStatus"
                      field="translations"/>
-        <one-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface"
+        <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface"
                      mapped-by="deliveryStatus"
                      field="products"/>
     </entity>

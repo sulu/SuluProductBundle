@@ -1,6 +1,6 @@
 <?php
 
-namespace Sulu\Bundle\Product\BaseBundle\Entity;
+namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -30,7 +30,7 @@ class ProductPrice
     private $id;
 
     /**
-     * @var \Sulu\Bundle\Product\BaseBundle\Entity\Product
+     * @var \Sulu\Bundle\ProductBundle\Entity\Product
      */
     private $product;
 
@@ -117,10 +117,10 @@ class ProductPrice
     /**
      * Set product
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $product
+     * @param \Sulu\Bundle\ProductBundle\Entity\Product $product
      * @return ProductPrice
      */
-    public function setProduct(\Sulu\Bundle\Product\BaseBundle\Entity\Product $product = null)
+    public function setProduct(\Sulu\Bundle\ProductBundle\Entity\Product $product = null)
     {
         $this->product = $product;
     
@@ -130,7 +130,7 @@ class ProductPrice
     /**
      * Get product
      *
-     * @return \Sulu\Bundle\Product\BaseBundle\Entity\Product 
+     * @return \Sulu\Bundle\ProductBundle\Entity\Product
      */
     public function getProduct()
     {

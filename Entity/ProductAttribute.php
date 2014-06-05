@@ -8,7 +8,7 @@
  * with this source code in the file LICENSE.
  */
 
-namespace Sulu\Bundle\Product\BaseBundle\Entity;
+namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -28,12 +28,12 @@ class ProductAttribute
     private $id;
 
     /**
-     * @var \Sulu\Bundle\Product\BaseBundle\Entity\BaseProduct
+     * @var \Sulu\Bundle\ProductBundle\Entity\BaseProduct
      */
     private $product;
 
     /**
-     * @var \Sulu\Bundle\Product\BaseBundle\Entity\Attribute
+     * @var \Sulu\Bundle\ProductBundle\Entity\Attribute
      */
     private $attribute;
 
@@ -73,10 +73,10 @@ class ProductAttribute
     /**
      * Set product
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $product
+     * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $product
      * @return ProductAttribute
      */
-    public function setProduct(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $product)
+    public function setProduct(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $product)
     {
         $this->product = $product;
     
@@ -86,7 +86,7 @@ class ProductAttribute
     /**
      * Get product
      *
-     * @return \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface
+     * @return \Sulu\Bundle\ProductBundle\Entity\ProductInterface
      */
     public function getProduct()
     {
@@ -96,10 +96,10 @@ class ProductAttribute
     /**
      * Set attribute
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Attribute $attribute
+     * @param \Sulu\Bundle\ProductBundle\Entity\Attribute $attribute
      * @return ProductAttribute
      */
-    public function setAttribute(\Sulu\Bundle\Product\BaseBundle\Entity\Attribute $attribute)
+    public function setAttribute(\Sulu\Bundle\ProductBundle\Entity\Attribute $attribute)
     {
         $this->attribute = $attribute;
     
@@ -109,7 +109,7 @@ class ProductAttribute
     /**
      * Get attribute
      *
-     * @return \Sulu\Bundle\Product\BaseBundle\Entity\Attribute 
+     * @return \Sulu\Bundle\ProductBundle\Entity\Attribute
      */
     public function getAttribute()
     {

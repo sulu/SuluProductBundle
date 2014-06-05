@@ -8,7 +8,7 @@
  * with this source code in the file LICENSE.
  */
 
-namespace Sulu\Bundle\Product\BaseBundle\Entity;
+namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -54,10 +54,10 @@ class Status
     /**
      * Add products
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $products
+     * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $products
      * @return Status
      */
-    public function addProduct(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $products)
+    public function addProduct(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $products)
     {
         $this->products[] = $products;
     
@@ -67,9 +67,9 @@ class Status
     /**
      * Remove products
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $products
+     * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $products
      */
-    public function removeProduct(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $products)
+    public function removeProduct(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $products)
     {
         $this->products->removeElement($products);
     }
@@ -87,10 +87,10 @@ class Status
     /**
      * Add translations
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\StatusTranslation $translations
+     * @param \Sulu\Bundle\ProductBundle\Entity\StatusTranslation $translations
      * @return Status
      */
-    public function addTranslation(\Sulu\Bundle\Product\BaseBundle\Entity\StatusTranslation $translations)
+    public function addTranslation(\Sulu\Bundle\ProductBundle\Entity\StatusTranslation $translations)
     {
         $this->translations[] = $translations;
     
@@ -100,9 +100,9 @@ class Status
     /**
      * Remove translations
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\StatusTranslation $translations
+     * @param \Sulu\Bundle\ProductBundle\Entity\StatusTranslation $translations
      */
-    public function removeTranslation(\Sulu\Bundle\Product\BaseBundle\Entity\StatusTranslation $translations)
+    public function removeTranslation(\Sulu\Bundle\ProductBundle\Entity\StatusTranslation $translations)
     {
         $this->translations->removeElement($translations);
     }

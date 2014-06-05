@@ -8,14 +8,14 @@
  * with this source code in the file LICENSE.
  */
 
-namespace Sulu\Bundle\Product\BaseBundle\Entity;
+namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Sulu\Bundle\ContactBundle\Entity\Country;
 use Sulu\Bundle\SecurityBundle\Entity\User;
 
 /**
  * Defines the interface for a product
- * @package Sulu\Bundle\Product\BaseBundle\Entity
+ * @package Sulu\Bundle\ProductBundle\Entity
  */
 interface ProductInterface
 {
@@ -363,17 +363,17 @@ interface ProductInterface
     /**
      * Add setProducts
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $setProducts
+     * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $setProducts
      * @return BaseProduct
      */
-    public function addSetProduct(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $setProducts);
+    public function addSetProduct(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $setProducts);
 
     /**
      * Remove setProducts
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $setProducts
+     * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $setProducts
      */
-    public function removeSetProduct(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $setProducts);
+    public function removeSetProduct(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $setProducts);
 
     /**
      * Get setProducts

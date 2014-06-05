@@ -1,6 +1,6 @@
 <?php
 
-namespace Sulu\Bundle\Product\BaseBundle\Entity;
+namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -25,7 +25,7 @@ class DeliveryStatusTranslation
     private $id;
 
     /**
-     * @var \Sulu\Bundle\Product\BaseBundle\Entity\DeliveryStatus
+     * @var \Sulu\Bundle\ProductBundle\Entity\DeliveryStatus
      */
     private $deliveryStatus;
 
@@ -89,10 +89,10 @@ class DeliveryStatusTranslation
     /**
      * Set deliveryStatus
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\DeliveryStatus $deliveryStatus
+     * @param \Sulu\Bundle\ProductBundle\Entity\DeliveryStatus $deliveryStatus
      * @return DeliveryStatusTranslation
      */
-    public function setDeliveryStatus(\Sulu\Bundle\Product\BaseBundle\Entity\DeliveryStatus $deliveryStatus)
+    public function setDeliveryStatus(\Sulu\Bundle\ProductBundle\Entity\DeliveryStatus $deliveryStatus)
     {
         $this->deliveryStatus = $deliveryStatus;
     
@@ -102,7 +102,7 @@ class DeliveryStatusTranslation
     /**
      * Get deliveryStatus
      *
-     * @return \Sulu\Bundle\Product\BaseBundle\Entity\DeliveryStatus 
+     * @return \Sulu\Bundle\ProductBundle\Entity\DeliveryStatus
      */
     public function getDeliveryStatus()
     {

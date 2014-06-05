@@ -2,18 +2,18 @@
 <doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
-    <entity name="Sulu\Bundle\Product\BaseBundle\Entity\ProductAttribute" table="pr_product_attributes">
+    <entity name="Sulu\Bundle\ProductBundle\Entity\ProductAttribute" table="pr_product_attributes">
         <id name="id" type="integer" column="id">
             <generator strategy="AUTO"/>
         </id>
 
         <field name="value" type="text" />
 
-        <many-to-one target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface" field="product"
+        <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface" field="product"
                      inversed-by="productAttributes">
             <join-column name="idProducts" referenced-column-name="id" nullable="false" on-delete="CASCADE"/>
         </many-to-one>
-        <many-to-one target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Attribute" field="attribute"
+        <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\Attribute" field="attribute"
                      inversed-by="productAttributes">
             <join-column name="idAttributes" referenced-column-name="id" nullable="false"/>
         </many-to-one>

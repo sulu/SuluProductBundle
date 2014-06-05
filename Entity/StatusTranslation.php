@@ -8,7 +8,7 @@
  * with this source code in the file LICENSE.
  */
 
-namespace Sulu\Bundle\Product\BaseBundle\Entity;
+namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -33,7 +33,7 @@ class StatusTranslation
     private $id;
 
     /**
-     * @var \Sulu\Bundle\Product\BaseBundle\Entity\Status
+     * @var \Sulu\Bundle\ProductBundle\Entity\Status
      */
     private $status;
 
@@ -96,10 +96,10 @@ class StatusTranslation
     /**
      * Set status
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Status $status
+     * @param \Sulu\Bundle\ProductBundle\Entity\Status $status
      * @return StatusTranslation
      */
-    public function setStatus(\Sulu\Bundle\Product\BaseBundle\Entity\Status $status)
+    public function setStatus(\Sulu\Bundle\ProductBundle\Entity\Status $status)
     {
         $this->status = $status;
     
@@ -109,7 +109,7 @@ class StatusTranslation
     /**
      * Get status
      *
-     * @return \Sulu\Bundle\Product\BaseBundle\Entity\Status 
+     * @return \Sulu\Bundle\ProductBundle\Entity\Status
      */
     public function getStatus()
     {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Sulu\Bundle\Product\BaseBundle\Entity;
+namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -46,10 +46,10 @@ class DeliveryStatus
     /**
      * Add translations
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\DeliveryStatusTranslation $translations
+     * @param \Sulu\Bundle\ProductBundle\Entity\DeliveryStatusTranslation $translations
      * @return DeliveryStatus
      */
-    public function addTranslation(\Sulu\Bundle\Product\BaseBundle\Entity\DeliveryStatusTranslation $translations)
+    public function addTranslation(\Sulu\Bundle\ProductBundle\Entity\DeliveryStatusTranslation $translations)
     {
         $this->translations[] = $translations;
     
@@ -59,9 +59,9 @@ class DeliveryStatus
     /**
      * Remove translations
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\DeliveryStatusTranslation $translations
+     * @param \Sulu\Bundle\ProductBundle\Entity\DeliveryStatusTranslation $translations
      */
-    public function removeTranslation(\Sulu\Bundle\Product\BaseBundle\Entity\DeliveryStatusTranslation $translations)
+    public function removeTranslation(\Sulu\Bundle\ProductBundle\Entity\DeliveryStatusTranslation $translations)
     {
         $this->translations->removeElement($translations);
     }
@@ -79,10 +79,10 @@ class DeliveryStatus
     /**
      * Add products
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $products
+     * @param \Sulu\Bundle\ProductBundle\Entity\Product $products
      * @return DeliveryStatus
      */
-    public function addProduct(\Sulu\Bundle\Product\BaseBundle\Entity\Product $products)
+    public function addProduct(\Sulu\Bundle\ProductBundle\Entity\Product $products)
     {
         $this->products[] = $products;
     
@@ -92,9 +92,9 @@ class DeliveryStatus
     /**
      * Remove products
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\Product $products
+     * @param \Sulu\Bundle\ProductBundle\Entity\Product $products
      */
-    public function removeProduct(\Sulu\Bundle\Product\BaseBundle\Entity\Product $products)
+    public function removeProduct(\Sulu\Bundle\ProductBundle\Entity\Product $products)
     {
         $this->products->removeElement($products);
     }

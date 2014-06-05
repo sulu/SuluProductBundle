@@ -8,13 +8,13 @@
  * with this source code in the file LICENSE.
  */
 
-namespace Sulu\Bundle\Product\BaseBundle\Admin;
+namespace Sulu\Bundle\ProductBundle\Admin;
 
 use Sulu\Bundle\AdminBundle\Admin\Admin;
 use Sulu\Bundle\AdminBundle\Navigation\Navigation;
 use Sulu\Bundle\AdminBundle\Navigation\NavigationItem;
 
-class SuluProductBaseAdmin extends Admin
+class SuluProductAdmin extends Admin
 {
 
     public function __construct($title)

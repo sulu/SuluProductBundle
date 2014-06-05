@@ -2,14 +2,14 @@
 <doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
-    <entity name="Sulu\Bundle\Product\BaseBundle\Entity\Status" table="pr_status">
+    <entity name="Sulu\Bundle\ProductBundle\Entity\Status" table="pr_status">
         <id name="id" type="integer" column="id">
             <generator strategy="AUTO"/>
         </id>
-        <one-to-many field="products" target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface"
+        <one-to-many field="products" target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface"
                      mapped-by="status"/>
         <one-to-many field="translations"
-                     target-entity="Sulu\Bundle\Product\BaseBundle\Entity\StatusTranslation"
+                     target-entity="Sulu\Bundle\ProductBundle\Entity\StatusTranslation"
                      mapped-by="status"/>
     </entity>
 </doctrine-mapping>

@@ -1,10 +1,8 @@
 <?php
 
-namespace Sulu\Bundle\Product\BaseBundle\Controller;
+namespace Sulu\Bundle\ProductBundle\Controller;
 
 use FOS\RestBundle\Routing\ClassResourceInterface;
-use FOS\RestBundle\Controller\Annotations\Get;
-use FOS\RestBundle\Controller\Annotations\Put;
 use Sulu\Component\Rest\RestController;
 use Symfony\Component\HttpFoundation\Response;
 

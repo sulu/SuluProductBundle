@@ -1,17 +1,17 @@
 <doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
-    <entity name="Sulu\Bundle\Product\BaseBundle\Entity\AttributeSet" table="pr_attribute_sets">
+    <entity name="Sulu\Bundle\ProductBundle\Entity\AttributeSet" table="pr_attribute_sets">
         <id name="id" type="integer" column="id">
             <generator strategy="AUTO"/>
         </id>
 
-        <one-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\AttributeSetTranslation" mapped-by="attributeSet"
+        <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\AttributeSetTranslation" mapped-by="attributeSet"
                      field="translations"/>
-        <one-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface" mapped-by="attributeSet"
+        <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface" mapped-by="attributeSet"
                      field="products"/>
 
-        <many-to-many target-entity="Sulu\Bundle\Product\BaseBundle\Entity\Attribute" field="attributes">
+        <many-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\Attribute" field="attributes">
             <join-table name="pr_attribute_set_attributes">
                 <join-columns>
                     <join-column name="idAttributeSets" referenced-column-name="id" nullable="false"/>

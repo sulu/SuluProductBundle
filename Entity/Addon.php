@@ -1,6 +1,6 @@
 <?php
 
-namespace Sulu\Bundle\Product\BaseBundle\Entity;
+namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -20,12 +20,12 @@ class Addon
     private $id;
 
     /**
-     * @var \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface
+     * @var \Sulu\Bundle\ProductBundle\Entity\ProductInterface
      */
     private $product;
 
     /**
-     * @var \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface
+     * @var \Sulu\Bundle\ProductBundle\Entity\ProductInterface
      */
     private $addon;
 
@@ -66,10 +66,10 @@ class Addon
     /**
      * Set product
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $product
+     * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $product
      * @return Addon
      */
-    public function setProduct(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $product)
+    public function setProduct(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $product)
     {
         $this->product = $product;
     
@@ -79,7 +79,7 @@ class Addon
     /**
      * Get product
      *
-     * @return \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface
+     * @return \Sulu\Bundle\ProductBundle\Entity\ProductInterface
      */
     public function getProduct()
     {
@@ -89,10 +89,10 @@ class Addon
     /**
      * Set addon
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $addon
+     * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $addon
      * @return Addon
      */
-    public function setAddon(\Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface $addon)
+    public function setAddon(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $addon)
     {
         $this->addon = $addon;
     
@@ -102,7 +102,7 @@ class Addon
     /**
      * Get addon
      *
-     * @return \Sulu\Bundle\Product\BaseBundle\Entity\ProductInterface
+     * @return \Sulu\Bundle\ProductBundle\Entity\ProductInterface
      */
     public function getAddon()
     {

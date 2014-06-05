@@ -8,7 +8,7 @@
  * with this source code in the file LICENSE.
  */
 
-namespace Sulu\Bundle\Product\BaseBundle\Entity;
+namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -33,7 +33,7 @@ class AttributeSetTranslation
     private $id;
 
     /**
-     * @var \Sulu\Bundle\Product\BaseBundle\Entity\AttributeSet
+     * @var \Sulu\Bundle\ProductBundle\Entity\AttributeSet
      */
     private $attributeSet;
 
@@ -96,10 +96,10 @@ class AttributeSetTranslation
     /**
      * Set template
      *
-     * @param \Sulu\Bundle\Product\BaseBundle\Entity\AttributeSet $template
+     * @param \Sulu\Bundle\ProductBundle\Entity\AttributeSet $template
      * @return AttributeSetTranslation
      */
-    public function setAttributeSet(\Sulu\Bundle\Product\BaseBundle\Entity\AttributeSet $template)
+    public function setAttributeSet(\Sulu\Bundle\ProductBundle\Entity\AttributeSet $template)
     {
         $this->attributeSet = $template;
     
@@ -109,7 +109,7 @@ class AttributeSetTranslation
     /**
      * Get template
      *
-     * @return \Sulu\Bundle\Product\BaseBundle\Entity\AttributeSet
+     * @return \Sulu\Bundle\ProductBundle\Entity\AttributeSet
      */
     public function getAttributeSet()
     {
