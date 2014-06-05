@@ -1,0 +1,3 @@
+sulu_product_base.products:
+    type: rest
+    resource: Sulu\Bundle\ProductBundle\Controller\ProductbaseController

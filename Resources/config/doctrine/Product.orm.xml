@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <entity name="Sulu\Bundle\ProductBundle\Entity\Product" table="pr_products"
+            repository-class="Sulu\Bundle\ProductBundle\Entity\ProductRepository">
+        <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductAttribute" mapped-by="product"
+                     field="productAttributes"/>
+        <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductTranslation" mapped-by="product"
+                     field="translations"/>
+        <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\Addon" mapped-by="product"
+                     field="addons"/>
+        <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface" mapped-by="parent"
+                     field="children"/>
+        <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductPrice"
+                     mapped-by="product"
+                     field="prices"/>
+
+        <many-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface" field="setProducts"
+                      mapped-by="sets"/>
+    </entity>
+</doctrine-mapping>

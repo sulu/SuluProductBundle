@@ -9,7 +9,7 @@
 
 require.config({
     paths: {
-        suluproductbase: '../../suluproductbase/js'
+        suluproductbase: '../suluproductbase/js'
     }
 });
 
@@ -25,12 +25,19 @@ define({
 
         app.components.addSource('suluproductbase', '/bundles/suluproductbase/js/components');
 
-        // Example: list all contacts
-        // sandbox.mvc.routes.push({
-        //     route: 'contacts/contacts',
-        //    callback: function(){
-        //         this.html('<div data-aura-component="contacts@sulucontact" data-aura-display="list"/>');
-        //     }
-        // });
+        //flat list of products
+        sandbox.mvc.routes.push({
+            route: 'pim/products',
+            callback: function() {
+                this.html('<div data-aura-component="products@suluproductbase" data-aura-display="list"/>');
+            }
+        });
+
+        sandbox.mvc.routes.push({
+            route: 'pim/products/import',
+            callback: function() {
+                this.html('<div data-aura-component="products@suluproductbase" data-aura-display="import"/>');
+            }
+        });
     }
 });

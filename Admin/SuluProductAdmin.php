@@ -8,18 +8,29 @@
  * with this source code in the file LICENSE.
  */
 
-namespace Sulu\Bundle\Product\BaseBundle\Admin;
+namespace Sulu\Bundle\ProductBundle\Admin;
 
 use Sulu\Bundle\AdminBundle\Admin\Admin;
 use Sulu\Bundle\AdminBundle\Navigation\Navigation;
 use Sulu\Bundle\AdminBundle\Navigation\NavigationItem;
 
-class SuluProductBaseAdmin extends Admin
+class SuluProductAdmin extends Admin
 {
 
     public function __construct($title)
     {
         $rootNavigationItem = new NavigationItem($title);
+        $section = new NavigationItem('');
+
+        $pim = new NavigationItem('navigation.pim');
+        $pim->setIcon('asterisk');
+
+        $products = new NavigationItem('navigation.pim.products', $pim);
+        $products->setAction('pim/products');
+
+        $section->addChild($pim);
+        $rootNavigationItem->addChild($section);
+
         $this->setNavigation(new Navigation($rootNavigationItem));
     }
 
@@ -31,4 +42,11 @@ class SuluProductBaseAdmin extends Admin
         return array();
     }
 
+    /**
+     * {@inheritdoc}
+     */
+    public function getJsBundleName()
+    {
+        return 'suluproductbase';
+    }
 }

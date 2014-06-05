@@ -19,7 +19,7 @@ class AppKernel extends Kernel
             // Sulu
             new \Sulu\Bundle\CoreBundle\SuluCoreBundle(),
             new \Sulu\Bundle\AdminBundle\SuluAdminBundle(),
-            new \Sulu\Bundle\Product\BaseBundle\SuluProductBaseBundle(),
+            new \Sulu\Bundle\ProductBundle\SuluProductBundle(),
         );
 
         return $bundles;
