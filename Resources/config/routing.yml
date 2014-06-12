@@ -6,6 +6,10 @@ product_list:
     pattern: /template/product/list.html
     defaults: { _controller: SuluProductBundle:Template:productList }
 
+product_form:
+    pattern: /template/product/form.html
+    defaults: { _controller: SuluProductBundle:Template:productForm }
+
 product_import:
     pattern: /template/product/import.html
     defaults: { _controller: SuluProductBundle:Template:productImport }

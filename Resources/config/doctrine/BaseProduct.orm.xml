@@ -35,10 +35,10 @@
         </many-to-one>
         <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\AttributeSet" field="attributeSet"
                      inversed-by="products">
-            <join-column name="idAttributeSets" referenced-column-name="id" nullable="false"/>
+            <join-column name="idAttributeSets" referenced-column-name="id" nullable="true"/>
         </many-to-one>
         <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\Status" field="status" inversed-by="products">
-            <join-column name="idStatus" referenced-column-name="id"/>
+            <join-column name="idStatus" referenced-column-name="id" nullable="false"/>
         </many-to-one>
         <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\DeliveryStatus" field="deliveryStatus"
                      inversed-by="products">

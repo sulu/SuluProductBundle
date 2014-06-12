@@ -7,23 +7,87 @@
  * with this source code in the file LICENSE.
  */
 
-define(function() {
+define(['suluproduct/models/product'], function(Product) {
 
     'use strict';
 
     return {
 
         initialize: function() {
+            this.product = null;
+
             this.bindCustomEvents();
             if (this.options.display === 'list') {
                 this.renderList();
+            } else if (this.options.display === 'form') {
+                this.renderForm();
             } else if (this.options.display === 'import') {
                 this.renderImport();
             }
         },
 
         /**
-         * Creats the view for the flat product list
+         * Binds custom-related events
+         */
+        bindCustomEvents: function() {
+            this.sandbox.on('sulu.products.new', function() {
+                this.sandbox.emit('sulu.router.navigate', 'pim/products/add');
+            }.bind(this));
+            this.sandbox.on('sulu.products.save', function(data) {
+                this.save(data);
+            }.bind(this));
+            this.sandbox.on('sulu.products.import', function() {
+                this.sandbox.emit('sulu.router.navigate', 'pim/products/import');
+            }.bind(this));
+        },
+
+        save: function(data) {
+            this.sandbox.emit('sulu.header.toolbar.item.loading', 'save-button');
+            this.product.set(data);
+            this.product.save(null, {
+                success: function(response) {
+                    var model = response.toJSON();
+                    if (!!data.id) {
+                        this.sandbox.emit('sulu.products.saved', model);
+                    } else {
+                        this.sandbox.emit('sulu.router.navigate', 'pim/products/edit:' + model.id + '/details');
+                    }
+                }.bind(this),
+                error: function() {
+                    this.sandbox.logger.log('error while saving product');
+                }.bind(this)
+            });
+        },
+
+        renderForm: function() {
+            this.product = new Product();
+
+            var $form = this.sandbox.dom.createElement('<div id="products-form-container"/>'),
+                component = {
+                    name: 'products/components/form@suluproduct',
+                    options: {
+                        el: $form,
+                        data: this.product.defaults()
+                    }
+                };
+
+            this.html($form);
+
+            if (!!this.options.id) {
+                this.product.set({id: this.options.id});
+                this.product.fetch({
+                    success: function(model) {
+                        component.options.data = model.toJSON();
+                        this.sandbox.start([component]);
+                    }.bind(this)
+                });
+            } else {
+                this.sandbox.start([component]);
+            }
+        },
+
+        /**
+         * Creates the view for the flat product list
          */
         renderList: function() {
             var $list = this.sandbox.dom.createElement('<div id="products-list-container"/>');
@@ -42,15 +106,6 @@ define(function() {
             this.sandbox.start([
                 {name: 'products/components/import@suluproduct', options: { el: $container}}
             ]);
-        },
-
-        /**
-         * Binds custom-related events
-         */
-        bindCustomEvents: function() {
-            this.sandbox.on('sulu.pim.products.import', function() {
-                this.sandbox.emit('sulu.router.navigate', 'pim/products/import');
-            }.bind(this));
         }
     };
 });

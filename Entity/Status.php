@@ -116,4 +116,20 @@ class Status
     {
         return $this->translations;
     }
+
+    /**
+     * Returns the name for the status in the given language
+     * @param string $languageCode
+     * @return null|string
+     */
+    public function getName($languageCode) {
+        foreach ($this->getTranslations() as $translation) {
+            /** @var StatusTranslation $translation */
+            if ($translation->getLanguageCode() == $languageCode) {
+                return $translation->getName();
+            }
+        }
+
+        return null;
+    }
 }

@@ -9,7 +9,7 @@
 
 require.config({
     paths: {
-        suluproduct: '../suluproduct/js'
+        suluproduct: '../../suluproduct/js'
     }
 });
 
@@ -30,6 +30,13 @@ define({
             route: 'pim/products',
             callback: function() {
                 this.html('<div data-aura-component="products@suluproduct" data-aura-display="list"/>');
+            }
+        });
+
+        sandbox.mvc.routes.push({
+            route: 'pim/products/add',
+            callback: function() {
+                this.html('<div data-aura-component="products@suluproduct" data-aura-display="form"/>');
             }
         });
 

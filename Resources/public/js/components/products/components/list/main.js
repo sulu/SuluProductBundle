@@ -31,17 +31,17 @@ define(function() {
             };
         },
 
-        templates: ['/admin/productbase/template/product/list'],
+        templates: ['/admin/product/template/product/list'],
 
         initialize: function() {
             this.render();
         },
 
         render: function() {
-            this.sandbox.dom.html(this.$el, this.renderTemplate('/admin/productbase/template/product/list'));
+            this.sandbox.dom.html(this.$el, this.renderTemplate('/admin/product/template/product/list'));
 
             // init list-toolbar and datagrid
-            this.sandbox.sulu.initListToolbarAndList.call(this, 'productsFields', '/admin/productbase/api/productbases/fields',
+            this.sandbox.sulu.initListToolbarAndList.call(this, 'productsFields', '/admin/api/products/fields',
                 {
                     el: this.$find('#list-toolbar-container'),
                     instanceName: 'productsToolbar',
@@ -49,9 +49,11 @@ define(function() {
                     template: [{
                             'id': 1,
                             'icon': 'plus-circle',
-                            'title': 'Add User',
+                            'title': 'Add Product',
                             'class': 'highlight-white',
-                            disabled: true
+                            callback: function() {
+                                this.sandbox.emit('sulu.products.new')
+                            }.bind(this)
                         },
                         {
                             'id': 2,
@@ -65,7 +67,7 @@ define(function() {
                             'title': 'Import',
                             'group': '2',
                             callback: function() {
-                                this.sandbox.emit('sulu.pim.products.import');
+                                this.sandbox.emit('sulu.products.import');
                             }.bind(this)
                         },
                         {
@@ -77,7 +79,7 @@ define(function() {
                 },
                 {
                     el: this.sandbox.dom.find('#products-list', this.$el),
-                    url: '/admin/productbase/api/productbases?flat=true',
+                    url: '/admin/api/products?flat=true',
                     viewOptions: {
                         table: {
                             fullWidth: true
