@@ -82,6 +82,10 @@ define([], function() {
             if (this.sandbox.form.validate(formSelector)) {
                 var data = this.sandbox.form.getData(formSelector);
 
+                data.type = {
+                    id: 1 // TODO do not hardcode
+                };
+
                 this.sandbox.emit('sulu.products.save', data);
             }
         },

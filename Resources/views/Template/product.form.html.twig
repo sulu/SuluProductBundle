@@ -1,6 +1,4 @@
 <form class="form-horizontal" id="product-form">
-    <input type="hidden" id="type" value="1" data-mapper-property="type"/> <!-- TODO use dropdown? -->
-
     <div class="grid-row small">
         <div class="grid-col-12">
             <div class="form-group">
@@ -21,6 +19,7 @@
         <div class="grid-col-6">
             <div class="form-group">
                 <label for="status" class="required"><%=translate('product.status')%></label>
+
                 <div id="status"
                      data-aura-component="select@husky"
                      data-aura-data="{{ status|json_encode() }}"
@@ -34,6 +33,57 @@
                      data-validation-required="true"
                      data-aura-pre-selected-elements="[]"
                      data-form="true">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h2 class="divider"><%= translate('product.description') %></h2>
+
+    <div class="grid-row small">
+        <div class="grid-col-12">
+            <div class="form-group">
+                <label for="long-description"><%= translate('product.long-description') %></label>
+                <textarea id="long-description"
+                          class="form-element"
+                          data-type="textEditor"
+                          data-type-instance-name="long-description"
+                          data-aura-component="ckeditor@husky"
+                          data-aura-height="300"
+                          data-mapper-property="longDescription"
+                          data-aura-instance-name="long-description"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-row small">
+        <div class="grid-col-12">
+            <div class="form-group">
+                <label for="short-description"><%= translate('product.short-description') %></label>
+                <textarea id="short-description"
+                          class="form-element trigger-save-button"
+                          data-mapper-property="shortDescription"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <h2 class="divider"><%= translate('tag.tags.title') %></h2>
+
+    <div class="grid-row small">
+        <div class="grid-col-12">
+            <div class="form-group">
+                <label for="tags"></label>
+                <div
+                        id="tags"
+                        data-mapper-property="tags"
+                        data-type="tagList"
+                        data-type-instance-name="tags"
+                        data-form="true"
+                        data-aura-component="auto-complete-list@husky"
+                        data-aura-instance-name="tags"
+                        data-aura-remote-url="/admin/api/tags?flat=true&sortBy=name"
+                        data-aura-get-parameter="search"
+                        data-aura-auto-complete-icon="tag">
                 </div>
             </div>
         </div>
