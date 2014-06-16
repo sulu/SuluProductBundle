@@ -12,6 +12,7 @@ namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Sulu\Bundle\ContactBundle\Entity\Country;
 use Sulu\Bundle\SecurityBundle\Entity\User;
+use Sulu\Component\Security\UserInterface;
 
 /**
  * Defines the interface for a product
@@ -230,30 +231,30 @@ interface ProductInterface
     /**
      * Set changer
      *
-     * @param User $changer
+     * @param \Sulu\Component\Security\UserInterface $changer
      * @return ProductInterface
      */
-    public function setChanger(User $changer = null);
+    public function setChanger(UserInterface $changer = null);
 
     /**
      * Get changer
      *
-     * @return User
+     * @return UserInterface
      */
     public function getChanger();
 
     /**
      * Set creator
      *
-     * @param User $creator
+     * @param \Sulu\Component\Security\UserInterface $creator
      * @return ProductInterface
      */
-    public function setCreator(User $creator = null);
+    public function setCreator(UserInterface $creator = null);
 
     /**
      * Get creator
      *
-     * @return User
+     * @return UserInterface
      */
     public function getCreator();
 
