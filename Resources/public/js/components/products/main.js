@@ -39,6 +39,10 @@ define(['suluproduct/models/product'], function(Product) {
             this.sandbox.on('sulu.products.import', function() {
                 this.sandbox.emit('sulu.router.navigate', 'pim/products/import');
             }.bind(this));
+
+            this.sandbox.on('husky.datagrid.item.click', function(id) {
+                this.load(id);
+            }.bind(this));
         },
 
         save: function(data) {
@@ -57,6 +61,10 @@ define(['suluproduct/models/product'], function(Product) {
                     this.sandbox.logger.log('error while saving product');
                 }.bind(this)
             });
+        },
+
+        load: function(id) {
+            this.sandbox.emit('sulu.router.navigate', 'pim/products/edit:' + id + '/details');
         },
 
         renderForm: function() {

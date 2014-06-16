@@ -90,7 +90,7 @@ class ProductController extends RestController implements ClassResourceInterface
             $id,
             function ($id) use ($lang) {
                 /** @var Product $product */
-                $product = $this->getRepository()->findByIdAndLanguage($id, $lang);
+                $product = $this->getRepository()->findById($id);
 
                 return $product;
             }

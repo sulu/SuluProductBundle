@@ -13,6 +13,25 @@ use Doctrine\ORM\NoResultException;
  */
 class ProductRepository extends EntityRepository
 {
+    public function findById($id)
+    {
+        try {
+            $qb = $this->createQueryBuilder('product')
+                ->leftJoin('product.productAttributes', 'productAttributes')
+                ->leftJoin('product.translations', 'translations')
+                ->leftJoin('product.addons', 'addons')
+                ->leftJoin('product.children', 'children')
+                ->where('product.id = :productId')
+                ->setParameter('productId', $id);
+
+            $query = $qb->getQuery();
+            return $query->getSingleResult();
+
+        } catch (NoResultException $ex) {
+            return null;
+        }
+    }
+
     public function findByIdAndLanguage($id, $lang)
     {
         try {
