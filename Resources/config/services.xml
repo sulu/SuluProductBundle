@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<container xmlns="http://symfony.com/schema/dic/services" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+  <parameters>
+    <parameter key="sulu_product.admin.class">Sulu\Bundle\ProductBundle\Admin\SuluProductAdmin</parameter>
+    <parameter key="sulu_product.product_repository.class">Sulu\Bundle\ProductBundle\Entity\ProductRepository</parameter>
+    <parameter key="sulu_product.product_manager.class">Sulu\Bundle\ProductBundle\Product\ProductManager</parameter>
+  </parameters>
+  <services>
+    <service id="sulu_product.admin" class="%sulu_product.admin.class%">
+      <tag name="sulu.admin"/>
+      <argument>%sulu_admin.name%</argument>
+    </service>
+    <service id="sulu_product.product_repository" class="%sulu_product.product_repository.class%" factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
+      <argument>SuluProductBundle:Product</argument>
+    </service>
+    <service id="sulu_product.product_manager" class="%sulu_product.product_manager.class%">
+      <argument type="service" id="sulu_product.product_repository"/>
+      <argument type="service" id="doctrine.orm.entity_manager"/>
+    </service>
+  </services>
+</container>
