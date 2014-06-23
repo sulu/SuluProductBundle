@@ -14,71 +14,50 @@ use Sulu\Bundle\ProductBundle\Product\ProductRepositoryInterface;
  */
 class ProductRepository extends EntityRepository implements ProductRepositoryInterface
 {
-    public function findById($id)
-    {
-        try {
-            $qb = $this->createQueryBuilder('product')
-                ->leftJoin('product.productAttributes', 'productAttributes')
-                ->leftJoin('product.translations', 'translations')
-                ->leftJoin('product.addons', 'addons')
-                ->leftJoin('product.children', 'children')
-                ->where('product.id = :productId')
-                ->setParameter('productId', $id);
-
-            $query = $qb->getQuery();
-            return $query->getSingleResult();
-
-        } catch (NoResultException $ex) {
-            return null;
-        }
-    }
-
     public function findByIdAndLocale($id, $locale)
     {
         try {
-            $qb = $this->createQueryBuilder('product')
-                ->leftJoin('product.productAttributes', 'productAttributes')
-                ->leftJoin('product.translations', 'translations')
-                ->leftJoin('product.addons', 'addons')
-                ->leftJoin('product.children', 'children')
-                ->where('product.id = :productId')
-                ->andWhere('translations.languageCode = :languageCode')
-                ->setParameter('productId', $id)
-                ->setParameter('languageCode', $locale);
+            $qb = $this->getProductQuery($locale);
+            $qb->andWhere('product.id = :productId');
+            $qb->setParameter('productId', $id);
 
-            $query = $qb->getQuery();
-            return $query->getSingleResult();
-
-        } catch (NoResultException $ex) {
+            return $qb->getQuery()->getSingleResult();
+        } catch (NoResultException $exc) {
             return null;
         }
     }
 
-    public function findByParameters($parameters)
+    /**
+     * Returns all products in the given locale
+     * @param string $locale The locale of the product to load
+     * @return ProductInterface[]
+     */
+    public function findAllByLocale($locale)
     {
         try {
-            $qb = $this->createQueryBuilder('product')
-                ->leftJoin('product.productAttributes', 'productAttributes')
-                ->leftJoin('product.translations', 'translations')
-                ->leftJoin('product.addons', 'addons')
-                ->leftJoin('product.children', 'children')
-                ->where('translations.languageCode = :languageCode');
+            return $this->getProductQuery($locale)->getQuery()->getResult();
+        } catch (NoResultException $exc) {
+            return null;
+        }
+    }
 
-            foreach ($parameters as $key => $value) {
+    /**
+     * {@inheritDoc}
+     */
+    public function findByLocaleAndFilter($locale, array $filter)
+    {
+        try {
+            $qb = $this->getProductQuery($locale);
+
+            foreach ($filter as $key => $value) {
                 switch ($key) {
-                    case 'language':
-                        $qb->setParameter('languageCode', $value);
-                        break;
-
                     case 'status':
-                        $qb->leftJoin('product.status', 'productStatus');
-                        $qb->andWhere('productStatus.id = :' . $key);
+                        $qb->andWhere('status.id = :' . $key);
                         $qb->setParameter($key, $value);
                         break;
 
                     case 'type':
-                        $qb->leftJoin('product.type', 'productType');
-                        $qb->andWhere('productType.id = :' . $key);
+                        $qb->andWhere('type.id = :' . $key);
                         $qb->setParameter($key, $value);
                         break;
 
@@ -99,5 +78,26 @@ class ProductRepository extends EntityRepository implements ProductRepositoryInt
         } catch (NoResultException $ex) {
             return null;
         }
+    }
+
+    /**
+     * Returns the query for products
+     * @param string $locale The locale to load
+     * @return \Doctrine\ORM\QueryBuilder
+     */
+    private function getProductQuery($locale)
+    {
+        $qb = $this->createQueryBuilder('product')
+            ->leftJoin('product.translations', 'translations')
+            ->leftJoin('product.status', 'status')
+            ->leftJoin('status.translations', 'statusTranslations')
+            ->leftJoin('product.type', 'type')
+            ->leftJoin('type.translations', 'typeTranslations')
+            ->andWhere('translations.locale = :locale')
+            ->andWhere('statusTranslations.locale = :locale')
+            ->andWhere('typeTranslations.locale = :locale')
+            ->setParameter('locale', $locale);
+
+        return $qb;
     }
 }

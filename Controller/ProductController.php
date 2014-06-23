@@ -21,6 +21,7 @@ use Sulu\Bundle\ProductBundle\Entity\ProductRepository;
 use Sulu\Bundle\ProductBundle\Entity\ProductTranslation;
 use Sulu\Bundle\ProductBundle\Entity\Status;
 use Sulu\Bundle\ProductBundle\Entity\Type;
+use Sulu\Bundle\ProductBundle\Product\ProductManagerInterface;
 use Sulu\Component\Rest\Exception\EntityIdAlreadySetException;
 use Sulu\Component\Rest\Exception\EntityNotFoundException;
 use Sulu\Component\Rest\Exception\RestException;
@@ -43,9 +44,9 @@ class ProductController extends RestController implements ClassResourceInterface
      * @param Request $request
      * @return mixed
      */
-    private function getLanguage($request)
+    private function getLocale($request)
     {
-        $lang = $request->get('language');
+        $lang = $request->get('locale');
         if (!$lang) {
             if ($this->getUser()) {
                 $lang = $this->getUser()->getLocale() ? : $this->container->getParameter('locale');
@@ -59,11 +60,11 @@ class ProductController extends RestController implements ClassResourceInterface
     /**
      * Returns the repository object for AdvancedProduct
      *
-     * @return ProductRepository
+     * @return ProductManagerInterface
      */
-    private function getRepository()
+    private function getManager()
     {
-        return $this->getDoctrine()->getRepository('SuluProductBundle:Product');
+        return $this->get('sulu_product.product_manager');
     }
 
     /**
@@ -85,12 +86,12 @@ class ProductController extends RestController implements ClassResourceInterface
      */
     public function getAction(Request $request, $id)
     {
-        $lang = $this->getLanguage($request);
+        $locale = $this->getLocale($request);
         $view = $this->responseGetById(
             $id,
-            function ($id) use ($lang) {
+            function ($id) use ($locale) {
                 /** @var Product $product */
-                $product = $this->getRepository()->findById($id);
+                $product = $this->getManager()->findByIdAndLocale($id, $locale);
 
                 return $product;
             }
@@ -107,20 +108,19 @@ class ProductController extends RestController implements ClassResourceInterface
      */
     public function cgetAction(Request $request)
     {
-        if ($request->get('flat') == 'true') {
-            $view = $this->responseList();
-        } else {
-            $parameters = null;
-            $query = $request->getQueryString();
-            if ($query) {
-                list($key, $value) = explode("=", $query);
-                $parameters[$key] = $value;
-            }
-            $parameters['language'] = $this->getLanguage($request);
+        $locale = $this->getLocale($request);
 
-            $result = $this->getRepository()->findByParameters($parameters);
-            $view = $this->view($this->createHalResponse($result), 200);
-        }
+        $filter = array(
+            'code' => $request->get('code'),
+            'number' => $request->get('number'),
+            'status' => $request->get('status'),
+            'type' => $request->get('type')
+        );
+
+        $filter = array_filter($filter);
+
+        $result = $this->getManager()->findAllByLocale($locale, $filter);
+        $view = $this->view($this->createHalResponse($result), 200);
         return $this->handleView($view);
     }
 
@@ -133,7 +133,7 @@ class ProductController extends RestController implements ClassResourceInterface
      */
     public function putAction(Request $request, $id)
     {
-        $lang = $this->getLanguage($request);
+        $lang = $this->getLocale($request);
         $now = new DateTime();
 
         try {
@@ -258,7 +258,7 @@ class ProductController extends RestController implements ClassResourceInterface
      */
     public function deleteAction(Request $request, $id)
     {
-        $lang = $this->getLanguage($request);
+        $lang = $this->getLocale($request);
 
         $delete = function ($id) use ($lang) {
             /* @var Product $product */
@@ -301,7 +301,7 @@ class ProductController extends RestController implements ClassResourceInterface
         } else {
             $productTranslation = new ProductTranslation();
             $productTranslation->setProduct($product);
-            $productTranslation->setLanguageCode($translationData['languageCode']);
+            $productTranslation->setLocale($translationData['languageCode']);
             $productTranslation->setName($translationData['name']);
             $productTranslation->setShortDescription($translationData['shortDescription']);
             $productTranslation->setLongDescription($translationData['longDescription']);

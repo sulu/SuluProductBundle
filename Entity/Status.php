@@ -118,18 +118,20 @@ class Status
     }
 
     /**
-     * Returns the name for the status in the given language
-     * @param string $languageCode
-     * @return null|string
+     * Returns the translation for the given locale
+     * @param string $locale
+     * @return TypeTranslation
      */
-    public function getName($languageCode) {
-        foreach ($this->getTranslations() as $translation) {
-            /** @var StatusTranslation $translation */
-            if ($translation->getLocale() == $languageCode) {
-                return $translation->getName();
+    public function getTranslation($locale)
+    {
+        $translation = null;
+        foreach ($this->translations as $translationData) {
+            if ($translationData->getLocale() == $locale) {
+                $translation = $translationData;
+                break;
             }
         }
 
-        return null;
+        return $translation;
     }
 }
