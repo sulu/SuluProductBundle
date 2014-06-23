@@ -198,7 +198,7 @@ abstract class BaseProduct implements ProductInterface
     /**
      * Set cost
      *
-     * @param string $cost
+     * @param double $cost
      * @return BaseProduct
      */
     public function setCost($cost)
@@ -211,7 +211,7 @@ abstract class BaseProduct implements ProductInterface
     /**
      * Get cost
      *
-     * @return string 
+     * @return double
      */
     public function getCost()
     {

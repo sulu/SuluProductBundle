@@ -13,6 +13,7 @@ namespace Sulu\Bundle\ProductBundle\Product;
 use Doctrine\Common\Persistence\ObjectManager;
 use Sulu\Bundle\ProductBundle\Api\Product;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
+use Sulu\Component\Security\UserRepositoryInterface;
 
 class ProductManager implements ProductManagerInterface
 {
@@ -22,13 +23,23 @@ class ProductManager implements ProductManagerInterface
     private $productRepository;
 
     /**
+     * @var UserRepositoryInterface
+     */
+    private $userRepository;
+
+    /**
      * @var ObjectManager
      */
     private $em;
 
-    public function __construct(ProductRepositoryInterface $productRepository, ObjectManager $em)
+    public function __construct(
+        ProductRepositoryInterface $productRepository,
+        UserRepositoryInterface $userRepository,
+        ObjectManager $em
+    )
     {
         $this->productRepository = $productRepository;
+        $this->userRepository = $userRepository;
         $this->em = $em;
     }
 
@@ -39,7 +50,11 @@ class ProductManager implements ProductManagerInterface
     {
         $product = $this->productRepository->findByIdAndLocale($id, $locale);
 
-        return new Product($product, $locale);
+        if ($product) {
+            return new Product($product, $locale);
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -61,5 +76,35 @@ class ProductManager implements ProductManagerInterface
         );
 
         return $products;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function save(Product $product, $userId)
+    {
+        $user = $this->userRepository->findUserById($userId);
+
+        $product->setChanged(new \DateTime());
+        $product->setChanger($user);
+
+        if ($product->getId() == null) {
+            $product->setCreated(new \DateTime());
+            $product->setCreator($user);
+            $this->em->persist($product->getEntity());
+        }
+
+        $this->em->flush();
+
+        return $product;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function delete(Product $product, $userId)
+    {
+        $this->em->remove($product);
+        $this->em->flush();
     }
 }

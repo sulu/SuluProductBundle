@@ -207,6 +207,24 @@ class Attribute
     }
 
     /**
+     * Returns the translation with the given locale
+     * @param string $locale The locale to return
+     * @return AttributeTranslation
+     */
+    public function getTranslation($locale)
+    {
+        $translation = null;
+        foreach ($this->translations as $translationData) {
+            if ($translationData->getLocale() == $locale) {
+                $translation = $translationData;
+                break;
+            }
+        }
+
+        return $translation;
+    }
+
+    /**
      * Add productAttributes
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\ProductAttribute $productAttributes

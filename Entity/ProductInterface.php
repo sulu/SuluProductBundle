@@ -73,6 +73,36 @@ interface ProductInterface
     public function getManufacturer();
 
     /**
+     * Set cost
+     *
+     * @param double $cost
+     * @return ProductInterface
+     */
+    public function setCost($cost);
+
+    /**
+     * Get cost
+     *
+     * @return double
+     */
+    public function getCost();
+
+    /**
+     * Set priceInfo
+     *
+     * @param string $priceInfo
+     * @return BaseProduct
+     */
+    public function setPriceInfo($priceInfo);
+
+    /**
+     * Get priceInfo
+     *
+     * @return string
+     */
+    public function getPriceInfo();
+
+    /**
      * Set created
      *
      * @param \DateTime $created

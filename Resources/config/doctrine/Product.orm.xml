@@ -7,7 +7,11 @@
         <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductAttribute" mapped-by="product"
                      field="productAttributes"/>
         <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductTranslation" mapped-by="product"
-                     field="translations"/>
+                     field="translations">
+            <cascade>
+                <cascade-persist/>
+            </cascade>
+        </one-to-many>
         <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\Addon" mapped-by="product"
                      field="addons"/>
         <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface" mapped-by="parent"

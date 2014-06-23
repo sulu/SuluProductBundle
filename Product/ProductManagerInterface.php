@@ -10,7 +10,7 @@
 
 namespace Sulu\Bundle\ProductBundle\Product;
 
-use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
+use Sulu\Bundle\ProductBundle\Api\Product;
 
 /**
  * The interface for the product manager
@@ -22,7 +22,7 @@ interface ProductManagerInterface
      * Returns the product with the given ID and locale
      * @param int $id The id of the product to load
      * @param string $locale The locale to load
-     * @return ProductInterface
+     * @return Product
      */
     public function findByIdAndLocale($id, $locale);
 
@@ -30,7 +30,22 @@ interface ProductManagerInterface
      * Returns all products in the given locale
      * @param string $locale
      * @param array $filter
-     * @return ProductInterface[]
+     * @return Product[]
      */
     public function findAllByLocale($locale, $filter = array());
+
+    /**
+     * Saves the given product
+     * @param Product $product
+     * @param int $userId The id of the user who called this action
+     * @return Product
+     */
+    public function save(Product $product, $userId);
+
+    /**
+     * Deletes the given product
+     * @param Product $product The product to delete
+     * @param int $userId The user who delete the product
+     */
+    public function delete(Product $product, $userId);
 } 

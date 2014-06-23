@@ -336,7 +336,6 @@ class ProductControllerTest extends DatabaseTestCase
             self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\ProductTranslation'),
             self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\ProductAttribute'),
             self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Addon'),
-
             self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Account'),
             self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\AccountCategory'),
             self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Activity'),
@@ -461,6 +460,7 @@ class ProductControllerTest extends DatabaseTestCase
             'PUT',
             '/api/products/1',
             array(
+                'name' => 'EnglishProductTranslationNameNew-1',
                 'code' => 'EvilCode',
                 'number' => 'EvilNumber',
                 'manufacturer' => 'EvilKnievel'
@@ -471,6 +471,7 @@ class ProductControllerTest extends DatabaseTestCase
         $this->client->request('GET', '/api/products/1');
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+        $this->assertEquals('EnglishProductTranslationNameNew-1', $response->name);
         $this->assertEquals('EvilCode', $response->code);
         $this->assertEquals('EvilNumber', $response->number);
         $this->assertEquals('EvilKnievel', $response->manufacturer);
@@ -490,42 +491,54 @@ class ProductControllerTest extends DatabaseTestCase
 
     public function testPutNotExistingParentProduct()
     {
-        $this->client->request('PUT', '/api/products/1', array('number' => 1, 'parent' => 666));
+        $this->client->request('PUT', '/api/products/1', array('number' => 1, 'parent' => array('id' => 666)));
 
         $response = json_decode($this->client->getResponse()->getContent());
 
         $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
-        $this->assertEquals('Entity with the type "SuluProductBundle:Product" and the id "666" not found.', $response->message);
+        $this->assertEquals(
+            'Entity with the type "SuluProductBundle:Product" and the id "666" not found.',
+            $response->message
+        );
     }
 
     public function testPutNotExistingAttributeSet()
     {
-        $this->client->request('PUT', '/api/products/1', array('number' => 1, 'attributeSet' => 666));
+        $this->client->request('PUT', '/api/products/1', array('number' => 1, 'attributeSet' => array('id' => 666)));
 
         $response = json_decode($this->client->getResponse()->getContent());
 
         $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
-        $this->assertEquals('Entity with the type "SuluProductBundle:AttributeSet" and the id "666" not found.', $response->message);
+        $this->assertEquals(
+            'Entity with the type "SuluProductBundle:AttributeSet" and the id "666" not found.',
+            $response->message
+        );
     }
 
     public function testPutNotExistingType()
     {
-        $this->client->request('PUT', '/api/products/1', array('number' => 1, 'type' => 666));
+        $this->client->request('PUT', '/api/products/1', array('number' => 1, 'type' => array('id' => 666)));
 
         $response = json_decode($this->client->getResponse()->getContent());
 
         $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
-        $this->assertEquals('Entity with the type "SuluProductBundle:Type" and the id "666" not found.', $response->message);
+        $this->assertEquals(
+            'Entity with the type "SuluProductBundle:Type" and the id "666" not found.',
+            $response->message
+        );
     }
 
     public function testPutNotExistingStatus()
     {
-        $this->client->request('PUT', '/api/products/1', array('number' => 1, 'status' => 666));
+        $this->client->request('PUT', '/api/products/1', array('number' => 1, 'status' => array('id' => 666)));
 
         $response = json_decode($this->client->getResponse()->getContent());
 
         $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
-        $this->assertEquals('Entity with the type "SuluProductBundle:Status" and the id "666" not found.', $response->message);
+        $this->assertEquals(
+            'Entity with the type "SuluProductBundle:Status" and the id "666" not found.',
+            $response->message
+        );
     }
 
     public function testPost($testParent = false)
@@ -539,14 +552,22 @@ class ProductControllerTest extends DatabaseTestCase
             'longDescription' => 'Indeed, it\'s a real english product.',
             'number' => 'NUMBER:0815',
             'manufacturer' => $this->product1->getManufacturer(),
-            'manufacturerCountry' => $this->product1->getManufacturerCountry(),
+            'manufacturerCountry' => array(
+                'id' => $this->product1->getManufacturerCountry()
+            ),
             'created' => $dateTime,
             'changed' => $dateTime,
             'cost' => 666.66,
             'priceInfo' => 'Preis Info',
-            'status' => $this->productStatus1->getId(),
-            'type' => $this->type1->getId(),
-            'attributeSet' => $this->attributeSet1->getId(),
+            'status' => array(
+                'id' => $this->productStatus1->getId()
+            ),
+            'type' => array(
+                'id' => $this->type1->getId()
+            ),
+            'attributeSet' => array(
+                'id' => $this->attributeSet1->getId()
+            ),
             'attributes' => array(
                 array(
                     'attribute' => array(
@@ -605,8 +626,6 @@ class ProductControllerTest extends DatabaseTestCase
 
     public function testPostMissingNumber()
     {
-        $dateTime = new DateTime();
-
         $data = array(
             'code' => 'CODE:0815',
             'manufacturer' => $this->product1->getManufacturer(),
@@ -626,19 +645,19 @@ class ProductControllerTest extends DatabaseTestCase
     }
 
     public function testPostNoType()
-{
-    $data = array(
-        'code' => 'CODE:0815',
-        'number' => 'NUMBER:0815',
-        'status' => $this->productStatus1->getId()
-    );
+    {
+        $data = array(
+            'code' => 'CODE:0815',
+            'number' => 'NUMBER:0815',
+            'status' => $this->productStatus1->getId()
+        );
 
-    $this->client->request('POST', '/api/products', $data);
-    $response = json_decode($this->client->getResponse()->getContent());
+        $this->client->request('POST', '/api/products', $data);
+        $response = json_decode($this->client->getResponse()->getContent());
 
-    $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
-    $this->assertEquals('There is no type for the product given', $response->message);
-}
+        $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
+        $this->assertEquals('There is no type for the product given', $response->message);
+    }
 
     public function testPostNotExistingType()
     {
@@ -653,7 +672,10 @@ class ProductControllerTest extends DatabaseTestCase
         $response = json_decode($this->client->getResponse()->getContent());
 
         $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
-        $this->assertEquals('Entity with the type "SuluProductBundle:Type" and the id "666" not found.', $response->message);
+        $this->assertEquals(
+            'Entity with the type "SuluProductBundle:Type" and the id "666" not found.',
+            $response->message
+        );
     }
 
     public function testPostNoStatus()
@@ -684,7 +706,10 @@ class ProductControllerTest extends DatabaseTestCase
         $response = json_decode($this->client->getResponse()->getContent());
 
         $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
-        $this->assertEquals('Entity with the type "SuluProductBundle:Status" and the id "666" not found.', $response->message);
+        $this->assertEquals(
+            'Entity with the type "SuluProductBundle:Status" and the id "666" not found.',
+            $response->message
+        );
     }
 
     public function testPostNotExistingParentProduct()
@@ -701,7 +726,10 @@ class ProductControllerTest extends DatabaseTestCase
         $response = json_decode($this->client->getResponse()->getContent());
 
         $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
-        $this->assertEquals('Entity with the type "SuluProductBundle:Product" and the id "666" not found.', $response->message);
+        $this->assertEquals(
+            'Entity with the type "SuluProductBundle:Product" and the id "666" not found.',
+            $response->message
+        );
     }
 
     public function testPostNotExistingAttributeSet()
@@ -718,7 +746,10 @@ class ProductControllerTest extends DatabaseTestCase
         $response = json_decode($this->client->getResponse()->getContent());
 
         $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
-        $this->assertEquals('Entity with the type "SuluProductBundle:AttributeSet" and the id "666" not found.', $response->message);
+        $this->assertEquals(
+            'Entity with the type "SuluProductBundle:AttributeSet" and the id "666" not found.',
+            $response->message
+        );
     }
 
     public function testDeleteById()
