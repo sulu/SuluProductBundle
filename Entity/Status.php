@@ -125,7 +125,7 @@ class Status
     public function getName($languageCode) {
         foreach ($this->getTranslations() as $translation) {
             /** @var StatusTranslation $translation */
-            if ($translation->getLanguageCode() == $languageCode) {
+            if ($translation->getLocale() == $languageCode) {
                 return $translation->getName();
             }
         }

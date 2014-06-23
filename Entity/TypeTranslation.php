@@ -25,7 +25,7 @@ class TypeTranslation
     /**
      * @var string
      */
-    private $languageCode;
+    private $locale;
 
     /**
      * @var integer
@@ -66,9 +66,9 @@ class TypeTranslation
      * @param string $languageCode
      * @return TypeTranslation
      */
-    public function setLanguageCode($languageCode)
+    public function setLocale($languageCode)
     {
-        $this->languageCode = $languageCode;
+        $this->locale = $languageCode;
     
         return $this;
     }
@@ -78,9 +78,9 @@ class TypeTranslation
      *
      * @return string 
      */
-    public function getLanguageCode()
+    public function getLocale()
     {
-        return $this->languageCode;
+        return $this->locale;
     }
 
     /**

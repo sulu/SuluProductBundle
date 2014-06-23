@@ -340,6 +340,13 @@ interface ProductInterface
     public function getTranslations();
 
     /**
+     * Get one specific translation
+     * @param string $locale The locale of the translation to get
+     * @return ProductTranslation
+     */
+    public function getTranslation($locale);
+
+    /**
      * Add extras
      *
      * @param Addon $addon
