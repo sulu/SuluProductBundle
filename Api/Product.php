@@ -300,7 +300,12 @@ class Product extends ApiEntityWrapper
      */
     public function getAttributeSet()
     {
-        return new AttributeSet($this->entity->getAttributeSet(), $this->locale);
+        $attributeSet = $this->entity->getAttributeSet();
+        if ($attributeSet) {
+            return new AttributeSet($attributeSet, $this->locale);
+        } else {
+            return null;
+        }
     }
 
     /**

@@ -31,7 +31,7 @@ class TemplateController extends Controller
         foreach ($statuses as $status) {
             $statusTitles[] = array(
                 'id' => $status->getId(),
-                'name' => $status->getName('de') // TODO use real language
+                'name' => $status->getId() // TODO use real language
             );
         }
 
