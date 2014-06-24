@@ -23,10 +23,6 @@ define([], function() {
 
         header: function() {
             return {
-                breadcrumb: [
-                    {title: 'navigation.pim'},
-                    {title: 'pim.products.title'}
-                ],
                 toolbar: {
                     template: 'default'
                 }
@@ -64,13 +60,16 @@ define([], function() {
             this.sandbox.on('sulu.products.saved', function(id) {
                 this.options.data.id = id;
                 this.setHeaderBar(true);
-                this.setTitle();
-                this.setBreadcrumb();
+                this.setHeaderInformation();
             }, this);
 
             // back to list
             this.sandbox.on('sulu.header.back', function() {
                 this.sandbox.emit('sulu.products.list');
+            }, this);
+
+            this.sandbox.on('sulu.header.initialized', function() {
+                this.setHeaderInformation();
             }, this);
         },
 
@@ -92,8 +91,8 @@ define([], function() {
 
         render: function() {
             this.sandbox.dom.html(this.$el, this.renderTemplate('/admin/product/template/product/form'));
-            this.setTitle();
-            this.setBreadcrumb();
+
+            this.setHeaderInformation();
 
             this.initForm(this.options.data);
         },
@@ -114,22 +113,20 @@ define([], function() {
             }.bind(this));
         },
 
-        setTitle: function() {
+        setHeaderInformation: function() {
             var title = 'pim.product.title';
             if (!!this.options.data && !!this.options.data.name) {
                 title = this.options.data.name;
             }
             this.sandbox.emit('sulu.header.set-title', title);
-        },
 
-        setBreadcrumb: function() {
             var breadcrumb = [
                 {title: 'navigation.pim'},
                 {title: 'pim.products.title'}
             ];
-            if (!!this.options.data && !!this.options.data.name) {
+            if (!!this.options.data && !!this.options.data.number) {
                 breadcrumb.push({
-                    title: this.options.data.name
+                    title: '#' + this.options.data.number
                 });
             } else {
                 breadcrumb.push({
