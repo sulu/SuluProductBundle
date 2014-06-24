@@ -104,7 +104,7 @@ class ProductManager implements ProductManagerInterface
      */
     public function delete(Product $product, $userId)
     {
-        $this->em->remove($product);
+        $this->em->remove($product->getEntity());
         $this->em->flush();
     }
 }

@@ -171,8 +171,8 @@ class ProductController extends RestController implements ClassResourceInterface
         try {
             $locale = $this->getLocale($request);
             $number = $request->get('number');
-            $typeId = $request->get('type');
-            $statusId = $request->get('status');
+            $typeId = $request->get('type')['id'];
+            $statusId = $request->get('status')['id'];
 
             if ($number == null) {
                 throw new RestException('There is no number for the product given');
@@ -189,13 +189,6 @@ class ProductController extends RestController implements ClassResourceInterface
             $product = new Product(new ProductEntity(), $locale);
 
             $this->fillProductFromRequest($request, $product);
-
-            $attributes = $request->get('attributes');
-            if (!empty($attributes)) {
-                foreach ($attributes as $attribute) {
-                    $this->addProductAttribute($product, $attribute);
-                }
-            }
 
             $product = $this->getManager()->save($product, $this->getUser()->getId());
 
@@ -219,7 +212,6 @@ class ProductController extends RestController implements ClassResourceInterface
         $locale = $this->getLocale($request);
 
         $delete = function ($id) use ($locale) {
-            /* @var Product $product */
             $product = $this->getManager()->findByIdAndLocale($id, $locale);
 
             if (!$product) {
@@ -231,42 +223,11 @@ class ProductController extends RestController implements ClassResourceInterface
                 throw new RestException(400, 'Deletion not allowed, because the product has sub products');
             }
 
-            $this->getManager()->remove($product);
+            $this->getManager()->delete($product, $this->getUser()->getId());
         };
         $view = $this->responseDelete($id, $delete);
 
         return $this->handleView($view);
-    }
-
-    /**
-     * Adds an attribute to the product.
-     *
-     * @param Product $product
-     * @param array $attributeData
-     * @throws \Sulu\Component\Rest\Exception\EntityIdAlreadySetException
-     * @throws \Sulu\Component\Rest\Exception\RestException
-     */
-    private function addProductAttribute(Product $product, array $attributeData)
-    {
-        $em = $this->getDoctrine()->getManager();
-
-        if (isset($attributeData['id'])) {
-            throw new EntityIdAlreadySetException($this->attributeEntityName, $attributeData['id']);
-        } elseif (!isset($attributeData['attribute'])) {
-            throw new RestException(404, 'Missing attribute property.');
-        } else {
-            $attribute = $this->getDoctrine()
-                ->getRepository($this->attributeEntityName)
-                ->find($attributeData['attribute']['id']);
-
-            $productAttribute = new ProductAttribute();
-            $productAttribute->setProduct($product->getEntity());
-            $productAttribute->setAttribute($attribute);
-            $productAttribute->setValue($attributeData['value']);
-
-            $em->persist($productAttribute);
-            $product->addProductAttribute($productAttribute);
-        }
     }
 
     /**

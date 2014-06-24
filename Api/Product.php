@@ -263,6 +263,10 @@ class Product extends ApiEntityWrapper
         return new Type($this->entity->getType(), $this->locale);
     }
 
+    /**
+     * Sets the type of the product
+     * @param TypeEntity $type The type of the product
+     */
     public function setType(TypeEntity $type)
     {
         $this->entity->setType($type);

@@ -543,8 +543,6 @@ class ProductControllerTest extends DatabaseTestCase
 
     public function testPost($testParent = false)
     {
-        $dateTime = new DateTime();
-
         $data = array(
             'code' => 'CODE:0815',
             'name' => 'English Product',
@@ -555,8 +553,6 @@ class ProductControllerTest extends DatabaseTestCase
             'manufacturerCountry' => array(
                 'id' => $this->product1->getManufacturerCountry()
             ),
-            'created' => $dateTime,
-            'changed' => $dateTime,
             'cost' => 666.66,
             'priceInfo' => 'Preis Info',
             'status' => array(
@@ -567,25 +563,11 @@ class ProductControllerTest extends DatabaseTestCase
             ),
             'attributeSet' => array(
                 'id' => $this->attributeSet1->getId()
-            ),
-            'attributes' => array(
-                array(
-                    'attribute' => array(
-                        'id' => $this->attribute1->getId()
-                    ),
-                    'value' => 'Very product'
-                ),
-                array(
-                    'attribute' => array(
-                        'id' => $this->attribute2->getId()
-                    ),
-                    'value' => 'Much shiny'
-                ),
-            ),
+            )
         );
 
         if ($testParent) {
-            $data['parent'] = $this->product2->getId();
+            $data['parent']['id'] = $this->product2->getId();
         }
 
         $this->client->request('POST', '/api/products', $data);
@@ -611,13 +593,6 @@ class ProductControllerTest extends DatabaseTestCase
 
         $this->assertEquals($this->attributeSet1->getId(), $response->attributeSet->id);
         $this->assertEquals('EnglishTemplate-1', $response->attributeSet->name);
-
-        $productAttribute = $response->productAttributes[0];
-        $this->assertEquals('Very product', $productAttribute->value);
-        $this->assertEquals($this->attribute1->getUnit(), $productAttribute->attribute->unit);
-        $this->assertEquals($this->attribute1->getType(), $productAttribute->attribute->type);
-        $this->assertEquals($this->attributeTranslation1->getName(), $productAttribute->name);
-        $this->assertEquals($this->attributeTranslation1->getLocale(), $productAttribute->languageCode);
 
         if ($testParent) {
             $this->assertEquals($this->product2->getId(), $response->parent->id);
@@ -664,8 +639,8 @@ class ProductControllerTest extends DatabaseTestCase
         $data = array(
             'code' => 'CODE:0815',
             'number' => 'NUMBER:0815',
-            'status' => $this->productStatus1->getId(),
-            'type' => 666,
+            'status' => array('id' => $this->productStatus1->getId()),
+            'type' => array('id' => 666),
         );
 
         $this->client->request('POST', '/api/products', $data);
@@ -683,7 +658,7 @@ class ProductControllerTest extends DatabaseTestCase
         $data = array(
             'code' => 'CODE:0815',
             'number' => 'NUMBER:0815',
-            'type' => $this->type1->getId()
+            'type' => array ('id' => $this->type1->getId())
         );
 
         $this->client->request('POST', '/api/products', $data);
@@ -698,8 +673,8 @@ class ProductControllerTest extends DatabaseTestCase
         $data = array(
             'code' => 'CODE:0815',
             'number' => 'NUMBER:0815',
-            'status' => 666,
-            'type' => $this->productStatus1->getId(),
+            'status' => array('id' => 666),
+            'type' => array('id' => $this->productStatus1->getId()),
         );
 
         $this->client->request('POST', '/api/products', $data);
@@ -717,9 +692,9 @@ class ProductControllerTest extends DatabaseTestCase
         $data = array(
             'code' => 'CODE:0815',
             'number' => 'NUMBER:0815',
-            'status' => $this->productStatus1->getId(),
-            'type' => $this->productStatus1->getId(),
-            'parent' => 666
+            'status' => array('id' => $this->productStatus1->getId()),
+            'type' => array('id' => $this->productStatus1->getId()),
+            'parent' => array('id' => 666)
         );
 
         $this->client->request('POST', '/api/products', $data);
@@ -737,9 +712,9 @@ class ProductControllerTest extends DatabaseTestCase
         $data = array(
             'code' => 'CODE:0815',
             'number' => 'NUMBER:0815',
-            'status' => $this->productStatus1->getId(),
-            'type' => $this->productStatus1->getId(),
-            'attributeSet' => 666
+            'status' => array('id' => $this->productStatus1->getId()),
+            'type' => array('id' => $this->productStatus1->getId()),
+            'attributeSet' => array('id' => 666)
         );
 
         $this->client->request('POST', '/api/products', $data);
@@ -756,5 +731,8 @@ class ProductControllerTest extends DatabaseTestCase
     {
         $this->client->request('DELETE', '/api/products/1');
         $this->assertEquals('204', $this->client->getResponse()->getStatusCode());
+
+        $this->client->request('GET', '/api/products/1');
+        $this->assertEquals('404', $this->client->getResponse()->getStatusCode());
     }
 }
