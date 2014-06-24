@@ -26,22 +26,25 @@ define(['suluproduct/models/product'], function(Product) {
             }
         },
 
-        /**
-         * Binds custom-related events
-         */
         bindCustomEvents: function() {
             this.sandbox.on('sulu.products.new', function() {
                 this.sandbox.emit('sulu.router.navigate', 'pim/products/add');
             }.bind(this));
+
             this.sandbox.on('sulu.products.save', function(data) {
                 this.save(data);
             }.bind(this));
+
             this.sandbox.on('sulu.products.import', function() {
                 this.sandbox.emit('sulu.router.navigate', 'pim/products/import');
             }.bind(this));
 
             this.sandbox.on('husky.datagrid.item.click', function(id) {
                 this.load(id);
+            }.bind(this));
+
+            this.sandbox.on('sulu.products.list', function() {
+                this.sandbox.emit('sulu.router.navigate', 'pim/products');
             }.bind(this));
         },
 
