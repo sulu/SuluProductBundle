@@ -12,6 +12,9 @@ namespace Sulu\Bundle\ProductBundle\Controller;
 
 use Doctrine\ORM\EntityManager;
 use FOS\RestBundle\Routing\ClassResourceInterface;
+use Hateoas\HateoasBuilder;
+use Hateoas\Representation\CollectionRepresentation;
+use Hateoas\Representation\PaginatedRepresentation;
 use Sulu\Bundle\ProductBundle\Api\Product;
 use Sulu\Bundle\ProductBundle\Entity\Product as ProductEntity;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSet;
@@ -23,6 +26,8 @@ use Sulu\Bundle\ProductBundle\Product\ProductManagerInterface;
 use Sulu\Component\Rest\Exception\EntityIdAlreadySetException;
 use Sulu\Component\Rest\Exception\EntityNotFoundException;
 use Sulu\Component\Rest\Exception\RestException;
+use Sulu\Component\Rest\ListBuilder\DoctrineListBuilder;
+use Sulu\Component\Rest\ListBuilder\DoctrineListBuilderFactory;
 use Sulu\Component\Rest\RestController;
 use Symfony\Component\HttpFoundation\Request;
 use FOS\RestBundle\Controller\Annotations\Get;
@@ -105,19 +110,31 @@ class ProductController extends RestController implements ClassResourceInterface
      */
     public function cgetAction(Request $request)
     {
-        $locale = $this->getLocale($request);
+        $page = $request->get('page', 1);
+        $limit = $request->get('limit', 10);
 
-        $filter = array(
-            'code' => $request->get('code'),
-            'number' => $request->get('number'),
-            'status' => $request->get('status'),
-            'type' => $request->get('type')
+        /** @var DoctrineListBuilderFactory $factory */
+        $factory = $this->get('sulu_core.doctrine_list_builder_factory');
+        $products = $factory->create($this->entityName)
+            ->execute();
+
+        array_walk(
+            $products,
+            function (&$product) use ($request) {
+                $product = new Product($product, $this->getLocale($request));
+            }
         );
 
-        $filter = array_filter($filter);
+        $collection = new PaginatedRepresentation(
+            new CollectionRepresentation($products),
+            'get_products',
+            array(),
+            $page,
+            $limit,
+            3
+        );
 
-        $result = $this->getManager()->findAllByLocale($locale, $filter);
-        $view = $this->view($this->createHalResponse($result), 200);
+        $view = $this->view($collection, 200);
         return $this->handleView($view);
     }
 

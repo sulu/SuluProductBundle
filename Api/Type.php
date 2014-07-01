@@ -10,12 +10,12 @@
 
 namespace Sulu\Bundle\ProductBundle\Api;
 
-use Sulu\Bundle\CoreBundle\Entity\ApiEntityWrapper;
 use Sulu\Bundle\ProductBundle\Entity\Type as Entity;
 use JMS\Serializer\Annotation\VirtualProperty;
 use JMS\Serializer\Annotation\SerializedName;
+use Sulu\Component\Rest\ApiWrapper;
 
-class Type extends ApiEntityWrapper
+class Type extends ApiWrapper
 {
     /**
      * @param Entity $type

@@ -12,21 +12,23 @@ namespace Sulu\Bundle\ProductBundle\Api;
 
 use Sulu\Bundle\ProductBundle\Entity\ProductAttribute;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface as Entity;
-use Sulu\Bundle\CoreBundle\Entity\ApiEntityWrapper;
 use JMS\Serializer\Annotation\VirtualProperty;
 use JMS\Serializer\Annotation\SerializedName;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductTranslation;
+use Sulu\Component\Rest\ApiWrapper;
 use Sulu\Component\Security\UserInterface;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSet as AttributeSetEntity;
 use Sulu\Bundle\ProductBundle\Entity\Status as StatusEntity;
 use Sulu\Bundle\ProductBundle\Entity\Type as TypeEntity;
+use Hateoas\Configuration\Annotation\Relation;
 
 /**
  * The product class which will be exported to the API
  * @package Sulu\Bundle\ProductBundle\Api
+ * @Relation("self", href="expr('/api/admin/products/' ~ object.getId())")
  */
-class Product extends ApiEntityWrapper
+class Product extends ApiWrapper
 {
     /**
      * @param Entity $product The product to wrap

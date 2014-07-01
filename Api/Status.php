@@ -10,12 +10,12 @@
 
 namespace Sulu\Bundle\ProductBundle\Api;
 
-use Sulu\Bundle\CoreBundle\Entity\ApiEntityWrapper;
 use Sulu\Bundle\ProductBundle\Entity\Status as Entity;
 use JMS\Serializer\Annotation\VirtualProperty;
 use JMS\Serializer\Annotation\SerializedName;
+use Sulu\Component\Rest\ApiWrapper;
 
-class Status extends ApiEntityWrapper
+class Status extends ApiWrapper
 {
     /**
      * @param Entity $type
