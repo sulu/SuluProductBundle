@@ -116,6 +116,8 @@ class ProductController extends RestController implements ClassResourceInterface
         /** @var DoctrineListBuilderFactory $factory */
         $factory = $this->get('sulu_core.doctrine_list_builder_factory');
         $products = $factory->create($this->entityName)
+            ->limit($limit)
+            ->setCurrentPage($page)
             ->execute();
 
         array_walk(

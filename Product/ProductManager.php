@@ -91,7 +91,7 @@ class ProductManager implements ProductManagerInterface
         if ($product->getId() == null) {
             $product->setCreated(new \DateTime());
             $product->setCreator($user);
-            $this->em->persist($product->getEntity());
+            $this->em->persist($product->getObject());
         }
 
         $this->em->flush();
@@ -104,7 +104,7 @@ class ProductManager implements ProductManagerInterface
      */
     public function delete(Product $product, $userId)
     {
-        $this->em->remove($product->getEntity());
+        $this->em->remove($product->getObject());
         $this->em->flush();
     }
 }

@@ -23,7 +23,7 @@ class Type extends ApiWrapper
      */
     public function __construct(Entity $type, $locale)
     {
-        $this->entity = $type;
+        $this->object = $type;
         $this->locale = $locale;
     }
 
@@ -35,7 +35,7 @@ class Type extends ApiWrapper
      */
     public function getId()
     {
-        return $this->entity->getId();
+        return $this->object->getId();
     }
 
     /**
@@ -46,6 +46,6 @@ class Type extends ApiWrapper
      */
     public function getName()
     {
-        return $this->entity->getTranslation($this->locale)->getName();
+        return $this->object->getTranslation($this->locale)->getName();
     }
 } 
