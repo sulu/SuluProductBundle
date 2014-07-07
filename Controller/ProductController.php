@@ -37,7 +37,9 @@ class ProductController extends RestController implements ClassResourceInterface
 {
     protected $entityName = 'SuluProductBundle:Product';
     protected $productTypeEntityName = 'SuluProductBundle:Type';
+    protected $productTypeTranslationEntityName = 'SuluProductBundle:TypeTranslation';
     protected $productStatusEntityName = 'SuluProductBundle:Status';
+    protected $productStatusTranslationEntityName = 'SuluProductBundle:StatusTranslation';
     protected $attributeSetEntityName = 'SuluProductBundle:AttributeSet';
     protected $productTranslationEntityName = 'SuluProductBundle:ProductTranslation';
 
@@ -49,11 +51,20 @@ class ProductController extends RestController implements ClassResourceInterface
 
     public function __construct()
     {
-        $this->fieldDescriptors['name'] = new DoctrineFieldDescriptor('name', $this->entityName);
-        $this->fieldDescriptors['code'] = new DoctrineFieldDescriptor('code', $this->entityName);
-        $this->fieldDescriptors['number'] = new DoctrineFieldDescriptor('number', $this->entityName);
+        $this->fieldDescriptors['code'] = new DoctrineFieldDescriptor('code', 'code', $this->entityName);
+        $this->fieldDescriptors['number'] = new DoctrineFieldDescriptor('number', 'number', $this->entityName);
+
+        $this->fieldDescriptors['name'] = new DoctrineFieldDescriptor(
+            'name',
+            'name',
+            $this->productTranslationEntityName,
+            array(
+                $this->productTranslationEntityName => $this->entityName . '.translations'
+            )
+        );
 
         $this->fieldDescriptors['shortDescription'] = new DoctrineFieldDescriptor(
+            'shortDescription',
             'shortDescription',
             $this->productTranslationEntityName,
             array(
@@ -62,22 +73,28 @@ class ProductController extends RestController implements ClassResourceInterface
         );
         $this->fieldDescriptors['longDescription'] = new DoctrineFieldDescriptor(
             'longDescription',
+            'longDescription',
             $this->productTranslationEntityName,
             array(
                 $this->productTranslationEntityName => $this->entityName . '.translations'
             )
         );
         $this->fieldDescriptors['type'] = new DoctrineFieldDescriptor(
-            'type', $this->productTypeEntityName,
+            'name',
+            'type',
+            $this->productTypeTranslationEntityName,
             array(
-                $this->productTypeEntityName => $this->entityName . '.type'
+                $this->productTypeEntityName => $this->entityName . '.type',
+                $this->productTypeTranslationEntityName => $this->productTypeEntityName . '.translations',
             )
         );
         $this->fieldDescriptors['status'] = new DoctrineFieldDescriptor(
+            'name',
             'status',
-            $this->productStatusEntityName,
+            $this->productStatusTranslationEntityName,
             array(
-                $this->productStatusEntityName => $this->entityName . '.status'
+                $this->productStatusEntityName => $this->entityName . '.status',
+                $this->productStatusTranslationEntityName => $this->productStatusEntityName . '.translations',
             )
         );
     }
@@ -157,28 +174,36 @@ class ProductController extends RestController implements ClassResourceInterface
         $sortBy = $request->get('sortBy');
         $sortOrder = $request->get('sortOrder', 'asc');
         $fields = $request->get('fields');
+        $searchFields = $request->get('searchFields');
+        $search = $request->get('search');
 
         /** @var DoctrineListBuilderFactory $factory */
         $factory = $this->get('sulu_core.doctrine_list_builder_factory');
         $listBuilder = $factory->create($this->entityName)
-            ->sort($this->fieldDescriptors[$sortBy], $sortOrder)
             ->limit($limit)
             ->setCurrentPage($page);
 
         if ($fields != null) {
             foreach (explode(',', $fields) as $field) {
-                $listBuilder->add($this->fieldDescriptors[$field]);
+                $listBuilder->addField($this->fieldDescriptors[$field]);
             }
+        } else {
+            $listBuilder->setFields($this->fieldDescriptors);
+        }
+
+        if ($searchFields != null) {
+            foreach (explode(',', $searchFields) as $searchField) {
+                $listBuilder->addSearchField($this->fieldDescriptors[$searchField]);
+            }
+
+            $listBuilder->search($search);
+        }
+
+        if ($sortBy != null) {
+            $listBuilder->sort($this->fieldDescriptors[$sortBy], $sortOrder);
         }
 
         $products = $listBuilder->execute();
-
-        array_walk(
-            $products,
-            function (&$product) use ($request) {
-                $product = new Product($product, $this->getLocale($request));
-            }
-        );
 
         $collection = new PaginatedRepresentation(
             new CollectionRepresentation($products),
