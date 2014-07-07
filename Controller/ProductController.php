@@ -12,23 +12,17 @@ namespace Sulu\Bundle\ProductBundle\Controller;
 
 use Doctrine\ORM\EntityManager;
 use FOS\RestBundle\Routing\ClassResourceInterface;
-use Hateoas\HateoasBuilder;
-use Hateoas\Representation\CollectionRepresentation;
-use Hateoas\Representation\PaginatedRepresentation;
 use Sulu\Bundle\ProductBundle\Api\Product;
 use Sulu\Bundle\ProductBundle\Entity\Product as ProductEntity;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSet;
-use Sulu\Bundle\ProductBundle\Entity\ProductAttribute;
-use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\ProductBundle\Entity\Status;
 use Sulu\Bundle\ProductBundle\Entity\Type;
 use Sulu\Bundle\ProductBundle\Product\ProductManagerInterface;
-use Sulu\Component\Rest\Exception\EntityIdAlreadySetException;
 use Sulu\Component\Rest\Exception\EntityNotFoundException;
 use Sulu\Component\Rest\Exception\RestException;
-use Sulu\Component\Rest\ListBuilder\DoctrineListBuilder;
 use Sulu\Component\Rest\ListBuilder\DoctrineListBuilderFactory;
 use Sulu\Component\Rest\ListBuilder\FieldDescriptor\DoctrineFieldDescriptor;
+use Sulu\Component\Rest\ListBuilder\ListRepresentation;
 use Sulu\Component\Rest\RestController;
 use Symfony\Component\HttpFoundation\Request;
 use FOS\RestBundle\Controller\Annotations\Get;
@@ -51,8 +45,15 @@ class ProductController extends RestController implements ClassResourceInterface
 
     public function __construct()
     {
+        $this->fieldDescriptors['id'] = new DoctrineFieldDescriptor('id', 'id', $this->entityName);
         $this->fieldDescriptors['code'] = new DoctrineFieldDescriptor('code', 'code', $this->entityName);
         $this->fieldDescriptors['number'] = new DoctrineFieldDescriptor('number', 'number', $this->entityName);
+        $this->fieldDescriptors['manufacturer'] = new DoctrineFieldDescriptor('manufacturer', 'manufacturer', $this->entityName);
+        $this->fieldDescriptors['cost'] = new DoctrineFieldDescriptor('cost', 'cost', $this->entityName);
+        $this->fieldDescriptors['price'] = new DoctrineFieldDescriptor('price', 'price', $this->entityName);
+        $this->fieldDescriptors['priceInfo'] = new DoctrineFieldDescriptor('priceInfo', 'priceInfo', $this->entityName);
+        $this->fieldDescriptors['created'] = new DoctrineFieldDescriptor('created', 'created', $this->entityName);
+        $this->fieldDescriptors['changed'] = new DoctrineFieldDescriptor('changed', 'changed', $this->entityName);
 
         $this->fieldDescriptors['name'] = new DoctrineFieldDescriptor(
             'name',
@@ -205,16 +206,10 @@ class ProductController extends RestController implements ClassResourceInterface
 
         $products = $listBuilder->execute();
 
-        $collection = new PaginatedRepresentation(
-            new CollectionRepresentation($products),
-            'get_products',
-            array(),
-            $page,
-            $limit,
-            ceil($listBuilder->count() / $limit)
-        );
+        $total = $listBuilder->count();
+        $list = new ListRepresentation($products, 'get_products', $request->query->all(), $page, $limit, $total);
 
-        $view = $this->view($collection, 200);
+        $view = $this->view($list, 200);
         return $this->handleView($view);
     }
 
