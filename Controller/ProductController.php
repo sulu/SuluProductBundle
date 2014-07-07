@@ -28,6 +28,7 @@ use Sulu\Component\Rest\Exception\EntityNotFoundException;
 use Sulu\Component\Rest\Exception\RestException;
 use Sulu\Component\Rest\ListBuilder\DoctrineListBuilder;
 use Sulu\Component\Rest\ListBuilder\DoctrineListBuilderFactory;
+use Sulu\Component\Rest\ListBuilder\FieldDescriptor\DoctrineFieldDescriptor;
 use Sulu\Component\Rest\RestController;
 use Symfony\Component\HttpFoundation\Request;
 use FOS\RestBundle\Controller\Annotations\Get;
@@ -35,10 +36,51 @@ use FOS\RestBundle\Controller\Annotations\Get;
 class ProductController extends RestController implements ClassResourceInterface
 {
     protected $entityName = 'SuluProductBundle:Product';
-    private $attributeEntityName = 'SuluProductBundle:Attribute';
     protected $productTypeEntityName = 'SuluProductBundle:Type';
     protected $productStatusEntityName = 'SuluProductBundle:Status';
     protected $attributeSetEntityName = 'SuluProductBundle:AttributeSet';
+    protected $productTranslationEntityName = 'SuluProductBundle:ProductTranslation';
+
+    /**
+     * Describes the fields, which are handled by this controller
+     * @var DoctrineFieldDescriptor[]
+     */
+    protected $fieldDescriptors = array();
+
+    public function __construct()
+    {
+        $this->fieldDescriptors['name'] = new DoctrineFieldDescriptor('name', $this->entityName);
+        $this->fieldDescriptors['code'] = new DoctrineFieldDescriptor('code', $this->entityName);
+        $this->fieldDescriptors['number'] = new DoctrineFieldDescriptor('number', $this->entityName);
+
+        $this->fieldDescriptors['shortDescription'] = new DoctrineFieldDescriptor(
+            'shortDescription',
+            $this->productTranslationEntityName,
+            array(
+                $this->productTranslationEntityName => $this->entityName . '.translations'
+            )
+        );
+        $this->fieldDescriptors['longDescription'] = new DoctrineFieldDescriptor(
+            'longDescription',
+            $this->productTranslationEntityName,
+            array(
+                $this->productTranslationEntityName => $this->entityName . '.translations'
+            )
+        );
+        $this->fieldDescriptors['type'] = new DoctrineFieldDescriptor(
+            'type', $this->productTypeEntityName,
+            array(
+                $this->productTypeEntityName => $this->entityName . '.type'
+            )
+        );
+        $this->fieldDescriptors['status'] = new DoctrineFieldDescriptor(
+            'status',
+            $this->productStatusEntityName,
+            array(
+                $this->productStatusEntityName => $this->entityName . '.status'
+            )
+        );
+    }
 
     /**
      * Returns the language.
@@ -112,12 +154,22 @@ class ProductController extends RestController implements ClassResourceInterface
     {
         $page = $request->get('page', 1);
         $limit = $request->get('limit', 10);
+        $sortBy = $request->get('sortBy');
+        $sortOrder = $request->get('sortOrder', 'asc');
+        $fields = $request->get('fields');
 
         /** @var DoctrineListBuilderFactory $factory */
         $factory = $this->get('sulu_core.doctrine_list_builder_factory');
         $listBuilder = $factory->create($this->entityName)
+            ->sort($this->fieldDescriptors[$sortBy], $sortOrder)
             ->limit($limit)
             ->setCurrentPage($page);
+
+        if ($fields != null) {
+            foreach (explode(',', $fields) as $field) {
+                $listBuilder->add($this->fieldDescriptors[$field]);
+            }
+        }
 
         $products = $listBuilder->execute();
 
