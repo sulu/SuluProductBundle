@@ -115,10 +115,11 @@ class ProductController extends RestController implements ClassResourceInterface
 
         /** @var DoctrineListBuilderFactory $factory */
         $factory = $this->get('sulu_core.doctrine_list_builder_factory');
-        $products = $factory->create($this->entityName)
+        $listBuilder = $factory->create($this->entityName)
             ->limit($limit)
-            ->setCurrentPage($page)
-            ->execute();
+            ->setCurrentPage($page);
+
+        $products = $listBuilder->execute();
 
         array_walk(
             $products,
@@ -133,7 +134,7 @@ class ProductController extends RestController implements ClassResourceInterface
             array(),
             $page,
             $limit,
-            3
+            ceil($listBuilder->count() / $limit)
         );
 
         $view = $this->view($collection, 200);
