@@ -11,6 +11,7 @@
 namespace Sulu\Bundle\ProductBundle\Product;
 
 use Sulu\Bundle\ProductBundle\Api\Product;
+use Sulu\Component\Rest\ListBuilder\FieldDescriptor\DoctrineFieldDescriptor;
 
 /**
  * The interface for the product manager
@@ -18,6 +19,19 @@ use Sulu\Bundle\ProductBundle\Api\Product;
  */
 interface ProductManagerInterface
 {
+    /**
+     * Returns the FieldDescriptors for the products
+     * @return DoctrineFieldDescriptor[]
+     */
+    public function getFieldDescriptors();
+
+    /**
+     * Returns the FieldDescriptor for the given key
+     * @param string $key The key of the FieldDescriptor to return
+     * @return DoctrineFieldDescriptor
+     */
+    public function getFieldDescriptor($key);
+
     /**
      * Returns the product with the given ID and locale
      * @param int $id The id of the product to load
@@ -36,11 +50,13 @@ interface ProductManagerInterface
 
     /**
      * Saves the given product
-     * @param Product $product
-     * @param int $userId The id of the user who called this action
+     * @param array $data The data for the product to save
+     * @param string $locale The locale in which the product should be saved
+     * @param integer $userId The id of the user who called this action
+     * @param integer $id The id of the product, if the product is already saved in the database
      * @return Product
      */
-    public function save(Product $product, $userId);
+    public function save(array $data, $locale, $userId, $id = null);
 
     /**
      * Deletes the given product

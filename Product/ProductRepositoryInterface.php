@@ -20,6 +20,13 @@ interface ProductRepositoryInterface
 {
     /**
      * Finds the product with the given ID
+     * @param integer $id The id of the product
+     * @return ProductInterface
+     */
+    public function findById($id);
+
+    /**
+     * Finds the product with the given ID in the given language
      * @param int $id The id of the product
      * @param string $locale The locale of the product to load
      * @return ProductInterface

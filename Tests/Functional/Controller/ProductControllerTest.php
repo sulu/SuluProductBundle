@@ -386,7 +386,7 @@ class ProductControllerTest extends DatabaseTestCase
     {
         $this->client->request('GET', '/api/products');
         $response = json_decode($this->client->getResponse()->getContent());
-        $items = $response->_embedded;
+        $items = $response->_embedded->products;
 
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
         $this->assertEquals(2, count($items));
@@ -408,15 +408,43 @@ class ProductControllerTest extends DatabaseTestCase
         $this->assertEquals($this->type2->getId(), $item->type->id);
     }
 
+    public function testGetAllFlat()
+    {
+        $this->client->request('GET', '/api/products?flat=true');
+        $response = json_decode($this->client->getResponse()->getContent());
+        $items = $response->_embedded->products;
+
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+        $this->assertEquals(2, count($items));
+
+        $item = $items[0];
+        $this->assertEquals('EnglishProductCode-1', $item->code);
+        $this->assertEquals('ProductNumber-1', $item->number);
+        $this->assertEquals('EnglishManufacturer-1', $item->manufacturer);
+        $this->assertEquals('EnglishProductType-1', $item->type);
+        $this->assertEquals('EnglishProductStatus-1', $item->status);
+        $this->assertEquals('EnglishProductType-1', $item->type);
+
+        $item = $items[1];
+        $this->assertEquals('EnglishProductCode-2', $item->code);
+        $this->assertEquals('ProductNumber-1', $item->number);
+        $this->assertEquals('EnglishManufacturer-2', $item->manufacturer);
+        $this->assertEquals('EnglishProductType-2', $item->type);
+        $this->assertEquals('EnglishProductStatus-2', $item->status);
+        $this->assertEquals('EnglishProductType-2', $item->type);
+    }
+
     public function testGetByStatus()
     {
         $this->client->request('GET', '/api/products?status=' . $this->productStatus1->getId());
         $response = json_decode($this->client->getResponse()->getContent());
 
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
-        $this->assertEquals(1, count($response->_embedded));
-        $this->assertEquals($this->product1->getManufacturer(), $response->_embedded[0]->manufacturer);
-        $this->assertEquals($this->productStatusTranslation1->getName(), $response->_embedded[0]->status->name);
+        $this->assertEquals(1, count($response->_embedded->products));
+        $this->assertEquals($this->product1->getManufacturer(), $response->_embedded->products[0]->manufacturer);
+        $this->assertEquals(
+            $this->productStatusTranslation1->getName(), $response->_embedded->products[0]->status->name
+        );
     }
 
     public function testGetByType()
@@ -425,9 +453,9 @@ class ProductControllerTest extends DatabaseTestCase
         $response = json_decode($this->client->getResponse()->getContent());
 
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
-        $this->assertEquals(1, count($response->_embedded));
-        $this->assertEquals($this->product1->getManufacturer(), $response->_embedded[0]->manufacturer);
-        $this->assertEquals($this->typeTranslation1->getName(), $response->_embedded[0]->type->name);
+        $this->assertEquals(1, count($response->_embedded->products));
+        $this->assertEquals($this->product1->getManufacturer(), $response->_embedded->products[0]->manufacturer);
+        $this->assertEquals($this->typeTranslation1->getName(), $response->_embedded->products[0]->type->name);
     }
 
     public function testGetByCode()
@@ -437,21 +465,8 @@ class ProductControllerTest extends DatabaseTestCase
 
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
         $this->assertEquals(1, count($response->_embedded));
-        $this->assertEquals($this->product1->getManufacturer(), $response->_embedded[0]->manufacturer);
-        $this->assertEquals($this->product1->getCode(), $response->_embedded[0]->code);
-    }
-
-    public function testGetByNumber()
-    {
-        $this->client->request('GET', '/api/products?number=' . 'ProductNumber-1');
-        $response = json_decode($this->client->getResponse()->getContent());
-
-        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
-        $this->assertEquals(2, count($response->_embedded));
-        $this->assertEquals($this->product1->getManufacturer(), $response->_embedded[0]->manufacturer);
-        $this->assertEquals($this->product1->getNumber(), $response->_embedded[0]->number);
-        $this->assertEquals($this->product2->getManufacturer(), $response->_embedded[1]->manufacturer);
-        $this->assertEquals($this->product2->getNumber(), $response->_embedded[1]->number);
+        $this->assertEquals($this->product1->getManufacturer(), $response->_embedded->products[0]->manufacturer);
+        $this->assertEquals($this->product1->getCode(), $response->_embedded->products[0]->code);
     }
 
     public function testPut()
@@ -463,7 +478,13 @@ class ProductControllerTest extends DatabaseTestCase
                 'name' => 'EnglishProductTranslationNameNew-1',
                 'code' => 'EvilCode',
                 'number' => 'EvilNumber',
-                'manufacturer' => 'EvilKnievel'
+                'manufacturer' => 'EvilKnievel',
+                'status' => array(
+                    'id' => $this->productStatus1->getId()
+                ),
+                'type' => array(
+                    'id' => $this->type1->getId()
+                ),
             )
         );
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
@@ -480,18 +501,37 @@ class ProductControllerTest extends DatabaseTestCase
     public function testPutNotExisting()
     {
         $this->client->request('PUT', '/api/products/666', array('code' => 'MissingProduct'));
+        $response = json_decode($this->client->getResponse()->getContent());
+
         $this->assertEquals(404, $this->client->getResponse()->getStatusCode());
+
+        $this->assertEquals(
+            'Entity with the type "SuluProductBundle:Product" and the id "666" not found.',
+            $response->message
+        );
     }
 
     public function testPutMissingNumber()
     {
         $this->client->request('PUT', '/api/products/1', array('number' => null));
+
+        $response = json_decode($this->client->getResponse()->getContent());
+
         $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
+        $this->assertEquals('The "SuluProductBundle:Product"-entity requires a "number"-argument', $response->message);
     }
 
     public function testPutNotExistingParentProduct()
     {
-        $this->client->request('PUT', '/api/products/1', array('number' => 1, 'parent' => array('id' => 666)));
+        $this->client->request(
+            'PUT', '/api/products/1', array(
+                'number' => 1,
+                'status' => array('id' => 1),
+                'type' => array('id' => 1),
+                'attributeSet' => array('id' => 1),
+                'parent' => array('id' => 666)
+            )
+        );
 
         $response = json_decode($this->client->getResponse()->getContent());
 
@@ -504,7 +544,15 @@ class ProductControllerTest extends DatabaseTestCase
 
     public function testPutNotExistingAttributeSet()
     {
-        $this->client->request('PUT', '/api/products/1', array('number' => 1, 'attributeSet' => array('id' => 666)));
+        $this->client->request(
+            'PUT', '/api/products/1',
+            array(
+                'number' => 1,
+                'status' => array('id' => 1),
+                'type' => array('id' => 1),
+                'attributeSet' => array('id' => 666)
+            )
+        );
 
         $response = json_decode($this->client->getResponse()->getContent());
 
@@ -517,7 +565,9 @@ class ProductControllerTest extends DatabaseTestCase
 
     public function testPutNotExistingType()
     {
-        $this->client->request('PUT', '/api/products/1', array('number' => 1, 'type' => array('id' => 666)));
+        $this->client->request(
+            'PUT', '/api/products/1', array('number' => 1, 'status' => array('id' => 666), 'type' => array('id' => 666))
+        );
 
         $response = json_decode($this->client->getResponse()->getContent());
 
@@ -530,7 +580,9 @@ class ProductControllerTest extends DatabaseTestCase
 
     public function testPutNotExistingStatus()
     {
-        $this->client->request('PUT', '/api/products/1', array('number' => 1, 'status' => array('id' => 666)));
+        $this->client->request(
+            'PUT', '/api/products/1', array('number' => 1, 'type' => array('id' => 1), 'status' => array('id' => 666))
+        );
 
         $response = json_decode($this->client->getResponse()->getContent());
 
@@ -631,7 +683,7 @@ class ProductControllerTest extends DatabaseTestCase
         $response = json_decode($this->client->getResponse()->getContent());
 
         $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
-        $this->assertEquals('There is no type for the product given', $response->message);
+        $this->assertEquals('The "SuluProductBundle:Product"-entity requires a "type"-argument', $response->message);
     }
 
     public function testPostNotExistingType()
@@ -658,14 +710,14 @@ class ProductControllerTest extends DatabaseTestCase
         $data = array(
             'code' => 'CODE:0815',
             'number' => 'NUMBER:0815',
-            'type' => array ('id' => $this->type1->getId())
+            'type' => array('id' => $this->type1->getId())
         );
 
         $this->client->request('POST', '/api/products', $data);
         $response = json_decode($this->client->getResponse()->getContent());
 
         $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
-        $this->assertEquals('There is no status for the product given', $response->message);
+        $this->assertEquals('The "SuluProductBundle:Product"-entity requires a "status"-argument', $response->message);
     }
 
     public function testPostNotExistingStatus()

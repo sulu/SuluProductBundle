@@ -35,7 +35,7 @@ class Product extends ApiWrapper
      * @param string $locale The locale of this product
      */
     public function __construct(Entity $product, $locale) {
-        $this->object = $product;
+        $this->entity = $product;
         $this->locale = $locale;
     }
 
@@ -47,7 +47,7 @@ class Product extends ApiWrapper
      */
     public function getId()
     {
-        return $this->object->getId();
+        return $this->entity->getId();
     }
 
     /**
@@ -118,7 +118,7 @@ class Product extends ApiWrapper
      */
     public function getCode()
     {
-        return $this->object->getCode();
+        return $this->entity->getCode();
     }
 
     /**
@@ -127,7 +127,7 @@ class Product extends ApiWrapper
      */
     public function setCode($code)
     {
-        $this->object->setCode($code);
+        $this->entity->setCode($code);
     }
 
     /**
@@ -138,7 +138,7 @@ class Product extends ApiWrapper
      */
     public function getNumber()
     {
-        return $this->object->getNumber();
+        return $this->entity->getNumber();
     }
 
     /**
@@ -147,7 +147,7 @@ class Product extends ApiWrapper
      */
     public function setNumber($number)
     {
-        $this->object->setNumber($number);
+        $this->entity->setNumber($number);
     }
 
     /**
@@ -158,7 +158,7 @@ class Product extends ApiWrapper
      */
     public function getCost()
     {
-        return $this->object->getCost();
+        return $this->entity->getCost();
     }
 
     /**
@@ -167,7 +167,7 @@ class Product extends ApiWrapper
      */
     public function setCost($cost)
     {
-        $this->object->setCost($cost);
+        $this->entity->setCost($cost);
     }
 
     /**
@@ -176,7 +176,7 @@ class Product extends ApiWrapper
      */
     public function setPriceInfo($priceInfo)
     {
-        $this->object->setPriceInfo($priceInfo);
+        $this->entity->setPriceInfo($priceInfo);
     }
 
     /**
@@ -187,7 +187,7 @@ class Product extends ApiWrapper
      */
     public function getPriceInfo()
     {
-        return $this->object->getPriceInfo();
+        return $this->entity->getPriceInfo();
     }
 
     /**
@@ -198,7 +198,7 @@ class Product extends ApiWrapper
      */
     public function getManufacturer()
     {
-        return $this->object->getManufacturer();
+        return $this->entity->getManufacturer();
     }
 
     /**
@@ -207,7 +207,7 @@ class Product extends ApiWrapper
      */
     public function setManufacturer($manufacturer)
     {
-        $this->object->setManufacturer($manufacturer);
+        $this->entity->setManufacturer($manufacturer);
     }
 
     /**
@@ -218,7 +218,7 @@ class Product extends ApiWrapper
      */
     public function getParent()
     {
-        $parent = $this->object->getParent();
+        $parent = $this->entity->getParent();
 
         if ($parent) {
             return new Product($parent, $this->locale);
@@ -233,7 +233,7 @@ class Product extends ApiWrapper
      */
     public function setParent(ProductInterface $parent = null)
     {
-        $this->object->setParent($parent);
+        $this->entity->setParent($parent);
     }
 
     /**
@@ -242,7 +242,7 @@ class Product extends ApiWrapper
      */
     public function getChildren()
     {
-        return $this->object->getChildren();
+        return $this->entity->getChildren();
     }
 
     /**
@@ -251,7 +251,7 @@ class Product extends ApiWrapper
      */
     public function addProductAttribute(ProductAttribute $productAttribute)
     {
-        $this->object->addProductAttribute($productAttribute);
+        $this->entity->addProductAttribute($productAttribute);
     }
 
     /**
@@ -262,7 +262,7 @@ class Product extends ApiWrapper
      */
     public function getType()
     {
-        return new Type($this->object->getType(), $this->locale);
+        return new Type($this->entity->getType(), $this->locale);
     }
 
     /**
@@ -271,7 +271,7 @@ class Product extends ApiWrapper
      */
     public function setType(TypeEntity $type)
     {
-        $this->object->setType($type);
+        $this->entity->setType($type);
     }
 
     /**
@@ -282,7 +282,7 @@ class Product extends ApiWrapper
      */
     public function getStatus()
     {
-        return new Status($this->object->getStatus(), $this->locale);
+        return new Status($this->entity->getStatus(), $this->locale);
     }
 
     /**
@@ -291,7 +291,7 @@ class Product extends ApiWrapper
      */
     public function setStatus(StatusEntity $status)
     {
-        $this->object->setStatus($status);
+        $this->entity->setStatus($status);
     }
 
     /**
@@ -302,7 +302,7 @@ class Product extends ApiWrapper
      */
     public function getAttributeSet()
     {
-        $attributeSet = $this->object->getAttributeSet();
+        $attributeSet = $this->entity->getAttributeSet();
         if ($attributeSet) {
             return new AttributeSet($attributeSet, $this->locale);
         } else {
@@ -316,7 +316,7 @@ class Product extends ApiWrapper
      */
     public function setAttributeSet(AttributeSetEntity $attributeSet)
     {
-        $this->object->setAttributeSet($attributeSet);
+        $this->entity->setAttributeSet($attributeSet);
     }
 
     /**
@@ -325,7 +325,7 @@ class Product extends ApiWrapper
      */
     public function setChanger(UserInterface $user)
     {
-        $this->object->setChanger($user);
+        $this->entity->setChanger($user);
     }
 
     /**
@@ -334,7 +334,7 @@ class Product extends ApiWrapper
      */
     public function setCreator(UserInterface $user)
     {
-        $this->object->setCreator($user);
+        $this->entity->setCreator($user);
     }
 
     /**
@@ -343,7 +343,7 @@ class Product extends ApiWrapper
      */
     public function setChanged(\DateTime $changed)
     {
-        $this->object->setChanged($changed);
+        $this->entity->setChanged($changed);
     }
 
     /**
@@ -352,18 +352,18 @@ class Product extends ApiWrapper
      */
     public function setCreated(\DateTime $created)
     {
-        $this->object->setCreated($created);
+        $this->entity->setCreated($created);
     }
 
     private function getTranslation()
     {
-        $productTranslation = $this->object->getTranslation($this->locale);
+        $productTranslation = $this->entity->getTranslation($this->locale);
         if (!$productTranslation) {
             $productTranslation = new ProductTranslation();
             $productTranslation->setLocale($this->locale);
-            $productTranslation->setProduct($this->object);
+            $productTranslation->setProduct($this->entity);
 
-            $this->object->addTranslation($productTranslation);
+            $this->entity->addTranslation($productTranslation);
         }
         return $productTranslation;
     }

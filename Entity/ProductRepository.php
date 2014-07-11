@@ -14,6 +14,25 @@ use Sulu\Bundle\ProductBundle\Product\ProductRepositoryInterface;
  */
 class ProductRepository extends EntityRepository implements ProductRepositoryInterface
 {
+    /**
+     * {@inheritDoc}
+     */
+    public function findById($id)
+    {
+        try {
+            $qb = $this->createQueryBuilder('product')
+                ->andWhere('product.id = :productId')
+                ->setParameter('productId', $id);
+
+            return $qb->getQuery()->getSingleResult();
+        } catch (NoResultException $exc) {
+            return null;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function findByIdAndLocale($id, $locale)
     {
         try {
@@ -58,16 +77,6 @@ class ProductRepository extends EntityRepository implements ProductRepositoryInt
 
                     case 'type':
                         $qb->andWhere('type.id = :' . $key);
-                        $qb->setParameter($key, $value);
-                        break;
-
-                    case 'code':
-                        $qb->andWhere('product.code = :' . $key);
-                        $qb->setParameter($key, $value);
-                        break;
-
-                    case 'number':
-                        $qb->andWhere('product.number = :' . $key);
                         $qb->setParameter($key, $value);
                         break;
                 }
