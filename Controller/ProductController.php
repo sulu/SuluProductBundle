@@ -14,6 +14,7 @@ use FOS\RestBundle\Routing\ClassResourceInterface;
 use Hateoas\Representation\CollectionRepresentation;
 use Sulu\Bundle\ProductBundle\Api\Product;
 use Sulu\Bundle\ProductBundle\Product\Exception\MissingProductAttributeException;
+use Sulu\Bundle\ProductBundle\Product\Exception\ProductChildrenExistException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductDependencyNotFoundException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductNotFoundException;
 use Sulu\Bundle\ProductBundle\Product\ProductManagerInterface;
@@ -145,7 +146,7 @@ class ProductController extends RestController implements ClassResourceInterface
                 $request->request->all(),
                 $this->getLocale($request),
                 $this->getUser()->getId(),
-                $request->get('id')
+                $id
             );
 
             $view = $this->view($product, 200);
@@ -175,8 +176,7 @@ class ProductController extends RestController implements ClassResourceInterface
             $product = $this->getManager()->save(
                 $request->request->all(),
                 $this->getLocale($request),
-                $this->getUser()->getId(),
-                $request->get('id')
+                $this->getUser()->getId()
             );
 
             $view = $this->view($product, 200);
@@ -203,18 +203,11 @@ class ProductController extends RestController implements ClassResourceInterface
         $locale = $this->getLocale($request);
 
         $delete = function ($id) use ($locale) {
-            $product = $this->getManager()->findByIdAndLocale($id, $locale);
-
-            if (!$product) {
-                throw new EntityNotFoundException(self::$entityName, $id);
-            }
-
-            // do not allow to delete entity if child is existent
-            if (count($product->getChildren()) > 0) {
+            try {
+                $this->getManager()->delete($id, $this->getUser()->getId());
+            } catch (ProductChildrenExistException $exc) {
                 throw new RestException(400, 'Deletion not allowed, because the product has sub products');
             }
-
-            $this->getManager()->delete($product, $this->getUser()->getId());
         };
         $view = $this->responseDelete($id, $delete);
 

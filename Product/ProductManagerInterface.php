@@ -60,8 +60,8 @@ interface ProductManagerInterface
 
     /**
      * Deletes the given product
-     * @param Product $product The product to delete
+     * @param integer $id The id of the product to delete
      * @param int $userId The user who delete the product
      */
-    public function delete(Product $product, $userId);
+    public function delete($id, $userId);
 } 

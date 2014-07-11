@@ -566,7 +566,7 @@ class ProductControllerTest extends DatabaseTestCase
     public function testPutNotExistingType()
     {
         $this->client->request(
-            'PUT', '/api/products/1', array('number' => 1, 'status' => array('id' => 666), 'type' => array('id' => 666))
+            'PUT', '/api/products/1', array('number' => 1, 'status' => array('id' => 1), 'type' => array('id' => 666))
         );
 
         $response = json_decode($this->client->getResponse()->getContent());

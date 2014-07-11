@@ -21,6 +21,7 @@ use Sulu\Bundle\ProductBundle\Entity\StatusRepository;
 use Sulu\Bundle\ProductBundle\Entity\Type;
 use Sulu\Bundle\ProductBundle\Entity\TypeRepository;
 use Sulu\Bundle\ProductBundle\Product\Exception\MissingProductAttributeException;
+use Sulu\Bundle\ProductBundle\Product\Exception\ProductChildrenExistException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductDependencyNotFoundException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductNotFoundException;
 use Sulu\Component\Rest\ListBuilder\FieldDescriptor\DoctrineFieldDescriptor;
@@ -147,8 +148,6 @@ class ProductManager implements ProductManagerInterface
      */
     public function save(array $data, $locale, $userId, $id = null)
     {
-        $this->checkData($data, $id === null);
-
         if ($id) {
             $product = $this->productRepository->findByIdAndLocale($id, $locale);
 
@@ -160,6 +159,8 @@ class ProductManager implements ProductManagerInterface
         } else {
             $product = new Product(new ProductEntity(), $locale);
         }
+
+        $this->checkData($data, $id === null);
 
         $user = $this->userRepository->findUserById($userId);
 
@@ -231,9 +232,20 @@ class ProductManager implements ProductManagerInterface
     /**
      * {@inheritDoc}
      */
-    public function delete(Product $product, $userId)
+    public function delete($id, $userId)
     {
-        $this->em->remove($product->getEntity());
+        $product = $this->productRepository->findById($id);
+
+        if (!$product) {
+            throw new ProductNotFoundException($id);
+        }
+
+        // do not allow to delete entity if child is existent
+        if (count($product->getChildren()) > 0) {
+            throw new ProductChildrenExistException($id);
+        }
+
+        $this->em->remove($product);
         $this->em->flush();
     }
 
