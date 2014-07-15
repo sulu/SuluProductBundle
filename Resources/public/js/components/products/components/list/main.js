@@ -80,6 +80,7 @@ define(function() {
                 {
                     el: this.sandbox.dom.find('#products-list', this.$el),
                     url: '/admin/api/products?flat=true',
+                    resultKey: 'products',
                     viewOptions: {
                         table: {
                             fullWidth: true
