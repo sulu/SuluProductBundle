@@ -19,6 +19,14 @@ define(function() {
             width: true
         },
 
+        layout: {
+            content: {
+                width: 'max',
+                leftSpace: false,
+                rightSpace: false
+            }
+        },
+
         header: function() {
             return {
                 title: 'pim.products.title',

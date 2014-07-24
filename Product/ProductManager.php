@@ -24,7 +24,8 @@ use Sulu\Bundle\ProductBundle\Product\Exception\MissingProductAttributeException
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductChildrenExistException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductDependencyNotFoundException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductNotFoundException;
-use Sulu\Component\Rest\ListBuilder\FieldDescriptor\DoctrineFieldDescriptor;
+use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescriptor;
+use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineJoinDescriptor;
 use Sulu\Component\Security\UserRepositoryInterface;
 
 class ProductManager implements ProductManagerInterface
@@ -80,8 +81,7 @@ class ProductManager implements ProductManagerInterface
         TypeRepository $typeRepository,
         UserRepositoryInterface $userRepository,
         ObjectManager $em
-    )
-    {
+    ) {
         $this->productRepository = $productRepository;
         $this->attributeSetRepository = $attributeSetRepository;
         $this->statusRepository = $statusRepository;
@@ -285,42 +285,66 @@ class ProductManager implements ProductManagerInterface
             'name',
             'name',
             self::$productTranslationEntityName,
+            null,
             array(
-                self::$productTranslationEntityName => self::$productEntityName . '.translations'
+                self::$productTranslationEntityName => new DoctrineJoinDescriptor(
+                        self::$productTranslationEntityName,
+                        self::$productEntityName . '.translations'
+                    )
             )
         );
         $this->fieldDescriptors['shortDescription'] = new DoctrineFieldDescriptor(
             'shortDescription',
             'shortDescription',
             self::$productTranslationEntityName,
+            null,
             array(
-                self::$productTranslationEntityName => self::$productEntityName . '.translations'
+                self::$productTranslationEntityName => new DoctrineJoinDescriptor(
+                        self::$productTranslationEntityName,
+                        self::$productEntityName . '.translations'
+                    )
             )
         );
         $this->fieldDescriptors['longDescription'] = new DoctrineFieldDescriptor(
             'longDescription',
             'longDescription',
             self::$productTranslationEntityName,
+            null,
             array(
-                self::$productTranslationEntityName => self::$productEntityName . '.translations'
+                self::$productTranslationEntityName => new DoctrineJoinDescriptor(
+                        self::$productTranslationEntityName,
+                        self::$productEntityName . '.translations'
+                    )
             )
         );
         $this->fieldDescriptors['type'] = new DoctrineFieldDescriptor(
             'name',
             'type',
             self::$productTypeTranslationEntityName,
+            null,
             array(
-                self::$productTypeEntityName => self::$productEntityName . '.type',
-                self::$productTypeTranslationEntityName => self::$productTypeEntityName . '.translations',
+                self::$productTypeEntityName => new DoctrineJoinDescriptor(
+                        self::$productTypeEntityName,
+                        self::$productEntityName . '.type'
+                    ),
+                self::$productTypeTranslationEntityName => new DoctrineJoinDescriptor(
+                        self::$productTypeTranslationEntityName, self::$productTypeEntityName . '.translations'
+                    ),
             )
         );
         $this->fieldDescriptors['status'] = new DoctrineFieldDescriptor(
             'name',
             'status',
             self::$productStatusTranslationEntityName,
+            null,
             array(
-                self::$productStatusEntityName => self::$productEntityName . '.status',
-                self::$productStatusTranslationEntityName => self::$productStatusEntityName . '.translations',
+                self::$productStatusEntityName => new DoctrineJoinDescriptor(
+                        self::$productStatusEntityName,
+                        self::$productEntityName . '.status'
+                    ),
+                self::$productStatusTranslationEntityName => new DoctrineJoinDescriptor(
+                        self::$productStatusTranslationEntityName, self::$productStatusEntityName . '.translations'
+                    ),
             )
         );
     }
