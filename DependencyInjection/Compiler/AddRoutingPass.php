@@ -32,7 +32,8 @@ class AddRoutingPass implements CompilerPassInterface
             $container->setDefinition(
                 'sulu_product.product_route_provider',
                 new Definition(
-                    'Sulu\Bundle\ProductBundle\Routing\ProductRouteProvider', array(
+                    'Sulu\Bundle\ProductBundle\Routing\ProductRouteProvider',
+                    array(
                         new Reference('sulu_core.webspace.request_analyzer'),
                     )
                 )
@@ -44,7 +45,13 @@ class AddRoutingPass implements CompilerPassInterface
                     new Parameter('cmf_routing.dynamic_router.class'),
                     array(
                         new Reference('router.request_context'),
-                        new Reference('cmf_routing.nested_matcher'),
+                        new Definition(
+                            new Parameter('cmf_routing.nested_matcher.class'),
+                            array(
+                                new Reference('sulu_product.product_route_provider'),
+                                new Reference('cmf_routing.final_matcher')
+                            )
+                        ),
                         new Reference('cmf_routing.generator'),
                         new Parameter('cmf_routing.uri_filter_regexp'),
                         new Reference('event_dispatcher'),
