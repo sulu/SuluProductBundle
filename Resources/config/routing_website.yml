@@ -1,0 +1,3 @@
+sulu_product.product:
+    pattern: /products/{id}
+    defaults: { _controller: SuluProductBundle:ProductWebsite:display }
