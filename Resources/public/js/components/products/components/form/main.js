@@ -81,6 +81,10 @@ define([], function() {
             if (this.sandbox.form.validate(formSelector)) {
                 var data = this.sandbox.form.getData(formSelector);
 
+                if (data.id === '') {
+                    delete data.id;
+                }
+
                 data.type = {
                     id: 1 // TODO do not hardcode
                 };
@@ -114,16 +118,16 @@ define([], function() {
         },
 
         setHeaderInformation: function() {
-            var title = 'pim.product.title';
+            var title = 'pim.product.title',
+                breadcrumb = [
+                    {title: 'navigation.pim'},
+                    {title: 'pim.products.title'}
+                ];
             if (!!this.options.data && !!this.options.data.name) {
                 title = this.options.data.name;
             }
             this.sandbox.emit('sulu.header.set-title', title);
 
-            var breadcrumb = [
-                {title: 'navigation.pim'},
-                {title: 'pim.products.title'}
-            ];
             if (!!this.options.data && !!this.options.data.number) {
                 breadcrumb.push({
                     title: '#' + this.options.data.number
