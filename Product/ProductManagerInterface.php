@@ -11,7 +11,7 @@
 namespace Sulu\Bundle\ProductBundle\Product;
 
 use Sulu\Bundle\ProductBundle\Api\Product;
-use Sulu\Component\Rest\ListBuilder\FieldDescriptor\DoctrineFieldDescriptor;
+use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescriptor;
 
 /**
  * The interface for the product manager
@@ -21,9 +21,10 @@ interface ProductManagerInterface
 {
     /**
      * Returns the FieldDescriptors for the products
+     * @param $locale
      * @return DoctrineFieldDescriptor[]
      */
-    public function getFieldDescriptors();
+    public function getFieldDescriptors($locale);
 
     /**
      * Returns the FieldDescriptor for the given key
