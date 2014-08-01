@@ -37,14 +37,21 @@ class ProductWebsiteController
      */
     private $requestAnalyzer;
 
+    /**
+     * @var string
+     */
+    private $productTemplate;
+
     public function __construct(
         EngineInterface $templating,
         ProductManagerInterface $productManager,
-        RequestAnalyzerInterface $requestAnalyzer
+        RequestAnalyzerInterface $requestAnalyzer,
+        $productTemplate
     ) {
         $this->templating = $templating;
         $this->productManager = $productManager;
         $this->requestAnalyzer = $requestAnalyzer;
+        $this->productTemplate = $productTemplate;
     }
 
     public function displayAction($id)
@@ -55,7 +62,7 @@ class ProductWebsiteController
         );
 
         if ($product) {
-            return new Response($product->getName());
+            return $this->templating->renderResponse($this->productTemplate, array('product' => $product));
         } else {
             return new Response('404');
         }
