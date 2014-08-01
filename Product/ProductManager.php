@@ -68,12 +68,6 @@ class ProductManager implements ProductManagerInterface
      */
     private $em;
 
-    /**
-     * Describes the fields, which are handled by this controller
-     * @var DoctrineFieldDescriptor[]
-     */
-    protected $fieldDescriptors = array();
-
     public function __construct(
         ProductRepositoryInterface $productRepository,
         AttributeSetRepository $attributeSetRepository,
@@ -88,16 +82,107 @@ class ProductManager implements ProductManagerInterface
         $this->typeRepository = $typeRepository;
         $this->userRepository = $userRepository;
         $this->em = $em;
-
-        $this->initializeFieldDescriptors();
     }
 
     /**
      * {@inheritDoc}
      */
-    public function getFieldDescriptors()
+    public function getFieldDescriptors($locale)
     {
-        return $this->fieldDescriptors;
+        $fieldDescriptors = array();
+
+        $fieldDescriptors['id'] = new DoctrineFieldDescriptor('id', 'id', self::$productEntityName);
+        $fieldDescriptors['code'] = new DoctrineFieldDescriptor('code', 'code', self::$productEntityName);
+        $fieldDescriptors['number'] = new DoctrineFieldDescriptor('number', 'number', self::$productEntityName);
+        $fieldDescriptors['manufacturer'] = new DoctrineFieldDescriptor(
+            'manufacturer', 'manufacturer', self::$productEntityName
+        );
+        $fieldDescriptors['cost'] = new DoctrineFieldDescriptor('cost', 'cost', self::$productEntityName);
+        $fieldDescriptors['price'] = new DoctrineFieldDescriptor('price', 'price', self::$productEntityName);
+        $fieldDescriptors['priceInfo'] = new DoctrineFieldDescriptor(
+            'priceInfo', 'priceInfo', self::$productEntityName
+        );
+        $fieldDescriptors['created'] = new DoctrineFieldDescriptor(
+            'created', 'created', self::$productEntityName
+        );
+        $fieldDescriptors['changed'] = new DoctrineFieldDescriptor(
+            'changed', 'changed', self::$productEntityName
+        );
+
+        $fieldDescriptors['name'] = new DoctrineFieldDescriptor(
+            'name',
+            'name',
+            self::$productTranslationEntityName,
+            null,
+            array(
+                self::$productTranslationEntityName => new DoctrineJoinDescriptor(
+                        self::$productTranslationEntityName,
+                        self::$productEntityName . '.translations',
+                        self::$productTranslationEntityName . '.locale = \'' . $locale . '\''
+                    )
+            )
+        );
+        $fieldDescriptors['shortDescription'] = new DoctrineFieldDescriptor(
+            'shortDescription',
+            'shortDescription',
+            self::$productTranslationEntityName,
+            null,
+            array(
+                self::$productTranslationEntityName => new DoctrineJoinDescriptor(
+                        self::$productTranslationEntityName,
+                        self::$productEntityName . '.translations',
+                        self::$productTranslationEntityName . '.locale = \'' . $locale . '\''
+                    )
+            )
+        );
+        $fieldDescriptors['longDescription'] = new DoctrineFieldDescriptor(
+            'longDescription',
+            'longDescription',
+            self::$productTranslationEntityName,
+            null,
+            array(
+                self::$productTranslationEntityName => new DoctrineJoinDescriptor(
+                        self::$productTranslationEntityName,
+                        self::$productEntityName . '.translations',
+                        self::$productTranslationEntityName . '.locale = \'' . $locale . '\''
+                    )
+            )
+        );
+        $fieldDescriptors['type'] = new DoctrineFieldDescriptor(
+            'name',
+            'type',
+            self::$productTypeTranslationEntityName,
+            null,
+            array(
+                self::$productTypeEntityName => new DoctrineJoinDescriptor(
+                        self::$productTypeEntityName,
+                        self::$productEntityName . '.type'
+                    ),
+                self::$productTypeTranslationEntityName => new DoctrineJoinDescriptor(
+                        self::$productTypeTranslationEntityName,
+                        self::$productTypeEntityName . '.translations',
+                        self::$productTypeTranslationEntityName . '.locale = \'' . $locale . '\''
+                    ),
+            )
+        );
+        $fieldDescriptors['status'] = new DoctrineFieldDescriptor(
+            'name',
+            'status',
+            self::$productStatusTranslationEntityName,
+            null,
+            array(
+                self::$productStatusEntityName => new DoctrineJoinDescriptor(
+                        self::$productStatusEntityName,
+                        self::$productEntityName . '.status'
+                    ),
+                self::$productStatusTranslationEntityName => new DoctrineJoinDescriptor(
+                        self::$productStatusTranslationEntityName, self::$productStatusEntityName . '.translations',
+                        self::$productStatusTranslationEntityName . '.locale = \'' . $locale . '\''
+                    ),
+            )
+        );
+        
+        return $fieldDescriptors;
     }
 
     /**
@@ -259,94 +344,6 @@ class ProductManager implements ProductManagerInterface
     private function getProperty(array $data, $key, $default = null)
     {
         return array_key_exists($key, $data) ? $data[$key] : $default;
-    }
-
-    private function initializeFieldDescriptors()
-    {
-        $this->fieldDescriptors['id'] = new DoctrineFieldDescriptor('id', 'id', self::$productEntityName);
-        $this->fieldDescriptors['code'] = new DoctrineFieldDescriptor('code', 'code', self::$productEntityName);
-        $this->fieldDescriptors['number'] = new DoctrineFieldDescriptor('number', 'number', self::$productEntityName);
-        $this->fieldDescriptors['manufacturer'] = new DoctrineFieldDescriptor(
-            'manufacturer', 'manufacturer', self::$productEntityName
-        );
-        $this->fieldDescriptors['cost'] = new DoctrineFieldDescriptor('cost', 'cost', self::$productEntityName);
-        $this->fieldDescriptors['price'] = new DoctrineFieldDescriptor('price', 'price', self::$productEntityName);
-        $this->fieldDescriptors['priceInfo'] = new DoctrineFieldDescriptor(
-            'priceInfo', 'priceInfo', self::$productEntityName
-        );
-        $this->fieldDescriptors['created'] = new DoctrineFieldDescriptor(
-            'created', 'created', self::$productEntityName
-        );
-        $this->fieldDescriptors['changed'] = new DoctrineFieldDescriptor(
-            'changed', 'changed', self::$productEntityName
-        );
-
-        $this->fieldDescriptors['name'] = new DoctrineFieldDescriptor(
-            'name',
-            'name',
-            self::$productTranslationEntityName,
-            null,
-            array(
-                self::$productTranslationEntityName => new DoctrineJoinDescriptor(
-                        self::$productTranslationEntityName,
-                        self::$productEntityName . '.translations'
-                    )
-            )
-        );
-        $this->fieldDescriptors['shortDescription'] = new DoctrineFieldDescriptor(
-            'shortDescription',
-            'shortDescription',
-            self::$productTranslationEntityName,
-            null,
-            array(
-                self::$productTranslationEntityName => new DoctrineJoinDescriptor(
-                        self::$productTranslationEntityName,
-                        self::$productEntityName . '.translations'
-                    )
-            )
-        );
-        $this->fieldDescriptors['longDescription'] = new DoctrineFieldDescriptor(
-            'longDescription',
-            'longDescription',
-            self::$productTranslationEntityName,
-            null,
-            array(
-                self::$productTranslationEntityName => new DoctrineJoinDescriptor(
-                        self::$productTranslationEntityName,
-                        self::$productEntityName . '.translations'
-                    )
-            )
-        );
-        $this->fieldDescriptors['type'] = new DoctrineFieldDescriptor(
-            'name',
-            'type',
-            self::$productTypeTranslationEntityName,
-            null,
-            array(
-                self::$productTypeEntityName => new DoctrineJoinDescriptor(
-                        self::$productTypeEntityName,
-                        self::$productEntityName . '.type'
-                    ),
-                self::$productTypeTranslationEntityName => new DoctrineJoinDescriptor(
-                        self::$productTypeTranslationEntityName, self::$productTypeEntityName . '.translations'
-                    ),
-            )
-        );
-        $this->fieldDescriptors['status'] = new DoctrineFieldDescriptor(
-            'name',
-            'status',
-            self::$productStatusTranslationEntityName,
-            null,
-            array(
-                self::$productStatusEntityName => new DoctrineJoinDescriptor(
-                        self::$productStatusEntityName,
-                        self::$productEntityName . '.status'
-                    ),
-                self::$productStatusTranslationEntityName => new DoctrineJoinDescriptor(
-                        self::$productStatusTranslationEntityName, self::$productStatusEntityName . '.translations'
-                    ),
-            )
-        );
     }
 
     private function checkData($data, $create)

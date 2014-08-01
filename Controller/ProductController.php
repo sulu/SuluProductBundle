@@ -47,11 +47,14 @@ class ProductController extends RestController implements ClassResourceInterface
     /**
      * returns all fields that can be used by list
      * @Get("products/fields")
+     * @param \Symfony\Component\HttpFoundation\Request $request
      * @return mixed
      */
-    public function getFieldsAction()
+    public function getFieldsAction(Request $request)
     {
-        return $this->handleView($this->view(array_values($this->getManager()->getFieldDescriptors())));
+        return $this->handleView(
+            $this->view(array_values($this->getManager()->getFieldDescriptors($this->getLocale($request))))
+        );
     }
 
     /**
@@ -106,7 +109,10 @@ class ProductController extends RestController implements ClassResourceInterface
 
             $listBuilder = $factory->create(self::$entityName);
 
-            $restHelper->initializeListBuilder($listBuilder, $this->getManager()->getFieldDescriptors());
+            $restHelper->initializeListBuilder(
+                $listBuilder,
+                $this->getManager()->getFieldDescriptors($this->getLocale($request))
+            );
 
             foreach ($filter as $key => $value) {
                 $listBuilder->where($this->getManager()->getFieldDescriptor($key), $value);
@@ -129,6 +135,7 @@ class ProductController extends RestController implements ClassResourceInterface
         }
 
         $view = $this->view($list, 200);
+
         return $this->handleView($view);
     }
 
