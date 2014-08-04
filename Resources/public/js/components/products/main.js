@@ -28,7 +28,7 @@ define(['suluproduct/models/product', 'app-config'], function(Product, AppConfig
 
         bindCustomEvents: function() {
             this.sandbox.on('sulu.products.new', function() {
-                this.sandbox.emit('sulu.router.navigate', 'pim/products/add');
+                this.sandbox.emit('sulu.router.navigate', 'pim/products/' + AppConfig.getUser().locale + '/add');
             }.bind(this));
 
             this.sandbox.on('sulu.products.save', function(data) {
@@ -61,7 +61,7 @@ define(['suluproduct/models/product', 'app-config'], function(Product, AppConfig
                     if (!!data.id) {
                         this.sandbox.emit('sulu.products.saved', model);
                     } else {
-                        this.sandbox.emit('sulu.router.navigate', 'pim/products/edit:' + model.id + '/details');
+                        this.load(model.id, this.options.locale);
                     }
                 }.bind(this),
                 error: function() {

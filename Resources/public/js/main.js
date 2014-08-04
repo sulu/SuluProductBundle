@@ -34,9 +34,9 @@ define({
         });
 
         sandbox.mvc.routes.push({
-            route: 'pim/products/add',
-            callback: function() {
-                this.html('<div data-aura-component="products@suluproduct" data-aura-display="form"/>');
+            route: 'pim/products/:locale/add',
+            callback: function(locale) {
+                this.html('<div data-aura-component="products@suluproduct" data-aura-display="form" data-aura-locale="' + locale + '"/>');
             }
         });
 
