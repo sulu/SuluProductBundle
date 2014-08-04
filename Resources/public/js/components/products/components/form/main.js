@@ -24,7 +24,10 @@ define([], function() {
         header: function() {
             return {
                 toolbar: {
-                    template: 'default'
+                    template: 'default',
+                    languageChanger: {
+                        preSelected: this.options.locale
+                    }
                 }
             };
         },

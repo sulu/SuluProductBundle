@@ -82,6 +82,7 @@ define(['suluproduct/models/product', 'app-config'], function(Product, AppConfig
                     name: 'products/components/form@suluproduct',
                     options: {
                         el: $form,
+                        locale: this.options.locale,
                         data: this.product.defaults()
                     }
                 };
