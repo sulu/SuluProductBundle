@@ -60,7 +60,7 @@ define(function() {
                             'title': 'Add Product',
                             'class': 'highlight-white',
                             callback: function() {
-                                this.sandbox.emit('sulu.products.new')
+                                this.sandbox.emit('sulu.products.new');
                             }.bind(this)
                         },
                         {
