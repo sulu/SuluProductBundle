@@ -11,7 +11,8 @@ define([], function() {
 
     'use strict';
 
-    var formSelector = '#product-form';
+    var formSelector = '#product-form',
+        maxLengthTitle = 60;
 
     return {
 
@@ -129,6 +130,7 @@ define([], function() {
             if (!!this.options.data && !!this.options.data.name) {
                 title = this.options.data.name;
             }
+            title = this.sandbox.util.cropTail(title, maxLengthTitle);
             this.sandbox.emit('sulu.header.set-title', title);
 
             if (!!this.options.data && !!this.options.data.number) {
