@@ -31,7 +31,7 @@ class StatusManager
 
     /**
      * @param $locale
-     * @return null|Status
+     * @return null|Status[]
      */
     public function findAll($locale)
     {

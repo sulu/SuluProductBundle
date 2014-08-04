@@ -24,7 +24,9 @@ class StatusRepository extends EntityRepository
     public function findAllByLocale($locale)
     {
         try {
-            return $this->getStatusQuery($locale)->getQuery()->getResult();
+            $qb = $this->getStatusQuery($locale);
+
+            return $qb->getQuery()->getResult();
         } catch (NoResultException $exc) {
             return null;
         }
@@ -38,7 +40,7 @@ class StatusRepository extends EntityRepository
     private function getStatusQuery($locale)
     {
         $qb = $this->createQueryBuilder('status')
-            ->leftJoin('status.translations', 'statusTranslations', 'WITH', 'statusTranslations.locale = :locale')
+            ->innerJoin('status.translations', 'statusTranslations', 'WITH', 'statusTranslations.locale = :locale')
             ->setParameter('locale', $locale);
 
         return $qb;
