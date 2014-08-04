@@ -55,7 +55,7 @@ define(['suluproduct/models/product', 'app-config'], function(Product, AppConfig
         save: function(data) {
             this.sandbox.emit('sulu.header.toolbar.item.loading', 'save-button');
             this.product.set(data);
-            this.product.save(null, {
+            this.product.saveLocale(this.options.locale, {
                 success: function(response) {
                     var model = response.toJSON();
                     if (!!data.id) {
