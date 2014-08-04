@@ -53,37 +53,7 @@ define(function() {
                 {
                     el: this.$find('#list-toolbar-container'),
                     instanceName: 'productsToolbar',
-                    inHeader: true,
-                    template: [{
-                            'id': 1,
-                            'icon': 'plus-circle',
-                            'title': 'Add Product',
-                            'class': 'highlight-white',
-                            callback: function() {
-                                this.sandbox.emit('sulu.products.new');
-                            }.bind(this)
-                        },
-                        {
-                            'id': 2,
-                            'icon': 'trash-o',
-                            'title': 'Delete User',
-                            'disabled': true
-                        },
-                        {
-                            'id': 'import',
-                            'icon': 'cloud-upload',
-                            'title': 'Import',
-                            'group': '2',
-                            callback: function() {
-                                this.sandbox.emit('sulu.products.import');
-                            }.bind(this)
-                        },
-                        {
-                            'icon': 'cloud-download',
-                            'title': 'Export',
-                            disabled: true
-                        }
-                    ]
+                    inHeader: true
                 },
                 {
                     el: this.sandbox.dom.find('#products-list', this.$el),

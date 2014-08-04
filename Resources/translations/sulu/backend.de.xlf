@@ -26,6 +26,30 @@
                 <source>product.description</source>
                 <target>Produktbeschreibung</target>
             </trans-unit>
+            <trans-unit id="7" resname="product.code">
+                <source>product.code</source>
+                <target>Produktcode</target>
+            </trans-unit>
+            <trans-unit id="8" resname="product.manufacturer">
+                <source>product.manufacturer</source>
+                <target>Hersteller</target>
+            </trans-unit>
+            <trans-unit id="9" resname="product.cost">
+                <source>product.cost</source>
+                <target>Kosten</target>
+            </trans-unit>
+            <trans-unit id="10" resname="product.price">
+                <source>product.price</source>
+                <target>Preis</target>
+            </trans-unit>
+            <trans-unit id="11" resname="product.price-info">
+                <source>product.price-info</source>
+                <target>Preisinfo</target>
+            </trans-unit>
+            <trans-unit id="12" resname="product.type">
+                <source>product.type</source>
+                <target>Produkttyp</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>

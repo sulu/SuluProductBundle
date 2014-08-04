@@ -126,7 +126,7 @@ class ProductManager implements ProductManagerInterface
         );
 
         $fieldDescriptors['manufacturer'] = new DoctrineFieldDescriptor(
-            'manufacturer', 'manufacturer', self::$productEntityName, null, array(), true
+            'manufacturer', 'manufacturer', self::$productEntityName, 'product.manufacturer', array(), true
         );
 
         $fieldDescriptors['cost'] = new DoctrineFieldDescriptor(
