@@ -7,7 +7,7 @@
  * with this source code in the file LICENSE.
  */
 
-define(['suluproduct/models/product'], function(Product) {
+define(['suluproduct/models/product', 'app-config'], function(Product, AppConfig) {
 
     'use strict';
 
@@ -28,7 +28,7 @@ define(['suluproduct/models/product'], function(Product) {
 
         bindCustomEvents: function() {
             this.sandbox.on('sulu.products.new', function() {
-                this.sandbox.emit('sulu.router.navigate', 'pim/products/add');
+                this.sandbox.emit('sulu.router.navigate', 'pim/products/' + AppConfig.getUser().locale + '/add');
             }.bind(this));
 
             this.sandbox.on('sulu.products.save', function(data) {
@@ -40,24 +40,32 @@ define(['suluproduct/models/product'], function(Product) {
             }.bind(this));
 
             this.sandbox.on('husky.datagrid.item.click', function(id) {
-                this.load(id);
+                this.load(id, AppConfig.getUser().locale);
+            }.bind(this));
+
+            this.sandbox.on('sulu.list-toolbar.add', function() {
+                this.sandbox.emit('sulu.products.new');
             }.bind(this));
 
             this.sandbox.on('sulu.products.list', function() {
                 this.sandbox.emit('sulu.router.navigate', 'pim/products');
             }.bind(this));
+
+            this.sandbox.on('sulu.header.language-changed', function(locale) {
+                this.load(this.options.id, locale);
+            }, this);
         },
 
         save: function(data) {
             this.sandbox.emit('sulu.header.toolbar.item.loading', 'save-button');
             this.product.set(data);
-            this.product.save(null, {
+            this.product.saveLocale(this.options.locale, {
                 success: function(response) {
                     var model = response.toJSON();
                     if (!!data.id) {
                         this.sandbox.emit('sulu.products.saved', model);
                     } else {
-                        this.sandbox.emit('sulu.router.navigate', 'pim/products/edit:' + model.id + '/details');
+                        this.load(model.id, this.options.locale);
                     }
                 }.bind(this),
                 error: function() {
@@ -66,8 +74,8 @@ define(['suluproduct/models/product'], function(Product) {
             });
         },
 
-        load: function(id) {
-            this.sandbox.emit('sulu.router.navigate', 'pim/products/edit:' + id + '/details');
+        load: function(id, localization) {
+            this.sandbox.emit('sulu.router.navigate', 'pim/products/' + localization + '/edit:' + id + '/details');
         },
 
         renderForm: function() {
@@ -78,6 +86,7 @@ define(['suluproduct/models/product'], function(Product) {
                     name: 'products/components/form@suluproduct',
                     options: {
                         el: $form,
+                        locale: this.options.locale,
                         data: this.product.defaults()
                     }
                 };
@@ -86,7 +95,7 @@ define(['suluproduct/models/product'], function(Product) {
 
             if (!!this.options.id) {
                 this.product.set({id: this.options.id});
-                this.product.fetch({
+                this.product.fetchLocale(this.options.locale, {
                     success: function(model) {
                         component.options.data = model.toJSON();
                         this.sandbox.start([component]);

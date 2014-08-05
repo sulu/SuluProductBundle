@@ -8,6 +8,7 @@
         <parameter key="sulu_product.status_repository.class">Sulu\Bundle\ProductBundle\Entity\StatusRepository</parameter>
         <parameter key="sulu_product.type_repository.class">Sulu\Bundle\ProductBundle\Entity\TypeRepository</parameter>
         <parameter key="sulu_product.product_manager.class">Sulu\Bundle\ProductBundle\Product\ProductManager</parameter>
+        <parameter key="sulu_product.status_manager.class">Sulu\Bundle\ProductBundle\Product\StatusManager</parameter>
         <parameter key="sulu_product.productwebsite.controller.class">Sulu\Bundle\ProductBundle\Controller\ProductWebsiteController</parameter>
     </parameters>
     <services>
@@ -44,6 +45,9 @@
             <argument type="service" id="sulu_product.product_manager"/>
             <argument type="service" id="sulu_core.webspace.request_analyzer" on-invalid="ignore"/>
             <argument>%sulu_product.template%</argument>
+        </service>
+        <service id="sulu_product.status_manager" class="%sulu_product.status_manager.class%">
+            <argument type="service" id="sulu_product.status_repository"/>
         </service>
     </services>
 </container>
