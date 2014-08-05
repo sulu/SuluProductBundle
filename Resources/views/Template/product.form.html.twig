@@ -1,10 +1,11 @@
 <form class="form-horizontal" id="product-form">
+    <input type="hidden" id="id" data-mapper-property="id"/>
     <div class="grid-row small">
         <div class="grid-col-12">
             <div class="form-group">
                 <label for="name" class="required"><%= translate('product.name') %></label>
-                <input class="form-element" type="text" id="name"
-                       data-validation-required="true" data-mapper-property="name"/>
+                <input class="form-element" type="text" id="name" data-validation-required="true"
+                       data-validation-max-length="255" data-mapper-property="name"/>
             </div>
         </div>
     </div>
@@ -12,8 +13,8 @@
         <div class="grid-col-6">
             <div class="form-group">
                 <label for="number" class="required"><%= translate('product.number') %></label>
-                <input class="form-element" type="text" id="number"
-                       data-validation-required="true" data-mapper-property="number"/>
+                <input class="form-element" type="text" id="number" data-validation-required="true"
+                       data-validation-max-length="255" data-mapper-property="number"/>
             </div>
         </div>
         <div class="grid-col-6">

@@ -7,14 +7,39 @@
  * with this source code in the file LICENSE.
  */
 
-define(['mvc/relationalmodel'], function(RelationalModel) {
+define(['mvc/relationalmodel'], function (RelationalModel) {
 
     'use strict';
 
-    return RelationalModel({
+    function getUrl(urlRoot, id, locale) {
+        return urlRoot + (id !== undefined ? '/' + id : '') + '?locale=' + locale;
+    }
+
+    return new RelationalModel({
         urlRoot: '/admin/api/products',
 
-        defaults: function() {
+        saveLocale: function (locale, options) {
+            options = _.defaults(
+                (options || {}),
+                {
+                    url: getUrl(this.urlRoot, this.get('id'), locale)
+                }
+            );
+
+            return this.save.call(this, null, options);
+        },
+
+        fetchLocale: function (locale, options) {
+            options = _.defaults((options || {}),
+                {
+                    url: getUrl(this.urlRoot, this.get('id'), locale)
+                }
+            );
+
+            return this.fetch.call(this, options);
+        },
+
+        defaults: function () {
             return {
                 name: '',
                 code: '',

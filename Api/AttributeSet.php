@@ -23,7 +23,7 @@ class AttributeSet extends ApiWrapper
      */
     public function __construct(Entity $type, $locale)
     {
-        $this->object = $type;
+        $this->entity = $type;
         $this->locale = $locale;
     }
 
@@ -35,7 +35,7 @@ class AttributeSet extends ApiWrapper
      */
     public function getId()
     {
-        return $this->object->getId();
+        return $this->entity->getId();
     }
 
     /**
@@ -46,6 +46,6 @@ class AttributeSet extends ApiWrapper
      */
     public function getName()
     {
-        return $this->object->getTranslation($this->locale)->getName();
+        return $this->entity->getTranslation($this->locale)->getName();
     }
 } 

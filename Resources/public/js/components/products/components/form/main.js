@@ -11,7 +11,8 @@ define([], function() {
 
     'use strict';
 
-    var formSelector = '#product-form';
+    var formSelector = '#product-form',
+        maxLengthTitle = 60;
 
     return {
 
@@ -24,7 +25,10 @@ define([], function() {
         header: function() {
             return {
                 toolbar: {
-                    template: 'default'
+                    template: 'default',
+                    languageChanger: {
+                        preSelected: this.options.locale
+                    }
                 }
             };
         },
@@ -81,6 +85,10 @@ define([], function() {
             if (this.sandbox.form.validate(formSelector)) {
                 var data = this.sandbox.form.getData(formSelector);
 
+                if (data.id === '') {
+                    delete data.id;
+                }
+
                 data.type = {
                     id: 1 // TODO do not hardcode
                 };
@@ -114,16 +122,17 @@ define([], function() {
         },
 
         setHeaderInformation: function() {
-            var title = 'pim.product.title';
+            var title = 'pim.product.title',
+                breadcrumb = [
+                    {title: 'navigation.pim'},
+                    {title: 'pim.products.title'}
+                ];
             if (!!this.options.data && !!this.options.data.name) {
                 title = this.options.data.name;
             }
+            title = this.sandbox.util.cropTail(title, maxLengthTitle);
             this.sandbox.emit('sulu.header.set-title', title);
 
-            var breadcrumb = [
-                {title: 'navigation.pim'},
-                {title: 'pim.products.title'}
-            ];
             if (!!this.options.data && !!this.options.data.number) {
                 breadcrumb.push({
                     title: '#' + this.options.data.number
@@ -148,10 +157,16 @@ define([], function() {
         listenForChange: function() {
             this.sandbox.dom.on('#product-form', 'change', function() {
                 this.setHeaderBar(false);
-            }.bind(this), 'select, input');
+            }.bind(this), 'select');
             this.sandbox.dom.on('#product-form', 'keyup', function() {
                 this.setHeaderBar(false);
-            }.bind(this), 'input');
+            }.bind(this), 'input, textarea');
+            this.sandbox.on('sulu.content.changed', function() {
+                this.setHeaderBar(false);
+            }.bind(this));
+            this.sandbox.on('husky.select.status.selected.item', function() {
+                this.setHeaderBar(false);
+            }.bind(this));
         }
     };
 });
