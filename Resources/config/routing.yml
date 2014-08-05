@@ -1,7 +1,3 @@
-sulu_product:
-    resource: "@SuluProductBundle/Resources/config/routing_api.yml"
-    prefix: /api
-
 product_list:
     pattern: /template/product/list.html
     defaults: { _controller: SuluProductBundle:Template:productList }

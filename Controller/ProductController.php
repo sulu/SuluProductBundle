@@ -10,70 +10,51 @@
 
 namespace Sulu\Bundle\ProductBundle\Controller;
 
-use DateTime;
-use Doctrine\ORM\EntityManager;
 use FOS\RestBundle\Routing\ClassResourceInterface;
-use Sulu\Bundle\ProductBundle\Entity\AttributeSet;
-use Sulu\Bundle\ProductBundle\Entity\Product;
-use Sulu\Bundle\ProductBundle\Entity\ProductAttribute;
-use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
-use Sulu\Bundle\ProductBundle\Entity\ProductRepository;
-use Sulu\Bundle\ProductBundle\Entity\ProductTranslation;
-use Sulu\Bundle\ProductBundle\Entity\Status;
-use Sulu\Bundle\ProductBundle\Entity\Type;
-use Sulu\Component\Rest\Exception\EntityIdAlreadySetException;
+use Hateoas\Representation\CollectionRepresentation;
+use Sulu\Bundle\ProductBundle\Api\Product;
+use Sulu\Bundle\ProductBundle\Product\Exception\MissingProductAttributeException;
+use Sulu\Bundle\ProductBundle\Product\Exception\ProductChildrenExistException;
+use Sulu\Bundle\ProductBundle\Product\Exception\ProductDependencyNotFoundException;
+use Sulu\Bundle\ProductBundle\Product\Exception\ProductNotFoundException;
+use Sulu\Bundle\ProductBundle\Product\ProductManagerInterface;
 use Sulu\Component\Rest\Exception\EntityNotFoundException;
+use Sulu\Component\Rest\Exception\MissingArgumentException;
 use Sulu\Component\Rest\Exception\RestException;
+use Sulu\Component\Rest\ListBuilder\DoctrineListBuilderFactory;
+use Sulu\Component\Rest\ListBuilder\ListRepresentation;
 use Sulu\Component\Rest\RestController;
+use Sulu\Component\Rest\RestHelperInterface;
 use Symfony\Component\HttpFoundation\Request;
 use FOS\RestBundle\Controller\Annotations\Get;
 
 class ProductController extends RestController implements ClassResourceInterface
 {
-    protected $entityName = 'SuluProductBundle:Product';
-    private $attributeEntityName = 'SuluProductBundle:Attribute';
-    private $productTranslationEntityName = 'SuluProductBundle:ProductTranslation';
-    protected $productTypeEntityName = 'SuluProductBundle:Type';
-    protected $productStatusEntityName = 'SuluProductBundle:Status';
-    protected $attributeSetEntityName = 'SuluProductBundle:AttributeSet';
+    protected static $entityName = 'SuluProductBundle:Product';
 
-    /**
-     * Returns the language.
-     *
-     * @param Request $request
-     * @return mixed
-     */
-    private function getLanguage($request)
-    {
-        $lang = $request->get('language');
-        if (!$lang) {
-            if ($this->getUser()) {
-                $lang = $this->getUser()->getLocale() ? : $this->container->getParameter('locale');
-            } else {
-                $lang = $this->container->getParameter('locale');
-            }
-        }
-        return $lang;
-    }
+    protected static $entityKey = 'products';
 
     /**
      * Returns the repository object for AdvancedProduct
      *
-     * @return ProductRepository
+     * @return ProductManagerInterface
      */
-    private function getRepository()
+    private function getManager()
     {
-        return $this->getDoctrine()->getRepository('SuluProductBundle:Product');
+        return $this->get('sulu_product.product_manager');
     }
 
     /**
      * returns all fields that can be used by list
      * @Get("products/fields")
+     * @param \Symfony\Component\HttpFoundation\Request $request
      * @return mixed
      */
-    public function getFieldsAction()
+    public function getFieldsAction(Request $request)
     {
-        return $this->responseFields();
+        return $this->handleView(
+            $this->view(array_values($this->getManager()->getFieldDescriptors($this->getLocale($request))))
+        );
     }
 
     /**
@@ -85,12 +66,12 @@ class ProductController extends RestController implements ClassResourceInterface
      */
     public function getAction(Request $request, $id)
     {
-        $lang = $this->getLanguage($request);
+        $locale = $this->getLocale($request);
         $view = $this->responseGetById(
             $id,
-            function ($id) use ($lang) {
+            function ($id) use ($locale) {
                 /** @var Product $product */
-                $product = $this->getRepository()->findByIdAndLanguage($id, $lang);
+                $product = $this->getManager()->findByIdAndLocale($id, $locale);
 
                 return $product;
             }
@@ -107,20 +88,54 @@ class ProductController extends RestController implements ClassResourceInterface
      */
     public function cgetAction(Request $request)
     {
-        if ($request->get('flat') == 'true') {
-            $view = $this->responseList();
-        } else {
-            $parameters = null;
-            $query = $request->getQueryString();
-            if ($query) {
-                list($key, $value) = explode("=", $query);
-                $parameters[$key] = $value;
-            }
-            $parameters['language'] = $this->getLanguage($request);
+        $filter = array();
 
-            $result = $this->getRepository()->findByParameters($parameters);
-            $view = $this->view($this->createHalResponse($result), 200);
+        $status = $request->get('status');
+        if ($status) {
+            $filter['status'] = $status;
         }
+
+        $type = $request->get('type');
+        if ($type) {
+            $filter['type'] = $type;
+        }
+
+        if ($request->get('flat') == 'true') {
+            /** @var RestHelperInterface $restHelper */
+            $restHelper = $this->get('sulu_core.doctrine_rest_helper');
+
+            /** @var DoctrineListBuilderFactory $factory */
+            $factory = $this->get('sulu_core.doctrine_list_builder_factory');
+
+            $listBuilder = $factory->create(self::$entityName);
+
+            $restHelper->initializeListBuilder(
+                $listBuilder,
+                $this->getManager()->getFieldDescriptors($this->getLocale($request))
+            );
+
+            foreach ($filter as $key => $value) {
+                $listBuilder->where($this->getManager()->getFieldDescriptor($key), $value);
+            }
+
+            $list = new ListRepresentation(
+                $listBuilder->execute(),
+                self::$entityKey,
+                'get_products',
+                $request->query->all(),
+                $listBuilder->getCurrentPage(),
+                $listBuilder->getLimit(),
+                $listBuilder->count()
+            );
+        } else {
+            $list = new CollectionRepresentation(
+                $this->getManager()->findAllByLocale($this->getLocale($request), $filter),
+                self::$entityKey
+            );
+        }
+
+        $view = $this->view($list, 200);
+
         return $this->handleView($view);
     }
 
@@ -133,44 +148,24 @@ class ProductController extends RestController implements ClassResourceInterface
      */
     public function putAction(Request $request, $id)
     {
-        $lang = $this->getLanguage($request);
-        $now = new DateTime();
-
         try {
-            /** @var Product $product */
-            $product = $this->getDoctrine()->getRepository($this->entityName)->findById($id, $lang);
+            $product = $this->getManager()->save(
+                $request->request->all(),
+                $this->getLocale($request),
+                $this->getUser()->getId(),
+                $id
+            );
 
-            if (!$product) {
-                throw new EntityNotFoundException($this->entityName, $id);
-            } elseif ($request->get('number') === null) {
-                throw new RestException('The number property must not be NULL!');
-            } else {
-                /** @var EntityManager $em */
-                $em = $this->getDoctrine()->getManager();
-
-                $product->setCode($request->get('code'));
-                $product->setNumber($request->get('number'));
-                $product->setManufacturer($request->get('manufacturer'));
-                $product->setChanged($now);
-                $product->setChanger($this->getUser());
-
-                $this->setParent($product, $request->get('parent'));
-                $this->setStatus($product, $request->get('status'));
-                $this->setAttributeSet($product, $request->get('attributeSet'));
-                $this->setType($product, $request->get('type'));
-
-                $em->flush();
-
-                $view = $this->view($product, 200);
-            }
-        } catch (EntityNotFoundException $ex) {
-            if ($ex->getId() == $id) {
-                $view = $this->view($ex->toArray(), 404);
-            } else {
-                $view = $this->view($ex->toArray(), 400);
-            }
-        } catch (RestException $ex) {
-            $view = $this->view($ex->toArray(), 400);
+            $view = $this->view($product, 200);
+        } catch (ProductNotFoundException $exc) {
+            $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
+            $view = $this->view($exception->toArray(), 404);
+        } catch (ProductDependencyNotFoundException $exc) {
+            $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
+            $view = $this->view($exception->toArray(), 400);
+        } catch (MissingProductAttributeException $exc) {
+            $exception = new MissingArgumentException(self::$entityName, $exc->getAttribute());
+            $view = $this->view($exception->toArray(), 400);
         }
 
         return $this->handleView($view);
@@ -185,65 +180,19 @@ class ProductController extends RestController implements ClassResourceInterface
     public function postAction(Request $request)
     {
         try {
-            $number = $request->get('number');
-            $typeId = $request->get('type');
-            $statusId = $request->get('status');
-            $now = new DateTime();
+            $product = $this->getManager()->save(
+                $request->request->all(),
+                $this->getLocale($request),
+                $this->getUser()->getId()
+            );
 
-            if ($number == null) {
-                throw new RestException('There is no number for the product given');
-            }
-
-            if ($typeId == null) {
-                throw new RestException('There is no type for the product given');
-            }
-
-            if ($statusId == null) {
-                throw new RestException('There is no status for the product given');
-            }
-
-            $em = $this->getDoctrine()->getManager();
-
-            $product = new Product();
-            $product->setCost($request->get('cost'));
-            $product->setPriceInfo($request->get('priceInfo'));
-
-            $product->setCode($request->get('code'));
-            $product->setNumber($number);
-            $product->setManufacturer($request->get('manufacturer'));
-            $product->setManufacturerCountry($request->get('manufacturerCountry'));
-            $product->setCreated($now);
-            $product->setChanged($now);
-            $product->setCreator($this->getUser());
-            $product->setChanger($this->getUser());
-
-            $this->setParent($product, $request->get('parent'));
-            $this->setStatus($product, $statusId);
-            $this->setType($product, $typeId);
-            $this->setAttributeSet($product, $request->get('attributeSet'));
-
-            $em->persist($product);
-
-            /** @var ProductTranslation $translation */
-            $translations = $request->get('translations');
-            if (!empty($translations)) {
-                foreach ($translations as $translation) {
-                    $this->addProductTranslation($product, $translation);
-                }
-            }
-
-            /** @var ProductTranslation $translation */
-            $attributes = $request->get('attributes');
-            if (!empty($attributes)) {
-                foreach ($attributes as $attribute) {
-                    $this->addProductAttribute($product, $attribute);
-                }
-            }
-
-            $em->flush();
             $view = $this->view($product, 200);
-        } catch (RestException $ex) {
-            $view = $this->view($ex->toArray(), 400);
+        } catch (ProductDependencyNotFoundException $exc) {
+            $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
+            $view = $this->view($exception->toArray(), 400);
+        } catch (MissingProductAttributeException $exc) {
+            $exception = new MissingArgumentException(self::$entityName, $exc->getAttribute());
+            $view = $this->view($exception->toArray(), 400);
         }
 
         return $this->handleView($view);
@@ -258,158 +207,17 @@ class ProductController extends RestController implements ClassResourceInterface
      */
     public function deleteAction(Request $request, $id)
     {
-        $lang = $this->getLanguage($request);
+        $locale = $this->getLocale($request);
 
-        $delete = function ($id) use ($lang) {
-            /* @var Product $product */
-            $product = $this->getDoctrine()
-                ->getRepository($this->entityName)
-                ->findByIdAndLanguage($id, $lang);
-
-            if (!$product) {
-                throw new EntityNotFoundException($this->entityName, $id);
-            }
-
-            // do not allow to delete entity if child is existent
-            if ($product->getChildren()->count() > 0) {
+        $delete = function ($id) use ($locale) {
+            try {
+                $this->getManager()->delete($id, $this->getUser()->getId());
+            } catch (ProductChildrenExistException $exc) {
                 throw new RestException(400, 'Deletion not allowed, because the product has sub products');
             }
-
-            $em = $this->getDoctrine()->getManager();
-
-            $em->remove($product);
-            $em->flush();
         };
         $view = $this->responseDelete($id, $delete);
 
         return $this->handleView($view);
-    }
-
-    /**
-     * Adds a translation to the product.
-     *
-     * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $product
-     * @param array $translationData
-     * @throws \Sulu\Component\Rest\Exception\EntityIdAlreadySetException
-     */
-    private function addProductTranslation(ProductInterface $product, array $translationData)
-    {
-        $em = $this->getDoctrine()->getManager();
-
-        if (isset($translationData['id'])) {
-            throw new EntityIdAlreadySetException($this->productTranslationEntityName, $translationData['id']);
-        } else {
-            $productTranslation = new ProductTranslation();
-            $productTranslation->setProduct($product);
-            $productTranslation->setLanguageCode($translationData['languageCode']);
-            $productTranslation->setName($translationData['name']);
-            $productTranslation->setShortDescription($translationData['shortDescription']);
-            $productTranslation->setLongDescription($translationData['longDescription']);
-
-            $em->persist($productTranslation);
-            $product->addTranslation($productTranslation);
-        }
-    }
-
-    /**
-     * Adds an attribute to the product.
-     *
-     * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $product
-     * @param array $attributeData
-     * @throws \Sulu\Component\Rest\Exception\EntityIdAlreadySetException
-     * @throws \Sulu\Component\Rest\Exception\RestException
-     */
-    private function addProductAttribute(ProductInterface $product, array $attributeData)
-    {
-        $em = $this->getDoctrine()->getManager();
-
-        if (isset($attributeData['id'])) {
-            throw new EntityIdAlreadySetException($this->attributeEntityName, $attributeData['id']);
-        } elseif (!isset($attributeData['attribute'])) {
-            throw new RestException(404, 'Missing attribute property.');
-        } else {
-            $attribute = $this->getDoctrine()
-                ->getRepository($this->attributeEntityName)
-                ->find($attributeData['attribute']['id']);
-
-            $productAttribute = new ProductAttribute();
-            $productAttribute->setProduct($product);
-            $productAttribute->setAttribute($attribute);
-            $productAttribute->setValue($attributeData['value']);
-
-            $em->persist($productAttribute);
-            $product->addProductAttribute($productAttribute);
-        }
-    }
-
-    /**
-     * @param Product $product
-     * @param string $attributeSetId
-     * @throws \Sulu\Component\Rest\Exception\EntityNotFoundException
-     */
-    private function setAttributeSet(Product $product, $attributeSetId)
-    {
-        if ($attributeSetId) {
-            /** @var AttributeSet $attributeSet */
-            $attributeSet = $this->getDoctrine()->getRepository($this->attributeSetEntityName)
-                ->find($attributeSetId);
-            if (!$attributeSet) {
-                throw new EntityNotFoundException($this->attributeSetEntityName, $attributeSetId);
-            }
-            $product->setAttributeSet($attributeSet);
-        }
-    }
-
-    /**
-     * @param Product $product
-     * @param string $parentId
-     * @throws \Sulu\Component\Rest\Exception\EntityNotFoundException
-     */
-    private function setParent(Product $product, $parentId)
-    {
-        if ($parentId) {
-            /** @var Product $parentProduct */
-            $parentProduct = $this->getDoctrine()->getRepository($this->entityName)->find($parentId);
-            if (!$parentProduct) {
-                throw new EntityNotFoundException($this->entityName, $parentId);
-            }
-            $product->setParent($parentProduct);
-        } else {
-            $product->setParent(null);
-        }
-    }
-
-    /**
-     * @param Product $product
-     * @param string $statusId
-     * @throws \Sulu\Component\Rest\Exception\EntityNotFoundException
-     */
-    private function setStatus(Product $product, $statusId)
-    {
-        if ($statusId) {
-            /** @var Status $status */
-            $status = $this->getDoctrine()->getRepository($this->productStatusEntityName)->find($statusId);
-            if (!$status) {
-                throw new EntityNotFoundException($this->productStatusEntityName, $statusId);
-            }
-            $product->setStatus($status);
-        }
-    }
-
-    /**
-     * @param Product $product
-     * @param string $typeId
-     * @throws \Sulu\Component\Rest\Exception\EntityNotFoundException
-     */
-    private function setType(Product $product, $typeId)
-    {
-        if ($typeId) {
-            /** @var Type $type */
-            $type = $this->getDoctrine()->getRepository($this->productTypeEntityName)->find($typeId);
-            if (!$type) {
-                throw new EntityNotFoundException($this->productTypeEntityName, $typeId);
-            }
-            $product->setType($type);
-        }
     }
 }

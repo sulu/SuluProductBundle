@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+    <file source-language="en" datatype="plaintext" original="file.ext">
+        <body>
+            <trans-unit id="1" resname="product.name">
+                <source>product.name</source>
+                <target>Name</target>
+            </trans-unit>
+            <trans-unit id="2" resname="product.number">
+                <source>product.number</source>
+                <target>Produktnummer</target>
+            </trans-unit>
+            <trans-unit id="3" resname="product.status">
+                <source>product.status</source>
+                <target>Status</target>
+            </trans-unit>
+            <trans-unit id="4" resname="product.long-description">
+                <source>product.long-description</source>
+                <target>Beschreibung</target>
+            </trans-unit>
+            <trans-unit id="5" resname="product.short-description">
+                <source>product.short-description</source>
+                <target>Kurzbeschreibung</target>
+            </trans-unit>
+            <trans-unit id="6" resname="product.description">
+                <source>product.description</source>
+                <target>Produktbeschreibung</target>
+            </trans-unit>
+            <trans-unit id="7" resname="product.code">
+                <source>product.code</source>
+                <target>Produktcode</target>
+            </trans-unit>
+            <trans-unit id="8" resname="product.manufacturer">
+                <source>product.manufacturer</source>
+                <target>Hersteller</target>
+            </trans-unit>
+            <trans-unit id="9" resname="product.cost">
+                <source>product.cost</source>
+                <target>Kosten</target>
+            </trans-unit>
+            <trans-unit id="10" resname="product.price">
+                <source>product.price</source>
+                <target>Preis</target>
+            </trans-unit>
+            <trans-unit id="11" resname="product.price-info">
+                <source>product.price-info</source>
+                <target>Preisinfo</target>
+            </trans-unit>
+            <trans-unit id="12" resname="product.type">
+                <source>product.type</source>
+                <target>Produkttyp</target>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>

@@ -119,6 +119,22 @@ class Product extends BaseProduct
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public function getTranslation($locale)
+    {
+        $translation = null;
+        foreach ($this->translations as $translationData) {
+            if ($translationData->getLocale() == $locale) {
+                $translation = $translationData;
+                break;
+            }
+        }
+
+        return $translation;
+    }
+
+    /**
      * Add addons
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\Addon $addons

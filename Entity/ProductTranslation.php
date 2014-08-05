@@ -20,7 +20,7 @@ class ProductTranslation
     /**
      * @var string
      */
-    private $languageCode;
+    private $locale;
 
     /**
      * @var string
@@ -53,9 +53,9 @@ class ProductTranslation
      * @param string $languageCode
      * @return ProductTranslation
      */
-    public function setLanguageCode($languageCode)
+    public function setLocale($languageCode)
     {
-        $this->languageCode = $languageCode;
+        $this->locale = $languageCode;
     
         return $this;
     }
@@ -65,9 +65,9 @@ class ProductTranslation
      *
      * @return string 
      */
-    public function getLanguageCode()
+    public function getLocale()
     {
-        return $this->languageCode;
+        return $this->locale;
     }
 
     /**

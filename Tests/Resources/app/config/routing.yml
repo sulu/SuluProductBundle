@@ -1,3 +1,7 @@
-sulu_product_base:
+sulu_product:
     resource: "@SuluProductBundle/Resources/config/routing.yml"
-    prefix: /
+    prefix:
+
+sulu_product_api:
+    resource: "@SuluProductBundle/Resources/config/routing_api.yml"
+    prefix: /api

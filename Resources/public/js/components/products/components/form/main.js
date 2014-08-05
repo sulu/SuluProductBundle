@@ -11,7 +11,8 @@ define([], function() {
 
     'use strict';
 
-    var formSelector = '#product-form';
+    var formSelector = '#product-form',
+        maxLengthTitle = 60;
 
     return {
 
@@ -23,12 +24,11 @@ define([], function() {
 
         header: function() {
             return {
-                breadcrumb: [
-                    {title: 'navigation.pim'},
-                    {title: 'pim.products.title'}
-                ],
                 toolbar: {
-                    template: 'default'
+                    template: 'default',
+                    languageChanger: {
+                        preSelected: this.options.locale
+                    }
                 }
             };
         },
@@ -64,13 +64,16 @@ define([], function() {
             this.sandbox.on('sulu.products.saved', function(id) {
                 this.options.data.id = id;
                 this.setHeaderBar(true);
-                this.setTitle();
-                this.setBreadcrumb();
+                this.setHeaderInformation();
             }, this);
 
             // back to list
             this.sandbox.on('sulu.header.back', function() {
                 this.sandbox.emit('sulu.products.list');
+            }, this);
+
+            this.sandbox.on('sulu.header.initialized', function() {
+                this.setHeaderInformation();
             }, this);
         },
 
@@ -82,14 +85,22 @@ define([], function() {
             if (this.sandbox.form.validate(formSelector)) {
                 var data = this.sandbox.form.getData(formSelector);
 
+                if (data.id === '') {
+                    delete data.id;
+                }
+
+                data.type = {
+                    id: 1 // TODO do not hardcode
+                };
+
                 this.sandbox.emit('sulu.products.save', data);
             }
         },
 
         render: function() {
             this.sandbox.dom.html(this.$el, this.renderTemplate('/admin/product/template/product/form'));
-            this.setTitle();
-            this.setBreadcrumb();
+
+            this.setHeaderInformation();
 
             this.initForm(this.options.data);
         },
@@ -110,22 +121,21 @@ define([], function() {
             }.bind(this));
         },
 
-        setTitle: function() {
-            var title = 'pim.product.title';
+        setHeaderInformation: function() {
+            var title = 'pim.product.title',
+                breadcrumb = [
+                    {title: 'navigation.pim'},
+                    {title: 'pim.products.title'}
+                ];
             if (!!this.options.data && !!this.options.data.name) {
                 title = this.options.data.name;
             }
+            title = this.sandbox.util.cropTail(title, maxLengthTitle);
             this.sandbox.emit('sulu.header.set-title', title);
-        },
 
-        setBreadcrumb: function() {
-            var breadcrumb = [
-                {title: 'navigation.pim'},
-                {title: 'pim.products.title'}
-            ];
-            if (!!this.options.data && !!this.options.data.name) {
+            if (!!this.options.data && !!this.options.data.number) {
                 breadcrumb.push({
-                    title: this.options.data.name
+                    title: '#' + this.options.data.number
                 });
             } else {
                 breadcrumb.push({
@@ -147,10 +157,16 @@ define([], function() {
         listenForChange: function() {
             this.sandbox.dom.on('#product-form', 'change', function() {
                 this.setHeaderBar(false);
-            }.bind(this), 'select, input');
+            }.bind(this), 'select');
             this.sandbox.dom.on('#product-form', 'keyup', function() {
                 this.setHeaderBar(false);
-            }.bind(this), 'input');
+            }.bind(this), 'input, textarea');
+            this.sandbox.on('sulu.content.changed', function() {
+                this.setHeaderBar(false);
+            }.bind(this));
+            this.sandbox.on('husky.select.status.selected.item', function() {
+                this.setHeaderBar(false);
+            }.bind(this));
         }
     };
 });
