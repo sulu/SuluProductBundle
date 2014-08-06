@@ -61,6 +61,10 @@ sulu_core:
                 content:
                     path: "%kernel.root_dir%/../../vendor/sulu/content-bundle/Sulu/Bundle/ContentBundle/Content/Templates"
                     internal: true
+
+liip_theme:
+    themes: ['default']
+    active_theme: 'default'
             
 parameters:
     # Just a dirty hack to get the jms serializer bundle correctly working
