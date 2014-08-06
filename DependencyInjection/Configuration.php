@@ -29,7 +29,7 @@ class Configuration implements ConfigurationInterface
         $rootNode = $treeBuilder->root('sulu_product');
 
         $rootNode->children()
-            ->scalarNode('template')->end()
+            ->scalarNode('template')->defaultValue('ClientWebsiteBundle:views:product.html.twig')->end()
         ->end();
 
         return $treeBuilder;
