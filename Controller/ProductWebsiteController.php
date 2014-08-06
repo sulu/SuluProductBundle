@@ -76,8 +76,8 @@ class ProductWebsiteController
                 $this->productTemplate,
                 array('product' => $product, 'navigation' => $navigation)
             );
-        } else {
-            throw new NotFoundHttpException();
         }
+
+        throw new NotFoundHttpException(sprintf('The product ID "%s" has not been found', $id));
     }
 } 
