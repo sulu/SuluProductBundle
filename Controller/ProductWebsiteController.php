@@ -16,6 +16,7 @@ use Sulu\Bundle\WebsiteBundle\Navigation\NavigationMapperInterface;
 use Sulu\Component\Webspace\Analyzer\RequestAnalyzerInterface;
 use Symfony\Bundle\FrameworkBundle\Templating\EngineInterface;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * This Controller is responsible for the rendering of the product
@@ -78,7 +79,7 @@ class ProductWebsiteController
                 array('product' => $product, 'navigation' => $navigation)
             );
         } else {
-            return new Response('404');
+            throw new NotFoundHttpException();
         }
     }
 } 
