@@ -20,7 +20,7 @@ define(['suluproduct/models/product', 'app-config'], function(Product, AppConfig
             if (this.options.display === 'list') {
                 this.renderList();
             } else if (this.options.display === 'form') {
-                this.renderForm();
+                this.renderForm(this.options.productType);
             } else if (this.options.display === 'import') {
                 this.renderImport();
             }
@@ -44,10 +44,6 @@ define(['suluproduct/models/product', 'app-config'], function(Product, AppConfig
 
             this.sandbox.on('husky.datagrid.item.click', function(id) {
                 this.load(id, AppConfig.getUser().locale);
-            }.bind(this));
-
-            this.sandbox.on('sulu.list-toolbar.add', function() {
-                this.sandbox.emit('sulu.products.new');
             }.bind(this));
 
             this.sandbox.on('sulu.products.list', function() {
@@ -81,7 +77,7 @@ define(['suluproduct/models/product', 'app-config'], function(Product, AppConfig
             this.sandbox.emit('sulu.router.navigate', 'pim/products/' + localization + '/edit:' + id + '/details');
         },
 
-        renderForm: function() {
+        renderForm: function(productType) {
             this.product = new Product();
 
             var $form = this.sandbox.dom.createElement('<div id="products-form-container"/>'),
@@ -90,7 +86,8 @@ define(['suluproduct/models/product', 'app-config'], function(Product, AppConfig
                     options: {
                         el: $form,
                         locale: this.options.locale,
-                        data: this.product.defaults()
+                        data: this.product.defaults(),
+                        productType: productType
                     }
                 };
 

@@ -17,6 +17,12 @@ define(function () {
 
         addProduct = function(type) {
             this.sandbox.emit('sulu.products.new', type);
+        },
+
+        bindCustomEvents = function() {
+            this.sandbox.on('sulu.list-toolbar.add', function() {
+                this.sandbox.emit('sulu.products.new');
+            }.bind(this));
         };
 
     return {
@@ -51,6 +57,7 @@ define(function () {
 
         initialize: function () {
             this.render();
+            bindCustomEvents.call(this);
         },
 
         render: function () {
