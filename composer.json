@@ -27,7 +27,8 @@
         "sulu/website-bundle": "dev-develop",
 
         "sulu/tag-bundle": "@dev",
-        "sulu/category-bundle": "@dev"
+        "sulu/category-bundle": "@dev",
+        "sulu/media-bundle": "@dev"
     },
     "require-dev": {
         "sensio/framework-extra-bundle":  "~3.0",
