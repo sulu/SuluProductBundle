@@ -11,7 +11,13 @@ define([], function() {
 
     'use strict';
 
-    var formSelector = '#product-form',
+    var types = {
+            'product': 1,
+            'product-with-variant': 2,
+            'product-addon': 3,
+            'product-set': 4
+        },
+        formSelector = '#product-form',
         maxLengthTitle = 60;
 
     return {
@@ -90,7 +96,7 @@ define([], function() {
                 }
 
                 data.type = {
-                    id: 1 // TODO do not hardcode
+                    id: types[this.options.productType]
                 };
 
                 this.sandbox.emit('sulu.products.save', data);
