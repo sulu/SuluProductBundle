@@ -20,7 +20,7 @@ define(['suluproduct/models/product', 'app-config'], function(Product, AppConfig
             if (this.options.display === 'list') {
                 this.renderList();
             } else if (this.options.display === 'form') {
-                this.renderForm(this.options.productType);
+                this.renderForm();
             } else if (this.options.display === 'import') {
                 this.renderImport();
             }
@@ -77,7 +77,7 @@ define(['suluproduct/models/product', 'app-config'], function(Product, AppConfig
             this.sandbox.emit('sulu.router.navigate', 'pim/products/' + localization + '/edit:' + id + '/details');
         },
 
-        renderForm: function(productType) {
+        renderForm: function() {
             this.product = new Product();
 
             var $form = this.sandbox.dom.createElement('<div id="products-form-container"/>'),
@@ -87,7 +87,7 @@ define(['suluproduct/models/product', 'app-config'], function(Product, AppConfig
                         el: $form,
                         locale: this.options.locale,
                         data: this.product.defaults(),
-                        productType: productType
+                        productType: this.options.productType
                     }
                 };
 
