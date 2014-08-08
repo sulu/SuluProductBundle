@@ -27,8 +27,11 @@ define(['suluproduct/models/product', 'app-config'], function(Product, AppConfig
         },
 
         bindCustomEvents: function() {
-            this.sandbox.on('sulu.products.new', function() {
-                this.sandbox.emit('sulu.router.navigate', 'pim/products/' + AppConfig.getUser().locale + '/add');
+            this.sandbox.on('sulu.products.new', function(type) {
+                this.sandbox.emit(
+                    'sulu.router.navigate',
+                    'pim/products/' + AppConfig.getUser().locale + '/add/type:' + type
+                );
             }.bind(this));
 
             this.sandbox.on('sulu.products.save', function(data) {

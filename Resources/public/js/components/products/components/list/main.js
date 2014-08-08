@@ -16,7 +16,7 @@ define(function () {
         TYPE_PRODUCT_SET = 'product-set',
 
         addProduct = function(type) {
-            this.sandbox.emit('sulu.products.products.new', type);
+            this.sandbox.emit('sulu.products.new', type);
         };
 
     return {
