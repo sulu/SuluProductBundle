@@ -15,12 +15,12 @@ define(function () {
         TYPE_PRODUCT_ADDON = 'product-addon',
         TYPE_PRODUCT_SET = 'product-set',
 
-        addProduct = function(type) {
+        addProduct = function (type) {
             this.sandbox.emit('sulu.products.new', type);
         },
 
-        bindCustomEvents = function() {
-            this.sandbox.on('sulu.list-toolbar.add', function() {
+        bindCustomEvents = function () {
+            this.sandbox.on('sulu.list-toolbar.add', function () {
                 this.sandbox.emit('sulu.products.new');
             }.bind(this));
         };
@@ -60,7 +60,7 @@ define(function () {
             bindCustomEvents.call(this);
         },
 
-        render: function () {
+        renderGrid: function () {
             this.sandbox.dom.html(this.$el, this.renderTemplate('/admin/product/template/product/list'));
 
             // init list-toolbar and datagrid
@@ -115,6 +115,10 @@ define(function () {
                     }
                 }
             );
+        },
+
+        render: function () {
+            this.renderGrid();
         }
     };
 });
