@@ -11,6 +11,31 @@ define(['suluproduct/models/product', 'app-config'], function(Product, AppConfig
 
     'use strict';
 
+    var eventNamespace = 'sulu.products.',
+
+        /**
+         * @event sulu.products.new
+         * @description Opens the form for a new product
+         */
+        PRODUCT_NEW = eventNamespace + 'new',
+
+        /**
+         * @event sulu.products.save
+         * @description Saves a given product
+         */
+        PRODUCT_SAVE = eventNamespace + 'save',
+
+        /**
+         * @description Opens the form for importing products
+         */
+        PRODUCT_IMPORT = eventNamespace + 'import',
+
+        /**
+         * @event sulu.products.list
+         * @description Shows the list for products
+         */
+        PRODUCT_LIST = eventNamespace + 'list';
+
     return {
 
         initialize: function() {
@@ -27,18 +52,18 @@ define(['suluproduct/models/product', 'app-config'], function(Product, AppConfig
         },
 
         bindCustomEvents: function() {
-            this.sandbox.on('sulu.products.new', function(type) {
+            this.sandbox.on(PRODUCT_NEW, function(type) {
                 this.sandbox.emit(
                     'sulu.router.navigate',
                     'pim/products/' + AppConfig.getUser().locale + '/add/type:' + type
                 );
             }.bind(this));
 
-            this.sandbox.on('sulu.products.save', function(data) {
+            this.sandbox.on(PRODUCT_SAVE, function(data) {
                 this.save(data);
             }.bind(this));
 
-            this.sandbox.on('sulu.products.import', function() {
+            this.sandbox.on(PRODUCT_IMPORT, function() {
                 this.sandbox.emit('sulu.router.navigate', 'pim/products/import');
             }.bind(this));
 
@@ -46,7 +71,7 @@ define(['suluproduct/models/product', 'app-config'], function(Product, AppConfig
                 this.load(id, AppConfig.getUser().locale);
             }.bind(this));
 
-            this.sandbox.on('sulu.products.list', function() {
+            this.sandbox.on(PRODUCT_LIST, function() {
                 this.sandbox.emit('sulu.router.navigate', 'pim/products');
             }.bind(this));
 
