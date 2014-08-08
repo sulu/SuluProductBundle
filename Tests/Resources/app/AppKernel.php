@@ -28,6 +28,8 @@ class AppKernel extends Kernel
             new \Sulu\Bundle\ContactBundle\SuluContactBundle(),
             new \Sulu\Bundle\TagBundle\SuluTagBundle(),
             new \Sulu\Bundle\WebsiteBundle\SuluWebsiteBundle(),
+            new \Sulu\Bundle\CategoryBundle\SuluCategoryBundle(),
+            new \Sulu\Bundle\MediaBundle\SuluMediaBundle(),
         );
 
         return $bundles;
