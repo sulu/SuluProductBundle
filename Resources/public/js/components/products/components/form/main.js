@@ -95,9 +95,11 @@ define([], function() {
                     delete data.id;
                 }
 
-                data.type = {
-                    id: types[this.options.productType]
-                };
+                if (!!this.options.productType) {
+                    data.type = {
+                        id: types[this.options.productType]
+                    };
+                }
 
                 this.sandbox.emit('sulu.products.save', data);
             }
