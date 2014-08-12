@@ -28,17 +28,6 @@ define([], function() {
 
         templates: ['/admin/product/template/product/form'],
 
-        header: function() {
-            return {
-                toolbar: {
-                    template: 'default',
-                    languageChanger: {
-                        preSelected: this.options.locale
-                    }
-                }
-            };
-        },
-
         initialize: function() {
             this.saved = true;
 
