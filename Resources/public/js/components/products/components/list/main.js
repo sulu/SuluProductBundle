@@ -29,10 +29,6 @@ define(function () {
 
         view: true,
 
-        fullSize: {
-            width: true
-        },
-
         layout: {
             content: {
                 width: 'max',
