@@ -1,6 +1,6 @@
-/Tests/Resources/app/cache/*
-/Tests/Resources/app/logs/*
 /node_modules/
+/Tests/app/cache/*
+/Tests/app/logs/*
 /vendor/
 /composer.phar
 /composer.lock
