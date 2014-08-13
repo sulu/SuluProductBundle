@@ -10,8 +10,8 @@
 
 namespace Sulu\Bundle\ProductBundle\Admin;
 
-use Sulu\Bundle\AdminBundle\Admin\ContentNavigation;
-use Sulu\Bundle\AdminBundle\Navigation\NavigationItem;
+use Sulu\Bundle\AdminBundle\Navigation\ContentNavigation;
+use Sulu\Bundle\AdminBundle\Navigation\ContentNavigationItem;
 
 class SuluProductContentNavigation extends ContentNavigation
 {
@@ -19,11 +19,18 @@ class SuluProductContentNavigation extends ContentNavigation
     {
         parent::__construct();
 
-        $details = new NavigationItem('Details');
+        $details = new ContentNavigationItem('Details');
         $details->setAction('details');
-        $details->setContentType('product');
-        $details->setContentComponent('products@suluproduct');
-        $details->setContentComponentOptions(array('display' => 'form'));
+        $details->setGroups(array('product'));
+        $details->setComponent('products@suluproduct');
+        $details->setComponentOptions(array('display' => 'form'));
         $this->addNavigationItem($details);
+
+        $variants = new ContentNavigationItem('Variants');
+        $variants->setAction('variants');
+        $variants->setGroups(array('product'));
+        $variants->setComponent('products@suluproduct');
+        $variants->setComponentOptions(array('display' => 'variants'));
+        $this->addNavigationItem($variants);
     }
 } 
