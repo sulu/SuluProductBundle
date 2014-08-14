@@ -11,7 +11,7 @@ define(function () {
 
     'use strict';
     var TYPE_PRODUCT = 'product',
-        TYPE_PRODUCT_VARIANT = 'product-with-variant',
+        TYPE_PRODUCT_VARIANT = 'product-with-variants',
         TYPE_PRODUCT_ADDON = 'product-addon',
         TYPE_PRODUCT_SET = 'product-set',
 
@@ -82,7 +82,7 @@ define(function () {
                                     },
                                     {
                                         id: 'add-lead',
-                                        title: this.sandbox.translate('products.add-product-with-variant'),
+                                        title: this.sandbox.translate('products.add-product-with-variants'),
                                         callback: addProduct.bind(this, TYPE_PRODUCT_VARIANT)
                                     },
                                     {

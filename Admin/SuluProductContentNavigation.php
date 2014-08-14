@@ -19,16 +19,16 @@ class SuluProductContentNavigation extends ContentNavigation
     {
         parent::__construct();
 
-        $details = new ContentNavigationItem('Details');
+        $details = new ContentNavigationItem('content-navigation.products.detail');
         $details->setAction('details');
-        $details->setGroups(array('product'));
+        $details->setGroups(array('product', 'product-with-variants', 'product-addon', 'product-set'));
         $details->setComponent('products@suluproduct');
         $details->setComponentOptions(array('display' => 'form'));
         $this->addNavigationItem($details);
 
-        $variants = new ContentNavigationItem('Variants');
+        $variants = new ContentNavigationItem('content-navigation.products.variants');
         $variants->setAction('variants');
-        $variants->setGroups(array('product'));
+        $variants->setGroups(array('product-with-variants'));
         $variants->setComponent('products@suluproduct');
         $variants->setComponentOptions(array('display' => 'variants'));
         $this->addNavigationItem($variants);

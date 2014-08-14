@@ -13,7 +13,7 @@ define([], function() {
 
     var types = {
             'product': 1,
-            'product-with-variant': 2,
+            'product-with-variants': 2,
             'product-addon': 3,
             'product-set': 4
         },

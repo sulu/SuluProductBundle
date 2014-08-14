@@ -12,7 +12,6 @@ namespace Sulu\Bundle\ProductBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Response;
 
 class NavigationController extends Controller
 {
@@ -20,11 +19,36 @@ class NavigationController extends Controller
 
     public function productAction()
     {
+        return $this->getJsonResponse('product');
+    }
+
+    public function productWithVariantsAction()
+    {
+        return $this->getJsonResponse('product-with-variants');
+    }
+
+    public function productAddonAction()
+    {
+        return $this->getJsonResponse('product-addon');
+    }
+
+    public function productSetAction()
+    {
+        return $this->getJsonResponse('product-set');
+    }
+
+    /**
+     * @param $group
+     * @return JsonResponse
+     */
+    private function getJsonResponse($group)
+    {
         if ($this->has(self::SERVICE_NAME)) {
             $contentNavigation = $this->get(self::SERVICE_NAME);
-            return new Response(json_encode($contentNavigation->toArray('product')));
+
+            return new JsonResponse(json_encode($contentNavigation->toArray($group)));
         }
 
-        return new Response(array());
+        return new JsonResponse(array());
     }
 } 

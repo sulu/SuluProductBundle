@@ -21,7 +21,7 @@ define(function () {
                     }
                 },
                 tabs: {
-                    url: '/admin/product/navigation/product'
+                    url: '/admin/product/navigation/' + this.options.productType
                 }
             };
         }
