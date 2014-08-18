@@ -46,7 +46,7 @@ class NavigationController extends Controller
         if ($this->has(self::SERVICE_NAME)) {
             $contentNavigation = $this->get(self::SERVICE_NAME);
 
-            return new JsonResponse(json_encode($contentNavigation->toArray($group)));
+            return new JsonResponse($contentNavigation->toArray($group));
         }
 
         return new JsonResponse(array());

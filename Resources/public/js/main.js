@@ -36,14 +36,14 @@ define({
         sandbox.mvc.routes.push({
             route: 'pim/products/:locale/add/type::type',
             callback: function(locale, type) {
-                this.html('<div data-aura-component="products/components/content@suluproduct" data-aura-display="form" data-aura-locale="' + locale + '" data-aura-product-type="' + type + '"/>');
+                this.html('<div data-aura-component="products@suluproduct" data-aura-display="tab" data-aura-locale="' + locale + '" data-aura-product-type="' + type + '"/>');
             }
         });
 
         sandbox.mvc.routes.push({
             route: 'pim/products/:locale/edit::id/:content',
             callback: function(locale, id, content) {
-                this.html('<div data-aura-component="products/components/content@suluproduct" data-aura-display="form" data-aura-content="' + content + '" data-aura-locale="' + locale + '" data-aura-id="' + id + '"/>');
+                this.html('<div data-aura-component="products@suluproduct" data-aura-display="tab" data-aura-content="' + content + '" data-aura-locale="' + locale + '" data-aura-id="' + id + '"/>');
             }
         });
 
