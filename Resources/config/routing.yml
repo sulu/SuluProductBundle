@@ -18,6 +18,10 @@ sulu_product.product_list:
     pattern: /template/product/list.html
     defaults: { _controller: SuluProductBundle:Template:productList }
 
+sulu_product.product_variants:
+    pattern: /template/product/variants.html
+    defaults: { _controller: SuluProductBundle:Template:productVariants }
+
 sulu_product.product_form:
     pattern: /template/product/form.html
     defaults: { _controller: SuluProductBundle:Template:productForm }
