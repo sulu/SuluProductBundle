@@ -1,3 +1,8 @@
-sulu_product_base.products:
+sulu_product.products:
     type: rest
     resource: Sulu\Bundle\ProductBundle\Controller\ProductController
+
+sulu_product.variants:
+    type: rest
+    parent: sulu_product.products
+    resource: Sulu\Bundle\ProductBundle\Controller\VariantController

@@ -4,4 +4,5 @@ sulu_product:
 
 sulu_product_api:
     resource: "@SuluProductBundle/Resources/config/routing_api.yml"
+    type: rest
     prefix: /api

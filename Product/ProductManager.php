@@ -125,6 +125,19 @@ class ProductManager implements ProductManagerInterface
             'product.number'
         );
 
+        $fieldDescriptors['parent'] = new DoctrineFieldDescriptor(
+            'id',
+            'parent',
+            self::$productEntityName . 'Parent',
+            'product.parent',
+            array(
+                self::$productEntityName . 'Parent' => new DoctrineJoinDescriptor(
+                        self::$productEntityName,
+                        self::$productEntityName . '.parent'
+                    )
+            )
+        );
+
         $fieldDescriptors['manufacturer'] = new DoctrineFieldDescriptor(
             'manufacturer', 'manufacturer', self::$productEntityName, 'product.manufacturer', array(), true
         );
