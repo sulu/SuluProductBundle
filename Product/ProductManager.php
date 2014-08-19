@@ -135,7 +135,8 @@ class ProductManager implements ProductManagerInterface
                         self::$productEntityName,
                         self::$productEntityName . '.parent'
                     )
-            )
+            ),
+            true
         );
 
         $fieldDescriptors['manufacturer'] = new DoctrineFieldDescriptor(

@@ -50,6 +50,14 @@
                 <source>product.type</source>
                 <target>Product type</target>
             </trans-unit>
+            <trans-unit id="13" resname="content-navigation.product.general">
+                <source>content-navigation.product.general</source>
+                <target>General</target>
+            </trans-unit>
+            <trans-unit id="14" resname="content-navigation.product.variants">
+                <source>content-navigation.product.variants</source>
+                <target>Variants</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>

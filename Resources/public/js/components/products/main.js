@@ -43,7 +43,6 @@ define(['suluproduct/models/product', 'app-config'], function (Product, AppConfi
         PRODUCT_LIST = eventNamespace + 'list';
 
     return {
-
         initialize: function () {
             this.product = null;
 

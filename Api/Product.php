@@ -233,7 +233,11 @@ class Product extends ApiWrapper
      */
     public function setParent(Product $parent = null)
     {
-        $this->entity->setParent($parent->getEntity());
+        if ($parent != null) {
+            $this->entity->setParent($parent->getEntity());
+        } else {
+            $this->entity->setParent(null);
+        }
     }
 
     /**
