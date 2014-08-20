@@ -18,6 +18,7 @@ define([], function () {
                 'product-variants-list',
                 '/admin/api/products/fields',
                 {
+                    // TODO use header function instead for consistency
                     el: '#list-toolbar',
                     inHeader: true
                 },

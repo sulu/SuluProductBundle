@@ -12,6 +12,7 @@ define(function () {
     'use strict';
 
     return {
+        // TODO exclude tabs into own function and remove header
         header: function () {
             return {
                 toolbar: {
