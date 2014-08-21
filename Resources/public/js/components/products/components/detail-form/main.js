@@ -96,7 +96,7 @@ define([], function () {
                     delete data.id;
                 }
 
-                if (!!this.options.productType) {
+                if (!data.type && !!this.options.productType) {
                     data.type = {
                         id: types[this.options.productType]
                     };

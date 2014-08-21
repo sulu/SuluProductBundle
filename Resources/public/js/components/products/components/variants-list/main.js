@@ -11,7 +11,7 @@ define([], function () {
     'use strict';
 
     var maxLengthTitle = 60,
-        
+
         renderList = function () {
             this.sandbox.sulu.initListToolbarAndList.call(
                 this,
@@ -25,14 +25,21 @@ define([], function () {
                 {
                     el: '#product-variants',
                     resultKey: 'products',
-                    url: '/admin/api/products/' + this.options.data.id + '/variants?flat=true',
-                    viewOptions: {
-                        table: {
-                            fullWidth: true
-                        }
-                    }
+                    url: '/admin/api/products/' + this.options.data.id + '/variants?flat=true'
                 }
             );
+        },
+
+        bindCustomEvents = function () {
+            this.sandbox.on('sulu.list-toolbar.add', function () {
+                add.call(this);
+            }, this);
+        },
+
+        render = function () {
+            this.sandbox.dom.html(this.$el, this.renderTemplate('/admin/product/template/product/variants'));
+
+            renderList.call(this);
         },
 
         setHeaderInformation = function () {
@@ -57,6 +64,10 @@ define([], function () {
                 });
             }
             this.sandbox.emit('sulu.header.set-breadcrumb', breadcrumb);
+        },
+
+        add = function () {
+
         };
 
     return {
@@ -64,26 +75,14 @@ define([], function () {
 
         view: true,
 
-        layout: {
-            content: {
-                width: 'max',
-                leftSpace: false,
-                rightSpace: false
-            }
-        },
-
         templates: ['/admin/product/template/product/variants'],
 
         initialize: function () {
-            this.render();
+            render.call(this);
+
+            bindCustomEvents.call(this);
 
             setHeaderInformation.call(this);
-        },
-
-        render: function () {
-            this.sandbox.dom.html(this.$el, this.renderTemplate('/admin/product/template/product/variants'));
-
-            renderList.call(this);
         }
     };
 });
