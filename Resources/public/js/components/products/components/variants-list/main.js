@@ -10,7 +10,11 @@
 define([], function () {
     'use strict';
 
-    var maxLengthTitle = 60,
+    var constants = {
+            productOverlayName: 'variants'
+        },
+
+        maxLengthTitle = 60,
 
         renderList = function () {
             this.sandbox.sulu.initListToolbarAndList.call(
@@ -32,7 +36,7 @@ define([], function () {
 
         bindCustomEvents = function () {
             this.sandbox.on('sulu.list-toolbar.add', function () {
-                add.call(this);
+                startAddOverlay.call(this);
             }, this);
         },
 
@@ -40,6 +44,8 @@ define([], function () {
             this.sandbox.dom.html(this.$el, this.renderTemplate('/admin/product/template/product/variants'));
 
             renderList.call(this);
+
+            initializeAddOverlay.call(this);
         },
 
         setHeaderInformation = function () {
@@ -66,8 +72,29 @@ define([], function () {
             this.sandbox.emit('sulu.header.set-breadcrumb', breadcrumb);
         },
 
-        add = function () {
+        initializeAddOverlay = function () {
+            var $el = this.sandbox.dom.createElement('<div/>');
+            this.sandbox.dom.append(this.$el, $el);
 
+            this.sandbox.start([{
+                name: 'products-overlay@suluproduct',
+                options: {
+                    el: $el,
+                    instanceName: constants.productOverlayName,
+                    slides: [
+                        {
+                            title: 'Products'
+                        }
+                    ],
+                    translations: {
+                        addProducts: 'products-overlay.add-variant'
+                    }
+                }
+            }]);
+        },
+
+        startAddOverlay = function () {
+            this.sandbox.emit('sulu.products.products-overlay.' + constants.productOverlayName + '.open');
         };
 
     return {

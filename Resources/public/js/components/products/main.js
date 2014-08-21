@@ -8,7 +8,6 @@
  */
 
 define(['suluproduct/models/product', 'app-config'], function (Product, AppConfig) {
-
     'use strict';
 
     var types = {
