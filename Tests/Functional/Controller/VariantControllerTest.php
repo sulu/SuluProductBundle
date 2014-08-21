@@ -40,6 +40,11 @@ class VariantControllerTest extends DatabaseTestCase
     protected $productType;
 
     /**
+     * @var Product
+     */
+    private $product;
+
+    /**
      * @var Type
      */
     protected $productWithVariantsType;
@@ -79,6 +84,13 @@ class VariantControllerTest extends DatabaseTestCase
         $activeStatusTranslation->setStatus($this->activeStatus);
         self::$em->persist($this->activeStatus);
         self::$em->persist($activeStatusTranslation);
+
+        $this->product = new Product(new ProductEntity(), 'en');
+        $this->product->setName('Product with Variants');
+        $this->product->setNumber('1');
+        $this->product->setStatus($this->activeStatus);
+        $this->product->setType($this->productWithVariantsType);
+        self::$em->persist($this->product->getEntity());
 
         self::$em->flush();
     }
@@ -136,19 +148,12 @@ class VariantControllerTest extends DatabaseTestCase
 
     public function testGetAll()
     {
-        $product = new Product(new ProductEntity(), 'en');
-        $product->setName('Product with Variants');
-        $product->setNumber('1');
-        $product->setStatus($this->activeStatus);
-        $product->setType($this->productWithVariantsType);
-        self::$em->persist($product->getEntity());
-
         $productVariant1 = new Product(new ProductEntity(), 'en');
         $productVariant1->setName('Productvariant');
         $productVariant1->setNumber('2');
         $productVariant1->setStatus($this->activeStatus);
         $productVariant1->setType($this->productType);
-        $productVariant1->setParent($product);
+        $productVariant1->setParent($this->product);
         self::$em->persist($productVariant1->getEntity());
 
         $productVariant2 = new Product(new ProductEntity(), 'en');
@@ -156,7 +161,7 @@ class VariantControllerTest extends DatabaseTestCase
         $productVariant2->setNumber('3');
         $productVariant2->setStatus($this->activeStatus);
         $productVariant2->setType($this->productType);
-        $productVariant2->setParent($product);
+        $productVariant2->setParent($this->product);
         self::$em->persist($productVariant2->getEntity());
 
         $anotherProduct = new Product(new ProductEntity(), 'en');
@@ -175,5 +180,67 @@ class VariantControllerTest extends DatabaseTestCase
         $this->assertCount(2, $response->_embedded->products);
         $this->assertEquals('Productvariant', $response->_embedded->products[0]->name);
         $this->assertEquals('Another Productvariant', $response->_embedded->products[1]->name);
+    }
+
+    public function testPost()
+    {
+        $productVariant = new Product(new ProductEntity(), 'en');
+        $productVariant->setName('ProductVariant');
+        $productVariant->setNumber('2');
+        $productVariant->setStatus($this->activeStatus);
+        $productVariant->setType($this->productType);
+        $productVariant->setParent($this->product);
+        self::$em->persist($productVariant->getEntity());
+
+        self::$em->flush();
+
+        $this->client->request('POST', '/api/products/1/variants', array('id' => $productVariant->getId()));
+
+        $response = json_decode($this->client->getResponse()->getContent());
+
+        $this->assertEquals('2', $response->number);
+        $this->assertEquals('1', $response->parent->number);
+
+        $this->client->request('GET', '/api/products/2');
+
+        $response = json_decode($this->client->getResponse()->getContent());
+
+        $this->assertEquals('1', $response->parent->number);
+    }
+
+    public function testPostWithNotExistingParent()
+    {
+        $productVariant = new Product(new ProductEntity(), 'en');
+        $productVariant->setName('ProductVariant');
+        $productVariant->setNumber('2');
+        $productVariant->setStatus($this->activeStatus);
+        $productVariant->setType($this->productType);
+        $productVariant->setParent($this->product);
+        self::$em->persist($productVariant->getEntity());
+
+        self::$em->flush();
+
+        $this->client->request('POST', '/api/products/3/variants', array('id' => $productVariant->getId()));
+
+        $response = json_decode($this->client->getResponse()->getContent());
+
+        $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
+        $this->assertEquals(
+            'Entity with the type "SuluProductBundle:Product" and the id "3" not found.',
+            $response->message
+        );
+    }
+
+    public function testPostWithNotExistingVariant()
+    {
+        $this->client->request('POST', '/api/products/1/variants', array('id' => 2));
+
+        $response = json_decode($this->client->getResponse()->getContent());
+
+        $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
+        $this->assertEquals(
+            'Entity with the type "SuluProductBundle:Product" and the id "2" not found.',
+            $response->message
+        );
     }
 }
