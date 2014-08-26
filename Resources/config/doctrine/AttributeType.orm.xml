@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <entity name="Sulu\Bundle\ProductBundle\Entity\AttributeType" table="pr_attribute_type">
+        <id name="id" type="integer" column="id">
+            <generator strategy="AUTO"/>
+        </id>
+        <field name="name" type="string" lenth="40" column="name"/>
+        <one-to-many field="attributes" target-entity="Sulu\Bundle\ProductBundle\Entity\Attribute"
+                     mapped-by="type"/>
+    </entity>
+</doctrine-mapping>

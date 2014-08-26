@@ -6,7 +6,7 @@
         <id name="id" type="integer" column="id">
             <generator strategy="AUTO"/>
         </id>
-        
+
         <field name="locale" type="string" length="10" />
         <field name="name" type="string" length="255"/>
 
