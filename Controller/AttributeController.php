@@ -13,14 +13,16 @@ namespace Sulu\Bundle\ProductBundle\Controller;
 use FOS\RestBundle\Routing\ClassResourceInterface;
 use FOS\RestBundle\Controller\Annotations\Get;
 
-use Sulu\Component\Rest\RestController;
+use Hateoas\Representation\CollectionRepresentation;
+
 use Symfony\Component\HttpFoundation\Request;
+
+use Sulu\Component\Rest\RestController;
 use Sulu\Component\Rest\Exception\EntityNotFoundException;
+use Sulu\Component\Rest\Exception\MissingArgumentException;
+use Sulu\Component\Rest\ListBuilder\ListRepresentation;
 use Sulu\Bundle\ProductBundle\Product\Exception\AttributeDependencyNotFoundException;
 use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeAttributeException;
-use Sulu\Component\Rest\Exception\MissingArgumentException;
-use Hateoas\Representation\CollectionRepresentation;
-use Sulu\Component\Rest\ListBuilder\ListRepresentation;
 
 class AttributeController extends RestController implements ClassResourceInterface
 {
@@ -83,44 +85,16 @@ class AttributeController extends RestController implements ClassResourceInterfa
     public function cgetAction(Request $request)
     {
         $filter = array();
-
         $status = $request->get('status');
         if ($status) {
             $filter['status'] = $status;
         }
-
         $type = $request->get('type');
         if ($type) {
             $filter['type'] = $type;
         }
-
         if ($request->get('flat') == 'true') {
-            /** @var RestHelperInterface $restHelper */
-            $restHelper = $this->get('sulu_core.doctrine_rest_helper');
-
-            /** @var DoctrineListBuilderFactory $factory */
-            $factory = $this->get('sulu_core.doctrine_list_builder_factory');
-
-            $listBuilder = $factory->create(self::$entityName);
-
-            $restHelper->initializeListBuilder(
-                $listBuilder,
-                $this->getManager()->getFieldDescriptors($this->getLocale($request))
-            );
-
-            foreach ($filter as $key => $value) {
-                $listBuilder->where($this->getManager()->getFieldDescriptor($key), $value);
-            }
-
-            $list = new ListRepresentation(
-                $listBuilder->execute(),
-                self::$entityKey,
-                'get_attributes',
-                $request->query->all(),
-                $listBuilder->getCurrentPage(),
-                $listBuilder->getLimit(),
-                $listBuilder->count()
-            );
+            $list = $this->getListRepresentation($request, $filter);
         } else {
             $list = new CollectionRepresentation(
                 $this->getManager()->findAllByLocale($this->getLocale($request), $filter),
@@ -129,15 +103,52 @@ class AttributeController extends RestController implements ClassResourceInterfa
         }
 
         $view = $this->view($list, 200);
-
         return $this->handleView($view);
     }
 
     /**
-     * Change a attribute by the given attribute id.
+     * Returns a list representation
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
-     * @param integer $id attribute ID
+     * @param array $filter
+     * @return Sulu\Component\Rest\ListBuilder\ListRepresentation
+     */
+    private function getListRepresentation($request, $filter)
+    {
+        /** @var RestHelperInterface $restHelper */
+        $restHelper = $this->get('sulu_core.doctrine_rest_helper');
+
+        /** @var DoctrineListBuilderFactory $factory */
+        $factory = $this->get('sulu_core.doctrine_list_builder_factory');
+
+        $listBuilder = $factory->create(self::$entityName);
+
+        $restHelper->initializeListBuilder(
+            $listBuilder,
+            $this->getManager()->getFieldDescriptors($this->getLocale($request))
+        );
+
+        foreach ($filter as $key => $value) {
+            $listBuilder->where($this->getManager()->getFieldDescriptor($key), $value);
+        }
+
+        $list = new ListRepresentation(
+            $listBuilder->execute(),
+            self::$entityKey,
+            'get_attributes',
+            $request->query->all(),
+            $listBuilder->getCurrentPage(),
+            $listBuilder->getLimit(),
+            $listBuilder->count()
+        );
+        return $list;
+    }
+
+    /**
+     * Change a attribute by the given id.
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @param integer $id the attribute id
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function putAction(Request $request, $id)
@@ -192,7 +203,7 @@ class AttributeController extends RestController implements ClassResourceInterfa
      * Delete an product attribute with the given id.
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
-     * @param integer $id attribute id
+     * @param integer $id the attribute id
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function deleteAction(Request $request, $id)

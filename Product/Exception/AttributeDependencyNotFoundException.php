@@ -28,7 +28,12 @@ class AttributeDependencyNotFoundException extends AttributeException
     {
         $this->entityName = $entityName;
         $this->id = $id;
-        parent::__construct('The product dependency "' . $this->entityName . ' with the id "' . $this->id . '" was not found.', 0);
+        parent::__construct(
+            'The product dependency "' . $this->entityName .
+            ' with the id "' . $this->id .
+            '" was not found.',
+            0
+        );
     }
 
     /**

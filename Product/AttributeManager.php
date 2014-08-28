@@ -16,13 +16,13 @@ use Doctrine\Common\Persistence\ObjectManager;
 
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescriptor;
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineJoinDescriptor;
+use Sulu\Component\Security\UserRepositoryInterface;
 use Sulu\Bundle\ProductBundle\Api\Attribute;
+use Sulu\Bundle\ProductBundle\Entity\AttributeTypeRepository;
+use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeAttributeException;
 use Sulu\Bundle\ProductBundle\Entity\Attribute as AttributeEntity;
 use Sulu\Bundle\ProductBundle\Product\Exception\AttributeNotFoundException;
 use Sulu\Bundle\ProductBundle\Product\Exception\AttributeDependencyNotFoundException;
-use Sulu\Component\Security\UserRepositoryInterface;
-use Sulu\Bundle\ProductBundle\Entity\AttributeTypeRepository;
-use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeAttributeException;
 
 class AttributeManager implements AttributeManagerInterface
 {
@@ -146,7 +146,6 @@ class AttributeManager implements AttributeManagerInterface
                 $attribute = new Attribute($attribute, $locale);
             }
         );
-
         return $attributes;
     }
 
@@ -157,11 +156,9 @@ class AttributeManager implements AttributeManagerInterface
     {
         if ($id) {
             $attribute = $this->attributeRepository->findByIdAndLocale($id, $locale);
-
             if (!$attribute) {
                 throw new AttributeNotFoundException($id);
             }
-
             $attribute = new Attribute($attribute, $locale);
         } else {
             $attribute = new Attribute(new AttributeEntity(), $locale);
@@ -192,7 +189,6 @@ class AttributeManager implements AttributeManagerInterface
         }
 
         $this->em->flush();
-
         return $attribute;
     }
 

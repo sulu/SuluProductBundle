@@ -47,7 +47,6 @@ class LoadAttributeTypes implements FixtureInterface, OrderedFixtureInterface
                     }
                 }
                 $manager->persist($attributeType);
-
                 $i++;
             }
         }
