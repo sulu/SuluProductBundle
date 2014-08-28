@@ -216,14 +216,6 @@ class ProductManager implements ProductManagerInterface
     /**
      * {@inheritDoc}
      */
-    public function getFieldDescriptor($key)
-    {
-        return $this->fieldDescriptors[$key];
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public function findByIdAndLocale($id, $locale)
     {
         $product = $this->productRepository->findByIdAndLocale($id, $locale);
@@ -340,6 +332,30 @@ class ProductManager implements ProductManagerInterface
         $this->em->flush();
 
         return $product;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function addVariant($parentId, $variantId, $locale)
+    {
+        $variant = $this->productRepository->findById($variantId);
+
+        if (!$variant) {
+            throw new ProductNotFoundException($variantId);
+        }
+
+        $parent = $this->productRepository->findById($parentId);
+
+        if (!$parent) {
+            throw new ProductNotFoundException($parentId);
+        }
+
+        $variant->setParent($parent);
+
+        $this->em->flush();
+
+        return new Product($variant, $locale);
     }
 
     /**

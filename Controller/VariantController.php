@@ -94,15 +94,12 @@ class VariantController extends RestController implements ClassResourceInterface
     public function postAction(Request $request, $parentId)
     {
         try {
-            $variant = $this->getManager()->findByIdAndLocale($request->get('id'), $this->getLocale($request));
-            $parent = $this->getManager()->findByIdAndLocale($parentId, $this->getLocale($request));
-
-            $variant->setParent($parent);
+            $variant = $this->getManager()->addVariant($parentId, $request->get('id'), $this->getLocale($request));
 
             $view = $this->view($variant, 200);
         } catch (ProductNotFoundException $exc) {
             $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
-            $view = $this->view($exception->toArray(), 404);
+            $view = $this->view($exception->toArray(), 400);
         }
 
         return $this->handleView($view);

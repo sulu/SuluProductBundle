@@ -27,13 +27,6 @@ interface ProductManagerInterface
     public function getFieldDescriptors($locale);
 
     /**
-     * Returns the FieldDescriptor for the given key
-     * @param string $key The key of the FieldDescriptor to return
-     * @return DoctrineFieldDescriptor
-     */
-    public function getFieldDescriptor($key);
-
-    /**
      * Returns the product with the given ID and locale
      * @param int $id The id of the product to load
      * @param string $locale The locale to load
@@ -58,6 +51,15 @@ interface ProductManagerInterface
      * @return Product
      */
     public function save(array $data, $locale, $userId, $id = null);
+
+    /**
+     * Adds an variant to a specific product
+     * @param integer $parentId The id of the product, to which the variant is added
+     * @param integer $variantId The id of the product, which is added to the other as a variant
+     * @param string $locale The locale to load
+     * @return Product The new variant
+     */
+    public function addVariant($parentId, $variantId, $locale);
 
     /**
      * Deletes the given product
