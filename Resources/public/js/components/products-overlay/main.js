@@ -112,6 +112,10 @@ define([], function () {
             this.sandbox.emit(ADD.call(this), id);
         },
 
+        setPosition = function () {
+            this.sandbox.emit('husky.overlay.' + this.options.instanceName + '.set-position');
+        },
+
         bindCustomEvents = function () {
             this.sandbox.once('husky.overlay.' + this.options.instanceName + '.opened', function () {
                 initializeDataGrid.call(this);
@@ -123,6 +127,10 @@ define([], function () {
 
             this.sandbox.on('husky.datagrid.' + this.options.dataGridInstanceName + '.item.click', function (id) {
                 addProductVariant.call(this, id);
+            }, this);
+
+            this.sandbox.on('husky.datagrid.' + this.options.dataGridInstanceName + '.view.rendered', function() {
+                setPosition.call(this);
             }, this);
         };
 
