@@ -82,6 +82,10 @@ define(['suluproduct/models/product', 'app-config'], function (Product, AppConfi
             this.sandbox.on('sulu.header.language-changed', function (locale) {
                 this.load(this.options.id, locale);
             }, this);
+
+            this.sandbox.on('sulu.products.products-overlay.variants.add', function (id) {
+                this.addVariant(id);
+            }, this);
         },
 
         save: function (data) {
@@ -104,6 +108,10 @@ define(['suluproduct/models/product', 'app-config'], function (Product, AppConfi
 
         load: function (id, localization) {
             this.sandbox.emit('sulu.router.navigate', 'pim/products/' + localization + '/edit:' + id + '/details');
+        },
+
+        addVariant: function (id) {
+            this.product.get('variants').fetch({data: {id: id}, type: 'POST'});
         },
 
         renderTabs: function () {
