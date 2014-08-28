@@ -18,16 +18,6 @@ use Doctrine\ORM\Mapping as ORM;
 class Attribute
 {
     /**
-     * @var string
-     */
-    private $unit;
-
-    /**
-     * @var string
-     */
-    private $type;
-
-    /**
      * @var \DateTime
      */
     private $created;
@@ -69,52 +59,6 @@ class Attribute
     {
         $this->translations = new \Doctrine\Common\Collections\ArrayCollection();
         $this->productAttributes = new \Doctrine\Common\Collections\ArrayCollection();
-    }
-    
-    /**
-     * Set unit
-     *
-     * @param string $unit
-     * @return Attribute
-     */
-    public function setUnit($unit)
-    {
-        $this->unit = $unit;
-    
-        return $this;
-    }
-
-    /**
-     * Get unit
-     *
-     * @return string 
-     */
-    public function getUnit()
-    {
-        return $this->unit;
-    }
-
-    /**
-     * Set type
-     *
-     * @param string $type
-     * @return Attribute
-     */
-    public function setType($type)
-    {
-        $this->type = $type;
-    
-        return $this;
-    }
-
-    /**
-     * Get type
-     *
-     * @return string 
-     */
-    public function getType()
-    {
-        return $this->type;
     }
 
     /**
@@ -301,5 +245,33 @@ class Attribute
     public function getCreator()
     {
         return $this->creator;
+    }
+    /**
+     * @var \Sulu\Bundle\ProductBundle\Entity\AttributeType
+     */
+    private $type;
+
+
+    /**
+     * Set type
+     *
+     * @param \Sulu\Bundle\ProductBundle\Entity\AttributeType $type
+     * @return Attribute
+     */
+    public function setType(\Sulu\Bundle\ProductBundle\Entity\AttributeType $type)
+    {
+        $this->type = $type;
+    
+        return $this;
+    }
+
+    /**
+     * Get type
+     *
+     * @return \Sulu\Bundle\ProductBundle\Entity\AttributeType 
+     */
+    public function getType()
+    {
+        return $this->type;
     }
 }

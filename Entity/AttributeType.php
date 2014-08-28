@@ -40,10 +40,10 @@ class AttributeType
     /**
      * Add attributes
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\AttributeInterface $attributes
+     * @param \Sulu\Bundle\ProductBundle\Entity\Attribute $attributes
      * @return AttributeType
      */
-    public function addAttribute(\Sulu\Bundle\ProductBundle\Entity\AttributeInterface $attributes)
+    public function addAttribute(\Sulu\Bundle\ProductBundle\Entity\Attribute $attributes)
     {
         $this->attributes[] = $attributes;
     
@@ -53,9 +53,9 @@ class AttributeType
     /**
      * Remove attributes
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\AttributeInterface $attributes
+     * @param \Sulu\Bundle\ProductBundle\Entity\Attribute $attributes
      */
-    public function removeAttribute(\Sulu\Bundle\ProductBundle\Entity\AttributeInterface $attributes)
+    public function removeAttribute(\Sulu\Bundle\ProductBundle\Entity\Attribute $attributes)
     {
         $this->attributes->removeElement($attributes);
     }

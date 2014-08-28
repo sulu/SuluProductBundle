@@ -13,7 +13,7 @@
         <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\Attribute" field="attribute"
                      inversed-by="translations">
             <join-columns>
-                <join-column name="idAttributes" referenced-column-name="id" nullable="false"/>
+                <join-column name="idAttributes" referenced-column-name="id" nullable="false" on-delete="CASCADE"/>
             </join-columns>
         </many-to-one>
     </entity>

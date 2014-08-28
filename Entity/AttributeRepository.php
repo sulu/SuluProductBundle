@@ -22,11 +22,11 @@ class AttributeRepository extends EntityRepository implements AttributeRepositor
     public function findById($id)
     {
         try {
-            $qb = $this->createQueryBuilder('attribute')
-                ->andWhere('atribute.id = :attributeId')
+            $queryBuilder = $this->createQueryBuilder('attribute')
+                ->andWhere('attribute.id = :attributeId')
                 ->setParameter('attributeId', $id);
 
-            return $qb->getQuery()->getSingleResult();
+            return $queryBuilder->getQuery()->getSingleResult();
         } catch (NoResultException $exc) {
             return null;
         }
@@ -38,11 +38,11 @@ class AttributeRepository extends EntityRepository implements AttributeRepositor
     public function findByIdAndLocale($id, $locale)
     {
         try {
-            $qb = $this->getAttributeQuery($locale);
-            $qb->andWhere('attribute.id = :attributeId');
-            $qb->setParameter('attributeId', $id);
+            $queryBuilder = $this->getAttributeQuery($locale);
+            $queryBuilder->andWhere('attribute.id = :attributeId');
+            $queryBuilder->setParameter('attributeId', $id);
 
-            return $qb->getQuery()->getSingleResult();
+            return $queryBuilder->getQuery()->getSingleResult();
         } catch (NoResultException $exc) {
             return null;
         }
@@ -51,7 +51,7 @@ class AttributeRepository extends EntityRepository implements AttributeRepositor
     /**
      * Returns all attributes for the given locale
      * @param string $locale The locale of the attribute to load
-     * @return AttributeInterface[]
+     * @return Attribute[]
      */
     public function findAllByLocale($locale)
     {
@@ -67,12 +67,12 @@ class AttributeRepository extends EntityRepository implements AttributeRepositor
      * @param string $locale The locale to load
      * @return \Doctrine\ORM\QueryBuilder
      */
-    private function getProductQuery($locale)
+    private function getAttributeQuery($locale)
     {
-        $qb = $this->createQueryBuilder('attribute')
+        $queryBuilder = $this->createQueryBuilder('attribute')
             ->leftJoin('attribute.translations', 'translations', 'WITH', 'translations.locale = :locale')
             ->setParameter('locale', $locale);
 
-        return $qb;
+        return $queryBuilder;
     }
 }

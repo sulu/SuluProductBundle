@@ -10,19 +10,40 @@
 
 namespace Sulu\Bundle\ProductBundle\Product;
 
+use \DateTime;
+
+use Doctrine\Common\Persistence\ObjectManager;
+
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescriptor;
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineJoinDescriptor;
-use Doctrine\Common\Persistence\ObjectManager;
+use Sulu\Bundle\ProductBundle\Api\Attribute;
+use Sulu\Bundle\ProductBundle\Entity\Attribute as AttributeEntity;
+use Sulu\Bundle\ProductBundle\Product\Exception\AttributeNotFoundException;
+use Sulu\Bundle\ProductBundle\Product\Exception\AttributeDependencyNotFoundException;
+use Sulu\Component\Security\UserRepositoryInterface;
+use Sulu\Bundle\ProductBundle\Entity\AttributeTypeRepository;
+use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeAttributeException;
 
 class AttributeManager implements AttributeManagerInterface
 {
     protected static $attributeEntityName = 'SuluProductBundle:Attribute';
     protected static $attributeTranslationEntityName = 'SuluProductBundle:AttributeTranslation';
+    protected static $attributeTypeEntityName = 'SuluProductBundle:AttributeType';
 
     /**
      * @var AttributeRepositoryInterface
      */
     private $attributeRepository;
+
+    /**
+     * @var UserRepositoryInterface
+     */
+    private $userRepository;
+
+    /**
+     * @var AttributeTypeRepository
+     */
+    private $attributeTypeRepository;
 
     /**
      * @var ObjectManager
@@ -31,9 +52,13 @@ class AttributeManager implements AttributeManagerInterface
 
     public function __construct(
         AttributeRepositoryInterface $attributeRepository,
+        UserRepositoryInterface $userRepository,
+        AttributeTypeRepository $attributeTypeRepository,
         ObjectManager $em
     ) {
         $this->attributeRepository = $attributeRepository;
+        $this->userRepository = $userRepository;
+        $this->attributeTypeRepository = $attributeTypeRepository;
         $this->em = $em;
     }
 
@@ -42,16 +67,40 @@ class AttributeManager implements AttributeManagerInterface
      */
     public function getFieldDescriptors($locale)
     {
-        $fieldDescriptors['title'] = new DoctrineFieldDescriptor(
-            'title',
-            'title',
+        $fieldDescriptors = array();
+
+        $fieldDescriptors['id'] = new DoctrineFieldDescriptor(
+            'id',
+            'id',
+            self::$attributeEntityName,
+            'public.id',
+            array(),
+            true
+        );
+
+        $fieldDescriptors['name'] = new DoctrineFieldDescriptor(
+            'name',
+            'name',
             self::$attributeTranslationEntityName,
-            'attribute.title',
+            'product.attribute.name',
             array(
                 self::$attributeTranslationEntityName => new DoctrineJoinDescriptor(
                     self::$attributeTranslationEntityName,
                     self::$attributeEntityName . '.translations',
                     self::$attributeTranslationEntityName . '.locale = \'' . $locale . '\''
+                )
+            )
+        );
+
+        $fieldDescriptors['type'] = new DoctrineFieldDescriptor(
+            'name',
+            'type',
+            self::$attributeTypeEntityName,
+            'product.attribute.type',
+            array(
+                self::$attributeTypeEntityName => new DoctrineJoinDescriptor(
+                    self::$attributeTypeEntityName,
+                    self::$attributeEntityName . '.type'
                 )
             )
         );
@@ -106,7 +155,75 @@ class AttributeManager implements AttributeManagerInterface
      */
     public function save(array $data, $locale, $userId, $id = null)
     {
-        // TODO: implement
+        if ($id) {
+            $attribute = $this->attributeRepository->findByIdAndLocale($id, $locale);
+
+            if (!$attribute) {
+                throw new AttributeNotFoundException($id);
+            }
+
+            $attribute = new Attribute($attribute, $locale);
+        } else {
+            $attribute = new Attribute(new AttributeEntity(), $locale);
+        }
+
+        $this->checkData($data, $id === null);
+
+        $user = $this->userRepository->findUserById($userId);
+
+        $attribute->setChanged(new DateTime());
+        $attribute->setChanger($user);
+        $attribute->setName($this->getProperty($data, 'name', $attribute->getName()));
+
+        if (array_key_exists('type', $data) && array_key_exists('id', $data['type'])) {
+            $typeId = $data['type']['id'];
+            /** @var Type $type */
+            $type = $this->attributeTypeRepository->find($typeId);
+            if (!$type) {
+                throw new AttributeDependencyNotFoundException(self::$attributeTypeEntityName, $typeId);
+            }
+            $attribute->setType($type);
+        }
+
+        if ($attribute->getId() == null) {
+            $attribute->setCreated(new DateTime());
+            $attribute->setCreator($user);
+            $this->em->persist($attribute->getEntity());
+        }
+
+        $this->em->flush();
+
+        return $attribute;
+    }
+
+    /**
+     * Returns the entry from the data with the given key, or the given default value,
+     * if the key does not exist
+     * @param array $data
+     * @param string $key
+     * @param string $default
+     * @return mixed
+     */
+    private function getProperty(array $data, $key, $default = null)
+    {
+        return array_key_exists($key, $data) ? $data[$key] : $default;
+    }
+
+    private function checkData($data, $create)
+    {
+
+        $this->checkDataSet($data, 'type', $create) && $this->checkDataSet($data['type'], 'id', $create);
+    }
+
+    private function checkDataSet(array $data, $key, $create)
+    {
+        $keyExists = array_key_exists($key, $data);
+
+        if (($create && !($keyExists && $data[$key] !== null)) || (!$keyExists || $data[$key] === null)) {
+            throw new MissingAttributeAttributeException($key);
+        }
+
+        return $keyExists;
     }
 
     /**
@@ -114,6 +231,13 @@ class AttributeManager implements AttributeManagerInterface
      */
     public function delete($id, $userId)
     {
-        // TODO: implement
+        $attribute = $this->attributeRepository->findById($id);
+
+        if (!$attribute) {
+            throw new AttributeNotFoundException($id);
+        }
+
+        $this->em->remove($attribute);
+        $this->em->flush();
     }
 }
