@@ -23,6 +23,7 @@ use Sulu\Bundle\ProductBundle\Api\Attribute as Attribute;
 use Sulu\Bundle\ProductBundle\Entity\AttributeTranslation;
 use Sulu\Bundle\ProductBundle\Api\AttributeType;
 use Sulu\Component\Rest\ApiWrapper;
+use Sulu\Bundle\ProductBundle\Entity\AttributeValue;
 
 /**
 * The Attribute class which will be exported to the API
@@ -162,6 +163,18 @@ class Attribute extends ApiWrapper
     public function setCreator($creator)
     {
         $this->entity->setCreator($creator);
+        return $this;
+    }
+
+    /**
+     * Add value
+     *
+     * @param \Sulu\Bundle\ProductBundle\Entity\AttributeValue $value
+     * @return Attribute
+     */
+    public function addValue(AttributeValue $value)
+    {
+        $this->entity->addValue($value);;
         return $this;
     }
 

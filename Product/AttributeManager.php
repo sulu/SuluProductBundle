@@ -17,12 +17,17 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescriptor;
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineJoinDescriptor;
 use Sulu\Component\Security\UserRepositoryInterface;
-use Sulu\Bundle\ProductBundle\Api\Attribute;
 use Sulu\Bundle\ProductBundle\Entity\AttributeTypeRepository;
-use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeAttributeException;
+use Sulu\Bundle\ProductBundle\Api\Attribute;
 use Sulu\Bundle\ProductBundle\Entity\Attribute as AttributeEntity;
+use Sulu\Bundle\ProductBundle\Api\AttributeValue;
+use Sulu\Bundle\ProductBundle\Entity\AttributeValue as AttributeValueEntity;
 use Sulu\Bundle\ProductBundle\Product\Exception\AttributeNotFoundException;
+use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeAttributeException;
 use Sulu\Bundle\ProductBundle\Product\Exception\AttributeDependencyNotFoundException;
+use Sulu\Bundle\ProductBundle\Product\Exception\AttributeValueNotFoundException;
+use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeValueAttributeException;
+use Sulu\Bundle\ProductBundle\Product\Exception\AttributeValueDependencyNotFoundException;
 
 class AttributeManager implements AttributeManagerInterface
 {
@@ -188,8 +193,41 @@ class AttributeManager implements AttributeManagerInterface
             $this->em->persist($attribute->getEntity());
         }
 
+        if (array_key_exists('values', $data)) {
+            $this->addValues($attribute, $data['values'], $locale);
+        }
+
         $this->em->flush();
         return $attribute;
+    }
+    /**
+     * Creates values for an attribute
+     *
+     * @param $values
+     */
+    private function addValues($attribute, $values, $locale)
+    {
+        foreach ($values as $value) {
+            $id = array_key_exists('id', $value);
+            if ($id) {
+                $attributeValue = $this->attributeValueRepository->findByIdAndLocale($id, $locale);
+                if (!$attributeValue) {
+                    throw new AttributeValueNotFoundException($id);
+                }
+                $attributeValue = new AttributeValue($attributeValue, $locale);
+            } else {
+                $attributeValue = new AttributeValue(new AttributeValueEntity(), $locale);
+            }
+            $attributeValue->setName($value['name']);
+            if (array_key_exists('selected', $value)) {
+                $attributeValue->setSelected($value['selected']);
+            } else {
+            }
+            if ($attributeValue->getId() == null) {
+                $this->em->persist($attributeValue->getEntity());
+            }
+            $attributeValue->setAttribute($attribute);
+        }
     }
 
     /**

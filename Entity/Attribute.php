@@ -1,12 +1,4 @@
 <?php
-/*
- * This file is part of the Sulu CMS.
- *
- * (c) MASSIVE ART WebServices GmbH
- *
- * This source file is subject to the MIT license that is bundled
- * with this source code in the file LICENSE.
- */
 
 namespace Sulu\Bundle\ProductBundle\Entity;
 
@@ -40,7 +32,17 @@ class Attribute
     /**
      * @var \Doctrine\Common\Collections\Collection
      */
+    private $values;
+
+    /**
+     * @var \Doctrine\Common\Collections\Collection
+     */
     private $productAttributes;
+
+    /**
+     * @var \Sulu\Bundle\ProductBundle\Entity\AttributeType
+     */
+    private $type;
 
     /**
      * @var \Sulu\Bundle\SecurityBundle\Entity\User
@@ -58,9 +60,10 @@ class Attribute
     public function __construct()
     {
         $this->translations = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->values = new \Doctrine\Common\Collections\ArrayCollection();
         $this->productAttributes = new \Doctrine\Common\Collections\ArrayCollection();
     }
-
+    
     /**
      * Set created
      *
@@ -169,6 +172,39 @@ class Attribute
     }
 
     /**
+     * Add values
+     *
+     * @param \Sulu\Bundle\ProductBundle\Entity\AttributeValue $values
+     * @return Attribute
+     */
+    public function addValue(\Sulu\Bundle\ProductBundle\Entity\AttributeValue $values)
+    {
+        $this->values[] = $values;
+    
+        return $this;
+    }
+
+    /**
+     * Remove values
+     *
+     * @param \Sulu\Bundle\ProductBundle\Entity\AttributeValue $values
+     */
+    public function removeValue(\Sulu\Bundle\ProductBundle\Entity\AttributeValue $values)
+    {
+        $this->values->removeElement($values);
+    }
+
+    /**
+     * Get values
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getValues()
+    {
+        return $this->values;
+    }
+
+    /**
      * Add productAttributes
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\ProductAttribute $productAttributes
@@ -199,6 +235,29 @@ class Attribute
     public function getProductAttributes()
     {
         return $this->productAttributes;
+    }
+
+    /**
+     * Set type
+     *
+     * @param \Sulu\Bundle\ProductBundle\Entity\AttributeType $type
+     * @return Attribute
+     */
+    public function setType(\Sulu\Bundle\ProductBundle\Entity\AttributeType $type)
+    {
+        $this->type = $type;
+    
+        return $this;
+    }
+
+    /**
+     * Get type
+     *
+     * @return \Sulu\Bundle\ProductBundle\Entity\AttributeType 
+     */
+    public function getType()
+    {
+        return $this->type;
     }
 
     /**
@@ -245,33 +304,5 @@ class Attribute
     public function getCreator()
     {
         return $this->creator;
-    }
-    /**
-     * @var \Sulu\Bundle\ProductBundle\Entity\AttributeType
-     */
-    private $type;
-
-
-    /**
-     * Set type
-     *
-     * @param \Sulu\Bundle\ProductBundle\Entity\AttributeType $type
-     * @return Attribute
-     */
-    public function setType(\Sulu\Bundle\ProductBundle\Entity\AttributeType $type)
-    {
-        $this->type = $type;
-    
-        return $this;
-    }
-
-    /**
-     * Get type
-     *
-     * @return \Sulu\Bundle\ProductBundle\Entity\AttributeType 
-     */
-    public function getType()
-    {
-        return $this->type;
     }
 }
