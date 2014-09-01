@@ -173,9 +173,9 @@ class AttributeValueManager implements AttributeValueManagerInterface
     /**
      * {@inheritDoc}
      */
-    public function delete($id, $userId)
+    public function delete($attributeValueId, $userId)
     {
-        $attributeValue = $this->attributeValueRepository->findById($id);
+        $attributeValue = $this->attributeValueRepository->findById($attributeValueId);
 
         if (!$attributeValue) {
             throw new AttributeValueNotFoundException($id);

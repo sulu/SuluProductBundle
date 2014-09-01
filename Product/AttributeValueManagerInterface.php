@@ -55,5 +55,5 @@ interface AttributeValueManagerInterface
      * @param integer $id The id of the attribute to delete
      * @param int $userId The user who delete the attribute
      */
-    public function delete($id, $userId);
+    public function delete($attributeValueId, $userId);
 }

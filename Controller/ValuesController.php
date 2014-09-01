@@ -131,20 +131,20 @@ class ValuesController extends RestController implements ClassResourceInterface
     }
 
     /**
-     * Delete an product attribute value with the given id.
+     * Delete an product attribute value for the given id.
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
      * @param integer $id the attribute id
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function deleteAction(Request $request, $id)
+    public function deleteAction(Request $request, $id, $attributeValueId)
     {
         $locale = $this->getLocale($request);
 
-        $delete = function ($id) use ($locale) {
-            $this->getManager()->delete($id, $this->getUser()->getId());
+        $delete = function ($attributeValueId) use ($locale) {
+            $this->getManager()->delete($attributeValueId, $this->getUser()->getId());
         };
-        $view = $this->responseDelete($id, $delete);
+        $view = $this->responseDelete($attributeValueId, $delete);
         return $this->handleView($view);
     }
 }
