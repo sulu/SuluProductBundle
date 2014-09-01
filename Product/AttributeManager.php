@@ -193,41 +193,8 @@ class AttributeManager implements AttributeManagerInterface
             $this->em->persist($attribute->getEntity());
         }
 
-        if (array_key_exists('values', $data)) {
-            $this->addValues($attribute, $data['values'], $locale);
-        }
-
         $this->em->flush();
         return $attribute;
-    }
-    /**
-     * Creates values for an attribute
-     *
-     * @param $values
-     */
-    private function addValues($attribute, $values, $locale)
-    {
-        foreach ($values as $value) {
-            $id = array_key_exists('id', $value);
-            if ($id) {
-                $attributeValue = $this->attributeValueRepository->findByIdAndLocale($id, $locale);
-                if (!$attributeValue) {
-                    throw new AttributeValueNotFoundException($id);
-                }
-                $attributeValue = new AttributeValue($attributeValue, $locale);
-            } else {
-                $attributeValue = new AttributeValue(new AttributeValueEntity(), $locale);
-            }
-            $attributeValue->setName($value['name']);
-            if (array_key_exists('selected', $value)) {
-                $attributeValue->setSelected($value['selected']);
-            } else {
-            }
-            if ($attributeValue->getId() == null) {
-                $this->em->persist($attributeValue->getEntity());
-            }
-            $attributeValue->setAttribute($attribute);
-        }
     }
 
     /**

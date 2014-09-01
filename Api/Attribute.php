@@ -174,7 +174,7 @@ class Attribute extends ApiWrapper
      */
     public function addValue(AttributeValue $value)
     {
-        $this->entity->addValue($value);;
+        $this->entity->addValue($value);
         return $this;
     }
 

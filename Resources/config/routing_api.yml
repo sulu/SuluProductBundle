@@ -5,3 +5,8 @@ sulu_product_base.products:
 sulu_product_base.attributes:
     type: rest
     resource: Sulu\Bundle\ProductBundle\Controller\AttributeController
+
+sulu_product_base.attribute_values:
+    type: rest
+    resource: Sulu\Bundle\ProductBundle\Controller\ValuesController
+    parent: sulu_product_base.attributes

@@ -43,7 +43,7 @@ class AttributeValue
      * @param boolean $selected
      * @return AttributeValue
      */
-    public function setSelected($selected)
+    public function setSelected($selected=false)
     {
         $this->selected = $selected;
     

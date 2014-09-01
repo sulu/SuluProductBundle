@@ -17,7 +17,7 @@
                 <cascade-persist/>
             </cascade>
         </one-to-many>
-        <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\AttributeValue" mapped-by="value"
+        <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\AttributeValue" mapped-by="attribute"
             field="values">
             <cascade>
                 <cascade-persist/>

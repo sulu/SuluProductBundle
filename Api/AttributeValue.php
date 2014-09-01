@@ -19,11 +19,12 @@ use Sulu\Component\Rest\ApiWrapper;
 use Sulu\Component\Security\UserInterface;
 use Sulu\Bundle\ProductBundle\Entity\AttributeValueTranslation;
 use Sulu\Bundle\ProductBundle\Entity\AttributeValue as AttributeValueEntity;
+use JMS\Serializer\Annotation\ExclusionPolicy;
 
 /**
  * The product class which will be exported to the API
  * @package Sulu\Bundle\ProductBundle\Api
- * @Relation("self", href="expr('/api/admin/products/' ~ object.getId())")
+ * @ExclusionPolicy("all")
  */
 class AttributeValue extends ApiWrapper
 {
@@ -67,6 +68,24 @@ class AttributeValue extends ApiWrapper
     public function setName($name)
     {
         $this->getTranslation()->setName($name);
+    }
+
+    /**
+     * Sets the attribute
+     * @param Attribute $attribute
+     */
+    public function setAttribute($attribute)
+    {
+        $this->entity->setAttribute($attribute);
+    }
+
+    /**
+     * Gets the selected state of the attributeValue
+     * @param $selected The selected state of the attributeValue
+     */
+    public function getSelected()
+    {
+        $this->entity->getSelected();
     }
 
     /**

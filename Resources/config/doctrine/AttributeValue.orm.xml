@@ -11,13 +11,15 @@
                 <option name="default">0</option>
             </options>
         </field>
-        <one-to-many field="translations" target-entity="Sulu\Bundle\ProductBundle\Entity\AttributeValueTranslation" mapped-by="type">
+        <one-to-many field="translations" target-entity="Sulu\Bundle\ProductBundle\Entity\AttributeValueTranslation" mapped-by="attributeValue">
             <cascade>
                 <cascade-persist/>
             </cascade>
         </one-to-many>
         <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\Attribute" field="attribute" inversed-by="values">
-            <join-column name="idAttribute" referenced-column-name="id" nullable="false"/>
+            <join-columns>
+                <join-column name="idAttribute" referenced-column-name="id" nullable="false"/>
+            </join-columns>
         </many-to-one>
     </entity>
 </doctrine-mapping>

@@ -5,6 +5,7 @@
         <parameter key="sulu_product.product_repository.class">Sulu\Bundle\ProductBundle\Entity\ProductRepository</parameter>
         <parameter key="sulu_product.attribute_set_repository.class">Sulu\Bundle\ProductBundle\Entity\AttributeSetRepository</parameter>
         <parameter key="sulu_product.attribute_repository.class">Sulu\Bundle\ProductBundle\Entity\AttributeRepository</parameter>
+        <parameter key="sulu_product.attribute_value_repository.class">Sulu\Bundle\ProductBundle\Entity\AttributeValueRepository</parameter>
         <parameter key="sulu_product.attribute_type_repository.class">Sulu\Bundle\ProductBundle\Entity\AttributeTypeRepository</parameter>
         <parameter key="sulu_product.status_repository.class">Sulu\Bundle\ProductBundle\Entity\StatusRepository</parameter>
         <parameter key="sulu_product.type_repository.class">Sulu\Bundle\ProductBundle\Entity\TypeRepository</parameter>
@@ -12,6 +13,7 @@
         <parameter key="sulu_product.attribute_manager.class">Sulu\Bundle\ProductBundle\Product\AttributeManager</parameter>
         <parameter key="sulu_product.status_manager.class">Sulu\Bundle\ProductBundle\Product\StatusManager</parameter>
         <parameter key="sulu_product.productwebsite.controller.class">Sulu\Bundle\ProductBundle\Controller\ProductWebsiteController</parameter>
+        <parameter key="sulu_product.attribute_value_manager.class">Sulu\Bundle\ProductBundle\Product\AttributeValueManager</parameter>
     </parameters>
     <services>
         <service id="sulu_product.admin" class="%sulu_product.admin.class%">
@@ -25,6 +27,10 @@
         <service id="sulu_product.attribute_repository" class="%sulu_product.attribute_repository.class%"
                  factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
             <argument>SuluProductBundle:Attribute</argument>
+        </service>
+        <service id="sulu_product.attribute_value_repository" class="%sulu_product.attribute_value_repository.class%"
+                 factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
+            <argument>SuluProductBundle:AttributeValue</argument>
         </service>
         <service id="sulu_product.attribute_set_repository" class="%sulu_product.attribute_set_repository.class%"
                  factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
@@ -54,6 +60,11 @@
             <argument type="service" id="sulu_product.attribute_repository"/>
             <argument type="service" id="sulu_security.user_repository" />
             <argument type="service" id="sulu_product.attribute_type_repository"/>
+            <argument type="service" id="doctrine.orm.entity_manager"/>
+        </service>
+        <service id="sulu_product.attribute_value_manager" class="%sulu_product.attribute_value_manager.class%">
+            <argument type="service" id="sulu_product.attribute_value_repository"/>
+            <argument type="service" id="sulu_security.user_repository" />
             <argument type="service" id="doctrine.orm.entity_manager"/>
         </service>
         <service id="sulu_product.productwebsite.controller" class="%sulu_product.productwebsite.controller.class%">
