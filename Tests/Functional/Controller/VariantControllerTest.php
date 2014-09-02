@@ -243,4 +243,26 @@ class VariantControllerTest extends DatabaseTestCase
             $response->message
         );
     }
+
+    public function testDelete()
+    {
+        $productVariant1 = new Product(new ProductEntity(), 'en');
+        $productVariant1->setName('Productvariant');
+        $productVariant1->setNumber('2');
+        $productVariant1->setStatus($this->activeStatus);
+        $productVariant1->setType($this->productType);
+        $productVariant1->setParent($this->product);
+        self::$em->persist($productVariant1->getEntity());
+
+        self::$em->flush();
+
+        $this->client->request('GET', '/api/products/1/variants/2');
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+
+        $this->client->request('DELETE', '/api/products/1/variants/2');
+        $this->assertEquals(204, $this->client->getResponse()->getStatusCode());
+
+        $this->client->request('GET', '/api/products/1/variants/2');
+        $this->assertEquals(404, $this->client->getResponse()->getStatusCode());
+    }
 }

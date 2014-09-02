@@ -39,6 +39,33 @@ class VariantController extends RestController implements ClassResourceInterface
     }
 
     /**
+     * Retrieves and shows the variant entIdwith the given ID for the parent product
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @param integer $parentId
+     * @param integer $id product ID
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function getAction(Request $request, $parentId, $id)
+    {
+        $locale = $this->getLocale($request);
+        $view = $this->responseGetById(
+            $id,
+            function ($id) use ($locale, $parentId) {
+                $product = $this->getManager()->findByIdAndLocale($id, $locale);
+
+                if ($product->getParent() && $product->getParent()->getId() == $parentId) {
+                    return $product;
+                } else {
+                    return null;
+                }
+            }
+        );
+
+        return $this->handleView($view);
+    }
+
+    /**
      * Returns a list of products
      * @param Request $request
      * @param $parentId
@@ -100,6 +127,27 @@ class VariantController extends RestController implements ClassResourceInterface
         } catch (ProductNotFoundException $exc) {
             $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
             $view = $this->view($exception->toArray(), 400);
+        }
+
+        return $this->handleView($view);
+    }
+
+    /**
+     * Removes a variant from a product
+     * @param Request $request
+     * @param $parentId
+     * @param $id
+     * @return Response
+     */
+    public function deleteAction(Request $request, $parentId, $id)
+    {
+        try {
+            $this->getManager()->removeVariant($parentId, $id);
+
+            $view = $this->view(null, 204);
+        } catch (ProductNotFoundException $exc) {
+            $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
+            $view = $this->view($exception->toArray(), 404);
         }
 
         return $this->handleView($view);

@@ -361,6 +361,23 @@ class ProductManager implements ProductManagerInterface
     /**
      * {@inheritDoc}
      */
+    public function removeVariant($parentId, $variantId)
+    {
+        $variant = $this->productRepository->findById($variantId);
+
+        if (!$variant || $variant->getParent()->getId() != $parentId) {
+            // TODO think about better exception
+            throw new ProductNotFoundException($variantId);
+        }
+
+        $variant->setParent(null);
+
+        $this->em->flush();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function delete($id, $userId)
     {
         $product = $this->productRepository->findById($id);
