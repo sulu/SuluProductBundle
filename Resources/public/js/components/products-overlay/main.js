@@ -109,7 +109,10 @@ define([], function () {
         },
 
         addProductVariant = function (id) {
-            this.sandbox.emit(ADD.call(this), id);
+            this.sandbox.emit(ADD.call(this), id, function(response) {
+                this.sandbox.emit('husky.datagrid.' + this.options.dataGridInstanceName + '.record.remove', id);
+                this.sandbox.emit('husky.datagrid.record.add', response);
+            }.bind(this));
         },
 
         setPosition = function () {

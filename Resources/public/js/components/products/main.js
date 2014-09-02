@@ -83,8 +83,8 @@ define(['suluproduct/models/product', 'app-config'], function (Product, AppConfi
                 this.load(this.options.id, locale);
             }, this);
 
-            this.sandbox.on('sulu.products.products-overlay.variants.add', function (id) {
-                this.addVariant(id);
+            this.sandbox.on('sulu.products.products-overlay.variants.add', function (id, callback) {
+                this.addVariant(id, callback);
             }, this);
         },
 
@@ -110,8 +110,19 @@ define(['suluproduct/models/product', 'app-config'], function (Product, AppConfi
             this.sandbox.emit('sulu.router.navigate', 'pim/products/' + localization + '/edit:' + id + '/details');
         },
 
-        addVariant: function (id) {
-            this.product.get('variants').fetch({data: {id: id}, type: 'POST'});
+        addVariant: function (id, callback) {
+            this.product.get('variants').fetch(
+                {
+                    data: {
+                        id: id
+                    },
+                    type: 'POST',
+                    success: function (collection, response) {
+                        delete response.parent; // FIXME this is necessary because of husky datagrid
+                        callback(response);
+                    }
+                }
+            );
         },
 
         renderTabs: function () {
