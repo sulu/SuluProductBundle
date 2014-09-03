@@ -23,7 +23,6 @@ use Sulu\Bundle\ProductBundle\Entity\Attribute as AttributeEntity;
 use Sulu\Bundle\ProductBundle\Api\AttributeValue;
 use Sulu\Bundle\ProductBundle\Entity\AttributeValue as AttributeValueEntity;
 use Sulu\Bundle\ProductBundle\Product\Exception\AttributeNotFoundException;
-use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeAttributeException;
 use Sulu\Bundle\ProductBundle\Product\Exception\AttributeDependencyNotFoundException;
 use Sulu\Bundle\ProductBundle\Product\Exception\AttributeValueNotFoundException;
 use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeValueAttributeException;
@@ -119,9 +118,24 @@ class AttributeValueManager implements AttributeValueManagerInterface
 
         if ($attributeValue) {
             return new AttributeValue($attributeValue, $locale);
-        } else {
-            return null;
         }
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function findAllByLocale($locale)
+    {
+        $attributeValues = $this->attributeValueRepository->findAllByLocale($locale);
+
+        array_walk(
+            $attributeValues,
+            function (&$attributeValue) use ($locale) {
+                $attributeValue = new AttributeValue($attributeValue, $locale);
+            }
+        );
+        return $attributeValues;
     }
 
     /**
@@ -132,17 +146,17 @@ class AttributeValueManager implements AttributeValueManagerInterface
         if ($attributeValueId) {
             $attributeValue = $this->attributeValueRepository->findByIdAndLocale($attributeValueId, $locale);
             if (!$attributeValue) {
-                throw new AttributeNotFoundException($attributeValueid);
+                throw new AttributeValueNotFoundException($attributeValueId);
             }
             $attributeValue = new AttributeValue($attributeValue, $locale);
         } else {
             $attributeValue = new AttributeValue(new AttributeValueEntity(), $locale);
         }
 
+        $this->checkData($data, $attributeValueId === null);
+
         $attributeValue->setName($this->getProperty($data, 'name', $attributeValue->getName()));
-        if ($this->getProperty($data, 'selected')) {
-            $attributeValue->setSelected($this->getProperty($data, 'selected', $attributeValue->getSelected()));
-        }
+        $attributeValue->setSelected($this->getProperty($data, 'selected', $attributeValue->getSelected()));
 
         if ($attributeValue->getId() == null) {
             $this->em->persist($attributeValue->getEntity());
@@ -155,6 +169,22 @@ class AttributeValueManager implements AttributeValueManagerInterface
 
         $this->em->flush();
         return $attributeValue;
+    }
+
+    private function checkData($data, $create)
+    {
+        $this->checkDataSet($data, 'name', $create);
+    }
+
+    private function checkDataSet(array $data, $key, $create)
+    {
+        $keyExists = array_key_exists($key, $data);
+
+        if (($create && !($keyExists && $data[$key] !== null))) {
+            throw new MissingAttributeValueAttributeException($key);
+        }
+
+        return $keyExists;
     }
 
     /**
@@ -178,7 +208,7 @@ class AttributeValueManager implements AttributeValueManagerInterface
         $attributeValue = $this->attributeValueRepository->findById($attributeValueId);
 
         if (!$attributeValue) {
-            throw new AttributeValueNotFoundException($id);
+            throw new AttributeValueNotFoundException($attributeValueId);
         }
 
         $this->em->remove($attributeValue);

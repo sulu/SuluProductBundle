@@ -44,10 +44,9 @@ interface AttributeManagerInterface
     /**
      * Returns all attributes in the given locale
      * @param string $locale
-     * @param array $filter
      * @return Attribute[]
      */
-    public function findAllByLocale($locale, $filter = array());
+    public function findAllByLocale($locale);
 
     /**
      * Saves the given attribute

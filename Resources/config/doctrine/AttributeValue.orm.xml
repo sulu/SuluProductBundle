@@ -6,11 +6,7 @@
         <id name="id" type="integer" column="id">
             <generator strategy="AUTO"/>
         </id>
-        <field name="selected" type="boolean" column="selected">
-            <options>
-                <option name="default">0</option>
-            </options>
-        </field>
+        <field name="selected" type="boolean" column="selected"/>
         <one-to-many field="translations" target-entity="Sulu\Bundle\ProductBundle\Entity\AttributeValueTranslation" mapped-by="attributeValue">
             <cascade>
                 <cascade-persist/>

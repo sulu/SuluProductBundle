@@ -22,9 +22,9 @@ class AttributeValueRepository extends EntityRepository implements AttributeValu
     public function findById($id)
     {
         try {
-            $queryBuilder = $this->createQueryBuilder('values')
-                ->andWhere('values.id = :valuesId')
-                ->setParameter('valuesId', $id);
+            $queryBuilder = $this->createQueryBuilder('value')
+                ->andWhere('value.id = :valueId')
+                ->setParameter('valueId', $id);
 
             return $queryBuilder->getQuery()->getSingleResult();
         } catch (NoResultException $exc) {
@@ -39,8 +39,8 @@ class AttributeValueRepository extends EntityRepository implements AttributeValu
     {
         try {
             $queryBuilder = $this->getAttributeValueQuery($locale);
-            $queryBuilder->leftJoin('values.attribute', 'attribute', 'WITH', 'attribute.id = :attributeId');
-            $queryBuilder->setParameter('attributeId', $id);
+            $queryBuilder->andWhere('attributeValue.id = :attributeValueId');
+            $queryBuilder->setParameter('attributeValueId', $id);
 
             return $queryBuilder->getQuery()->getSingleResult();
         } catch (NoResultException $exc) {
@@ -67,8 +67,8 @@ class AttributeValueRepository extends EntityRepository implements AttributeValu
      */
     private function getAttributeValueQuery($locale)
     {
-        $queryBuilder = $this->createQueryBuilder('values')
-            ->leftJoin('values.translations', 'translations', 'WITH', 'translations.locale = :locale')
+        $queryBuilder = $this->createQueryBuilder('attributeValue')
+            ->leftJoin('attributeValue.translations', 'translations', 'WITH', 'translations.locale = :locale')
             ->setParameter('locale', $locale);
 
         return $queryBuilder;

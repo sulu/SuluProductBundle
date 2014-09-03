@@ -3,6 +3,7 @@
 namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Sulu\Component\Security\UserInterface;
 
 /**
  * Attribute
@@ -263,10 +264,10 @@ class Attribute
     /**
      * Set changer
      *
-     * @param \Sulu\Bundle\SecurityBundle\Entity\User $changer
+     * @param \Sulu\Component\Security\UserInterface $changer
      * @return Attribute
      */
-    public function setChanger(\Sulu\Bundle\SecurityBundle\Entity\User $changer = null)
+    public function setChanger(UserInterface $changer = null)
     {
         $this->changer = $changer;
     
@@ -286,10 +287,10 @@ class Attribute
     /**
      * Set creator
      *
-     * @param \Sulu\Bundle\SecurityBundle\Entity\User $creator
+     * @param \Sulu\Component\Security\UserInterface $creator
      * @return Attribute
      */
-    public function setCreator(\Sulu\Bundle\SecurityBundle\Entity\User $creator = null)
+    public function setCreator(UserInterface $creator = null)
     {
         $this->creator = $creator;
     

@@ -23,7 +23,7 @@ use Sulu\Bundle\ProductBundle\Api\Attribute as Attribute;
 use Sulu\Bundle\ProductBundle\Entity\AttributeTranslation;
 use Sulu\Bundle\ProductBundle\Api\AttributeType;
 use Sulu\Component\Rest\ApiWrapper;
-use Sulu\Bundle\ProductBundle\Entity\AttributeValue;
+use Sulu\Component\Security\UserInterface;
 
 /**
 * The Attribute class which will be exported to the API
@@ -128,7 +128,7 @@ class Attribute extends ApiWrapper
      * @param $changer changer for the attribute
      * @return Sulu\Bundle\ProductBundle\Api\Attribute
      */
-    public function setChanger($changer)
+    public function setChanger(UserInterface $changer)
     {
         $this->entity->setChanger($changer);
         return $this;
@@ -160,7 +160,7 @@ class Attribute extends ApiWrapper
      * @param $creator creator of the attribute
      * @return Sulu\Bundle\ProductBundle\Api\Attribute
      */
-    public function setCreator($creator)
+    public function setCreator(UserInterface $creator)
     {
         $this->entity->setCreator($creator);
         return $this;
@@ -172,7 +172,7 @@ class Attribute extends ApiWrapper
      * @param \Sulu\Bundle\ProductBundle\Entity\AttributeValue $value
      * @return Attribute
      */
-    public function addValue(AttributeValue $value)
+    public function addValue(Sulu\Bundle\ProductBundle\Entity\AttributeValue $value)
     {
         $this->entity->addValue($value);
         return $this;

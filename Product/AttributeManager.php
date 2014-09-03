@@ -137,13 +137,9 @@ class AttributeManager implements AttributeManagerInterface
     /**
      * {@inheritDoc}
      */
-    public function findAllByLocale($locale, $filter = array())
+    public function findAllByLocale($locale)
     {
-        if (empty($filter)) {
-            $attributes = $this->attributeRepository->findAllByLocale($locale);
-        } else {
-            $attributes = $this->attributeRepository->findByLocaleAndFilter($locale, $filter);
-        }
+        $attributes = $this->attributeRepository->findAllByLocale($locale);
 
         array_walk(
             $attributes,
@@ -187,6 +183,16 @@ class AttributeManager implements AttributeManagerInterface
             $attribute->setType($type);
         }
 
+        if (array_key_exists('type', $data) && array_key_exists('id', $data['type'])) {
+            $typeId = $data['type']['id'];
+            /** @var Type $type */
+            $type = $this->attributeTypeRepository->find($typeId);
+            if (!$type) {
+                throw new AttributeDependencyNotFoundException(self::$attributeTypeEntityName, $typeId);
+            }
+            $attribute->setType($type);
+        }
+
         if ($attribute->getId() == null) {
             $attribute->setCreated(new DateTime());
             $attribute->setCreator($user);
@@ -212,15 +218,15 @@ class AttributeManager implements AttributeManagerInterface
 
     private function checkData($data, $create)
     {
-
         $this->checkDataSet($data, 'type', $create) && $this->checkDataSet($data['type'], 'id', $create);
+        $this->checkDataSet($data, 'name', $create);
     }
 
     private function checkDataSet(array $data, $key, $create)
     {
         $keyExists = array_key_exists($key, $data);
 
-        if (($create && !($keyExists && $data[$key] !== null)) || (!$keyExists || $data[$key] === null)) {
+        if (($create && !($keyExists && $data[$key] !== null))) {
             throw new MissingAttributeAttributeException($key);
         }
 

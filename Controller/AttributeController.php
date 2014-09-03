@@ -23,6 +23,7 @@ use Sulu\Component\Rest\Exception\MissingArgumentException;
 use Sulu\Component\Rest\ListBuilder\ListRepresentation;
 use Sulu\Bundle\ProductBundle\Product\Exception\AttributeDependencyNotFoundException;
 use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeAttributeException;
+use Sulu\Bundle\ProductBundle\Product\Exception\AttributeNotFoundException;
 
 class AttributeController extends RestController implements ClassResourceInterface
 {
@@ -84,20 +85,11 @@ class AttributeController extends RestController implements ClassResourceInterfa
      */
     public function cgetAction(Request $request)
     {
-        $filter = array();
-        $status = $request->get('status');
-        if ($status) {
-            $filter['status'] = $status;
-        }
-        $type = $request->get('type');
-        if ($type) {
-            $filter['type'] = $type;
-        }
         if ($request->get('flat') == 'true') {
-            $list = $this->getListRepresentation($request, $filter);
+            $list = $this->getListRepresentation($request);
         } else {
             $list = new CollectionRepresentation(
-                $this->getManager()->findAllByLocale($this->getLocale($request), $filter),
+                $this->getManager()->findAllByLocale($this->getLocale($request)),
                 self::$entityKey
             );
         }
@@ -110,10 +102,9 @@ class AttributeController extends RestController implements ClassResourceInterfa
      * Returns a list representation
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
-     * @param array $filter
      * @return Sulu\Component\Rest\ListBuilder\ListRepresentation
      */
-    private function getListRepresentation($request, $filter)
+    private function getListRepresentation($request)
     {
         /** @var RestHelperInterface $restHelper */
         $restHelper = $this->get('sulu_core.doctrine_rest_helper');
@@ -127,10 +118,6 @@ class AttributeController extends RestController implements ClassResourceInterfa
             $listBuilder,
             $this->getManager()->getFieldDescriptors($this->getLocale($request))
         );
-
-        foreach ($filter as $key => $value) {
-            $listBuilder->where($this->getManager()->getFieldDescriptor($key), $value);
-        }
 
         $list = new ListRepresentation(
             $listBuilder->execute(),
@@ -208,12 +195,13 @@ class AttributeController extends RestController implements ClassResourceInterfa
      */
     public function deleteAction(Request $request, $id)
     {
-        $locale = $this->getLocale($request);
-
-        $delete = function ($id) use ($locale) {
+        try {
             $this->getManager()->delete($id, $this->getUser()->getId());
-        };
-        $view = $this->responseDelete($id, $delete);
+            $view = $this->view($id, 204);
+        } catch (AttributeNotFoundException $exc) {
+            $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
+            $view = $this->view($exception->toArray(), 400);
+        }
         return $this->handleView($view);
     }
 }

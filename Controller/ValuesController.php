@@ -23,12 +23,14 @@ use Sulu\Component\Rest\Exception\MissingArgumentException;
 use Sulu\Component\Rest\ListBuilder\ListRepresentation;
 use Sulu\Bundle\ProductBundle\Product\Exception\AttributeDependencyNotFoundException;
 use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeAttributeException;
+use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeValueAttributeException;
+use Sulu\Bundle\ProductBundle\Product\Exception\AttributeValueNotFoundException;
 
 class ValuesController extends RestController implements ClassResourceInterface
 {
     protected static $entityName = 'SuluProductBundle:AttributeValue';
 
-    protected static $entitykey = 'attributeValues';
+    protected static $entityKey = 'attributeValues';
 
     /**
      * Returns the manager for AttributeValues
@@ -54,25 +56,80 @@ class ValuesController extends RestController implements ClassResourceInterface
     }
 
     /**
+     * Retrieves and shows a attribute with the given ID
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @param integer $id attribute value ID
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function getAction(Request $request, $attributeId, $attributeValueId)
+    {
+        $locale = $this->getLocale($request);
+        $view = $this->responseGetById(
+            $attributeValueId,
+            function ($attributeValueId) use ($locale) {
+                $attribute = $this->getManager()->findByIdAndLocale($attributeValueId, $locale);
+
+                return $attribute;
+            }
+        );
+
+        return $this->handleView($view);
+    }
+
+    /**
      * Retrieves and shows a attributeValue with the given ID
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
      * @param integer $id attribute ID
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function getAction(Request $request, $id)
+    public function cgetAction(Request $request, $id)
     {
-        $locale = $this->getLocale($request);
-        $view = $this->responseGetById(
-            $id,
-            function ($id) use ($locale) {
-                $attributeValue = $this->getManager()->findByIdAndLocale($id, $locale);
+        if ($request->get('flat') == 'true') {
+            $list = $this->getListRepresentation($request, $id);
+        } else {
+            $list = new CollectionRepresentation(
+                $this->getManager()->findAllByLocale($this->getLocale($request)),
+                self::$entityKey
+            );
+        }
 
-                return $attributeValue;
-            }
+        $view = $this->view($list, 200);
+        return $this->handleView($view);
+    }
+
+    /**
+     * Returns a list representation
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @return Sulu\Component\Rest\ListBuilder\ListRepresentation
+     */
+    private function getListRepresentation($request, $id)
+    {
+        /** @var RestHelperInterface $restHelper */
+        $restHelper = $this->get('sulu_core.doctrine_rest_helper');
+
+        /** @var DoctrineListBuilderFactory $factory */
+        $factory = $this->get('sulu_core.doctrine_list_builder_factory');
+
+        $listBuilder = $factory->create(self::$entityName);
+
+        $restHelper->initializeListBuilder(
+            $listBuilder,
+            $this->getManager()->getFieldDescriptors($this->getLocale($request))
         );
 
-        return $this->handleView($view);
+        $list = new ListRepresentation(
+            $listBuilder->execute(),
+            self::$entityKey,
+            'cget_attribute_values',
+            array_merge($request->query->all(), array('id'=>$id)),
+            $listBuilder->getCurrentPage(),
+            $listBuilder->getLimit(),
+            $listBuilder->count()
+        );
+        return $list;
     }
 
     /**
@@ -95,10 +152,10 @@ class ValuesController extends RestController implements ClassResourceInterface
         } catch (AttributeDependencyNotFoundException $exc) {
             $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
             $view = $this->view($exception->toArray(), 400);
-        } catch (AttributeNotFoundException $exc) {
+        } catch (AttributeValueNotFoundException $exc) {
             $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
             $view = $this->view($exception->toArray(), 400);
-        } catch (MissingAttributeAttributeException $exc) {
+        } catch (MissingAttributeValueAttributeException $exc) {
             $exception = new MissingArgumentException(self::$entityName, $exc->getAttribute());
             $view = $this->view($exception->toArray(), 400);
         }
@@ -123,7 +180,7 @@ class ValuesController extends RestController implements ClassResourceInterface
         } catch (AttributeDependencyNotFoundException $exc) {
             $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
             $view = $this->view($exception->toArray(), 400);
-        } catch (MissingAttributeAttributeException $exc) {
+        } catch (MissingAttributeValueAttributeException $exc) {
             $exception = new MissingArgumentException(self::$entityName, $exc->getAttribute());
             $view = $this->view($exception->toArray(), 400);
         }
@@ -137,14 +194,15 @@ class ValuesController extends RestController implements ClassResourceInterface
      * @param integer $id the attribute id
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function deleteAction(Request $request, $id, $attributeValueId)
+    public function deleteAction(Request $request, $attributeId, $attributeValueId)
     {
-        $locale = $this->getLocale($request);
-
-        $delete = function ($attributeValueId) use ($locale) {
+        try {
             $this->getManager()->delete($attributeValueId, $this->getUser()->getId());
-        };
-        $view = $this->responseDelete($attributeValueId, $delete);
+            $view = $this->view($attributeValueId, 204);
+        } catch (AttributeNotFoundException $exc) {
+            $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
+            $view = $this->view($exception->toArray(), 400);
+        }
         return $this->handleView($view);
     }
 }

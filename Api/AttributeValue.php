@@ -23,7 +23,9 @@ use JMS\Serializer\Annotation\ExclusionPolicy;
 
 /**
  * The product class which will be exported to the API
+ *
  * @package Sulu\Bundle\ProductBundle\Api
+ * @Relation("self", href="expr('/api/admin/attributes/' ~ object.getId() ~ '/values')")
  * @ExclusionPolicy("all")
  */
 class AttributeValue extends ApiWrapper
@@ -36,7 +38,6 @@ class AttributeValue extends ApiWrapper
     {
         $this->entity = $entity;
         $this->locale = $locale;
-        $this->setSelected(false);
     }
 
     /**
@@ -82,10 +83,12 @@ class AttributeValue extends ApiWrapper
     /**
      * Gets the selected state of the attributeValue
      * @param $selected The selected state of the attributeValue
+     * @VirtualProperty
+     * @SerializedName("selected")
      */
     public function getSelected()
     {
-        $this->entity->getSelected();
+        return $this->entity->getSelected();
     }
 
     /**
@@ -94,6 +97,9 @@ class AttributeValue extends ApiWrapper
      */
     public function setSelected($selected)
     {
+        if (!$selected) {
+            $selected = false;
+        }
         $this->entity->setSelected($selected);
     }
 
