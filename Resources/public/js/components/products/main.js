@@ -31,6 +31,12 @@ define(['suluproduct/models/product', 'app-config'], function (Product, AppConfi
         PRODUCT_SAVE = eventNamespace + 'save',
 
         /**
+         * @event sulu.products.delete
+         * @description Deletes the given products
+         */
+        PRODUCT_DELETE = eventNamespace + 'delete',
+
+        /**
          * @description Opens the form for importing products
          */
         PRODUCT_IMPORT = eventNamespace + 'import',
@@ -41,6 +47,10 @@ define(['suluproduct/models/product', 'app-config'], function (Product, AppConfi
          */
         PRODUCT_LIST = eventNamespace + 'list',
 
+        /**
+         * @event sulu.products.variants.delete
+         * @description Deletes the given variants from the current product
+         */
         PRODUCT_VARIANT_DELETE = eventNamespace + 'variants.delete';
 
     return {
@@ -68,6 +78,10 @@ define(['suluproduct/models/product', 'app-config'], function (Product, AppConfi
             this.sandbox.on(PRODUCT_SAVE, function (data) {
                 this.save(data);
             }.bind(this));
+
+            this.sandbox.on(PRODUCT_DELETE, function (ids) {
+                this.del(ids);
+            }, this);
 
             this.sandbox.on(PRODUCT_IMPORT, function () {
                 this.sandbox.emit('sulu.router.navigate', 'pim/products/import');
@@ -114,6 +128,21 @@ define(['suluproduct/models/product', 'app-config'], function (Product, AppConfi
 
         load: function (id, localization) {
             this.sandbox.emit('sulu.router.navigate', 'pim/products/' + localization + '/edit:' + id + '/details');
+        },
+
+        del: function (ids) {
+            this.confirmDeleteDialog(function (wasConfirmed) {
+                if (wasConfirmed) {
+                    this.sandbox.util.each(ids, function (key, id) {
+                        var product = new  Product({id: id});
+                        product.destroy({
+                            success: function () {
+                                this.sandbox.emit('husky.datagrid.record.remove', id);
+                            }.bind(this)
+                        });
+                    }.bind(this));
+                }
+            }.bind(this));
         },
 
         addVariant: function (id) {
