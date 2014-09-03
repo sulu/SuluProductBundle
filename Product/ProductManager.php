@@ -290,8 +290,7 @@ class ProductManager implements ProductManagerInterface
 
         if (array_key_exists('parent', $data) && array_key_exists('id', $data['parent'])) {
             $parentId = $data['parent']['id'];
-            /** @var ProductEntity $parentProduct */
-            $parentProduct = $this->productRepository->findById($parentId);
+            $parentProduct = $this->findByIdAndLocale($parentId, $locale);
             if (!$parentProduct) {
                 throw new ProductDependencyNotFoundException(self::$productEntityName, $parentId);
             }
