@@ -19,6 +19,14 @@ define(['mvc/collection', 'suluproduct/models/product'], function (Collection, P
             this.productId = productId;
         },
 
+        parse: function (response) {
+            if (!!response._embedded) {
+                return response._embedded.products;
+            } else {
+                return response;
+            }
+        },
+
         url: function () {
             return '/admin/api/products/' + this.productId + '/variants';
         }

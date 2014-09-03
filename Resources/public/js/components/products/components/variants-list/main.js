@@ -38,6 +38,16 @@ define([], function () {
             this.sandbox.on('sulu.list-toolbar.add', function () {
                 startAddOverlay.call(this);
             }, this);
+
+            this.sandbox.on('sulu.list-toolbar.delete', function () {
+                this.sandbox.emit('husky.datagrid.items.get-selected', function (ids) {
+                    this.sandbox.emit('sulu.products.variants.delete', ids);
+                }.bind(this));
+            }, this);
+
+            this.sandbox.on('sulu.products.variant.deleted', function (id) {
+                this.sandbox.emit('husky.datagrid.record.remove', id);
+            }, this);
         },
 
         render = function () {
@@ -76,21 +86,23 @@ define([], function () {
             var $el = this.sandbox.dom.createElement('<div/>');
             this.sandbox.dom.append(this.$el, $el);
 
-            this.sandbox.start([{
-                name: 'products-overlay@suluproduct',
-                options: {
-                    el: $el,
-                    instanceName: constants.productOverlayName,
-                    slides: [
-                        {
-                            title: 'Products'
+            this.sandbox.start([
+                {
+                    name: 'products-overlay@suluproduct',
+                    options: {
+                        el: $el,
+                        instanceName: constants.productOverlayName,
+                        slides: [
+                            {
+                                title: 'Products'
+                            }
+                        ],
+                        translations: {
+                            addProducts: 'products-overlay.add-variant'
                         }
-                    ],
-                    translations: {
-                        addProducts: 'products-overlay.add-variant'
                     }
                 }
-            }]);
+            ]);
         },
 
         startAddOverlay = function () {

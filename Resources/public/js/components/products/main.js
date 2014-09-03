@@ -39,7 +39,9 @@ define(['suluproduct/models/product', 'app-config'], function (Product, AppConfi
          * @event sulu.products.list
          * @description Shows the list for products
          */
-        PRODUCT_LIST = eventNamespace + 'list';
+        PRODUCT_LIST = eventNamespace + 'list',
+
+        PRODUCT_VARIANT_DELETE = eventNamespace + 'variants.delete';
 
     return {
         initialize: function () {
@@ -86,6 +88,10 @@ define(['suluproduct/models/product', 'app-config'], function (Product, AppConfi
             this.sandbox.on('sulu.products.products-overlay.variants.add', function (id, callback) {
                 this.addVariant(id, callback);
             }, this);
+
+            this.sandbox.on(PRODUCT_VARIANT_DELETE, function (ids) {
+                this.deleteVariants(ids);
+            }, this);
         },
 
         save: function (data) {
@@ -110,7 +116,7 @@ define(['suluproduct/models/product', 'app-config'], function (Product, AppConfi
             this.sandbox.emit('sulu.router.navigate', 'pim/products/' + localization + '/edit:' + id + '/details');
         },
 
-        addVariant: function (id, callback) {
+        addVariant: function (id) {
             this.product.get('variants').fetch(
                 {
                     data: {
@@ -119,9 +125,41 @@ define(['suluproduct/models/product', 'app-config'], function (Product, AppConfi
                     type: 'POST',
                     success: function (collection, response) {
                         delete response.parent; // FIXME this is necessary because of husky datagrid
-                        callback(response);
-                    }
+                        this.sandbox.emit('husky.datagrid.' + this.options.dataGridInstanceName + '.record.remove', id);
+                        this.sandbox.emit('husky.datagrid.record.add', response);
+                    }.bind(this)
                 }
+            );
+        },
+
+        deleteVariants: function (ids) {
+            this.confirmDeleteDialog(function (wasConfirmed) {
+                if (wasConfirmed) {
+                    this.product.get('variants').fetch({
+                        success: function (collection) {
+                            this.sandbox.util.each(ids, function (key, id) {
+                                var product = collection.get(id);
+                                product.urlRoot = collection.url() + '/';
+
+                                product.destroy({
+                                    success: function () {
+                                        this.sandbox.emit('sulu.products.variant.deleted', id);
+                                    }.bind(this)
+                                });
+                            }.bind(this));
+                        }.bind(this)
+                    });
+                }
+            }.bind(this));
+        },
+
+        confirmDeleteDialog: function (callbackFunction) {
+            this.sandbox.emit(
+                'sulu.overlay.show-warning',
+                'sulu.overlay.be-careful',
+                'sulu.overlay.delete-desc',
+                callbackFunction.bind(this, false),
+                callbackFunction.bind(this, true)
             );
         },
 
