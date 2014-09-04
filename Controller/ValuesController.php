@@ -22,8 +22,8 @@ use Sulu\Component\Rest\Exception\EntityNotFoundException;
 use Sulu\Component\Rest\Exception\MissingArgumentException;
 use Sulu\Component\Rest\ListBuilder\ListRepresentation;
 use Sulu\Bundle\ProductBundle\Product\Exception\AttributeDependencyNotFoundException;
-use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeAttributeException;
-use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeValueAttributeException;
+use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeException;
+use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeValueException;
 use Sulu\Bundle\ProductBundle\Product\Exception\AttributeValueNotFoundException;
 
 /**
@@ -161,7 +161,7 @@ class ValuesController extends RestController implements ClassResourceInterface
         } catch (AttributeValueNotFoundException $exc) {
             $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
             $view = $this->view($exception->toArray(), 404);
-        } catch (MissingAttributeValueAttributeException $exc) {
+        } catch (MissingAttributeValueException $exc) {
             $exception = new MissingArgumentException(self::$entityName, $exc->getAttribute());
             $view = $this->view($exception->toArray(), 400);
         }
@@ -187,7 +187,7 @@ class ValuesController extends RestController implements ClassResourceInterface
         } catch (AttributeDependencyNotFoundException $exc) {
             $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
             $view = $this->view($exception->toArray(), 400);
-        } catch (MissingAttributeValueAttributeException $exc) {
+        } catch (MissingAttributeValueException $exc) {
             $exception = new MissingArgumentException(self::$entityName, $exc->getAttribute());
             $view = $this->view($exception->toArray(), 400);
         }

@@ -10,7 +10,7 @@
 
 namespace Sulu\Bundle\ProductBundle\Product\Exception;
 
-class MissingAttributeAttributeException extends AttributeException
+class MissingAttributeException extends AttributeException
 {
     /**
      * The name of the attribute which is missing

@@ -25,10 +25,14 @@ use Sulu\Bundle\ProductBundle\Entity\AttributeValue as AttributeValueEntity;
 use Sulu\Bundle\ProductBundle\Product\Exception\AttributeNotFoundException;
 use Sulu\Bundle\ProductBundle\Product\Exception\AttributeDependencyNotFoundException;
 use Sulu\Bundle\ProductBundle\Product\Exception\AttributeValueNotFoundException;
-use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeValueAttributeException;
+use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeValueException;
 use Sulu\Bundle\ProductBundle\Product\Exception\AttributeValueDependencyNotFoundException;
 use Sulu\Bundle\ProductBundle\Product\AttributeValueManagerInterface;
 
+/**
+ * Manager responsible for attributeValues
+ * @package Sulu\Bundle\ProductBundle\Product
+ */
 class AttributeValueManager implements AttributeValueManagerInterface
 {
     protected static $attributeValueEntityName = 'SuluProductBundle:AttributeValue';
@@ -98,6 +102,7 @@ class AttributeValueManager implements AttributeValueManagerInterface
             array(),
             true
         );
+
         return $fieldDescriptors;
     }
 
@@ -119,6 +124,7 @@ class AttributeValueManager implements AttributeValueManagerInterface
         if ($attributeValue) {
             return new AttributeValue($attributeValue, $locale);
         }
+
         return null;
     }
 
@@ -135,6 +141,7 @@ class AttributeValueManager implements AttributeValueManagerInterface
                 $attributeValue = new AttributeValue($attributeValue, $locale);
             }
         );
+
         return $attributeValues;
     }
 
@@ -181,7 +188,7 @@ class AttributeValueManager implements AttributeValueManagerInterface
         $keyExists = array_key_exists($key, $data);
 
         if (($create && !($keyExists && $data[$key] !== null))) {
-            throw new MissingAttributeValueAttributeException($key);
+            throw new MissingAttributeValueException($key);
         }
 
         return $keyExists;
