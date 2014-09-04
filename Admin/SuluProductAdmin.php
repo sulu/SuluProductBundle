@@ -28,6 +28,9 @@ class SuluProductAdmin extends Admin
         $products = new NavigationItem('navigation.pim.products', $pim);
         $products->setAction('pim/products');
 
+        $attributes = new NavigationItem('navigation.pim.attributes', $pim);
+        $attributes->setAction('pim/attributes');
+
         $section->addChild($pim);
         $rootNavigationItem->addChild($section);
 

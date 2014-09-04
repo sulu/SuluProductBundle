@@ -53,5 +53,20 @@ define({
                 this.html('<div data-aura-component="products@suluproduct" data-aura-display="import"/>');
             }
         });
+
+        //flat list of attributes
+        sandbox.mvc.routes.push({
+            route: 'pim/attributes',
+            callback: function() {
+                this.html('<div data-aura-component="attributes@suluproduct" data-aura-display="list"/>');
+            }
+        });
+
+        sandbox.mvc.routes.push({
+            route: 'pim/attributes/:locale/add',
+            callback: function(locale, type) {
+                this.html('<div data-aura-component="attributes@suluproduct" data-aura-display="form" data-aura-locale="' + locale + '"/>');
+            }
+        });
     }
 });

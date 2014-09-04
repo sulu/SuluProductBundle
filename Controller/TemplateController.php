@@ -37,6 +37,35 @@ class TemplateController extends Controller
     }
 
     /**
+     * Returns Template for attribute list
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function attributeListAction()
+    {
+        return $this->render('SuluProductBundle:Template:attribute.list.html.twig');
+    }
+
+    /**
+     * Returns Template for attribute list
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function attributeFormAction()
+    {
+        /** @var Status[] $statuses */
+        $statuses = $this->get('sulu_product.status_manager')->findAll('en'); // TODO use correct language
+
+        $statusTitles = array();
+        foreach ($statuses as $status) {
+            $statusTitles[] = array(
+                'id' => $status->getId(),
+                'name' => $status->getName()
+            );
+        }
+
+        return $this->render('SuluProductBundle:Template:attribute.form.html.twig', array('status' => $statusTitles));
+    }
+
+    /**
      * Returns Template for product import
      * @return \Symfony\Component\HttpFoundation\Response
      */
