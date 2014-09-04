@@ -22,9 +22,13 @@ use Sulu\Component\Rest\Exception\EntityNotFoundException;
 use Sulu\Component\Rest\Exception\MissingArgumentException;
 use Sulu\Component\Rest\ListBuilder\ListRepresentation;
 use Sulu\Bundle\ProductBundle\Product\Exception\AttributeDependencyNotFoundException;
-use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeAttributeException;
+use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeException;
 use Sulu\Bundle\ProductBundle\Product\Exception\AttributeNotFoundException;
 
+/**
+ * Makes product attributes available through a REST API
+ * @package Sulu\Bundle\ProductBundle\Controller
+ */
 class AttributeController extends RestController implements ClassResourceInterface
 {
     protected static $entityName = 'SuluProductBundle:Attribute';
@@ -153,8 +157,8 @@ class AttributeController extends RestController implements ClassResourceInterfa
             $view = $this->view($exception->toArray(), 400);
         } catch (AttributeNotFoundException $exc) {
             $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
-            $view = $this->view($exception->toArray(), 400);
-        } catch (MissingAttributeAttributeException $exc) {
+            $view = $this->view($exception->toArray(), 404);
+        } catch (MissingAttributeException $exc) {
             $exception = new MissingArgumentException(self::$entityName, $exc->getAttribute());
             $view = $this->view($exception->toArray(), 400);
         }
@@ -179,7 +183,7 @@ class AttributeController extends RestController implements ClassResourceInterfa
         } catch (AttributeDependencyNotFoundException $exc) {
             $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
             $view = $this->view($exception->toArray(), 400);
-        } catch (MissingAttributeAttributeException $exc) {
+        } catch (MissingAttributeException $exc) {
             $exception = new MissingArgumentException(self::$entityName, $exc->getAttribute());
             $view = $this->view($exception->toArray(), 400);
         }
@@ -200,7 +204,7 @@ class AttributeController extends RestController implements ClassResourceInterfa
             $view = $this->view($id, 204);
         } catch (AttributeNotFoundException $exc) {
             $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
-            $view = $this->view($exception->toArray(), 400);
+            $view = $this->view($exception->toArray(), 404);
         }
         return $this->handleView($view);
     }

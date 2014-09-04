@@ -353,7 +353,7 @@ class ValueControllerTest extends DatabaseTestCase
 
         $this->client->request('PUT', $url, $data);
         $response = json_decode($this->client->getResponse()->getContent());
-        $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
+        $this->assertEquals(404, $this->client->getResponse()->getStatusCode());
 
         $this->assertEquals(
             'Entity with the type "SuluProductBundle:AttributeValue" and the id "666" not found.',
@@ -446,6 +446,6 @@ class ValueControllerTest extends DatabaseTestCase
     public function testDeleteNotExistingById()
     {
         $this->client->request('DELETE', '/api/attributes/666');
-        $this->assertEquals('400', $this->client->getResponse()->getStatusCode());
+        $this->assertEquals('404', $this->client->getResponse()->getStatusCode());
     }
 }

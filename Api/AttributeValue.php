@@ -14,12 +14,12 @@ use Hateoas\Configuration\Annotation\Relation;
 
 use JMS\Serializer\Annotation\VirtualProperty;
 use JMS\Serializer\Annotation\SerializedName;
+use JMS\Serializer\Annotation\ExclusionPolicy;
 
 use Sulu\Component\Rest\ApiWrapper;
 use Sulu\Component\Security\UserInterface;
 use Sulu\Bundle\ProductBundle\Entity\AttributeValueTranslation;
 use Sulu\Bundle\ProductBundle\Entity\AttributeValue as AttributeValueEntity;
-use JMS\Serializer\Annotation\ExclusionPolicy;
 
 /**
  * The product class which will be exported to the API
@@ -103,16 +103,23 @@ class AttributeValue extends ApiWrapper
         $this->entity->setSelected($selected);
     }
 
-    private function getTranslation()
+    /**
+     * Returns the translation with the given locale
+     * @param string $locale The locale to return
+     * @return AttributeValueTranslation
+     */
+    public function getTranslation()
     {
-        $attributeValueTranslation = $this->entity->getTranslation($this->locale);
-        if (!$attributeValueTranslation) {
-            $attributeValueTranslation = new AttributeValueTranslation();
-            $attributeValueTranslation->setLocale($this->locale);
-            $attributeValueTranslation->setAttributeValue($this->entity);
-
-            $this->entity->addTranslation($attributeValueTranslation);
+        foreach ($this->entity->translations as $translation) {
+            if ($translation->getLocale() == $this->locale) {
+                return $translation;
+            }
         }
-        return $attributeValueTranslation;
+        $translation = new AttributeValueTranslation();
+        $translation->setLocale($this->locale);
+        $translation->setAttributeValue($this->entity);
+
+        $this->entity->addTranslation($translation);
+        return $translation;
     }
 }

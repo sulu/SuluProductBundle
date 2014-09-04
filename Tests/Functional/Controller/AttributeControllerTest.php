@@ -314,7 +314,7 @@ class AttributeControllerTest extends DatabaseTestCase
         $this->client->request('PUT', '/api/attributes/666', $data);
 
         $response = json_decode($this->client->getResponse()->getContent());
-        $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
+        $this->assertEquals(404, $this->client->getResponse()->getStatusCode());
 
         $this->assertEquals(
             'Entity with the type "SuluProductBundle:Attribute" and the id "666" not found.',
@@ -429,6 +429,6 @@ class AttributeControllerTest extends DatabaseTestCase
     public function testDeleteNotExistingById()
     {
         $this->client->request('DELETE', '/api/attributes/666');
-        $this->assertEquals('400', $this->client->getResponse()->getStatusCode());
+        $this->assertEquals('404', $this->client->getResponse()->getStatusCode());
     }
 }

@@ -12,21 +12,22 @@
         <field name="changed" type="datetime" length="255"/>
 
         <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\AttributeTranslation" mapped-by="attribute"
-            field="translations">
+                     field="translations">
             <cascade>
                 <cascade-persist/>
             </cascade>
         </one-to-many>
         <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\AttributeValue" mapped-by="attribute"
-            field="values">
+                     field="values">
             <cascade>
                 <cascade-persist/>
             </cascade>
         </one-to-many>
         <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductAttribute" mapped-by="attribute"
-            field="productAttributes"/>
+                     field="productAttributes"/>
 
-        <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\AttributeType" field="type" inversed-by="attributes">
+        <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\AttributeType" field="type"
+                     inversed-by="attributes">
             <join-column name="idType" referenced-column-name="id" nullable="false"/>
         </many-to-one>
 

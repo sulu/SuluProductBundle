@@ -22,7 +22,7 @@ class AttributeValue
     /**
      * @var \Doctrine\Common\Collections\Collection
      */
-    private $translations;
+    public $translations;
 
     /**
      * @var \Sulu\Bundle\ProductBundle\Entity\Attribute
@@ -101,24 +101,6 @@ class AttributeValue
     public function getTranslations()
     {
         return $this->translations;
-    }
-
-    /**
-     * Returns the translation with the given locale
-     * @param string $locale The locale to return
-     * @return AttributeValueTranslation
-     */
-    public function getTranslation($locale)
-    {
-        $translation = null;
-        foreach ($this->translations as $translationData) {
-            if ($translationData->getLocale() == $locale) {
-                $translation = $translationData;
-                break;
-            }
-        }
-
-        return $translation;
     }
 
     /**

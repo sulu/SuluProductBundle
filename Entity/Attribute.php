@@ -1,4 +1,12 @@
 <?php
+/*
+ * This file is part of the Sulu CMS.
+ *
+ * (c) MASSIVE ART WebServices GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
 
 namespace Sulu\Bundle\ProductBundle\Entity;
 
@@ -28,7 +36,7 @@ class Attribute
     /**
      * @var \Doctrine\Common\Collections\Collection
      */
-    private $translations;
+    public $translations;
 
     /**
      * @var \Doctrine\Common\Collections\Collection
@@ -152,24 +160,6 @@ class Attribute
     public function getTranslations()
     {
         return $this->translations;
-    }
-
-    /**
-     * Returns the translation with the given locale
-     * @param string $locale The locale to return
-     * @return AttributeTranslation
-     */
-    public function getTranslation($locale)
-    {
-        $translation = null;
-        foreach ($this->translations as $translationData) {
-            if ($translationData->getLocale() == $locale) {
-                $translation = $translationData;
-                break;
-            }
-        }
-
-        return $translation;
     }
 
     /**

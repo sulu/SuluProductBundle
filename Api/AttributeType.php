@@ -18,10 +18,10 @@ use Sulu\Bundle\ProductBundle\Entity\AttributeType as AttribureTypeEntity;
 use Sulu\Component\Rest\ApiWrapper;
 
 /**
-* The AttributeType class which will be exported to the API
-*
-* @package Sulu\Bundle\ProductBundle\Api
-* @ExclusionPolicy("all")
+ * The AttributeType class which will be exported to the API
+ *
+ * @package Sulu\Bundle\ProductBundle\Api
+ * @ExclusionPolicy("all")
  */
 class AttributeType extends ApiWrapper
 {

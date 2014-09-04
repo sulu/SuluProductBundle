@@ -22,10 +22,14 @@ use Sulu\Component\Rest\Exception\EntityNotFoundException;
 use Sulu\Component\Rest\Exception\MissingArgumentException;
 use Sulu\Component\Rest\ListBuilder\ListRepresentation;
 use Sulu\Bundle\ProductBundle\Product\Exception\AttributeDependencyNotFoundException;
-use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeAttributeException;
-use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeValueAttributeException;
+use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeException;
+use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeValueException;
 use Sulu\Bundle\ProductBundle\Product\Exception\AttributeValueNotFoundException;
 
+/**
+ * Makes product attribute values available through a REST API
+ * @package Sulu\Bundle\ProductBundle\Controller
+ */
 class ValuesController extends RestController implements ClassResourceInterface
 {
     protected static $entityName = 'SuluProductBundle:AttributeValue';
@@ -96,6 +100,7 @@ class ValuesController extends RestController implements ClassResourceInterface
         }
 
         $view = $this->view($list, 200);
+
         return $this->handleView($view);
     }
 
@@ -129,6 +134,7 @@ class ValuesController extends RestController implements ClassResourceInterface
             $listBuilder->getLimit(),
             $listBuilder->count()
         );
+
         return $list;
     }
 
@@ -154,11 +160,12 @@ class ValuesController extends RestController implements ClassResourceInterface
             $view = $this->view($exception->toArray(), 400);
         } catch (AttributeValueNotFoundException $exc) {
             $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
-            $view = $this->view($exception->toArray(), 400);
-        } catch (MissingAttributeValueAttributeException $exc) {
+            $view = $this->view($exception->toArray(), 404);
+        } catch (MissingAttributeValueException $exc) {
             $exception = new MissingArgumentException(self::$entityName, $exc->getAttribute());
             $view = $this->view($exception->toArray(), 400);
         }
+
         return $this->handleView($view);
     }
 
@@ -180,10 +187,11 @@ class ValuesController extends RestController implements ClassResourceInterface
         } catch (AttributeDependencyNotFoundException $exc) {
             $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
             $view = $this->view($exception->toArray(), 400);
-        } catch (MissingAttributeValueAttributeException $exc) {
+        } catch (MissingAttributeValueException $exc) {
             $exception = new MissingArgumentException(self::$entityName, $exc->getAttribute());
             $view = $this->view($exception->toArray(), 400);
         }
+
         return $this->handleView($view);
     }
 
@@ -199,10 +207,11 @@ class ValuesController extends RestController implements ClassResourceInterface
         try {
             $this->getManager()->delete($attributeValueId, $this->getUser()->getId());
             $view = $this->view($attributeValueId, 204);
-        } catch (AttributeNotFoundException $exc) {
+        } catch (AttributeValueNotFoundException $exc) {
             $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
-            $view = $this->view($exception->toArray(), 400);
+            $view = $this->view($exception->toArray(), 404);
         }
+
         return $this->handleView($view);
     }
 }
