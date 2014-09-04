@@ -10,6 +10,11 @@
 
 namespace Sulu\Bundle\ProductBundle\Product\Exception;
 
+/* AttributeDependencyNotFoundException
+ *
+ * This exception is thrown if a required dependency for creating a new
+ * attribute is not given.
+ */
 class AttributeDependencyNotFoundException extends AttributeException
 {
     /**
