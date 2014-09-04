@@ -25,6 +25,10 @@ use Sulu\Bundle\ProductBundle\Product\Exception\AttributeDependencyNotFoundExcep
 use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeAttributeException;
 use Sulu\Bundle\ProductBundle\Product\Exception\AttributeNotFoundException;
 
+/**
+ * Makes product attributes available through a REST API
+ * @package Sulu\Bundle\ProductBundle\Controller
+ */
 class AttributeController extends RestController implements ClassResourceInterface
 {
     protected static $entityName = 'SuluProductBundle:Attribute';
@@ -153,7 +157,7 @@ class AttributeController extends RestController implements ClassResourceInterfa
             $view = $this->view($exception->toArray(), 400);
         } catch (AttributeNotFoundException $exc) {
             $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
-            $view = $this->view($exception->toArray(), 400);
+            $view = $this->view($exception->toArray(), 404);
         } catch (MissingAttributeAttributeException $exc) {
             $exception = new MissingArgumentException(self::$entityName, $exc->getAttribute());
             $view = $this->view($exception->toArray(), 400);
@@ -200,7 +204,7 @@ class AttributeController extends RestController implements ClassResourceInterfa
             $view = $this->view($id, 204);
         } catch (AttributeNotFoundException $exc) {
             $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
-            $view = $this->view($exception->toArray(), 400);
+            $view = $this->view($exception->toArray(), 404);
         }
         return $this->handleView($view);
     }

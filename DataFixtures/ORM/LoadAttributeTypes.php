@@ -25,12 +25,12 @@ class LoadAttributeTypes implements FixtureInterface, OrderedFixtureInterface
         $metadata->setIdGeneratorType(\Doctrine\ORM\Mapping\ClassMetadata::GENERATOR_TYPE_NONE);
 
         $i = 1;
-        $file = dirname(__FILE__) . '/../attributeTypes.xml';
+        $file = dirname(__FILE__) . '/../attribute-types.xml';
         $doc = new DOMDocument();
         $doc->load($file);
 
         $xpath = new DOMXpath($doc);
-        $elements = $xpath->query('/AttributeTypes/AttributeType');
+        $elements = $xpath->query('/attribute-types/attribute-type');
 
         if (!is_null($elements)) {
             /** @var $element DOMNode */

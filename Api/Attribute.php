@@ -26,12 +26,13 @@ use Sulu\Component\Rest\ApiWrapper;
 use Sulu\Component\Security\UserInterface;
 
 /**
-* The Attribute class which will be exported to the API
-*
-* @package Sulu\Bundle\ProductBundle\Api
-* @Relation("self", href="expr('/api/admin/attributes/' ~ object.getId())")
-* @ExclusionPolicy("all")
+ * The Attribute class which will be exported to the API
+ *
+ * @package Sulu\Bundle\ProductBundle\Api
+ * @Relation("self", href="expr('/api/admin/attributes/' ~ object.getId())")
+ * @ExclusionPolicy("all")
  */
+
 class Attribute extends ApiWrapper
 {
     /**
@@ -178,16 +179,23 @@ class Attribute extends ApiWrapper
         return $this;
     }
 
-    private function getTranslation()
+    /**
+     * Returns the translation with the given locale
+     * @param string $locale The locale to return
+     * @return AttributeTranslation
+     */
+    public function getTranslation()
     {
-        $attributeTranslation = $this->entity->getTranslation($this->locale);
-        if (!$attributeTranslation) {
-            $attributeTranslation = new AttributeTranslation();
-            $attributeTranslation->setLocale($this->locale);
-            $attributeTranslation->setAttribute($this->entity);
-
-            $this->entity->addTranslation($attributeTranslation);
+        foreach ($this->entity->translations as $translation) {
+            if ($translation->getLocale() == $this->locale) {
+                return $translation;
+            }
         }
-        return $attributeTranslation;
+        $translation = new AttributeTranslation();
+        $translation->setLocale($this->locale);
+        $translation->setAttribute($this->entity);
+
+        $this->entity->addTranslation($translation);
+        return $translation;
     }
 }
