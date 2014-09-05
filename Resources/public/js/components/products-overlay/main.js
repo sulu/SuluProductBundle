@@ -14,6 +14,10 @@ define([], function () {
             translations: {
                 addProducts: 'sulu.products.add-products',
                 productName: 'sulu.products.productName'
+            },
+            filter: {
+                parent: false,
+                type: []
             }
         },
 
@@ -49,6 +53,20 @@ define([], function () {
             return createEventName.call(this, 'add');
         },
 
+        /**
+         * Returns the URL with all the filters
+         * @returns {string}
+         */
+        getUrl = function () {
+            var url = '/admin/api/products?flat=true';
+
+            if (this.options.filter.parent !== false) {
+                url += '&parent=' + ((this.options.filter.parent === null) ? 'null' : this.options.filter.parent);
+            }
+
+            return url;
+        },
+
         initializeOverlay = function () {
             bindCustomEvents.call(this);
 
@@ -79,7 +97,7 @@ define([], function () {
                     options: {
                         el: '#' + this.options.dataGridInstanceName,
                         instanceName: this.options.dataGridInstanceName,
-                        url: '/admin/api/products?flat=true',
+                        url: getUrl.call(this),
                         resultKey: 'products',
                         pagination: false,
                         viewOptions: {

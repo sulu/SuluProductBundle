@@ -154,7 +154,7 @@ define(['suluproduct/models/product', 'app-config'], function (Product, AppConfi
                     type: 'POST',
                     success: function (collection, response) {
                         delete response.parent; // FIXME this is necessary because of husky datagrid
-                        this.sandbox.emit('husky.datagrid.' + this.options.dataGridInstanceName + '.record.remove', id);
+                        this.sandbox.emit('husky.datagrid.variants-datagrid.record.remove', id);
                         this.sandbox.emit('husky.datagrid.record.add', response);
                     }.bind(this)
                 }

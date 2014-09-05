@@ -27,6 +27,7 @@ doctrine:
         resolve_target_entities:
             Sulu\Component\Security\UserInterface: Sulu\Bundle\TestBundle\Entity\TestUser
             Sulu\Bundle\ProductBundle\Entity\ProductInterface: Sulu\Bundle\ProductBundle\Entity\Product
+            Sulu\Bundle\SecurityBundle\Entity\RoleInterface: Sulu\Bundle\SecurityBundle\Entity\Role
 
 monolog:
     handlers:
@@ -51,7 +52,8 @@ sulu_core:
         username: admin
         password: admin
     webspace:
-        ~
+        request_analyzer:
+            enabled: false
     content:
         templates:
             paths:

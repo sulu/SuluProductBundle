@@ -21,7 +21,7 @@ use Sulu\Bundle\ProductBundle\Product\ProductManagerInterface;
 use Sulu\Component\Rest\Exception\EntityNotFoundException;
 use Sulu\Component\Rest\Exception\MissingArgumentException;
 use Sulu\Component\Rest\Exception\RestException;
-use Sulu\Component\Rest\ListBuilder\DoctrineListBuilderFactory;
+use Sulu\Component\Rest\ListBuilder\Doctrine\DoctrineListBuilderFactory;
 use Sulu\Component\Rest\ListBuilder\ListRepresentation;
 use Sulu\Component\Rest\RestController;
 use Sulu\Component\Rest\RestHelperInterface;
@@ -100,7 +100,14 @@ class ProductController extends RestController implements ClassResourceInterface
             $filter['type'] = $type;
         }
 
+        $parent = $request->get('parent');
+        if ($parent) {
+            $filter['parent'] = ($parent == 'null') ? null : $parent;
+        }
+
         if ($request->get('flat') == 'true') {
+            $fieldDescriptors = $this->getManager()->getFieldDescriptors($this->getLocale($request));
+
             /** @var RestHelperInterface $restHelper */
             $restHelper = $this->get('sulu_core.doctrine_rest_helper');
 
@@ -111,11 +118,11 @@ class ProductController extends RestController implements ClassResourceInterface
 
             $restHelper->initializeListBuilder(
                 $listBuilder,
-                $this->getManager()->getFieldDescriptors($this->getLocale($request))
+                $fieldDescriptors
             );
 
             foreach ($filter as $key => $value) {
-                $listBuilder->where($this->getManager()->getFieldDescriptor($key), $value);
+                $listBuilder->where($fieldDescriptors[$key], $value);
             }
 
             $list = new ListRepresentation(
@@ -213,7 +220,7 @@ class ProductController extends RestController implements ClassResourceInterface
             try {
                 $this->getManager()->delete($id, $this->getUser()->getId());
             } catch (ProductChildrenExistException $exc) {
-                throw new RestException(400, 'Deletion not allowed, because the product has sub products');
+                throw new RestException('Deletion not allowed, because the product has sub products', 400);
             }
         };
         $view = $this->responseDelete($id, $delete);

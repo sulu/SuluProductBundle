@@ -99,6 +99,9 @@ define([], function () {
                         ],
                         translations: {
                             addProducts: 'products-overlay.add-variant'
+                        },
+                        filter: {
+                            parent: null
                         }
                     }
                 }
