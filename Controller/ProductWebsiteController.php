@@ -59,7 +59,7 @@ class ProductWebsiteController
 
     public function displayAction($id)
     {
-        $navigation = $this->navigationMapper->getMainNavigation(
+        $navigation = $this->navigationMapper->getRootNavigation(
             $this->requestAnalyzer->getCurrentWebspace()->getKey(),
             $this->requestAnalyzer->getCurrentLocalization()->getLocalization(),
             1,
