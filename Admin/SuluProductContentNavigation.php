@@ -30,5 +30,11 @@ class SuluProductContentNavigation extends ContentNavigation
         $variants->setGroups(array('product-with-variants'));
         $variants->setComponent('products/components/variants-list@suluproduct');
         $this->addNavigationItem($variants);
+
+        $items = new ContentNavigationItem('content-navigation.product.items');
+        $items->setAction('items');
+        $items->setGroups(array('product-set'));
+        $items->setComponent('products/components/items-list@suluproduct');
+        $this->addNavigationItem($items);
     }
 } 

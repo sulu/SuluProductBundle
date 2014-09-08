@@ -22,6 +22,10 @@ sulu_product.product_variants:
     pattern: /template/product/variants.html
     defaults: { _controller: SuluProductBundle:Template:productVariants }
 
+sulu_product.product_items:
+    pattern: /template/product/items.html
+    defaults: { _controller: SuluProductBundle:Template:productItems }
+
 sulu_product.product_form:
     pattern: /template/product/form.html
     defaults: { _controller: SuluProductBundle:Template:productForm }

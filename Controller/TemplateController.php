@@ -41,6 +41,11 @@ class TemplateController extends Controller
         return $this->render('SuluProductBundle:Template:product.variants.html.twig');
     }
 
+    public function productItemsAction()
+    {
+        return $this->render('SuluProductBundle:Template:product.items.html.twig');
+    }
+
     /**
      * Returns Template for product import
      * @return \Symfony\Component\HttpFoundation\Response
