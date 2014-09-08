@@ -285,7 +285,7 @@ class ProductControllerTest extends DatabaseTestCase
         $this->product2->setAttributeSet($this->attributeSet2);
         $this->product2->setCreated(new DateTime());
         $this->product2->setChanged(new DateTime());
-        $this->product2->setParent($this->product1);
+        $this->product1->setParent($this->product2);
 
         $productTranslation2 = new ProductTranslation();
         $productTranslation2->setProduct($this->product2);
@@ -812,6 +812,27 @@ class ProductControllerTest extends DatabaseTestCase
         $response = json_decode($this->client->getResponse()->getContent());
 
         $this->assertCount(1, $response->_embedded->products);
+        $this->assertEquals('EnglishProductCode-2', $response->_embedded->products[0]->code);
+    }
+
+    public function testTypeFilter()
+    {
+        $this->client->request('GET', '/api/products?flat=true&type=1');
+
+        $response = json_decode($this->client->getResponse()->getContent());
+
+        $this->assertCount(1, $response->_embedded->products);
         $this->assertEquals('EnglishProductCode-1', $response->_embedded->products[0]->code);
+    }
+
+    public function testAllTypeFilter()
+    {
+        $this->client->request('GET', '/api/products?flat=true&type=1,2');
+
+        $response = json_decode($this->client->getResponse()->getContent());
+
+        $this->assertCount(2, $response->_embedded->products);
+        $this->assertEquals('EnglishProductCode-1', $response->_embedded->products[0]->code);
+        $this->assertEquals('EnglishProductCode-2', $response->_embedded->products[1]->code);
     }
 }

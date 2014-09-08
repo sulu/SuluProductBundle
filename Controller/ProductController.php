@@ -97,7 +97,7 @@ class ProductController extends RestController implements ClassResourceInterface
 
         $type = $request->get('type');
         if ($type) {
-            $filter['type'] = $type;
+            $filter['type_id'] = explode(',', $type);
         }
 
         $parent = $request->get('parent');
@@ -122,7 +122,11 @@ class ProductController extends RestController implements ClassResourceInterface
             );
 
             foreach ($filter as $key => $value) {
-                $listBuilder->where($fieldDescriptors[$key], $value);
+                if (is_array($value)) {
+                    $listBuilder->in($fieldDescriptors[$key], $value);
+                } else {
+                    $listBuilder->where($fieldDescriptors[$key], $value);
+                }
             }
 
             $list = new ListRepresentation(

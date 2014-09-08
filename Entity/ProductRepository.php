@@ -80,7 +80,7 @@ class ProductRepository extends EntityRepository implements ProductRepositoryInt
                         $qb->setParameter($key, $value);
                         break;
 
-                    case 'type':
+                    case 'type_id':
                         $qb->andWhere('type.id = :' . $key);
                         $qb->setParameter($key, $value);
                         break;

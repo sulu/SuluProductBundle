@@ -17,13 +17,14 @@ define([], function () {
             },
             filter: {
                 parent: false,
-                type: []
+                types: []
             }
         },
 
         templates = {
             productsDataGrid: function () {
                 return [
+                    '<div id="', this.options.searchInstanceName, '"></div>',
                     '<div id="', this.options.dataGridInstanceName, '" />'
                 ].join('');
             }
@@ -62,6 +63,10 @@ define([], function () {
 
             if (this.options.filter.parent !== false) {
                 url += '&parent=' + ((this.options.filter.parent === null) ? 'null' : this.options.filter.parent);
+            }
+
+            if (this.options.filter.types.length > 0) {
+                url += '&type=' + this.options.filter.types.join(',');
             }
 
             return url;
@@ -157,6 +162,7 @@ define([], function () {
             this.options = this.sandbox.util.extend({}, defaults, this.options);
 
             this.options.dataGridInstanceName = this.options.instanceName + '-datagrid';
+            this.options.searchInstanceName = this.options.instanceName + '-search';
 
             initializeOverlay.call(this);
         }

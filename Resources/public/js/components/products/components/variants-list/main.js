@@ -101,7 +101,8 @@ define([], function () {
                             addProducts: 'products-overlay.add-variant'
                         },
                         filter: {
-                            parent: null
+                            parent: null,
+                            types: [1, 4] // TODO use better variables for types
                         }
                     }
                 }
