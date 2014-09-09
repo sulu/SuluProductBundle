@@ -31,7 +31,7 @@ use Sulu\Bundle\ProductBundle\Product\Exception\AttributeNotFoundException;
  * Makes product attribute values available through a REST API
  * @package Sulu\Bundle\ProductBundle\Controller
  */
-class ValuesController extends RestController implements ClassResourceInterface
+class ValueController extends RestController implements ClassResourceInterface
 {
     protected static $entityName = 'SuluProductBundle:AttributeValue';
 
@@ -40,7 +40,7 @@ class ValuesController extends RestController implements ClassResourceInterface
     /**
      * Returns the manager for AttributeValues
      *
-     * @return AttributeValuesManager
+     * @return AttributeValueManager
      */
     private function getManager()
     {
@@ -152,7 +152,7 @@ class ValuesController extends RestController implements ClassResourceInterface
         $list = new ListRepresentation(
             $listBuilder->execute(),
             self::$entityKey,
-            'cget_attribute_values',
+            'get_attribute_values',
             array_merge($request->query->all(), array('id'=>$id)),
             $listBuilder->getCurrentPage(),
             $listBuilder->getLimit(),
