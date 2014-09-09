@@ -8,5 +8,5 @@ sulu_product_base.attributes:
 
 sulu_product_base.attribute_values:
     type: rest
-    resource: Sulu\Bundle\ProductBundle\Controller\ValuesController
+    resource: Sulu\Bundle\ProductBundle\Controller\ValueController
     parent: sulu_product_base.attributes
