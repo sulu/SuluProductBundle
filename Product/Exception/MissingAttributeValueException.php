@@ -10,8 +10,7 @@
 
 namespace Sulu\Bundle\ProductBundle\Product\Exception;
 
-/* MissingAttributeException
- *
+/**
  * This exception is thrown if a required property for creating or manipulating
  * an attribute value is missing.
  */

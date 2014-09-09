@@ -10,8 +10,7 @@
 
 namespace Sulu\Bundle\ProductBundle\Product\Exception;
 
-/* AttributeNotFoundException
- *
+/**
  * This exception is thrown if a requested attribute was not found.
  */
 class AttributeNotFoundException extends AttributeException

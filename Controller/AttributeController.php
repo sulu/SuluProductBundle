@@ -68,16 +68,13 @@ class AttributeController extends RestController implements ClassResourceInterfa
     public function getAction(Request $request, $id)
     {
         $locale = $this->getLocale($request);
-        $view = $this->responseGetById(
-            $id,
-            function ($id) use ($locale) {
-                /** @var ProductAttribute $attribute */
-                $attribute = $this->getManager()->findByIdAndLocale($id, $locale);
-
-                return $attribute;
-            }
-        );
-
+        try {
+            $attribute = $this->getManager()->findByIdAndLocale($id, $locale);
+            $view = $this->view($attribute, 200);
+        } catch (AttributeNotFoundException $exc) {
+            $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
+            $view = $this->view($exception->toArray(), 404);
+        }
         return $this->handleView($view);
     }
 

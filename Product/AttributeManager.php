@@ -120,14 +120,6 @@ class AttributeManager implements AttributeManagerInterface
     /**
      * {@inheritDoc}
      */
-    public function getFieldDescriptor($key)
-    {
-        return $this->fieldDescriptors[$key];
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public function findByIdAndLocale($id, $locale)
     {
         $attribute = $this->attributeRepository->findByIdAndLocale($id, $locale);
@@ -135,7 +127,7 @@ class AttributeManager implements AttributeManagerInterface
         if ($attribute) {
             return new Attribute($attribute, $locale);
         } else {
-            return null;
+            throw new AttributeNotFoundException($id);
         }
     }
 

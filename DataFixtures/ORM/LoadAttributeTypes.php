@@ -41,7 +41,7 @@ class LoadAttributeTypes implements FixtureInterface, OrderedFixtureInterface
                 /** @var $child DOMNode */
                 foreach ($children as $child) {
                     if (isset($child->nodeName)) {
-                        if ($child->nodeName == "Name") {
+                        if ($child->nodeName == "name") {
                             $attributeType->setName($child->nodeValue);
                         }
                     }
