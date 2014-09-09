@@ -44,7 +44,7 @@
             <argument type="service" id="templating"/>
             <argument type="service" id="sulu_product.product_manager"/>
             <argument type="service" id="sulu_core.webspace.request_analyzer" on-invalid="ignore"/>
-            <argument type="service" id="sulu_website.navigation_mapper"/>
+            <argument type="service" id="sulu_website.resolver.request_analyzer"/>
             <argument>%sulu_product.template%</argument>
         </service>
         <service id="sulu_product.status_manager" class="%sulu_product.status_manager.class%">
