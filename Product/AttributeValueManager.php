@@ -36,6 +36,7 @@ use Sulu\Bundle\ProductBundle\Product\AttributeValueManagerInterface;
 class AttributeValueManager implements AttributeValueManagerInterface
 {
     protected static $attributeValueEntityName = 'SuluProductBundle:AttributeValue';
+    protected static $attributeEntityName = 'SuluProductBundle:Attribute';
     protected static $attributeValueTranslationEntityName = 'SuluProductBundle:AttributeValueTranslation';
     protected static $attributeRepository = 'SuluProductBundle:Attribute';
 
@@ -103,15 +104,21 @@ class AttributeValueManager implements AttributeValueManagerInterface
             true
         );
 
-        return $fieldDescriptors;
-    }
+        $fieldDescriptors['attribute_id'] = new DoctrineFieldDescriptor(
+            'id',
+            'attribute_id',
+            self::$attributeEntityName,
+            null,
+            array(
+                self::$attributeEntityName => new DoctrineJoinDescriptor(
+                    self::$attributeEntityName,
+                    self::$attributeValueEntityName . '.attribute'
+                )
+            ),
+            true
+        );
 
-    /**
-     * {@inheritDoc}
-     */
-    public function getFieldDescriptor($key)
-    {
-        return $this->fieldDescriptors[$key];
+        return $fieldDescriptors;
     }
 
     /**
@@ -123,9 +130,28 @@ class AttributeValueManager implements AttributeValueManagerInterface
 
         if ($attributeValue) {
             return new AttributeValue($attributeValue, $locale);
+        } else {
+            throw new AttributeValueNotFoundException($id);
         }
+    }
 
-        return null;
+    /**
+     * {@inheritDoc}
+     */
+    public function findAllByAttributeIdAndLocale($locale, $id)
+    {
+        $attributeValues = $this->attributeValueRepository->findByAttributeIdAndLocale($id, $locale);
+        if ($attributeValues) {
+            array_walk(
+                $attributeValues,
+                function (&$attributeValue) use ($locale) {
+                    $attributeValue = new AttributeValue($attributeValue, $locale);
+                }
+            );
+            return $attributeValues;
+        } else {
+            throw new AttributeNotFoundException($id);
+        }
     }
 
     /**

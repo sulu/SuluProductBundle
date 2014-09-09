@@ -27,13 +27,6 @@ interface AttributeManagerInterface
     public function getFieldDescriptors($locale);
 
     /**
-     * Returns the FieldDescriptor for the given key
-     * @param string $key The key of the FieldDescriptor to return
-     * @return DoctrineFieldDescriptor
-     */
-    public function getFieldDescriptor($key);
-
-    /**
      * Returns the attribute with the given ID and locale
      * @param int $id The id of the attribute to load
      * @param string $locale The locale to load

@@ -106,6 +106,13 @@ class ValueControllerTest extends DatabaseTestCase
         $this->attribute2 = new Attribute($this->attributeEntity2, 'en');
         $this->attribute2->setName('attribute-2');
 
+        $this->attributeEntity3 = new AttributeEntity();
+        $this->attributeEntity3->setCreated(new DateTime());
+        $this->attributeEntity3->setChanged(new DateTime());
+        $this->attributeEntity3->setType($this->attributeType3);
+        $this->attribute3 = new Attribute($this->attributeEntity3, 'en');
+        $this->attribute3->setName('attribute-3');
+
         // **** AttributeValues
         $this->attributeValueEntity1_1 = new AttributeValueEntity();
         $this->attributeValueEntity1_1->setSelected(true);
@@ -119,12 +126,20 @@ class ValueControllerTest extends DatabaseTestCase
         $this->attributeValue1_2 = new AttributeValue($this->attributeValueEntity1_2, 'en');
         $this->attributeValue1_2->setName('Value1_2');
 
+        $this->attributeValueEntity2_1 = new AttributeValueEntity();
+        $this->attributeValueEntity2_1->setSelected(false);
+        $this->attributeValueEntity2_1->setAttribute($this->attributeEntity3);
+        $this->attributeValue2_1 = new AttributeValue($this->attributeValueEntity2_1, 'en');
+        $this->attributeValue2_1->setName('Value2_1');
+
         self::$em->persist($this->attributeType1);
         self::$em->persist($this->attribute1->getEntity());
         self::$em->persist($this->attributeValue1_1->getEntity());
         self::$em->persist($this->attributeValue1_2->getEntity());
+        self::$em->persist($this->attributeValue2_1->getEntity());
         self::$em->persist($this->attributeType2);
         self::$em->persist($this->attribute2->getEntity());
+        self::$em->persist($this->attribute3->getEntity());
         self::$em->persist($this->attributeType3);
         self::$em->persist($this->attributeType4);
         self::$em->persist($this->attributeType5);
@@ -172,12 +187,48 @@ class ValueControllerTest extends DatabaseTestCase
     }
 
     /**
+     * Get not existing values for an attribute by it's id
+     */
+    public function testGetNotExistingValueById()
+    {
+        $url = '/api/attributes/' .
+            $this->attribute1->getId() .
+            '/values/' .
+            666;
+        $this->client->request('GET', $url);
+        $response = json_decode($this->client->getResponse()->getContent());
+        $this->assertEquals(404, $this->client->getResponse()->getStatusCode());
+        $this->assertEquals(
+            'Entity with the type "SuluProductBundle:AttributeValue" and the id "666" not found.',
+            $response->message
+        );
+    }
+
+    /**
+     * Get values from not existing attribute by it's id
+     */
+    public function testGetNotExistingValueById2()
+    {
+        $url = '/api/attributes/' .
+            666 .
+            '/values/' .
+            $this->attributeValue1_1->getId();
+        $this->client->request('GET', $url);
+        $response = json_decode($this->client->getResponse()->getContent());
+        $this->assertEquals(404, $this->client->getResponse()->getStatusCode());
+        $this->assertEquals(
+            'Entity with the type "SuluProductBundle:Attribute" and the id "666" not found.',
+            $response->message
+        );
+    }
+
+    /**
      * Get all available attributes
      */
     public function testGetAll()
     {
         $url = '/api/attributes/' .
-            $this->attribute1->getId() .
+            $this->attribute2->getId() .
             '/values';
         $this->client->request('GET', $url);
         $response = json_decode($this->client->getResponse()->getContent());
@@ -196,12 +247,25 @@ class ValueControllerTest extends DatabaseTestCase
     }
 
     /**
+     * Get not existing all available attributes
+     */
+    public function testNotExistingGetAll()
+    {
+        $url = '/api/attributes/' .
+            666 .
+            '/values';
+        $this->client->request('GET', $url);
+        $response = json_decode($this->client->getResponse()->getContent());
+        $this->assertEquals(404, $this->client->getResponse()->getStatusCode());
+    }
+
+    /**
      * Get all available attribute values flat
      */
     public function testGetAllFlat()
     {
         $url = '/api/attributes/' .
-            $this->attribute1->getId() .
+            $this->attribute2->getId() .
             '/values?flat=true';
         $this->client->request('GET', $url);
         $response = json_decode($this->client->getResponse()->getContent());

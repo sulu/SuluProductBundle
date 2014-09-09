@@ -123,10 +123,24 @@ class AttributeControllerTest extends DatabaseTestCase
         $this->client->request('GET', '/api/attributes/1');
         $response = json_decode($this->client->getResponse()->getContent());
 
-
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
         $this->assertEquals('some-translation-type-1-string', $response->type->name);
         $this->assertEquals('Gas', $response->name);
+    }
+
+    /**
+     * Get a not existing attribute by it's id
+     */
+    public function testGetNotExistingById()
+    {
+        $this->client->request('GET', '/api/attributes/666');
+        $response = json_decode($this->client->getResponse()->getContent());
+
+        $this->assertEquals(404, $this->client->getResponse()->getStatusCode());
+        $this->assertEquals(
+            'Entity with the type "SuluProductBundle:Attribute" and the id "666" not found.',
+            $response->message
+        );
     }
 
     /**

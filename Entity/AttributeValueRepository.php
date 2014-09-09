@@ -51,6 +51,23 @@ class AttributeValueRepository extends EntityRepository implements AttributeValu
     /**
      * {@inheritDoc}
      */
+    public function findByAttributeIdAndLocale($id, $locale)
+    {
+        try {
+            $queryBuilder = $this->getAttributeValueQuery($locale);
+            $queryBuilder->leftJoin('attributeValue.attribute', 'attribute');
+            $queryBuilder->andWhere('attribute.id = :attributeId');
+            $queryBuilder->setParameter('attributeId', $id);
+
+            return $queryBuilder->getQuery()->getResult();
+        } catch (NoResultException $exc) {
+            return null;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function findAllByLocale($locale)
     {
         try {

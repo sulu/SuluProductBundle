@@ -12,9 +12,8 @@ namespace Sulu\Bundle\ProductBundle\Product\Exception;
 
 use Exception;
 
-/* AttributeException
- *
- * Base exception for handling attribute specific.
+/**
+ * Base exception for handling attribute specific exceptions.
  */
 class AttributeException extends Exception
 {

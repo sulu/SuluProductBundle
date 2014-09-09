@@ -25,6 +25,7 @@ use Sulu\Bundle\ProductBundle\Product\Exception\AttributeDependencyNotFoundExcep
 use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeException;
 use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeValueException;
 use Sulu\Bundle\ProductBundle\Product\Exception\AttributeValueNotFoundException;
+use Sulu\Bundle\ProductBundle\Product\Exception\AttributeNotFoundException;
 
 /**
  * Makes product attribute values available through a REST API
@@ -47,8 +48,18 @@ class ValuesController extends RestController implements ClassResourceInterface
     }
 
     /**
+     * Returns the manager for Attributes
+     *
+     * @return AttributeManager
+     */
+    private function getAttributeManager()
+    {
+        return $this->get('sulu_product.attribute_manager');
+    }
+
+    /**
      * returns all fields that can be used by list
-     * @Get("attributes/{id}/values/fields")
+     * @Get("attributes/values/fields")
      * @param \Symfony\Component\HttpFoundation\Request $request
      * @return mixed
      */
@@ -69,15 +80,21 @@ class ValuesController extends RestController implements ClassResourceInterface
     public function getAction(Request $request, $attributeId, $attributeValueId)
     {
         $locale = $this->getLocale($request);
-        $view = $this->responseGetById(
-            $attributeValueId,
-            function ($attributeValueId) use ($locale) {
-                $attribute = $this->getManager()->findByIdAndLocale($attributeValueId, $locale);
+        try {
+            $this->getAttributeManager()->findByIdAndLocale($attributeId, $locale);
+        } catch (AttributeNotFoundException $exc) {
+            $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
+            $view = $this->view($exception->toArray(), 404);
+            return $this->handleView($view);
+        }
 
-                return $attribute;
-            }
-        );
-
+        try {
+            $attributeValue = $this->getManager()->findByIdAndLocale($attributeValueId, $locale);
+            $view = $this->view($attributeValue, 200);
+        } catch (AttributeValueNotFoundException $exc) {
+            $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
+            $view = $this->view($exception->toArray(), 404);
+        }
         return $this->handleView($view);
     }
 
@@ -90,16 +107,21 @@ class ValuesController extends RestController implements ClassResourceInterface
      */
     public function cgetAction(Request $request, $id)
     {
-        if ($request->get('flat') == 'true') {
-            $list = $this->getListRepresentation($request, $id);
-        } else {
-            $list = new CollectionRepresentation(
-                $this->getManager()->findAllByLocale($this->getLocale($request)),
-                self::$entityKey
-            );
-        }
+        try {
+            if ($request->get('flat') == 'true') {
+                $list = $this->getListRepresentation($request, $id);
+            } else {
+                $list = new CollectionRepresentation(
+                    $this->getManager()->findAllByAttributeIdAndLocale($this->getLocale($request), $id),
+                    self::$entityKey
+                );
+            }
+            $view = $this->view($list, 200);
 
-        $view = $this->view($list, 200);
+        } catch (AttributeNotFoundException $exc) {
+            $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
+            $view = $this->view($exception->toArray(), 404);
+        }
 
         return $this->handleView($view);
     }
@@ -119,11 +141,13 @@ class ValuesController extends RestController implements ClassResourceInterface
         $factory = $this->get('sulu_core.doctrine_list_builder_factory');
 
         $listBuilder = $factory->create(self::$entityName);
-
+        $fieldDescriptors = $this->getManager()->getFieldDescriptors($this->getLocale($request));
         $restHelper->initializeListBuilder(
             $listBuilder,
-            $this->getManager()->getFieldDescriptors($this->getLocale($request))
+            $fieldDescriptors
         );
+
+        $listBuilder->where($fieldDescriptors['attribute_id'], $id);
 
         $list = new ListRepresentation(
             $listBuilder->execute(),
