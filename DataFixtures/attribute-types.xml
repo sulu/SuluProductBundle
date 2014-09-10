@@ -3,10 +3,10 @@
         <name>product.attribute.type.text</name>
     </attribute-type>
     <attribute-type>
-        <name>product.attribute.type.dropdown</name>
+        <name>product.attribute.type.date</name>
     </attribute-type>
     <attribute-type>
-        <name>product.attribute.type.date</name>
+        <name>product.attribute.type.dropdown</name>
     </attribute-type>
     <attribute-type>
         <name>product.attribute.type.checkbox</name>
