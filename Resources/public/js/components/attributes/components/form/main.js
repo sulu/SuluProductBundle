@@ -35,16 +35,11 @@ define([], function() {
 
         initialize: function() {
             this.saved = true;
-
             this.initializeValidation();
-
             this.bindDOMEvents();
             this.bindCustomEvents();
-
             this.setHeaderBar(true);
-
             this.render();
-
             this.listenForChange();
         },
 
@@ -58,10 +53,10 @@ define([], function() {
             }.bind(this));
 
             this.sandbox.on('sulu.header.toolbar.delete', function() {
-                this.sandbox.emit('sulu.products.product.delete', this.sandbox.dom.val('#id'));
+                this.sandbox.emit('sulu.products.attribute.delete', this.sandbox.dom.val('#id'));
             }.bind(this));
 
-            this.sandbox.on('sulu.products.saved', function(id) {
+            this.sandbox.on('sulu.products.attributes.saved', function(id) {
                 this.options.data.id = id;
                 this.setHeaderBar(true);
                 this.setHeaderInformation();
@@ -69,7 +64,7 @@ define([], function() {
 
             // back to list
             this.sandbox.on('sulu.header.back', function() {
-                this.sandbox.emit('sulu.products.list');
+                this.sandbox.emit('sulu.product.attributes.list');
             }, this);
 
             this.sandbox.on('sulu.header.initialized', function() {
@@ -99,6 +94,40 @@ define([], function() {
 
         render: function() {
             this.sandbox.dom.html(this.$el, this.renderTemplate('/admin/product/template/attribute/form'));
+            this.values_list = this.sandbox.dom.find('#attribute-values-list', this.$el);
+            // this.values_list.addClass('hidden');
+
+            // datagrid
+            var id = this.options.data.id;
+            var url = '/admin/api/attributes/' + id + '/values?flat=true'
+            this.sandbox.start([{
+                    name: 'datagrid@husky',
+                    options: {
+                        el: this.sandbox.dom.find('#attribute-values-list', this.$el),
+                        url: url,
+                        pagination: false,
+                        instanceName: 'product-attributes',
+                        resultKey: 'attributeValues',
+                        view: 'table',
+                        matchings: '/admin/api/attributes/values/fields',
+                        contentFilters: {
+                            selected: 'radio'
+                        },
+                        viewOptions: {
+                            table: {
+                                showHead: true,
+                                editable: true,
+                                validation: true,
+                                fullWidth: false
+                            },
+                            selectItem: {
+                                type: 'checkbox',
+                                inFirstCell: true
+                            }
+                        }
+                    }
+                }
+            ]);
 
             this.setHeaderInformation();
 
@@ -155,18 +184,28 @@ define([], function() {
         },
 
         listenForChange: function() {
-            // this.sandbox.dom.on('#attribute-form', 'change', function() {
-            //     this.setHeaderBar(false);
-            // }.bind(this), 'select');
-            // this.sandbox.dom.on('#attribute-form', 'keyup', function() {
-            //     this.setHeaderBar(false);
-            // }.bind(this), 'input, textarea');
-            // this.sandbox.on('sulu.content.changed', function() {
-            //     this.setHeaderBar(false);
-            // }.bind(this));
-            // this.sandbox.on('husky.select.status.selected.item', function() {
-            //     this.setHeaderBar(false);
-            // }.bind(this));
+            this.sandbox.dom.on('#attribute-form', 'change', function() {
+                this.setHeaderBar(false);
+            }.bind(this), 'select');
+            this.sandbox.dom.on('#attribute-form', 'keyup', function() {
+                this.setHeaderBar(false);
+            }.bind(this), 'input, textarea');
+            this.sandbox.on('sulu.content.changed', function() {
+                this.setHeaderBar(false);
+            }.bind(this));
+            this.sandbox.on('husky.select.attribute-types.selected.item', function(id) {
+                this.toggleValuesList(id);
+                this.setHeaderBar(false);
+            }.bind(this));
+        },
+
+        toggleValuesList: function(id) {
+            // Don't show the value list for type 1 & 2
+            if (id > 2) {
+                this.values_list.removeClass('hidden');
+            } else {
+                this.values_list.addClass('hidden');
+            }
         }
     };
 });

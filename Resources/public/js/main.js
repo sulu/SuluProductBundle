@@ -68,5 +68,12 @@ define({
                 this.html('<div data-aura-component="attributes@suluproduct" data-aura-display="form" data-aura-locale="' + locale + '"/>');
             }
         });
+
+        sandbox.mvc.routes.push({
+            route: 'pim/attributes/:locale/edit::id/:details',
+            callback: function(locale, id) {
+                this.html('<div data-aura-component="attributes@suluproduct" data-aura-display="form" data-aura-locale="' + locale + '" data-aura-id="' + id + '"/>');
+            }
+        });
     }
 });
