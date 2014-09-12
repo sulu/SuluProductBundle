@@ -58,6 +58,10 @@
                 <source>content-navigation.product.variants</source>
                 <target>Variants</target>
             </trans-unit>
+            <trans-unit id="15" resname="content-navigation.product.pricing">
+                <source>content-navigation.product.pricing</source>
+                <target>Pricing</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>
