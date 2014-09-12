@@ -49,4 +49,13 @@ class TemplateController extends Controller
     {
         return $this->render('SuluProductBundle:Template:product.import.html.twig');
     }
+
+    /**
+     * Returns Template for product pricing
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function productPricingAction()
+    {
+        return $this->render('SuluProductBundle:Template:product.pricing.html.twig');
+    }
 }

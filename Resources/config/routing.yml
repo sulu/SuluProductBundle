@@ -29,3 +29,7 @@ sulu_product.product_form:
 sulu_product.product_import:
     pattern: /template/product/import.html
     defaults: { _controller: SuluProductBundle:Template:productImport }
+
+sulu_product.product_pricing:
+    pattern: /template/product/pricing.html
+    defaults: { _controller: SuluProductBundle:Template:productPricing }
