@@ -151,6 +151,23 @@ class AttributeManager implements AttributeManagerInterface
     /**
      * {@inheritDoc}
      */
+    public function findAllByLocaleAndType($locale, $type)
+    {
+        $attributes = $this->attributeRepository->findAllByLocaleAndType($locale, $type);
+
+        array_walk(
+            $attributes,
+            function (&$attribute) use ($locale) {
+                $attribute = new Attribute($attribute, $locale);
+            }
+        );
+
+        return $attributes;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function save(array $data, $locale, $userId, $id = null)
     {
         if ($id) {

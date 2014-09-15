@@ -186,11 +186,21 @@ class Attribute extends ApiWrapper
      */
     public function getTranslation()
     {
+        $fallback = null;
         foreach ($this->entity->translations as $translation) {
+            if ($translation->getName() != null) {
+                $fallback = $translation;
+            }
             if ($translation->getLocale() == $this->locale) {
                 return $translation;
             }
         }
+
+        if ($fallback) {
+            return $fallback;
+        }
+
+        // Still no translation found
         $translation = new AttributeTranslation();
         $translation->setLocale($this->locale);
         $translation->setAttribute($this->entity);
