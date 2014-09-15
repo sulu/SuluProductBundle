@@ -352,6 +352,8 @@ class ProductControllerTest extends DatabaseTestCase
             self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\ProductPrice'),
             self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Type'),
             self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\TypeTranslation'),
+            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\TaxClass'),
+            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\TaxClassTranslation'),
             self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Status'),
             self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\StatusTranslation'),
             self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\AttributeSet'),

@@ -102,7 +102,7 @@ define([], function () {
             this.sandbox.on('sulu.content.changed', function () {
                 setHeaderBar.call(this, false);
             }.bind(this));
-            this.sandbox.on('husky.select.status.selected.item', function () {
+            this.sandbox.on('husky.select.tax-class.selected.item', function () {
                 setHeaderBar.call(this, false);
             }.bind(this));
         };
