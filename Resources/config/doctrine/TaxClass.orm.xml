@@ -10,5 +10,7 @@
 
         <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\TaxClassTranslation" mapped-by="taxClass"
                      field="translations"/>
+        <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface" mapped-by="taxClass"
+                     field="products"/>
     </entity>
 </doctrine-mapping>

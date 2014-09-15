@@ -66,6 +66,11 @@ abstract class BaseProduct implements ProductInterface
     private $type;
 
     /**
+     * @var \Sulu\Bundle\ProductBundle\Entity\TaxClass
+     */
+    private $taxClass;
+
+    /**
      * @var \Sulu\Bundle\ProductBundle\Entity\AttributeSet
      */
     private $attributeSet;
@@ -125,7 +130,7 @@ abstract class BaseProduct implements ProductInterface
         $this->upsells = new \Doctrine\Common\Collections\ArrayCollection();
         $this->crosssells = new \Doctrine\Common\Collections\ArrayCollection();
     }
-    
+
     /**
      * Set code
      *
@@ -135,14 +140,14 @@ abstract class BaseProduct implements ProductInterface
     public function setCode($code)
     {
         $this->code = $code;
-    
+
         return $this;
     }
 
     /**
      * Get code
      *
-     * @return string 
+     * @return string
      */
     public function getCode()
     {
@@ -158,14 +163,14 @@ abstract class BaseProduct implements ProductInterface
     public function setNumber($number)
     {
         $this->number = $number;
-    
+
         return $this;
     }
 
     /**
      * Get number
      *
-     * @return string 
+     * @return string
      */
     public function getNumber()
     {
@@ -181,14 +186,14 @@ abstract class BaseProduct implements ProductInterface
     public function setManufacturer($manufacturer)
     {
         $this->manufacturer = $manufacturer;
-    
+
         return $this;
     }
 
     /**
      * Get manufacturer
      *
-     * @return string 
+     * @return string
      */
     public function getManufacturer()
     {
@@ -204,7 +209,7 @@ abstract class BaseProduct implements ProductInterface
     public function setCost($cost)
     {
         $this->cost = $cost;
-    
+
         return $this;
     }
 
@@ -227,14 +232,14 @@ abstract class BaseProduct implements ProductInterface
     public function setPrice($price)
     {
         $this->price = $price;
-    
+
         return $this;
     }
 
     /**
      * Get price
      *
-     * @return string 
+     * @return string
      */
     public function getPrice()
     {
@@ -250,14 +255,14 @@ abstract class BaseProduct implements ProductInterface
     public function setPriceInfo($priceInfo)
     {
         $this->priceInfo = $priceInfo;
-    
+
         return $this;
     }
 
     /**
      * Get priceInfo
      *
-     * @return string 
+     * @return string
      */
     public function getPriceInfo()
     {
@@ -273,14 +278,14 @@ abstract class BaseProduct implements ProductInterface
     public function setCreated($created)
     {
         $this->created = $created;
-    
+
         return $this;
     }
 
     /**
      * Get created
      *
-     * @return \DateTime 
+     * @return \DateTime
      */
     public function getCreated()
     {
@@ -296,14 +301,14 @@ abstract class BaseProduct implements ProductInterface
     public function setChanged($changed)
     {
         $this->changed = $changed;
-    
+
         return $this;
     }
 
     /**
      * Get changed
      *
-     * @return \DateTime 
+     * @return \DateTime
      */
     public function getChanged()
     {
@@ -313,7 +318,7 @@ abstract class BaseProduct implements ProductInterface
     /**
      * Get id
      *
-     * @return integer 
+     * @return integer
      */
     public function getId()
     {
@@ -329,14 +334,14 @@ abstract class BaseProduct implements ProductInterface
     public function setManufacturerCountry(\Sulu\Bundle\ContactBundle\Entity\Country $manufacturerCountry = null)
     {
         $this->manufacturerCountry = $manufacturerCountry;
-    
+
         return $this;
     }
 
     /**
      * Get manufacturerCountry
      *
-     * @return \Sulu\Bundle\ContactBundle\Entity\Country 
+     * @return \Sulu\Bundle\ContactBundle\Entity\Country
      */
     public function getManufacturerCountry()
     {
@@ -352,14 +357,14 @@ abstract class BaseProduct implements ProductInterface
     public function setType(\Sulu\Bundle\ProductBundle\Entity\Type $type)
     {
         $this->type = $type;
-    
+
         return $this;
     }
 
     /**
      * Get type
      *
-     * @return \Sulu\Bundle\ProductBundle\Entity\Type 
+     * @return \Sulu\Bundle\ProductBundle\Entity\Type
      */
     public function getType()
     {
@@ -375,14 +380,14 @@ abstract class BaseProduct implements ProductInterface
     public function setAttributeSet(\Sulu\Bundle\ProductBundle\Entity\AttributeSet $attributeSet)
     {
         $this->attributeSet = $attributeSet;
-    
+
         return $this;
     }
 
     /**
      * Get attributeSet
      *
-     * @return \Sulu\Bundle\ProductBundle\Entity\AttributeSet 
+     * @return \Sulu\Bundle\ProductBundle\Entity\AttributeSet
      */
     public function getAttributeSet()
     {
@@ -398,14 +403,14 @@ abstract class BaseProduct implements ProductInterface
     public function setStatus(\Sulu\Bundle\ProductBundle\Entity\Status $status = null)
     {
         $this->status = $status;
-    
+
         return $this;
     }
 
     /**
      * Get status
      *
-     * @return \Sulu\Bundle\ProductBundle\Entity\Status 
+     * @return \Sulu\Bundle\ProductBundle\Entity\Status
      */
     public function getStatus()
     {
@@ -421,14 +426,14 @@ abstract class BaseProduct implements ProductInterface
     public function setDeliveryStatus(\Sulu\Bundle\ProductBundle\Entity\DeliveryStatus $deliveryStatus = null)
     {
         $this->deliveryStatus = $deliveryStatus;
-    
+
         return $this;
     }
 
     /**
      * Get deliveryStatus
      *
-     * @return \Sulu\Bundle\ProductBundle\Entity\DeliveryStatus 
+     * @return \Sulu\Bundle\ProductBundle\Entity\DeliveryStatus
      */
     public function getDeliveryStatus()
     {
@@ -444,14 +449,14 @@ abstract class BaseProduct implements ProductInterface
     public function setParent(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $parent = null)
     {
         $this->parent = $parent;
-    
+
         return $this;
     }
 
     /**
      * Get parent
      *
-     * @return \Sulu\Bundle\ProductBundle\Entity\ProductInterface 
+     * @return \Sulu\Bundle\ProductBundle\Entity\ProductInterface
      */
     public function getParent()
     {
@@ -467,7 +472,7 @@ abstract class BaseProduct implements ProductInterface
     public function addSet(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $sets)
     {
         $this->sets[] = $sets;
-    
+
         return $this;
     }
 
@@ -484,7 +489,7 @@ abstract class BaseProduct implements ProductInterface
     /**
      * Get sets
      *
-     * @return \Doctrine\Common\Collections\Collection 
+     * @return \Doctrine\Common\Collections\Collection
      */
     public function getSets()
     {
@@ -500,7 +505,7 @@ abstract class BaseProduct implements ProductInterface
     public function addRelation(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $relations)
     {
         $this->relations[] = $relations;
-    
+
         return $this;
     }
 
@@ -517,7 +522,7 @@ abstract class BaseProduct implements ProductInterface
     /**
      * Get relations
      *
-     * @return \Doctrine\Common\Collections\Collection 
+     * @return \Doctrine\Common\Collections\Collection
      */
     public function getRelations()
     {
@@ -533,7 +538,7 @@ abstract class BaseProduct implements ProductInterface
     public function addUpsell(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $upsells)
     {
         $this->upsells[] = $upsells;
-    
+
         return $this;
     }
 
@@ -550,7 +555,7 @@ abstract class BaseProduct implements ProductInterface
     /**
      * Get upsells
      *
-     * @return \Doctrine\Common\Collections\Collection 
+     * @return \Doctrine\Common\Collections\Collection
      */
     public function getUpsells()
     {
@@ -566,7 +571,7 @@ abstract class BaseProduct implements ProductInterface
     public function addCrosssell(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $crosssells)
     {
         $this->crosssells[] = $crosssells;
-    
+
         return $this;
     }
 
@@ -583,7 +588,7 @@ abstract class BaseProduct implements ProductInterface
     /**
      * Get crosssells
      *
-     * @return \Doctrine\Common\Collections\Collection 
+     * @return \Doctrine\Common\Collections\Collection
      */
     public function getCrosssells()
     {
@@ -599,7 +604,7 @@ abstract class BaseProduct implements ProductInterface
     public function setChanger(UserInterface $changer = null)
     {
         $this->changer = $changer;
-    
+
         return $this;
     }
 
@@ -622,7 +627,7 @@ abstract class BaseProduct implements ProductInterface
     public function setCreator(UserInterface $creator = null)
     {
         $this->creator = $creator;
-    
+
         return $this;
     }
 
@@ -634,5 +639,28 @@ abstract class BaseProduct implements ProductInterface
     public function getCreator()
     {
         return $this->creator;
+    }
+
+    /**
+     * Set taxClass
+     *
+     * @param \Sulu\Bundle\ProductBundle\Entity\TaxClass $taxClass
+     * @return BaseProduct
+     */
+    public function setTaxClass(\Sulu\Bundle\ProductBundle\Entity\TaxClass $taxClass = null)
+    {
+        $this->taxClass = $taxClass;
+
+        return $this;
+    }
+
+    /**
+     * Get taxClass
+     *
+     * @return \Sulu\Bundle\ProductBundle\Entity\TaxClass
+     */
+    public function getTaxClass()
+    {
+        return $this->taxClass;
     }
 }

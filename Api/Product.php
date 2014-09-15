@@ -21,6 +21,7 @@ use Sulu\Component\Security\UserInterface;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSet as AttributeSetEntity;
 use Sulu\Bundle\ProductBundle\Entity\Status as StatusEntity;
 use Sulu\Bundle\ProductBundle\Entity\Type as TypeEntity;
+use Sulu\Bundle\ProductBundle\Entity\TaxClass as TaxClassEntity;
 use Hateoas\Configuration\Annotation\Relation;
 
 /**
@@ -296,6 +297,31 @@ class Product extends ApiWrapper
     public function setStatus(StatusEntity $status)
     {
         $this->entity->setStatus($status);
+    }
+
+    /**
+     * Returns the tax class of the product
+     * @return TaxClass The status of the product
+     * @VirtualProperty
+     * @SerializedName("taxClass")
+     */
+    public function getTaxClass()
+    {
+        $taxClass = $this->entity->getTaxClass();
+        if ($taxClass) {
+            return new TaxClass($this->entity->getTaxClass(), $this->locale);
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Sets the tax class of the product
+     * @param TaxClassEntity $taxClass The tax class of the product
+     */
+    public function setTaxClass(TaxClassEntity $taxClass)
+    {
+        $this->entity->setTaxClass($taxClass);
     }
 
     /**

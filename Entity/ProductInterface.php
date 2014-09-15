@@ -193,6 +193,21 @@ interface ProductInterface
     public function getStatus();
 
     /**
+     * Set taxClass
+     *
+     * @param \Sulu\Bundle\ProductBundle\Entity\TaxClass $taxClass
+     * @return BaseProduct
+     */
+    public function setTaxClass(\Sulu\Bundle\ProductBundle\Entity\TaxClass $taxClass = null);
+
+    /**
+     * Get taxClass
+     *
+     * @return \Sulu\Bundle\ProductBundle\Entity\TaxClass
+     */
+    public function getTaxClass();
+
+    /**
      * Add relations
      *
      * @param ProductInterface $relations

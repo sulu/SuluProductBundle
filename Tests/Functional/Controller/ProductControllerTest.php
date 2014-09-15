@@ -19,6 +19,8 @@ use Sulu\Bundle\ProductBundle\Entity\ProductAttribute;
 use Sulu\Bundle\ProductBundle\Entity\ProductTranslation;
 use Sulu\Bundle\ProductBundle\Entity\Status;
 use Sulu\Bundle\ProductBundle\Entity\StatusTranslation;
+use Sulu\Bundle\ProductBundle\Entity\TaxClass;
+use Sulu\Bundle\ProductBundle\Entity\TaxClassTranslation;
 use Sulu\Bundle\ProductBundle\Entity\Type;
 use Sulu\Bundle\ProductBundle\Entity\TypeTranslation;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSet;
@@ -143,6 +145,11 @@ class ProductControllerTest extends DatabaseTestCase
      * @var AttributeTranslation
      */
     private $attributeTranslation2;
+
+    /**
+     * @var TaxClass
+     */
+    private $taxClass1;
 
     public static function setUpBeforeClass()
     {
@@ -298,6 +305,15 @@ class ProductControllerTest extends DatabaseTestCase
         $this->productAttribute2->setValue('EnglishProductAttributeValue-2');
         $this->productAttribute2->setProduct($this->product2);
         $this->productAttribute2->setAttribute($this->attribute2);
+
+        $this->taxClass1 = new TaxClass();
+        $taxClassTranslation1 = new TaxClassTranslation();
+        $taxClassTranslation1->setName('20%');
+        $taxClassTranslation1->setLocale('en');
+        $taxClassTranslation1->setTaxClass($this->taxClass1);
+
+        self::$em->persist($this->taxClass1);
+        self::$em->persist($taxClassTranslation1);
 
         self::$em->persist($this->type1);
         self::$em->persist($this->typeTranslation1);
@@ -495,6 +511,9 @@ class ProductControllerTest extends DatabaseTestCase
                 'type' => array(
                     'id' => $this->type1->getId()
                 ),
+                'taxClass' => array(
+                    'id' => $this->taxClass1->getId()
+                )
             )
         );
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
@@ -506,6 +525,7 @@ class ProductControllerTest extends DatabaseTestCase
         $this->assertEquals('EvilCode', $response->code);
         $this->assertEquals('EvilNumber', $response->number);
         $this->assertEquals('EvilKnievel', $response->manufacturer);
+        $this->assertEquals('20%', $response->taxClass->name);
     }
 
     public function testPutNotExisting()
@@ -632,6 +652,9 @@ class ProductControllerTest extends DatabaseTestCase
             ),
             'attributeSet' => array(
                 'id' => $this->attributeSet1->getId()
+            ),
+            'taxClass' => array(
+                'id' => $this->taxClass1->getId()
             )
         );
 
@@ -662,6 +685,8 @@ class ProductControllerTest extends DatabaseTestCase
 
         $this->assertEquals($this->attributeSet1->getId(), $response->attributeSet->id);
         $this->assertEquals('EnglishTemplate-1', $response->attributeSet->name);
+
+        $this->assertEquals('20%', $response->taxClass->name);
 
         if ($testParent) {
             $this->assertEquals($this->product2->getId(), $response->parent->id);

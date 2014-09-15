@@ -18,6 +18,7 @@ use Sulu\Bundle\ProductBundle\Entity\AttributeSetRepository;
 use Sulu\Bundle\ProductBundle\Entity\Product as ProductEntity;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSet;
 use Sulu\Bundle\ProductBundle\Entity\StatusRepository;
+use Sulu\Bundle\ProductBundle\Entity\TaxClassRepository;
 use Sulu\Bundle\ProductBundle\Entity\Type;
 use Sulu\Bundle\ProductBundle\Entity\TypeRepository;
 use Sulu\Bundle\ProductBundle\Product\Exception\MissingProductAttributeException;
@@ -37,6 +38,7 @@ class ProductManager implements ProductManagerInterface
     protected static $productStatusTranslationEntityName = 'SuluProductBundle:StatusTranslation';
     protected static $attributeSetEntityName = 'SuluProductBundle:AttributeSet';
     protected static $productTranslationEntityName = 'SuluProductBundle:ProductTranslation';
+    protected static $productTaxClassEntityName = 'SuluProductBundle:TaxClass';
 
     /**
      * @var ProductRepositoryInterface
@@ -59,6 +61,11 @@ class ProductManager implements ProductManagerInterface
     private $typeRepository;
 
     /**
+     * @var TaxClassRepository
+     */
+    private $taxClassRepository;
+
+    /**
      * @var UserRepositoryInterface
      */
     private $userRepository;
@@ -73,6 +80,7 @@ class ProductManager implements ProductManagerInterface
         AttributeSetRepository $attributeSetRepository,
         StatusRepository $statusRepository,
         TypeRepository $typeRepository,
+        TaxClassRepository $taxClassRepository,
         UserRepositoryInterface $userRepository,
         ObjectManager $em
     ) {
@@ -80,6 +88,7 @@ class ProductManager implements ProductManagerInterface
         $this->attributeSetRepository = $attributeSetRepository;
         $this->statusRepository = $statusRepository;
         $this->typeRepository = $typeRepository;
+        $this->taxClassRepository = $taxClassRepository;
         $this->userRepository = $userRepository;
         $this->em = $em;
     }
@@ -331,6 +340,16 @@ class ProductManager implements ProductManagerInterface
                 throw new ProductDependencyNotFoundException(self::$productTypeEntityName, $typeId);
             }
             $product->setType($type);
+        }
+
+        if (array_key_exists('taxClass', $data) && array_key_exists('id', $data['taxClass'])) {
+            $taxClassId = $data['taxClass']['id'];
+            /** @var TaxClass $taxClass */
+            $taxClass = $this->taxClassRepository->find($taxClassId);
+            if (!$taxClass) {
+                throw new ProductDependencyNotFoundException(self::$productTaxClassEntityName, $taxClassId);
+            }
+            $product->setTaxClass($taxClass);
         }
 
         $product->setChanged(new DateTime());

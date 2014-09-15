@@ -69,4 +69,42 @@ class TaxClass
     {
         return $this->translations;
     }
+    /**
+     * @var \Doctrine\Common\Collections\Collection
+     */
+    private $products;
+
+
+    /**
+     * Add products
+     *
+     * @param \Sulu\Bundle\ProductBundle\Entity\Product $products
+     * @return TaxClass
+     */
+    public function addProduct(\Sulu\Bundle\ProductBundle\Entity\Product $products)
+    {
+        $this->products[] = $products;
+    
+        return $this;
+    }
+
+    /**
+     * Remove products
+     *
+     * @param \Sulu\Bundle\ProductBundle\Entity\Product $products
+     */
+    public function removeProduct(\Sulu\Bundle\ProductBundle\Entity\Product $products)
+    {
+        $this->products->removeElement($products);
+    }
+
+    /**
+     * Get products
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getProducts()
+    {
+        return $this->products;
+    }
 }
