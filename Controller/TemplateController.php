@@ -3,6 +3,7 @@
 namespace Sulu\Bundle\ProductBundle\Controller;
 
 use Sulu\Bundle\ProductBundle\Api\Status;
+use Sulu\Bundle\ProductBundle\Entity\TaxClass;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 
 class TemplateController extends Controller
@@ -56,6 +57,20 @@ class TemplateController extends Controller
      */
     public function productPricingAction()
     {
-        return $this->render('SuluProductBundle:Template:product.pricing.html.twig');
+        /** @var TaxClass[] $taxClasses */
+        $taxClasses = $this->get('sulu_product.tax_class_manager')->findAll('en');
+
+        $taxClassTitles = array();
+        foreach ($taxClasses as $taxClass) {
+            $taxClassTitles[] = array(
+                'id' => $taxClass->getId(),
+                'name' => $taxClass->getName()
+            );
+        }
+
+        return $this->render(
+            'SuluProductBundle:Template:product.pricing.html.twig',
+            array('taxClasses' => $taxClassTitles)
+        );
     }
 }

@@ -8,8 +8,10 @@
         <parameter key="sulu_product.attribute_set_repository.class">Sulu\Bundle\ProductBundle\Entity\AttributeSetRepository</parameter>
         <parameter key="sulu_product.status_repository.class">Sulu\Bundle\ProductBundle\Entity\StatusRepository</parameter>
         <parameter key="sulu_product.type_repository.class">Sulu\Bundle\ProductBundle\Entity\TypeRepository</parameter>
+        <parameter key="sulu_product.tax_class_repository.class">Sulu\Bundle\ProductBundle\Entity\TaxClassRepository</parameter>
         <parameter key="sulu_product.product_manager.class">Sulu\Bundle\ProductBundle\Product\ProductManager</parameter>
         <parameter key="sulu_product.status_manager.class">Sulu\Bundle\ProductBundle\Product\StatusManager</parameter>
+        <parameter key="sulu_product.tax_class_manager.class">Sulu\Bundle\ProductBundle\Product\TaxClassManager</parameter>
         <parameter key="sulu_product.productwebsite.controller.class">Sulu\Bundle\ProductBundle\Controller\ProductWebsiteController</parameter>
     </parameters>
     <services>
@@ -33,6 +35,10 @@
                  factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
             <argument>SuluProductBundle:Type</argument>
         </service>
+        <service id="sulu_product.tax_class_repository" class="%sulu_product.tax_class_repository.class%"
+                 factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
+            <argument>SuluProductBundle:TaxClass</argument>
+        </service>
         <service id="sulu_product.product_manager" class="%sulu_product.product_manager.class%">
             <argument type="service" id="sulu_product.product_repository"/>
             <argument type="service" id="sulu_product.attribute_set_repository"/>
@@ -50,6 +56,9 @@
         </service>
         <service id="sulu_product.status_manager" class="%sulu_product.status_manager.class%">
             <argument type="service" id="sulu_product.status_repository"/>
+        </service>
+        <service id="sulu_product.tax_class_manager" class="%sulu_product.tax_class_manager.class%">
+            <argument type="service" id="sulu_product.tax_class_repository"/>
         </service>
         <service id="sulu_product.admin.content_navigation" class="%sulu_product.admin.content_navigation.class%"/>
     </services>

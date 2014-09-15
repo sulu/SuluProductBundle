@@ -9,20 +9,19 @@
                        data-validation-max-length="255" data-mapper-property="priceInfo"/>
             </div>
         </div>
-        {#
         <div class="grid-col-6">
             <div class="form-group">
-                <label for="status" class="required"><%=translate('product.status')%></label>
+                <label for="status" class="required"><%=translate('product.tax-class')%></label>
 
-                <div id="status"
+                <div id="tax-class"
                      data-aura-component="select@husky"
-                     data-aura-data="{{ status|json_encode() }}"
-                     data-aura-default-label="<%=translate('product.status')%>"
+                     data-aura-data="{{ taxClasses|json_encode() }}"
+                     data-aura-default-label="<%=translate('public.please-choose')%>"
                      data-aura-multiple-select="false"
-                     data-aura-instance-name="status"
-                     data-type-label="status"
-                     data-type-required="status"
-                     data-mapper-property="status"
+                     data-aura-instance-name="tax-class"
+                     data-type-label="tax-class"
+                     data-type-required="tax-class"
+                     data-mapper-property="taxClass"
                      data-type="husky-select"
                      data-validation-required="true"
                      data-aura-pre-selected-elements="[]"
@@ -30,6 +29,5 @@
                 </div>
             </div>
         </div>
-        #}
     </div>
 </form>

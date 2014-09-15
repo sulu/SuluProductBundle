@@ -62,6 +62,10 @@
                 <source>content-navigation.product.pricing</source>
                 <target>Preise</target>
             </trans-unit>
+            <trans-unit id="16" resname="product.tax-class">
+                <source>product.tax-class</source>
+                <target>Steuerklasse</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>
