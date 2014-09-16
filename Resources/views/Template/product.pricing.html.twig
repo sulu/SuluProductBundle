@@ -1,6 +1,7 @@
 <form class="form-horizontal" id="product-pricing-form">
     <input type="hidden" id="id" data-mapper-property="id"/>
     <input type="hidden" id="type" data-mapper-property="type" data-type="attributes"/>
+
     <div class="grid-row small">
         <div class="grid-col-6">
             <div class="form-group">
@@ -28,6 +29,18 @@
                      data-form="true">
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="grid-row small">
+        <div id="price-list"
+             data-aura-component="datagrid@husky"
+             data-aura-data='{ "items": true, "embedded": {{ prices|json_encode() }} }'
+             data-aura-items="true"
+             data-aura-matchings='[
+                {"content": "Currency", "name": "currency"},
+                {"content": "Price", "name": "price"}
+             ]'>
         </div>
     </div>
 </form>
