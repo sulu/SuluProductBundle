@@ -37,6 +37,7 @@
              data-aura-component="datagrid@husky"
              data-aura-data='{ "items": true, "embedded": {{ prices|json_encode() }} }'
              data-aura-items="true"
+             data-aura-view-options='{ "table": { "selectItem": false } }'
              data-aura-matchings='[
                 {"content": "Currency", "name": "currency"},
                 {"content": "Price", "name": "price"}
