@@ -35,12 +35,13 @@
     <div class="grid-row small">
         <div id="price-list"
              data-aura-component="datagrid@husky"
+             data-aura-instance-name="pricing"
              data-aura-data='{ "items": true, "embedded": {{ prices|json_encode() }} }'
              data-aura-items="true"
-             data-aura-view-options='{ "table": { "selectItem": false } }'
+             data-aura-view-options='{ "table": { "selectItem": false, "editable": true } }'
              data-aura-matchings='[
-                {"content": "Currency", "name": "currency"},
-                {"content": "Price", "name": "price"}
+                {"content": "<%=translate("product.currency")%>", "name": "currency"},
+                {"content": "<%=translate("product.price")%>", "name": "price", "editable": true}
              ]'>
         </div>
     </div>

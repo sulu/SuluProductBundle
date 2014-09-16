@@ -66,6 +66,14 @@
                 <source>product.tax-class</source>
                 <target>Tax class</target>
             </trans-unit>
+            <trans-unit id="17" resname="product.currency">
+                <source>product.currency</source>
+                <target>Currency</target>
+            </trans-unit>
+            <trans-unit id="18" resname="product.price">
+                <source>product.price</source>
+                <target>Price</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>
