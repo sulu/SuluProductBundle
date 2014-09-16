@@ -1,10 +1,16 @@
 <?php
 
-use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Config\Loader\LoaderInterface;
+use Sulu\Component\HttpKernel\SuluKernel;
 
-class AppKernel extends Kernel
+class AppKernel extends SuluKernel
 {
+    public function __construct($environment, $debug)
+    {
+        parent::__construct($environment, $debug);
+        $this->setContext(SuluKernel::CONTEXT_ADMIN);
+    }
+
     public function registerBundles()
     {
         $bundles = array(
