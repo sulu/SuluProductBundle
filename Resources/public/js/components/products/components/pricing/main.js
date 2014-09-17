@@ -39,6 +39,8 @@ define([], function () {
             if (this.sandbox.form.validate(formSelector)) {
                 var data = this.sandbox.form.getData(formSelector);
 
+
+
                 this.sandbox.emit('sulu.products.save', data);
             }
         },

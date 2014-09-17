@@ -15,7 +15,7 @@ class ProductPrice
     private $minimumQuantity;
 
     /**
-     * @var string
+     * @var double
      */
     private $price;
 
@@ -61,7 +61,7 @@ class ProductPrice
     /**
      * Set price
      *
-     * @param string $price
+     * @param double $price
      * @return ProductPrice
      */
     public function setPrice($price)
@@ -74,7 +74,7 @@ class ProductPrice
     /**
      * Get price
      *
-     * @return string 
+     * @return double
      */
     public function getPrice()
     {

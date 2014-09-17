@@ -12,10 +12,12 @@ namespace Sulu\Bundle\ProductBundle\Tests\Functional\Controller;
 
 use DateTime;
 use Doctrine\ORM\Tools\SchemaTool;
+use Sulu\Bundle\ProductBundle\Entity\Currency;
 use Sulu\Bundle\ProductBundle\Entity\Product;
 use Sulu\Bundle\ProductBundle\Entity\Attribute;
 use Sulu\Bundle\ProductBundle\Entity\AttributeTranslation;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttribute;
+use Sulu\Bundle\ProductBundle\Entity\ProductPrice;
 use Sulu\Bundle\ProductBundle\Entity\ProductTranslation;
 use Sulu\Bundle\ProductBundle\Entity\Status;
 use Sulu\Bundle\ProductBundle\Entity\StatusTranslation;
@@ -151,6 +153,16 @@ class ProductControllerTest extends DatabaseTestCase
      */
     private $taxClass1;
 
+    /**
+     * @var Currency
+     */
+    private $currency1;
+
+    /**
+     * @var Currency
+     */
+    private $currency2;
+
     public static function setUpBeforeClass()
     {
         parent::setUpBeforeClass();
@@ -189,6 +201,12 @@ class ProductControllerTest extends DatabaseTestCase
 
     private function setUpTestData()
     {
+        $this->currency1 = new Currency();
+        $this->currency1->setCurrency('EUR');
+
+        $this->currency2 = new Currency();
+        $this->currency2->setCurrency('USD');
+
         // Product 1
         // product type
         $this->type1 = new Type();
@@ -234,6 +252,16 @@ class ProductControllerTest extends DatabaseTestCase
         $this->product1->setAttributeSet($this->attributeSet1);
         $this->product1->setCreated(new DateTime());
         $this->product1->setChanged(new DateTime());
+
+        $productPrice1 = new ProductPrice();
+        $productPrice1->setCurrency($this->currency1);
+        $productPrice1->setPrice(14.99);
+        $this->product1->addPrice($productPrice1);
+
+        $productPrice2 = new ProductPrice();
+        $productPrice2->setCurrency($this->currency2);
+        $productPrice2->setPrice(9.99);
+        $this->product1->addPrice($productPrice2);
 
         $productTranslation1 = new ProductTranslation();
         $productTranslation1->setProduct($this->product1);
@@ -314,6 +342,9 @@ class ProductControllerTest extends DatabaseTestCase
 
         self::$em->persist($this->taxClass1);
         self::$em->persist($taxClassTranslation1);
+
+        self::$em->persist($this->currency1);
+        self::$em->persist($this->currency2);
 
         self::$em->persist($this->type1);
         self::$em->persist($this->typeTranslation1);
@@ -407,6 +438,26 @@ class ProductControllerTest extends DatabaseTestCase
         $this->assertEquals('EnglishProductType-1', $response->type->name);
         $this->assertEquals($this->productStatus1->getId(), $response->status->id);
         $this->assertEquals('EnglishProductStatus-1', $response->status->name);
+        $this->assertContains(
+            array(
+                'price' => 14.99,
+                'currency' => array(
+                    'id' => 1,
+                    'name' => 'EUR'
+                )
+            ),
+            $response->prices
+        );
+        $this->assertContains(
+            array(
+                'price' => 9.99,
+                'currency' => array(
+                    'id' => 2,
+                    'name' => 'USD'
+                )
+            ),
+            $response->prices
+        );
     }
 
     public function testGetAll()
