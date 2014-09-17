@@ -43,18 +43,24 @@
                 </th>
             </tr>
         </thead>
-        <tbody>
-            {% for currency in currencies %}
-            <tr class="row">
-                <td><span class="cell-content">{{ currency }}</span></td>
-                <td>
-                    <div class="input-wrapper" style="display: block">
-                        <input id="price-{{ currency }}" type="text" data-type="decimal"
-                               class="form-element husky-validate editable-input"/>
-                    </div>
-                </td>
-            </tr>
-            {% endfor %}
+        <tbody data-mapper-property='[{"data":"prices", "tpl":"price-tpl"}]'
+               data-type="collection">
+            <script type="text/template" id="price-tpl">
+                <tr class="row">
+                    <td>
+                        <span class="cell-content" data-type="label" data-type-label="name"
+                              data-mapper-property="currency">
+                        </span>
+                    </td>
+                    <td>
+                        <div class="input-wrapper" style="display: block">
+                            <input type="text" data-type="decimal" value="<~=price~>"
+                                   class="form-element husky-validate editable-input"
+                                   data-mapper-property="price"/>
+                        </div>
+                    </td>
+                </tr>
+            </script>
         </tbody>
     </table>
 </form>
