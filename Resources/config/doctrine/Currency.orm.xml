@@ -7,6 +7,6 @@
             <generator strategy="AUTO"/>
         </id>
 
-        <field name="currency" type="string" length="255" nullable="false"/>
+        <field name="name" type="string" length="255" nullable="false"/>
     </entity>
 </doctrine-mapping>

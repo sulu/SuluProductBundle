@@ -202,10 +202,10 @@ class ProductControllerTest extends DatabaseTestCase
     private function setUpTestData()
     {
         $this->currency1 = new Currency();
-        $this->currency1->setCurrency('EUR');
+        $this->currency1->setName('EUR');
 
         $this->currency2 = new Currency();
-        $this->currency2->setCurrency('USD');
+        $this->currency2->setName('USD');
 
         // Product 1
         // product type

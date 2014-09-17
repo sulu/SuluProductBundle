@@ -12,7 +12,7 @@ class Currency
     /**
      * @var string
      */
-    private $currency;
+    private $name;
 
     /**
      * @var integer
@@ -26,9 +26,9 @@ class Currency
      * @param string $currency
      * @return Currency
      */
-    public function setCurrency($currency)
+    public function setName($currency)
     {
-        $this->currency = $currency;
+        $this->name = $currency;
     
         return $this;
     }
@@ -38,9 +38,9 @@ class Currency
      *
      * @return string 
      */
-    public function getCurrency()
+    public function getName()
     {
-        return $this->currency;
+        return $this->name;
     }
 
     /**
