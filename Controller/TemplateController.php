@@ -68,11 +68,11 @@ class TemplateController extends Controller
             );
         }
 
-        $prices = array(array('currency' => 'EUR'));
+        $currencies = array('EUR');
 
         return $this->render(
             'SuluProductBundle:Template:product.pricing.html.twig',
-            array('taxClasses' => $taxClassTitles, 'prices' => $prices)
+            array('taxClasses' => $taxClassTitles, 'currencies' => $currencies)
         );
     }
 }

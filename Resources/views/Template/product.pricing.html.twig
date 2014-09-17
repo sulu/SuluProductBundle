@@ -32,17 +32,29 @@
         </div>
     </div>
 
-    <div class="grid-row small">
-        <div id="price-list"
-             data-aura-component="datagrid@husky"
-             data-aura-instance-name="pricing"
-             data-aura-data='{ "items": true, "embedded": {{ prices|json_encode() }} }'
-             data-aura-items="true"
-             data-aura-view-options='{ "table": { "selectItem": false, "editable": true } }'
-             data-aura-matchings='[
-                {"content": "<%=translate("product.currency")%>", "name": "currency"},
-                {"content": "<%=translate("product.price")%>", "name": "price", "editable": true}
-             ]'>
-        </div>
-    </div>
+    <table class="table">
+        <thead>
+            <tr class="row">
+                <th class="header-cell">
+                    <span class="cell-content"><%=translate('product.currency')%></span>
+                </th>
+                <th class="header-cell">
+                    <span class="cell-content"><%=translate('product.price')%></span>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for currency in currencies %}
+            <tr class="row">
+                <td><span class="cell-content">{{ currency }}</span></td>
+                <td>
+                    <div class="input-wrapper" style="display: block">
+                        <input id="price-{{ currency }}" type="text"
+                               class="form-element huskay-validate editable-input"/>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </form>
