@@ -13,31 +13,52 @@ namespace Sulu\Bundle\ProductBundle\Controller;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
+/**
+ * Responsible for creating the tab navigations
+ * @package Sulu\Bundle\ProductBundle\Controller
+ */
 class NavigationController extends Controller
 {
     const SERVICE_NAME = 'sulu_product.admin.content_navigation';
 
+    /**
+     * Returns the tabs for simple products
+     * @return JsonResponse
+     */
     public function productAction()
     {
         return $this->getJsonResponse('product');
     }
 
+    /**
+     * Returns the tabs for products with variants
+     * @return JsonResponse
+     */
     public function productWithVariantsAction()
     {
         return $this->getJsonResponse('product-with-variants');
     }
 
+    /**
+     * Returns the tabs for product addons
+     * @return JsonResponse
+     */
     public function productAddonAction()
     {
         return $this->getJsonResponse('product-addon');
     }
 
+    /**
+     * Returns the tabs for product sets
+     * @return JsonResponse
+     */
     public function productSetAction()
     {
         return $this->getJsonResponse('product-set');
     }
 
     /**
+     * Creates the json response for the tabs for the given groups
      * @param $group
      * @return JsonResponse
      */

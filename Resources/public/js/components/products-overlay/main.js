@@ -38,7 +38,6 @@ define([], function () {
         },
 
         /**
-         *
          * @event sulu.product.products-overlay.open
          * @description Opens the overlay
          */
