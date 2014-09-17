@@ -1,0 +1,1 @@
+define(["mvc/collection","suluproduct/models/product"],function(a,b){"use strict";return new a({model:b,productId:null,setProductId:function(a){this.productId=a},parse:function(a){return a._embedded?a._embedded.products:a},url:function(){return"/admin/api/products/"+this.productId+"/variants"}})});
