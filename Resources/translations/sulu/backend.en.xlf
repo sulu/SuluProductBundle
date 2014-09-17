@@ -58,6 +58,22 @@
                 <source>content-navigation.product.variants</source>
                 <target>Variants</target>
             </trans-unit>
+            <trans-unit id="19" resname="products.add-product">
+                <source>products.add-product</source>
+                <target>Create new product</target>
+            </trans-unit>
+            <trans-unit id="20" resname="products.add-product-with-variants">
+                <source>products.add-product-with-variants</source>
+                <target>Create new product with variants</target>
+            </trans-unit>
+            <trans-unit id="21" resname="products.add-product-addon">
+                <source>products.add-product-addon</source>
+                <target>Create new product addon</target>
+            </trans-unit>
+            <trans-unit id="22" resname="products.add-product-set">
+                <source>products.add-product-set</source>
+                <target>Create new product set</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>
