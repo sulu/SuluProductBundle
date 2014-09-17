@@ -3,7 +3,7 @@
 namespace Sulu\Bundle\ProductBundle\Controller;
 
 use Sulu\Bundle\ProductBundle\Api\Status;
-use Sulu\Bundle\ProductBundle\Entity\TaxClass;
+use Sulu\Bundle\ProductBundle\Api\TaxClass;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 
 class TemplateController extends Controller
@@ -68,6 +68,7 @@ class TemplateController extends Controller
             );
         }
 
+        // TODO load currencies correctly
         $currencies = array('EUR');
 
         return $this->render(
