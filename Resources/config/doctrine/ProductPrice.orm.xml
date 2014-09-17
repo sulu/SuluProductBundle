@@ -14,5 +14,8 @@
                      field="product" inversed-by="prices">
             <join-column name="idProducts" referenced-column-name="id"/>
         </many-to-one>
+        <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\ProductPrice" field="currency">
+            <join-column name="idCurrencies" referenced-column-name="id"/>
+        </many-to-one>
     </entity>
 </doctrine-mapping>

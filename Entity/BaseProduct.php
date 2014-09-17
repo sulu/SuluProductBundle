@@ -33,11 +33,6 @@ abstract class BaseProduct implements ProductInterface
     /**
      * @var string
      */
-    private $price;
-
-    /**
-     * @var string
-     */
     private $priceInfo;
 
     /**
@@ -221,29 +216,6 @@ abstract class BaseProduct implements ProductInterface
     public function getCost()
     {
         return $this->cost;
-    }
-
-    /**
-     * Set price
-     *
-     * @param string $price
-     * @return BaseProduct
-     */
-    public function setPrice($price)
-    {
-        $this->price = $price;
-
-        return $this;
-    }
-
-    /**
-     * Get price
-     *
-     * @return string
-     */
-    public function getPrice()
-    {
-        return $this->price;
     }
 
     /**

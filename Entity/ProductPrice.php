@@ -136,4 +136,32 @@ class ProductPrice
     {
         return $this->product;
     }
+    /**
+     * @var \Sulu\Bundle\ProductBundle\Entity\ProductPrice
+     */
+    private $currency;
+
+
+    /**
+     * Set currency
+     *
+     * @param \Sulu\Bundle\ProductBundle\Entity\ProductPrice $currency
+     * @return ProductPrice
+     */
+    public function setCurrency(\Sulu\Bundle\ProductBundle\Entity\ProductPrice $currency = null)
+    {
+        $this->currency = $currency;
+    
+        return $this;
+    }
+
+    /**
+     * Get currency
+     *
+     * @return \Sulu\Bundle\ProductBundle\Entity\ProductPrice 
+     */
+    public function getCurrency()
+    {
+        return $this->currency;
+    }
 }

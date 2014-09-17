@@ -11,7 +11,6 @@
         <field name="number" type="string" length="255" nullable="false"/>
         <field name="manufacturer" type="string" length="255" nullable="true"/>
         <field name="cost" type="decimal" precision="15" scale="2" nullable="true"/>
-        <field name="price" type="decimal" precision="15" scale="2" nullable="true"/>
         <field name="priceInfo" type="text" nullable="true"/>
         <field name="created" type="datetime" nullable="true"/>
         <field name="changed" type="datetime" nullable="true"/>

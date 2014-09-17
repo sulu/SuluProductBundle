@@ -39,18 +39,7 @@ define([], function () {
             if (this.sandbox.form.validate(formSelector)) {
                 var data = this.sandbox.form.getData(formSelector);
 
-                // add price from datagrid
-                data.prices = [];
-
-                this.sandbox.once('husky.datagrid.pricing.data.provide', function (priceData) {
-                    this.sandbox.util.each(priceData.embedded, function (key, price) {
-                        console.log(price);
-                    });
-
-                    this.sandbox.emit('sulu.products.save', data);
-                }, this);
-
-                this.sandbox.emit('husky.datagrid.pricing.data.get');
+                this.sandbox.emit('sulu.products.save', data);
             }
         },
 

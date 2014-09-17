@@ -161,15 +161,6 @@ class ProductManager implements ProductManagerInterface
             true
         );
 
-        $fieldDescriptors['price'] = new DoctrineFieldDescriptor(
-            'price',
-            'price',
-            self::$productEntityName,
-            'product.price',
-            array(),
-            true
-        );
-
         $fieldDescriptors['priceInfo'] = new DoctrineFieldDescriptor(
             'priceInfo', 'priceInfo', self::$productEntityName, 'product.price-info', array(), true
         );
