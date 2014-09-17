@@ -35,7 +35,8 @@ class Product extends ApiWrapper
      * @param Entity $product The product to wrap
      * @param string $locale The locale of this product
      */
-    public function __construct(Entity $product, $locale) {
+    public function __construct(Entity $product, $locale)
+    {
         $this->entity = $product;
         $this->locale = $locale;
     }
@@ -350,6 +351,24 @@ class Product extends ApiWrapper
     }
 
     /**
+     * Returns the prices for the product
+     * @return \Sulu\Bundle\ProductBundle\Entity\ProductPrice[]
+     * @VirtualProperty
+     * @SerializedName("prices")
+     */
+    public function getPrices()
+    {
+        $priceEntities = $this->entity->getPrices();
+
+        $prices = array();
+        foreach ($priceEntities as $priceEntity) {
+            $prices[] = new ProductPrice($priceEntity, $this->locale);
+        }
+
+        return $prices;
+    }
+
+    /**
      * Sets the changer of the product
      * @param UserInterface $user The changer of the product
      */
@@ -395,6 +414,7 @@ class Product extends ApiWrapper
 
             $this->entity->addTranslation($productTranslation);
         }
+
         return $productTranslation;
     }
 }

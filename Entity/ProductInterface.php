@@ -341,6 +341,13 @@ interface ProductInterface
     public function getChildren();
 
     /**
+     * Get prices
+     *
+     * @return ProductPrice[]
+     */
+    public function getPrices();
+
+    /**
      * Add attributes
      *
      * @param ProductAttribute $productAttributes

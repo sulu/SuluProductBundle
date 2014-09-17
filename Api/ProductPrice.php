@@ -1,6 +1,6 @@
 <?php
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of the Sulu CMF.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -10,12 +10,12 @@
 
 namespace Sulu\Bundle\ProductBundle\Api;
 
-use Sulu\Bundle\ProductBundle\Entity\Currency as Entity;
+use Sulu\Component\Rest\ApiWrapper;
+use Sulu\Bundle\ProductBundle\Entity\ProductPrice as Entity;
 use JMS\Serializer\Annotation\VirtualProperty;
 use JMS\Serializer\Annotation\SerializedName;
-use Sulu\Component\Rest\ApiWrapper;
 
-class Currency extends ApiWrapper
+class ProductPrice extends ApiWrapper
 {
     /**
      * @param Entity $type
@@ -28,8 +28,8 @@ class Currency extends ApiWrapper
     }
 
     /**
-     * The id of the currency
-     * @return int The id of the currency
+     * Returns the ID of the ProductPrice
+     * @return int
      * @VirtualProperty
      * @SerializedName("id")
      */
@@ -39,13 +39,24 @@ class Currency extends ApiWrapper
     }
 
     /**
-     * The name of the currency
-     * @return int The name of the currency
+     * Returns the price
+     * @return float
      * @VirtualProperty
-     * @SerializedName("name")
+     * @SerializedName("price")
      */
-    public function getName()
+    public function getPrice()
     {
-        return $this->entity->getName();
+        return $this->entity->getPrice();
     }
-}
+
+    /**
+     * Returns the currency
+     * @return Currency
+     * @VirtualProperty
+     * @SerializedName("currency")
+     */
+    public function getCurrency()
+    {
+        return new Currency($this->entity->getCurrency(), $this->locale);
+    }
+} 

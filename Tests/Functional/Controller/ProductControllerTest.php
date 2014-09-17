@@ -256,11 +256,13 @@ class ProductControllerTest extends DatabaseTestCase
         $productPrice1 = new ProductPrice();
         $productPrice1->setCurrency($this->currency1);
         $productPrice1->setPrice(14.99);
+        $productPrice1->setProduct($this->product1);
         $this->product1->addPrice($productPrice1);
 
         $productPrice2 = new ProductPrice();
         $productPrice2->setCurrency($this->currency2);
         $productPrice2->setPrice(9.99);
+        $productPrice2->setProduct($this->product1);
         $this->product1->addPrice($productPrice2);
 
         $productTranslation1 = new ProductTranslation();
@@ -346,6 +348,8 @@ class ProductControllerTest extends DatabaseTestCase
         self::$em->persist($this->currency1);
         self::$em->persist($this->currency2);
 
+        self::$em->persist($productPrice1);
+        self::$em->persist($productPrice2);
         self::$em->persist($this->type1);
         self::$em->persist($this->typeTranslation1);
         self::$em->persist($this->attributeSet1);
@@ -385,6 +389,7 @@ class ProductControllerTest extends DatabaseTestCase
             self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\TypeTranslation'),
             self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\TaxClass'),
             self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\TaxClassTranslation'),
+            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Currency'),
             self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Status'),
             self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\StatusTranslation'),
             self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\AttributeSet'),
@@ -428,35 +433,37 @@ class ProductControllerTest extends DatabaseTestCase
     public function testGetById()
     {
         $this->client->request('GET', '/api/products/1');
-        $response = json_decode($this->client->getResponse()->getContent());
+        $response = json_decode($this->client->getResponse()->getContent(), true);
 
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
-        $this->assertEquals('EnglishProductCode-1', $response->code);
-        $this->assertEquals('ProductNumber-1', $response->number);
-        $this->assertEquals('EnglishManufacturer-1', $response->manufacturer);
-        $this->assertEquals($this->type1->getId(), $response->type->id);
-        $this->assertEquals('EnglishProductType-1', $response->type->name);
-        $this->assertEquals($this->productStatus1->getId(), $response->status->id);
-        $this->assertEquals('EnglishProductStatus-1', $response->status->name);
+        $this->assertEquals('EnglishProductCode-1', $response['code']);
+        $this->assertEquals('ProductNumber-1', $response['number']);
+        $this->assertEquals('EnglishManufacturer-1', $response['manufacturer']);
+        $this->assertEquals($this->type1->getId(), $response['type']['id']);
+        $this->assertEquals('EnglishProductType-1', $response['type']['name']);
+        $this->assertEquals($this->productStatus1->getId(), $response['status']['id']);
+        $this->assertEquals('EnglishProductStatus-1', $response['status']['name']);
         $this->assertContains(
             array(
+                'id' => 1,
                 'price' => 14.99,
                 'currency' => array(
                     'id' => 1,
                     'name' => 'EUR'
                 )
             ),
-            $response->prices
+            $response['prices']
         );
         $this->assertContains(
             array(
+                'id' => 2,
                 'price' => 9.99,
                 'currency' => array(
                     'id' => 2,
                     'name' => 'USD'
                 )
             ),
-            $response->prices
+            $response['prices']
         );
     }
 
