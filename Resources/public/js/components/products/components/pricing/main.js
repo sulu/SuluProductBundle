@@ -51,6 +51,13 @@ define([], function () {
             var formObject = this.sandbox.form.create(formSelector);
             formObject.initialized.then(function () {
                 setFormData.call(this, data);
+                this.sandbox.form.addCollectionFilter(formSelector, 'prices', function (price) {
+                    if (price.id === "") {
+                        delete price.id;
+                    }
+                    
+                    return price.price !== "";
+                });
             }.bind(this));
         },
 

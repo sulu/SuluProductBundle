@@ -46,9 +46,10 @@
         <tbody data-mapper-property='[{"data":"prices", "tpl":"price-tpl"}]'
                data-type="collection">
             <script type="text/template" id="price-tpl">
+                <~ var price = price ? price : '', id = id ? id : null; ~>
                 <tr class="row">
                     <td>
-                        <input type="hidden" data-mapper-property="id" value="<~=id~>"/>
+                        <input type="hidden" data-mapper-property="id" data-type="decimal" value="<~=id~>"/>
                         <span class="cell-content" data-type="label" data-type-label="name"
                               data-mapper-property="currency">
                         </span>

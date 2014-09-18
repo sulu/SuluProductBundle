@@ -102,6 +102,12 @@ class ProductRepository extends EntityRepository implements ProductRepositoryInt
     private function getProductQuery($locale)
     {
         $qb = $this->createQueryBuilder('product')
+            ->addSelect('prices')
+            ->addSelect('parent')
+            ->addSelect('translations')
+            ->addSelect('status')
+            ->addSelect('type')
+            ->addSelect('currency')
             ->leftJoin('product.parent', 'parent')
             ->leftJoin('product.translations', 'translations', 'WITH', 'translations.locale = :locale')
             ->leftJoin('product.status', 'status')

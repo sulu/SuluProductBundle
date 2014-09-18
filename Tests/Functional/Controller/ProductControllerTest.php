@@ -212,6 +212,9 @@ class ProductControllerTest extends DatabaseTestCase
         $this->currency2 = new Currency();
         $this->currency2->setName('USD');
 
+        $this->currency3 = new Currency();
+        $this->currency3->setName('GBP');
+
         // Product 1
         // product type
         $this->type1 = new Type();
@@ -352,6 +355,7 @@ class ProductControllerTest extends DatabaseTestCase
 
         self::$em->persist($this->currency1);
         self::$em->persist($this->currency2);
+        self::$em->persist($this->currency3);
 
         self::$em->persist($productPrice1);
         self::$em->persist($productPrice2);
@@ -472,14 +476,12 @@ class ProductControllerTest extends DatabaseTestCase
         );
         $this->assertContains(
             array(
-                'id' => null,
-                'price' => null,
                 'currency' => array(
                     'id' => 3,
                     'name' => 'GBP'
                 )
             ),
-            $response['price']
+            $response['prices']
         );
     }
 
@@ -600,15 +602,6 @@ class ProductControllerTest extends DatabaseTestCase
                         )
                     ),
                     array(
-                        'id' => null,
-                        'price' => null,
-                        'currency' => array(
-                            'id' => 2,
-                            'name' => 'USD'
-                        )
-                    ),
-                    array(
-                        'id' => 3,
                         'price' => 12.99,
                         'currency' => array(
                             'id' => 3,
@@ -632,7 +625,7 @@ class ProductControllerTest extends DatabaseTestCase
         $this->assertContains(
             array(
                 'id' => 1,
-                'price' => 14.99,
+                'price' => 17.99,
                 'currency' => array(
                     'id' => 1,
                     'name' => 'EUR'
@@ -642,7 +635,16 @@ class ProductControllerTest extends DatabaseTestCase
         );
         $this->assertContains(
             array(
-                'id' => 2,
+                'currency' => array(
+                    'id' => 2,
+                    'name' => 'USD'
+                )
+            ),
+            $response['prices']
+        );
+        $this->assertContains(
+            array(
+                'id' => 3,
                 'price' => 12.99,
                 'currency' => array(
                     'id' => 3,

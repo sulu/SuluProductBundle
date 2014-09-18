@@ -19,6 +19,7 @@ use Sulu\Bundle\ProductBundle\Entity\ProductTranslation;
 use Sulu\Component\Rest\ApiWrapper;
 use Sulu\Component\Security\UserInterface;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSet as AttributeSetEntity;
+use Sulu\Bundle\ProductBundle\Entity\ProductPrice as ProductPriceEntity;
 use Sulu\Bundle\ProductBundle\Entity\Status as StatusEntity;
 use Sulu\Bundle\ProductBundle\Entity\Type as TypeEntity;
 use Sulu\Bundle\ProductBundle\Entity\TaxClass as TaxClassEntity;
@@ -348,6 +349,11 @@ class Product extends ApiWrapper
     public function setAttributeSet(AttributeSetEntity $attributeSet)
     {
         $this->entity->setAttributeSet($attributeSet);
+    }
+
+    public function removePrice(ProductPriceEntity $price)
+    {
+        $this->entity->removePrice($price);
     }
 
     /**

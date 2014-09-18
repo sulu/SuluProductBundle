@@ -50,6 +50,15 @@ class ProductPrice extends ApiWrapper
     }
 
     /**
+     * Sets the price
+     * @param float $price
+     */
+    public function setPrice($price)
+    {
+        $this->entity->setPrice($price);
+    }
+
+    /**
      * Returns the currency
      * @return Currency
      * @VirtualProperty

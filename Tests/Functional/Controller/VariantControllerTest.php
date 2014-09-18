@@ -110,6 +110,7 @@ class VariantControllerTest extends DatabaseTestCase
             self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Product'),
             self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\DeliveryStatus'),
             self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\ProductPrice'),
+            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Currency'),
             self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Type'),
             self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\TypeTranslation'),
             self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Status'),

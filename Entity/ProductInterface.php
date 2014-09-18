@@ -341,6 +341,21 @@ interface ProductInterface
     public function getChildren();
 
     /**
+     * Add prices
+     *
+     * @param \Sulu\Bundle\ProductBundle\Entity\ProductPrice $prices
+     * @return Product
+     */
+    public function addPrice(\Sulu\Bundle\ProductBundle\Entity\ProductPrice $prices);
+
+    /**
+     * Remove prices
+     *
+     * @param \Sulu\Bundle\ProductBundle\Entity\ProductPrice $prices
+     */
+    public function removePrice(\Sulu\Bundle\ProductBundle\Entity\ProductPrice $prices);
+
+    /**
      * Get prices
      *
      * @return ProductPrice[]
