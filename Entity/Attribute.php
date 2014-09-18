@@ -11,22 +11,13 @@
 namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Sulu\Component\Security\UserInterface;
 
 /**
  * Attribute
  */
 class Attribute
 {
-    /**
-     * @var string
-     */
-    private $unit;
-
-    /**
-     * @var string
-     */
-    private $type;
-
     /**
      * @var \DateTime
      */
@@ -45,12 +36,22 @@ class Attribute
     /**
      * @var \Doctrine\Common\Collections\Collection
      */
-    private $translations;
+    public $translations;
+
+    /**
+     * @var \Doctrine\Common\Collections\Collection
+     */
+    private $values;
 
     /**
      * @var \Doctrine\Common\Collections\Collection
      */
     private $productAttributes;
+
+    /**
+     * @var \Sulu\Bundle\ProductBundle\Entity\AttributeType
+     */
+    private $type;
 
     /**
      * @var \Sulu\Bundle\SecurityBundle\Entity\User
@@ -68,55 +69,10 @@ class Attribute
     public function __construct()
     {
         $this->translations = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->values = new \Doctrine\Common\Collections\ArrayCollection();
         $this->productAttributes = new \Doctrine\Common\Collections\ArrayCollection();
     }
     
-    /**
-     * Set unit
-     *
-     * @param string $unit
-     * @return Attribute
-     */
-    public function setUnit($unit)
-    {
-        $this->unit = $unit;
-    
-        return $this;
-    }
-
-    /**
-     * Get unit
-     *
-     * @return string 
-     */
-    public function getUnit()
-    {
-        return $this->unit;
-    }
-
-    /**
-     * Set type
-     *
-     * @param string $type
-     * @return Attribute
-     */
-    public function setType($type)
-    {
-        $this->type = $type;
-    
-        return $this;
-    }
-
-    /**
-     * Get type
-     *
-     * @return string 
-     */
-    public function getType()
-    {
-        return $this->type;
-    }
-
     /**
      * Set created
      *
@@ -207,21 +163,36 @@ class Attribute
     }
 
     /**
-     * Returns the translation with the given locale
-     * @param string $locale The locale to return
-     * @return AttributeTranslation
+     * Add values
+     *
+     * @param \Sulu\Bundle\ProductBundle\Entity\AttributeValue $values
+     * @return Attribute
      */
-    public function getTranslation($locale)
+    public function addValue(\Sulu\Bundle\ProductBundle\Entity\AttributeValue $values)
     {
-        $translation = null;
-        foreach ($this->translations as $translationData) {
-            if ($translationData->getLocale() == $locale) {
-                $translation = $translationData;
-                break;
-            }
-        }
+        $this->values[] = $values;
+    
+        return $this;
+    }
 
-        return $translation;
+    /**
+     * Remove values
+     *
+     * @param \Sulu\Bundle\ProductBundle\Entity\AttributeValue $values
+     */
+    public function removeValue(\Sulu\Bundle\ProductBundle\Entity\AttributeValue $values)
+    {
+        $this->values->removeElement($values);
+    }
+
+    /**
+     * Get values
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getValues()
+    {
+        return $this->values;
     }
 
     /**
@@ -258,12 +229,35 @@ class Attribute
     }
 
     /**
-     * Set changer
+     * Set type
      *
-     * @param \Sulu\Bundle\SecurityBundle\Entity\User $changer
+     * @param \Sulu\Bundle\ProductBundle\Entity\AttributeType $type
      * @return Attribute
      */
-    public function setChanger(\Sulu\Bundle\SecurityBundle\Entity\User $changer = null)
+    public function setType(\Sulu\Bundle\ProductBundle\Entity\AttributeType $type)
+    {
+        $this->type = $type;
+    
+        return $this;
+    }
+
+    /**
+     * Get type
+     *
+     * @return \Sulu\Bundle\ProductBundle\Entity\AttributeType 
+     */
+    public function getType()
+    {
+        return $this->type;
+    }
+
+    /**
+     * Set changer
+     *
+     * @param \Sulu\Component\Security\UserInterface $changer
+     * @return Attribute
+     */
+    public function setChanger(UserInterface $changer = null)
     {
         $this->changer = $changer;
     
@@ -283,10 +277,10 @@ class Attribute
     /**
      * Set creator
      *
-     * @param \Sulu\Bundle\SecurityBundle\Entity\User $creator
+     * @param \Sulu\Component\Security\UserInterface $creator
      * @return Attribute
      */
-    public function setCreator(\Sulu\Bundle\SecurityBundle\Entity\User $creator = null)
+    public function setCreator(UserInterface $creator = null)
     {
         $this->creator = $creator;
     

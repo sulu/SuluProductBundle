@@ -10,6 +10,10 @@
 
 namespace Sulu\Bundle\ProductBundle\Product\Exception;
 
+/**
+ * This exception is thrown if a required property for creating or manipulating
+ * an product attribute is missing.
+ */
 class MissingProductAttributeException extends ProductException
 {
     /**

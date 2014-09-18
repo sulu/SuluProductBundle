@@ -1,0 +1,17 @@
+<attribute-types>
+    <attribute-type>
+        <name>product.attribute.type.text</name>
+    </attribute-type>
+    <attribute-type>
+        <name>product.attribute.type.date</name>
+    </attribute-type>
+    <attribute-type>
+        <name>product.attribute.type.dropdown</name>
+    </attribute-type>
+    <attribute-type>
+        <name>product.attribute.type.checkbox</name>
+    </attribute-type>
+    <attribute-type>
+        <name>product.attribute.type.radiobutton</name>
+    </attribute-type>
+</attribute-types>

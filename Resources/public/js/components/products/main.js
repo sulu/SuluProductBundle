@@ -71,7 +71,7 @@ define(['suluproduct/models/product', 'app-config'], function (Product, AppConfi
             this.sandbox.on(PRODUCT_NEW, function (type) {
                 this.sandbox.emit(
                     'sulu.router.navigate',
-                        'pim/products/' + AppConfig.getUser().locale + '/add/type:' + type
+                    'pim/products/' + AppConfig.getUser().locale + '/add/type:' + type
                 );
             }.bind(this));
 
@@ -134,7 +134,7 @@ define(['suluproduct/models/product', 'app-config'], function (Product, AppConfi
             this.confirmDeleteDialog(function (wasConfirmed) {
                 if (wasConfirmed) {
                     this.sandbox.util.each(ids, function (key, id) {
-                        var product = new  Product({id: id});
+                        var product = new Product({id: id});
                         product.destroy({
                             success: function () {
                                 this.sandbox.emit('husky.datagrid.record.remove', id);

@@ -22,6 +22,10 @@ use Sulu\Component\Rest\RestHelperInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * This controller is responsible for managing variants to a specific product
+ * @package Sulu\Bundle\ProductBundle\Controller
+ */
 class VariantController extends RestController implements ClassResourceInterface
 {
     protected static $entityName = 'SuluProductBundle:Product';

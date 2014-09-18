@@ -30,6 +30,7 @@ use Sulu\Bundle\ProductBundle\Entity\AttributeSetTranslation;
 use Sulu\Bundle\TestBundle\Entity\TestUser;
 use Sulu\Bundle\TestBundle\Testing\DatabaseTestCase;
 use Symfony\Component\HttpKernel\Client;
+use Sulu\Bundle\ProductBundle\Entity\AttributeType;
 
 class ProductControllerTest extends DatabaseTestCase
 {
@@ -238,11 +239,12 @@ class ProductControllerTest extends DatabaseTestCase
         $this->attributeSetTranslation1->setAttributeSet($this->attributeSet1);
 
         // Attributes
+        $this->attributeType1 = new AttributeType();
+        $this->attributeType1->setName('EnglishAttributeType-1');
         $this->attribute1 = new Attribute();
         $this->attribute1->setCreated(new DateTime());
         $this->attribute1->setChanged(new DateTime());
-        $this->attribute1->setUnit('EnglishAttributeUnit-1');
-        $this->attribute1->setType('EnglishAttributeType-1');
+        $this->attribute1->setType($this->attributeType1);
 
         // Attribute Translations
         $this->attributeTranslation1 = new AttributeTranslation();
@@ -308,11 +310,12 @@ class ProductControllerTest extends DatabaseTestCase
         $this->attributeSetTranslation2->setAttributeSet($this->attributeSet2);
 
         // Attributes
+        $this->attributeType2 = new AttributeType();
+        $this->attributeType2->setName('EnglishAttributeType-2');
         $this->attribute2 = new Attribute();
         $this->attribute2->setCreated(new DateTime());
         $this->attribute2->setChanged(new DateTime());
-        $this->attribute2->setUnit('EnglishAttributeUnit-2');
-        $this->attribute2->setType('EnglishAttributeType-2');
+        $this->attribute2->setType($this->attributeType2);
 
         // Attribute Translations
         $this->attributeTranslation2 = new AttributeTranslation();
@@ -360,6 +363,7 @@ class ProductControllerTest extends DatabaseTestCase
         self::$em->persist($productPrice1);
         self::$em->persist($productPrice2);
         self::$em->persist($this->type1);
+        self::$em->persist($this->attributeType1);
         self::$em->persist($this->typeTranslation1);
         self::$em->persist($this->attributeSet1);
         self::$em->persist($this->attributeSetTranslation1);
@@ -372,6 +376,7 @@ class ProductControllerTest extends DatabaseTestCase
         self::$em->persist($this->productAttribute1);
 
         self::$em->persist($this->type2);
+        self::$em->persist($this->attributeType2);
         self::$em->persist($this->typeTranslation2);
         self::$em->persist($this->attributeSet2);
         self::$em->persist($this->attributeSetTranslation2);
@@ -408,6 +413,7 @@ class ProductControllerTest extends DatabaseTestCase
             self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\ProductTranslation'),
             self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\ProductAttribute'),
             self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Addon'),
+            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\AttributeType'),
             self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Account'),
             self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\AccountCategory'),
             self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Activity'),

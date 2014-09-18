@@ -55,7 +55,7 @@ define([], function () {
                     if (price.id === "") {
                         delete price.id;
                     }
-                    
+
                     return price.price !== "";
                 });
             }.bind(this));
