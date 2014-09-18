@@ -163,6 +163,11 @@ class ProductControllerTest extends DatabaseTestCase
      */
     private $currency2;
 
+    /**
+     * @var Currency
+     */
+    private $currency3;
+
     public static function setUpBeforeClass()
     {
         parent::setUpBeforeClass();
@@ -465,6 +470,17 @@ class ProductControllerTest extends DatabaseTestCase
             ),
             $response['prices']
         );
+        $this->assertContains(
+            array(
+                'id' => null,
+                'price' => null,
+                'currency' => array(
+                    'id' => 3,
+                    'name' => 'GBP'
+                )
+            ),
+            $response['price']
+        );
     }
 
     public function testGetAll()
@@ -573,19 +589,68 @@ class ProductControllerTest extends DatabaseTestCase
                 ),
                 'taxClass' => array(
                     'id' => $this->taxClass1->getId()
+                ),
+                'prices' => array(
+                    array(
+                        'id' => 1,
+                        'price' => 17.99,
+                        'currency' => array(
+                            'id' => 1,
+                            'name' => 'EUR'
+                        )
+                    ),
+                    array(
+                        'id' => null,
+                        'price' => null,
+                        'currency' => array(
+                            'id' => 2,
+                            'name' => 'USD'
+                        )
+                    ),
+                    array(
+                        'id' => 3,
+                        'price' => 12.99,
+                        'currency' => array(
+                            'id' => 3,
+                            'name' => 'GBP'
+                        )
+                    )
                 )
             )
         );
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
 
         $this->client->request('GET', '/api/products/1');
-        $response = json_decode($this->client->getResponse()->getContent());
+        $response = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
-        $this->assertEquals('EnglishProductTranslationNameNew-1', $response->name);
-        $this->assertEquals('EvilCode', $response->code);
-        $this->assertEquals('EvilNumber', $response->number);
-        $this->assertEquals('EvilKnievel', $response->manufacturer);
-        $this->assertEquals('20%', $response->taxClass->name);
+        $this->assertEquals('EnglishProductTranslationNameNew-1', $response['name']);
+        $this->assertEquals('EvilCode', $response['code']);
+        $this->assertEquals('EvilNumber', $response['number']);
+        $this->assertEquals('EvilKnievel', $response['manufacturer']);
+        $this->assertEquals('20%', $response['taxClass']['name']);
+
+        $this->assertContains(
+            array(
+                'id' => 1,
+                'price' => 14.99,
+                'currency' => array(
+                    'id' => 1,
+                    'name' => 'EUR'
+                )
+            ),
+            $response['prices']
+        );
+        $this->assertContains(
+            array(
+                'id' => 2,
+                'price' => 12.99,
+                'currency' => array(
+                    'id' => 3,
+                    'name' => 'GBP'
+                )
+            ),
+            $response['prices']
+        );
     }
 
     public function testPutNotExisting()
