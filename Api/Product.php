@@ -143,7 +143,7 @@ class Product extends ApiWrapper
 
     /**
      * Sets the number of the product
-     * @param double $number The number of the product
+     * @param string $number The number of the product
      */
     public function setNumber($number)
     {
@@ -229,11 +229,15 @@ class Product extends ApiWrapper
 
     /**
      * Sets the parent of the product
-     * @param ProductInterface $parent The parent of the product
+     * @param Product $parent The parent of the product
      */
-    public function setParent(ProductInterface $parent = null)
+    public function setParent(Product $parent = null)
     {
-        $this->entity->setParent($parent);
+        if ($parent != null) {
+            $this->entity->setParent($parent->getEntity());
+        } else {
+            $this->entity->setParent(null);
+        }
     }
 
     /**

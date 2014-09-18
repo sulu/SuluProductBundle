@@ -70,12 +70,17 @@ class ProductRepository extends EntityRepository implements ProductRepositoryInt
 
             foreach ($filter as $key => $value) {
                 switch ($key) {
+                    case 'parent':
+                        $qb->andWhere('parent.id = :' . $key);
+                        $qb->setParameter($key, $value);
+                        break;
+
                     case 'status':
                         $qb->andWhere('status.id = :' . $key);
                         $qb->setParameter($key, $value);
                         break;
 
-                    case 'type':
+                    case 'type_id':
                         $qb->andWhere('type.id = :' . $key);
                         $qb->setParameter($key, $value);
                         break;
@@ -97,6 +102,7 @@ class ProductRepository extends EntityRepository implements ProductRepositoryInt
     private function getProductQuery($locale)
     {
         $qb = $this->createQueryBuilder('product')
+            ->leftJoin('product.parent', 'parent')
             ->leftJoin('product.translations', 'translations', 'WITH', 'translations.locale = :locale')
             ->leftJoin('product.status', 'status')
             ->leftJoin('status.translations', 'statusTranslations', 'WITH', 'statusTranslations.locale = :locale')

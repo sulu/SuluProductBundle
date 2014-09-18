@@ -36,6 +36,11 @@ class TemplateController extends Controller
         return $this->render('SuluProductBundle:Template:product.form.html.twig', array('status' => $statusTitles));
     }
 
+    public function productVariantsAction()
+    {
+        return $this->render('SuluProductBundle:Template:product.variants.html.twig');
+    }
+
     /**
      * Returns Template for product import
      * @return \Symfony\Component\HttpFoundation\Response

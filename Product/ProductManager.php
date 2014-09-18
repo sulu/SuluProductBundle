@@ -125,6 +125,20 @@ class ProductManager implements ProductManagerInterface
             'product.number'
         );
 
+        $fieldDescriptors['parent'] = new DoctrineFieldDescriptor(
+            'id',
+            'parent',
+            self::$productEntityName . 'Parent',
+            'product.parent',
+            array(
+                self::$productEntityName . 'Parent' => new DoctrineJoinDescriptor(
+                        self::$productEntityName,
+                        self::$productEntityName . '.parent'
+                    )
+            ),
+            true
+        );
+
         $fieldDescriptors['manufacturer'] = new DoctrineFieldDescriptor(
             'manufacturer', 'manufacturer', self::$productEntityName, 'product.manufacturer', array(), true
         );
@@ -149,6 +163,20 @@ class ProductManager implements ProductManagerInterface
 
         $fieldDescriptors['priceInfo'] = new DoctrineFieldDescriptor(
             'priceInfo', 'priceInfo', self::$productEntityName, 'product.price-info', array(), true
+        );
+
+        $fieldDescriptors['type_id'] = new DoctrineFieldDescriptor(
+            'id',
+            'type_id',
+            self::$productTypeEntityName,
+            null,
+            array(
+                self::$productTypeEntityName => new DoctrineJoinDescriptor(
+                        self::$productTypeEntityName,
+                        self::$productEntityName . '.type'
+                    )
+            ),
+            true
         );
 
         $fieldDescriptors['type'] = new DoctrineFieldDescriptor(
@@ -197,14 +225,6 @@ class ProductManager implements ProductManagerInterface
         );
 
         return $fieldDescriptors;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getFieldDescriptor($key)
-    {
-        return $this->fieldDescriptors[$key];
     }
 
     /**
@@ -284,8 +304,7 @@ class ProductManager implements ProductManagerInterface
 
         if (array_key_exists('parent', $data) && array_key_exists('id', $data['parent'])) {
             $parentId = $data['parent']['id'];
-            /** @var ProductEntity $parentProduct */
-            $parentProduct = $this->productRepository->findById($parentId);
+            $parentProduct = $this->findByIdAndLocale($parentId, $locale);
             if (!$parentProduct) {
                 throw new ProductDependencyNotFoundException(self::$productEntityName, $parentId);
             }
@@ -326,6 +345,47 @@ class ProductManager implements ProductManagerInterface
         $this->em->flush();
 
         return $product;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function addVariant($parentId, $variantId, $locale)
+    {
+        $variant = $this->productRepository->findById($variantId);
+
+        if (!$variant) {
+            throw new ProductNotFoundException($variantId);
+        }
+
+        $parent = $this->productRepository->findById($parentId);
+
+        if (!$parent) {
+            throw new ProductNotFoundException($parentId);
+        }
+
+        $variant->setParent($parent);
+
+        $this->em->flush();
+
+        return new Product($variant, $locale);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function removeVariant($parentId, $variantId)
+    {
+        $variant = $this->productRepository->findById($variantId);
+
+        if (!$variant || $variant->getParent()->getId() != $parentId) {
+            // TODO think about better exception
+            throw new ProductNotFoundException($variantId);
+        }
+
+        $variant->setParent(null);
+
+        $this->em->flush();
     }
 
     /**
