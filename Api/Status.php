@@ -14,7 +14,13 @@ use Sulu\Bundle\ProductBundle\Entity\Status as Entity;
 use JMS\Serializer\Annotation\VirtualProperty;
 use JMS\Serializer\Annotation\SerializedName;
 use Sulu\Component\Rest\ApiWrapper;
-
+/**
+ * The Attribute class which will be exported to the API
+ *
+ * @package Sulu\Bundle\ProductBundle\Api
+ * @Relation("self", href="expr('/api/admin/attributes/' ~ object.getId())")
+ * @ExclusionPolicy("all")
+ */
 class Status extends ApiWrapper
 {
     /**

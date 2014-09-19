@@ -32,7 +32,6 @@ use Sulu\Component\Security\UserInterface;
  * @Relation("self", href="expr('/api/admin/attributes/' ~ object.getId())")
  * @ExclusionPolicy("all")
  */
-
 class Attribute extends ApiWrapper
 {
     /**

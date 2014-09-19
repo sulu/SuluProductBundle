@@ -351,6 +351,10 @@ class Product extends ApiWrapper
         $this->entity->setAttributeSet($attributeSet);
     }
 
+    /**
+     * Removes the given price from the product
+     * @param ProductPriceEntity $price
+     */
     public function removePrice(ProductPriceEntity $price)
     {
         $this->entity->removePrice($price);

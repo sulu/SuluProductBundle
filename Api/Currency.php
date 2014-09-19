@@ -14,7 +14,12 @@ use Sulu\Bundle\ProductBundle\Entity\Currency as Entity;
 use JMS\Serializer\Annotation\VirtualProperty;
 use JMS\Serializer\Annotation\SerializedName;
 use Sulu\Component\Rest\ApiWrapper;
-
+/**
+ * The currency class which will be exported to the API
+ *
+ * @package Sulu\Bundle\ProductBundle\Api
+ * @ExclusionPolicy("all")
+ */
 class Currency extends ApiWrapper
 {
     /**

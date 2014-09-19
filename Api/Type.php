@@ -15,6 +15,12 @@ use JMS\Serializer\Annotation\VirtualProperty;
 use JMS\Serializer\Annotation\SerializedName;
 use Sulu\Component\Rest\ApiWrapper;
 
+/**
+ * The Type class which will be exported to the API
+ *
+ * @package Sulu\Bundle\ProductBundle\Api
+ * @ExclusionPolicy("all")
+ */
 class Type extends ApiWrapper
 {
     /**

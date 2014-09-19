@@ -15,6 +15,13 @@ use JMS\Serializer\Annotation\VirtualProperty;
 use JMS\Serializer\Annotation\SerializedName;
 use Sulu\Component\Rest\ApiWrapper;
 
+/**
+ * The Attribute set class which will be exported to the API
+ *
+ * @package Sulu\Bundle\ProductBundle\Api
+ * @Relation("self", href="expr('/api/admin/attribute-sets/' ~ object.getId())")
+ * @ExclusionPolicy("all")
+ */
 class AttributeSet extends ApiWrapper
 {
     /**

@@ -16,6 +16,12 @@ use JMS\Serializer\Annotation\SerializedName;
 use Sulu\Bundle\ProductBundle\Entity\TaxClassTranslation;
 use Sulu\Component\Rest\ApiWrapper;
 
+/**
+ * The TaxClass class which will be exported to the API
+ *
+ * @package Sulu\Bundle\ProductBundle\Api
+ * @ExclusionPolicy("all")
+ */
 class TaxClass extends ApiWrapper
 {
     /**
