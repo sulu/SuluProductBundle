@@ -13,6 +13,7 @@ namespace Sulu\Bundle\ProductBundle\Api;
 use Sulu\Bundle\ProductBundle\Entity\TaxClass as Entity;
 use JMS\Serializer\Annotation\VirtualProperty;
 use JMS\Serializer\Annotation\SerializedName;
+use JMS\Serializer\Annotation\ExclusionPolicy;
 use Sulu\Bundle\ProductBundle\Entity\TaxClassTranslation;
 use Sulu\Component\Rest\ApiWrapper;
 

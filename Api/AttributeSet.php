@@ -13,6 +13,8 @@ namespace Sulu\Bundle\ProductBundle\Api;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSet as Entity;
 use JMS\Serializer\Annotation\VirtualProperty;
 use JMS\Serializer\Annotation\SerializedName;
+use JMS\Serializer\Annotation\ExclusionPolicy;
+use Hateoas\Configuration\Annotation\Relation;
 use Sulu\Component\Rest\ApiWrapper;
 
 /**

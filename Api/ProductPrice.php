@@ -14,6 +14,7 @@ use Sulu\Component\Rest\ApiWrapper;
 use Sulu\Bundle\ProductBundle\Entity\ProductPrice as Entity;
 use JMS\Serializer\Annotation\VirtualProperty;
 use JMS\Serializer\Annotation\SerializedName;
+use JMS\Serializer\Annotation\ExclusionPolicy;
 
 /**
  * The Status class which will be exported to the API

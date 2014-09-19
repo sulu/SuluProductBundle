@@ -13,6 +13,7 @@ namespace Sulu\Bundle\ProductBundle\Api;
 use Sulu\Bundle\ProductBundle\Entity\Currency as Entity;
 use JMS\Serializer\Annotation\VirtualProperty;
 use JMS\Serializer\Annotation\SerializedName;
+use JMS\Serializer\Annotation\ExclusionPolicy;
 use Sulu\Component\Rest\ApiWrapper;
 /**
  * The currency class which will be exported to the API
