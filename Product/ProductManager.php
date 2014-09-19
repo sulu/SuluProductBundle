@@ -524,6 +524,11 @@ class ProductManager implements ProductManagerInterface
         return array_key_exists($key, $data) ? $data[$key] : $default;
     }
 
+    /**
+     * Checks if the given data is correct
+     * @param array $data The data to check
+     * @param boolean $create Defines if check is for new or already existing data
+     */
     private function checkData($data, $create)
     {
         $this->checkDataSet($data, 'number', $create);
@@ -533,6 +538,14 @@ class ProductManager implements ProductManagerInterface
         $this->checkDataSet($data, 'status', $create) && $this->checkDataSet($data['status'], 'id', $create);
     }
 
+    /**
+     * Checks if data for the given key is set correctly
+     * @param array $data The array with the data
+     * @param string $key The array key to check
+     * @param bool $create Defines if the is for new or already existing data
+     * @return bool
+     * @throws Exception\MissingProductAttributeException
+     */
     private function checkDataSet(array $data, $key, $create)
     {
         $keyExists = array_key_exists($key, $data);
@@ -544,6 +557,10 @@ class ProductManager implements ProductManagerInterface
         return $keyExists;
     }
 
+    /**
+     * Adds an ProductPrice for every currency to the Product, if it is no existing already
+     * @param ProductInterface $product The product to fill with currencies
+     */
     private function addAllCurrencies(ProductInterface $product)
     {
         $currencies = $this->currencyRepository->findAll();

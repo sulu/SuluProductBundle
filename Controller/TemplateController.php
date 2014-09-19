@@ -1,4 +1,12 @@
 <?php
+/*
+ * This file is part of the Sulu CMS.
+ *
+ * (c) MASSIVE ART WebServices GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
 
 namespace Sulu\Bundle\ProductBundle\Controller;
 
@@ -68,12 +76,9 @@ class TemplateController extends Controller
             );
         }
 
-        // TODO load currencies correctly
-        $currencies = array('EUR');
-
         return $this->render(
             'SuluProductBundle:Template:product.pricing.html.twig',
-            array('taxClasses' => $taxClassTitles, 'currencies' => $currencies)
+            array('taxClasses' => $taxClassTitles)
         );
     }
 }

@@ -1,4 +1,12 @@
 <?php
+/*
+ * This file is part of the Sulu CMS.
+ *
+ * (c) MASSIVE ART WebServices GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
 
 namespace Sulu\Bundle\ProductBundle\Entity;
 
@@ -18,6 +26,11 @@ class TaxClass
      * @var \Doctrine\Common\Collections\Collection
      */
     private $translations;
+
+    /**
+     * @var \Doctrine\Common\Collections\Collection
+     */
+    private $products;
 
     /**
      * Constructor
@@ -69,11 +82,6 @@ class TaxClass
     {
         return $this->translations;
     }
-    /**
-     * @var \Doctrine\Common\Collections\Collection
-     */
-    private $products;
-
 
     /**
      * Add products
