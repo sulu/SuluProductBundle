@@ -18,6 +18,8 @@ use Sulu\Component\Security\UserInterface;
  */
 class Attribute
 {
+
+    const ATTRIBUTE_TYPE_TEXT = 1;
     /**
      * @var \DateTime
      */
