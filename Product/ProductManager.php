@@ -274,8 +274,6 @@ class ProductManager implements ProductManagerInterface
         } else {
             return null;
         }
-
-        return $products;
     }
 
     /**
