@@ -5,6 +5,7 @@ namespace Sulu\Bundle\ProductBundle\Entity;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\NoResultException;
 use Sulu\Bundle\ProductBundle\Product\ProductRepositoryInterface;
+use Sulu\Bundle\ProductBundle\Entity\Product;
 
 /**
  * ProductRepository
@@ -55,6 +56,27 @@ class ProductRepository extends EntityRepository implements ProductRepositoryInt
     {
         try {
             return $this->getProductQuery($locale)->getQuery()->getResult();
+        } catch (NoResultException $exc) {
+            return null;
+        }
+    }
+
+    /**
+     * Returns all products in the given locale for the given number
+     * @param string $locale The locale of the product to load
+     * @param string $number The number of the product to load
+     * @return ProductInterface[]
+     */
+    public function findMasterByLocaleAndNumber($locale, $number)
+    {
+        try {
+            $qb = $this->getProductQuery($locale);
+            $qb->andWhere('product.number = :number');
+            $qb->andWhere('type.id = :id');
+            $qb->setParameter('number', $number);
+            $qb->setParameter('id', Product::MASTER_PRODUCT);
+            $query = $qb->getQuery();
+            return $query->getSingleResult();
         } catch (NoResultException $exc) {
             return null;
         }
