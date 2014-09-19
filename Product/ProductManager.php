@@ -265,7 +265,23 @@ class ProductManager implements ProductManagerInterface
     /**
      * {@inheritDoc}
      */
-    public function save(array $data, $locale, $userId, $id = null)
+    public function findMasterByLocaleAndNumber($locale, $number)
+    {
+        $product = $this->productRepository->findMasterByLocaleAndNumber($locale, $number);
+
+        if ($product) {
+            return new Product($product, $locale);
+        } else {
+            return null;
+        }
+
+        return $products;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function save(array $data, $locale, $userId, $id = null, $flush=true)
     {
         if ($id) {
             $product = $this->productRepository->findByIdAndLocale($id, $locale);
@@ -342,7 +358,9 @@ class ProductManager implements ProductManagerInterface
             $this->em->persist($product->getEntity());
         }
 
-        $this->em->flush();
+        if ($flush) {
+            $this->em->flush();
+        }
 
         return $product;
     }
