@@ -5,6 +5,7 @@ namespace Sulu\Bundle\ProductBundle\Entity;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\NoResultException;
 use Sulu\Bundle\ProductBundle\Product\ProductRepositoryInterface;
+use Sulu\Bundle\ProductBundle\Entity\Product;
 
 /**
  * ProductRepository
@@ -73,7 +74,7 @@ class ProductRepository extends EntityRepository implements ProductRepositoryInt
             $qb->andWhere('product.number = :number');
             $qb->andWhere('type.id = :id');
             $qb->setParameter('number', $number);
-            $qb->setParameter('id', 2);
+            $qb->setParameter('id', Product::MASTER_PRODUCT);
             $query = $qb->getQuery();
             return $query->getSingleResult();
         } catch (NoResultException $exc) {

@@ -92,7 +92,12 @@ class ProductManager implements ProductManagerInterface
         $fieldDescriptors = array();
 
         $fieldDescriptors['id'] = new DoctrineFieldDescriptor(
-            'id', 'id', self::$productEntityName, 'public.id', array(), true
+            'id',
+            'id',
+            self::$productEntityName,
+            'public.id',
+            array(),
+            true
         );
 
         $fieldDescriptors['name'] = new DoctrineFieldDescriptor(
@@ -279,7 +284,7 @@ class ProductManager implements ProductManagerInterface
     /**
      * {@inheritDoc}
      */
-    public function save(array $data, $locale, $userId, $id = null, $flush=true)
+    public function save(array $data, $locale, $userId, $id = null, $flush = true)
     {
         if ($id) {
             $product = $this->productRepository->findByIdAndLocale($id, $locale);
