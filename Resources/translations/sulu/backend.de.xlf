@@ -73,6 +73,7 @@
             <trans-unit id="18" resname="product.price">
                 <source>product.price</source>
                 <target>Preis</target>
+            </trans-unit>
             <trans-unit id="19" resname="products.add-product">
                 <source>products.add-product</source>
                 <target>Neues Produkt erstellen</target>
