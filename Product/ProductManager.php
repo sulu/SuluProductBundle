@@ -17,6 +17,7 @@ use Sulu\Bundle\ProductBundle\Api\Status;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSetRepository;
 use Sulu\Bundle\ProductBundle\Entity\Product as ProductEntity;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSet;
+use Sulu\Bundle\ProductBundle\Entity\Attribute;
 use Sulu\Bundle\ProductBundle\Entity\StatusRepository;
 use Sulu\Bundle\ProductBundle\Entity\Type;
 use Sulu\Bundle\ProductBundle\Entity\TypeRepository;
@@ -27,6 +28,9 @@ use Sulu\Bundle\ProductBundle\Product\Exception\ProductNotFoundException;
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescriptor;
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineJoinDescriptor;
 use Sulu\Component\Security\UserRepositoryInterface;
+use Sulu\Bundle\ProductBundle\Entity\ProductAttribute;
+use Sulu\Bundle\ProductBundle\Entity\AttributeRepository;
+use Sulu\Bundle\ProductBundle\Entity\ProductAttributeRepository;
 
 class ProductManager implements ProductManagerInterface
 {
@@ -36,12 +40,23 @@ class ProductManager implements ProductManagerInterface
     protected static $productStatusEntityName = 'SuluProductBundle:Status';
     protected static $productStatusTranslationEntityName = 'SuluProductBundle:StatusTranslation';
     protected static $attributeSetEntityName = 'SuluProductBundle:AttributeSet';
+    protected static $attributeEntityName = 'SuluProductBundle:Attribute';
     protected static $productTranslationEntityName = 'SuluProductBundle:ProductTranslation';
 
     /**
      * @var ProductRepositoryInterface
      */
     private $productRepository;
+
+    /**
+     * @var AttributeRepository
+     */
+    private $attributeRepository;
+
+    /**
+     * @var ProductAttributeRepository
+     */
+    private $productAttributeRepository;
 
     /**
      * @var AttributeSetRepository
@@ -71,6 +86,8 @@ class ProductManager implements ProductManagerInterface
     public function __construct(
         ProductRepositoryInterface $productRepository,
         AttributeSetRepository $attributeSetRepository,
+        AttributeRepository $attributeRepository,
+        ProductAttributeRepository $productAttributeRepository,
         StatusRepository $statusRepository,
         TypeRepository $typeRepository,
         UserRepositoryInterface $userRepository,
@@ -78,6 +95,8 @@ class ProductManager implements ProductManagerInterface
     ) {
         $this->productRepository = $productRepository;
         $this->attributeSetRepository = $attributeSetRepository;
+        $this->attributeRepository = $attributeRepository;
+        $this->productAttributeRepository = $productAttributeRepository;
         $this->statusRepository = $statusRepository;
         $this->typeRepository = $typeRepository;
         $this->userRepository = $userRepository;
@@ -310,6 +329,29 @@ class ProductManager implements ProductManagerInterface
         $product->setManufacturer($this->getProperty($data, 'manufacturer', $product->getManufacturer()));
         $product->setCost($this->getProperty($data, 'cost', $product->getCost()));
         $product->setPriceInfo($this->getProperty($data, 'priceInfo', $product->getPriceInfo()));
+
+        if (array_key_exists('attributes', $data)) {
+            foreach ($data['attributes'] as $attribute) {
+                $attributeId = $attribute['id'];
+                $attributeValue = $attribute['value'];
+
+                /** @var AttributeSet $attributeSet */
+                $attribute = $this->attributeRepository->find($attributeId);
+                if (!$attribute) {
+                    throw new ProductDependencyNotFoundException(self::$attributeEntityName, $attributeId);
+                }
+
+                $productAttribute = $this->productAttributeRepository->findByAttributeIdAndProductId($attributeId, $product->getId());
+                if (!$productAttribute) {
+                    $productAttribute = new ProductAttribute();
+                    $productAttribute->setAttribute($attribute);
+                    $productAttribute->setProduct($product->getEntity());
+                }
+
+                $productAttribute->setValue($attributeValue);
+                $this->em->persist($productAttribute);
+            }
+        }
 
         if (array_key_exists('attributeSet', $data) && array_key_exists('id', $data['attributeSet'])) {
             $attributeSetId = $data['attributeSet']['id'];
