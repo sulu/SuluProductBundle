@@ -20,7 +20,7 @@ class Status
     /**
      * @var integer
      */
-    public $id;
+    private $id;
 
     /**
      * @var \Doctrine\Common\Collections\Collection
