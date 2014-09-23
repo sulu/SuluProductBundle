@@ -6,6 +6,7 @@
         <parameter key="sulu_product.product_repository.class">Sulu\Bundle\ProductBundle\Entity\ProductRepository</parameter>
         <parameter key="sulu_product.attribute_set_repository.class">Sulu\Bundle\ProductBundle\Entity\AttributeSetRepository</parameter>
         <parameter key="sulu_product.attribute_repository.class">Sulu\Bundle\ProductBundle\Entity\AttributeRepository</parameter>
+        <parameter key="sulu_product.product_attribute_repository.class">Sulu\Bundle\ProductBundle\Entity\ProductAttributeRepository</parameter>
         <parameter key="sulu_product.attribute_value_repository.class">Sulu\Bundle\ProductBundle\Entity\AttributeValueRepository</parameter>
         <parameter key="sulu_product.attribute_type_repository.class">Sulu\Bundle\ProductBundle\Entity\AttributeTypeRepository</parameter>
         <parameter key="sulu_product.status_repository.class">Sulu\Bundle\ProductBundle\Entity\StatusRepository</parameter>
@@ -31,6 +32,10 @@
         <service id="sulu_product.attribute_repository" class="%sulu_product.attribute_repository.class%"
                  factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
             <argument>SuluProductBundle:Attribute</argument>
+        </service>
+        <service id="sulu_product.product_attribute_repository" class="%sulu_product.product_attribute_repository.class%"
+                 factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
+            <argument>SuluProductBundle:ProductAttribute</argument>
         </service>
         <service id="sulu_product.attribute_value_repository" class="%sulu_product.attribute_value_repository.class%"
                  factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
@@ -64,6 +69,8 @@
             <argument type="service" id="sulu_core.rest_helper"/>
             <argument type="service" id="sulu_product.product_repository"/>
             <argument type="service" id="sulu_product.attribute_set_repository"/>
+            <argument type="service" id="sulu_product.attribute_repository"/>
+            <argument type="service" id="sulu_product.product_attribute_repository"/>
             <argument type="service" id="sulu_product.status_repository"/>
             <argument type="service" id="sulu_product.type_repository"/>
             <argument type="service" id="sulu_product.tax_class_repository"/>

@@ -21,6 +21,7 @@ use Sulu\Bundle\ProductBundle\Entity\Product as ProductEntity;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSet;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductPrice as ProductPriceEntity;
+use Sulu\Bundle\ProductBundle\Entity\Attribute;
 use Sulu\Bundle\ProductBundle\Entity\StatusRepository;
 use Sulu\Bundle\ProductBundle\Entity\TaxClassRepository;
 use Sulu\Bundle\ProductBundle\Entity\Type;
@@ -34,6 +35,9 @@ use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescri
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineJoinDescriptor;
 use Sulu\Component\Rest\RestHelperInterface;
 use Sulu\Component\Security\UserRepositoryInterface;
+use Sulu\Bundle\ProductBundle\Entity\ProductAttribute;
+use Sulu\Bundle\ProductBundle\Entity\AttributeRepository;
+use Sulu\Bundle\ProductBundle\Entity\ProductAttributeRepository;
 
 class ProductManager implements ProductManagerInterface
 {
@@ -43,6 +47,7 @@ class ProductManager implements ProductManagerInterface
     protected static $productStatusEntityName = 'SuluProductBundle:Status';
     protected static $productStatusTranslationEntityName = 'SuluProductBundle:StatusTranslation';
     protected static $attributeSetEntityName = 'SuluProductBundle:AttributeSet';
+    protected static $attributeEntityName = 'SuluProductBundle:Attribute';
     protected static $productTranslationEntityName = 'SuluProductBundle:ProductTranslation';
     protected static $productTaxClassEntityName = 'SuluProductBundle:TaxClass';
     protected static $productPriceEntityName = 'SuluProductBundle:ProductPrice';
@@ -56,6 +61,16 @@ class ProductManager implements ProductManagerInterface
      * @var ProductRepositoryInterface
      */
     private $productRepository;
+
+    /**
+     * @var AttributeRepository
+     */
+    private $attributeRepository;
+
+    /**
+     * @var ProductAttributeRepository
+     */
+    private $productAttributeRepository;
 
     /**
      * @var AttributeSetRepository
@@ -96,6 +111,8 @@ class ProductManager implements ProductManagerInterface
         RestHelperInterface $restHelper,
         ProductRepositoryInterface $productRepository,
         AttributeSetRepository $attributeSetRepository,
+        AttributeRepository $attributeRepository,
+        ProductAttributeRepository $productAttributeRepository,
         StatusRepository $statusRepository,
         TypeRepository $typeRepository,
         TaxClassRepository $taxClassRepository,
@@ -106,6 +123,8 @@ class ProductManager implements ProductManagerInterface
         $this->restHelper = $restHelper;
         $this->productRepository = $productRepository;
         $this->attributeSetRepository = $attributeSetRepository;
+        $this->attributeRepository = $attributeRepository;
+        $this->productAttributeRepository = $productAttributeRepository;
         $this->statusRepository = $statusRepository;
         $this->typeRepository = $typeRepository;
         $this->taxClassRepository = $taxClassRepository;
@@ -122,7 +141,12 @@ class ProductManager implements ProductManagerInterface
         $fieldDescriptors = array();
 
         $fieldDescriptors['id'] = new DoctrineFieldDescriptor(
-            'id', 'id', self::$productEntityName, 'public.id', array(), true
+            'id',
+            'id',
+            self::$productEntityName,
+            'public.id',
+            array(),
+            true
         );
 
         $fieldDescriptors['name'] = new DoctrineFieldDescriptor(
@@ -290,7 +314,21 @@ class ProductManager implements ProductManagerInterface
     /**
      * {@inheritDoc}
      */
-    public function save(array $data, $locale, $userId, $id = null)
+    public function findMasterByLocaleAndNumber($locale, $number)
+    {
+        $product = $this->productRepository->findMasterByLocaleAndNumber($locale, $number);
+
+        if ($product) {
+            return new Product($product, $locale);
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function save(array $data, $locale, $userId, $id = null, $flush = true)
     {
         if ($id) {
             $product = $this->productRepository->findByIdAndLocale($id, $locale);
@@ -316,6 +354,31 @@ class ProductManager implements ProductManagerInterface
         $product->setManufacturer($this->getProperty($data, 'manufacturer', $product->getManufacturer()));
         $product->setCost($this->getProperty($data, 'cost', $product->getCost()));
         $product->setPriceInfo($this->getProperty($data, 'priceInfo', $product->getPriceInfo()));
+
+        if (array_key_exists('attributes', $data)) {
+
+            foreach ($data['attributes'] as $attribute) {
+                $attributeId = $attribute['id'];
+                $attributeValue = $attribute['value'];
+                $this->checkDataSet($attribute, 'id', true);
+
+                /** @var AttributeSet $attributeSet */
+                $attribute = $this->attributeRepository->find($attributeId);
+                if (!$attribute) {
+                    throw new ProductDependencyNotFoundException(self::$attributeEntityName, $attributeId);
+                }
+
+                $productAttribute = $this->productAttributeRepository->findByAttributeIdAndProductId($attributeId, $product->getId());
+                if (!$productAttribute) {
+                    $productAttribute = new ProductAttribute();
+                    $productAttribute->setAttribute($attribute);
+                    $productAttribute->setProduct($product->getEntity());
+                    $this->em->persist($productAttribute);
+                }
+
+                $productAttribute->setValue($attributeValue);
+            }
+        }
 
         if (array_key_exists('attributeSet', $data) && array_key_exists('id', $data['attributeSet'])) {
             $attributeSetId = $data['attributeSet']['id'];
@@ -399,7 +462,9 @@ class ProductManager implements ProductManagerInterface
             $this->em->persist($product->getEntity());
         }
 
-        $this->em->flush();
+        if ($flush) {
+            $this->em->flush();
+        }
 
         return $product;
     }
