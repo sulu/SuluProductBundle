@@ -24,7 +24,7 @@ class LoadProductTypes implements FixtureInterface, OrderedFixtureInterface
     public function load(ObjectManager $manager)
     {
         // force id = 1
-        $metadata = $manager->getClassMetaData(get_class(new Status()));
+        $metadata = $manager->getClassMetaData(get_class(new Type()));
         $metadata->setIdGeneratorType(\Doctrine\ORM\Mapping\ClassMetadata::GENERATOR_TYPE_NONE);
 
         $i = 1;
@@ -47,11 +47,11 @@ class LoadProductTypes implements FixtureInterface, OrderedFixtureInterface
                         $translation = new TypeTranslation();
                         $translation->setLocale($child->nodeName);
                         $translation->setName($child->nodeValue);
-                        $translation->setStatus($status);
+                        $translation->setType($type);
                         $manager->persist($translation);
                     }
                 }
-                $manager->persist($status);
+                $manager->persist($type);
                 $i++;
             }
         }
