@@ -74,6 +74,54 @@
                 <source>products.add-product-set</source>
                 <target>Create new product set</target>
             </trans-unit>
+            <trans-unit id="23" resname="navigation.pim.attributes">
+                <source>navigation.pim.attributes</source>
+                <target>Attributes</target>
+            </trans-unit>
+            <trans-unit id="25" resname="product.attributes.type">
+                <source>product.attributes.type</source>
+                <target>Type</target>
+            </trans-unit>
+            <trans-unit id="26" resname="pim.attributes.title">
+                <source>pim.attributes.title</source>
+                <target>Attributes</target>
+            </trans-unit>
+            <trans-unit id="27" resname="product.attribute.type">
+                <source>product.attribute.type</source>
+                <target>Type</target>
+            </trans-unit>
+            <trans-unit id="28" resname="product.attribute.type.text">
+                <source>product.attribute.type.text</source>
+                <target>Text</target>
+            </trans-unit>
+            <trans-unit id="29" resname="product.attribute.type.date">
+                <source>product.attribute.type.date</source>
+                <target>Date</target>
+            </trans-unit>
+            <trans-unit id="30" resname="product.attribute.type.dropdown">
+                <source>product.attribute.type.dropdown</source>
+                <target>Dropdown</target>
+            </trans-unit>
+            <trans-unit id="31" resname="product.attribute.type.checkbox">
+                <source>product.attribute.type.checkbox</source>
+                <target>Checkbox</target>
+            </trans-unit>
+            <trans-unit id="32" resname="product.attribute.type.radiobutton">
+                <source>product.attribute.type.radiobutton</source>
+                <target>Radiobutton</target>
+            </trans-unit>
+            <trans-unit id="33" resname="product.attribute.name">
+                <source>product.attribute.name</source>
+                <target>Name</target>
+            </trans-unit>
+            <trans-unit id="34" resname="pim.attribute.title">
+                <source>pim.attribute.title</source>
+                <target>Attribute</target>
+            </trans-unit>
+            <trans-unit id="35" resname="product.attribute.title">
+                <source>product.attribute.title</source>
+                <target>Title</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>

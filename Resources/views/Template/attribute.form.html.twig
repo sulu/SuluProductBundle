@@ -1,0 +1,40 @@
+<form class="" id="attribute-form">
+    <input type="hidden" id="id" data-mapper-property="id"/>
+
+    <div class="grid-row small">
+        <div class="grid-col-12">
+            <div class="form-group">
+                <label for="title" class="required"><%= translate('product.attribute.title') %></label>
+                <input class="form-element" type="text" id="title" data-validation-required="true"
+                       data-validation-max-length="255" data-mapper-property="name"/>
+            </div>
+        </div>
+    </div>
+    <div class="grid-row small">
+        <div class="grid-col-6">
+            <div class="form-group">
+                <label for="attribute-types" class="required"><%=translate('product.attributes.type')%></label>
+
+                <div id="attribute-types"
+                     data-aura-component="select@husky"
+                     data-aura-instance-name="attribute-types"
+                     data-aura-data="{{ attribute_types|json_encode() }}"
+                     data-aura-default-label="<%=translate('product.attribute.type')%>"
+                     data-aura-multiple-select="false"
+                     data-aura-direction="bottom"
+                     data-type="husky-select"
+                     data-validation-required="true"
+                     data-aura-pre-selected-elements="[1]"
+                     data-form="true">
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div class="grid-col-12">
+        <!-- problem is that this div container has no height and is position relative-->
+        <div class="form-group">
+            <div id="attribute-values-list"></div>
+        </div>
+    </div>
+</form>
