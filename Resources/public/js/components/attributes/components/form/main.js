@@ -36,15 +36,10 @@ define([], function() {
         initialize: function() {
             this.saved = true;
             this.initializeValidation();
-            this.bindDOMEvents();
             this.bindCustomEvents();
             this.setHeaderBar(true);
             this.render();
             this.listenForChange();
-        },
-
-        bindDOMEvents: function() {
-
         },
 
         bindCustomEvents: function() {

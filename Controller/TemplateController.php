@@ -67,7 +67,6 @@ class TemplateController extends Controller
      */
     public function attributeFormAction()
     {
-
         $repository = $this->getDoctrine()
             ->getRepository('SuluProductBundle:AttributeType');
         $types = $repository->findAll();
