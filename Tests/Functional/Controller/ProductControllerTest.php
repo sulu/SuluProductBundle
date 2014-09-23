@@ -28,7 +28,6 @@ use Sulu\Bundle\TestBundle\Testing\DatabaseTestCase;
 use Symfony\Component\HttpKernel\Client;
 use Sulu\Bundle\ProductBundle\Entity\AttributeType;
 
-
 class ProductControllerTest extends DatabaseTestCase
 {
     /**
@@ -146,12 +145,21 @@ class ProductControllerTest extends DatabaseTestCase
      */
     private $attributeTranslation2;
 
+    public static function setUpBeforeClass()
+    {
+        parent::setUpBeforeClass();
+
+        static::$kernel->getContainer()->set(
+            'sulu_security.user_repository',
+            static::$kernel->getContainer()->get('test_user_provider')
+        );
+    }
     public function setUp()
     {
-        $this->setUpTestUser();
-        $this->setUpClient();
         $this->setUpSchema();
+        $this->setUpTestUser();
         $this->setUpTestData();
+        $this->setUpClient();
     }
 
     private function setUpTestUser()
@@ -280,6 +288,7 @@ class ProductControllerTest extends DatabaseTestCase
         $this->product2->setAttributeSet($this->attributeSet2);
         $this->product2->setCreated(new DateTime());
         $this->product2->setChanged(new DateTime());
+        $this->product1->setParent($this->product2);
 
         $productTranslation2 = new ProductTranslation();
         $productTranslation2->setProduct($this->product2);
@@ -449,7 +458,8 @@ class ProductControllerTest extends DatabaseTestCase
         $this->assertEquals(1, count($response->_embedded->products));
         $this->assertEquals($this->product1->getManufacturer(), $response->_embedded->products[0]->manufacturer);
         $this->assertEquals(
-            $this->productStatusTranslation1->getName(), $response->_embedded->products[0]->status->name
+            $this->productStatusTranslation1->getName(),
+            $response->_embedded->products[0]->status->name
         );
     }
 
@@ -530,7 +540,9 @@ class ProductControllerTest extends DatabaseTestCase
     public function testPutNotExistingParentProduct()
     {
         $this->client->request(
-            'PUT', '/api/products/1', array(
+            'PUT',
+            '/api/products/1',
+            array(
                 'number' => 1,
                 'status' => array('id' => 1),
                 'type' => array('id' => 1),
@@ -551,7 +563,8 @@ class ProductControllerTest extends DatabaseTestCase
     public function testPutNotExistingAttributeSet()
     {
         $this->client->request(
-            'PUT', '/api/products/1',
+            'PUT',
+            '/api/products/1',
             array(
                 'number' => 1,
                 'status' => array('id' => 1),
@@ -572,7 +585,9 @@ class ProductControllerTest extends DatabaseTestCase
     public function testPutNotExistingType()
     {
         $this->client->request(
-            'PUT', '/api/products/1', array('number' => 1, 'status' => array('id' => 1), 'type' => array('id' => 666))
+            'PUT',
+            '/api/products/1',
+            array('number' => 1, 'status' => array('id' => 1), 'type' => array('id' => 666))
         );
 
         $response = json_decode($this->client->getResponse()->getContent());
@@ -587,7 +602,9 @@ class ProductControllerTest extends DatabaseTestCase
     public function testPutNotExistingStatus()
     {
         $this->client->request(
-            'PUT', '/api/products/1', array('number' => 1, 'type' => array('id' => 1), 'status' => array('id' => 666))
+            'PUT',
+            '/api/products/1',
+            array('number' => 1, 'type' => array('id' => 1), 'status' => array('id' => 666))
         );
 
         $response = json_decode($this->client->getResponse()->getContent());
@@ -792,5 +809,36 @@ class ProductControllerTest extends DatabaseTestCase
 
         $this->client->request('GET', '/api/products/1');
         $this->assertEquals('404', $this->client->getResponse()->getStatusCode());
+    }
+
+    public function testParentFilter()
+    {
+        $this->client->request('GET', '/api/products?flat=true&parent=null');
+
+        $response = json_decode($this->client->getResponse()->getContent());
+
+        $this->assertCount(1, $response->_embedded->products);
+        $this->assertEquals('EnglishProductCode-2', $response->_embedded->products[0]->code);
+    }
+
+    public function testTypeFilter()
+    {
+        $this->client->request('GET', '/api/products?flat=true&type=1');
+
+        $response = json_decode($this->client->getResponse()->getContent());
+
+        $this->assertCount(1, $response->_embedded->products);
+        $this->assertEquals('EnglishProductCode-1', $response->_embedded->products[0]->code);
+    }
+
+    public function testAllTypeFilter()
+    {
+        $this->client->request('GET', '/api/products?flat=true&type=1,2');
+
+        $response = json_decode($this->client->getResponse()->getContent());
+
+        $this->assertCount(2, $response->_embedded->products);
+        $this->assertEquals('EnglishProductCode-1', $response->_embedded->products[0]->code);
+        $this->assertEquals('EnglishProductCode-2', $response->_embedded->products[1]->code);
     }
 }

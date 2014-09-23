@@ -48,7 +48,7 @@ define([], function() {
             }.bind(this));
 
             this.sandbox.on('sulu.header.toolbar.delete', function() {
-                this.sandbox.emit('sulu.products.attribute.delete', this.sandbox.dom.val('#id'));
+                this.sandbox.emit('sulu.product.attributes.delete', this.sandbox.dom.val('#id'));
             }.bind(this));
 
             this.sandbox.on('sulu.products.attributes.saved', function(id) {
@@ -80,8 +80,13 @@ define([], function() {
                 }
 
                 data.type = {
-                    id: types[this.options.productType]
+                    id: 1
                 };
+
+                // TODO implement type handling
+//                data.type = {
+//                    id: types[this.options.productType]
+//                };
 
                 this.sandbox.emit('sulu.product.attributes.save', data);
             }
@@ -89,12 +94,12 @@ define([], function() {
 
         render: function() {
             this.sandbox.dom.html(this.$el, this.renderTemplate('/admin/product/template/attribute/form'));
-            this.values_list = this.sandbox.dom.find('#attribute-values-list', this.$el);
-            // this.values_list.addClass('hidden');
+            this.valuesList = this.sandbox.dom.find('#attribute-values-list', this.$el);
+            this.valuesList.addClass('hidden');
 
             // datagrid
-            var id = this.options.data.id;
-            var url = '/admin/api/attributes/' + id + '/values?flat=true'
+            var id = this.options.data.id,
+                url = '/admin/api/attributes/' + id + '/values?flat=true';
             this.sandbox.start([{
                     name: 'datagrid@husky',
                     options: {
@@ -146,10 +151,10 @@ define([], function() {
         },
 
         setHeaderInformation: function() {
-            var title = 'pim.product.attribute.title',
+            var title = 'pim.attribute.title',
                 breadcrumb = [
                     {title: 'navigation.pim'},
-                    {title: 'pim.product.attributes.title'}
+                    {title: 'pim.attribute.title'}
                 ];
             if (!!this.options.data && !!this.options.data.name) {
                 title = this.options.data.name;
@@ -157,13 +162,9 @@ define([], function() {
             title = this.sandbox.util.cropTail(title, maxLengthTitle);
             this.sandbox.emit('sulu.header.set-title', title);
 
-            if (!!this.options.data && !!this.options.data.number) {
+            if (!!this.options.data && !!this.options.data.id) {
                 breadcrumb.push({
-                    title: '#' + this.options.data.number
-                });
-            } else {
-                breadcrumb.push({
-                    title: 'pim.product.attribute.title'
+                    title: '#' + this.options.data.id
                 });
             }
             this.sandbox.emit('sulu.header.set-breadcrumb', breadcrumb);
@@ -196,11 +197,12 @@ define([], function() {
 
         toggleValuesList: function(id) {
             // Don't show the value list for type 1 & 2
-            if (id > 2) {
-                this.values_list.removeClass('hidden');
-            } else {
-                this.values_list.addClass('hidden');
-            }
+            // TODO deactivated until full implementation
+//            if (id > 2) {
+//                this.valuesList.removeClass('hidden');
+//            } else {
+//                this.valuesList.addClass('hidden');
+//            }
         }
     };
 });

@@ -5,6 +5,7 @@ namespace Sulu\Bundle\ProductBundle\Entity;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\NoResultException;
 use Sulu\Bundle\ProductBundle\Product\ProductRepositoryInterface;
+use Sulu\Bundle\ProductBundle\Entity\Product;
 
 /**
  * ProductRepository
@@ -61,6 +62,27 @@ class ProductRepository extends EntityRepository implements ProductRepositoryInt
     }
 
     /**
+     * Returns all products in the given locale for the given number
+     * @param string $locale The locale of the product to load
+     * @param string $number The number of the product to load
+     * @return ProductInterface[]
+     */
+    public function findMasterByLocaleAndNumber($locale, $number)
+    {
+        try {
+            $qb = $this->getProductQuery($locale);
+            $qb->andWhere('product.number = :number');
+            $qb->andWhere('type.id = :id');
+            $qb->setParameter('number', $number);
+            $qb->setParameter('id', Product::MASTER_PRODUCT);
+            $query = $qb->getQuery();
+            return $query->getSingleResult();
+        } catch (NoResultException $exc) {
+            return null;
+        }
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function findByLocaleAndFilter($locale, array $filter)
@@ -70,12 +92,17 @@ class ProductRepository extends EntityRepository implements ProductRepositoryInt
 
             foreach ($filter as $key => $value) {
                 switch ($key) {
+                    case 'parent':
+                        $qb->andWhere('parent.id = :' . $key);
+                        $qb->setParameter($key, $value);
+                        break;
+
                     case 'status':
                         $qb->andWhere('status.id = :' . $key);
                         $qb->setParameter($key, $value);
                         break;
 
-                    case 'type':
+                    case 'type_id':
                         $qb->andWhere('type.id = :' . $key);
                         $qb->setParameter($key, $value);
                         break;
@@ -97,6 +124,7 @@ class ProductRepository extends EntityRepository implements ProductRepositoryInt
     private function getProductQuery($locale)
     {
         $qb = $this->createQueryBuilder('product')
+            ->leftJoin('product.parent', 'parent')
             ->leftJoin('product.translations', 'translations', 'WITH', 'translations.locale = :locale')
             ->leftJoin('product.status', 'status')
             ->leftJoin('status.translations', 'statusTranslations', 'WITH', 'statusTranslations.locale = :locale')

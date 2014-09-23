@@ -59,8 +59,12 @@ define(['suluproduct/models/attribute', 'app-config'], function(Attribute, AppCo
                 this.save(data);
             }.bind(this));
 
-            this.sandbox.on(ATTRIBUTE_DELETE, function(ids) {
-                this.deleteAttributes(ids);
+            this.sandbox.on(ATTRIBUTE_DELETE, function(data) {
+                if(this.sandbox.util.typeOf(data) === 'array') {
+                    this.deleteAttributes(data);
+                } else {
+                    this.deleteAttribute(data);
+                }
             }.bind(this));
 
             this.sandbox.on('husky.datagrid.item.click', function(id) {
@@ -83,7 +87,7 @@ define(['suluproduct/models/attribute', 'app-config'], function(Attribute, AppCo
                 success: function(response) {
                     var model = response.toJSON();
                     if (!!data.id) {
-                        this.sandbox.emit('sulu.attributes.saved', model);
+                        this.sandbox.emit('sulu.products.attributes.saved', model);
                     } else {
                         this.load(model.id, this.options.locale);
                     }
@@ -101,6 +105,28 @@ define(['suluproduct/models/attribute', 'app-config'], function(Attribute, AppCo
             );
         },
 
+        deleteAttribute: function(id) {
+            if (!id && id != 0) {
+                // TODO: translations
+                this.sandbox.emit('sulu.overlay.show-error', 'sulu.overlay.delete-no-items');
+                return;
+            }
+            this.showDeleteConfirmation(id, function(wasConfirmed) {
+                if (wasConfirmed) {
+                    // TODO: show loading icon
+                    var attribute = Attribute.findOrCreate({id: id});
+                    attribute.destroy({
+                        success: function() {
+                            this.sandbox.emit(
+                                'sulu.router.navigate',
+                                    'pim/attributes'
+                            );
+                        }.bind(this)
+                    });
+                }
+            }.bind(this));
+        },
+
         deleteAttributes: function(ids) {
             if (ids.length < 1) {
                 // TODO: translations
@@ -111,7 +137,7 @@ define(['suluproduct/models/attribute', 'app-config'], function(Attribute, AppCo
                 if (wasConfirmed) {
                     // TODO: show loading icon
                     ids.forEach(function(id) {
-                        var attribute = new Attribute({id: id});
+                        var attribute = Attribute.findOrCreate({id: id});
                         attribute.destroy({
                             data: {removeAttributes: !!removeAttributes},
                             processData: true,

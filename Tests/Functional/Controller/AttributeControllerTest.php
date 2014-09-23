@@ -28,14 +28,39 @@ class AttributeControllerTest extends DatabaseTestCase
     protected static $entities;
 
     /**
+     * @var TestUser
+     */
+    private $testUser;
+
+    /**
      * @var Client
      */
     private $client;
 
     /**
-     * @var TestUser
+     * @var AttributeType
      */
-    private $testUser;
+    private $attributeType1;
+
+    /**
+     * @var AttributeEntity
+     */
+    private $attributeEntity1;
+
+    /**
+     * @var Attribute
+     */
+    private $attribute1;
+
+    /**
+     * @var AttributeEntity
+     */
+    private $attributeEntity2;
+
+    /**
+     * @var Attribute
+     */
+    private $attribute2;
 
     public function setUp()
     {
@@ -200,10 +225,14 @@ class AttributeControllerTest extends DatabaseTestCase
 
         $this->client->request('POST', '/api/attributes', $data);
         $response = json_decode($this->client->getResponse()->getContent());
+        $this->assertEquals('Material', $response->name);
+        $this->assertEquals($this->attributeType1->getId(), $response->type->id);
 
         $this->client->request('GET', '/api/attributes/' . $response->id);
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+        $this->assertEquals('Material', $response->name);
+        $this->assertEquals($this->attributeType1->getId(), $response->type->id);
     }
 
     /**
@@ -308,6 +337,8 @@ class AttributeControllerTest extends DatabaseTestCase
         $this->client->request('PUT', '/api/attributes/1', $data);
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+        $this->assertEquals('some-translation-type-2-string', $response->type->name);
+        $this->assertEquals('Petrol', $response->name);
 
         $this->client->request('GET', '/api/attributes/1');
         $response = json_decode($this->client->getResponse()->getContent());
@@ -372,6 +403,8 @@ class AttributeControllerTest extends DatabaseTestCase
 
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+        $this->assertEquals('some-translation-type-1-string', $response->type->name);
+        $this->assertEquals('Some new name', $response->name);
 
         $this->client->request('GET', '/api/attributes/1');
         $response = json_decode($this->client->getResponse()->getContent());
@@ -417,6 +450,8 @@ class AttributeControllerTest extends DatabaseTestCase
 
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+        $this->assertEquals('some-translation-type-1-string', $response->type->name);
+        $this->assertEquals('Gas', $response->name);
 
         $this->client->request('GET', '/api/attributes/1');
         $response = json_decode($this->client->getResponse()->getContent());

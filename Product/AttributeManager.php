@@ -111,7 +111,11 @@ class AttributeManager implements AttributeManagerInterface
                     self::$attributeTypeEntityName,
                     self::$attributeEntityName . '.type'
                 )
-            )
+            ),
+            false,
+            true,
+            'translation'
+
         );
 
         return $fieldDescriptors;
@@ -137,6 +141,23 @@ class AttributeManager implements AttributeManagerInterface
     public function findAllByLocale($locale)
     {
         $attributes = $this->attributeRepository->findAllByLocale($locale);
+
+        array_walk(
+            $attributes,
+            function (&$attribute) use ($locale) {
+                $attribute = new Attribute($attribute, $locale);
+            }
+        );
+
+        return $attributes;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function findAllByLocaleAndType($locale, $type)
+    {
+        $attributes = $this->attributeRepository->findAllByLocaleAndType($locale, $type);
 
         array_walk(
             $attributes,

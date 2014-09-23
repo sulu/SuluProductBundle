@@ -19,7 +19,6 @@ use JMS\Serializer\Annotation\Expose;
 use JMS\Serializer\Annotation\Groups;
 
 use Sulu\Bundle\ProductBundle\Entity\Attribute as AttributeEntity;
-use Sulu\Bundle\ProductBundle\Api\Attribute as Attribute;
 use Sulu\Bundle\ProductBundle\Entity\AttributeTranslation;
 use Sulu\Bundle\ProductBundle\Api\AttributeType;
 use Sulu\Component\Rest\ApiWrapper;
@@ -36,7 +35,7 @@ use Sulu\Component\Security\UserInterface;
 class Attribute extends ApiWrapper
 {
     /**
-     * @param Entity $entity
+     * @param AttributeEntity $entity
      * @param string $locale
      */
     public function __construct(AttributeEntity $entity, $locale)
@@ -186,11 +185,21 @@ class Attribute extends ApiWrapper
      */
     public function getTranslation()
     {
+        $fallback = null;
         foreach ($this->entity->translations as $translation) {
+            if ($translation->getName() != null) {
+                $fallback = $translation;
+            }
             if ($translation->getLocale() == $this->locale) {
                 return $translation;
             }
         }
+
+        if ($fallback) {
+            return $fallback;
+        }
+
+        // Still no translation found
         $translation = new AttributeTranslation();
         $translation->setLocale($this->locale);
         $translation->setAttribute($this->entity);

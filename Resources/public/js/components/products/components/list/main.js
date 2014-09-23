@@ -11,7 +11,7 @@ define(function () {
 
     'use strict';
     var TYPE_PRODUCT = 'product',
-        TYPE_PRODUCT_VARIANT = 'product-with-variant',
+        TYPE_PRODUCT_VARIANT = 'product-with-variants',
         TYPE_PRODUCT_ADDON = 'product-addon',
         TYPE_PRODUCT_SET = 'product-set',
 
@@ -23,15 +23,16 @@ define(function () {
             this.sandbox.on('sulu.list-toolbar.add', function () {
                 this.sandbox.emit('sulu.products.new');
             }.bind(this));
+
+            this.sandbox.on('sulu.list-toolbar.delete', function () {
+                this.sandbox.emit('husky.datagrid.items.get-selected', function (ids) {
+                    this.sandbox.emit('sulu.products.delete', ids);
+                }.bind(this));
+            }, this);
         };
 
     return {
-
         view: true,
-
-        fullSize: {
-            width: true
-        },
 
         layout: {
             content: {
@@ -80,22 +81,22 @@ define(function () {
                                 title: this.sandbox.translate('sulu.list-toolbar.add'),
                                 items: [
                                     {
-                                        id: 'add-basic',
+                                        id: 'add-product',
                                         title: this.sandbox.translate('products.add-product'),
                                         callback: addProduct.bind(this, TYPE_PRODUCT)
                                     },
                                     {
-                                        id: 'add-lead',
-                                        title: this.sandbox.translate('products.add-product-with-variant'),
+                                        id: 'add-product-with-variants',
+                                        title: this.sandbox.translate('products.add-product-with-variants'),
                                         callback: addProduct.bind(this, TYPE_PRODUCT_VARIANT)
                                     },
                                     {
-                                        id: 'add-customer',
+                                        id: 'add-product-addon',
                                         title: this.sandbox.translate('products.add-product-addon'),
                                         callback: addProduct.bind(this, TYPE_PRODUCT_ADDON)
                                     },
                                     {
-                                        id: 'add-supplier',
+                                        id: 'add-product-set',
                                         title: this.sandbox.translate('products.add-product-set'),
                                         callback: addProduct.bind(this, TYPE_PRODUCT_SET)
                                     }

@@ -61,6 +61,22 @@ class AttributeRepository extends EntityRepository implements AttributeRepositor
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public function findAllByLocaleAndType($locale, $type)
+    {
+        try {
+            $queryBuilder = $this->getAttributeQuery($locale);
+            $queryBuilder->andWhere('type.id = :type');
+            $queryBuilder->setParameter('type', $type);
+
+            return $queryBuilder->getQuery()->getResult();
+        } catch (NoResultException $exc) {
+            return null;
+        }
+    }
+
+    /**
      * Returns the query for attributes
      * @param string $locale The locale to load
      * @return \Doctrine\ORM\QueryBuilder
@@ -69,6 +85,7 @@ class AttributeRepository extends EntityRepository implements AttributeRepositor
     {
         $queryBuilder = $this->createQueryBuilder('attribute')
             ->leftJoin('attribute.translations', 'translations', 'WITH', 'translations.locale = :locale')
+            ->leftJoin('attribute.type', 'type')
             ->setParameter('locale', $locale);
 
         return $queryBuilder;

@@ -40,6 +40,91 @@ class ValueControllerTest extends DatabaseTestCase
      */
     private $testUser;
 
+    /**
+     * @var AttributeType
+     */
+    private $attributeType1;
+
+    /**
+     * @var AttributeType
+     */
+    private $attributeType2;
+
+    /**
+     * @var AttributeType
+     */
+    private $attributeType3;
+
+    /**
+     * @var AttributeType
+     */
+    private $attributeType4;
+
+    /**
+     * @var AttributeType
+     */
+    private $attributeType5;
+
+    /**
+     * @var AttributeEntity
+     */
+    private $attributeEntity1;
+
+    /**
+     * @var AttributeEntity
+     */
+    private $attributeEntity2;
+
+    /**
+     * @var AttributeEntity
+     */
+    private $attributeEntity3;
+
+    /**
+     * @var Attribute
+     */
+    private $attribute1;
+
+    /**
+     * @var Attribute
+     */
+    private $attribute2;
+
+    /**
+     * @var Attribute
+     */
+    private $attribute3;
+
+    /**
+     * @var AttributeValueEntity
+     */
+    private $attributeValueEntity1_1;
+
+    /**
+     * @var AttributeValue
+     */
+    private $attributeValue1_1;
+
+    /**
+     * @var AttributeValueEntity
+     */
+    private $attributeValueEntity1_2;
+
+    /**
+     * @var AttributeValue
+     */
+    private $attributeValue1_2;
+
+    /**
+     * @var AttributeValueEntity
+     */
+    private $attributeValueEntity2_1;
+
+    /**
+     * @var AttributeValue
+     */
+    private $attributeValue2_1;
+
     public function setUp()
     {
         $this->setUpTestUser();
@@ -300,6 +385,8 @@ class ValueControllerTest extends DatabaseTestCase
         $this->client->request('POST', $url, $data);
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+        $this->assertEquals('New value for attribute 2', $response->name);
+        $this->assertTrue($response->selected);
 
         // Get the new created value
         $url = '/api/attributes/' .
@@ -309,7 +396,6 @@ class ValueControllerTest extends DatabaseTestCase
         $this->client->request('GET', $url);
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
-
         $this->assertEquals('New value for attribute 2', $response->name);
         $this->assertTrue($response->selected);
     }
@@ -330,6 +416,8 @@ class ValueControllerTest extends DatabaseTestCase
         $this->client->request('POST', $url, $data);
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+        $this->assertEquals('New value for attribute 2', $response->name);
+        $this->assertFalse($response->selected);
 
         // Get the new created value
         $url = '/api/attributes/' .
@@ -339,7 +427,6 @@ class ValueControllerTest extends DatabaseTestCase
         $this->client->request('GET', $url);
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
-
         $this->assertEquals('New value for attribute 2', $response->name);
         $this->assertFalse($response->selected);
     }
@@ -386,6 +473,8 @@ class ValueControllerTest extends DatabaseTestCase
         $this->client->request('PUT', $url, $data);
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+        $this->assertEquals('New changed value for attribute 2', $response->name);
+        $this->assertFalse($response->selected);
 
         // Get the new created value
         $url = '/api/attributes/' .
@@ -395,7 +484,6 @@ class ValueControllerTest extends DatabaseTestCase
         $this->client->request('GET', $url);
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
-
         $this->assertEquals('New changed value for attribute 2', $response->name);
         $this->assertFalse($response->selected);
     }
@@ -442,6 +530,8 @@ class ValueControllerTest extends DatabaseTestCase
         $this->client->request('PUT', $url, $data);
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+        $this->assertEquals('New changed changed value for attribute 2', $response->name);
+        $this->assertFalse($response->selected);
 
         // Get the new created value
         $url = '/api/attributes/' .
@@ -451,7 +541,6 @@ class ValueControllerTest extends DatabaseTestCase
         $this->client->request('GET', $url);
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
-
         $this->assertEquals('New changed changed value for attribute 2', $response->name);
         $this->assertFalse($response->selected);
     }
@@ -473,6 +562,8 @@ class ValueControllerTest extends DatabaseTestCase
         $this->client->request('PUT', $url, $data);
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+        $this->assertEquals('Value1_2', $response->name);
+        $this->assertTrue($response->selected);
 
         // Get the new created value
         $url = '/api/attributes/' .
@@ -482,7 +573,6 @@ class ValueControllerTest extends DatabaseTestCase
         $this->client->request('GET', $url);
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
-
         $this->assertEquals('Value1_2', $response->name);
         $this->assertTrue($response->selected);
     }
