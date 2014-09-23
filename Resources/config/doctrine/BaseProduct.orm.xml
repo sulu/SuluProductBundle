@@ -112,5 +112,15 @@
                 </inverse-join-columns>
             </join-table>
         </many-to-many>
+        <many-to-many target-entity="Sulu\Bundle\CategoryBundle\Entity\Category" field="categories">
+            <join-table name="pr_product_categories">
+                <join-columns>
+                    <join-column name="idProducts" referenced-column-name="id" nullable="false"/>
+                </join-columns>
+                <inverse-join-columns>
+                    <join-column name="idCategories" referenced-column-name="id" nullable="false"/>
+                </inverse-join-columns>
+            </join-table>
+        </many-to-many>
     </mapped-superclass>
 </doctrine-mapping>
