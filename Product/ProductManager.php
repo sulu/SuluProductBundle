@@ -429,7 +429,7 @@ class ProductManager implements ProductManagerInterface
     {
         if (isset($priceData['id'])) {
             throw new EntityIdAlreadySetException(self::$productPriceEntityName, $priceData['id']);
-        } else {
+        } elseif(isset($priceData['price'])) {
             $currency = $this->currencyRepository->find($priceData['currency']['id']);
 
             if (!$currency) {
