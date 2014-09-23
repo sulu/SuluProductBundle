@@ -23,6 +23,7 @@ class SuluProductContentNavigation extends ContentNavigation
         $details->setAction('details');
         $details->setGroups(array('product', 'product-with-variants', 'product-addon', 'product-set'));
         $details->setComponent('products/components/detail-form@suluproduct');
+        $details->setResetStore(false);
         $this->addNavigationItem($details);
 
         $variants = new ContentNavigationItem('content-navigation.product.variants');
@@ -30,6 +31,7 @@ class SuluProductContentNavigation extends ContentNavigation
         $variants->setGroups(array('product-with-variants'));
         $variants->setComponent('products/components/variants-list@suluproduct');
         $variants->setDisplay(array('edit'));
+        $variants->setResetStore(false);
         $this->addNavigationItem($variants);
 
         $pricing = new ContentNavigationItem('content-navigation.product.pricing');
@@ -37,6 +39,7 @@ class SuluProductContentNavigation extends ContentNavigation
         $pricing->setGroups(array('product', 'product-set'));
         $pricing->setComponent('products/components/pricing@suluproduct');
         $pricing->setDisplay(array('edit'));
+        $pricing->setResetStore(false);
         $this->addNavigationItem($pricing);
     }
 } 
