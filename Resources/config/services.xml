@@ -65,8 +65,8 @@
                  factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
             <argument>SuluProductBundle:Currency</argument>
         </service>
-        <service id="sulu_product.product_manager" class="%sulu_product.product_manager.class%" scope="request">
-            <argument type="service" id="sulu_core.rest_helper"/>
+        <service id="sulu_product.product_manager" class="%sulu_product.product_manager.class%">
+            <!-- <argument type="service" id="sulu_core.rest_helper"/> -->
             <argument type="service" id="sulu_product.product_repository"/>
             <argument type="service" id="sulu_product.attribute_set_repository"/>
             <argument type="service" id="sulu_product.attribute_repository"/>
