@@ -331,9 +331,11 @@ class ProductManager implements ProductManagerInterface
         $product->setPriceInfo($this->getProperty($data, 'priceInfo', $product->getPriceInfo()));
 
         if (array_key_exists('attributes', $data)) {
+
             foreach ($data['attributes'] as $attribute) {
                 $attributeId = $attribute['id'];
                 $attributeValue = $attribute['value'];
+                $this->checkDataSet($attribute, 'id', true);
 
                 /** @var AttributeSet $attributeSet */
                 $attribute = $this->attributeRepository->find($attributeId);
@@ -346,10 +348,10 @@ class ProductManager implements ProductManagerInterface
                     $productAttribute = new ProductAttribute();
                     $productAttribute->setAttribute($attribute);
                     $productAttribute->setProduct($product->getEntity());
+                    $this->em->persist($productAttribute);
                 }
 
                 $productAttribute->setValue($attributeValue);
-                $this->em->persist($productAttribute);
             }
         }
 
