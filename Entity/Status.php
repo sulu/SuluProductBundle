@@ -20,7 +20,7 @@ class Status
     /**
      * @var integer
      */
-    private $id;
+    public $id;
 
     /**
      * @var \Doctrine\Common\Collections\Collection
@@ -41,6 +41,17 @@ class Status
         $this->translations = new \Doctrine\Common\Collections\ArrayCollection();
     }
     
+    /**
+     * Set id
+     *
+     * @return integer 
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+        return $this;
+    }
+
     /**
      * Get id
      *

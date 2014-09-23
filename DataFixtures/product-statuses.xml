@@ -1,0 +1,22 @@
+<product-statuses>
+    <product-status>
+        <de>Importiert</de>
+        <en>Imported</en>
+    </product-status>
+    <product-status>
+        <de>Fertig für Freigabe</de>
+        <en>Ready for Release</en>
+    </product-status>
+    <product-status>
+        <de>Publiziert</de>
+        <en>Published</en>
+    </product-status>
+    <product-status>
+        <de>Archiviert</de>
+        <en>Archived</en>
+    </product-status>
+    <product-status>
+        <de>Abgelehnt</de>
+        <en>Rejected</en>
+    </product-status>
+</product-statuses>
