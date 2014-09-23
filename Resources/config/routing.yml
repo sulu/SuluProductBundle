@@ -30,6 +30,14 @@ sulu_product.product_import:
     pattern: /template/product/import.html
     defaults: { _controller: SuluProductBundle:Template:productImport }
 
+attribute_list:
+    pattern: /template/attribute/list.html
+    defaults: { _controller: SuluProductBundle:Template:attributeList }
+
+attribute_form:
+    pattern: /template/attribute/form.html
+    defaults: { _controller: SuluProductBundle:Template:attributeForm }
+
 sulu_product.product_pricing:
     pattern: /template/product/pricing.html
     defaults: { _controller: SuluProductBundle:Template:productPricing }
