@@ -12,13 +12,17 @@ namespace Sulu\Bundle\ProductBundle\Tests\Functional\Controller;
 
 use DateTime;
 use Doctrine\ORM\Tools\SchemaTool;
+use Sulu\Bundle\ProductBundle\Entity\Currency;
 use Sulu\Bundle\ProductBundle\Entity\Product;
 use Sulu\Bundle\ProductBundle\Entity\Attribute;
 use Sulu\Bundle\ProductBundle\Entity\AttributeTranslation;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttribute;
+use Sulu\Bundle\ProductBundle\Entity\ProductPrice;
 use Sulu\Bundle\ProductBundle\Entity\ProductTranslation;
 use Sulu\Bundle\ProductBundle\Entity\Status;
 use Sulu\Bundle\ProductBundle\Entity\StatusTranslation;
+use Sulu\Bundle\ProductBundle\Entity\TaxClass;
+use Sulu\Bundle\ProductBundle\Entity\TaxClassTranslation;
 use Sulu\Bundle\ProductBundle\Entity\Type;
 use Sulu\Bundle\ProductBundle\Entity\TypeTranslation;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSet;
@@ -145,6 +149,26 @@ class ProductControllerTest extends DatabaseTestCase
      */
     private $attributeTranslation2;
 
+    /**
+     * @var TaxClass
+     */
+    private $taxClass1;
+
+    /**
+     * @var Currency
+     */
+    private $currency1;
+
+    /**
+     * @var Currency
+     */
+    private $currency2;
+
+    /**
+     * @var Currency
+     */
+    private $currency3;
+
     public static function setUpBeforeClass()
     {
         parent::setUpBeforeClass();
@@ -183,6 +207,15 @@ class ProductControllerTest extends DatabaseTestCase
 
     private function setUpTestData()
     {
+        $this->currency1 = new Currency();
+        $this->currency1->setName('EUR');
+
+        $this->currency2 = new Currency();
+        $this->currency2->setName('USD');
+
+        $this->currency3 = new Currency();
+        $this->currency3->setName('GBP');
+
         // Product 1
         // product type
         $this->type1 = new Type();
@@ -229,6 +262,18 @@ class ProductControllerTest extends DatabaseTestCase
         $this->product1->setAttributeSet($this->attributeSet1);
         $this->product1->setCreated(new DateTime());
         $this->product1->setChanged(new DateTime());
+
+        $productPrice1 = new ProductPrice();
+        $productPrice1->setCurrency($this->currency1);
+        $productPrice1->setPrice(14.99);
+        $productPrice1->setProduct($this->product1);
+        $this->product1->addPrice($productPrice1);
+
+        $productPrice2 = new ProductPrice();
+        $productPrice2->setCurrency($this->currency2);
+        $productPrice2->setPrice(9.99);
+        $productPrice2->setProduct($this->product1);
+        $this->product1->addPrice($productPrice2);
 
         $productTranslation1 = new ProductTranslation();
         $productTranslation1->setProduct($this->product1);
@@ -302,6 +347,21 @@ class ProductControllerTest extends DatabaseTestCase
         $this->productAttribute2->setProduct($this->product2);
         $this->productAttribute2->setAttribute($this->attribute2);
 
+        $this->taxClass1 = new TaxClass();
+        $taxClassTranslation1 = new TaxClassTranslation();
+        $taxClassTranslation1->setName('20%');
+        $taxClassTranslation1->setLocale('en');
+        $taxClassTranslation1->setTaxClass($this->taxClass1);
+
+        self::$em->persist($this->taxClass1);
+        self::$em->persist($taxClassTranslation1);
+
+        self::$em->persist($this->currency1);
+        self::$em->persist($this->currency2);
+        self::$em->persist($this->currency3);
+
+        self::$em->persist($productPrice1);
+        self::$em->persist($productPrice2);
         self::$em->persist($this->type1);
         self::$em->persist($this->attributeType1);
         self::$em->persist($this->typeTranslation1);
@@ -341,6 +401,9 @@ class ProductControllerTest extends DatabaseTestCase
             self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\ProductPrice'),
             self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Type'),
             self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\TypeTranslation'),
+            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\TaxClass'),
+            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\TaxClassTranslation'),
+            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Currency'),
             self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Status'),
             self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\StatusTranslation'),
             self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\AttributeSet'),
@@ -385,16 +448,47 @@ class ProductControllerTest extends DatabaseTestCase
     public function testGetById()
     {
         $this->client->request('GET', '/api/products/1');
-        $response = json_decode($this->client->getResponse()->getContent());
+        $response = json_decode($this->client->getResponse()->getContent(), true);
 
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
-        $this->assertEquals('EnglishProductCode-1', $response->code);
-        $this->assertEquals('ProductNumber-1', $response->number);
-        $this->assertEquals('EnglishManufacturer-1', $response->manufacturer);
-        $this->assertEquals($this->type1->getId(), $response->type->id);
-        $this->assertEquals('EnglishProductType-1', $response->type->name);
-        $this->assertEquals($this->productStatus1->getId(), $response->status->id);
-        $this->assertEquals('EnglishProductStatus-1', $response->status->name);
+        $this->assertEquals('EnglishProductCode-1', $response['code']);
+        $this->assertEquals('ProductNumber-1', $response['number']);
+        $this->assertEquals('EnglishManufacturer-1', $response['manufacturer']);
+        $this->assertEquals($this->type1->getId(), $response['type']['id']);
+        $this->assertEquals('EnglishProductType-1', $response['type']['name']);
+        $this->assertEquals($this->productStatus1->getId(), $response['status']['id']);
+        $this->assertEquals('EnglishProductStatus-1', $response['status']['name']);
+        $this->assertContains(
+            array(
+                'id' => 1,
+                'price' => 14.99,
+                'currency' => array(
+                    'id' => 1,
+                    'name' => 'EUR'
+                )
+            ),
+            $response['prices']
+        );
+        $this->assertContains(
+            array(
+                'id' => 2,
+                'price' => 9.99,
+                'currency' => array(
+                    'id' => 2,
+                    'name' => 'USD'
+                )
+            ),
+            $response['prices']
+        );
+        $this->assertContains(
+            array(
+                'currency' => array(
+                    'id' => 3,
+                    'name' => 'GBP'
+                )
+            ),
+            $response['prices']
+        );
     }
 
     public function testGetAll()
@@ -501,17 +595,70 @@ class ProductControllerTest extends DatabaseTestCase
                 'type' => array(
                     'id' => $this->type1->getId()
                 ),
+                'taxClass' => array(
+                    'id' => $this->taxClass1->getId()
+                ),
+                'prices' => array(
+                    array(
+                        'id' => 1,
+                        'price' => 17.99,
+                        'currency' => array(
+                            'id' => 1,
+                            'name' => 'EUR'
+                        )
+                    ),
+                    array(
+                        'price' => 12.99,
+                        'currency' => array(
+                            'id' => 3,
+                            'name' => 'GBP'
+                        )
+                    )
+                )
             )
         );
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
 
         $this->client->request('GET', '/api/products/1');
-        $response = json_decode($this->client->getResponse()->getContent());
+        $response = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
-        $this->assertEquals('EnglishProductTranslationNameNew-1', $response->name);
-        $this->assertEquals('EvilCode', $response->code);
-        $this->assertEquals('EvilNumber', $response->number);
-        $this->assertEquals('EvilKnievel', $response->manufacturer);
+        $this->assertEquals('EnglishProductTranslationNameNew-1', $response['name']);
+        $this->assertEquals('EvilCode', $response['code']);
+        $this->assertEquals('EvilNumber', $response['number']);
+        $this->assertEquals('EvilKnievel', $response['manufacturer']);
+        $this->assertEquals('20%', $response['taxClass']['name']);
+
+        $this->assertContains(
+            array(
+                'id' => 1,
+                'price' => 17.99,
+                'currency' => array(
+                    'id' => 1,
+                    'name' => 'EUR'
+                )
+            ),
+            $response['prices']
+        );
+        $this->assertContains(
+            array(
+                'currency' => array(
+                    'id' => 2,
+                    'name' => 'USD'
+                )
+            ),
+            $response['prices']
+        );
+        $this->assertContains(
+            array(
+                'id' => 3,
+                'price' => 12.99,
+                'currency' => array(
+                    'id' => 3,
+                    'name' => 'GBP'
+                )
+            ),
+            $response['prices']
+        );
     }
 
     public function testPutNotExisting()
@@ -638,6 +785,9 @@ class ProductControllerTest extends DatabaseTestCase
             ),
             'attributeSet' => array(
                 'id' => $this->attributeSet1->getId()
+            ),
+            'taxClass' => array(
+                'id' => $this->taxClass1->getId()
             )
         );
 
@@ -668,6 +818,8 @@ class ProductControllerTest extends DatabaseTestCase
 
         $this->assertEquals($this->attributeSet1->getId(), $response->attributeSet->id);
         $this->assertEquals('EnglishTemplate-1', $response->attributeSet->name);
+
+        $this->assertEquals('20%', $response->taxClass->name);
 
         if ($testParent) {
             $this->assertEquals($this->product2->getId(), $response->parent->id);

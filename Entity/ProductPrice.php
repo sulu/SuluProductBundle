@@ -15,7 +15,7 @@ class ProductPrice
     private $minimumQuantity;
 
     /**
-     * @var string
+     * @var double
      */
     private $price;
 
@@ -34,6 +34,10 @@ class ProductPrice
      */
     private $product;
 
+    /**
+     * @var \Sulu\Bundle\ProductBundle\Entity\Currency
+     */
+    private $currency;
 
     /**
      * Set minimumQuantity
@@ -61,7 +65,7 @@ class ProductPrice
     /**
      * Set price
      *
-     * @param string $price
+     * @param double $price
      * @return ProductPrice
      */
     public function setPrice($price)
@@ -74,7 +78,7 @@ class ProductPrice
     /**
      * Get price
      *
-     * @return string 
+     * @return double
      */
     public function getPrice()
     {
@@ -135,5 +139,28 @@ class ProductPrice
     public function getProduct()
     {
         return $this->product;
+    }
+
+    /**
+     * Set currency
+     *
+     * @param \Sulu\Bundle\ProductBundle\Entity\Currency $currency
+     * @return ProductPrice
+     */
+    public function setCurrency(\Sulu\Bundle\ProductBundle\Entity\Currency $currency = null)
+    {
+        $this->currency = $currency;
+    
+        return $this;
+    }
+
+    /**
+     * Get currency
+     *
+     * @return \Sulu\Bundle\ProductBundle\Entity\Currency
+     */
+    public function getCurrency()
+    {
+        return $this->currency;
     }
 }

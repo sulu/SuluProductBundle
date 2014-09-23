@@ -58,6 +58,22 @@
                 <source>content-navigation.product.variants</source>
                 <target>Variants</target>
             </trans-unit>
+            <trans-unit id="15" resname="content-navigation.product.pricing">
+                <source>content-navigation.product.pricing</source>
+                <target>Pricing</target>
+            </trans-unit>
+            <trans-unit id="16" resname="product.tax-class">
+                <source>product.tax-class</source>
+                <target>Tax class</target>
+            </trans-unit>
+            <trans-unit id="17" resname="product.currency">
+                <source>product.currency</source>
+                <target>Currency</target>
+            </trans-unit>
+            <trans-unit id="18" resname="product.price">
+                <source>product.price</source>
+                <target>Price</target>
+            </trans-unit>
             <trans-unit id="19" resname="products.add-product">
                 <source>products.add-product</source>
                 <target>Create new product</target>

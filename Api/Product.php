@@ -19,8 +19,10 @@ use Sulu\Bundle\ProductBundle\Entity\ProductTranslation;
 use Sulu\Component\Rest\ApiWrapper;
 use Sulu\Component\Security\UserInterface;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSet as AttributeSetEntity;
+use Sulu\Bundle\ProductBundle\Entity\ProductPrice as ProductPriceEntity;
 use Sulu\Bundle\ProductBundle\Entity\Status as StatusEntity;
 use Sulu\Bundle\ProductBundle\Entity\Type as TypeEntity;
+use Sulu\Bundle\ProductBundle\Entity\TaxClass as TaxClassEntity;
 use Hateoas\Configuration\Annotation\Relation;
 
 /**
@@ -34,7 +36,8 @@ class Product extends ApiWrapper
      * @param Entity $product The product to wrap
      * @param string $locale The locale of this product
      */
-    public function __construct(Entity $product, $locale) {
+    public function __construct(Entity $product, $locale)
+    {
         $this->entity = $product;
         $this->locale = $locale;
     }
@@ -299,6 +302,31 @@ class Product extends ApiWrapper
     }
 
     /**
+     * Returns the tax class of the product
+     * @return TaxClass The status of the product
+     * @VirtualProperty
+     * @SerializedName("taxClass")
+     */
+    public function getTaxClass()
+    {
+        $taxClass = $this->entity->getTaxClass();
+        if ($taxClass) {
+            return new TaxClass($this->entity->getTaxClass(), $this->locale);
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Sets the tax class of the product
+     * @param TaxClassEntity $taxClass The tax class of the product
+     */
+    public function setTaxClass(TaxClassEntity $taxClass)
+    {
+        $this->entity->setTaxClass($taxClass);
+    }
+
+    /**
      * Returns the attribute set of the product
      * @return AttributeSet The attribute set of the product
      * @VirtualProperty
@@ -321,6 +349,33 @@ class Product extends ApiWrapper
     public function setAttributeSet(AttributeSetEntity $attributeSet)
     {
         $this->entity->setAttributeSet($attributeSet);
+    }
+
+    /**
+     * Removes the given price from the product
+     * @param ProductPriceEntity $price
+     */
+    public function removePrice(ProductPriceEntity $price)
+    {
+        $this->entity->removePrice($price);
+    }
+
+    /**
+     * Returns the prices for the product
+     * @return \Sulu\Bundle\ProductBundle\Entity\ProductPrice[]
+     * @VirtualProperty
+     * @SerializedName("prices")
+     */
+    public function getPrices()
+    {
+        $priceEntities = $this->entity->getPrices();
+
+        $prices = array();
+        foreach ($priceEntities as $priceEntity) {
+            $prices[] = new ProductPrice($priceEntity, $this->locale);
+        }
+
+        return $prices;
     }
 
     /**
@@ -378,6 +433,7 @@ class Product extends ApiWrapper
 
             $this->entity->addTranslation($productTranslation);
         }
+
         return $productTranslation;
     }
 }

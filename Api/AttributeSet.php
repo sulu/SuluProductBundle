@@ -13,8 +13,17 @@ namespace Sulu\Bundle\ProductBundle\Api;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSet as Entity;
 use JMS\Serializer\Annotation\VirtualProperty;
 use JMS\Serializer\Annotation\SerializedName;
+use JMS\Serializer\Annotation\ExclusionPolicy;
+use Hateoas\Configuration\Annotation\Relation;
 use Sulu\Component\Rest\ApiWrapper;
 
+/**
+ * The Attribute set class which will be exported to the API
+ *
+ * @package Sulu\Bundle\ProductBundle\Api
+ * @Relation("self", href="expr('/api/admin/attribute-sets/' ~ object.getId())")
+ * @ExclusionPolicy("all")
+ */
 class AttributeSet extends ApiWrapper
 {
     /**
