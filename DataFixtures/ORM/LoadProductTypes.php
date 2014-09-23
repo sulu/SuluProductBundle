@@ -11,10 +11,10 @@
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
-use Sulu\Bundle\ProductBundle\Entity\Status;
-use Sulu\Bundle\ProductBundle\Entity\StatusTranslation;
+use Sulu\Bundle\ProductBundle\Entity\Type;
+use Sulu\Bundle\ProductBundle\Entity\TypeTranslation;
 
-class LoadProductStatuses implements FixtureInterface, OrderedFixtureInterface
+class LoadProductTypes implements FixtureInterface, OrderedFixtureInterface
 {
 
     private static $translations = ['de', 'en'];
@@ -28,23 +28,23 @@ class LoadProductStatuses implements FixtureInterface, OrderedFixtureInterface
         $metadata->setIdGeneratorType(\Doctrine\ORM\Mapping\ClassMetadata::GENERATOR_TYPE_NONE);
 
         $i = 1;
-        $file = dirname(__FILE__) . '/../product-statuses.xml';
+        $file = dirname(__FILE__) . '/../product-types.xml';
         $doc = new DOMDocument();
         $doc->load($file);
 
         $xpath = new DOMXpath($doc);
-        $elements = $xpath->query('/product-statuses/product-status');
+        $elements = $xpath->query('/product-types/product-type');
 
         if (!is_null($elements)) {
             /** @var $element DOMNode */
             foreach ($elements as $element) {
-                $status = new Status();
-                $status->setId($i);
+                $type = new Type();
+                $type->setId($i);
                 $children = $element->childNodes;
                 /** @var $child DOMNode */
                 foreach ($children as $child) {
                     if (isset($child->nodeName) && (in_array($child->nodeName, self::$translations))) {
-                        $translation = new StatusTranslation();
+                        $translation = new TypeTranslation();
                         $translation->setLocale($child->nodeName);
                         $translation->setName($child->nodeValue);
                         $translation->setStatus($status);
