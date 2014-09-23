@@ -437,6 +437,15 @@ class Product extends ApiWrapper
     }
 
     /**
+     * Returns the creator of the product
+     * @return creator/owner of the product
+     */
+    public function getCreator()
+    {
+        return $this->entity->getCreator();
+    }
+
+    /**
      * Sets the change time of the product
      * @param \DateTime $changed
      */
