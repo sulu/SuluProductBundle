@@ -1,0 +1,18 @@
+<product-types>
+    <product-type>
+        <de>Produkt</de>
+        <en>Product</en>
+    </product-type>
+    <product-type>
+        <de>Produkt mit Varianten</de>
+        <en>Product with Variants</en>
+    </product-type>
+    <product-type>
+        <de>Produkt Erweiterung</de>
+        <en>Product Add-on</en>
+    </product-type>
+    <product-type>
+        <de>Produkt Gruppe</de>
+        <en>Product Set</en>
+    </product-type>
+</product-types>

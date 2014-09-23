@@ -37,3 +37,7 @@ attribute_list:
 attribute_form:
     pattern: /template/attribute/form.html
     defaults: { _controller: SuluProductBundle:Template:attributeForm }
+
+sulu_product.product_pricing:
+    pattern: /template/product/pricing.html
+    defaults: { _controller: SuluProductBundle:Template:productPricing }

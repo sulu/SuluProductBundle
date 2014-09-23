@@ -40,7 +40,18 @@ class Type
         $this->products = new \Doctrine\Common\Collections\ArrayCollection();
         $this->translations = new \Doctrine\Common\Collections\ArrayCollection();
     }
-    
+
+    /**
+     * Set id
+     *
+     * @return Status
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+        return $this;
+    }
+
     /**
      * Get id
      *

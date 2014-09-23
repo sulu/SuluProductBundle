@@ -13,20 +13,31 @@ namespace Sulu\Bundle\ProductBundle\Product;
 use DateTime;
 use Doctrine\Common\Persistence\ObjectManager;
 use Sulu\Bundle\ProductBundle\Api\Product;
+use Sulu\Bundle\ProductBundle\Api\ProductPrice;
 use Sulu\Bundle\ProductBundle\Api\Status;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSetRepository;
+use Sulu\Bundle\ProductBundle\Entity\CurrencyRepository;
 use Sulu\Bundle\ProductBundle\Entity\Product as ProductEntity;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSet;
+use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
+use Sulu\Bundle\ProductBundle\Entity\ProductPrice as ProductPriceEntity;
+use Sulu\Bundle\ProductBundle\Entity\Attribute;
 use Sulu\Bundle\ProductBundle\Entity\StatusRepository;
+use Sulu\Bundle\ProductBundle\Entity\TaxClassRepository;
 use Sulu\Bundle\ProductBundle\Entity\Type;
 use Sulu\Bundle\ProductBundle\Entity\TypeRepository;
 use Sulu\Bundle\ProductBundle\Product\Exception\MissingProductAttributeException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductChildrenExistException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductDependencyNotFoundException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductNotFoundException;
+use Sulu\Component\Rest\Exception\EntityIdAlreadySetException;
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescriptor;
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineJoinDescriptor;
+use Sulu\Component\Rest\RestHelperInterface;
 use Sulu\Component\Security\UserRepositoryInterface;
+use Sulu\Bundle\ProductBundle\Entity\ProductAttribute;
+use Sulu\Bundle\ProductBundle\Entity\AttributeRepository;
+use Sulu\Bundle\ProductBundle\Entity\ProductAttributeRepository;
 
 class ProductManager implements ProductManagerInterface
 {
@@ -36,12 +47,30 @@ class ProductManager implements ProductManagerInterface
     protected static $productStatusEntityName = 'SuluProductBundle:Status';
     protected static $productStatusTranslationEntityName = 'SuluProductBundle:StatusTranslation';
     protected static $attributeSetEntityName = 'SuluProductBundle:AttributeSet';
+    protected static $attributeEntityName = 'SuluProductBundle:Attribute';
     protected static $productTranslationEntityName = 'SuluProductBundle:ProductTranslation';
+    protected static $productTaxClassEntityName = 'SuluProductBundle:TaxClass';
+    protected static $productPriceEntityName = 'SuluProductBundle:ProductPrice';
+
+    /**
+     * @var RestHelperInterface
+     */
+    private $restHelper;
 
     /**
      * @var ProductRepositoryInterface
      */
     private $productRepository;
+
+    /**
+     * @var AttributeRepository
+     */
+    private $attributeRepository;
+
+    /**
+     * @var ProductAttributeRepository
+     */
+    private $productAttributeRepository;
 
     /**
      * @var AttributeSetRepository
@@ -59,6 +88,16 @@ class ProductManager implements ProductManagerInterface
     private $typeRepository;
 
     /**
+     * @var TaxClassRepository
+     */
+    private $taxClassRepository;
+
+    /**
+     * @var CurrencyRepository
+     */
+    private $currencyRepository;
+
+    /**
      * @var UserRepositoryInterface
      */
     private $userRepository;
@@ -69,17 +108,27 @@ class ProductManager implements ProductManagerInterface
     private $em;
 
     public function __construct(
+        RestHelperInterface $restHelper,
         ProductRepositoryInterface $productRepository,
         AttributeSetRepository $attributeSetRepository,
+        AttributeRepository $attributeRepository,
+        ProductAttributeRepository $productAttributeRepository,
         StatusRepository $statusRepository,
         TypeRepository $typeRepository,
+        TaxClassRepository $taxClassRepository,
+        CurrencyRepository $currencyRepository,
         UserRepositoryInterface $userRepository,
         ObjectManager $em
     ) {
+        $this->restHelper = $restHelper;
         $this->productRepository = $productRepository;
         $this->attributeSetRepository = $attributeSetRepository;
+        $this->attributeRepository = $attributeRepository;
+        $this->productAttributeRepository = $productAttributeRepository;
         $this->statusRepository = $statusRepository;
         $this->typeRepository = $typeRepository;
+        $this->taxClassRepository = $taxClassRepository;
+        $this->currencyRepository = $currencyRepository;
         $this->userRepository = $userRepository;
         $this->em = $em;
     }
@@ -157,15 +206,6 @@ class ProductManager implements ProductManagerInterface
             true
         );
 
-        $fieldDescriptors['price'] = new DoctrineFieldDescriptor(
-            'price',
-            'price',
-            self::$productEntityName,
-            'product.price',
-            array(),
-            true
-        );
-
         $fieldDescriptors['priceInfo'] = new DoctrineFieldDescriptor(
             'priceInfo', 'priceInfo', self::$productEntityName, 'product.price-info', array(), true
         );
@@ -235,11 +275,15 @@ class ProductManager implements ProductManagerInterface
     /**
      * {@inheritDoc}
      */
-    public function findByIdAndLocale($id, $locale)
+    public function findByIdAndLocale($id, $locale, $loadCurrencies = true)
     {
         $product = $this->productRepository->findByIdAndLocale($id, $locale);
 
         if ($product) {
+            if ($loadCurrencies) {
+                $this->addAllCurrencies($product);
+            }
+
             return new Product($product, $locale);
         } else {
             return null;
@@ -311,6 +355,31 @@ class ProductManager implements ProductManagerInterface
         $product->setCost($this->getProperty($data, 'cost', $product->getCost()));
         $product->setPriceInfo($this->getProperty($data, 'priceInfo', $product->getPriceInfo()));
 
+        if (array_key_exists('attributes', $data)) {
+
+            foreach ($data['attributes'] as $attribute) {
+                $attributeId = $attribute['id'];
+                $attributeValue = $attribute['value'];
+                $this->checkDataSet($attribute, 'id', true);
+
+                /** @var AttributeSet $attributeSet */
+                $attribute = $this->attributeRepository->find($attributeId);
+                if (!$attribute) {
+                    throw new ProductDependencyNotFoundException(self::$attributeEntityName, $attributeId);
+                }
+
+                $productAttribute = $this->productAttributeRepository->findByAttributeIdAndProductId($attributeId, $product->getId());
+                if (!$productAttribute) {
+                    $productAttribute = new ProductAttribute();
+                    $productAttribute->setAttribute($attribute);
+                    $productAttribute->setProduct($product->getEntity());
+                    $this->em->persist($productAttribute);
+                }
+
+                $productAttribute->setValue($attributeValue);
+            }
+        }
+
         if (array_key_exists('attributeSet', $data) && array_key_exists('id', $data['attributeSet'])) {
             $attributeSetId = $data['attributeSet']['id'];
             /** @var AttributeSet $attributeSet */
@@ -323,7 +392,7 @@ class ProductManager implements ProductManagerInterface
 
         if (array_key_exists('parent', $data) && array_key_exists('id', $data['parent'])) {
             $parentId = $data['parent']['id'];
-            $parentProduct = $this->findByIdAndLocale($parentId, $locale);
+            $parentProduct = $this->findByIdAndLocale($parentId, $locale, false);
             if (!$parentProduct) {
                 throw new ProductDependencyNotFoundException(self::$productEntityName, $parentId);
             }
@@ -352,6 +421,38 @@ class ProductManager implements ProductManagerInterface
             $product->setType($type);
         }
 
+        if (array_key_exists('taxClass', $data) && array_key_exists('id', $data['taxClass'])) {
+            $taxClassId = $data['taxClass']['id'];
+            /** @var TaxClass $taxClass */
+            $taxClass = $this->taxClassRepository->find($taxClassId);
+            if (!$taxClass) {
+                throw new ProductDependencyNotFoundException(self::$productTaxClassEntityName, $taxClassId);
+            }
+            $product->setTaxClass($taxClass);
+        }
+
+        if (array_key_exists('prices', $data)) {
+            $get = function (ProductPrice $price) {
+                return $price->getId();
+            };
+
+            $add = function ($price) use ($product) {
+                return $this->addPrice($product->getEntity(), $price);
+            };
+
+            $update = function (ProductPrice $price, $matchedEntry) {
+                return $this->updatePrice($price, $matchedEntry);
+            };
+
+            $delete = function (ProductPrice $price) {
+                $this->em->remove($price->getEntity());
+
+                return true;
+            };
+
+            $this->restHelper->processSubEntities($product->getPrices(), $data['prices'], $get, $add, $update, $delete);
+        }
+
         $product->setChanged(new DateTime());
         $product->setChanger($user);
 
@@ -366,6 +467,53 @@ class ProductManager implements ProductManagerInterface
         }
 
         return $product;
+    }
+
+    /**
+     * Updates the given price with the values from the given array
+     * @param ProductPrice $price
+     * @param array $matchedEntry
+     * @return bool
+     */
+    protected function updatePrice(ProductPrice $price, $matchedEntry)
+    {
+        $price->setPrice($matchedEntry['price']);
+
+        return true;
+    }
+
+    /**
+     * Adds a price to the given product
+     * @param ProductInterface $product The product to add the price to
+     * @param array $priceData The array containing the data for the new price
+     * @return bool
+     * @throws \Sulu\Component\Rest\Exception\EntityIdAlreadySetException
+     * @throws Exception\ProductDependencyNotFoundException
+     */
+    protected function addPrice(ProductInterface $product, $priceData)
+    {
+        if (isset($priceData['id'])) {
+            throw new EntityIdAlreadySetException(self::$productPriceEntityName, $priceData['id']);
+        } else {
+            $currency = $this->currencyRepository->find($priceData['currency']['id']);
+
+            if (!$currency) {
+                throw new ProductDependencyNotFoundException(
+                    self::$productPriceEntityName,
+                    $priceData['currency']['id']
+                );
+            }
+
+            $price = new ProductPriceEntity();
+            $price->setPrice($priceData['price']);
+            $price->setProduct($product);
+            $price->setCurrency($currency);
+            $product->addPrice($price);
+
+            $this->em->persist($price);
+        }
+
+        return true;
     }
 
     /**
@@ -441,6 +589,11 @@ class ProductManager implements ProductManagerInterface
         return array_key_exists($key, $data) ? $data[$key] : $default;
     }
 
+    /**
+     * Checks if the given data is correct
+     * @param array $data The data to check
+     * @param boolean $create Defines if check is for new or already existing data
+     */
     private function checkData($data, $create)
     {
         $this->checkDataSet($data, 'number', $create);
@@ -450,6 +603,14 @@ class ProductManager implements ProductManagerInterface
         $this->checkDataSet($data, 'status', $create) && $this->checkDataSet($data['status'], 'id', $create);
     }
 
+    /**
+     * Checks if data for the given key is set correctly
+     * @param array $data The array with the data
+     * @param string $key The array key to check
+     * @param bool $create Defines if the is for new or already existing data
+     * @return bool
+     * @throws Exception\MissingProductAttributeException
+     */
     private function checkDataSet(array $data, $key, $create)
     {
         $keyExists = array_key_exists($key, $data);
@@ -459,5 +620,28 @@ class ProductManager implements ProductManagerInterface
         }
 
         return $keyExists;
+    }
+
+    /**
+     * Adds an ProductPrice for every currency to the Product, if it is no existing already
+     * @param ProductInterface $product The product to fill with currencies
+     */
+    private function addAllCurrencies(ProductInterface $product)
+    {
+        $currencies = $this->currencyRepository->findAll();
+
+        foreach ($product->getPrices() as $price) {
+            if (($key = array_search($price->getCurrency(), $currencies)) !== false) {
+                unset ($currencies[$key]);
+            }
+        }
+
+        foreach ($currencies as $currency) {
+            $price = new ProductPriceEntity();
+            $price->setCurrency($currency);
+
+            $product->addPrice($price);
+            $price->setProduct($product);
+        }
     }
 }
