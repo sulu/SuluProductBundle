@@ -111,7 +111,11 @@ class AttributeManager implements AttributeManagerInterface
                     self::$attributeTypeEntityName,
                     self::$attributeEntityName . '.type'
                 )
-            )
+            ),
+            false,
+            true,
+            'translation'
+
         );
 
         return $fieldDescriptors;

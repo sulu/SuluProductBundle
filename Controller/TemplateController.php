@@ -42,7 +42,10 @@ class TemplateController extends Controller
             );
         }
 
-        return $this->render('SuluProductBundle:Template:product.form.html.twig', array('status' => $statusTitles));
+        return $this->render(
+            'SuluProductBundle:Template:product.form.html.twig',
+            array('status' => $statusTitles)
+        );
     }
 
     public function productVariantsAction()
@@ -56,7 +59,46 @@ class TemplateController extends Controller
      */
     public function productImportAction()
     {
-        return $this->render('SuluProductBundle:Template:product.import.html.twig');
+        return $this->render(
+            'SuluProductBundle:Template:product.import.html.twig'
+        );
+    }
+
+    /**
+     * Returns Template for attribute list
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function attributeListAction()
+    {
+        return $this->render(
+            'SuluProductBundle:Template:attribute.list.html.twig'
+        );
+    }
+
+    /**
+     * Returns Template for attribute list
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function attributeFormAction()
+    {
+        $repository = $this->getDoctrine()
+            ->getRepository('SuluProductBundle:AttributeType');
+        $types = $repository->findAll();
+
+        $attributeTypes = array();
+        foreach ($types as $type) {
+            $attributeTypes[] = array(
+                'id'=>$type->getId(),
+                'name'=>$type->getName()
+            );
+        }
+
+        return $this->render(
+            'SuluProductBundle:Template:attribute.form.html.twig',
+            array(
+                'attribute_types' => $attributeTypes
+            )
+        );
     }
 
     /**

@@ -116,7 +116,7 @@ class ProductManager implements ProductManagerInterface
     private $em;
 
     public function __construct(
-        RestHelperInterface $restHelper,
+        // RestHelperInterface $restHelper,
         ProductRepositoryInterface $productRepository,
         AttributeSetRepository $attributeSetRepository,
         AttributeRepository $attributeRepository,
@@ -129,7 +129,7 @@ class ProductManager implements ProductManagerInterface
         UserRepositoryInterface $userRepository,
         ObjectManager $em
     ) {
-        $this->restHelper = $restHelper;
+        // $this->restHelper = $restHelper;
         $this->productRepository = $productRepository;
         $this->attributeSetRepository = $attributeSetRepository;
         $this->attributeRepository = $attributeRepository;
@@ -489,7 +489,7 @@ class ProductManager implements ProductManagerInterface
                 return true;
             };
 
-            $this->restHelper->processSubEntities($product->getPrices(), $data['prices'], $get, $add, $update, $delete);
+            // $this->restHelper->processSubEntities($product->getPrices(), $data['prices'], $get, $add, $update, $delete);
         }
 
         $product->setChanged(new DateTime());
