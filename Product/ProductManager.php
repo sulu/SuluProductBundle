@@ -21,7 +21,6 @@ use Sulu\Bundle\ProductBundle\Entity\Product as ProductEntity;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSet;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductPrice as ProductPriceEntity;
-use Sulu\Bundle\ProductBundle\Entity\Attribute;
 use Sulu\Bundle\ProductBundle\Entity\StatusRepository;
 use Sulu\Bundle\ProductBundle\Entity\TaxClassRepository;
 use Sulu\Bundle\ProductBundle\Entity\Type;
@@ -30,6 +29,7 @@ use Sulu\Bundle\ProductBundle\Product\Exception\MissingProductAttributeException
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductChildrenExistException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductDependencyNotFoundException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductNotFoundException;
+use Sulu\Component\Persistence\RelationTrait;
 use Sulu\Component\Rest\Exception\EntityIdAlreadySetException;
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescriptor;
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineJoinDescriptor;
@@ -41,6 +41,8 @@ use Sulu\Bundle\ProductBundle\Entity\ProductAttributeRepository;
 
 class ProductManager implements ProductManagerInterface
 {
+    use RelationTrait;
+
     protected static $productEntityName = 'SuluProductBundle:Product';
     protected static $productTypeEntityName = 'SuluProductBundle:Type';
     protected static $productTypeTranslationEntityName = 'SuluProductBundle:TypeTranslation';
@@ -51,11 +53,6 @@ class ProductManager implements ProductManagerInterface
     protected static $productTranslationEntityName = 'SuluProductBundle:ProductTranslation';
     protected static $productTaxClassEntityName = 'SuluProductBundle:TaxClass';
     protected static $productPriceEntityName = 'SuluProductBundle:ProductPrice';
-
-    /**
-     * @var RestHelperInterface
-     */
-    private $restHelper;
 
     /**
      * @var ProductRepositoryInterface
@@ -108,7 +105,6 @@ class ProductManager implements ProductManagerInterface
     private $em;
 
     public function __construct(
-        // RestHelperInterface $restHelper,
         ProductRepositoryInterface $productRepository,
         AttributeSetRepository $attributeSetRepository,
         AttributeRepository $attributeRepository,
@@ -120,7 +116,6 @@ class ProductManager implements ProductManagerInterface
         UserRepositoryInterface $userRepository,
         ObjectManager $em
     ) {
-        // $this->restHelper = $restHelper;
         $this->productRepository = $productRepository;
         $this->attributeSetRepository = $attributeSetRepository;
         $this->attributeRepository = $attributeRepository;
@@ -450,7 +445,7 @@ class ProductManager implements ProductManagerInterface
                 return true;
             };
 
-            // $this->restHelper->processSubEntities($product->getPrices(), $data['prices'], $get, $add, $update, $delete);
+            $this->processSubEntities($product->getPrices(), $data['prices'], $get, $add, $update, $delete);
         }
 
         $product->setChanged(new DateTime());
