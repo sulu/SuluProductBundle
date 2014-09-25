@@ -321,18 +321,30 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
+     * Fetches a product
+     *
+     * @param $id
+     * @param $locale
+     * @return Sulu\Bundle\ProductBundle\Api\Product
+     */
+    protected function fetchProduct($id, $locale)
+    {
+        $product = $this->productRepository->findByIdAndLocale($id, $locale);
+
+        if (!$product) {
+            throw new ProductNotFoundException($id);
+        }
+
+        return new Product($product, $locale);
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function save(array $data, $locale, $userId, $id = null, $flush = true)
     {
         if ($id) {
-            $product = $this->productRepository->findByIdAndLocale($id, $locale);
-
-            if (!$product) {
-                throw new ProductNotFoundException($id);
-            }
-
-            $product = new Product($product, $locale);
+            $product = $this->fetchProduct($id, $locale);
         } else {
             $product = new Product(new ProductEntity(), $locale);
         }
