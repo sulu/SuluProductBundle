@@ -151,10 +151,10 @@ class ProductManager implements ProductManagerInterface
             'product.name',
             array(
                 self::$productTranslationEntityName => new DoctrineJoinDescriptor(
-                        self::$productTranslationEntityName,
-                        self::$productEntityName . '.translations',
-                        self::$productTranslationEntityName . '.locale = \'' . $locale . '\''
-                    )
+                    self::$productTranslationEntityName,
+                    self::$productEntityName . '.translations',
+                    self::$productTranslationEntityName . '.locale = \'' . $locale . '\''
+                )
             )
         );
 
@@ -181,15 +181,20 @@ class ProductManager implements ProductManagerInterface
             'product.parent',
             array(
                 self::$productEntityName . 'Parent' => new DoctrineJoinDescriptor(
-                        self::$productEntityName,
-                        self::$productEntityName . '.parent'
-                    )
+                    self::$productEntityName,
+                    self::$productEntityName . '.parent'
+                )
             ),
             true
         );
 
         $fieldDescriptors['manufacturer'] = new DoctrineFieldDescriptor(
-            'manufacturer', 'manufacturer', self::$productEntityName, 'product.manufacturer', array(), true
+            'manufacturer',
+            'manufacturer',
+            self::$productEntityName,
+            'product.manufacturer',
+            array(),
+            true
         );
 
         $fieldDescriptors['cost'] = new DoctrineFieldDescriptor(
@@ -202,7 +207,12 @@ class ProductManager implements ProductManagerInterface
         );
 
         $fieldDescriptors['priceInfo'] = new DoctrineFieldDescriptor(
-            'priceInfo', 'priceInfo', self::$productEntityName, 'product.price-info', array(), true
+            'priceInfo',
+            'priceInfo',
+            self::$productEntityName,
+            'product.price-info',
+            array(),
+            true
         );
 
         $fieldDescriptors['type_id'] = new DoctrineFieldDescriptor(
@@ -212,11 +222,11 @@ class ProductManager implements ProductManagerInterface
             null,
             array(
                 self::$productTypeEntityName => new DoctrineJoinDescriptor(
-                        self::$productTypeEntityName,
-                        self::$productEntityName . '.type'
-                    )
+                    self::$productTypeEntityName,
+                    self::$productEntityName . '.type'
+                )
             ),
-            true
+            false
         );
 
         $fieldDescriptors['type'] = new DoctrineFieldDescriptor(
@@ -226,14 +236,14 @@ class ProductManager implements ProductManagerInterface
             'product.type',
             array(
                 self::$productTypeEntityName => new DoctrineJoinDescriptor(
-                        self::$productTypeEntityName,
-                        self::$productEntityName . '.type'
-                    ),
+                    self::$productTypeEntityName,
+                    self::$productEntityName . '.type'
+                ),
                 self::$productTypeTranslationEntityName => new DoctrineJoinDescriptor(
-                        self::$productTypeTranslationEntityName,
-                        self::$productTypeEntityName . '.translations',
-                        self::$productTypeTranslationEntityName . '.locale = \'' . $locale . '\''
-                    ),
+                    self::$productTypeTranslationEntityName,
+                    self::$productTypeEntityName . '.translations',
+                    self::$productTypeTranslationEntityName . '.locale = \'' . $locale . '\''
+                ),
             ),
             true
         );
@@ -245,23 +255,52 @@ class ProductManager implements ProductManagerInterface
             'product.status',
             array(
                 self::$productStatusEntityName => new DoctrineJoinDescriptor(
-                        self::$productStatusEntityName,
-                        self::$productEntityName . '.status'
-                    ),
+                    self::$productStatusEntityName,
+                    self::$productEntityName . '.status'
+                ),
                 self::$productStatusTranslationEntityName => new DoctrineJoinDescriptor(
-                        self::$productStatusTranslationEntityName, self::$productStatusEntityName . '.translations',
-                        self::$productStatusTranslationEntityName . '.locale = \'' . $locale . '\''
-                    ),
+                    self::$productStatusTranslationEntityName,
+                    self::$productStatusEntityName . '.translations',
+                    self::$productStatusTranslationEntityName . '.locale = \'' . $locale . '\''
+                ),
+            ),
+            true
+        );
+
+        $fieldDescriptors['status_id'] = new DoctrineFieldDescriptor(
+            'id',
+            'status_id',
+            self::$productStatusEntityName,
+            null,
+            array(
+                self::$productStatusEntityName => new DoctrineJoinDescriptor(
+                    self::$productStatusEntityName,
+                    self::$productEntityName . '.status'
+                )
             ),
             true
         );
 
         $fieldDescriptors['created'] = new DoctrineFieldDescriptor(
-            'created', 'created', self::$productEntityName, 'public.created', array(), false, false, 'date'
+            'created',
+            'created',
+            self::$productEntityName,
+            'public.created',
+            array(),
+            false,
+            false,
+            'date'
         );
 
         $fieldDescriptors['changed'] = new DoctrineFieldDescriptor(
-            'changed', 'changed', self::$productEntityName, 'public.changed', array(), false, false, 'date'
+            'changed',
+            'changed',
+            self::$productEntityName,
+            'public.changed',
+            array(),
+            false,
+            false,
+            'date'
         );
 
         return $fieldDescriptors;
@@ -307,7 +346,10 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * {@inheritDoc}
+     * Returns all master products in the given locale for the given number
+     * @param string $locale The locale of the product to load
+     * @param string $number The number of the product to load
+     * @return ProductInterface[]
      */
     public function findMasterByLocaleAndNumber($locale, $number)
     {
@@ -318,6 +360,26 @@ class ProductManager implements ProductManagerInterface
         } else {
             return null;
         }
+    }
+
+    /**
+     * Returns all simple products in the given locale for the given number
+     * @param string $locale The locale of the product to load
+     * @param string $number The number of the product to load
+     * @return ProductInterface[]
+     */
+    public function findSimpleByLocaleAndNumber($locale, $number)
+    {
+        $products = $this->productRepository->findSimpleByLocaleAndNumber($locale, $number);
+
+        array_walk(
+            $products,
+            function (&$product) use ($locale) {
+                $product = new Product($product, $locale);
+            }
+        );
+
+        return $products;
     }
 
     /**
@@ -341,8 +403,13 @@ class ProductManager implements ProductManagerInterface
     /**
      * {@inheritDoc}
      */
-    public function save(array $data, $locale, $userId, $id = null, $flush = true)
-    {
+    public function save(
+        array $data,
+        $locale,
+        $userId,
+        $id = null,
+        $flush = true
+    ) {
         if ($id) {
             $product = $this->fetchProduct($id, $locale);
         } else {
@@ -375,7 +442,10 @@ class ProductManager implements ProductManagerInterface
                     throw new ProductDependencyNotFoundException(self::$attributeEntityName, $attributeId);
                 }
 
-                $productAttribute = $this->productAttributeRepository->findByAttributeIdAndProductId($attributeId, $product->getId());
+                $productAttribute = $this->productAttributeRepository->findByAttributeIdAndProductId(
+                    $attributeId,
+                    $product->getId()
+                );
                 if (!$productAttribute) {
                     $productAttribute = new ProductAttribute();
                     $productAttribute->setAttribute($attribute);
