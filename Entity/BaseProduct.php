@@ -106,6 +106,11 @@ abstract class BaseProduct implements ProductInterface
     private $crosssells;
 
     /**
+     * @var \Doctrine\Common\Collections\Collection
+     */
+    private $categories;
+
+    /**
      * @var \Sulu\Bundle\SecurityBundle\Entity\User
      */
     private $changer;
@@ -634,5 +639,38 @@ abstract class BaseProduct implements ProductInterface
     public function getTaxClass()
     {
         return $this->taxClass;
+    }
+
+    /**
+     * Add categories
+     *
+     * @param \Sulu\Bundle\CategoryBundle\Entity\Category $categories
+     * @return BaseProduct
+     */
+    public function addCategory(\Sulu\Bundle\CategoryBundle\Entity\Category $categories)
+    {
+        $this->categories[] = $categories;
+    
+        return $this;
+    }
+
+    /**
+     * Remove categories
+     *
+     * @param \Sulu\Bundle\CategoryBundle\Entity\Category $categories
+     */
+    public function removeCategory(\Sulu\Bundle\CategoryBundle\Entity\Category $categories)
+    {
+        $this->categories->removeElement($categories);
+    }
+
+    /**
+     * Get categories
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getCategories()
+    {
+        return $this->categories;
     }
 }

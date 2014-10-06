@@ -11,9 +11,10 @@ define(
     [
         'mvc/relationalmodel',
         'mvc/hasmany',
-        'suluproduct/collections/variants'
+        'suluproduct/collections/variants',
+        'sulucategory/model/category'
     ],
-    function (RelationalModel, HasMany, Variants) {
+    function (RelationalModel, HasMany, Variants, Category) {
 
         'use strict';
 
@@ -35,6 +36,11 @@ define(
                     reverseRelation: {
                         key: 'parent'
                     }
+                },
+                {
+                    type: HasMany,
+                    key: 'categories',
+                    relatedModel: Category
                 }
             ],
 
@@ -68,7 +74,8 @@ define(
                     name: '',
                     code: '',
                     number: '',
-                    variants: []
+                    variants: [],
+                    categories: []
                 };
             }
         });

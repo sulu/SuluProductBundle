@@ -7,7 +7,11 @@
  * with this source code in the file LICENSE.
  */
 
-define(['suluproduct/models/product', 'app-config'], function (Product, AppConfig) {
+define([
+    'suluproduct/models/product',
+    'sulucategory/model/category',
+    'app-config'
+], function (Product, Category, AppConfig) {
     'use strict';
 
     var types = {
@@ -71,7 +75,7 @@ define(['suluproduct/models/product', 'app-config'], function (Product, AppConfi
             this.sandbox.on(PRODUCT_NEW, function (type) {
                 this.sandbox.emit(
                     'sulu.router.navigate',
-                    'pim/products/' + AppConfig.getUser().locale + '/add/type:' + type
+                        'pim/products/' + AppConfig.getUser().locale + '/add/type:' + type
                 );
             }.bind(this));
 
@@ -111,6 +115,14 @@ define(['suluproduct/models/product', 'app-config'], function (Product, AppConfi
         save: function (data) {
             this.sandbox.emit('sulu.header.toolbar.item.loading', 'save-button');
             this.product.set(data);
+
+            // FIXME the categories should already be loaded correctly here
+            this.product.get('categories').reset();
+            this.sandbox.util.foreach(data.categories, function (id) {
+                var category = Category.findOrCreate({id: id});
+                this.product.get('categories').add(category);
+            }.bind(this));
+
             this.product.saveLocale(this.options.locale, {
                 success: function (response) {
                     var model = response.toJSON();

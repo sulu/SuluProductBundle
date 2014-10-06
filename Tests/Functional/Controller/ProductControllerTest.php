@@ -12,6 +12,8 @@ namespace Sulu\Bundle\ProductBundle\Tests\Functional\Controller;
 
 use DateTime;
 use Doctrine\ORM\Tools\SchemaTool;
+use Sulu\Bundle\CategoryBundle\Entity\Category;
+use Sulu\Bundle\CategoryBundle\Entity\CategoryTranslation;
 use Sulu\Bundle\ProductBundle\Entity\Currency;
 use Sulu\Bundle\ProductBundle\Entity\Product;
 use Sulu\Bundle\ProductBundle\Entity\Attribute;
@@ -63,6 +65,16 @@ class ProductControllerTest extends DatabaseTestCase
      * @var Status
      */
     private $productStatus1;
+
+    /**
+     * @var AttributeType
+     */
+    private $attributeType1;
+
+    /**
+     * @var AttributeType
+     */
+    private $attributeType2;
 
     /**
      * @var AttributeSet
@@ -169,6 +181,16 @@ class ProductControllerTest extends DatabaseTestCase
      */
     private $currency3;
 
+    /**
+     * @var Category
+     */
+    private $category1;
+
+    /**
+     * @var Category
+     */
+    private $category2;
+
     public static function setUpBeforeClass()
     {
         parent::setUpBeforeClass();
@@ -178,6 +200,7 @@ class ProductControllerTest extends DatabaseTestCase
             static::$kernel->getContainer()->get('test_user_provider')
         );
     }
+
     public function setUp()
     {
         $this->setUpSchema();
@@ -353,6 +376,33 @@ class ProductControllerTest extends DatabaseTestCase
         $taxClassTranslation1->setLocale('en');
         $taxClassTranslation1->setTaxClass($this->taxClass1);
 
+        $this->category1 = new Category();
+        $this->category1->setLft(1);
+        $this->category1->setRgt(2);
+        $this->category1->setDepth(1);
+        $this->category1->setCreated(new DateTime());
+        $this->category1->setChanged(new DateTime());
+        $categoryTranslation1 = new CategoryTranslation();
+        $categoryTranslation1->setLocale('en');
+        $categoryTranslation1->setTranslation('Category 1');
+        $categoryTranslation1->setCategory($this->category1);
+        $this->category1->addTranslation($categoryTranslation1);
+
+        $this->category2 = new Category();
+        $this->category2->setLft(3);
+        $this->category2->setRgt(4);
+        $this->category2->setDepth(1);
+        $this->category2->setCreated(new DateTime());
+        $this->category2->setChanged(new DateTime());
+        $categoryTranslation2 = new CategoryTranslation();
+        $categoryTranslation2->setLocale('en');
+        $categoryTranslation2->setTranslation('Category 2');
+        $categoryTranslation2->setCategory($this->category2);
+        $this->category2->addTranslation($categoryTranslation2);
+
+        self::$em->persist($this->category1);
+        self::$em->persist($this->category2);
+
         self::$em->persist($this->taxClass1);
         self::$em->persist($taxClassTranslation1);
 
@@ -433,6 +483,9 @@ class ProductControllerTest extends DatabaseTestCase
             self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\PhoneType'),
             self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Url'),
             self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\UrlType'),
+            self::$em->getClassMetadata('Sulu\Bundle\CategoryBundle\Entity\Category'),
+            self::$em->getClassMetadata('Sulu\Bundle\CategoryBundle\Entity\CategoryTranslation'),
+            self::$em->getClassMetadata('Sulu\Bundle\CategoryBundle\Entity\CategoryMeta'),
         );
 
         self::$tool->dropSchema(self::$entities);
@@ -761,6 +814,31 @@ class ProductControllerTest extends DatabaseTestCase
             'Entity with the type "SuluProductBundle:Status" and the id "666" not found.',
             $response->message
         );
+    }
+
+    public function testPutWithCategories()
+    {
+        $this->client->request(
+            'PUT',
+            '/api/products/1',
+            array(
+                'number' => 1,
+                'type' => array('id' => 1),
+                'status' => array('id' => 1),
+                'categories' => array(array('id' => 1), array('id' => 2))
+            )
+        );
+
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+
+        $this->client->request('GET', '/api/products/1');
+
+        $response = json_decode($this->client->getResponse()->getContent());
+
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+
+        $this->assertEquals('Category 1', $response->categories[0]->name);
+        $this->assertEquals('Category 2', $response->categories[1]->name);
     }
 
     public function testPost($testParent = false)

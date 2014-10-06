@@ -456,4 +456,26 @@ interface ProductInterface
      * @return \Doctrine\Common\Collections\Collection
      */
     public function getSetProducts();
+
+    /**
+     * Add categories
+     *
+     * @param \Sulu\Bundle\CategoryBundle\Entity\Category $categories
+     * @return BaseProduct
+     */
+    public function addCategory(\Sulu\Bundle\CategoryBundle\Entity\Category $categories);
+
+    /**
+     * Remove categories
+     *
+     * @param \Sulu\Bundle\CategoryBundle\Entity\Category $categories
+     */
+    public function removeCategory(\Sulu\Bundle\CategoryBundle\Entity\Category $categories);
+
+    /**
+     * Get categories
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getCategories();
 }

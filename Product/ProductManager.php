@@ -12,6 +12,8 @@ namespace Sulu\Bundle\ProductBundle\Product;
 
 use DateTime;
 use Doctrine\Common\Persistence\ObjectManager;
+use Sulu\Bundle\CategoryBundle\Api\Category;
+use Sulu\Bundle\CategoryBundle\Entity\CategoryRepository;
 use Sulu\Bundle\ProductBundle\Api\Product;
 use Sulu\Bundle\ProductBundle\Api\ProductPrice;
 use Sulu\Bundle\ProductBundle\Api\Status;
@@ -53,6 +55,7 @@ class ProductManager implements ProductManagerInterface
     protected static $productTranslationEntityName = 'SuluProductBundle:ProductTranslation';
     protected static $productTaxClassEntityName = 'SuluProductBundle:TaxClass';
     protected static $productPriceEntityName = 'SuluProductBundle:ProductPrice';
+    protected static $categoryEntityName = 'SuluCategoryBundle:Category';
 
     /**
      * @var ProductRepositoryInterface
@@ -95,6 +98,11 @@ class ProductManager implements ProductManagerInterface
     private $currencyRepository;
 
     /**
+     * @var CategoryRepository
+     */
+    private $categoryRepository;
+
+    /**
      * @var UserRepositoryInterface
      */
     private $userRepository;
@@ -113,6 +121,7 @@ class ProductManager implements ProductManagerInterface
         TypeRepository $typeRepository,
         TaxClassRepository $taxClassRepository,
         CurrencyRepository $currencyRepository,
+        CategoryRepository $categoryRepository,
         UserRepositoryInterface $userRepository,
         ObjectManager $em
     ) {
@@ -124,6 +133,7 @@ class ProductManager implements ProductManagerInterface
         $this->typeRepository = $typeRepository;
         $this->taxClassRepository = $taxClassRepository;
         $this->currencyRepository = $currencyRepository;
+        $this->categoryRepository = $categoryRepository;
         $this->userRepository = $userRepository;
         $this->em = $em;
     }
@@ -432,7 +442,7 @@ class ProductManager implements ProductManagerInterface
         $product->setCost($this->getProperty($data, 'cost', $product->getCost()));
         $product->setPriceInfo($this->getProperty($data, 'priceInfo', $product->getPriceInfo()));
 
-        if (array_key_exists('attributes', $data)) {
+        if (isset($data['attributes'])) {
 
             foreach ($data['attributes'] as $attribute) {
                 $attributeId = $attribute['id'];
@@ -460,7 +470,7 @@ class ProductManager implements ProductManagerInterface
             }
         }
 
-        if (array_key_exists('attributeSet', $data) && array_key_exists('id', $data['attributeSet'])) {
+        if (isset($data['attributeSet']) && isset($data['attributeSet']['id'])) {
             $attributeSetId = $data['attributeSet']['id'];
             /** @var AttributeSet $attributeSet */
             $attributeSet = $this->attributeSetRepository->find($attributeSetId);
@@ -470,7 +480,7 @@ class ProductManager implements ProductManagerInterface
             $product->setAttributeSet($attributeSet);
         }
 
-        if (array_key_exists('parent', $data) && array_key_exists('id', $data['parent'])) {
+        if (isset($data['parent']) && isset($data['parent']['id'])) {
             $parentId = $data['parent']['id'];
             $parentProduct = $this->findByIdAndLocale($parentId, $locale, false);
             if (!$parentProduct) {
@@ -481,7 +491,7 @@ class ProductManager implements ProductManagerInterface
             $product->setParent(null);
         }
 
-        if (array_key_exists('status', $data) && array_key_exists('id', $data['status'])) {
+        if (isset($data['status']) && isset($data['status']['id'])) {
             $statusId = $data['status']['id'];
             /** @var Status $status */
             $status = $this->statusRepository->find($statusId);
@@ -491,7 +501,7 @@ class ProductManager implements ProductManagerInterface
             $product->setStatus($status);
         }
 
-        if (array_key_exists('type', $data) && array_key_exists('id', $data['type'])) {
+        if (isset($data['type']) && isset($data['type']['id'])) {
             $typeId = $data['type']['id'];
             /** @var Type $type */
             $type = $this->typeRepository->find($typeId);
@@ -501,7 +511,7 @@ class ProductManager implements ProductManagerInterface
             $product->setType($type);
         }
 
-        if (array_key_exists('taxClass', $data) && array_key_exists('id', $data['taxClass'])) {
+        if (isset($data['taxClass']) && isset($data['taxClass']['id'])) {
             $taxClassId = $data['taxClass']['id'];
             /** @var TaxClass $taxClass */
             $taxClass = $this->taxClassRepository->find($taxClassId);
@@ -511,13 +521,42 @@ class ProductManager implements ProductManagerInterface
             $product->setTaxClass($taxClass);
         }
 
+        if (isset($data['categories'])) {
+            $get = function (Category $category) {
+                return $category->getId();
+            };
+
+            $add = function ($categoryData) use ($product) {
+                return $this->addCategory($product->getEntity(), $categoryData);
+            };
+
+            $update = function (Category $category, $matchedEntry) {
+                // do not update categories
+            };
+
+            $delete = function (Category $category) use ($product) {
+                $product->removeCategory($category->getEntity());
+
+                return true;
+            };
+
+            $this->processSubEntities(
+                $product->getCategories(),
+                $data['categories'],
+                $get,
+                $add,
+                $update,
+                $delete
+            );
+        }
+
         if (array_key_exists('prices', $data)) {
             $get = function (ProductPrice $price) {
                 return $price->getId();
             };
 
-            $add = function ($price) use ($product) {
-                return $this->addPrice($product->getEntity(), $price);
+            $add = function ($priceData) use ($product) {
+                return $this->addPrice($product->getEntity(), $priceData);
             };
 
             $update = function (ProductPrice $price, $matchedEntry) {
@@ -574,7 +613,7 @@ class ProductManager implements ProductManagerInterface
     {
         if (isset($priceData['id'])) {
             throw new EntityIdAlreadySetException(self::$productPriceEntityName, $priceData['id']);
-        } else {
+        } elseif (isset($priceData['price'])) {
             $currency = $this->currencyRepository->find($priceData['currency']['id']);
 
             if (!$currency) {
@@ -592,6 +631,32 @@ class ProductManager implements ProductManagerInterface
 
             $this->em->persist($price);
         }
+
+        return true;
+    }
+
+    /**
+     * Adds a category to the given product
+     * @param ProductInterface $product The product to add the price to
+     * @param array $categoryData The array containing the data for the additional category
+     * @return bool
+     * @throws \Sulu\Component\Rest\Exception\EntityIdAlreadySetException
+     * @throws Exception\ProductDependencyNotFoundException
+     */
+    protected function addCategory(ProductInterface $product, $categoryData)
+    {
+        $category = $this->categoryRepository->find($categoryData['id']);
+
+        if (!$category) {
+            throw new ProductDependencyNotFoundException(
+                self::$categoryEntityName,
+                $categoryData['id']
+            );
+        }
+
+        $product->addCategory($category);
+
+        $this->em->persist($category);
 
         return true;
     }

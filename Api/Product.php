@@ -10,6 +10,8 @@
 
 namespace Sulu\Bundle\ProductBundle\Api;
 
+use Sulu\Bundle\CategoryBundle\Api\Category;
+use Sulu\Bundle\CategoryBundle\Entity\Category as CategoryEntity;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttribute;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface as Entity;
 use JMS\Serializer\Annotation\VirtualProperty;
@@ -362,7 +364,7 @@ class Product extends ApiWrapper
 
     /**
      * Returns the prices for the product
-     * @return \Sulu\Bundle\ProductBundle\Entity\ProductPrice[]
+     * @return \Sulu\Bundle\ProductBundle\Api\ProductPrice[]
      * @VirtualProperty
      * @SerializedName("prices")
      */
@@ -376,6 +378,44 @@ class Product extends ApiWrapper
         }
 
         return $prices;
+    }
+
+    /**
+     * Adds a category to the product
+     * @param CategoryEntity $category
+     */
+    public function addCategory(CategoryEntity $category)
+    {
+        $this->entity->addCategory($category);
+    }
+
+    /**
+     * Removes a category from the product
+     * @param CategoryEntity $category
+     */
+    public function removeCategory(CategoryEntity $category)
+    {
+        $this->entity->removeCategory($category);
+    }
+
+    /**
+     * Returns the categories for the product
+     * @return CategoryEntity[]
+     * @VirtualProperty
+     * @SerializedName("categories")
+     */
+    public function getCategories()
+    {
+        $categoryEntities = $this->entity->getCategories();
+
+        $categories = array();
+        if ($categoryEntities) {
+            foreach ($categoryEntities as $categoryEntity) {
+                $categories[] = new Category($categoryEntity, $this->locale);
+            }
+        }
+
+        return $categories;
     }
 
     /**

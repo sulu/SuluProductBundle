@@ -1,6 +1,7 @@
 <form class="form-horizontal" id="product-form">
     <input type="hidden" id="id" data-mapper-property="id"/>
     <input type="hidden" id="type" data-mapper-property="type" data-type="attributes"/>
+
     <div class="grid-row small">
         <div class="grid-col-12">
             <div class="form-group">
@@ -74,18 +75,43 @@
     <div class="grid-row small">
         <div class="grid-col-12">
             <div class="form-group">
-                <label for="tags"></label>
-                <div
-                        id="tags"
-                        data-mapper-property="tags"
-                        data-type="tagList"
-                        data-type-instance-name="tags"
-                        data-form="true"
-                        data-aura-component="auto-complete-list@husky"
-                        data-aura-instance-name="tags"
-                        data-aura-remote-url="/admin/api/tags?flat=true&sortBy=name"
-                        data-aura-get-parameter="search"
-                        data-aura-auto-complete-icon="tag">
+                <label for="tags"><%= translate('tag.tags.title') %></label>
+
+                <div id="tags"
+                     data-mapper-property="tags"
+                     data-type="tagList"
+                     data-type-instance-name="tags"
+                     data-form="true"
+                     data-aura-component="auto-complete-list@husky"
+                     data-aura-instance-name="tags"
+                     data-aura-remote-url="/admin/api/tags?flat=true&sortBy=name"
+                     data-aura-get-parameter="search"
+                     data-aura-auto-complete-icon="tag">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-row small">
+        <div class="grid-col-12">
+            <div class="form-group">
+                <label class="top p-top-10"><%= translate('product.products.categories') %></label>
+
+                <div id="categories">
+                    <div data-aura-component="datagrid@husky"
+                         data-aura-url="/admin/api/categories?flat=true&sortBy=depth&sortOrder=asc"
+                         data-aura-result-key="categories"
+                         data-aura-pagination="false"
+                         data-aura-instance-name="categories"
+                         data-aura-children-property-name="children"
+                         data-aura-resize-listeners="false"
+                         data-aura-view-options='{"table":{"noItemsText":"sulu.category.no-categories-available","showHead":false,"cssClass":"white-box","selectItem":{"type":"checkbox","inFirstCell":true}}}'
+                         data-aura-matchings='[{"name":"name","content":"Name"},{"name":"id","disabled":true},{"name":"children","disabled":true},{"name":"parent","disabled":true}]'
+                         data-form="true"
+                         data-type="categoryList"
+                         data-mapper-property="categories"
+                         id="categoriesList">
+                    </div>
                 </div>
             </div>
         </div>
