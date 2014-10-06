@@ -1,22 +1,18 @@
 <product-statuses>
     <product-status>
-        <de>Importiert</de>
-        <en>Imported</en>
+        <de>nicht eingereicht</de>
+        <en>not submitted</en>
     </product-status>
     <product-status>
-        <de>Fertig für Freigabe</de>
-        <en>Ready for Release</en>
+        <de>eingereicht</de>
+        <en>submitted</en>
     </product-status>
     <product-status>
-        <de>Publiziert</de>
-        <en>Published</en>
+        <de>publiziert</de>
+        <en>published</en>
     </product-status>
     <product-status>
-        <de>Archiviert</de>
-        <en>Archived</en>
-    </product-status>
-    <product-status>
-        <de>Abgelehnt</de>
-        <en>Rejected</en>
+        <de>abgelehnt</de>
+        <en>rejected</en>
     </product-status>
 </product-statuses>
