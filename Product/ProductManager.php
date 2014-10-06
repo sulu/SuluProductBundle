@@ -540,7 +540,7 @@ class ProductManager implements ProductManagerInterface
                 return true;
             };
 
-            $this->restHelper->processSubEntities(
+            $this->processSubEntities(
                 $product->getCategories(),
                 $data['categories'],
                 $get,
