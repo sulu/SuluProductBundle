@@ -62,7 +62,7 @@ class ProductRepository extends EntityRepository implements ProductRepositoryInt
     }
 
     /**
-     * Returns all products in the given locale for the given number
+     * Returns all master products in the given locale for the given number
      * @param string $locale The locale of the product to load
      * @param string $number The number of the product to load
      * @return ProductInterface[]
@@ -77,6 +77,27 @@ class ProductRepository extends EntityRepository implements ProductRepositoryInt
             $qb->setParameter('id', Product::MASTER_PRODUCT);
             $query = $qb->getQuery();
             return $query->getSingleResult();
+        } catch (NoResultException $exc) {
+            return null;
+        }
+    }
+
+    /**
+     * Returns all simple products in the given locale for the given number
+     * @param string $locale The locale of the product to load
+     * @param string $number The number of the product to load
+     * @return ProductInterface[]
+     */
+    public function findSimpleByLocaleAndNumber($locale, $number)
+    {
+        try {
+            $qb = $this->getProductQuery($locale);
+            $qb->andWhere('product.number = :number');
+            $qb->andWhere('type.id = :id');
+            $qb->setParameter('number', $number);
+            $qb->setParameter('id', Product::SIMPLE_PRODUCT);
+            $query = $qb->getQuery();
+            return $query->getResult();
         } catch (NoResultException $exc) {
             return null;
         }
