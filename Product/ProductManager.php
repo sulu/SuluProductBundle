@@ -335,12 +335,14 @@ class ProductManager implements ProductManagerInterface
             $products = $this->productRepository->findByLocaleAndFilter($locale, $filter);
         }
 
-        array_walk(
-            $products,
-            function (&$product) use ($locale) {
-                $product = new Product($product, $locale);
-            }
-        );
+        if ($products) {
+            array_walk(
+                $products,
+                function (&$product) use ($locale) {
+                    $product = new Product($product, $locale);
+                }
+            );
+        }
 
         return $products;
     }
@@ -371,13 +373,14 @@ class ProductManager implements ProductManagerInterface
     public function findSimpleByLocaleAndNumber($locale, $number)
     {
         $products = $this->productRepository->findSimpleByLocaleAndNumber($locale, $number);
-
-        array_walk(
-            $products,
-            function (&$product) use ($locale) {
-                $product = new Product($product, $locale);
-            }
-        );
+        if ($products) {
+            array_walk(
+                $products,
+                function (&$product) use ($locale) {
+                    $product = new Product($product, $locale);
+                }
+            );
+        }
 
         return $products;
     }
