@@ -82,18 +82,23 @@ class ProductController extends RestController implements ClassResourceInterface
     }
 
     /**
-     * Returns a list of products
+     * Get filters provided by the request
      *
-     * @param \Symfony\Component\HttpFoundation\Request $request
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @param Request $request
+     * @return List $filter
      */
-    public function cgetAction(Request $request)
+    private function getFilters(Request $request)
     {
         $filter = array();
 
         $status = $request->get('status');
         if ($status) {
-            $filter['status'] = $status;
+            $filter['status'] = explode(',', $status);
+        }
+
+        $status_id = $request->get('status_id');
+        if ($status_id) {
+            $filter['status_id'] = explode(',', $status_id);
         }
 
         $type = $request->get('type');
@@ -101,14 +106,38 @@ class ProductController extends RestController implements ClassResourceInterface
             $filter['type_id'] = explode(',', $type);
         }
 
+        $type_id = $request->get('type_id');
+        if ($type_id) {
+            $filter['type_id'] = explode(',', $type_id);
+        }
+
         $parent = $request->get('parent');
         if ($parent) {
             $filter['parent'] = ($parent == 'null') ? null : $parent;
         }
 
-        if ($request->get('flat') == 'true') {
-            $fieldDescriptors = $this->getManager()->getFieldDescriptors($this->getLocale($request));
+        $category = $request->get('categories');
+        if ($category) {
+            $filter['categories'] = ($category == 'null') ? null : $category;
+        }
+        return $filter;
+    }
 
+    /**
+     * Returns a list of products
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function cgetAction(Request $request)
+    {
+        $filter = $this->getFilters($request);
+
+        if ($request->get('flat') == 'true') {
+            $fieldDescriptors = $this->getManager()->getFieldDescriptors(
+                $this->getLocale($request),
+                isset($filter['categories'])
+            );
             /** @var RestHelperInterface $restHelper */
             $restHelper = $this->get('sulu_core.doctrine_rest_helper');
 
