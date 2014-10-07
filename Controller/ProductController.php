@@ -116,9 +116,9 @@ class ProductController extends RestController implements ClassResourceInterface
             $filter['parent'] = ($parent == 'null') ? null : $parent;
         }
 
-        $category = $request->get('categories');
-        if ($category) {
-            $filter['categories'] = ($category == 'null') ? null : $category;
+        $categories = $request->get('categories');
+        if ($categories) {
+            $filter['categories'] = ($categories == 'null') ? null : $categories;
         }
         return $filter;
     }
