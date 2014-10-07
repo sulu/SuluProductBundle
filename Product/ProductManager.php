@@ -141,7 +141,7 @@ class ProductManager implements ProductManagerInterface
     /**
      * {@inheritDoc}
      */
-    public function getFieldDescriptors($locale)
+    public function getFieldDescriptors($locale, $categoryFilter = false)
     {
         $fieldDescriptors = array();
 
@@ -197,6 +197,22 @@ class ProductManager implements ProductManagerInterface
             ),
             true
         );
+        // TODO: Workaround for filtering products by it's categories.
+        if ($categoryFilter) {
+            $fieldDescriptors['categories'] = new DoctrineFieldDescriptor(
+                'id',
+                'categories',
+                self::$productEntityName . 'Categories',
+                'product.categories',
+                array(
+                    self::$productEntityName . 'Categories' => new DoctrineJoinDescriptor(
+                        self::$productEntityName,
+                        self::$productEntityName . '.categories'
+                    )
+                ),
+                true
+            );
+        }
 
         $fieldDescriptors['manufacturer'] = new DoctrineFieldDescriptor(
             'manufacturer',
