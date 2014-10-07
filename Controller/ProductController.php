@@ -91,24 +91,24 @@ class ProductController extends RestController implements ClassResourceInterface
     {
         $filter = array();
 
-        $status = $request->get('status');
-        if ($status) {
-            $filter['status'] = explode(',', $status);
+        $statuses = $request->get('status');
+        if ($statuses) {
+            $filter['status'] = explode(',', $statuses);
         }
 
-        $status_id = $request->get('status_id');
-        if ($status_id) {
-            $filter['status_id'] = explode(',', $status_id);
+        $status_ids = $request->get('status_id');
+        if ($status_ids) {
+            $filter['status_id'] = explode(',', $status_ids);
         }
 
-        $type = $request->get('type');
-        if ($type) {
-            $filter['type_id'] = explode(',', $type);
+        $types = $request->get('type');
+        if ($types) {
+            $filter['type_id'] = explode(',', $types);
         }
 
-        $type_id = $request->get('type_id');
-        if ($type_id) {
-            $filter['type_id'] = explode(',', $type_id);
+        $type_ids = $request->get('type_id');
+        if ($type_ids) {
+            $filter['type_id'] = explode(',', $type_ids);
         }
 
         $parent = $request->get('parent');
