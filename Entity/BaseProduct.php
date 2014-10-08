@@ -81,6 +81,11 @@ abstract class BaseProduct implements ProductInterface
     private $deliveryStatus;
 
     /**
+     * @var \Sulu\Bundle\ContactBundle\Entity\Account
+     */
+    private $supplier;
+
+    /**
      * @var \Sulu\Bundle\ProductBundle\Entity\ProductInterface
      */
     private $parent;
@@ -416,6 +421,30 @@ abstract class BaseProduct implements ProductInterface
     {
         return $this->deliveryStatus;
     }
+
+    /**
+     * Set supplier
+     *
+     * @param \Sulu\Bundle\ContactBundle\Entity\Account $supplier
+     * @return BaseProduct
+     */
+    public function setSupplier(\Sulu\Bundle\ContactBundle\Entity\Account $supplier = null)
+    {
+        $this->supplier = $supplier;
+
+        return $this;
+    }
+
+    /**
+     * Get supplier
+     *
+     * @return \Sulu\Bundle\ContactBundle\Entity\Account
+     */
+    public function getSupplier()
+    {
+        return $this->supplier;
+    }
+
 
     /**
      * Set parent
