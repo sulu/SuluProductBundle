@@ -156,6 +156,15 @@ class Product extends ApiWrapper
     }
 
     /**
+     * Sets the supplier of the product
+     * @param Sulu\Bundle\ContactBundle\Entity\Account $supplier
+     */
+    public function setSupplier($supplier)
+    {
+        $this->entity->setSupplier($supplier);
+    }
+
+    /**
      * Returns the cost of the product
      * @return double The cost of the product
      * @VirtualProperty
