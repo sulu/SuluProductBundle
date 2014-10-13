@@ -116,6 +116,11 @@ abstract class BaseProduct implements ProductInterface
     private $categories;
 
     /**
+     * @var \Doctrine\Common\Collections\Collection
+     */
+    private $media;
+
+    /**
      * @var \Sulu\Bundle\SecurityBundle\Entity\User
      */
     private $changer;
@@ -701,5 +706,38 @@ abstract class BaseProduct implements ProductInterface
     public function getCategories()
     {
         return $this->categories;
+    }
+
+    /**
+     * Add media
+     *
+     * @param \Sulu\Bundle\MediaBundle\Entity\Media $media
+     * @return Media
+     */
+    public function addMedia(\Sulu\Bundle\MediaBundle\Entity\Media $media)
+    {
+        $this->media[] = $media;
+
+        return $this;
+    }
+
+    /**
+     * Remove media
+     *
+     * @param \Sulu\Bundle\MediaBundle\Entity\Media $media
+     */
+    public function removeMedia(\Sulu\Bundle\MediaBundle\Entity\Media $media)
+    {
+        $this->media->removeElement($media);
+    }
+
+    /**
+     * Get media
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getMedia()
+    {
+        return $this->media;
     }
 }
