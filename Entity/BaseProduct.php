@@ -712,7 +712,7 @@ abstract class BaseProduct implements ProductInterface
      * Add media
      *
      * @param \Sulu\Bundle\MediaBundle\Entity\Media $media
-     * @return Media
+     * @return Product
      */
     public function addMedia(\Sulu\Bundle\MediaBundle\Entity\Media $media)
     {
