@@ -96,9 +96,9 @@ class ProductController extends RestController implements ClassResourceInterface
             $filter['status'] = explode(',', $statuses);
         }
 
-        $status_ids = $request->get('status_id');
-        if ($status_ids) {
-            $filter['status_id'] = explode(',', $status_ids);
+        $statusIds = $request->get('status_id');
+        if ($statusIds) {
+            $filter['status_id'] = explode(',', $statusIds);
         }
 
         $types = $request->get('type');
@@ -106,14 +106,14 @@ class ProductController extends RestController implements ClassResourceInterface
             $filter['type_id'] = explode(',', $types);
         }
 
-        $type_ids = $request->get('type_id');
-        if ($type_ids) {
-            $filter['type_id'] = explode(',', $type_ids);
+        $typeIds = $request->get('type_id');
+        if ($typeIds) {
+            $filter['type_id'] = explode(',', $typeIds);
         }
 
-        $supplier_id = $request->get('supplier_id');
-        if ($supplier_id) {
-            $filter['accounts_supplier_id'] = $supplier_id;
+        $supplierId = $request->get('supplier_id');
+        if ($supplierId) {
+            $filter['accounts_supplier_id'] = $supplierId;
         }
 
         $parent = $request->get('parent');
@@ -143,6 +143,9 @@ class ProductController extends RestController implements ClassResourceInterface
                 $this->getLocale($request),
                 isset($filter['categories'])
             );
+
+            $filterFieldDescriptors = $this->getManager()->getFilterFieldDescriptors();
+
             /** @var RestHelperInterface $restHelper */
             $restHelper = $this->get('sulu_core.doctrine_rest_helper');
 
@@ -158,9 +161,9 @@ class ProductController extends RestController implements ClassResourceInterface
 
             foreach ($filter as $key => $value) {
                 if (is_array($value)) {
-                    $listBuilder->in($fieldDescriptors[$key], $value);
+                    $listBuilder->in($filterFieldDescriptors[$key], $value);
                 } else {
-                    $listBuilder->where($fieldDescriptors[$key], $value);
+                    $listBuilder->where($filterFieldDescriptors[$key], $value);
                 }
             }
 
