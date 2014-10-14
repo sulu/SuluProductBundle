@@ -49,6 +49,7 @@ class ProductManager implements ProductManagerInterface
     protected static $productTypeEntityName = 'SuluProductBundle:Type';
     protected static $productTypeTranslationEntityName = 'SuluProductBundle:TypeTranslation';
     protected static $productStatusEntityName = 'SuluProductBundle:Status';
+    protected static $accountsSupplierEntityName = 'SuluAccountBundle:Account';
     protected static $productStatusTranslationEntityName = 'SuluProductBundle:StatusTranslation';
     protected static $attributeSetEntityName = 'SuluProductBundle:AttributeSet';
     protected static $attributeEntityName = 'SuluProductBundle:Attribute';
@@ -302,6 +303,20 @@ class ProductManager implements ProductManagerInterface
                 self::$productStatusEntityName => new DoctrineJoinDescriptor(
                     self::$productStatusEntityName,
                     self::$productEntityName . '.status'
+                )
+            ),
+            true
+        );
+
+        $fieldDescriptors['accounts_supplier_id'] = new DoctrineFieldDescriptor(
+            'id',
+            'supplier_id',
+            self::$accountsSupplierEntityName,
+            null,
+            array(
+                self::$accountsSupplierEntityName => new DoctrineJoinDescriptor(
+                    self::$accountsSupplierEntityName,
+                    self::$productEntityName . '.supplier'
                 )
             ),
             true

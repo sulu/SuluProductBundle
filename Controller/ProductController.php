@@ -111,6 +111,11 @@ class ProductController extends RestController implements ClassResourceInterface
             $filter['type_id'] = explode(',', $type_ids);
         }
 
+        $supplier_id = $request->get('supplier_id');
+        if ($supplier_id) {
+            $filter['accounts_supplier_id'] = $supplier_id;
+        }
+
         $parent = $request->get('parent');
         if ($parent) {
             $filter['parent'] = ($parent == 'null') ? null : $parent;
