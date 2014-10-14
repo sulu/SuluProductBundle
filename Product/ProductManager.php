@@ -49,6 +49,7 @@ class ProductManager implements ProductManagerInterface
     protected static $productTypeEntityName = 'SuluProductBundle:Type';
     protected static $productTypeTranslationEntityName = 'SuluProductBundle:TypeTranslation';
     protected static $productStatusEntityName = 'SuluProductBundle:Status';
+    protected static $accountsSupplierEntityName = 'SuluAccountBundle:Account';
     protected static $productStatusTranslationEntityName = 'SuluProductBundle:StatusTranslation';
     protected static $attributeSetEntityName = 'SuluProductBundle:AttributeSet';
     protected static $attributeEntityName = 'SuluProductBundle:Attribute';
@@ -136,6 +137,57 @@ class ProductManager implements ProductManagerInterface
         $this->categoryRepository = $categoryRepository;
         $this->userRepository = $userRepository;
         $this->em = $em;
+    }
+
+    /**
+     * Returns a list of fieldDescriptors just used for filtering
+     *
+     * @return List
+     */
+    public function getFilterFieldDescriptors()
+    {
+        $fieldDescriptors = array();
+
+        $fieldDescriptors['type_id'] = new DoctrineFieldDescriptor(
+            'id',
+            'type_id',
+            self::$productTypeEntityName,
+            null,
+            array(
+                self::$productTypeEntityName => new DoctrineJoinDescriptor(
+                    self::$productTypeEntityName,
+                    self::$productEntityName . '.type'
+                )
+            )
+        );
+
+        $fieldDescriptors['status_id'] = new DoctrineFieldDescriptor(
+            'id',
+            'status_id',
+            self::$productStatusEntityName,
+            null,
+            array(
+                self::$productStatusEntityName => new DoctrineJoinDescriptor(
+                    self::$productStatusEntityName,
+                    self::$productEntityName . '.status'
+                )
+            )
+        );
+
+        $fieldDescriptors['accounts_supplier_id'] = new DoctrineFieldDescriptor(
+            'id',
+            'supplier_id',
+            self::$accountsSupplierEntityName,
+            null,
+            array(
+                self::$accountsSupplierEntityName => new DoctrineJoinDescriptor(
+                    self::$accountsSupplierEntityName,
+                    self::$productEntityName . '.supplier'
+                )
+            )
+        );
+
+        return $fieldDescriptors;
     }
 
     /**
@@ -241,20 +293,6 @@ class ProductManager implements ProductManagerInterface
             true
         );
 
-        $fieldDescriptors['type_id'] = new DoctrineFieldDescriptor(
-            'id',
-            'type_id',
-            self::$productTypeEntityName,
-            null,
-            array(
-                self::$productTypeEntityName => new DoctrineJoinDescriptor(
-                    self::$productTypeEntityName,
-                    self::$productEntityName . '.type'
-                )
-            ),
-            false
-        );
-
         $fieldDescriptors['type'] = new DoctrineFieldDescriptor(
             'name',
             'type',
@@ -289,20 +327,6 @@ class ProductManager implements ProductManagerInterface
                     self::$productStatusEntityName . '.translations',
                     self::$productStatusTranslationEntityName . '.locale = \'' . $locale . '\''
                 ),
-            ),
-            true
-        );
-
-        $fieldDescriptors['status_id'] = new DoctrineFieldDescriptor(
-            'id',
-            'status_id',
-            self::$productStatusEntityName,
-            null,
-            array(
-                self::$productStatusEntityName => new DoctrineJoinDescriptor(
-                    self::$productStatusEntityName,
-                    self::$productEntityName . '.status'
-                )
             ),
             true
         );
