@@ -534,11 +534,7 @@ class ProductManager implements ProductManagerInterface
         if (isset($data['status']) && isset($data['status']['id'])) {
             $statusId = $data['status']['id'];
             /** @var Status $status */
-            $status = $this->statusRepository->find($statusId);
-            if (!$status) {
-                throw new ProductDependencyNotFoundException(self::$productStatusEntityName, $statusId);
-            }
-            $product->setStatus($status);
+            $this->setStatusForProduct($product, $statusId);
         }
 
         if (isset($data['type']) && isset($data['type']['id'])) {
@@ -612,13 +608,23 @@ class ProductManager implements ProductManagerInterface
             $this->processSubEntities($product->getPrices(), $data['prices'], $get, $add, $update, $delete);
         }
 
-        $product->setChanged(new DateTime());
-        $product->setChanger($user);
-
         if ($product->getId() == null) {
             $product->setCreated(new DateTime());
             $product->setCreator($user);
+            $product->setChanged(new DateTime());
+            $product->setChanger($user);
             $this->em->persist($product->getEntity());
+        } else {
+            // Check if product was changed, if yes set chager and changed date
+            $uow = $this->em->getUnitOfWork();
+            $uow->computeChangeSets();
+            $entity = $product->getEntity();
+            $changeset = $uow->getEntityChangeSet($entity);
+
+            if ($changeset) {
+                $product->setChanged(new DateTime());
+                $product->setChanger($user);
+            }
         }
 
         if ($flush) {
@@ -626,6 +632,21 @@ class ProductManager implements ProductManagerInterface
         }
 
         return $product;
+    }
+
+    /**
+     * Sets the status for a given product
+     *
+     * @param Product $product
+     * @param int $statusId
+     */
+    public function setStatusForProduct($product, $statusId)
+    {
+        $status = $this->statusRepository->find($statusId);
+        if (!$status) {
+            throw new ProductDependencyNotFoundException(self::$productStatusEntityName, $statusId);
+        }
+        $product->setStatus($status);
     }
 
     /**
