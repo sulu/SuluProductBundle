@@ -249,8 +249,9 @@ class ProductManager implements ProductManagerInterface
             ),
             true
         );
+
         // TODO: Workaround for filtering products by it's categories.
-        if ($categoryFilter) {
+        //if ($categoryFilter) {
             $fieldDescriptors['categories'] = new DoctrineFieldDescriptor(
                 'id',
                 'categories',
@@ -264,7 +265,7 @@ class ProductManager implements ProductManagerInterface
                 ),
                 true
             );
-        }
+        //}
 
         $fieldDescriptors['manufacturer'] = new DoctrineFieldDescriptor(
             'manufacturer',
