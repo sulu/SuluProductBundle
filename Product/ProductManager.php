@@ -24,6 +24,7 @@ use Sulu\Bundle\ProductBundle\Entity\AttributeSet;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductPrice as ProductPriceEntity;
 use Sulu\Bundle\ProductBundle\Entity\StatusRepository;
+use Sulu\Bundle\ProductBundle\Entity\TaxClass;
 use Sulu\Bundle\ProductBundle\Entity\TaxClassRepository;
 use Sulu\Bundle\ProductBundle\Entity\Type;
 use Sulu\Bundle\ProductBundle\Entity\TypeRepository;
@@ -143,7 +144,7 @@ class ProductManager implements ProductManagerInterface
     /**
      * Returns a list of fieldDescriptors just used for filtering
      *
-     * @return List
+     * @return DoctrineFieldDescriptor[]
      */
     public function getFilterFieldDescriptors()
     {
