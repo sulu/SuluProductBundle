@@ -111,7 +111,7 @@ class ProductManager implements ProductManagerInterface
     /**
      * @var ObjectManager
      */
-    private $em;
+    protected $em;
 
     public function __construct(
         ProductRepositoryInterface $productRepository,
@@ -461,7 +461,8 @@ class ProductManager implements ProductManagerInterface
         $locale,
         $userId,
         $id = null,
-        $flush = true
+        $flush = true,
+        $skipChanged = false
     ) {
         if ($id) {
             $product = $this->fetchProduct($id, $locale);
@@ -607,24 +608,15 @@ class ProductManager implements ProductManagerInterface
 
             $this->processSubEntities($product->getPrices(), $data['prices'], $get, $add, $update, $delete);
         }
+        if (!$skipChanged || $product->getId() == null) {
+            $product->setChanged(new DateTime());
+            $product->setChanger($user);
+        }
 
         if ($product->getId() == null) {
             $product->setCreated(new DateTime());
             $product->setCreator($user);
-            $product->setChanged(new DateTime());
-            $product->setChanger($user);
             $this->em->persist($product->getEntity());
-        } else {
-            // Check if product was changed, if yes set chager and changed date
-            $uow = $this->em->getUnitOfWork();
-            $uow->computeChangeSets();
-            $entity = $product->getEntity();
-            $changeset = $uow->getEntityChangeSet($entity);
-
-            if ($changeset) {
-                $product->setChanged(new DateTime());
-                $product->setChanger($user);
-            }
         }
 
         if ($flush) {
