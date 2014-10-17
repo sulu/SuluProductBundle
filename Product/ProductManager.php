@@ -187,6 +187,20 @@ class ProductManager implements ProductManagerInterface
             )
         );
 
+        $fieldDescriptors['parent'] = new DoctrineFieldDescriptor(
+            'id',
+            'parent',
+            self::$productEntityName . 'Parent',
+            'product.parent',
+            array(
+                self::$productEntityName . 'Parent' => new DoctrineJoinDescriptor(
+                    self::$productEntityName,
+                    self::$productEntityName . '.parent'
+                )
+            ),
+            true
+        );
+
         return $fieldDescriptors;
     }
 
@@ -528,8 +542,6 @@ class ProductManager implements ProductManagerInterface
                 throw new ProductDependencyNotFoundException(self::$productEntityName, $parentId);
             }
             $product->setParent($parentProduct);
-        } else {
-            $product->setParent(null);
         }
 
         if (isset($data['status']) && isset($data['status']['id'])) {
