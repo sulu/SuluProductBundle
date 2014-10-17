@@ -156,9 +156,9 @@ class ProductManager implements ProductManagerInterface
             null,
             array(
                 self::$productTypeEntityName => new DoctrineJoinDescriptor(
-                        self::$productTypeEntityName,
-                        self::$productEntityName . '.type'
-                    )
+                    self::$productTypeEntityName,
+                    self::$productEntityName . '.type'
+                )
             )
         );
 
@@ -169,9 +169,9 @@ class ProductManager implements ProductManagerInterface
             null,
             array(
                 self::$productStatusEntityName => new DoctrineJoinDescriptor(
-                        self::$productStatusEntityName,
-                        self::$productEntityName . '.status'
-                    )
+                    self::$productStatusEntityName,
+                    self::$productEntityName . '.status'
+                )
             )
         );
 
@@ -182,9 +182,9 @@ class ProductManager implements ProductManagerInterface
             null,
             array(
                 self::$accountsSupplierEntityName => new DoctrineJoinDescriptor(
-                        self::$accountsSupplierEntityName,
-                        self::$productEntityName . '.supplier'
-                    )
+                    self::$accountsSupplierEntityName,
+                    self::$productEntityName . '.supplier'
+                )
             )
         );
 
@@ -195,9 +195,9 @@ class ProductManager implements ProductManagerInterface
             'product.parent',
             array(
                 self::$productEntityName . 'Parent' => new DoctrineJoinDescriptor(
-                        self::$productEntityName,
-                        self::$productEntityName . '.parent'
-                    )
+                    self::$productEntityName,
+                    self::$productEntityName . '.parent'
+                )
             ),
             true
         );
@@ -209,9 +209,9 @@ class ProductManager implements ProductManagerInterface
             'product.categories',
             array(
                 self::$productEntityName . 'Categories' => new DoctrineJoinDescriptor(
-                        self::$productEntityName,
-                        self::$productEntityName . '.categories'
-                    )
+                    self::$productEntityName,
+                    self::$productEntityName . '.categories'
+                )
             ),
             true
         );
@@ -242,10 +242,10 @@ class ProductManager implements ProductManagerInterface
             'product.name',
             array(
                 self::$productTranslationEntityName => new DoctrineJoinDescriptor(
-                        self::$productTranslationEntityName,
-                        self::$productEntityName . '.translations',
-                        self::$productTranslationEntityName . '.locale = \'' . $locale . '\''
-                    )
+                    self::$productTranslationEntityName,
+                    self::$productEntityName . '.translations',
+                    self::$productTranslationEntityName . '.locale = \'' . $locale . '\''
+                )
             )
         );
 
@@ -272,9 +272,9 @@ class ProductManager implements ProductManagerInterface
             'product.parent',
             array(
                 self::$productEntityName . 'Parent' => new DoctrineJoinDescriptor(
-                        self::$productEntityName,
-                        self::$productEntityName . '.parent'
-                    )
+                    self::$productEntityName,
+                    self::$productEntityName . '.parent'
+                )
             ),
             true
         );
@@ -283,18 +283,18 @@ class ProductManager implements ProductManagerInterface
             new DoctrineFieldDescriptor(
                 'translation',
                 'categoryTranslation',
-                'SuluCategoryBundle:CategoryTranslation',
+                self::$categoryEntityName . 'Translation',
                 'product.categories',
                 array(
                     self::$productEntityName . 'Categories' => new DoctrineJoinDescriptor(
-                            self::$productEntityName,
-                            self::$productEntityName . '.categories'
-                        ),
-                    'SuluCategoryBundle:CategoryTranslation' => new DoctrineJoinDescriptor(
-                            'SuluCategoryBundle:CategoryTranslation',
-                            self::$productEntityName . 'Categories.translations',
-                            'SuluCategoryBundle:CategoryTranslation.locale = \'' . $locale . '\''
-                        ),
+                        self::$productEntityName,
+                        self::$productEntityName . '.categories'
+                    ),
+                    self::$categoryEntityName . 'Translation' => new DoctrineJoinDescriptor(
+                        self::$categoryEntityName . 'Translation',
+                        self::$productEntityName . 'Categories.translations',
+                        self::$categoryEntityName . 'Translation.locale = \'' . $locale . '\''
+                    ),
                 )
             ),
             ', ',
@@ -337,14 +337,14 @@ class ProductManager implements ProductManagerInterface
             'product.type',
             array(
                 self::$productTypeEntityName => new DoctrineJoinDescriptor(
-                        self::$productTypeEntityName,
-                        self::$productEntityName . '.type'
-                    ),
+                    self::$productTypeEntityName,
+                    self::$productEntityName . '.type'
+                ),
                 self::$productTypeTranslationEntityName => new DoctrineJoinDescriptor(
-                        self::$productTypeTranslationEntityName,
-                        self::$productTypeEntityName . '.translations',
-                        self::$productTypeTranslationEntityName . '.locale = \'' . $locale . '\''
-                    ),
+                    self::$productTypeTranslationEntityName,
+                    self::$productTypeEntityName . '.translations',
+                    self::$productTypeTranslationEntityName . '.locale = \'' . $locale . '\''
+                ),
             ),
             true
         );
@@ -356,14 +356,14 @@ class ProductManager implements ProductManagerInterface
             'product.status',
             array(
                 self::$productStatusEntityName => new DoctrineJoinDescriptor(
-                        self::$productStatusEntityName,
-                        self::$productEntityName . '.status'
-                    ),
+                    self::$productStatusEntityName,
+                    self::$productEntityName . '.status'
+                ),
                 self::$productStatusTranslationEntityName => new DoctrineJoinDescriptor(
-                        self::$productStatusTranslationEntityName,
-                        self::$productStatusEntityName . '.translations',
-                        self::$productStatusTranslationEntityName . '.locale = \'' . $locale . '\''
-                    ),
+                    self::$productStatusTranslationEntityName,
+                    self::$productStatusEntityName . '.translations',
+                    self::$productStatusTranslationEntityName . '.locale = \'' . $locale . '\''
+                ),
             ),
             true
         );
@@ -667,6 +667,7 @@ class ProductManager implements ProductManagerInterface
      *
      * @param Product $product
      * @param int $statusId
+     * @throws Exception\ProductDependencyNotFoundException
      */
     public function setStatusForProduct($product, $statusId)
     {
