@@ -140,8 +140,7 @@ class ProductController extends RestController implements ClassResourceInterface
 
         if ($request->get('flat') == 'true') {
             $fieldDescriptors = $this->getManager()->getFieldDescriptors(
-                $this->getLocale($request),
-                isset($filter['categories'])
+                $this->getLocale($request)
             );
 
             $filterFieldDescriptors = $this->getManager()->getFilterFieldDescriptors();
@@ -166,6 +165,9 @@ class ProductController extends RestController implements ClassResourceInterface
                     $listBuilder->where($filterFieldDescriptors[$key], $value);
                 }
             }
+
+            // TODO, should only be added if "categories" are requested
+            $listBuilder->addGroupBy($fieldDescriptors['id']);
 
             $list = new ListRepresentation(
                 $listBuilder->execute(),
