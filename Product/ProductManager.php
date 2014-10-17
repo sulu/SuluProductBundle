@@ -47,27 +47,16 @@ class ProductManager implements ProductManagerInterface
     use RelationTrait;
 
     protected static $productEntityName = 'SuluProductBundle:Product';
-
     protected static $productTypeEntityName = 'SuluProductBundle:Type';
-
     protected static $productTypeTranslationEntityName = 'SuluProductBundle:TypeTranslation';
-
     protected static $productStatusEntityName = 'SuluProductBundle:Status';
-
     protected static $accountsSupplierEntityName = 'SuluAccountBundle:Account';
-
     protected static $productStatusTranslationEntityName = 'SuluProductBundle:StatusTranslation';
-
     protected static $attributeSetEntityName = 'SuluProductBundle:AttributeSet';
-
     protected static $attributeEntityName = 'SuluProductBundle:Attribute';
-
     protected static $productTranslationEntityName = 'SuluProductBundle:ProductTranslation';
-
     protected static $productTaxClassEntityName = 'SuluProductBundle:TaxClass';
-
     protected static $productPriceEntityName = 'SuluProductBundle:ProductPrice';
-
     protected static $categoryEntityName = 'SuluCategoryBundle:Category';
 
     /**
