@@ -111,7 +111,7 @@ class ProductManager implements ProductManagerInterface
     /**
      * @var ObjectManager
      */
-    private $em;
+    protected $em;
 
     public function __construct(
         ProductRepositoryInterface $productRepository,
@@ -185,6 +185,20 @@ class ProductManager implements ProductManagerInterface
                     self::$productEntityName . '.supplier'
                 )
             )
+        );
+
+        $fieldDescriptors['parent'] = new DoctrineFieldDescriptor(
+            'id',
+            'parent',
+            self::$productEntityName . 'Parent',
+            'product.parent',
+            array(
+                self::$productEntityName . 'Parent' => new DoctrineJoinDescriptor(
+                    self::$productEntityName,
+                    self::$productEntityName . '.parent'
+                )
+            ),
+            true
         );
 
         return $fieldDescriptors;
@@ -462,7 +476,8 @@ class ProductManager implements ProductManagerInterface
         $locale,
         $userId,
         $id = null,
-        $flush = true
+        $flush = true,
+        $skipChanged = false
     ) {
         if ($id) {
             $product = $this->fetchProduct($id, $locale);
@@ -528,18 +543,12 @@ class ProductManager implements ProductManagerInterface
                 throw new ProductDependencyNotFoundException(self::$productEntityName, $parentId);
             }
             $product->setParent($parentProduct);
-        } else {
-            $product->setParent(null);
         }
 
         if (isset($data['status']) && isset($data['status']['id'])) {
             $statusId = $data['status']['id'];
             /** @var Status $status */
-            $status = $this->statusRepository->find($statusId);
-            if (!$status) {
-                throw new ProductDependencyNotFoundException(self::$productStatusEntityName, $statusId);
-            }
-            $product->setStatus($status);
+            $this->setStatusForProduct($product, $statusId);
         }
 
         if (isset($data['type']) && isset($data['type']['id'])) {
@@ -612,9 +621,10 @@ class ProductManager implements ProductManagerInterface
 
             $this->processSubEntities($product->getPrices(), $data['prices'], $get, $add, $update, $delete);
         }
-
-        $product->setChanged(new DateTime());
-        $product->setChanger($user);
+        if (!$skipChanged || $product->getId() == null) {
+            $product->setChanged(new DateTime());
+            $product->setChanger($user);
+        }
 
         if ($product->getId() == null) {
             $product->setCreated(new DateTime());
@@ -627,6 +637,21 @@ class ProductManager implements ProductManagerInterface
         }
 
         return $product;
+    }
+
+    /**
+     * Sets the status for a given product
+     *
+     * @param Product $product
+     * @param int $statusId
+     */
+    public function setStatusForProduct($product, $statusId)
+    {
+        $status = $this->statusRepository->find($statusId);
+        if (!$status) {
+            throw new ProductDependencyNotFoundException(self::$productStatusEntityName, $statusId);
+        }
+        $product->setStatus($status);
     }
 
     /**
