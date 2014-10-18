@@ -24,6 +24,7 @@ use Sulu\Bundle\ProductBundle\Entity\AttributeSet;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductPrice as ProductPriceEntity;
 use Sulu\Bundle\ProductBundle\Entity\StatusRepository;
+use Sulu\Bundle\ProductBundle\Entity\TaxClass;
 use Sulu\Bundle\ProductBundle\Entity\TaxClassRepository;
 use Sulu\Bundle\ProductBundle\Entity\Type;
 use Sulu\Bundle\ProductBundle\Entity\TypeRepository;
@@ -34,6 +35,7 @@ use Sulu\Bundle\ProductBundle\Product\Exception\ProductNotFoundException;
 use Sulu\Component\Persistence\RelationTrait;
 use Sulu\Component\Rest\Exception\EntityIdAlreadySetException;
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescriptor;
+use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineGroupConcatFieldDescriptor;
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineJoinDescriptor;
 use Sulu\Component\Rest\RestHelperInterface;
 use Sulu\Component\Security\UserRepositoryInterface;
@@ -142,7 +144,7 @@ class ProductManager implements ProductManagerInterface
     /**
      * Returns a list of fieldDescriptors just used for filtering
      *
-     * @return List
+     * @return DoctrineFieldDescriptor[]
      */
     public function getFilterFieldDescriptors()
     {
@@ -201,13 +203,27 @@ class ProductManager implements ProductManagerInterface
             true
         );
 
+        $fieldDescriptors['categories'] = new DoctrineFieldDescriptor(
+            'id',
+            'categories',
+            self::$productEntityName . 'Categories',
+            'product.categories',
+            array(
+                self::$productEntityName . 'Categories' => new DoctrineJoinDescriptor(
+                    self::$productEntityName,
+                    self::$productEntityName . '.categories'
+                )
+            ),
+            true
+        );
+
         return $fieldDescriptors;
     }
 
     /**
      * {@inheritDoc}
      */
-    public function getFieldDescriptors($locale, $categoryFilter = false)
+    public function getFieldDescriptors($locale)
     {
         $fieldDescriptors = array();
 
@@ -263,22 +279,30 @@ class ProductManager implements ProductManagerInterface
             ),
             true
         );
-        // TODO: Workaround for filtering products by it's categories.
-        if ($categoryFilter) {
-            $fieldDescriptors['categories'] = new DoctrineFieldDescriptor(
-                'id',
-                'categories',
-                self::$productEntityName . 'Categories',
+
+        $fieldDescriptors['categories'] = new DoctrineGroupConcatFieldDescriptor(
+            new DoctrineFieldDescriptor(
+                'translation',
+                'categoryTranslation',
+                self::$categoryEntityName . 'Translation',
                 'product.categories',
                 array(
                     self::$productEntityName . 'Categories' => new DoctrineJoinDescriptor(
                         self::$productEntityName,
                         self::$productEntityName . '.categories'
-                    )
-                ),
-                true
-            );
-        }
+                    ),
+                    self::$categoryEntityName . 'Translation' => new DoctrineJoinDescriptor(
+                        self::$categoryEntityName . 'Translation',
+                        self::$productEntityName . 'Categories.translations',
+                        self::$categoryEntityName . 'Translation.locale = \'' . $locale . '\''
+                    ),
+                )
+            ),
+            ', ',
+            'categories',
+            null,
+            true
+        );
 
         $fieldDescriptors['manufacturer'] = new DoctrineFieldDescriptor(
             'manufacturer',
@@ -454,7 +478,8 @@ class ProductManager implements ProductManagerInterface
      *
      * @param $id
      * @param $locale
-     * @return Sulu\Bundle\ProductBundle\Api\Product
+     * @return \Sulu\Bundle\ProductBundle\Api\Product
+     * @throws Exception\ProductNotFoundException
      */
     protected function fetchProduct($id, $locale)
     {
@@ -643,6 +668,7 @@ class ProductManager implements ProductManagerInterface
      *
      * @param Product $product
      * @param int $statusId
+     * @throws Exception\ProductDependencyNotFoundException
      */
     public function setStatusForProduct($product, $statusId)
     {
