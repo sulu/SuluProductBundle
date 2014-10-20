@@ -298,8 +298,9 @@ class ProductManager implements ProductManagerInterface
                     ),
                 )
             ),
-            ', ',
             'categories',
+            'product.categories',
+            ', ',
             null,
             true
         );
