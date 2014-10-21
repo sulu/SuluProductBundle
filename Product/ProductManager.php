@@ -207,7 +207,7 @@ class ProductManager implements ProductManagerInterface
             'id',
             'categories',
             self::$productEntityName . 'Categories',
-            'product.categories',
+            'products.categories',
             array(
                 self::$productEntityName . 'Categories' => new DoctrineJoinDescriptor(
                     self::$productEntityName,
@@ -285,7 +285,7 @@ class ProductManager implements ProductManagerInterface
                 'translation',
                 'categoryTranslation',
                 self::$categoryEntityName . 'Translation',
-                'product.categories',
+                'products.categories',
                 array(
                     self::$productEntityName . 'Categories' => new DoctrineJoinDescriptor(
                         self::$productEntityName,
@@ -299,7 +299,7 @@ class ProductManager implements ProductManagerInterface
                 )
             ),
             'categories',
-            'product.categories',
+            'products.categories',
             ', ',
             null,
             true
