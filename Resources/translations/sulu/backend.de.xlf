@@ -142,6 +142,10 @@
                 <source>product.supplier</source>
                 <target>Lieferant</target>
             </trans-unit>
+            <trans-unit id="37" resname="product.parent">
+                <source>product.parent</source>
+                <target>Hauptprodukt</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>
