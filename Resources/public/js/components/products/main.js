@@ -118,10 +118,12 @@ define([
 
             // FIXME the categories should already be loaded correctly here
             this.product.get('categories').reset();
-            this.sandbox.util.foreach(data.categories, function (id) {
-                var category = Category.findOrCreate({id: id});
-                this.product.get('categories').add(category);
-            }.bind(this));
+            if (!!data.categories) {
+                this.sandbox.util.foreach(data.categories, function (id) {
+                    var category = Category.findOrCreate({id: id});
+                    this.product.get('categories').add(category);
+                }.bind(this));
+            }
 
             this.product.saveLocale(this.options.locale, {
                 success: function (response) {
