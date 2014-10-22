@@ -25,6 +25,7 @@ class AppKernel extends SuluKernel
             new \Bazinga\Bundle\HateoasBundle\BazingaHateoasBundle(),
             new \Liip\ThemeBundle\LiipThemeBundle(),
 
+
             // Sulu
             new \Sulu\Bundle\CoreBundle\SuluCoreBundle(),
             new \Sulu\Bundle\AdminBundle\SuluAdminBundle(),
