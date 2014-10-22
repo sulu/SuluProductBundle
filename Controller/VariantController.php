@@ -95,6 +95,9 @@ class VariantController extends RestController implements ClassResourceInterface
 
             $listBuilder->where($fieldDescriptors['parent'], $parentId);
 
+            // TODO, should only be added if "categories" are requested
+            $listBuilder->addGroupBy($fieldDescriptors['id']);
+
             $list = new ListRepresentation(
                 $listBuilder->execute(),
                 self::$entityKey,
