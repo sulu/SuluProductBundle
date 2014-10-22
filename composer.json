@@ -12,13 +12,10 @@
     ],
     "require": {
         "php": ">=5.4",
-        "doctrine/orm": ">=2.2.3,<2.4-dev",
-        "friendsofsymfony/rest-bundle": "@dev",
-        "friendsofsymfony/http-cache": "@dev",
-        "jms/serializer-bundle": "@dev",
+        "doctrine/orm": "2.4.*",
         "willdurand/hateoas-bundle": "0.3.*",
 
-        "symfony-cmf/routing-bundle": "1.2.*@dev",
+        "symfony-cmf/routing-bundle": "1.2.*",
 
         "sulu/sulu": "dev-develop",
         "sulu/admin-bundle": "dev-develop",
