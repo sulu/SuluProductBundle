@@ -297,6 +297,20 @@ class ProductManager implements ProductManagerInterface
             self::$productEntityName,
             'product.manufacturer',
             array(),
+            true
+        );
+
+        $fieldDescriptors['supplier'] = new DoctrineFieldDescriptor(
+            'name',
+            'supplier',
+            self::$accountsSupplierEntityName,
+            'product.supplier',
+            array(
+                self::$accountsSupplierEntityName => new DoctrineJoinDescriptor(
+                        self::$accountsSupplierEntityName,
+                        self::$productEntityName . '.supplier'
+                    )
+            ),
             false
         );
 

@@ -138,6 +138,10 @@
                 <source>product.attribute.title</source>
                 <target>Titel</target>
             </trans-unit>
+            <trans-unit id="36" resname="product.supplier">
+                <source>product.supplier</source>
+                <target>Lieferant</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>
