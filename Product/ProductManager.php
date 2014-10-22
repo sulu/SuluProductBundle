@@ -266,20 +266,6 @@ class ProductManager implements ProductManagerInterface
             'product.number'
         );
 
-        $fieldDescriptors['parent'] = new DoctrineFieldDescriptor(
-            'id',
-            'parent',
-            self::$productEntityName . 'Parent',
-            'product.parent',
-            array(
-                self::$productEntityName . 'Parent' => new DoctrineJoinDescriptor(
-                    self::$productEntityName,
-                    self::$productEntityName . '.parent'
-                )
-            ),
-            true
-        );
-
         $fieldDescriptors['categories'] = new DoctrineGroupConcatFieldDescriptor(
             new DoctrineFieldDescriptor(
                 'translation',
@@ -311,7 +297,7 @@ class ProductManager implements ProductManagerInterface
             self::$productEntityName,
             'product.manufacturer',
             array(),
-            true
+            false
         );
 
         $fieldDescriptors['cost'] = new DoctrineFieldDescriptor(
