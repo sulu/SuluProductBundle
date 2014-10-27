@@ -273,13 +273,13 @@ class ProductManager implements ProductManagerInterface
             'product.parent',
             array(
                 self::$productEntityName . 'Parent' => new DoctrineJoinDescriptor(
-                        self::$productEntityName,
-                        self::$productEntityName . '.parent'
-                    )
+                    self::$productEntityName,
+                    self::$productEntityName . '.parent'
+                )
             ),
             true
         );
-        
+
         $fieldDescriptors['categories'] = new DoctrineGroupConcatFieldDescriptor(
             new DoctrineFieldDescriptor(
                 'translation',
@@ -321,9 +321,9 @@ class ProductManager implements ProductManagerInterface
             'product.supplier',
             array(
                 self::$accountsSupplierEntityName => new DoctrineJoinDescriptor(
-                        self::$accountsSupplierEntityName,
-                        self::$productEntityName . '.supplier'
-                    )
+                    self::$accountsSupplierEntityName,
+                    self::$productEntityName . '.supplier'
+                )
             ),
             false
         );
@@ -640,8 +640,12 @@ class ProductManager implements ProductManagerInterface
         }
 
         if (array_key_exists('prices', $data)) {
-            $get = function (ProductPrice $price) {
-                return $price->getId();
+            $get = function (ProductPrice $price, $data) {
+                if (isset($data['id'])) {
+                    return $data['id'] == $price->getId();
+                } else {
+                    return isset($data['price']) && $data['price'] == $price->getPrice();
+                }
             };
 
             $add = function ($priceData) use ($product) {
@@ -658,7 +662,14 @@ class ProductManager implements ProductManagerInterface
                 return true;
             };
 
-            $this->processSubEntities($product->getPrices(), $data['prices'], $get, $add, $update, $delete);
+            $this->compareEntitiesWithData(
+                $product->getPrices(),
+                $data['prices'],
+                $get,
+                $add,
+                $update,
+                $delete
+            );
         }
         if (!$skipChanged || $product->getId() == null) {
             $product->setChanged(new DateTime());
