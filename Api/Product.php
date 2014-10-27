@@ -515,9 +515,9 @@ class Product extends ApiWrapper
      * @VirtualProperty
      * @SerializedName("medias")
      */
-    public function getMedias()
+    public function getMedia()
     {
-        $mediaEntities = $this->entity->getMedias();
+        $mediaEntities = $this->entity->getMedia();
 
         $medias = array();
         if ($mediaEntities) {

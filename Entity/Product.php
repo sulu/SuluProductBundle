@@ -341,6 +341,6 @@ class Product extends BaseProduct
      */
     public function containsMedia(Media $media)
     {
-        return $this->getMedias()->contains($media);
+        return $this->getMedia()->contains($media);
     }
 }

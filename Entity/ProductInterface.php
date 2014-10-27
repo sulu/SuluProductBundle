@@ -485,7 +485,7 @@ interface ProductInterface
      *
      * @return \Doctrine\Common\Collections\Collection
      */
-    public function getMedias();
+    public function getMedia();
 
     /**
      * Get medias
