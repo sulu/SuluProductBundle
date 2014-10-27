@@ -22,5 +22,20 @@
 
         <many-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface" field="setProducts"
                       mapped-by="sets"/>
+
+        <many-to-many field="medias" target-entity="Sulu\Bundle\MediaBundle\Entity\Media">
+            <join-table name="pr_product_medias">
+                <join-columns>
+                    <join-column name="idProducts" referenced-column-name="id"/>
+                </join-columns>
+                <inverse-join-columns>
+                    <join-column name="idMedias" referenced-column-name="id" on-delete="CASCADE"/>
+                </inverse-join-columns>
+            </join-table>
+            <order-by>
+                <order-by-field name="id" direction="ASC"/>
+            </order-by>
+        </many-to-many>
+
     </entity>
 </doctrine-mapping>

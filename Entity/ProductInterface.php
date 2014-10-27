@@ -11,6 +11,7 @@
 namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Sulu\Bundle\ContactBundle\Entity\Country;
+use Sulu\Bundle\MediaBundle\Entity\Media;
 use Sulu\Bundle\SecurityBundle\Entity\User;
 use Sulu\Component\Security\UserInterface;
 
@@ -478,4 +479,29 @@ interface ProductInterface
      * @return \Doctrine\Common\Collections\Collection
      */
     public function getCategories();
+
+    /**
+     * Get medias
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getMedias();
+
+    /**
+     * Get medias
+     * @param Media $media
+     */
+    public function addMedia(Media $media);
+
+    /**
+     * Remove medias
+     * @param Media $media
+     */
+    public function removeMedia(Media $media);
+
+    /**
+     * Remove medias
+     * @param Media $media
+     */
+    public function containsMedia(Media $media);
 }

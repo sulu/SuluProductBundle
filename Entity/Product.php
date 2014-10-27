@@ -3,6 +3,7 @@
 namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Sulu\Bundle\MediaBundle\Entity\Media;
 
 /**
  * Product
@@ -43,6 +44,11 @@ class Product extends BaseProduct
      * @var \Doctrine\Common\Collections\Collection
      */
     private $setProducts;
+
+    /**
+     * @var \Doctrine\Common\Collections\Collection
+     */
+    private $medias;
 
     /**
      * Constructor
@@ -269,5 +275,72 @@ class Product extends BaseProduct
     public function getSetProducts()
     {
         return $this->setProducts;
+    }
+
+    /**
+     * Add medias
+     *
+     * @param Media $medias
+     * @return Product
+     */
+    public function addMedia(Media $medias)
+    {
+        $this->medias[] = $medias;
+
+        return $this;
+    }
+
+    /**
+     * Remove medias
+     *
+     * @param Media $medias
+     */
+    public function removeMedia(Media $medias)
+    {
+        $this->medias->removeElement($medias);
+    }
+
+    /**
+     * Get medias
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getMedias()
+    {
+        return $this->medias;
+    }
+
+    /**
+     * Add children
+     *
+     * @param Product $children
+     * @return Product
+     */
+    public function addChild(Product $children)
+    {
+        $this->children[] = $children;
+
+        return $this;
+    }
+
+    /**
+     * Remove children
+     *
+     * @param Product $children
+     */
+    public function removeChild(Product $children)
+    {
+        $this->children->removeElement($children);
+    }
+
+    /**
+     * Returns true when collection of media contains media with specific id
+     *
+     * @param Media $media
+     * @return bool
+     */
+    public function containsMedia(Media $media)
+    {
+        return $this->getMedias()->contains($media);
     }
 }
