@@ -124,8 +124,6 @@ define([
 
         processAjaxForMedia: function(mediaIds, productId, type) {
 
-            // TODO one request for post and one for delete?
-
             var requests = [],
                 medias = [],
                 url;
