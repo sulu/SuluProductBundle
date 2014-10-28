@@ -485,7 +485,16 @@ class ProductControllerTest extends DatabaseTestCase
             self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\UrlType'),
             self::$em->getClassMetadata('Sulu\Bundle\CategoryBundle\Entity\Category'),
             self::$em->getClassMetadata('Sulu\Bundle\CategoryBundle\Entity\CategoryTranslation'),
-            self::$em->getClassMetadata('Sulu\Bundle\CategoryBundle\Entity\CategoryMeta'),
+            self::$em->getClassMetadata('Sulu\Bundle\CategoryBundle\Entity\Media'),
+            self::$em->getClassMetadata('Sulu\Bundle\CategoryBundle\Entity\MediaType'),
+            self::$em->getClassMetadata('Sulu\Bundle\CategoryBundle\Entity\FileVersion'),
+            self::$em->getClassMetadata('Sulu\Bundle\CategoryBundle\Entity\File'),
+            self::$em->getClassMetadata('Sulu\Bundle\CategoryBundle\Entity\FileVersionMeta'),
+            self::$em->getClassMetadata('Sulu\Bundle\CategoryBundle\Entity\FileVersionContentLanguage'),
+            self::$em->getClassMetadata('Sulu\Bundle\CategoryBundle\Entity\FileVersionPublishLanguage'),
+            self::$em->getClassMetadata('Sulu\Bundle\CategoryBundle\Entity\Collection'),
+            self::$em->getClassMetadata('Sulu\Bundle\CategoryBundle\Entity\CollectionMeta'),
+            self::$em->getClassMetadata('Sulu\Bundle\CategoryBundle\Entity\CollectionType'),
         );
 
         self::$tool->dropSchema(self::$entities);
