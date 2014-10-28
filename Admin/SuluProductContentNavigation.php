@@ -41,5 +41,14 @@ class SuluProductContentNavigation extends ContentNavigation
         $pricing->setDisplay(array('edit'));
         $pricing->setResetStore(false);
         $this->addNavigationItem($pricing);
+
+        // media
+        $media = new ContentNavigationItem('content-navigation.product.media');
+        $media->setAction('media');
+        $media->setGroups(array('product'));
+        $media->setComponent('products/components/media@suluproduct');
+        $media->setDisplay(array('edit'));
+        $media->setResetStore(false);
+        $this->addNavigationItem($media);
     }
 } 

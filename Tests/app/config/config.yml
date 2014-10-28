@@ -78,7 +78,7 @@ sulu_core:
         request_analyzer:
             enabled: false
     content:
-        templates:
+        structure:
             paths:
                 app:
                     path: "%kernel.root_dir%/Resources/templates"

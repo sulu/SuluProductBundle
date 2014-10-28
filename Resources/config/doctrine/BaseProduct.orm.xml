@@ -128,10 +128,10 @@
         <many-to-many target-entity="Sulu\Bundle\MediaBundle\Entity\Media" field="media">
             <join-table name="pr_product_media">
                 <join-columns>
-                    <join-column name="idProducts" referenced-column-name="id" nullable="false"/>
+                    <join-column name="idProducts" referenced-column-name="id" nullable="false" on-delete="CASCADE"/>
                 </join-columns>
                 <inverse-join-columns>
-                    <join-column name="idMedia" referenced-column-name="id" nullable="false"/>
+                    <join-column name="idMedia" referenced-column-name="id" nullable="false" on-delete="CASCADE" />
                 </inverse-join-columns>
             </join-table>
         </many-to-many>

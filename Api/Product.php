@@ -12,6 +12,8 @@ namespace Sulu\Bundle\ProductBundle\Api;
 
 use Sulu\Bundle\CategoryBundle\Api\Category;
 use Sulu\Bundle\CategoryBundle\Entity\Category as CategoryEntity;
+use Sulu\Bundle\MediaBundle\Api\Media;
+use Sulu\Bundle\MediaBundle\Entity\Media as MediaEntity;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttribute;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface as Entity;
 use JMS\Serializer\Annotation\VirtualProperty;
@@ -484,5 +486,56 @@ class Product extends ApiWrapper
         }
 
         return $productTranslation;
+    }
+
+    /**
+     * Adds a media to the product
+     *
+     * @param Media $media
+     */
+    public function addMedia(Media $media)
+    {
+        $this->entity->addMedia($media->getEntity());
+    }
+
+    /**
+     * Removes a media from the product
+     *
+     * @param Media $media
+     */
+    public function removeMedia(Media $media)
+    {
+        $this->entity->removeMedia($media->getEntity());
+    }
+
+    /**
+     * Returns the media for the product
+     *
+     * @return Media[]
+     * @VirtualProperty
+     * @SerializedName("media")
+     */
+    public function getMedia()
+    {
+        $mediaEntities = $this->entity->getMedia();
+
+        $media = array();
+        if ($mediaEntities) {
+            foreach ($mediaEntities as $mediaEntity) {
+                $media[] = new Media($mediaEntity, $this->locale);
+            }
+        }
+        return $media;
+    }
+
+    /**
+     * Returns true when collection of media contains media with specific id
+     *
+     * @param Media $media
+     * @return bool
+     */
+    public function containsMedia(Media $media)
+    {
+        return $this->entity->getMedia()->contains($media->getEntity());
     }
 }

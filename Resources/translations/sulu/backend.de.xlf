@@ -146,6 +146,10 @@
                 <source>product.parent</source>
                 <target>Hauptprodukt</target>
             </trans-unit>
+            <trans-unit id="38" resname="content-navigation.product.media">
+                <source>content-navigation.product.media</source>
+                <target>Dokumente</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>
