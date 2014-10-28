@@ -184,7 +184,12 @@ define([], function() {
          */
         submit: function() {
             if (this.sandbox.form.validate(constants.formSelector)) {
-                this.sandbox.emit('sulu.products.media.save', this.options.data.id, this.newSelections, this.removedSelections);
+                this.sandbox.emit(
+                    'sulu.products.media.save',
+                    this.options.data.id,
+                    this.newSelections,
+                    this.removedSelections
+                );
             }
         },
 

@@ -3,7 +3,6 @@
 namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
-use Sulu\Bundle\MediaBundle\Entity\Media;
 
 /**
  * Product
@@ -270,28 +269,5 @@ class Product extends BaseProduct
     public function getSetProducts()
     {
         return $this->setProducts;
-    }
-
-    /**
-     * Add children
-     *
-     * @param Product $children
-     * @return Product
-     */
-    public function addChild(Product $children)
-    {
-        $this->children[] = $children;
-
-        return $this;
-    }
-
-    /**
-     * Remove children
-     *
-     * @param Product $children
-     */
-    public function removeChild(Product $children)
-    {
-        $this->children->removeElement($children);
     }
 }
