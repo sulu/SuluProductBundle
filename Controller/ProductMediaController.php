@@ -23,10 +23,10 @@ use FOS\RestBundle\Controller\Annotations\RouteResource;
 
 /**
  * Makes accounts available through a REST API
- * @RouteResource("Medias")
+ * @RouteResource("Media")
  * @package Sulu\Bundle\ProductBundle\Controller
  */
-abstract class ProductMediaController extends RestController
+class ProductMediaController extends RestController
 {
     protected static $mediaEntityName = 'SuluMediaBundle:Media';
     protected static $productEntityName = 'SuluProductBundle:Product';
@@ -95,14 +95,7 @@ abstract class ProductMediaController extends RestController
             $product->addMedia($media);
             $em->flush();
 
-            $view = $this->view(
-                new Media(
-                    $media,
-                    $this->getUser()->getLocale(),
-                    null
-                ),
-                200
-            );
+            $view = $this->view($media, 200);
         } catch (EntityNotFoundException $enfe) {
             $view = $this->view($enfe->toArray(), 404);
         } catch (RestException $exc) {
@@ -118,13 +111,13 @@ abstract class ProductMediaController extends RestController
      * Removes a media from the relation to the account
      *
      * @param $id - account id
+     * @param $mediaId
      * @param \Symfony\Component\HttpFoundation\Request $request
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function deleteAction($id, Request $request)
+    public function deleteAction($id, $mediaId, Request $request)
     {
         $locale = $this->getLocale($request);
-        $mediaId = $request->get('mediaId', '');
 
         try {
 

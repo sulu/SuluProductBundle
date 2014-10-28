@@ -46,11 +46,6 @@ class Product extends BaseProduct
     private $setProducts;
 
     /**
-     * @var \Doctrine\Common\Collections\Collection
-     */
-    private $medias;
-
-    /**
      * Constructor
      */
     public function __construct()
@@ -278,39 +273,6 @@ class Product extends BaseProduct
     }
 
     /**
-     * Add medias
-     *
-     * @param Media $medias
-     * @return Product
-     */
-    public function addMedia(Media $medias)
-    {
-        $this->medias[] = $medias;
-
-        return $this;
-    }
-
-    /**
-     * Remove medias
-     *
-     * @param Media $medias
-     */
-    public function removeMedia(Media $medias)
-    {
-        $this->medias->removeElement($medias);
-    }
-
-    /**
-     * Get medias
-     *
-     * @return \Doctrine\Common\Collections\Collection 
-     */
-    public function getMedias()
-    {
-        return $this->medias;
-    }
-
-    /**
      * Add children
      *
      * @param Product $children
@@ -331,16 +293,5 @@ class Product extends BaseProduct
     public function removeChild(Product $children)
     {
         $this->children->removeElement($children);
-    }
-
-    /**
-     * Returns true when collection of media contains media with specific id
-     *
-     * @param Media $media
-     * @return bool
-     */
-    public function containsMedia(Media $media)
-    {
-        return $this->getMedia()->contains($media);
     }
 }

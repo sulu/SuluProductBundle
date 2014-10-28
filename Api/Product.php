@@ -495,7 +495,7 @@ class Product extends ApiWrapper
      */
     public function addMedia(Media $media)
     {
-        $this->entity->addCategory($media->getEntity());
+        $this->entity->addMedia($media->getEntity());
     }
 
     /**
@@ -519,14 +519,14 @@ class Product extends ApiWrapper
     {
         $mediaEntities = $this->entity->getMedia();
 
-        $medias = array();
+        $media = array();
         if ($mediaEntities) {
             foreach ($mediaEntities as $mediaEntity) {
-                $medias[] = new Category($mediaEntity, $this->locale);
+                $media[] = new Media($mediaEntity, $this->locale);
             }
         }
 
-        return $medias;
+        return $media;
     }
 
     /**
@@ -537,6 +537,6 @@ class Product extends ApiWrapper
      */
     public function containsMedia(Media $media)
     {
-        return $this->entity->containsMedia($media->getEntity());
+        return $this->entity->getMedia()->contains($media->getEntity());
     }
 }

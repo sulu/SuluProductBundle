@@ -499,9 +499,4 @@ interface ProductInterface
      */
     public function removeMedia(Media $media);
 
-    /**
-     * Remove medias
-     * @param Media $media
-     */
-    public function containsMedia(Media $media);
 }

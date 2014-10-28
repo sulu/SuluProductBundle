@@ -16,3 +16,7 @@ sulu_product_base.attribute_values:
     resource: Sulu\Bundle\ProductBundle\Controller\ValueController
     parent: sulu_product_base.attributes
 
+sulu_product.media:
+    type: rest
+    parent: sulu_product.products
+    resource: Sulu\Bundle\ProductBundle\Controller\ProductMediaController

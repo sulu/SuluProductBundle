@@ -110,6 +110,55 @@ define([
             this.sandbox.on(PRODUCT_VARIANT_DELETE, function (ids) {
                 this.deleteVariants(ids);
             }, this);
+
+            // handling media
+            this.sandbox.on('sulu.products.media.save', this.saveMedia.bind(this));
+        },
+
+        saveMedia: function(productId, newMediaIds, removedMediaIds) {
+            this.sandbox.emit('sulu.header.toolbar.item.loading', 'save-button');
+
+            this.processAjaxForMedia(newMediaIds, productId, 'POST');
+            this.processAjaxForMedia(removedMediaIds, productId, 'DELETE');
+        },
+
+        processAjaxForMedia: function(mediaIds, productId, type) {
+
+            // TODO one request for post and one for delete?
+
+            var requests = [],
+                medias = [],
+                url;
+
+            if (mediaIds.length > 0) {
+                this.sandbox.util.each(mediaIds, function(index, id) {
+
+                    if (type === 'DELETE') {
+                        url = '/admin/api/products/' + productId + '/media/' + id;
+                    } else if (type === 'POST') {
+                        url = '/admin/api/products/' + productId + '/media';
+                    }
+
+                    requests.push(
+                        this.sandbox.util.ajax({
+                            url: url,
+                            data: {mediaId: id},
+                            type: type
+                        }).fail(function() {
+                            this.sandbox.logger.error("Error while saving media!");
+                        }.bind(this))
+                    );
+                    medias.push(id);
+                }.bind(this));
+
+                this.sandbox.util.when.apply(null, requests).then(function() {
+                    if (type === 'DELETE') {
+                        this.sandbox.emit('sulu.products.media.removed', medias);
+                    } else if (type === 'POST') {
+                        this.sandbox.emit('sulu.products.media.saved', medias);
+                    }
+                }.bind(this));
+            }
         },
 
         save: function (data) {

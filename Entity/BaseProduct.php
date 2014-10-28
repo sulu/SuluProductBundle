@@ -3,6 +3,7 @@
 namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Sulu\Bundle\MediaBundle\Entity\Media;
 use Sulu\Component\Security\UserInterface;
 
 /**
@@ -711,10 +712,10 @@ abstract class BaseProduct implements ProductInterface
     /**
      * Add media
      *
-     * @param \Sulu\Bundle\MediaBundle\Entity\Media $media
+     * @param Media $media
      * @return Product
      */
-    public function addMedia(\Sulu\Bundle\MediaBundle\Entity\Media $media)
+    public function addMedia(Media $media)
     {
         $this->media[] = $media;
 
@@ -724,9 +725,9 @@ abstract class BaseProduct implements ProductInterface
     /**
      * Remove media
      *
-     * @param \Sulu\Bundle\MediaBundle\Entity\Media $media
+     * @param Media $media
      */
-    public function removeMedia(\Sulu\Bundle\MediaBundle\Entity\Media $media)
+    public function removeMedia(Media $media)
     {
         $this->media->removeElement($media);
     }

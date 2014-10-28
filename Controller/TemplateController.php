@@ -123,4 +123,13 @@ class TemplateController extends Controller
             array('taxClasses' => $taxClassTitles)
         );
     }
+
+    /**
+     * Returns the template for product documents
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function productDocumentsAction()
+    {
+        return $this->render('SuluProductBundle:Template:product.documents.html.twig');
+    }
 }
