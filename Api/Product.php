@@ -509,11 +509,11 @@ class Product extends ApiWrapper
     }
 
     /**
-     * Returns the medias for the product
+     * Returns the media for the product
      *
      * @return Media[]
      * @VirtualProperty
-     * @SerializedName("medias")
+     * @SerializedName("media")
      */
     public function getMedia()
     {
@@ -525,7 +525,6 @@ class Product extends ApiWrapper
                 $media[] = new Media($mediaEntity, $this->locale);
             }
         }
-
         return $media;
     }
 

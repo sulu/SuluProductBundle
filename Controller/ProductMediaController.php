@@ -22,7 +22,7 @@ use Symfony\Component\HttpFoundation\Request;
 use FOS\RestBundle\Controller\Annotations\RouteResource;
 
 /**
- * Makes accounts available through a REST API
+ * Makes setting and removing of media for a product available through a REST API
  * @RouteResource("Media")
  * @package Sulu\Bundle\ProductBundle\Controller
  */

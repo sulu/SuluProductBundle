@@ -481,20 +481,20 @@ interface ProductInterface
     public function getCategories();
 
     /**
-     * Get medias
+     * Get media
      *
      * @return \Doctrine\Common\Collections\Collection
      */
     public function getMedia();
 
     /**
-     * Get medias
+     * Get media
      * @param Media $media
      */
     public function addMedia(Media $media);
 
     /**
-     * Remove medias
+     * Remove media
      * @param Media $media
      */
     public function removeMedia(Media $media);
