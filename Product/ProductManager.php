@@ -644,7 +644,15 @@ class ProductManager implements ProductManagerInterface
                 if (isset($data['id'])) {
                     return $data['id'] == $price->getId();
                 } else {
-                    return isset($data['price']) && $data['price'] == $price->getPrice();
+                    if (isset($data['currency']['id'])) {
+                        return $data['currency']['id'] == $price->getCurrency()->getId();
+                    }
+                    $priceCurrencyChanged = isset($data['currency']['name']) &&
+                        $data['currency']['name'] == $price->getCurrency()->getName();
+                    $priceValueChanged = isset($data['price']) && $data['price'] == $price->getPrice();
+                    $priceMinimumQuantity = isset($data['minimumQuantity']) &&
+                        $data['minimumQuantity'] == $price->getEntity()->getMinimumQuantity();
+                    return $priceValueChanged | $priceInfoChanged | $priceCurrencyChanged;
                 }
             };
 
@@ -658,7 +666,6 @@ class ProductManager implements ProductManagerInterface
 
             $delete = function (ProductPrice $price) {
                 $this->em->remove($price->getEntity());
-
                 return true;
             };
 
@@ -713,7 +720,25 @@ class ProductManager implements ProductManagerInterface
      */
     protected function updatePrice(ProductPrice $price, $matchedEntry)
     {
-        $price->setPrice($matchedEntry['price']);
+        if (isset($matchedEntry['minimumQuantity'])) {
+            $price->getEntity()->setMinimumQuantity($matchedEntry['minimumQuantity']);
+        }
+        if (isset($matchedEntry['price'])) {
+            $price->setPrice($matchedEntry['price']);
+        }
+        if (isset($matchedEntry['priceInfo'])) {
+            $price->getEntity()->setPriceInfo($matchedEntry['priceInfo']);
+        }
+        if (isset($matchedEntry['currency'])) {
+            $currency = $this->currencyRepository->find($matchedEntry['currency']['id']);
+            if (!$currency) {
+                throw new ProductDependencyNotFoundException(
+                    self::$productPriceEntityName,
+                    $matchedEntry['currency']['id']
+                );
+            }
+            $price->getEntity()->setCurrency($currency);
+        }
 
         return true;
     }
@@ -744,6 +769,12 @@ class ProductManager implements ProductManagerInterface
             $price->setPrice($priceData['price']);
             $price->setProduct($product);
             $price->setCurrency($currency);
+            if (isset($priceData['priceInfo'])) {
+                $price->setPriceInfo($priceData['priceInfo']);
+            }
+            if (isset($priceData['minimumQuantity'])) {
+                $price->setMinimumQuantity($priceData['minimumQuantity']);
+            }
             $product->addPrice($price);
 
             $this->em->persist($price);
