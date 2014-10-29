@@ -11,8 +11,43 @@
 namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\NoResultException;
 
 class CurrencyRepository extends EntityRepository
 {
+    /**
+     * Find a currency by it's id
+     *
+     * @param mixed $id
+     */
+    public function findById($id)
+    {
+        try {
+            $qb = $this->createQueryBuilder('currency')
+                ->andWhere('currency.id = :currencyId')
+                ->setParameter('currencyId', $id);
 
-} 
+            return $qb->getQuery()->getSingleResult();
+        } catch (NoResultException $exc) {
+            return null;
+        }
+    }
+
+    /**
+     * Find a currency by it's name
+     *
+     * @param string $name
+     */
+    public function findByName($name)
+    {
+        try {
+            $qb = $this->createQueryBuilder('currency')
+                ->andWhere('currency.name = :currencyName')
+                ->setParameter('currencyName', $name);
+
+            return $qb->getQuery()->getSingleResult();
+        } catch (NoResultException $exc) {
+            return null;
+        }
+    }
+}
