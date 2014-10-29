@@ -644,10 +644,10 @@ class ProductManager implements ProductManagerInterface
                 if (isset($data['id'])) {
                     return $data['id'] == $price->getId();
                 } else {
-                    $currencyNotChanged = isset($data['currency']['name']) &&
+                    $currencyNotChanged = isset($data['currency']) && array_key_exists('name', $data['currency']) &&
                         $data['currency']['name'] == $price->getCurrency()->getName();
-                    $valueNotChanged = isset($data['price']) && $data['price'] == $price->getPrice();
-                    $minimumQuantityNotChanged = isset($data['minimumQuantity']) &&
+                    $valueNotChanged = array_key_exists('price', $data) && $data['price'] == $price->getPrice();
+                    $minimumQuantityNotChanged = array_key_exists('minimumQuantity', $data) &&
                         $data['minimumQuantity'] == $price->getEntity()->getMinimumQuantity();
                     return $currencyNotChanged && $valueNotChanged && $minimumQuantityNotChanged;
                 }
