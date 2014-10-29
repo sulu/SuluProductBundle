@@ -640,19 +640,16 @@ class ProductManager implements ProductManagerInterface
         }
 
         if (array_key_exists('prices', $data)) {
-            $get = function (ProductPrice $price, $data) {
+            $compare = function (ProductPrice $price, $data) {
                 if (isset($data['id'])) {
                     return $data['id'] == $price->getId();
                 } else {
-                    if (isset($data['currency']['id'])) {
-                        return $data['currency']['id'] == $price->getCurrency()->getId();
-                    }
-                    $priceCurrencyChanged = isset($data['currency']['name']) &&
+                    $currencyNotChanged = isset($data['currency']['name']) &&
                         $data['currency']['name'] == $price->getCurrency()->getName();
-                    $priceValueChanged = isset($data['price']) && $data['price'] == $price->getPrice();
-                    $priceMinimumQuantity = isset($data['minimumQuantity']) &&
+                    $valueNotChanged = isset($data['price']) && $data['price'] == $price->getPrice();
+                    $minimumQuantityNotChanged = isset($data['minimumQuantity']) &&
                         $data['minimumQuantity'] == $price->getEntity()->getMinimumQuantity();
-                    return $priceValueChanged | $priceInfoChanged | $priceCurrencyChanged;
+                    return $currencyNotChanged || $valueNotChanged || $minimumQuantityNotChanged;
                 }
             };
 
@@ -672,7 +669,7 @@ class ProductManager implements ProductManagerInterface
             $this->compareEntitiesWithData(
                 $product->getPrices(),
                 $data['prices'],
-                $get,
+                $compare,
                 $add,
                 $update,
                 $delete
