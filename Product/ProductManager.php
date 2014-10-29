@@ -649,7 +649,7 @@ class ProductManager implements ProductManagerInterface
                     $valueNotChanged = isset($data['price']) && $data['price'] == $price->getPrice();
                     $minimumQuantityNotChanged = isset($data['minimumQuantity']) &&
                         $data['minimumQuantity'] == $price->getEntity()->getMinimumQuantity();
-                    return $currencyNotChanged || $valueNotChanged || $minimumQuantityNotChanged;
+                    return $currencyNotChanged && $valueNotChanged && $minimumQuantityNotChanged;
                 }
             };
 
