@@ -150,6 +150,14 @@
                 <source>content-navigation.product.media</source>
                 <target>Dokumente</target>
             </trans-unit>
+            <trans-unit id="39" resname="product.internal-item-number">
+                <source>product.internal-item-number</source>
+                <target>Interne Id</target>
+            </trans-unit>
+            <trans-unit id="40" resname="product.global-trade-item-number">
+                <source>product.global-trade-item-number</source>
+                <target>GTIN</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>

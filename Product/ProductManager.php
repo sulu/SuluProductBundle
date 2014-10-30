@@ -263,7 +263,7 @@ class ProductManager implements ProductManagerInterface
             'internalItemNumber',
             'internalItemNumber',
             self::$productEntityName,
-            'product.internalItemNumber',
+            'product.internal-item-number',
             array(),
             true
         );
@@ -272,7 +272,7 @@ class ProductManager implements ProductManagerInterface
             'globalTradeItemNumber',
             'globalTradeItemNumber',
             self::$productEntityName,
-            'product.globalTradeItemNumber'
+            'product.global-trade-item-number'
         );
 
         $fieldDescriptors['parent'] = new DoctrineFieldDescriptor(
