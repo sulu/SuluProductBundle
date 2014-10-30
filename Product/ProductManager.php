@@ -189,6 +189,14 @@ class ProductManager implements ProductManagerInterface
             )
         );
 
+        $fieldDescriptors['is_depreciated'] = new DoctrineFieldDescriptor(
+            'isDepreciated',
+            'is_depreciated',
+            self::$productEntityName,
+            null,
+            array()
+        );
+
         $fieldDescriptors['parent'] = new DoctrineFieldDescriptor(
             'id',
             'parent',

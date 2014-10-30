@@ -116,6 +116,11 @@ class ProductController extends RestController implements ClassResourceInterface
             $filter['accounts_supplier_id'] = $supplierId;
         }
 
+        $isDepreciated = $request->get('is_depreciated');
+        if ($isDepreciated !== null) {
+            $filter['is_depreciated'] = $isDepreciated;
+        }
+
         $parent = $request->get('parent');
         if ($parent) {
             $filter['parent'] = ($parent == 'null') ? null : $parent;

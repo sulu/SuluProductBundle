@@ -27,6 +27,11 @@ abstract class BaseProduct implements ProductInterface
     private $internalItemNumber;
 
     /**
+     * @var isDepreciated
+     */
+    private $isDepreciated = false;
+
+    /**
      * @var string
      */
     private $manufacturer;
@@ -214,6 +219,29 @@ abstract class BaseProduct implements ProductInterface
     public function getInternalItemNumber()
     {
         return $this->internalItemNumber;
+    }
+
+    /**
+     * Set isDepreciated
+     *
+     * @param boolean $isDepreciated
+     * @return BaseProduct
+     */
+    public function setIsDepreciated($isDepreciated)
+    {
+        $this->isDepreciated = $isDepreciated;
+
+        return $this;
+    }
+
+    /**
+     * Get isDepreciated
+     *
+     * @return boolean
+     */
+    public function isDepreciated()
+    {
+        return $this->isDepreciated;
     }
 
     /**
