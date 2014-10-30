@@ -24,6 +24,11 @@ abstract class BaseProduct implements ProductInterface
     /**
      * @var string
      */
+    private $internalProductNumber;
+
+    /**
+     * @var string
+     */
     private $manufacturer;
 
     /**
@@ -186,6 +191,29 @@ abstract class BaseProduct implements ProductInterface
     public function getNumber()
     {
         return $this->number;
+    }
+
+    /**
+     * Set internalProductNumber
+     *
+     * @param string $internalProductNumber
+     * @return BaseProduct
+     */
+    public function setInternalProductNumber($internalProductNumber)
+    {
+        $this->internalProductNumber = $internalProductNumber;
+
+        return $this;
+    }
+
+    /**
+     * Get internalProductNumber
+     *
+     * @return string
+     */
+    public function getInternalProductNumber()
+    {
+        return $this->internalProductNumber;
     }
 
     /**

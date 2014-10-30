@@ -7,8 +7,9 @@
             <generator strategy="AUTO"/>
         </id>
 
-        <field name="code" type="string" length="255" nullable="true"/>
-        <field name="number" type="string" length="255" nullable="false"/>
+        <field name="code" type="string" length="255" nullable="false"/>
+        <field name="number" type="string" length="255" nullable="true"/>
+        <field name="internalProductNumber" type="string" length="255" nullable="true"/>
         <field name="manufacturer" type="string" length="255" nullable="true"/>
         <field name="cost" type="decimal" precision="15" scale="2" nullable="true"/>
         <field name="priceInfo" type="text" nullable="true"/>

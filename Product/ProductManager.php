@@ -451,31 +451,14 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Returns all master products in the given locale for the given number
-     * @param string $locale The locale of the product to load
-     * @param string $number The number of the product to load
-     * @return ProductInterface[]
-     */
-    public function findMasterByLocaleAndNumber($locale, $number)
-    {
-        $product = $this->productRepository->findMasterByLocaleAndNumber($locale, $number);
-
-        if ($product) {
-            return new Product($product, $locale);
-        } else {
-            return null;
-        }
-    }
-
-    /**
      * Returns all simple products in the given locale for the given number
      * @param string $locale The locale of the product to load
      * @param string $number The number of the product to load
      * @return ProductInterface[]
      */
-    public function findSimpleByLocaleAndNumber($locale, $number)
+    public function findByLocaleAndInternalProductNumber($locale, $internalProductNumber)
     {
-        $products = $this->productRepository->findSimpleByLocaleAndNumber($locale, $number);
+        $products = $this->productRepository->findByLocaleAndInternalProductNumber($locale, $internalProductNumber);
         if ($products) {
             array_walk(
                 $products,
@@ -536,6 +519,7 @@ class ProductManager implements ProductManagerInterface
         $product->setManufacturer($this->getProperty($data, 'manufacturer', $product->getManufacturer()));
         $product->setCost($this->getProperty($data, 'cost', $product->getCost()));
         $product->setPriceInfo($this->getProperty($data, 'priceInfo', $product->getPriceInfo()));
+        $product->setInternalProductNumber($this->getProperty($data, 'internalProductNumber', $product->getInternalProductNumber()));
 
         if (isset($data['attributes'])) {
 
@@ -886,8 +870,6 @@ class ProductManager implements ProductManagerInterface
      */
     private function checkData($data, $create)
     {
-        $this->checkDataSet($data, 'number', $create);
-
         $this->checkDataSet($data, 'type', $create) && $this->checkDataSet($data['type'], 'id', $create);
 
         $this->checkDataSet($data, 'status', $create) && $this->checkDataSet($data['status'], 'id', $create);

@@ -158,6 +158,26 @@ class Product extends ApiWrapper
     }
 
     /**
+     * Returns the internalProductNumber of the product
+     * @return string The internalProductNumber of the product
+     * @VirtualProperty
+     * @SerializedName("internalProductNumber")
+     */
+    public function getInternalProductNumber()
+    {
+        return $this->entity->getInternalProductNumber();
+    }
+
+    /**
+     * Sets the internalProductNumber of the product
+     * @param string $internalProductNumber The number of the product
+     */
+    public function setInternalProductNumber($internalProductNumber)
+    {
+        $this->entity->setInternalProductNumber($internalProductNumber);
+    }
+
+    /**
      * Sets the supplier of the product
      * @param Sulu\Bundle\ContactBundle\Entity\Account $supplier
      */
