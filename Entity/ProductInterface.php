@@ -29,21 +29,6 @@ interface ProductInterface
     public function getId();
 
     /**
-     * Set code
-     *
-     * @param string $code
-     * @return BaseProduct
-     */
-    public function setCode($code);
-
-    /**
-     * Get code
-     *
-     * @return string
-     */
-    public function getCode();
-
-    /**
      * Set number
      *
      * @param string $number
@@ -57,6 +42,21 @@ interface ProductInterface
      * @return string
      */
     public function getNumber();
+
+    /**
+     * Set globalTradeItemNumber
+     *
+     * @param string $globalTradeItemNumber
+     * @return BaseProduct
+     */
+    public function setGlobalTradeItemNumber($globalTradeItemNumber);
+
+    /**
+     * Get globalTradeItemNumber
+     *
+     * @return string
+     */
+    public function getGlobalTradeItemNumber();
 
     /**
      * Set manufacturer

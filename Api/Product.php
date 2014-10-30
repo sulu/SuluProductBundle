@@ -118,26 +118,6 @@ class Product extends ApiWrapper
     }
 
     /**
-     * Returns the code of the product
-     * @return string The code of the product
-     * @VirtualProperty
-     * @SerializedName("code")
-     */
-    public function getCode()
-    {
-        return $this->entity->getCode();
-    }
-
-    /**
-     * Sets the code of the product
-     * @param string $code The code of the product
-     */
-    public function setCode($code)
-    {
-        $this->entity->setCode($code);
-    }
-
-    /**
      * Returns the number of the product
      * @return string The number of the product
      * @VirtualProperty
@@ -158,23 +138,43 @@ class Product extends ApiWrapper
     }
 
     /**
-     * Returns the internalProductNumber of the product
-     * @return string The internalProductNumber of the product
+     * Returns the globalTradeItemNumber of the product
+     * @return string The globalTradeItemNumber of the product
      * @VirtualProperty
-     * @SerializedName("internalProductNumber")
+     * @SerializedName("globalTradeItemNumber")
      */
-    public function getInternalProductNumber()
+    public function getGlobalTradeItemNumber()
     {
-        return $this->entity->getInternalProductNumber();
+        return $this->entity->getGlobalTradeItemNumber();
     }
 
     /**
-     * Sets the internalProductNumber of the product
-     * @param string $internalProductNumber The number of the product
+     * Sets the globalTradeItemNumber of the product
+     * @param string $globalTradeItemNumber The globalTradeItemNumber of the product
      */
-    public function setInternalProductNumber($internalProductNumber)
+    public function setGlobalTradeItemNumber($globalTradeItemNumber)
     {
-        $this->entity->setInternalProductNumber($internalProductNumber);
+        $this->entity->setGlobalTradeItemNumber($globalTradeItemNumber);
+    }
+
+    /**
+     * Returns the internalItemNumber of the product
+     * @return string The internalItemNumber of the product
+     * @VirtualProperty
+     * @SerializedName("internalItemNumber")
+     */
+    public function getInternalItemNumber()
+    {
+        return $this->entity->getInternalItemNumber();
+    }
+
+    /**
+     * Sets the internalItemNumber of the product
+     * @param string $internalItemNumber The number of the product
+     */
+    public function setInternalItemNumber($internalItemNumber)
+    {
+        $this->entity->setInternalItemNumber($internalItemNumber);
     }
 
     /**

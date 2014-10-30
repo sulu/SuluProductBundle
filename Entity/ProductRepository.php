@@ -67,13 +67,13 @@ class ProductRepository extends EntityRepository implements ProductRepositoryInt
      * @param string $number The number of the product to load
      * @return ProductInterface[]
      */
-    public function findByLocaleAndInternalProductNumber($locale, $internalProductNumber)
+    public function findByLocaleAndInternalItemNumber($locale, $internalItemNumber)
     {
         try {
             $qb = $this->getProductQuery($locale);
-            $qb->andWhere('product.internalProductNumber = :internalProductNumber');
+            $qb->andWhere('product.internalItemNumber = :internalItemNumber');
             $qb->andWhere('type.id = :id');
-            $qb->setParameter('internalProductNumber', $internalProductNumber);
+            $qb->setParameter('internalItemNumber', $internalItemNumber);
             $qb->setParameter('id', Product::SIMPLE_PRODUCT);
             $query = $qb->getQuery();
             return $query->getResult();
