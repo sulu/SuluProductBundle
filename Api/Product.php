@@ -78,6 +78,26 @@ class Product extends ApiWrapper
     }
 
     /**
+     * Returns the deprecated state of a product
+     * @return boolean
+     * @VirtualProperty
+     * @SerializedName("isDeprecated")
+     */
+    public function isDeprecated()
+    {
+        return $this->entity->isDeprecated();
+    }
+
+    /**
+     * Sets the deprecated state of the product
+     * @param boolean $isDeprecated
+     */
+    public function setIsDeprecated($isDeprecated)
+    {
+        $this->entity->setIsDeprecated($isDeprecated);
+    }
+
+    /**
      * Returns the short description of the product
      * @return string The short description of the product
      * @VirtualProperty

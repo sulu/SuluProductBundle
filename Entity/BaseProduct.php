@@ -27,6 +27,11 @@ abstract class BaseProduct implements ProductInterface
     private $internalItemNumber;
 
     /**
+     * @var isDeprecated
+     */
+    private $isDeprecated = false;
+
+    /**
      * @var string
      */
     private $manufacturer;
@@ -214,6 +219,29 @@ abstract class BaseProduct implements ProductInterface
     public function getInternalItemNumber()
     {
         return $this->internalItemNumber;
+    }
+
+    /**
+     * Set isDeprecated
+     *
+     * @param boolean $isDeprecated
+     * @return BaseProduct
+     */
+    public function setIsDeprecated($isDeprecated)
+    {
+        $this->isDeprecated = $isDeprecated;
+
+        return $this;
+    }
+
+    /**
+     * Get isDeprecated
+     *
+     * @return boolean
+     */
+    public function isDeprecated()
+    {
+        return $this->isDeprecated;
     }
 
     /**

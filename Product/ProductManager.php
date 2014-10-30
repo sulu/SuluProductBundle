@@ -189,6 +189,14 @@ class ProductManager implements ProductManagerInterface
             )
         );
 
+        $fieldDescriptors['is_deprecated'] = new DoctrineFieldDescriptor(
+            'isDeprecated',
+            'is_deprecated',
+            self::$productEntityName,
+            null,
+            array()
+        );
+
         $fieldDescriptors['parent'] = new DoctrineFieldDescriptor(
             'id',
             'parent',
@@ -539,7 +547,13 @@ class ProductManager implements ProductManagerInterface
         $product->setShortDescription($this->getProperty($data, 'shortDescription', $product->getShortDescription()));
         $product->setLongDescription($this->getProperty($data, 'longDescription', $product->getLongDescription()));
         $product->setNumber($this->getProperty($data, 'number', $product->getNumber()));
-        $product->setGlobalTradeItemNumber($this->getProperty($data, 'globalTradeItemNumber', $product->getGlobalTradeItemNumber()));
+        $product->setGlobalTradeItemNumber(
+            $this->getProperty(
+                $data,
+                'globalTradeItemNumber',
+                $product->getGlobalTradeItemNumber()
+            )
+        );
         $product->setManufacturer($this->getProperty($data, 'manufacturer', $product->getManufacturer()));
         $product->setCost($this->getProperty($data, 'cost', $product->getCost()));
         $product->setPriceInfo($this->getProperty($data, 'priceInfo', $product->getPriceInfo()));
