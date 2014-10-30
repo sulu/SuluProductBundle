@@ -250,20 +250,29 @@ class ProductManager implements ProductManagerInterface
             )
         );
 
-        $fieldDescriptors['code'] = new DoctrineFieldDescriptor(
-            'code',
-            'code',
-            self::$productEntityName,
-            'product.code',
-            array(),
-            true
-        );
-
         $fieldDescriptors['number'] = new DoctrineFieldDescriptor(
             'number',
             'number',
             self::$productEntityName,
-            'product.number'
+            'product.number',
+            array(),
+            true
+        );
+
+        $fieldDescriptors['internalItemNumber'] = new DoctrineFieldDescriptor(
+            'internalItemNumber',
+            'internalItemNumber',
+            self::$productEntityName,
+            'product.internalItemNumber',
+            array(),
+            true
+        );
+
+        $fieldDescriptors['globalTradeItemNumber'] = new DoctrineFieldDescriptor(
+            'globalTradeItemNumber',
+            'globalTradeItemNumber',
+            self::$productEntityName,
+            'product.globalTradeItemNumber'
         );
 
         $fieldDescriptors['parent'] = new DoctrineFieldDescriptor(
@@ -451,31 +460,17 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Returns all master products in the given locale for the given number
-     * @param string $locale The locale of the product to load
-     * @param string $number The number of the product to load
-     * @return ProductInterface[]
-     */
-    public function findMasterByLocaleAndNumber($locale, $number)
-    {
-        $product = $this->productRepository->findMasterByLocaleAndNumber($locale, $number);
-
-        if ($product) {
-            return new Product($product, $locale);
-        } else {
-            return null;
-        }
-    }
-
-    /**
      * Returns all simple products in the given locale for the given number
      * @param string $locale The locale of the product to load
      * @param string $number The number of the product to load
      * @return ProductInterface[]
      */
-    public function findSimpleByLocaleAndNumber($locale, $number)
+    public function findByLocaleAndInternalItemNumber($locale, $internalItemNumber)
     {
-        $products = $this->productRepository->findSimpleByLocaleAndNumber($locale, $number);
+        $products = $this->productRepository->findByLocaleAndInternalItemNumber(
+            $locale,
+            $internalItemNumber
+        );
         if ($products) {
             array_walk(
                 $products,
@@ -508,6 +503,17 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
+     * Generates the internal product number
+     *
+     * @param string $supplierId
+     * @param string $number
+     */
+    public function generateInternalItemNumber($id, $number)
+    {
+        return $id . '-' . $number;
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function save(
@@ -516,7 +522,8 @@ class ProductManager implements ProductManagerInterface
         $userId,
         $id = null,
         $flush = true,
-        $skipChanged = false
+        $skipChanged = false,
+        $supplierId = null
     ) {
         if ($id) {
             $product = $this->fetchProduct($id, $locale);
@@ -531,11 +538,17 @@ class ProductManager implements ProductManagerInterface
         $product->setName($this->getProperty($data, 'name', $product->getName()));
         $product->setShortDescription($this->getProperty($data, 'shortDescription', $product->getShortDescription()));
         $product->setLongDescription($this->getProperty($data, 'longDescription', $product->getLongDescription()));
-        $product->setCode($this->getProperty($data, 'code', $product->getCode()));
         $product->setNumber($this->getProperty($data, 'number', $product->getNumber()));
+        $product->setGlobalTradeItemNumber($this->getProperty($data, 'globalTradeItemNumber', $product->getGlobalTradeItemNumber()));
         $product->setManufacturer($this->getProperty($data, 'manufacturer', $product->getManufacturer()));
         $product->setCost($this->getProperty($data, 'cost', $product->getCost()));
         $product->setPriceInfo($this->getProperty($data, 'priceInfo', $product->getPriceInfo()));
+        if (!$supplierId) {
+            $internalId = $userId;
+        } else {
+            $internalId = $supplierId;
+        }
+        $product->setInternalItemNumber($this->generateInternalItemNumber($internalId, $product->getNumber()));
 
         if (isset($data['attributes'])) {
 
@@ -886,8 +899,6 @@ class ProductManager implements ProductManagerInterface
      */
     private function checkData($data, $create)
     {
-        $this->checkDataSet($data, 'number', $create);
-
         $this->checkDataSet($data, 'type', $create) && $this->checkDataSet($data['type'], 'id', $create);
 
         $this->checkDataSet($data, 'status', $create) && $this->checkDataSet($data['status'], 'id', $create);

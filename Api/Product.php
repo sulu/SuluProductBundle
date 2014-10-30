@@ -118,26 +118,6 @@ class Product extends ApiWrapper
     }
 
     /**
-     * Returns the code of the product
-     * @return string The code of the product
-     * @VirtualProperty
-     * @SerializedName("code")
-     */
-    public function getCode()
-    {
-        return $this->entity->getCode();
-    }
-
-    /**
-     * Sets the code of the product
-     * @param string $code The code of the product
-     */
-    public function setCode($code)
-    {
-        $this->entity->setCode($code);
-    }
-
-    /**
      * Returns the number of the product
      * @return string The number of the product
      * @VirtualProperty
@@ -155,6 +135,46 @@ class Product extends ApiWrapper
     public function setNumber($number)
     {
         $this->entity->setNumber($number);
+    }
+
+    /**
+     * Returns the globalTradeItemNumber of the product
+     * @return string The globalTradeItemNumber of the product
+     * @VirtualProperty
+     * @SerializedName("globalTradeItemNumber")
+     */
+    public function getGlobalTradeItemNumber()
+    {
+        return $this->entity->getGlobalTradeItemNumber();
+    }
+
+    /**
+     * Sets the globalTradeItemNumber of the product
+     * @param string $globalTradeItemNumber The globalTradeItemNumber of the product
+     */
+    public function setGlobalTradeItemNumber($globalTradeItemNumber)
+    {
+        $this->entity->setGlobalTradeItemNumber($globalTradeItemNumber);
+    }
+
+    /**
+     * Returns the internalItemNumber of the product
+     * @return string The internalItemNumber of the product
+     * @VirtualProperty
+     * @SerializedName("internalItemNumber")
+     */
+    public function getInternalItemNumber()
+    {
+        return $this->entity->getInternalItemNumber();
+    }
+
+    /**
+     * Sets the internalItemNumber of the product
+     * @param string $internalItemNumber The number of the product
+     */
+    public function setInternalItemNumber($internalItemNumber)
+    {
+        $this->entity->setInternalItemNumber($internalItemNumber);
     }
 
     /**

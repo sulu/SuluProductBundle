@@ -14,12 +14,17 @@ abstract class BaseProduct implements ProductInterface
     /**
      * @var string
      */
-    private $code;
+    private $number;
 
     /**
      * @var string
      */
-    private $number;
+    private $globalTradeItemNumber;
+
+    /**
+     * @var string
+     */
+    private $internalItemNumber;
 
     /**
      * @var string
@@ -143,29 +148,6 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Set code
-     *
-     * @param string $code
-     * @return BaseProduct
-     */
-    public function setCode($code)
-    {
-        $this->code = $code;
-
-        return $this;
-    }
-
-    /**
-     * Get code
-     *
-     * @return string
-     */
-    public function getCode()
-    {
-        return $this->code;
-    }
-
-    /**
      * Set number
      *
      * @param string $number
@@ -186,6 +168,52 @@ abstract class BaseProduct implements ProductInterface
     public function getNumber()
     {
         return $this->number;
+    }
+
+    /**
+     * Set globalTradeItemNumber
+     *
+     * @param string $globalTradeItemNumber
+     * @return BaseProduct
+     */
+    public function setGlobalTradeItemNumber($globalTradeItemNumber)
+    {
+        $this->globalTradeItemNumber = $globalTradeItemNumber;
+
+        return $this;
+    }
+
+    /**
+     * Get globalTradeItemNumber
+     *
+     * @return string
+     */
+    public function getGlobalTradeItemNumber()
+    {
+        return $this->globalTradeItemNumber;
+    }
+
+    /**
+     * Set internalItemNumber
+     *
+     * @param string $internalItemNumber
+     * @return BaseProduct
+     */
+    public function setInternalItemNumber($internalItemNumber)
+    {
+        $this->internalItemNumber = $internalItemNumber;
+
+        return $this;
+    }
+
+    /**
+     * Get internalItemNumber
+     *
+     * @return string
+     */
+    public function getInternalItemNumber()
+    {
+        return $this->internalItemNumber;
     }
 
     /**
