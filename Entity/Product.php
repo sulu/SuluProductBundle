@@ -270,4 +270,27 @@ class Product extends BaseProduct
     {
         return $this->setProducts;
     }
+
+    /**
+     * Add children
+     *
+     * @param \Sulu\Bundle\ProductBundle\Entity\Product $children
+     * @return Product
+     */
+    public function addChild(\Sulu\Bundle\ProductBundle\Entity\Product $children)
+    {
+        $this->children[] = $children;
+
+        return $this;
+    }
+
+    /**
+     * Remove children
+     *
+     * @param \Sulu\Bundle\ProductBundle\Entity\Product $children
+     */
+    public function removeChild(\Sulu\Bundle\ProductBundle\Entity\Product $children)
+    {
+        $this->children->removeElement($children);
+    }
 }
