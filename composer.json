@@ -15,6 +15,7 @@
         "doctrine/orm": "2.4.*",
         "willdurand/hateoas-bundle": "0.3.*",
 
+        "oro/doctrine-extensions": "1.0.*",
         "symfony-cmf/routing-bundle": "1.2.*",
 
         "sulu/sulu": "dev-develop",
