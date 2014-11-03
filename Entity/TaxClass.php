@@ -17,6 +17,10 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class TaxClass
 {
+
+    const STANDARD_TAX_RATE = 1;
+    const REDUCED_TAX_RATE = 2;
+
     /**
      * @var integer
      */
@@ -38,6 +42,18 @@ class TaxClass
     public function __construct()
     {
         $this->translations = new \Doctrine\Common\Collections\ArrayCollection();
+    }
+
+    /**
+     * Set id
+     *
+     * @return TaxClass
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+
+        return $this;
     }
     
     /**
