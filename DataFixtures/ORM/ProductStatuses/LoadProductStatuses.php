@@ -28,7 +28,7 @@ class LoadProductStatuses implements FixtureInterface, OrderedFixtureInterface
         $metadata->setIdGeneratorType(\Doctrine\ORM\Mapping\ClassMetadata::GENERATOR_TYPE_NONE);
 
         $i = 1;
-        $file = dirname(__FILE__) . '/../product-statuses.xml';
+        $file = dirname(__FILE__) . '/../../product-statuses.xml';
         $doc = new DOMDocument();
         $doc->load($file);
 

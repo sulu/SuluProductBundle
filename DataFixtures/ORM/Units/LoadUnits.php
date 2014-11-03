@@ -11,42 +11,47 @@
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
-use Sulu\Bundle\ProductBundle\Entity\AttributeType;
+use Sulu\Bundle\ProductBundle\Entity\Unit;
+use Sulu\Bundle\ProductBundle\Entity\UnitTranslation;
 
-class LoadAttributeTypes implements FixtureInterface, OrderedFixtureInterface
+class LoadUnits implements FixtureInterface, OrderedFixtureInterface
 {
+
+    private static $translations = ['de', 'en'];
     /**
      * {@inheritDoc}
      */
     public function load(ObjectManager $manager)
     {
         // force id = 1
-        $metadata = $manager->getClassMetaData(get_class(new AttributeType()));
+        $metadata = $manager->getClassMetaData(get_class(new Unit()));
         $metadata->setIdGeneratorType(\Doctrine\ORM\Mapping\ClassMetadata::GENERATOR_TYPE_NONE);
 
         $i = 1;
-        $file = dirname(__FILE__) . '/../attribute-types.xml';
+        $file = dirname(__FILE__) . '/../../units.xml';
         $doc = new DOMDocument();
         $doc->load($file);
 
         $xpath = new DOMXpath($doc);
-        $elements = $xpath->query('/attribute-types/attribute-type');
+        $elements = $xpath->query('/units/unit');
 
         if (!is_null($elements)) {
             /** @var $element DOMNode */
             foreach ($elements as $element) {
-                $attributeType = new AttributeType();
-                $attributeType->setId($i);
+                $unit = new Unit();
+                $unit->setId($i);
                 $children = $element->childNodes;
                 /** @var $child DOMNode */
                 foreach ($children as $child) {
-                    if (isset($child->nodeName)) {
-                        if ($child->nodeName == "name") {
-                            $attributeType->setName($child->nodeValue);
-                        }
+                    if (isset($child->nodeName) && (in_array($child->nodeName, self::$translations))) {
+                        $translation = new UnitTranslation();
+                        $translation->setLocale($child->nodeName);
+                        $translation->setName($child->nodeValue);
+                        $translation->setUnit($unit);
+                        $manager->persist($translation);
                     }
                 }
-                $manager->persist($attributeType);
+                $manager->persist($unit);
                 $i++;
             }
         }
