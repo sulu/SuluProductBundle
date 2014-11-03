@@ -173,6 +173,29 @@ class Product extends BaseProduct
     }
 
     /**
+     * Add children
+     *
+     * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $children
+     * @return Product
+     */
+    public function addChildren(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $children)
+    {
+        $this->children[] = $children;
+    
+        return $this;
+    }
+
+    /**
+     * Remove children
+     *
+     * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $children
+     */
+    public function removeChildren(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $children)
+    {
+        $this->children->removeElement($children);
+    }
+
+    /**
      * Get children
      *
      * @return \Doctrine\Common\Collections\Collection 
@@ -246,28 +269,5 @@ class Product extends BaseProduct
     public function getSetProducts()
     {
         return $this->setProducts;
-    }
-
-    /**
-     * Add children
-     *
-     * @param \Sulu\Bundle\ProductBundle\Entity\Product $children
-     * @return Product
-     */
-    public function addChild(\Sulu\Bundle\ProductBundle\Entity\Product $children)
-    {
-        $this->children[] = $children;
-
-        return $this;
-    }
-
-    /**
-     * Remove children
-     *
-     * @param \Sulu\Bundle\ProductBundle\Entity\Product $children
-     */
-    public function removeChild(\Sulu\Bundle\ProductBundle\Entity\Product $children)
-    {
-        $this->children->removeElement($children);
     }
 }
