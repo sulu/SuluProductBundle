@@ -11,47 +11,42 @@
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
-use Sulu\Bundle\ProductBundle\Entity\Type;
-use Sulu\Bundle\ProductBundle\Entity\TypeTranslation;
+use Sulu\Bundle\ProductBundle\Entity\AttributeType;
 
-class LoadProductTypes implements FixtureInterface, OrderedFixtureInterface
+class LoadAttributeTypes implements FixtureInterface, OrderedFixtureInterface
 {
-
-    private static $translations = ['de', 'en'];
     /**
      * {@inheritDoc}
      */
     public function load(ObjectManager $manager)
     {
         // force id = 1
-        $metadata = $manager->getClassMetaData(get_class(new Type()));
+        $metadata = $manager->getClassMetaData(get_class(new AttributeType()));
         $metadata->setIdGeneratorType(\Doctrine\ORM\Mapping\ClassMetadata::GENERATOR_TYPE_NONE);
 
         $i = 1;
-        $file = dirname(__FILE__) . '/../product-types.xml';
+        $file = dirname(__FILE__) . '/../../attribute-types.xml';
         $doc = new DOMDocument();
         $doc->load($file);
 
         $xpath = new DOMXpath($doc);
-        $elements = $xpath->query('/product-types/product-type');
+        $elements = $xpath->query('/attribute-types/attribute-type');
 
         if (!is_null($elements)) {
             /** @var $element DOMNode */
             foreach ($elements as $element) {
-                $type = new Type();
-                $type->setId($i);
+                $attributeType = new AttributeType();
+                $attributeType->setId($i);
                 $children = $element->childNodes;
                 /** @var $child DOMNode */
                 foreach ($children as $child) {
-                    if (isset($child->nodeName) && (in_array($child->nodeName, self::$translations))) {
-                        $translation = new TypeTranslation();
-                        $translation->setLocale($child->nodeName);
-                        $translation->setName($child->nodeValue);
-                        $translation->setType($type);
-                        $manager->persist($translation);
+                    if (isset($child->nodeName)) {
+                        if ($child->nodeName == "name") {
+                            $attributeType->setName($child->nodeValue);
+                        }
                     }
                 }
-                $manager->persist($type);
+                $manager->persist($attributeType);
                 $i++;
             }
         }
