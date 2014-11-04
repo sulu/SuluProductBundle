@@ -11,5 +11,8 @@
         <one-to-many field="translations"
                      target-entity="Sulu\Bundle\ProductBundle\Entity\UnitTranslation"
                      mapped-by="unit"/>
+        <one-to-many field="mappings"
+                     target-entity="Sulu\Bundle\ProductBundle\Entity\UnitMapping"
+                     mapped-by="unit"/>
     </entity>
 </doctrine-mapping>
