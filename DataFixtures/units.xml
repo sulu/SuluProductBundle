@@ -170,7 +170,6 @@
             <en>Square Meter</en>
         </translations>
         <mappings>
-            <value>m²</value>
             <value>m2</value>
             <value>qm</value>
             <value>m^2</value>
