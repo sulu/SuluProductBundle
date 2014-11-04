@@ -635,6 +635,10 @@ class ProductManager implements ProductManagerInterface
                 throw new ProductDependencyNotFoundException(self::$productTaxClassEntityName, $taxClassId);
             }
             $product->setTaxClass($taxClass);
+        } elseif ($product->getTaxClass() == null) {
+            // Default tax class
+            $taxClass = $this->taxClassRepository->find(TaxClass::STANDARD_TAX_RATE);
+            $product->setTaxClass($taxClass);
         }
 
         if (isset($data['categories'])) {
