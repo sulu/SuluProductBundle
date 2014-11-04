@@ -15,7 +15,7 @@ use Sulu\Bundle\AdminBundle\DependencyInjection\Compiler\ContentNavigationPass;
 /**
  * Add all services with the tag "sulu.product.admin.content_navigation" to the content navigation
  *
- * @package Sulu\Bundle\AdminBundle\DependencyInjection\Compiler
+ * @package Sulu\Bundle\ProductBundle\DependencyInjection\Compiler
  */
 class AddContentNavigationPass extends ContentNavigationPass
 {
