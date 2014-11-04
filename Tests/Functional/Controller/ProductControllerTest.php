@@ -277,7 +277,6 @@ class ProductControllerTest extends DatabaseTestCase
 
         // product
         $this->product1 = new Product();
-        $this->product1->setCode('EnglishProductCode-1');
         $this->product1->setNumber('ProductNumber-1');
         $this->product1->setManufacturer('EnglishManufacturer-1');
         $this->product1->setType($this->type1);
@@ -348,7 +347,6 @@ class ProductControllerTest extends DatabaseTestCase
 
         // product
         $this->product2 = new Product();
-        $this->product2->setCode('EnglishProductCode-2');
         $this->product2->setNumber('ProductNumber-1');
         $this->product2->setManufacturer('EnglishManufacturer-2');
         $this->product2->setType($this->type2);
@@ -514,7 +512,6 @@ class ProductControllerTest extends DatabaseTestCase
         $response = json_decode($this->client->getResponse()->getContent(), true);
 
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
-        $this->assertEquals('EnglishProductCode-1', $response['code']);
         $this->assertEquals('ProductNumber-1', $response['number']);
         $this->assertEquals('EnglishManufacturer-1', $response['manufacturer']);
         $this->assertEquals($this->type1->getId(), $response['type']['id']);
@@ -564,7 +561,6 @@ class ProductControllerTest extends DatabaseTestCase
         $this->assertEquals(2, count($items));
 
         $item = $items[0];
-        $this->assertEquals('EnglishProductCode-1', $item->code);
         $this->assertEquals('ProductNumber-1', $item->number);
         $this->assertEquals('EnglishManufacturer-1', $item->manufacturer);
         $this->assertEquals('EnglishProductType-1', $item->type->name);
@@ -572,7 +568,6 @@ class ProductControllerTest extends DatabaseTestCase
         $this->assertEquals($this->type1->getId(), $item->type->id);
 
         $item = $items[1];
-        $this->assertEquals('EnglishProductCode-2', $item->code);
         $this->assertEquals('ProductNumber-1', $item->number);
         $this->assertEquals('EnglishManufacturer-2', $item->manufacturer);
         $this->assertEquals('EnglishProductType-2', $item->type->name);
@@ -590,7 +585,6 @@ class ProductControllerTest extends DatabaseTestCase
         $this->assertEquals(2, count($items));
 
         $item = $items[0];
-        $this->assertEquals('EnglishProductCode-1', $item->code);
         $this->assertEquals('ProductNumber-1', $item->number);
         $this->assertEquals('EnglishManufacturer-1', $item->manufacturer);
         $this->assertEquals('EnglishProductType-1', $item->type);
@@ -598,7 +592,6 @@ class ProductControllerTest extends DatabaseTestCase
         $this->assertEquals('EnglishProductType-1', $item->type);
 
         $item = $items[1];
-        $this->assertEquals('EnglishProductCode-2', $item->code);
         $this->assertEquals('ProductNumber-1', $item->number);
         $this->assertEquals('EnglishManufacturer-2', $item->manufacturer);
         $this->assertEquals('EnglishProductType-2', $item->type);
@@ -631,17 +624,6 @@ class ProductControllerTest extends DatabaseTestCase
         $this->assertEquals($this->typeTranslation1->getName(), $response->_embedded->products[0]->type->name);
     }
 
-    public function testGetByCode()
-    {
-        $this->client->request('GET', '/api/products?code=' . 'EnglishProductCode-1');
-        $response = json_decode($this->client->getResponse()->getContent());
-
-        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
-        $this->assertEquals(1, count($response->_embedded));
-        $this->assertEquals($this->product1->getManufacturer(), $response->_embedded->products[0]->manufacturer);
-        $this->assertEquals($this->product1->getCode(), $response->_embedded->products[0]->code);
-    }
-
     public function testPut()
     {
         $this->client->request(
@@ -649,7 +631,6 @@ class ProductControllerTest extends DatabaseTestCase
             '/api/products/1',
             array(
                 'name' => 'EnglishProductTranslationNameNew-1',
-                'code' => 'EvilCode',
                 'number' => 'EvilNumber',
                 'manufacturer' => 'EvilKnievel',
                 'status' => array(
@@ -686,7 +667,6 @@ class ProductControllerTest extends DatabaseTestCase
         $response = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
         $this->assertEquals('EnglishProductTranslationNameNew-1', $response['name']);
-        $this->assertEquals('EvilCode', $response['code']);
         $this->assertEquals('EvilNumber', $response['number']);
         $this->assertEquals('EvilKnievel', $response['manufacturer']);
         $this->assertEquals('20%', $response['taxClass']['name']);
@@ -737,14 +717,14 @@ class ProductControllerTest extends DatabaseTestCase
         );
     }
 
-    public function testPutMissingNumber()
+    public function testPutMissingType()
     {
-        $this->client->request('PUT', '/api/products/1', array('number' => null));
+        $this->client->request('PUT', '/api/products/1', array('type' => null));
 
         $response = json_decode($this->client->getResponse()->getContent());
 
         $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
-        $this->assertEquals('The "SuluProductBundle:Product"-entity requires a "number"-argument', $response->message);
+        $this->assertEquals('The "SuluProductBundle:Product"-entity requires a "type"-argument', $response->message);
     }
 
     public function testPutNotExistingParentProduct()
@@ -854,7 +834,6 @@ class ProductControllerTest extends DatabaseTestCase
     public function testPost($testParent = false)
     {
         $data = array(
-            'code' => 'CODE:0815',
             'name' => 'English Product',
             'shortDescription' => 'This is an english product.',
             'longDescription' => 'Indeed, it\'s a real english product.',
@@ -894,7 +873,6 @@ class ProductControllerTest extends DatabaseTestCase
         $this->assertEquals('This is an english product.', $response->shortDescription);
         $this->assertEquals('Indeed, it\'s a real english product.', $response->longDescription);
 
-        $this->assertEquals('CODE:0815', $response->code);
         $this->assertEquals('NUMBER:0815', $response->number);
         $this->assertEquals(666.66, $response->cost);
         $this->assertEquals('Preis Info', $response->priceInfo);
@@ -917,7 +895,6 @@ class ProductControllerTest extends DatabaseTestCase
     public function testPostMissingNumber()
     {
         $data = array(
-            'code' => 'CODE:0815',
             'manufacturer' => $this->product1->getManufacturer(),
             'manufacturerCountry' => $this->product1->getManufacturerCountry(),
             'cost' => 666.66,
@@ -937,7 +914,6 @@ class ProductControllerTest extends DatabaseTestCase
     public function testPostNoType()
     {
         $data = array(
-            'code' => 'CODE:0815',
             'number' => 'NUMBER:0815',
             'status' => $this->productStatus1->getId()
         );
@@ -952,7 +928,6 @@ class ProductControllerTest extends DatabaseTestCase
     public function testPostNotExistingType()
     {
         $data = array(
-            'code' => 'CODE:0815',
             'number' => 'NUMBER:0815',
             'status' => array('id' => $this->productStatus1->getId()),
             'type' => array('id' => 666),
@@ -971,7 +946,6 @@ class ProductControllerTest extends DatabaseTestCase
     public function testPostNoStatus()
     {
         $data = array(
-            'code' => 'CODE:0815',
             'number' => 'NUMBER:0815',
             'type' => array('id' => $this->type1->getId())
         );
@@ -986,7 +960,6 @@ class ProductControllerTest extends DatabaseTestCase
     public function testPostNotExistingStatus()
     {
         $data = array(
-            'code' => 'CODE:0815',
             'number' => 'NUMBER:0815',
             'status' => array('id' => 666),
             'type' => array('id' => $this->productStatus1->getId()),
@@ -1005,7 +978,6 @@ class ProductControllerTest extends DatabaseTestCase
     public function testPostNotExistingParentProduct()
     {
         $data = array(
-            'code' => 'CODE:0815',
             'number' => 'NUMBER:0815',
             'status' => array('id' => $this->productStatus1->getId()),
             'type' => array('id' => $this->productStatus1->getId()),
@@ -1025,7 +997,6 @@ class ProductControllerTest extends DatabaseTestCase
     public function testPostNotExistingAttributeSet()
     {
         $data = array(
-            'code' => 'CODE:0815',
             'number' => 'NUMBER:0815',
             'status' => array('id' => $this->productStatus1->getId()),
             'type' => array('id' => $this->productStatus1->getId()),
@@ -1058,7 +1029,7 @@ class ProductControllerTest extends DatabaseTestCase
         $response = json_decode($this->client->getResponse()->getContent());
 
         $this->assertCount(1, $response->_embedded->products);
-        $this->assertEquals('EnglishProductCode-2', $response->_embedded->products[0]->code);
+        $this->assertEquals('ProductNumber-1', $response->_embedded->products[0]->number);
     }
 
     public function testTypeFilter()
@@ -1068,7 +1039,7 @@ class ProductControllerTest extends DatabaseTestCase
         $response = json_decode($this->client->getResponse()->getContent());
 
         $this->assertCount(1, $response->_embedded->products);
-        $this->assertEquals('EnglishProductCode-1', $response->_embedded->products[0]->code);
+        $this->assertEquals('ProductNumber-1', $response->_embedded->products[0]->number);
     }
 
     public function testAllTypeFilter()
@@ -1078,7 +1049,7 @@ class ProductControllerTest extends DatabaseTestCase
         $response = json_decode($this->client->getResponse()->getContent());
 
         $this->assertCount(2, $response->_embedded->products);
-        $this->assertEquals('EnglishProductCode-1', $response->_embedded->products[0]->code);
-        $this->assertEquals('EnglishProductCode-2', $response->_embedded->products[1]->code);
+        $this->assertEquals('ProductNumber-1', $response->_embedded->products[0]->number);
+        $this->assertEquals('ProductNumber-1', $response->_embedded->products[1]->number);
     }
 }
