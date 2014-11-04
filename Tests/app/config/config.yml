@@ -76,7 +76,7 @@ sulu_core:
         password: admin
     webspace:
         request_analyzer:
-            enabled: false
+            enabled: true
     content:
         structure:
             paths:
