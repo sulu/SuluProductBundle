@@ -34,6 +34,18 @@ class Unit
     }
 
     /**
+     * Set id
+     *
+     * @return Unit
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+
+        return $this;
+    }
+
+    /**
      * Get id
      *
      * @return integer 
@@ -107,5 +119,43 @@ class Unit
     public function getProducts()
     {
         return $this->products;
+    }
+    /**
+     * @var \Doctrine\Common\Collections\Collection
+     */
+    private $mappings;
+
+
+    /**
+     * Add mappings
+     *
+     * @param \Sulu\Bundle\ProductBundle\Entity\UnitMapping $mappings
+     * @return Unit
+     */
+    public function addMapping(\Sulu\Bundle\ProductBundle\Entity\UnitMapping $mappings)
+    {
+        $this->mappings[] = $mappings;
+
+        return $this;
+    }
+
+    /**
+     * Remove mappings
+     *
+     * @param \Sulu\Bundle\ProductBundle\Entity\UnitMapping $mappings
+     */
+    public function removeMapping(\Sulu\Bundle\ProductBundle\Entity\UnitMapping $mappings)
+    {
+        $this->mappings->removeElement($mappings);
+    }
+
+    /**
+     * Get mappings
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getMappings()
+    {
+        return $this->mappings;
     }
 }

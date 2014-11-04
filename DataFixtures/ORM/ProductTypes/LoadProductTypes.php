@@ -11,10 +11,10 @@
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
-use Sulu\Bundle\ProductBundle\Entity\TaxClass;
-use Sulu\Bundle\ProductBundle\Entity\TaxClassTranslation;
+use Sulu\Bundle\ProductBundle\Entity\Type;
+use Sulu\Bundle\ProductBundle\Entity\TypeTranslation;
 
-class LoadTaxClasses implements FixtureInterface, OrderedFixtureInterface
+class LoadProductTypes implements FixtureInterface, OrderedFixtureInterface
 {
 
     private static $translations = ['de', 'en'];
@@ -24,34 +24,34 @@ class LoadTaxClasses implements FixtureInterface, OrderedFixtureInterface
     public function load(ObjectManager $manager)
     {
         // force id = 1
-        $metadata = $manager->getClassMetaData(get_class(new TaxClass()));
+        $metadata = $manager->getClassMetaData(get_class(new Type()));
         $metadata->setIdGeneratorType(\Doctrine\ORM\Mapping\ClassMetadata::GENERATOR_TYPE_NONE);
 
         $i = 1;
-        $file = dirname(__FILE__) . '/../tax-classes.xml';
+        $file = dirname(__FILE__) . '/../../product-types.xml';
         $doc = new DOMDocument();
         $doc->load($file);
 
         $xpath = new DOMXpath($doc);
-        $elements = $xpath->query('/tax-classes/tax-class');
+        $elements = $xpath->query('/product-types/product-type');
 
         if (!is_null($elements)) {
             /** @var $element DOMNode */
             foreach ($elements as $element) {
-                $taxClass = new TaxClass();
-                $taxClass->setId($i);
+                $type = new Type();
+                $type->setId($i);
                 $children = $element->childNodes;
                 /** @var $child DOMNode */
                 foreach ($children as $child) {
                     if (isset($child->nodeName) && (in_array($child->nodeName, self::$translations))) {
-                        $translation = new TaxClassTranslation();
+                        $translation = new TypeTranslation();
                         $translation->setLocale($child->nodeName);
                         $translation->setName($child->nodeValue);
-                        $translation->setTaxClass($taxClass);
+                        $translation->setType($type);
                         $manager->persist($translation);
                     }
                 }
-                $manager->persist($taxClass);
+                $manager->persist($type);
                 $i++;
             }
         }
