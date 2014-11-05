@@ -158,6 +158,10 @@
                 <source>product.global-trade-item-number</source>
                 <target>GTIN</target>
             </trans-unit>
+            <trans-unit id="41" resname="product.order-unit">
+                <source>product.order-unit</source>
+                <target>Order Unit</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>
