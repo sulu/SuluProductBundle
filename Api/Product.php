@@ -161,7 +161,7 @@ class Product extends ApiWrapper
      */
     public function getOrderContentRatio()
     {
-        return $this->entity->orderContentRatio();
+        return $this->entity->getOrderContentRatio();
     }
 
     /**
