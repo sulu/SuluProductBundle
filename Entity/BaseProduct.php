@@ -157,6 +157,17 @@ abstract class BaseProduct implements ProductInterface
     private $orderContentRatio;
 
     /**
+     * @var \Sulu\Bundle\ProductBundle\Entity\Unit
+     */
+    private $contentUnit;
+
+    /**
+     * @var \Sulu\Bundle\ProductBundle\Entity\Unit
+     */
+    private $orderUnit;
+
+
+    /**
      * Constructor
      */
     public function __construct()
@@ -812,32 +823,6 @@ abstract class BaseProduct implements ProductInterface
     {
         return $this->media;
     }
-    /**
-     * @var \Sulu\Bundle\ProductBundle\Entity\Unit
-     */
-    private $unit;
-
-
-    /**
-     * Get isDeprecated
-     *
-     * @return boolean 
-     */
-    public function getIsDeprecated()
-    {
-        return $this->isDeprecated;
-    }
-
-    /**
-     * @var \Sulu\Bundle\ProductBundle\Entity\Unit
-     */
-    private $contentUnit;
-
-    /**
-     * @var \Sulu\Bundle\ProductBundle\Entity\Unit
-     */
-    private $orderUnit;
-
 
     /**
      * Set contentUnit
@@ -845,7 +830,7 @@ abstract class BaseProduct implements ProductInterface
      * @param \Sulu\Bundle\ProductBundle\Entity\Unit $contentUnit
      * @return BaseProduct
      */
-    public function setContentUnit(\Sulu\Bundle\ProductBundle\Entity\Unit $contentUnit)
+    public function setContentUnit(\Sulu\Bundle\ProductBundle\Entity\Unit $contentUnit = null)
     {
         $this->contentUnit = $contentUnit;
 
@@ -868,7 +853,7 @@ abstract class BaseProduct implements ProductInterface
      * @param \Sulu\Bundle\ProductBundle\Entity\Unit $orderUnit
      * @return BaseProduct
      */
-    public function setOrderUnit(\Sulu\Bundle\ProductBundle\Entity\Unit $orderUnit)
+    public function setOrderUnit(\Sulu\Bundle\ProductBundle\Entity\Unit $orderUnit = null)
     {
         $this->orderUnit = $orderUnit;
 

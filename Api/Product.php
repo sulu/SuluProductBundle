@@ -112,6 +112,8 @@ class Product extends ApiWrapper
      * Get minimumOrderQuantity
      *
      * @return float
+     * @VirtualProperty
+     * @SerializedName("minimumOrderQuantity")
      */
     public function getMinimumOrderQuantity()
     {
@@ -132,6 +134,8 @@ class Product extends ApiWrapper
      * Get recommendedOrderQuantity
      *
      * @return float
+     * @VirtualProperty
+     * @SerializedName("recommendedOrderQuantity")
      */
     public function getRecommendedOrderQuantity()
     {
@@ -152,6 +156,8 @@ class Product extends ApiWrapper
      * Get orderContentRatio
      *
      * @return float
+     * @VirtualProperty
+     * @SerializedName("orderContentRatio")
      */
     public function getOrderContentRatio()
     {
@@ -430,7 +436,7 @@ class Product extends ApiWrapper
      * Sets the order unit of the product
      * @param Unit $unit
      */
-    public function setOrderUnit(Unit $unit)
+    public function setOrderUnit(Unit $unit = null)
     {
         $this->entity->setOrderUnit($unit);
     }
@@ -450,7 +456,7 @@ class Product extends ApiWrapper
      * Sets the order contentUnit of the product
      * @param Unit $unit
      */
-    public function setContentUnit(Unit $unit)
+    public function setContentUnit(Unit $unit = null)
     {
         $this->entity->setContentUnit($unit);
     }
