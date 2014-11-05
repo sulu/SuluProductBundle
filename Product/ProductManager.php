@@ -522,8 +522,9 @@ class ProductManager implements ProductManagerInterface
     /**
      * Generates the internal product number
      *
-     * @param string $supplierId
+     * @param $id
      * @param string $number
+     * @return string
      */
     public function generateInternalItemNumber($id, $number)
     {
