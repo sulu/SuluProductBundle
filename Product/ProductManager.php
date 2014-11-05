@@ -50,8 +50,9 @@ class ProductManager implements ProductManagerInterface
 
     protected static $productEntityName = 'SuluProductBundle:Product';
     protected static $productTypeEntityName = 'SuluProductBundle:Type';
-    protected static $unitEntityName = 'SuluProductBundle:Unit';
     protected static $productTypeTranslationEntityName = 'SuluProductBundle:TypeTranslation';
+    protected static $unitEntityName = 'SuluProductBundle:Unit';
+    protected static $unitTranslationEntityName = 'SuluProductBundle:UnitTranslation';
     protected static $productStatusEntityName = 'SuluProductBundle:Status';
     protected static $accountsSupplierEntityName = 'SuluAccountBundle:Account';
     protected static $productStatusTranslationEntityName = 'SuluProductBundle:StatusTranslation';
@@ -386,6 +387,25 @@ class ProductManager implements ProductManagerInterface
                     self::$productTypeTranslationEntityName,
                     self::$productTypeEntityName . '.translations',
                     self::$productTypeTranslationEntityName . '.locale = \'' . $locale . '\''
+                ),
+            ),
+            true
+        );
+
+        $fieldDescriptors['orderUnit'] = new DoctrineFieldDescriptor(
+            'name',
+            'orderUnit',
+            self::$unitTranslationEntityName,
+            'product.order-unit',
+            array(
+                self::$unitEntityName => new DoctrineJoinDescriptor(
+                    self::$unitEntityName,
+                    self::$productEntityName . '.orderUnit'
+                ),
+                self::$unitTranslationEntityName => new DoctrineJoinDescriptor(
+                    self::$unitTranslationEntityName,
+                    self::$unitEntityName . '.translations',
+                    self::$unitTranslationEntityName . '.locale = \'' . $locale . '\''
                 ),
             ),
             true
