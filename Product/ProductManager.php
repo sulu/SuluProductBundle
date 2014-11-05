@@ -42,6 +42,7 @@ use Sulu\Component\Security\UserRepositoryInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttribute;
 use Sulu\Bundle\ProductBundle\Entity\AttributeRepository;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttributeRepository;
+use Sulu\Bundle\ProductBundle\Entity\UnitRepository;
 
 class ProductManager implements ProductManagerInterface
 {
@@ -49,6 +50,7 @@ class ProductManager implements ProductManagerInterface
 
     protected static $productEntityName = 'SuluProductBundle:Product';
     protected static $productTypeEntityName = 'SuluProductBundle:Type';
+    protected static $unitEntityName = 'SuluProductBundle:Unit';
     protected static $productTypeTranslationEntityName = 'SuluProductBundle:TypeTranslation';
     protected static $productStatusEntityName = 'SuluProductBundle:Status';
     protected static $accountsSupplierEntityName = 'SuluAccountBundle:Account';
@@ -101,6 +103,11 @@ class ProductManager implements ProductManagerInterface
     private $currencyRepository;
 
     /**
+     * @var UnitRepository
+     */
+    private $unitRepository;
+
+    /**
      * @var CategoryRepository
      */
     private $categoryRepository;
@@ -124,6 +131,7 @@ class ProductManager implements ProductManagerInterface
         TypeRepository $typeRepository,
         TaxClassRepository $taxClassRepository,
         CurrencyRepository $currencyRepository,
+        UnitRepository $unitRepository,
         CategoryRepository $categoryRepository,
         UserRepositoryInterface $userRepository,
         ObjectManager $em
@@ -136,6 +144,7 @@ class ProductManager implements ProductManagerInterface
         $this->typeRepository = $typeRepository;
         $this->taxClassRepository = $taxClassRepository;
         $this->currencyRepository = $currencyRepository;
+        $this->unitRepository = $unitRepository;
         $this->categoryRepository = $categoryRepository;
         $this->userRepository = $userRepository;
         $this->em = $em;
@@ -544,6 +553,21 @@ class ProductManager implements ProductManagerInterface
         $user = $this->userRepository->findUserById($userId);
 
         $product->setName($this->getProperty($data, 'name', $product->getName()));
+
+        $product->setMinimumOrderQuantity(
+            $this->getProperty(
+                $data,
+                'minimumOrderQuantity',
+                $product->getMinimumOrderQuantity()
+            )
+        );
+        $product->setRecommendedOrderQuantity(
+            $this->getProperty(
+                $data,
+                'recommendedOrderQuantity',
+                $product->getRecommendedOrderQuantity()
+            )
+        );
         $product->setShortDescription($this->getProperty($data, 'shortDescription', $product->getShortDescription()));
         $product->setLongDescription($this->getProperty($data, 'longDescription', $product->getLongDescription()));
         $product->setNumber($this->getProperty($data, 'number', $product->getNumber()));
@@ -625,6 +649,26 @@ class ProductManager implements ProductManagerInterface
                 throw new ProductDependencyNotFoundException(self::$productTypeEntityName, $typeId);
             }
             $product->setType($type);
+        }
+
+        if (isset($data['orderUnit']) && isset($data['orderUnit']['id'])) {
+            $orderUnitId = $data['orderUnit']['id'];
+            /** @var Unit $orderUnit */
+            $orderUnit = $this->unitRepository->find($orderUnitId);
+            if (!$orderUnit) {
+                throw new ProductDependencyNotFoundException(self::$unitEntityName, $orderUnitId);
+            }
+            $product->setOrderUnit($orderUnit);
+        }
+
+        if (isset($data['contentUnit']) && isset($data['contentUnit']['id'])) {
+            $contentUnitId = $data['contentUnit']['id'];
+            /** @var Unit $contentUnit */
+            $contentUnit = $this->unitRepository->find($contentUnitId);
+            if (!$contentUnit) {
+                throw new ProductDependencyNotFoundException(self::$unitEntityName, $contentUnitId);
+            }
+            $product->setContentUnit($contentUnit);
         }
 
         if (isset($data['taxClass']) && isset($data['taxClass']['id'])) {

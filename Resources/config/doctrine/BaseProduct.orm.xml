@@ -16,6 +16,9 @@
         <field name="created" type="datetime" nullable="true"/>
         <field name="changed" type="datetime" nullable="true"/>
         <field name="isDeprecated" type="boolean" nullable="false"/>
+        <field name="orderContentRatio" type="float" nullable="true"/>
+        <field name="minimumOrderQuantity" type="float" nullable="true"/>
+        <field name="recommendedOrderQuantity" type="float" nullable="true"/>
 
         <many-to-one field="changer" target-entity="Sulu\Component\Security\UserInterface">
             <join-columns>
@@ -44,6 +47,12 @@
         </many-to-one>
         <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\Status" field="status" inversed-by="products">
             <join-column name="idStatus" referenced-column-name="id" nullable="false"/>
+        </many-to-one>
+        <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\Unit" field="contentUnit" inversed-by="products">
+            <join-column name="idContentUnit" referenced-column-name="id" nullable="true"/>
+        </many-to-one>
+        <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\Unit" field="orderUnit" inversed-by="products">
+            <join-column name="idOrderUnit" referenced-column-name="id" nullable="true"/>
         </many-to-one>
         <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\DeliveryStatus" field="deliveryStatus"
                      inversed-by="products">

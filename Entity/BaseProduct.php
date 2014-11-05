@@ -142,6 +142,21 @@ abstract class BaseProduct implements ProductInterface
     private $creator;
 
     /**
+     * @var float
+     */
+    private $minimumOrderQuantity;
+
+    /**
+     * @var float
+     */
+    private $recommendedOrderQuantity;
+
+    /**
+     * @var float
+     */
+    private $orderContentRatio;
+
+    /**
      * Constructor
      */
     public function __construct()
@@ -796,5 +811,146 @@ abstract class BaseProduct implements ProductInterface
     public function getMedia()
     {
         return $this->media;
+    }
+    /**
+     * @var \Sulu\Bundle\ProductBundle\Entity\Unit
+     */
+    private $unit;
+
+
+    /**
+     * Get isDeprecated
+     *
+     * @return boolean 
+     */
+    public function getIsDeprecated()
+    {
+        return $this->isDeprecated;
+    }
+
+    /**
+     * @var \Sulu\Bundle\ProductBundle\Entity\Unit
+     */
+    private $contentUnit;
+
+    /**
+     * @var \Sulu\Bundle\ProductBundle\Entity\Unit
+     */
+    private $orderUnit;
+
+
+    /**
+     * Set contentUnit
+     *
+     * @param \Sulu\Bundle\ProductBundle\Entity\Unit $contentUnit
+     * @return BaseProduct
+     */
+    public function setContentUnit(\Sulu\Bundle\ProductBundle\Entity\Unit $contentUnit)
+    {
+        $this->contentUnit = $contentUnit;
+
+        return $this;
+    }
+
+    /**
+     * Get contentUnit
+     *
+     * @return \Sulu\Bundle\ProductBundle\Entity\Unit 
+     */
+    public function getContentUnit()
+    {
+        return $this->contentUnit;
+    }
+
+    /**
+     * Set orderUnit
+     *
+     * @param \Sulu\Bundle\ProductBundle\Entity\Unit $orderUnit
+     * @return BaseProduct
+     */
+    public function setOrderUnit(\Sulu\Bundle\ProductBundle\Entity\Unit $orderUnit)
+    {
+        $this->orderUnit = $orderUnit;
+
+        return $this;
+    }
+
+    /**
+     * Get orderUnit
+     *
+     * @return \Sulu\Bundle\ProductBundle\Entity\Unit 
+     */
+    public function getOrderUnit()
+    {
+        return $this->orderUnit;
+    }
+
+    /**
+     * Set orderContentRatio
+     *
+     * @param string $orderContentRatio
+     * @return BaseProduct
+     */
+    public function setOrderContentRatio($orderContentRatio)
+    {
+        $this->orderContentRatio = $orderContentRatio;
+
+        return $this;
+    }
+
+    /**
+     * Get orderContentRatio
+     *
+     * @return string
+     */
+    public function getOrderContentRatio()
+    {
+        return $this->orderContentRatio;
+    }
+
+    /**
+     * Set minimumOrderQuantity
+     *
+     * @param float $minimumOrderQuantity
+     * @return BaseProduct
+     */
+    public function setMinimumOrderQuantity($minimumOrderQuantity)
+    {
+        $this->minimumOrderQuantity = $minimumOrderQuantity;
+
+        return $this;
+    }
+
+    /**
+     * Get minimumOrderQuantity
+     *
+     * @return float
+     */
+    public function getMinimumOrderQuantity()
+    {
+        return $this->minimumOrderQuantity;
+    }
+
+    /**
+     * Set recommendedOrderQuantity
+     *
+     * @param float $recommendedOrderQuantity
+     * @return BaseProduct
+     */
+    public function setRecommendedOrderQuantity($recommendedOrderQuantity)
+    {
+        $this->recommendedOrderQuantity = $recommendedOrderQuantity;
+
+        return $this;
+    }
+
+    /**
+     * Get recommendedOrderQuantity
+     *
+     * @return float
+     */
+    public function getRecommendedOrderQuantity()
+    {
+        return $this->recommendedOrderQuantity;
     }
 }

@@ -28,6 +28,7 @@ use Sulu\Bundle\ProductBundle\Entity\Status as StatusEntity;
 use Sulu\Bundle\ProductBundle\Entity\Type as TypeEntity;
 use Sulu\Bundle\ProductBundle\Entity\TaxClass as TaxClassEntity;
 use Hateoas\Configuration\Annotation\Relation;
+use Sulu\Bundle\ProductBundle\Entity\Unit;
 
 /**
  * The product class which will be exported to the API
@@ -95,6 +96,66 @@ class Product extends ApiWrapper
     public function setIsDeprecated($isDeprecated)
     {
         $this->entity->setIsDeprecated($isDeprecated);
+    }
+
+    /**
+     * Set minimumOrderQuantity
+     *
+     * @param float $minimumOrderQuantity
+     */
+    public function setMinimumOrderQuantity($minimumOrderQuantity)
+    {
+        $this->entity->setMinimumOrderQuantity($minimumOrderQuantity);
+    }
+
+    /**
+     * Get minimumOrderQuantity
+     *
+     * @return float
+     */
+    public function getMinimumOrderQuantity()
+    {
+        return $this->entity->getMinimumOrderQuantity();
+    }
+
+    /**
+     * Set recommendedOrderQuantity
+     *
+     * @param float $recommendedOrderQuantity
+     */
+    public function setRecommendedOrderQuantity($recommendedOrderQuantity)
+    {
+        $this->entity->setRecommendedOrderQuantity($recommendedOrderQuantity);
+    }
+
+    /**
+     * Get recommendedOrderQuantity
+     *
+     * @return float
+     */
+    public function getRecommendedOrderQuantity()
+    {
+        return $this->entity->getRecommendedOrderQuantity();
+    }
+
+    /**
+     * Set orderContentRatio
+     *
+     * @param float $orderContentRatio
+     */
+    public function setOrderContentRatio($orderContentRatio)
+    {
+        $this->entity->orderContentRatio($orderContentRatio);
+    }
+
+    /**
+     * Get orderContentRatio
+     *
+     * @return float
+     */
+    public function getOrderContentRatio()
+    {
+        return $this->entity->orderContentRatio();
     }
 
     /**
@@ -352,6 +413,46 @@ class Product extends ApiWrapper
     public function setStatus(StatusEntity $status)
     {
         $this->entity->setStatus($status);
+    }
+
+    /**
+     * Returns the orderUnit of the product
+     * @return Unit
+     * @VirtualProperty
+     * @SerializedName("orderUnit")
+     */
+    public function getOrderUnit()
+    {
+        return new Unit($this->entity->getOrderUnit(), $this->locale);
+    }
+
+    /**
+     * Sets the order unit of the product
+     * @param Unit $unit
+     */
+    public function setOrderUnit(Unit $unit)
+    {
+        $this->entity->setOrderUnit($unit);
+    }
+
+    /**
+     * Returns the contentUnit of the product
+     * @return Unit
+     * @VirtualProperty
+     * @SerializedName("contentUnit")
+     */
+    public function getContentUnit()
+    {
+        return new Unit($this->entity->getContentUnit(), $this->locale);
+    }
+
+    /**
+     * Sets the order contentUnit of the product
+     * @param Unit $unit
+     */
+    public function setContentUnit(Unit $unit)
+    {
+        $this->entity->setContentUnit($unit);
     }
 
     /**

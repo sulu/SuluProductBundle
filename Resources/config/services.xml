@@ -13,6 +13,7 @@
         <parameter key="sulu_product.type_repository.class">Sulu\Bundle\ProductBundle\Entity\TypeRepository</parameter>
         <parameter key="sulu_product.tax_class_repository.class">Sulu\Bundle\ProductBundle\Entity\TaxClassRepository</parameter>
         <parameter key="sulu_product.currency_repository.class">Sulu\Bundle\ProductBundle\Entity\CurrencyRepository</parameter>
+        <parameter key="sulu_product.unit_repository.class">Sulu\Bundle\ProductBundle\Entity\UnitRepository</parameter>
         <parameter key="sulu_product.product_manager.class">Sulu\Bundle\ProductBundle\Product\ProductManager</parameter>
         <parameter key="sulu_product.attribute_manager.class">Sulu\Bundle\ProductBundle\Product\AttributeManager</parameter>
         <parameter key="sulu_product.status_manager.class">Sulu\Bundle\ProductBundle\Product\StatusManager</parameter>
@@ -65,6 +66,10 @@
                  factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
             <argument>SuluProductBundle:Currency</argument>
         </service>
+        <service id="sulu_product.unit_repository" class="%sulu_product.unit_repository.class%"
+                 factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
+            <argument>SuluProductBundle:Unit</argument>
+        </service>
         <service id="sulu_product.product_manager" class="%sulu_product.product_manager.class%">
             <argument type="service" id="sulu_product.product_repository"/>
             <argument type="service" id="sulu_product.attribute_set_repository"/>
@@ -74,6 +79,7 @@
             <argument type="service" id="sulu_product.type_repository"/>
             <argument type="service" id="sulu_product.tax_class_repository"/>
             <argument type="service" id="sulu_product.currency_repository"/>
+            <argument type="service" id="sulu_product.unit_repository"/>
             <argument type="service" id="sulu_category.category_repository"/>
             <argument type="service" id="sulu_security.user_repository" />
             <argument type="service" id="doctrine.orm.entity_manager"/>
