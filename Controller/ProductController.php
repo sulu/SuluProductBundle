@@ -54,7 +54,17 @@ class ProductController extends RestController implements ClassResourceInterface
     public function getFieldsAction(Request $request)
     {
         return $this->handleView(
-            $this->view(array_values($this->getManager()->getFieldDescriptors($this->getLocale($request))))
+            $this->view(
+                array_values(
+                    array_diff_key(
+                        $this->getManager()->getFieldDescriptors($this->getLocale($request)),
+                        array(
+                            'statusId' => false
+                        )
+                    )
+                ),
+                200
+            )
         );
     }
 
