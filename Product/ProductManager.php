@@ -430,6 +430,19 @@ class ProductManager implements ProductManagerInterface
             true
         );
 
+        $fieldDescriptors['statusId'] = new DoctrineFieldDescriptor(
+            'id',
+            'statusId',
+            self::$productStatusEntityName,
+            null,
+            array(
+                self::$productStatusEntityName => new DoctrineJoinDescriptor(
+                    self::$productStatusEntityName,
+                    self::$productEntityName . '.status'
+                )
+            )
+        );
+
         $fieldDescriptors['created'] = new DoctrineFieldDescriptor(
             'created',
             'created',
