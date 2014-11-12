@@ -15,13 +15,9 @@ use Hateoas\Configuration\Annotation\Relation;
 use JMS\Serializer\Annotation\VirtualProperty;
 use JMS\Serializer\Annotation\SerializedName;
 use JMS\Serializer\Annotation\ExclusionPolicy;
-use JMS\Serializer\Annotation\Expose;
-use JMS\Serializer\Annotation\Groups;
 
 use Sulu\Bundle\ProductBundle\Entity\ProductAttribute as ProductAttributeEntity;
-use Sulu\Bundle\ProductBundle\Entity\ProductAttributeTranslation;
 use Sulu\Component\Rest\ApiWrapper;
-use Sulu\Component\Security\UserInterface;
 
 /**
  * The ProductAttribute class which will be exported to the API
