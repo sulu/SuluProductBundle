@@ -14,7 +14,8 @@ use Sulu\Bundle\CategoryBundle\Api\Category;
 use Sulu\Bundle\CategoryBundle\Entity\Category as CategoryEntity;
 use Sulu\Bundle\MediaBundle\Api\Media;
 use Sulu\Bundle\MediaBundle\Entity\Media as MediaEntity;
-use Sulu\Bundle\ProductBundle\Entity\ProductAttribute;
+use Sulu\Bundle\ProductBundle\Entity\ProductAttribute as ProductAttributeEntity;
+use Sulu\Bundle\ProductBundle\Api\ProductAttribute;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface as Entity;
 use JMS\Serializer\Annotation\VirtualProperty;
 use JMS\Serializer\Annotation\SerializedName;
@@ -37,6 +38,11 @@ use Sulu\Bundle\ProductBundle\Entity\Unit;
  */
 class Product extends ApiWrapper
 {
+    /**
+     * @var Array
+     */
+    private $media;
+
     /**
      * @param Entity $product The product to wrap
      * @param string $locale The locale of this product
@@ -374,9 +380,9 @@ class Product extends ApiWrapper
 
     /**
      * Adds a product attribute to the product
-     * @param ProductAttribute $productAttribute
+     * @param ProductAttributeEntity $productAttribute
      */
-    public function addProductAttribute(ProductAttribute $productAttribute)
+    public function addProductAttribute(ProductAttributeEntity $productAttribute)
     {
         $this->entity->addProductAttribute($productAttribute);
     }
@@ -539,6 +545,24 @@ class Product extends ApiWrapper
     }
 
     /**
+     * Returns the attributes for the product
+     * @return \Sulu\Bundle\ProductBundle\Api\ProductAttributes[]
+     * @VirtualProperty
+     * @SerializedName("attributes")
+     */
+    public function getAttributes()
+    {
+        $attributeEntities = $this->entity->getProductAttributes();
+
+        $attributes = array();
+        foreach ($attributeEntities as $attributesEntity) {
+            $attributes[] = new ProductAttribute($attributesEntity, $this->locale);
+        }
+
+        return $attributes;
+    }
+
+    /**
      * Adds a category to the product
      * @param CategoryEntity $category
      */
@@ -655,6 +679,11 @@ class Product extends ApiWrapper
         $this->entity->removeMedia($media->getEntity());
     }
 
+    public function setMedia($media)
+    {
+        $this->media = $media;
+    }
+
     /**
      * Returns the media for the product
      *
@@ -664,15 +693,7 @@ class Product extends ApiWrapper
      */
     public function getMedia()
     {
-        $mediaEntities = $this->entity->getMedia();
-
-        $media = array();
-        if ($mediaEntities) {
-            foreach ($mediaEntities as $mediaEntity) {
-                $media[] = new Media($mediaEntity, $this->locale);
-            }
-        }
-        return $media;
+        return $this->media;
     }
 
     /**

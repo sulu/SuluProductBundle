@@ -43,6 +43,7 @@ use Sulu\Bundle\ProductBundle\Entity\ProductAttribute;
 use Sulu\Bundle\ProductBundle\Entity\AttributeRepository;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttributeRepository;
 use Sulu\Bundle\ProductBundle\Entity\UnitRepository;
+use Sulu\Bundle\MediaBundle\Media\Manager\DefaultMediaManager;
 
 class ProductManager implements ProductManagerInterface
 {
@@ -119,6 +120,11 @@ class ProductManager implements ProductManagerInterface
     private $userRepository;
 
     /**
+     * @var DefaultMediaManager
+     */
+    private $mediaManager;
+
+    /**
      * @var ObjectManager
      */
     protected $em;
@@ -135,6 +141,7 @@ class ProductManager implements ProductManagerInterface
         UnitRepository $unitRepository,
         CategoryRepository $categoryRepository,
         UserRepositoryInterface $userRepository,
+        DefaultMediaManager $mediaManager,
         ObjectManager $em
     ) {
         $this->productRepository = $productRepository;
@@ -148,6 +155,7 @@ class ProductManager implements ProductManagerInterface
         $this->unitRepository = $unitRepository;
         $this->categoryRepository = $categoryRepository;
         $this->userRepository = $userRepository;
+        $this->mediaManager = $mediaManager;
         $this->em = $em;
     }
 
@@ -230,6 +238,20 @@ class ProductManager implements ProductManagerInterface
                 self::$productEntityName . 'Categories' => new DoctrineJoinDescriptor(
                     self::$productEntityName,
                     self::$productEntityName . '.categories'
+                )
+            ),
+            true
+        );
+
+        $fieldDescriptors['attributes'] = new DoctrineFieldDescriptor(
+            'id',
+            'attributes',
+            self::$productEntityName . 'ProductAttributes',
+            'products.product-attributes',
+            array(
+                self::$productEntityName . 'ProductAttributes' => new DoctrineJoinDescriptor(
+                    self::$productEntityName,
+                    self::$productEntityName . '.productAttributes'
                 )
             ),
             true
@@ -480,7 +502,15 @@ class ProductManager implements ProductManagerInterface
                 $this->addAllCurrencies($product);
             }
 
-            return new Product($product, $locale);
+            $product = new Product($product, $locale);
+            $media = [];
+            // We have to replace the media with a media obtained from the mediaManager since the urls and the
+            // dimensions are added their.
+            foreach ($product->getEntity()->getMedia() as $medium) {
+                $media[] = $this->mediaManager->getbyId($medium->getId(), $locale);
+            }
+            $product->setMedia($media);
+            return $product;
         } else {
             return null;
         }

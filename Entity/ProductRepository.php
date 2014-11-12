@@ -130,6 +130,7 @@ class ProductRepository extends EntityRepository implements ProductRepositoryInt
             ->addSelect('status')
             ->addSelect('type')
             ->addSelect('currency')
+            ->addSelect('media')
             ->leftJoin('product.parent', 'parent')
             ->leftJoin('product.translations', 'translations', 'WITH', 'translations.locale = :locale')
             ->leftJoin('product.status', 'status')
@@ -138,6 +139,7 @@ class ProductRepository extends EntityRepository implements ProductRepositoryInt
             ->leftJoin('type.translations', 'typeTranslations', 'WITH', 'typeTranslations.locale = :locale')
             ->leftJoin('product.prices', 'prices')
             ->leftJoin('prices.currency', 'currency')
+            ->leftJoin('product.media', 'media')
             ->setParameter('locale', $locale);
 
         return $qb;
