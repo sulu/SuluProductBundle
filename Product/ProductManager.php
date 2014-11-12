@@ -505,7 +505,8 @@ class ProductManager implements ProductManagerInterface
             $product = new Product($product, $locale);
             $media = [];
             // We have to replace the media with a media obtained from the mediaManager since the urls and the
-            // dimensions are added their.
+            // dimensions are added by the mediaManager.
+            // TODO: implement proxy object who is responsible for generating the urls
             foreach ($product->getEntity()->getMedia() as $medium) {
                 $media[] = $this->mediaManager->getbyId($medium->getId(), $locale);
             }
