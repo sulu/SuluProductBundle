@@ -122,7 +122,7 @@ class ProductManager implements ProductManagerInterface
     /**
      * @var DefaultMediaManager
      */
-    private $mediaManager;
+    protected $mediaManager;
 
     /**
      * @var ObjectManager
