@@ -39,7 +39,7 @@ class LoadCurrencies implements FixtureInterface
                 $children = $element->childNodes;
                 /** @var $child DOMNode */
                 foreach ($children as $child) {
-                    switch($child->nodeName){
+                    switch ($child->nodeName) {
                         case "name":
                             $currency->setName($child->nodeValue);
                             break;
