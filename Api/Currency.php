@@ -25,7 +25,7 @@ use Sulu\Component\Rest\ApiWrapper;
 class Currency extends ApiWrapper
 {
     /**
-     * @param Entity $type
+     * @param \Sulu\Bundle\ProductBundle\Entity\Currency $taxClass
      * @param string $locale
      */
     public function __construct(Entity $taxClass, $locale)
@@ -54,5 +54,27 @@ class Currency extends ApiWrapper
     public function getName()
     {
         return $this->entity->getName();
+    }
+
+    /**
+     * The number of the currency
+     * @return int The number of the currency
+     * @VirtualProperty
+     * @SerializedName("number")
+     */
+    public function getNumber()
+    {
+        return $this->entity->getNumber();
+    }
+
+    /**
+     * The iso code of the currency
+     * @return int The iso code of the currency
+     * @VirtualProperty
+     * @SerializedName("code")
+     */
+    public function getCode()
+    {
+        return $this->entity->getCode();
     }
 }
