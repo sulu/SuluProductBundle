@@ -162,6 +162,14 @@
                 <source>product.order-unit</source>
                 <target>Bestelleinheit</target>
             </trans-unit>
+            <trans-unit id="42" resname="product.currency.iso-code">
+                <source>product.currency.iso-code</source>
+                <target>ISO-Code</target>
+            </trans-unit>
+            <trans-unit id="43" resname="product.currency.number">
+                <source>product.currency.number</source>
+                <target>Nummer</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>

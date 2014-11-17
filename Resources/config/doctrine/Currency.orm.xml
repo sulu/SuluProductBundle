@@ -8,5 +8,7 @@
         </id>
 
         <field name="name" type="string" length="255" nullable="false"/>
+        <field name="code" type="string" length="255" nullable="false"/>
+        <field name="number" type="string" length="255" nullable="false"/>
     </entity>
 </doctrine-mapping>
