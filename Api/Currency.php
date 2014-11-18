@@ -25,12 +25,12 @@ use Sulu\Component\Rest\ApiWrapper;
 class Currency extends ApiWrapper
 {
     /**
-     * @param \Sulu\Bundle\ProductBundle\Entity\Currency $taxClass
+     * @param \Sulu\Bundle\ProductBundle\Entity\Currency $currency
      * @param string $locale
      */
-    public function __construct(Entity $taxClass, $locale)
+    public function __construct(Entity $currency, $locale)
     {
-        $this->entity = $taxClass;
+        $this->entity = $currency;
         $this->locale = $locale;
     }
 
