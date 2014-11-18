@@ -36,10 +36,10 @@ class UnitRepository extends EntityRepository
     }
 
     /**
-     * Returns the taxClasses with the given locale
+     * Returns the units with the given locale
      *
      * @param string $locale The locale to load
-     * @return Status[]|null
+     * @return Unit[]|null
      */
     public function findAllByLocale($locale)
     {
@@ -53,7 +53,7 @@ class UnitRepository extends EntityRepository
     }
 
     /**
-     * Returns the query for tax classes
+     * Returns the query for units
      *
      * @param string $locale The locale to load
      * @return \Doctrine\ORM\QueryBuilder
