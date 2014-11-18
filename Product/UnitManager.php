@@ -1,0 +1,50 @@
+<?php
+/*
+ * This file is part of the Sulu CMF.
+ *
+ * (c) MASSIVE ART WebServices GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
+namespace Sulu\Bundle\ProductBundle\Product;
+
+use Sulu\Bundle\ProductBundle\Api\Unit;
+use Sulu\Bundle\ProductBundle\Entity\UnitRepository;
+
+/**
+ * Manager responsible for units
+ * @package Sulu\Bundle\ProductBundle\Product
+ */
+class UnitManager
+{
+    /**
+     * @var UnitRepository
+     */
+    private $unitRepository;
+
+    public function __construct(UnitRepository $repo)
+    {
+        $this->unitRepository = $repo;
+    }
+
+    /**
+     * Find all units
+     * @param $locale
+     * @return Unit[]
+     */
+    public function findAll($locale)
+    {
+        $units = $this->unitRepository->findAllByLocale($locale);
+
+        array_walk(
+            $units,
+            function (&$unit) use ($locale) {
+                $unit = new Unit($unit, $locale);
+            }
+        );
+
+        return $units;
+    }
+} 

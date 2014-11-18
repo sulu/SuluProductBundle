@@ -13,6 +13,7 @@ namespace Sulu\Bundle\ProductBundle\Controller;
 use Sulu\Bundle\ProductBundle\Api\Status;
 use Sulu\Bundle\ProductBundle\Api\TaxClass;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Request;
 
 class TemplateController extends Controller
 {
@@ -31,20 +32,18 @@ class TemplateController extends Controller
      */
     public function productFormAction()
     {
-        /** @var Status[] $statuses */
-        $statuses = $this->get('sulu_product.status_manager')->findAll('en'); // TODO use correct language
+        // TODO use correct language
+        $language = 'en';
 
-        $statusTitles = array();
-        foreach ($statuses as $status) {
-            $statusTitles[] = array(
-                'id' => $status->getId(),
-                'name' => $status->getName()
-            );
-        }
+        $status = $this->getStatus($language);
+        $units = $this->getUnits($language);
 
         return $this->render(
             'SuluProductBundle:Template:product.form.html.twig',
-            array('status' => $statusTitles)
+            array(
+                'status' => $status,
+                'units' => $units
+            )
         );
     }
 
@@ -131,5 +130,43 @@ class TemplateController extends Controller
     public function productDocumentsAction()
     {
         return $this->render('SuluProductBundle:Template:product.documents.html.twig');
+    }
+
+    /**
+     * Returns status for products
+     * @param $language
+     * @return array
+     */
+    private function getStatus($language){
+        /** @var Status[] $statuses */
+        $statuses = $this->get('sulu_product.status_manager')->findAll($language);
+
+        $statusTitles = array();
+        foreach ($statuses as $status) {
+            $statusTitles[] = array(
+                'id' => $status->getId(),
+                'name' => $status->getName()
+            );
+        }
+        return $statusTitles;
+    }
+
+    /**
+     * Returns units
+     * @param $language
+     * @return array
+     */
+    private function getUnits($language){
+        /** @var Status[] $units */
+        $units = $this->get('sulu_product.unit_manager')->findAll($language);
+
+        $unitTitles = array();
+        foreach ($units as $status) {
+            $unitTitles[] = array(
+                'id' => $status->getId(),
+                'name' => $status->getName()
+            );
+        }
+        return $unitTitles;
     }
 }

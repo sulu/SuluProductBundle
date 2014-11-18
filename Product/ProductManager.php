@@ -28,6 +28,7 @@ use Sulu\Bundle\ProductBundle\Entity\TaxClass;
 use Sulu\Bundle\ProductBundle\Entity\TaxClassRepository;
 use Sulu\Bundle\ProductBundle\Entity\Type;
 use Sulu\Bundle\ProductBundle\Entity\TypeRepository;
+use Sulu\Bundle\ProductBundle\Entity\Unit;
 use Sulu\Bundle\ProductBundle\Product\Exception\MissingProductAttributeException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductChildrenExistException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductDependencyNotFoundException;
@@ -542,8 +543,10 @@ class ProductManager implements ProductManagerInterface
 
     /**
      * Returns all simple products in the given locale for the given number
+     *
      * @param string $locale The locale of the product to load
-     * @param string $number The number of the product to load
+     * @param $internalItemNumber
+     * @internal param string $number The number of the product to load
      * @return ProductInterface[]
      */
     public function findByLocaleAndInternalItemNumber($locale, $internalItemNumber)
@@ -851,8 +854,10 @@ class ProductManager implements ProductManagerInterface
 
     /**
      * Updates the given price with the values from the given array
+     *
      * @param ProductPrice $price
      * @param array $matchedEntry
+     * @throws Exception\ProductDependencyNotFoundException
      * @return bool
      */
     protected function updatePrice(ProductPrice $price, $matchedEntry)
