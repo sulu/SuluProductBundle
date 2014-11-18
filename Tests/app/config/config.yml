@@ -74,9 +74,7 @@ sulu_core:
         workspace: test
         username: admin
         password: admin
-    webspace:
-        request_analyzer:
-            enabled: true
+    webspace: ~
     content:
         structure:
             paths:
