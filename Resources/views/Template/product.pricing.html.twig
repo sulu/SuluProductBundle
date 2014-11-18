@@ -40,9 +40,6 @@
                     <span class="cell-content"><%=translate('product.currency.iso-code')%></span>
                 </th>
                 <th class="header-cell">
-                    <span class="cell-content"><%=translate('product.currency.number')%></span>
-                </th>
-                <th class="header-cell">
                     <span class="cell-content"><%=translate('product.price')%></span>
                 </th>
             </tr>
@@ -54,10 +51,9 @@
                 <tr class="row">
                     <td>
                         <input type="hidden" data-mapper-property="id" data-type="decimal" value="<~=id~>"/>
-                        <~= currency.code ~>
-                    </td>
-                    <td>
-                        <~= currency.number ~>
+                        <span class="cell-content" data-type="label" data-type-label="code"
+                              data-mapper-property="currency">
+                        </span>
                     </td>
                     <td>
                         <div class="input-wrapper" style="display: block">
