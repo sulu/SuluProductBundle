@@ -162,6 +162,7 @@ class Unit
 
     /**
      * Returns the translation for the given locale
+     *
      * @param string $locale
      * @return TypeTranslation
      */

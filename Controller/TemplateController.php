@@ -134,10 +134,12 @@ class TemplateController extends Controller
 
     /**
      * Returns status for products
+     *
      * @param $language
      * @return array
      */
-    private function getStatus($language){
+    private function getStatus($language)
+    {
         /** @var Status[] $statuses */
         $statuses = $this->get('sulu_product.status_manager')->findAll($language);
 
@@ -148,15 +150,18 @@ class TemplateController extends Controller
                 'name' => $status->getName()
             );
         }
+
         return $statusTitles;
     }
 
     /**
      * Returns units
+     *
      * @param $language
      * @return array
      */
-    private function getUnits($language){
+    private function getUnits($language)
+    {
         /** @var Status[] $units */
         $units = $this->get('sulu_product.unit_manager')->findAll($language);
 
@@ -167,6 +172,7 @@ class TemplateController extends Controller
                 'name' => $status->getName()
             );
         }
+
         return $unitTitles;
     }
 }

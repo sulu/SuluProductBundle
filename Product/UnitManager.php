@@ -15,6 +15,7 @@ use Sulu\Bundle\ProductBundle\Entity\UnitRepository;
 
 /**
  * Manager responsible for units
+ *
  * @package Sulu\Bundle\ProductBundle\Product
  */
 class UnitManager
@@ -31,6 +32,7 @@ class UnitManager
 
     /**
      * Find all units
+     *
      * @param $locale
      * @return Unit[]
      */
