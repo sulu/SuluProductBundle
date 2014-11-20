@@ -633,6 +633,13 @@ class ProductManager implements ProductManagerInterface
                 $product->getRecommendedOrderQuantity()
             )
         );
+        $product->setOrderContentRatio(
+            $this->getProperty(
+                $data,
+                'orderContentRatio',
+                $product->getOrderContentRatio()
+            )
+        );
         $product->setShortDescription($this->getProperty($data, 'shortDescription', $product->getShortDescription()));
         $product->setLongDescription($this->getProperty($data, 'longDescription', $product->getLongDescription()));
         $product->setNumber($this->getProperty($data, 'number', $product->getNumber()));
