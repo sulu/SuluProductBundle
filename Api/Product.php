@@ -155,7 +155,7 @@ class Product extends ApiWrapper
      */
     public function setOrderContentRatio($orderContentRatio)
     {
-        $this->entity->orderContentRatio($orderContentRatio);
+        $this->entity->setOrderContentRatio($orderContentRatio);
     }
 
     /**
