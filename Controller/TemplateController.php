@@ -12,9 +12,11 @@ namespace Sulu\Bundle\ProductBundle\Controller;
 
 use Sulu\Bundle\ProductBundle\Api\Status;
 use Sulu\Bundle\ProductBundle\Api\TaxClass;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Sulu\Component\Rest\RestController;
 
-class TemplateController extends Controller
+class TemplateController extends RestController
 {
     /**
      * Returns Template for product list
@@ -29,10 +31,10 @@ class TemplateController extends Controller
      * Returns Template for product list
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function productFormAction()
+    public function productFormAction(Request $request)
     {
         /** @var Status[] $statuses */
-        $statuses = $this->get('sulu_product.status_manager')->findAll('en'); // TODO use correct language
+        $statuses = $this->get('sulu_product.status_manager')->findAll($this->getLocale($request));
 
         $statusTitles = array();
         foreach ($statuses as $status) {
@@ -105,10 +107,10 @@ class TemplateController extends Controller
      * Returns Template for product pricing
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function productPricingAction()
+    public function productPricingAction(Request $request)
     {
         /** @var TaxClass[] $taxClasses */
-        $taxClasses = $this->get('sulu_product.tax_class_manager')->findAll('en');
+        $taxClasses = $this->get('sulu_product.tax_class_manager')->findAll($this->getLocale($request));
 
         $taxClassTitles = array();
         foreach ($taxClasses as $taxClass) {
