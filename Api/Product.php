@@ -156,7 +156,7 @@ class Product extends ApiWrapper
      */
     public function setOrderContentRatio($orderContentRatio)
     {
-        $this->entity->orderContentRatio($orderContentRatio);
+        $this->entity->setOrderContentRatio($orderContentRatio);
     }
 
     /**
@@ -436,7 +436,12 @@ class Product extends ApiWrapper
      */
     public function getOrderUnit()
     {
-        return new Unit($this->entity->getOrderUnit(), $this->locale);
+        $unit = $this->entity->getOrderUnit();
+        if (!is_null($unit)) {
+            return new Unit($unit, $this->locale);
+        }
+
+        return null;
     }
 
     /**
@@ -457,7 +462,12 @@ class Product extends ApiWrapper
      */
     public function getContentUnit()
     {
-        return new Unit($this->entity->getContentUnit(), $this->locale);
+        $unit = $this->entity->getContentUnit();
+        if (!is_null($unit)) {
+            return new Unit($unit, $this->locale);
+        }
+
+        return null;
     }
 
     /**

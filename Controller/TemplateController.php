@@ -12,10 +12,11 @@ namespace Sulu\Bundle\ProductBundle\Controller;
 
 use Sulu\Bundle\ProductBundle\Api\Status;
 use Sulu\Bundle\ProductBundle\Api\TaxClass;
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Sulu\Component\Rest\RestController;
 
-class TemplateController extends Controller
+class TemplateController extends RestController
 {
     /**
      * Returns Template for product list
@@ -28,6 +29,7 @@ class TemplateController extends Controller
 
     /**
      * Returns Template for product list
+     *
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function productFormAction()
@@ -102,12 +104,14 @@ class TemplateController extends Controller
 
     /**
      * Returns Template for product pricing
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function productPricingAction()
+    public function productPricingAction(Request $request)
     {
         /** @var TaxClass[] $taxClasses */
-        $taxClasses = $this->get('sulu_product.tax_class_manager')->findAll('en');
+        $taxClasses = $this->get('sulu_product.tax_class_manager')->findAll($this->getLocale($request));
 
         $taxClassTitles = array();
         foreach ($taxClasses as $taxClass) {
@@ -166,10 +170,10 @@ class TemplateController extends Controller
         $units = $this->get('sulu_product.unit_manager')->findAll($language);
 
         $unitTitles = array();
-        foreach ($units as $status) {
+        foreach ($units as $unit) {
             $unitTitles[] = array(
-                'id' => $status->getId(),
-                'name' => $status->getName()
+                'id' => $unit->getId(),
+                'name' => $unit->getName()
             );
         }
 

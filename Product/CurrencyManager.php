@@ -11,9 +11,7 @@
 namespace Sulu\Bundle\ProductBundle\Product;
 
 use Sulu\Bundle\ProductBundle\Api\Currency;
-use Sulu\Bundle\ProductBundle\Api\Unit;
 use Sulu\Bundle\ProductBundle\Entity\CurrencyRepository;
-use Sulu\Bundle\ProductBundle\Entity\UnitRepository;
 
 /**
  * Manager responsible for currencies

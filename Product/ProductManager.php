@@ -546,7 +546,6 @@ class ProductManager implements ProductManagerInterface
      *
      * @param string $locale The locale of the product to load
      * @param $internalItemNumber
-     * @internal param string $number The number of the product to load
      * @return ProductInterface[]
      */
     public function findByLocaleAndInternalItemNumber($locale, $internalItemNumber)
@@ -629,11 +628,22 @@ class ProductManager implements ProductManagerInterface
                 $product->getMinimumOrderQuantity()
             )
         );
-        $product->setRecommendedOrderQuantity(
-            $this->getProperty(
+
+        if(isset($data['recommendedOrderQuantity']) && is_numeric($data['recommendedOrderQuantity'])) {
+            $value = $this->getProperty(
                 $data,
                 'recommendedOrderQuantity',
                 $product->getRecommendedOrderQuantity()
+            );
+
+            $product->setRecommendedOrderQuantity(floatval($value));
+        }
+
+        $product->setOrderContentRatio(
+            $this->getProperty(
+                $data,
+                'orderContentRatio',
+                $product->getOrderContentRatio()
             )
         );
         $product->setShortDescription($this->getProperty($data, 'shortDescription', $product->getShortDescription()));
@@ -726,6 +736,10 @@ class ProductManager implements ProductManagerInterface
             if (!$orderUnit) {
                 throw new ProductDependencyNotFoundException(self::$unitEntityName, $orderUnitId);
             }
+            $product->setOrderUnit($orderUnit);
+        } else {
+            // Default Unit
+            $orderUnit = $this->unitRepository->find(Unit::PIECE_ID);
             $product->setOrderUnit($orderUnit);
         }
 

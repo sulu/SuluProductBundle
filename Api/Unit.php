@@ -17,7 +17,7 @@ use JMS\Serializer\Annotation\ExclusionPolicy;
 use Sulu\Component\Rest\ApiWrapper;
 
 /**
- * The unit class which will be exportet to the api
+ * The unit class which will be exported to the api
  *
  * @package Sulu\Bundle\ProductBundle\Api
  * @ExclusionPolicy("all")
