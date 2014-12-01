@@ -43,6 +43,7 @@ use Sulu\Bundle\ProductBundle\Entity\ProductAttribute;
 use Sulu\Bundle\ProductBundle\Entity\AttributeRepository;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttributeRepository;
 use Sulu\Bundle\ProductBundle\Entity\UnitRepository;
+use Sulu\Bundle\ProductBundle\Entity\Unit;
 use Sulu\Bundle\MediaBundle\Media\Manager\DefaultMediaManager;
 
 class ProductManager implements ProductManagerInterface
@@ -730,6 +731,10 @@ class ProductManager implements ProductManagerInterface
             if (!$orderUnit) {
                 throw new ProductDependencyNotFoundException(self::$unitEntityName, $orderUnitId);
             }
+            $product->setOrderUnit($orderUnit);
+        } else {
+            // Default Unit
+            $orderUnit = $this->unitRepository->find(Unit::PIECE_ID);
             $product->setOrderUnit($orderUnit);
         }
 

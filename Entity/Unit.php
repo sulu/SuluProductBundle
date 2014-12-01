@@ -9,6 +9,9 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class Unit
 {
+    // The id for the unit type PIECE which is the default type.
+    const PIECE_ID = 1;
+
     /**
      * @var integer
      */
