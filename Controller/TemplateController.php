@@ -19,6 +19,7 @@ class TemplateController extends Controller
 {
     /**
      * Returns Template for product list
+     *
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function productListAction()
@@ -55,6 +56,7 @@ class TemplateController extends Controller
 
     /**
      * Returns Template for product import
+     *
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function productImportAction()
@@ -66,6 +68,7 @@ class TemplateController extends Controller
 
     /**
      * Returns Template for attribute list
+     *
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function attributeListAction()
@@ -77,6 +80,7 @@ class TemplateController extends Controller
 
     /**
      * Returns Template for attribute list
+     *
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function attributeFormAction()
@@ -88,8 +92,8 @@ class TemplateController extends Controller
         $attributeTypes = array();
         foreach ($types as $type) {
             $attributeTypes[] = array(
-                'id'=>$type->getId(),
-                'name'=>$type->getName()
+                'id' => $type->getId(),
+                'name' => $type->getName()
             );
         }
 
@@ -108,7 +112,6 @@ class TemplateController extends Controller
      */
     public function productPricingAction()
     {
-
         // TODO use correct language
         $language = 'en';
 
@@ -131,6 +134,7 @@ class TemplateController extends Controller
 
     /**
      * Returns the template for product documents
+     *
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function productDocumentsAction()
