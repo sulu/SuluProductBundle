@@ -18,7 +18,8 @@ class UnitRepository extends EntityRepository
     /**
      * Find a unit by it's abbrevation
      *
-     * @param string $name
+     * @param $abbrevation
+     * @return mixed|null
      */
     public function findByAbbrevation($abbrevation)
     {
@@ -32,6 +33,43 @@ class UnitRepository extends EntityRepository
         } catch (NoResultException $exc) {
             return null;
         }
+    }
+
+    /**
+     * Returns the units with the given locale
+     *
+     * @param string $locale The locale to load
+     * @return Unit[]|null
+     */
+    public function findAllByLocale($locale)
+    {
+        try {
+            $qb = $this->getUnitQuery($locale);
+
+            return $qb->getQuery()->getResult();
+        } catch (NoResultException $exc) {
+            return null;
+        }
+    }
+
+    /**
+     * Returns the query for units
+     *
+     * @param string $locale The locale to load
+     * @return \Doctrine\ORM\QueryBuilder
+     */
+    private function getUnitQuery($locale)
+    {
+        $qb = $this->createQueryBuilder('unit')
+            ->innerJoin(
+                'unit.translations',
+                'unitTranslations',
+                'WITH',
+                'unitTranslations.locale = :locale'
+            )
+            ->setParameter('locale', $locale);
+
+        return $qb;
     }
 
 }

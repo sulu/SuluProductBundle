@@ -14,12 +14,12 @@ use Sulu\Bundle\ProductBundle\Api\Status;
 use Sulu\Bundle\ProductBundle\Api\TaxClass;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use Sulu\Component\Rest\RestController;
 
-class TemplateController extends RestController
+class TemplateController extends Controller
 {
     /**
      * Returns Template for product list
+     *
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function productListAction()
@@ -29,24 +29,23 @@ class TemplateController extends RestController
 
     /**
      * Returns Template for product list
+     *
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function productFormAction(Request $request)
+    public function productFormAction()
     {
-        /** @var Status[] $statuses */
-        $statuses = $this->get('sulu_product.status_manager')->findAll($this->getLocale($request));
+        // TODO use correct language
+        $language = 'en';
 
-        $statusTitles = array();
-        foreach ($statuses as $status) {
-            $statusTitles[] = array(
-                'id' => $status->getId(),
-                'name' => $status->getName()
-            );
-        }
+        $status = $this->getStatus($language);
+        $units = $this->getUnits($language);
 
         return $this->render(
             'SuluProductBundle:Template:product.form.html.twig',
-            array('status' => $statusTitles)
+            array(
+                'status' => $status,
+                'units' => $units
+            )
         );
     }
 
@@ -57,6 +56,7 @@ class TemplateController extends RestController
 
     /**
      * Returns Template for product import
+     *
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function productImportAction()
@@ -68,6 +68,7 @@ class TemplateController extends RestController
 
     /**
      * Returns Template for attribute list
+     *
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function attributeListAction()
@@ -79,6 +80,7 @@ class TemplateController extends RestController
 
     /**
      * Returns Template for attribute list
+     *
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function attributeFormAction()
@@ -90,8 +92,8 @@ class TemplateController extends RestController
         $attributeTypes = array();
         foreach ($types as $type) {
             $attributeTypes[] = array(
-                'id'=>$type->getId(),
-                'name'=>$type->getName()
+                'id' => $type->getId(),
+                'name' => $type->getName()
             );
         }
 
@@ -105,12 +107,16 @@ class TemplateController extends RestController
 
     /**
      * Returns Template for product pricing
+     *
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function productPricingAction(Request $request)
+    public function productPricingAction()
     {
+        // TODO use correct language
+        $language = 'en';
+
         /** @var TaxClass[] $taxClasses */
-        $taxClasses = $this->get('sulu_product.tax_class_manager')->findAll($this->getLocale($request));
+        $taxClasses = $this->get('sulu_product.tax_class_manager')->findAll($language);
 
         $taxClassTitles = array();
         foreach ($taxClasses as $taxClass) {
@@ -128,10 +134,55 @@ class TemplateController extends RestController
 
     /**
      * Returns the template for product documents
+     *
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function productDocumentsAction()
     {
         return $this->render('SuluProductBundle:Template:product.documents.html.twig');
+    }
+
+    /**
+     * Returns status for products
+     *
+     * @param $language
+     * @return array
+     */
+    private function getStatus($language)
+    {
+        /** @var Status[] $statuses */
+        $statuses = $this->get('sulu_product.status_manager')->findAll($language);
+
+        $statusTitles = array();
+        foreach ($statuses as $status) {
+            $statusTitles[] = array(
+                'id' => $status->getId(),
+                'name' => $status->getName()
+            );
+        }
+
+        return $statusTitles;
+    }
+
+    /**
+     * Returns units
+     *
+     * @param $language
+     * @return array
+     */
+    private function getUnits($language)
+    {
+        /** @var Status[] $units */
+        $units = $this->get('sulu_product.unit_manager')->findAll($language);
+
+        $unitTitles = array();
+        foreach ($units as $unit) {
+            $unitTitles[] = array(
+                'id' => $unit->getId(),
+                'name' => $unit->getName()
+            );
+        }
+
+        return $unitTitles;
     }
 }

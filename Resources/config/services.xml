@@ -10,6 +10,7 @@
         <parameter key="sulu_product.attribute_value_repository.class">Sulu\Bundle\ProductBundle\Entity\AttributeValueRepository</parameter>
         <parameter key="sulu_product.attribute_type_repository.class">Sulu\Bundle\ProductBundle\Entity\AttributeTypeRepository</parameter>
         <parameter key="sulu_product.status_repository.class">Sulu\Bundle\ProductBundle\Entity\StatusRepository</parameter>
+        <parameter key="sulu_product.unit_repository.class">Sulu\Bundle\ProductBundle\Entity\UnitRepository</parameter>
         <parameter key="sulu_product.type_repository.class">Sulu\Bundle\ProductBundle\Entity\TypeRepository</parameter>
         <parameter key="sulu_product.tax_class_repository.class">Sulu\Bundle\ProductBundle\Entity\TaxClassRepository</parameter>
         <parameter key="sulu_product.currency_repository.class">Sulu\Bundle\ProductBundle\Entity\CurrencyRepository</parameter>
@@ -18,6 +19,8 @@
         <parameter key="sulu_product.attribute_manager.class">Sulu\Bundle\ProductBundle\Product\AttributeManager</parameter>
         <parameter key="sulu_product.status_manager.class">Sulu\Bundle\ProductBundle\Product\StatusManager</parameter>
         <parameter key="sulu_product.tax_class_manager.class">Sulu\Bundle\ProductBundle\Product\TaxClassManager</parameter>
+        <parameter key="sulu_product.unit_manager.class">Sulu\Bundle\ProductBundle\Product\UnitManager</parameter>
+        <parameter key="sulu_product.currency_manager.class">Sulu\Bundle\ProductBundle\Product\CurrencyManager</parameter>
         <parameter key="sulu_product.productwebsite.controller.class">Sulu\Bundle\ProductBundle\Controller\ProductWebsiteController</parameter>
         <parameter key="sulu_product.attribute_value_manager.class">Sulu\Bundle\ProductBundle\Product\AttributeValueManager</parameter>
     </parameters>
@@ -70,6 +73,10 @@
                  factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
             <argument>SuluProductBundle:Unit</argument>
         </service>
+        <service id="sulu_product.unit_repository" class="%sulu_product.unit_repository.class%"
+                 factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
+            <argument>SuluProductBundle:Unit</argument>
+        </service>
         <service id="sulu_product.product_manager" class="%sulu_product.product_manager.class%">
             <argument type="service" id="sulu_product.product_repository"/>
             <argument type="service" id="sulu_product.attribute_set_repository"/>
@@ -109,6 +116,12 @@
         </service>
         <service id="sulu_product.tax_class_manager" class="%sulu_product.tax_class_manager.class%">
             <argument type="service" id="sulu_product.tax_class_repository"/>
+        </service>
+        <service id="sulu_product.unit_manager" class="%sulu_product.unit_manager.class%">
+            <argument type="service" id="sulu_product.unit_repository"/>
+        </service>
+        <service id="sulu_product.currency_manager" class="%sulu_product.currency_manager.class%">
+            <argument type="service" id="sulu_product.currency_repository"/>
         </service>
         <service id="sulu_product.admin.content_navigation" class="%sulu_product.admin.content_navigation.class%"/>
     </services>
