@@ -14,9 +14,8 @@ use Sulu\Bundle\ProductBundle\Api\Status;
 use Sulu\Bundle\ProductBundle\Api\TaxClass;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use Sulu\Component\Rest\RestController;
 
-class TemplateController extends RestController
+class TemplateController extends Controller
 {
     /**
      * Returns Template for product list
@@ -105,13 +104,16 @@ class TemplateController extends RestController
     /**
      * Returns Template for product pricing
      *
-     * @param \Symfony\Component\HttpFoundation\Request $request
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function productPricingAction(Request $request)
+    public function productPricingAction()
     {
+
+        // TODO use correct language
+        $language = 'en';
+
         /** @var TaxClass[] $taxClasses */
-        $taxClasses = $this->get('sulu_product.tax_class_manager')->findAll($this->getLocale($request));
+        $taxClasses = $this->get('sulu_product.tax_class_manager')->findAll($language);
 
         $taxClassTitles = array();
         foreach ($taxClasses as $taxClass) {
