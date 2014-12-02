@@ -144,4 +144,25 @@ class ProductRepository extends EntityRepository implements ProductRepositoryInt
 
         return $qb;
     }
+
+    /**
+     * Returns all products with the given locale and ids
+     *
+     * @param string $locale The locale to load
+     * @param array $ids
+     * @return ProductInterface[]
+     */
+    public function findByLocaleAndIds($locale, array $ids = array())
+    {
+        try {
+            $qb = $this->getProductQuery($locale);
+            $qb->where('product.id IN (:ids)');
+            $qb->setParameter('ids', $ids);
+            $query = $qb->getQuery();
+
+            return $query->getResult();
+        } catch (NoResultException $ex) {
+            return null;
+        }
+    }
 }

@@ -57,8 +57,10 @@ class CurrencyManager
      * @param $locale
      * @return \Sulu\Bundle\ProductBundle\Api\Currency
      */
-    public function findById($id, $locale){
+    public function findById($id, $locale)
+    {
         $currency = $this->currencyRepository->findById($id);
+
         return new Currency($currency, $locale);
     }
 } 

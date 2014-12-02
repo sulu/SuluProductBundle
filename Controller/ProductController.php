@@ -193,6 +193,11 @@ class ProductController extends RestController implements ClassResourceInterface
                 $listBuilder->getLimit(),
                 $listBuilder->count()
             );
+        } else if ($request->get('ids') !== '') {
+            $list = new CollectionRepresentation(
+                $this->getManager()->findAllByIdsAndLocale($this->getLocale($request), $request->get('ids')),
+                self::$entityKey
+            );
         } else {
             $list = new CollectionRepresentation(
                 $this->getManager()->findAllByLocale($this->getLocale($request), $filter),
