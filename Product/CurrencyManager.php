@@ -49,4 +49,18 @@ class CurrencyManager
 
         return $currencies;
     }
+
+    /**
+     * @param $locale
+     * @param $code
+     * @return Currency
+     */
+    public function findByCode($locale, $code)
+    {
+        $currency = $this->currencyRepository->findByCode($code);
+        if (!$currency) {
+            return null;
+        }
+        return new Currency($currency, $locale);
+    }
 } 

@@ -49,4 +49,17 @@ class UnitManager
 
         return $units;
     }
-} 
+
+    /**
+     * @param $locale
+     * @param $abbrevation
+     * @return Unit
+     */
+    public function findByAbbrevation($locale, $abbrevation)
+    {
+        $unit = $this->unitRepository->findByAbbrevation($abbrevation);
+        var_dump($unit);
+        exit;
+        return new Unit($unit, $locale);
+    }
+}
