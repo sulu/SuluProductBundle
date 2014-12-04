@@ -58,8 +58,9 @@ class UnitManager
     public function findByAbbrevation($locale, $abbrevation)
     {
         $unit = $this->unitRepository->findByAbbrevation($abbrevation);
-        var_dump($unit);
-        exit;
+        if (!$unit) {
+            return null;
+        }
         return new Unit($unit, $locale);
     }
 }
