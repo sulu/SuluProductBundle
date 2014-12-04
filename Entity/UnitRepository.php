@@ -19,9 +19,10 @@ class UnitRepository extends EntityRepository
      * Find a unit by it's abbrevation
      *
      * @param $abbrevation
+     * @param bool $returnUnit
      * @return mixed|null
      */
-    public function findByAbbrevation($abbrevation)
+    public function findByAbbrevation($abbrevation, $returnUnit = false)
     {
         try {
             $qb = $this->createQueryBuilder('unit')
@@ -29,6 +30,9 @@ class UnitRepository extends EntityRepository
                 ->join('unit.mappings', 'mappings', 'WITH', 'mappings.name = :abbrevation')
                 ->setParameter('abbrevation', $abbrevation);
 
+            if ($returnUnit) {
+                return $qb->getQuery()->getSingleResult();
+            }
             return $qb->getQuery()->getSingleScalarResult();
         } catch (NoResultException $exc) {
             return null;

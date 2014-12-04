@@ -57,7 +57,7 @@ class UnitManager
      */
     public function findByAbbrevation($locale, $abbrevation)
     {
-        $unit = $this->unitRepository->findByAbbrevation($abbrevation);
+        $unit = $this->unitRepository->findByAbbrevation($abbrevation, true);
         if (!$unit) {
             return null;
         }
