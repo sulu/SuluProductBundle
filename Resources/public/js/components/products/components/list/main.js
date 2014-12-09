@@ -110,7 +110,7 @@ define(function () {
                     url: '/admin/api/products?flat=true',
                     resultKey: 'products',
                     searchInstanceName: 'productsToolbar',
-                    searchFields: ['name,number'],
+                    searchFields: ['name','number'],
                     viewOptions: {
                         table: {
                             fullWidth: true
