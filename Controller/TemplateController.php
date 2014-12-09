@@ -13,9 +13,9 @@ namespace Sulu\Bundle\ProductBundle\Controller;
 use Sulu\Bundle\ProductBundle\Api\Status;
 use Sulu\Bundle\ProductBundle\Api\TaxClass;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Sulu\Component\Rest\RestController;
 
-class TemplateController extends Controller
+class TemplateController extends RestController
 {
     /**
      * Returns Template for product list
@@ -32,10 +32,9 @@ class TemplateController extends Controller
      *
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function productFormAction()
+    public function productFormAction(Request $request)
     {
-        // TODO use correct language
-        $language = 'en';
+        $language = $this->getLocale($request);
 
         $status = $this->getStatus($language);
         $units = $this->getUnits($language);
