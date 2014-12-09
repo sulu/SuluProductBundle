@@ -545,7 +545,7 @@ class ProductManager implements ProductManagerInterface
      * Finds all elements with one of the ids
      * @param string $locale
      * @param string $ids
-     * @return \Sulu\Bundle\ProductBundle\Api\Product[]|\Sulu\Bundle\ProductBundle\Entity\ProductInterface[]
+     * @return \Sulu\Bundle\ProductBundle\Api\Product[]
      */
     public function findAllByIdsAndLocale($locale, $ids = '')
     {
