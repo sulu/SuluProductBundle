@@ -49,4 +49,18 @@ class CurrencyManager
 
         return $currencies;
     }
+
+    /**
+     * Finds a currency by id and locale
+     *
+     * @param $id
+     * @param $locale
+     * @return \Sulu\Bundle\ProductBundle\Api\Currency
+     */
+    public function findById($id, $locale)
+    {
+        $currency = $this->currencyRepository->findById($id);
+
+        return new Currency($currency, $locale);
+    }
 } 
