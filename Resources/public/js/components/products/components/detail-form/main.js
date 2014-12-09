@@ -176,6 +176,12 @@ define([], function () {
             this.sandbox.on('husky.select.status.selected.item', function () {
                 this.setHeaderBar(false);
             }.bind(this));
+            this.sandbox.on('husky.select.orderUnit.selected.item', function () {
+                this.setHeaderBar(false);
+            }.bind(this));
+            this.sandbox.on('husky.select.contentUnit.selected.item', function () {
+                this.setHeaderBar(false);
+            }.bind(this));
         }
     };
 });

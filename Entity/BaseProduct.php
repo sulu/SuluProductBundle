@@ -162,12 +162,12 @@ abstract class BaseProduct implements ProductInterface
     private $orderContentRatio;
 
     /**
-     * @var \Sulu\Bundle\ProductBundle\Entity\Unit
+     * @var Unit
      */
     private $contentUnit;
 
     /**
-     * @var \Sulu\Bundle\ProductBundle\Entity\Unit
+     * @var Unit
      */
     private $orderUnit;
 
@@ -855,10 +855,10 @@ abstract class BaseProduct implements ProductInterface
     /**
      * Set contentUnit
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\Unit $contentUnit
+     * @param Unit $contentUnit
      * @return BaseProduct
      */
-    public function setContentUnit(\Sulu\Bundle\ProductBundle\Entity\Unit $contentUnit = null)
+    public function setContentUnit(Unit $contentUnit = null)
     {
         $this->contentUnit = $contentUnit;
 
@@ -868,7 +868,7 @@ abstract class BaseProduct implements ProductInterface
     /**
      * Get contentUnit
      *
-     * @return \Sulu\Bundle\ProductBundle\Entity\Unit 
+     * @return Unit
      */
     public function getContentUnit()
     {
@@ -878,10 +878,10 @@ abstract class BaseProduct implements ProductInterface
     /**
      * Set orderUnit
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\Unit $orderUnit
+     * @param Unit $orderUnit
      * @return BaseProduct
      */
-    public function setOrderUnit(\Sulu\Bundle\ProductBundle\Entity\Unit $orderUnit = null)
+    public function setOrderUnit(Unit $orderUnit = null)
     {
         $this->orderUnit = $orderUnit;
 
@@ -891,7 +891,7 @@ abstract class BaseProduct implements ProductInterface
     /**
      * Get orderUnit
      *
-     * @return \Sulu\Bundle\ProductBundle\Entity\Unit 
+     * @return Unit
      */
     public function getOrderUnit()
     {

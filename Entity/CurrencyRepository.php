@@ -19,7 +19,8 @@ class CurrencyRepository extends EntityRepository
      * Find a currency by it's id
      *
      * @param mixed $id
-     */
+    * @return mixed|null
+    */
     public function findById($id)
     {
         try {
@@ -37,6 +38,7 @@ class CurrencyRepository extends EntityRepository
      * Find a currency by it's code
      *
      * @param string $code
+     * @return mixed|null
      */
     public function findByCode($code)
     {

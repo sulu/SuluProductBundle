@@ -170,6 +170,18 @@
                 <source>product.currency.number</source>
                 <target>Number</target>
             </trans-unit>
+            <trans-unit id="44" resname="product.orderUnit">
+                <source>product.orderUnit</source>
+                <target>Order unit</target>
+            </trans-unit>
+            <trans-unit id="45" resname="product.contentUnit">
+                <source>product.contentUnit</source>
+                <target>Content unit</target>
+            </trans-unit>
+            <trans-unit id="46" resname="product.recommendedOrderQuantity">
+                <source>product.recommendedOrderQuantity</source>
+                <target>Amount content unit</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>

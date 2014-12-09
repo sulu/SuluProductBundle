@@ -29,7 +29,8 @@ use Sulu\Bundle\ProductBundle\Entity\Status as StatusEntity;
 use Sulu\Bundle\ProductBundle\Entity\Type as TypeEntity;
 use Sulu\Bundle\ProductBundle\Entity\TaxClass as TaxClassEntity;
 use Hateoas\Configuration\Annotation\Relation;
-use Sulu\Bundle\ProductBundle\Entity\Unit;
+use Sulu\Bundle\ProductBundle\Api\Unit;
+use Sulu\Bundle\ProductBundle\Entity\Unit as UnitEntity;
 
 /**
  * The product class which will be exported to the API
@@ -455,14 +456,20 @@ class Product extends ApiWrapper
      */
     public function getOrderUnit()
     {
-        return new Unit($this->entity->getOrderUnit(), $this->locale);
+        $unit = $this->entity->getOrderUnit();
+        if (!is_null($unit)) {
+            return new Unit($unit, $this->locale);
+        }
+
+        return null;
     }
 
     /**
      * Sets the order unit of the product
-     * @param Unit $unit
+     *
+     * @param UnitEntity $unit
      */
-    public function setOrderUnit(Unit $unit = null)
+    public function setOrderUnit(UnitEntity $unit = null)
     {
         $this->entity->setOrderUnit($unit);
     }
@@ -475,14 +482,20 @@ class Product extends ApiWrapper
      */
     public function getContentUnit()
     {
-        return new Unit($this->entity->getContentUnit(), $this->locale);
+        $unit = $this->entity->getContentUnit();
+        if (!is_null($unit)) {
+            return new Unit($unit, $this->locale);
+        }
+
+        return null;
     }
 
     /**
      * Sets the order contentUnit of the product
-     * @param Unit $unit
+     *
+     * @param UnitEntity $unit
      */
-    public function setContentUnit(Unit $unit = null)
+    public function setContentUnit(UnitEntity $unit = null)
     {
         $this->entity->setContentUnit($unit);
     }

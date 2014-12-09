@@ -28,6 +28,7 @@ use Sulu\Bundle\ProductBundle\Entity\TaxClass;
 use Sulu\Bundle\ProductBundle\Entity\TaxClassRepository;
 use Sulu\Bundle\ProductBundle\Entity\Type;
 use Sulu\Bundle\ProductBundle\Entity\TypeRepository;
+use Sulu\Bundle\ProductBundle\Entity\Unit;
 use Sulu\Bundle\ProductBundle\Product\Exception\MissingProductAttributeException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductChildrenExistException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductDependencyNotFoundException;
@@ -541,9 +542,32 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
+     * Finds all elements with one of the ids
+     * @param string $locale
+     * @param string $ids
+     * @return \Sulu\Bundle\ProductBundle\Api\Product[]
+     */
+    public function findAllByIdsAndLocale($locale, $ids = '')
+    {
+        $products = $this->productRepository->findByLocaleAndIds($locale, explode(',', $ids));
+
+        if ($products) {
+            array_walk(
+                $products,
+                function (&$product) use ($locale) {
+                    $product = new Product($product, $locale);
+                }
+            );
+        }
+
+        return $products;
+    }
+
+    /**
      * Returns all simple products in the given locale for the given number
+     *
      * @param string $locale The locale of the product to load
-     * @param string $number The number of the product to load
+     * @param $internalItemNumber
      * @return ProductInterface[]
      */
     public function findByLocaleAndInternalItemNumber($locale, $internalItemNumber)
@@ -626,13 +650,17 @@ class ProductManager implements ProductManagerInterface
                 $product->getMinimumOrderQuantity()
             )
         );
-        $product->setRecommendedOrderQuantity(
-            $this->getProperty(
+
+        if(isset($data['recommendedOrderQuantity']) && is_numeric($data['recommendedOrderQuantity'])) {
+            $value = $this->getProperty(
                 $data,
                 'recommendedOrderQuantity',
                 $product->getRecommendedOrderQuantity()
-            )
-        );
+            );
+
+            $product->setRecommendedOrderQuantity(floatval($value));
+        }
+
         $product->setOrderContentRatio(
             $this->getProperty(
                 $data,
@@ -730,6 +758,10 @@ class ProductManager implements ProductManagerInterface
             if (!$orderUnit) {
                 throw new ProductDependencyNotFoundException(self::$unitEntityName, $orderUnitId);
             }
+            $product->setOrderUnit($orderUnit);
+        } else {
+            // Default Unit
+            $orderUnit = $this->unitRepository->find(Unit::PIECE_ID);
             $product->setOrderUnit($orderUnit);
         }
 
@@ -858,8 +890,10 @@ class ProductManager implements ProductManagerInterface
 
     /**
      * Updates the given price with the values from the given array
+     *
      * @param ProductPrice $price
      * @param array $matchedEntry
+     * @throws Exception\ProductDependencyNotFoundException
      * @return bool
      */
     protected function updatePrice(ProductPrice $price, $matchedEntry)

@@ -9,6 +9,9 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class Unit
 {
+    // The id for the unit type PIECE which is the default type.
+    const PIECE_ID = 1;
+
     /**
      * @var integer
      */
@@ -36,6 +39,7 @@ class Unit
     /**
      * Set id
      *
+     * @param $id
      * @return Unit
      */
     public function setId($id)
@@ -157,5 +161,25 @@ class Unit
     public function getMappings()
     {
         return $this->mappings;
+    }
+
+    /**
+     * Returns the translation for the given locale
+     *
+     * @param string $locale
+     * @return UnitTranslation
+     */
+    public function getTranslation($locale)
+    {
+        $translation = null;
+        /** @var UnitTranslation $translationData */
+        foreach ($this->translations as $translationData) {
+            if ($translationData->getLocale() == $locale) {
+                $translation = $translationData;
+                break;
+            }
+        }
+
+        return $translation;
     }
 }
