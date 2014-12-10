@@ -15,6 +15,7 @@ use FOS\RestBundle\Controller\Annotations\Get;
 
 use Hateoas\Representation\CollectionRepresentation;
 
+use Sulu\Component\Security\SecuredControllerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 use Sulu\Component\Rest\RestController;
@@ -29,7 +30,7 @@ use Sulu\Bundle\ProductBundle\Product\Exception\AttributeNotFoundException;
  * Makes product attributes available through a REST API
  * @package Sulu\Bundle\ProductBundle\Controller
  */
-class AttributeController extends RestController implements ClassResourceInterface
+class AttributeController extends RestController implements ClassResourceInterface, SecuredControllerInterface
 {
     protected static $entityName = 'SuluProductBundle:Attribute';
 

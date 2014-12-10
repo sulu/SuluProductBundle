@@ -17,7 +17,6 @@ use Sulu\Bundle\SecurityBundle\Permission\SecurityCheckerInterface;
 
 class SuluProductAdmin extends Admin
 {
-
     /**
      * @var SecurityCheckerInterface
      */
