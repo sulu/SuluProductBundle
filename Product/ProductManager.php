@@ -17,6 +17,7 @@ use Sulu\Bundle\CategoryBundle\Entity\CategoryRepository;
 use Sulu\Bundle\ProductBundle\Api\Product;
 use Sulu\Bundle\ProductBundle\Api\ProductPrice;
 use Sulu\Bundle\ProductBundle\Api\Status;
+use Sulu\Bundle\ProductBundle\Entity\Status as StatusEntity;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSetRepository;
 use Sulu\Bundle\ProductBundle\Entity\CurrencyRepository;
 use Sulu\Bundle\ProductBundle\Entity\Product as ProductEntity;
@@ -631,13 +632,16 @@ class ProductManager implements ProductManagerInterface
         $skipChanged = false,
         $supplierId = null
     ) {
+        $this->checkData($data, $id === null);
+
         if ($id) {
+            // Update an extisting product
             $product = $this->fetchProduct($id, $locale);
+            $product = $this->getDeprecatedProduct($product, $data['status']['id'], $locale);
+
         } else {
             $product = new Product(new ProductEntity(), $locale);
         }
-
-        $this->checkData($data, $id === null);
 
         $user = $this->userRepository->findUserById($userId);
 
@@ -651,7 +655,7 @@ class ProductManager implements ProductManagerInterface
             )
         );
 
-        if(isset($data['recommendedOrderQuantity']) && is_numeric($data['recommendedOrderQuantity'])) {
+        if (isset($data['recommendedOrderQuantity']) && is_numeric($data['recommendedOrderQuantity'])) {
             $value = $this->getProperty(
                 $data,
                 'recommendedOrderQuantity',
@@ -819,18 +823,23 @@ class ProductManager implements ProductManagerInterface
         }
 
         if (array_key_exists('prices', $data)) {
-            $compare = function (ProductPrice $price, $data) {
-                if (isset($data['id'])) {
-                    return $data['id'] == $price->getId();
-                } else {
-                    $currencyNotChanged = isset($data['currency']) && array_key_exists('name', $data['currency']) &&
-                        $data['currency']['name'] == $price->getCurrency()->getName();
-                    $valueNotChanged = array_key_exists('price', $data) && $data['price'] == $price->getPrice();
-                    $minimumQuantityNotChanged = array_key_exists('minimumQuantity', $data) &&
-                        $data['minimumQuantity'] == $price->getEntity()->getMinimumQuantity();
-                    return $currencyNotChanged && $valueNotChanged && $minimumQuantityNotChanged;
-                }
-            };
+            if ($product->getId() == $data['id']) {
+                $compare = function (ProductPrice $price, $data) {
+                    if (isset($data['id'])) {
+                        return $data['id'] == $price->getId();
+                    } else {
+                        return $this->priceHasChanged($data, $price);
+                    }
+                };
+            } else {
+                $compare = function (ProductPrice $price, $data) {
+                    if (isset($data['id'])) {
+                        return true;
+                    } else {
+                        return $this->priceHasChanged($data, $price);
+                    }
+                };
+            }
 
             $add = function ($priceData) use ($product) {
                 return $this->addPrice($product->getEntity(), $priceData);
@@ -870,6 +879,37 @@ class ProductManager implements ProductManagerInterface
         }
 
         return $product;
+    }
+
+    private function priceHasChanged($data, $price)
+    {
+        $currencyNotChanged = isset($data['currency']) && array_key_exists('name', $data['currency']) &&
+            $data['currency']['name'] == $price->getCurrency()->getName();
+        $valueNotChanged = array_key_exists('price', $data) && $data['price'] == $price->getPrice();
+        $minimumQuantityNotChanged = array_key_exists('minimumQuantity', $data) &&
+            $data['minimumQuantity'] == $price->getEntity()->getMinimumQuantity();
+        return $currencyNotChanged && $valueNotChanged && $minimumQuantityNotChanged;
+    }
+
+    private function getDeprecatedProduct($existingProduct, $statusId, $locale)
+    {
+        $result = $existingProduct;
+        if ($statusId == StatusEntity::PUBLISHED && $existingProduct->getStatus()->getId() != $statusId) {
+            // Check if the same product already exists in PUBLISHED state
+            $products = $this->productRepository->findByLocaleAndInternalItemNumber(
+                $locale,
+                $existingProduct->getInternalItemNumber()
+            );
+            foreach ($products as $product) {
+                if ($product->isDeprecated() && $existingProduct->getId() != $product->getId()) {
+                    $product->setIsDeprecated(false);
+                    $result = new Product($product, $locale);
+                } else {
+                    $this->em->remove($product);
+                }
+            }
+        }
+        return $result;
     }
 
     /**
