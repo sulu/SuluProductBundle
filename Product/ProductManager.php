@@ -46,6 +46,7 @@ use Sulu\Bundle\ProductBundle\Entity\AttributeRepository;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttributeRepository;
 use Sulu\Bundle\ProductBundle\Entity\UnitRepository;
 use Sulu\Bundle\MediaBundle\Media\Manager\DefaultMediaManager;
+use Symfony\Component\PropertyAccess\PropertyAccess;
 
 class ProductManager implements ProductManagerInterface
 {
@@ -634,10 +635,12 @@ class ProductManager implements ProductManagerInterface
     ) {
         $this->checkData($data, $id === null);
 
+        $deprecatedProduct = null;
+
         if ($id) {
             // Update an extisting product
             $product = $this->fetchProduct($id, $locale);
-            $product = $this->getDeprecatedProduct($product, $data['status']['id'], $locale);
+            $deprecatedProduct = $this->getDeprecatedProduct($product, $data['status']['id'], $locale);
 
         } else {
             $product = new Product(new ProductEntity(), $locale);
@@ -833,11 +836,7 @@ class ProductManager implements ProductManagerInterface
                 };
             } else {
                 $compare = function (ProductPrice $price, $data) {
-                    if (isset($data['id'])) {
-                        return true;
-                    } else {
-                        return $this->priceHasChanged($data, $price);
-                    }
+                    return $this->priceHasChanged($data, $price);
                 };
             }
 
@@ -874,6 +873,55 @@ class ProductManager implements ProductManagerInterface
             $this->em->persist($product->getEntity());
         }
 
+        if ($deprecatedProduct) {
+            $deprecatedProductEntity = $deprecatedProduct->getEntity();
+            $productEntity = $product->getEntity();
+
+            // Move prices
+            foreach ($deprecatedProductEntity->getPrices() as $data) {
+                $this->em->remove($data);
+            }
+            foreach ($productEntity->getPrices() as $data) {
+                $data->setProduct($deprecatedProductEntity);
+            }
+
+            // Move productAttributes
+            foreach ($deprecatedProductEntity->getProductAttributes() as $data) {
+                $this->em->remove($data);
+            }
+            foreach ($productEntity->getProductAttributes() as $data) {
+                $data->setProduct($deprecatedProductEntity);
+            }
+
+            // Move translations
+            foreach ($deprecatedProductEntity->getTranslations() as $data) {
+                $this->em->remove($data);
+            }
+            foreach ($productEntity->getTranslations() as $data) {
+                $data->setProduct($deprecatedProductEntity);
+            }
+
+            // Move addons
+            foreach ($deprecatedProductEntity->getAddons() as $data) {
+                $this->em->remove($data);
+            }
+            foreach ($productEntity->getAddons() as $data) {
+                $data->setProduct($deprecatedProductEntity);
+            }
+
+            // Move children
+            foreach ($deprecatedProductEntity->getChildren() as $data) {
+                $this->em->remove($data);
+            }
+            foreach ($productEntity->getChildren() as $data) {
+                $data->setParent($deprecatedProductEntity);
+            }
+
+            $deprecatedProductEntity->setNumber($productEntity->getNumber());
+
+            $product = $deprecatedProduct;
+        }
+
         if ($flush) {
             $this->em->flush();
         }
@@ -893,7 +941,6 @@ class ProductManager implements ProductManagerInterface
 
     private function getDeprecatedProduct($existingProduct, $statusId, $locale)
     {
-        $result = $existingProduct;
         if ($statusId == StatusEntity::PUBLISHED && $existingProduct->getStatus()->getId() != $statusId) {
             // Check if the same product already exists in PUBLISHED state
             $products = $this->productRepository->findByLocaleAndInternalItemNumber(
@@ -903,13 +950,11 @@ class ProductManager implements ProductManagerInterface
             foreach ($products as $product) {
                 if ($product->isDeprecated() && $existingProduct->getId() != $product->getId()) {
                     $product->setIsDeprecated(false);
-                    $result = new Product($product, $locale);
-                } else {
-                    $this->em->remove($product);
+                    return new Product($product, $locale);
                 }
             }
         }
-        return $result;
+        return null;
     }
 
     /**
