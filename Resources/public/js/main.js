@@ -31,7 +31,6 @@ define(['config'], function(Config) {
                 getParameter: 'search',
                 value: '',
                 instanceName: 'products',
-                valueKey: 'name',
                 noNewValues: true,
                 fields: [
                     {
