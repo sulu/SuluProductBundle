@@ -13,26 +13,39 @@ namespace Sulu\Bundle\ProductBundle\Admin;
 use Sulu\Bundle\AdminBundle\Admin\Admin;
 use Sulu\Bundle\AdminBundle\Navigation\Navigation;
 use Sulu\Bundle\AdminBundle\Navigation\NavigationItem;
+use Sulu\Bundle\SecurityBundle\Permission\SecurityCheckerInterface;
 
 class SuluProductAdmin extends Admin
 {
 
-    public function __construct($title)
+    /**
+     * @var SecurityCheckerInterface
+     */
+    private $securityChecker;
+
+    public function __construct(SecurityCheckerInterface $securityChecker, $title)
     {
+        $this->securityChecker = $securityChecker;
         $rootNavigationItem = new NavigationItem($title);
         $section = new NavigationItem('');
 
         $pim = new NavigationItem('navigation.pim');
         $pim->setIcon('asterisk');
 
-        $products = new NavigationItem('navigation.pim.products', $pim);
-        $products->setAction('pim/products');
+        if ($this->securityChecker->hasPermission('sulu.product.products', 'view')) {
+            $products = new NavigationItem('navigation.pim.products', $pim);
+            $products->setAction('pim/products');
+        }
 
-        $attributes = new NavigationItem('navigation.pim.attributes', $pim);
-        $attributes->setAction('pim/attributes');
+        if ($this->securityChecker->hasPermission('sulu.product.attributes', 'view')) {
+            $attributes = new NavigationItem('navigation.pim.attributes', $pim);
+            $attributes->setAction('pim/attributes');
+        }
 
-        $section->addChild($pim);
-        $rootNavigationItem->addChild($section);
+        if ($pim->hasChildren()) {
+            $section->addChild($pim);
+            $rootNavigationItem->addChild($section);
+        }
 
         $this->setNavigation(new Navigation($rootNavigationItem));
     }
@@ -51,5 +64,17 @@ class SuluProductAdmin extends Admin
     public function getJsBundleName()
     {
         return 'suluproduct';
+    }
+
+    public function getSecurityContexts()
+    {
+        return array(
+            'Sulu' => array(
+                'Product' => array(
+                    'sulu.product.attributes',
+                    'sulu.product.products',
+                )
+            )
+        );
     }
 }

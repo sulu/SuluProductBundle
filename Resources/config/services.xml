@@ -27,6 +27,8 @@
     <services>
         <service id="sulu_product.admin" class="%sulu_product.admin.class%">
             <tag name="sulu.admin"/>
+            <tag name="sulu.context" context="admin"/>
+            <argument type="service" id="sulu_security.security_checker"/>
             <argument>%sulu_admin.name%</argument>
         </service>
         <service id="sulu_product.product_repository" class="%sulu_product.product_repository.class%"

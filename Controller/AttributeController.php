@@ -205,4 +205,12 @@ class AttributeController extends RestController implements ClassResourceInterfa
         }
         return $this->handleView($view);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getSecurityContext()
+    {
+        return 'sulu.product.attributes';
+    }
 }
