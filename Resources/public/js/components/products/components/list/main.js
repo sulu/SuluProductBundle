@@ -109,6 +109,8 @@ define(function () {
                     el: this.sandbox.dom.find('#products-list', this.$el),
                     url: '/admin/api/products?flat=true',
                     resultKey: 'products',
+                    searchInstanceName: 'productsToolbar',
+                    searchFields: ['name','number'],
                     viewOptions: {
                         table: {
                             fullWidth: true
