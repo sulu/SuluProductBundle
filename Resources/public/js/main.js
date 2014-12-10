@@ -26,11 +26,12 @@ define(['config'], function(Config) {
             var sandbox = app.sandbox;
 
             Config.set('suluproduct.components.autocomplete.default', {
-                remoteUrl: '/admin/api/products?flat=true&searchFields=number,name&fields=id,name,number,manufacturer',
+                remoteUrl: '/admin/api/products?flat=true&searchFields=number,name&fields=id,name,number,manufacturer,supplier',
                 resultKey: 'products',
                 getParameter: 'search',
                 value: '',
                 instanceName: 'products',
+                valueKey: 'name',
                 noNewValues: true,
                 fields: [
                     {
@@ -42,7 +43,12 @@ define(['config'], function(Config) {
                         width: '150px'
                     },
                     {
-                        id: 'manufacturer'
+                        id: 'manufacturer',
+                        width: '150px'
+                    },
+                    {
+                        id: 'supplier',
+                        width: '150px'
                     }
                 ]
             });
