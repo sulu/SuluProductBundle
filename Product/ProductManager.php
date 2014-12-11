@@ -635,12 +635,12 @@ class ProductManager implements ProductManagerInterface
     ) {
         $this->checkData($data, $id === null);
 
-        $deprecatedProduct = null;
+        $publishedProduct = null;
 
         if ($id) {
             // Update an extisting product
             $product = $this->fetchProduct($id, $locale);
-            $deprecatedProduct = $this->getDeprecatedProduct($product, $data['status']['id'], $locale);
+            $publishedProduct = $this->getExistingPublishedProduct($product, $data['status']['id'], $locale);
 
         } else {
             $product = new Product(new ProductEntity(), $locale);
@@ -873,53 +873,10 @@ class ProductManager implements ProductManagerInterface
             $this->em->persist($product->getEntity());
         }
 
-        if ($deprecatedProduct) {
-            $deprecatedProductEntity = $deprecatedProduct->getEntity();
-            $productEntity = $product->getEntity();
-
-            // Move prices
-            foreach ($deprecatedProductEntity->getPrices() as $data) {
-                $this->em->remove($data);
-            }
-            foreach ($productEntity->getPrices() as $data) {
-                $data->setProduct($deprecatedProductEntity);
-            }
-
-            // Move productAttributes
-            foreach ($deprecatedProductEntity->getProductAttributes() as $data) {
-                $this->em->remove($data);
-            }
-            foreach ($productEntity->getProductAttributes() as $data) {
-                $data->setProduct($deprecatedProductEntity);
-            }
-
-            // Move translations
-            foreach ($deprecatedProductEntity->getTranslations() as $data) {
-                $this->em->remove($data);
-            }
-            foreach ($productEntity->getTranslations() as $data) {
-                $data->setProduct($deprecatedProductEntity);
-            }
-
-            // Move addons
-            foreach ($deprecatedProductEntity->getAddons() as $data) {
-                $this->em->remove($data);
-            }
-            foreach ($productEntity->getAddons() as $data) {
-                $data->setProduct($deprecatedProductEntity);
-            }
-
-            // Move children
-            foreach ($deprecatedProductEntity->getChildren() as $data) {
-                $this->em->remove($data);
-            }
-            foreach ($productEntity->getChildren() as $data) {
-                $data->setParent($deprecatedProductEntity);
-            }
-
-            $deprecatedProductEntity->setNumber($productEntity->getNumber());
-
-            $product = $deprecatedProduct;
+        if ($publishedProduct) {
+            // Since there is already a published product with the same internal id we are going to update the
+            // existing one with the properties of the current product.
+            $product = $this->convertProduct($product, $publishedProduct);
         }
 
         if ($flush) {
@@ -929,7 +886,63 @@ class ProductManager implements ProductManagerInterface
         return $product;
     }
 
-    private function priceHasChanged($data, $price)
+    /**
+     * Moves all properties from 
+     *
+     * @param Product $product
+     * @param Product $publishedProduct
+     */
+    private function convertProduct($product, $publishedProduct)
+    {
+        $publishedProductEntity = $publishedProduct->getEntity();
+        $productEntity = $product->getEntity();
+
+        // Move prices
+        foreach ($publishedProductEntity->getPrices() as $data) {
+            $this->em->remove($data);
+        }
+        foreach ($productEntity->getPrices() as $data) {
+            $data->setProduct($publishedProductEntity);
+        }
+
+        // Move productAttributes
+        foreach ($publishedProductEntity->getProductAttributes() as $data) {
+            $this->em->remove($data);
+        }
+        foreach ($productEntity->getProductAttributes() as $data) {
+            $data->setProduct($publishedProductEntity);
+        }
+
+        // Move translations
+        foreach ($publishedProductEntity->getTranslations() as $data) {
+            $this->em->remove($data);
+        }
+        foreach ($productEntity->getTranslations() as $data) {
+            $data->setProduct($publishedProductEntity);
+        }
+
+        // Move addons
+        foreach ($publishedProductEntity->getAddons() as $data) {
+            $this->em->remove($data);
+        }
+        foreach ($productEntity->getAddons() as $data) {
+            $data->setProduct($publishedProductEntity);
+        }
+
+        // Move children
+        foreach ($publishedProductEntity->getChildren() as $data) {
+            $this->em->remove($data);
+        }
+        foreach ($productEntity->getChildren() as $data) {
+            $data->setParent($publishedProductEntity);
+        }
+
+        $publishedProductEntity->setNumber($productEntity->getNumber());
+
+        return $publishedProduct;
+    }
+
+    private function checkForPriceChange($data, $price)
     {
         $currencyNotChanged = isset($data['currency']) && array_key_exists('name', $data['currency']) &&
             $data['currency']['name'] == $price->getCurrency()->getName();
@@ -939,7 +952,15 @@ class ProductManager implements ProductManagerInterface
         return $currencyNotChanged && $valueNotChanged && $minimumQuantityNotChanged;
     }
 
-    private function getDeprecatedProduct($existingProduct, $statusId, $locale)
+    /**
+     * Checks if a product with the same internal product id as the given product exists in published state and
+     * returns it.
+     *
+     * @param Product $existingProduct
+     * @param int $statusId
+     * @param string $locale
+     */
+    private function getExistingPublishedProduct($existingProduct, $statusId, $locale)
     {
         if ($statusId == StatusEntity::PUBLISHED && $existingProduct->getStatus()->getId() != $statusId) {
             // Check if the same product already exists in PUBLISHED state
