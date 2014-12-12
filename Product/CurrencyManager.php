@@ -51,6 +51,20 @@ class CurrencyManager
     }
 
     /**
+     * @param $locale
+     * @param $code
+     * @return Currency
+     */
+    public function findByCode($locale, $code)
+    {
+        $currency = $this->currencyRepository->findByCode($code);
+        if (!$currency) {
+            return null;
+        }
+        return new Currency($currency, $locale);
+    }
+
+    /**
      * Finds a currency by id and locale
      *
      * @param $id
@@ -60,7 +74,6 @@ class CurrencyManager
     public function findById($id, $locale)
     {
         $currency = $this->currencyRepository->findById($id);
-
         return new Currency($currency, $locale);
     }
 } 
