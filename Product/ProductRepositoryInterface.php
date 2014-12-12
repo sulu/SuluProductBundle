@@ -47,4 +47,13 @@ interface ProductRepositoryInterface
      * @return ProductInterface[]
      */
     public function findByLocaleAndFilter($locale, array $filter);
+
+    /**
+     * Returns all products with the given locale and ids
+     * @param string $locale The locale to load
+     * @param array $ids
+     * @return ProductInterface[]
+     */
+    public function findByLocaleAndIds($locale, array $ids);
+
 } 

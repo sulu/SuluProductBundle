@@ -26,10 +26,11 @@ use Sulu\Component\Rest\ListBuilder\Doctrine\DoctrineListBuilderFactory;
 use Sulu\Component\Rest\ListBuilder\ListRepresentation;
 use Sulu\Component\Rest\RestController;
 use Sulu\Component\Rest\RestHelperInterface;
+use Sulu\Component\Security\SecuredControllerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use FOS\RestBundle\Controller\Annotations\Get;
 
-class ProductController extends RestController implements ClassResourceInterface
+class ProductController extends RestController implements ClassResourceInterface, SecuredControllerInterface
 {
     protected static $entityName = 'SuluProductBundle:Product';
 
@@ -193,6 +194,11 @@ class ProductController extends RestController implements ClassResourceInterface
                 $listBuilder->getLimit(),
                 $listBuilder->count()
             );
+        } else if ($request->get('ids') !== '') {
+            $list = new CollectionRepresentation(
+                $this->getManager()->findAllByIdsAndLocale($this->getLocale($request), $request->get('ids')),
+                self::$entityKey
+            );
         } else {
             $list = new CollectionRepresentation(
                 $this->getManager()->findAllByLocale($this->getLocale($request), $filter),
@@ -287,5 +293,13 @@ class ProductController extends RestController implements ClassResourceInterface
         $view = $this->responseDelete($id, $delete);
 
         return $this->handleView($view);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getSecurityContext()
+    {
+        return 'sulu.product.products';
     }
 }

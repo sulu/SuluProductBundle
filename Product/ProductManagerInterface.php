@@ -43,6 +43,14 @@ interface ProductManagerInterface
     public function findAllByLocale($locale, $filter = array());
 
     /**
+     * Returns all products in the given locale and one of the ids
+    * @param string $locale
+    * @param array $ids
+    * @return Product[]
+    */
+    public function findAllByIdsAndLocale($locale, $ids);
+
+    /**
      * Saves the given product
      * @param array $data The data for the product to save
      * @param string $locale The locale in which the product should be saved

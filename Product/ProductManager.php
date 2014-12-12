@@ -542,6 +542,28 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
+     * Finds all elements with one of the ids
+     * @param string $locale
+     * @param string $ids
+     * @return \Sulu\Bundle\ProductBundle\Api\Product[]
+     */
+    public function findAllByIdsAndLocale($locale, $ids = '')
+    {
+        $products = $this->productRepository->findByLocaleAndIds($locale, explode(',', $ids));
+
+        if ($products) {
+            array_walk(
+                $products,
+                function (&$product) use ($locale) {
+                    $product = new Product($product, $locale);
+                }
+            );
+        }
+
+        return $products;
+    }
+
+    /**
      * Returns all simple products in the given locale for the given number
      *
      * @param string $locale The locale of the product to load
