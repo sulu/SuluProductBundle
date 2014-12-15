@@ -32,11 +32,6 @@ abstract class BaseProduct implements ProductInterface
     private $isDeprecated = false;
 
     /**
-     * @var isArchived
-     */
-    private $isArchived = false;
-
-    /**
      * @var string
      */
     private $manufacturer;
@@ -273,29 +268,6 @@ abstract class BaseProduct implements ProductInterface
     public function isDeprecated()
     {
         return $this->isDeprecated;
-    }
-
-    /**
-     * Set isArchived
-     *
-     * @param boolean $isArchived
-     * @return BaseProduct
-     */
-    public function setIsArchived($isArchived)
-    {
-        $this->isArchived = $isArchived;
-
-        return $this;
-    }
-
-    /**
-     * Get isArchived
-     *
-     * @return boolean
-     */
-    public function isArchived()
-    {
-        return $this->isArchived;
     }
 
     /**

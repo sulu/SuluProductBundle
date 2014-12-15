@@ -887,7 +887,7 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Moves all properties from 
+     * Copy all properties from a entity to a 'deprecated' entity.
      *
      * @param Product $product
      * @param Product $publishedProduct
@@ -929,6 +929,78 @@ class ProductManager implements ProductManagerInterface
             $data->setProduct($publishedProductEntity);
         }
 
+        // Move sets
+        foreach ($publishedProductEntity->getSets() as $data) {
+            $this->em->remove($data);
+        }
+        foreach ($productEntity->getSets() as $data) {
+            $data->setProduct($publishedProductEntity);
+        }
+
+        // Move relation
+        foreach ($publishedProductEntity->getRelations() as $data) {
+            $this->em->remove($data);
+        }
+        foreach ($productEntity->getRelations() as $data) {
+            $data->setProduct($publishedProductEntity);
+        }
+
+        // Move upsell
+        foreach ($publishedProductEntity->getUpsells() as $data) {
+            $this->em->remove($data);
+        }
+        foreach ($productEntity->getUpsells() as $data) {
+            $data->setProduct($publishedProductEntity);
+        }
+
+        // Move crossells
+        foreach ($publishedProductEntity->getCrosssells() as $data) {
+            $this->em->remove($data);
+        }
+        foreach ($productEntity->getCrosssells() as $data) {
+            $data->setProduct($publishedProductEntity);
+        }
+
+        // Move categories
+        foreach ($publishedProductEntity->getCategories() as $data) {
+            $this->em->remove($data);
+        }
+        foreach ($productEntity->getCategories() as $data) {
+            $data->setProduct($publishedProductEntity);
+        }
+
+        // Move media
+        foreach ($publishedProductEntity->getMedia() as $data) {
+            $this->em->remove($data);
+        }
+        foreach ($productEntity->getMedia() as $data) {
+            $data->setProduct($publishedProductEntity);
+        }
+
+        $publishedProductEntity->setNumber($productEntity->getNumber());
+        $publishedProductEntity->setGlobalTradeItemNumber($productEntity->getGlobalTradeItemNumber());
+        $publishedProductEntity->setInternalItemNumber($productEntity->getInternalItemNumber());
+        $publishedProductEntity->setManufacturer($productEntity->getManufacturer());
+        $publishedProductEntity->setCost($productEntity->getCost());
+        $publishedProductEntity->setPriceInfo($productEntity->getPriceInfo());
+        $publishedProductEntity->setCreated($productEntity->getCreated());
+        $publishedProductEntity->setChanged($productEntity->getChanged());
+        $publishedProductEntity->setManufacturerCountry($productEntity->getManufacturerCountry());
+        $publishedProductEntity->setType($productEntity->getType());
+        // $publishedProductEntity->setAttributeSet($productEntity->getAttributeSet());
+        $publishedProductEntity->setStatus($productEntity->getStatus());
+        $publishedProductEntity->setDeliveryStatus($productEntity->getDeliveryStatus());
+        $publishedProductEntity->setSupplier($productEntity->getSupplier());
+        $publishedProductEntity->setParent($productEntity->getParent());
+        $publishedProductEntity->setContentUnit($productEntity->getContentUnit());
+        $publishedProductEntity->setOrderUnit($productEntity->getOrderUnit());
+        $publishedProductEntity->setOrderContentRatio($productEntity->getOrderContentRatio());
+        $publishedProductEntity->setMinimumOrderQuantity($productEntity->getMinimumOrderQuantity());
+        $publishedProductEntity->setRecommendedOrderQuantity($productEntity->getRecommendedOrderQuantity());
+        $publishedProductEntity->setChanger($productEntity->getChanger());
+        $publishedProductEntity->setCreator($productEntity->getCreator());
+        $publishedProductEntity->setTaxClass($productEntity->getTaxClass());
+
         // Move children
         foreach ($publishedProductEntity->getChildren() as $data) {
             $this->em->remove($data);
@@ -937,7 +1009,7 @@ class ProductManager implements ProductManagerInterface
             $data->setParent($publishedProductEntity);
         }
 
-        $publishedProductEntity->setNumber($productEntity->getNumber());
+        $this->em->remove($productEntity);
 
         return $publishedProduct;
     }

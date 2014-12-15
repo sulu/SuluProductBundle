@@ -106,26 +106,6 @@ class Product extends ApiWrapper
     }
 
     /**
-     * Returns the archived state of a product
-     * @return boolean
-     * @VirtualProperty
-     * @SerializedName("isArchived")
-     */
-    public function isArchived()
-    {
-        return $this->entity->isArchived();
-    }
-
-    /**
-     * Sets the archived state of the product
-     * @param boolean $isArchived
-     */
-    public function setIsArchived($isArchived)
-    {
-        $this->entity->setIsArchived($isArchived);
-    }
-
-    /**
      * Set minimumOrderQuantity
      *
      * @param float $minimumOrderQuantity
