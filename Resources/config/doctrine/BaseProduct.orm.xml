@@ -15,7 +15,11 @@
         <field name="priceInfo" type="text" nullable="true"/>
         <field name="created" type="datetime" nullable="true"/>
         <field name="changed" type="datetime" nullable="true"/>
-        <field name="isDeprecated" type="boolean" nullable="false"/>
+        <field name="isDeprecated" type="boolean" nullable="false">
+            <options>
+                <option name="default">0</option>
+            </options>
+        </field>
         <field name="orderContentRatio" type="float" nullable="true"/>
         <field name="minimumOrderQuantity" type="float" nullable="true"/>
         <field name="recommendedOrderQuantity" type="float" nullable="true"/>

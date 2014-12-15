@@ -17,6 +17,11 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class Status
 {
+    const NOT_SUBMITTED = 1;
+    const SUBMITTED = 2;
+    const PUBLISHED = 3;
+    const REJECTED = 4;
+
     /**
      * @var integer
      */

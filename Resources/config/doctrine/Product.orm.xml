@@ -18,7 +18,11 @@
                      field="children"/>
         <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductPrice"
                      mapped-by="product"
-                     field="prices"/>
+                     field="prices">
+            <cascade>
+                <cascade-persist/>
+            </cascade>
+        </one-to-many>
 
         <many-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface" field="setProducts"
                       mapped-by="sets"/>

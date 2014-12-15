@@ -56,7 +56,7 @@ class Product extends BaseProduct
         $this->prices = new \Doctrine\Common\Collections\ArrayCollection();
         $this->setProducts = new \Doctrine\Common\Collections\ArrayCollection();
     }
-    
+
     /**
      * Add productAttributes
      *
