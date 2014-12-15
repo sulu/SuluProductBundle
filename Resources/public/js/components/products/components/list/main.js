@@ -101,6 +101,32 @@ define(function () {
                                         callback: addProduct.bind(this, TYPE_PRODUCT_SET)
                                     }
                                 ]
+                            },
+                            {
+                                id: 'wizard',
+                                icon: 'husky-publish',
+                                position: 2,
+                                title: 'Wizard',
+                                type: 'select',
+                                disabled: true,
+                                items: [
+                                    {
+                                        id: 'publish',
+                                        title: 'Publish',
+                                        icon: 'husky-publish',
+                                        callback: function() {
+                                            console.log("publish it");
+                                        }
+                                    },
+                                    {
+                                        id: 'unpublish',
+                                        icon: 'husky-unpublish',
+                                        title: 'Unpublish',
+                                        callback: function() {
+                                            console.log("unpublish it");
+                                        }
+                                    }
+                                ]
                             }
                         ];
                     }.bind(this)
