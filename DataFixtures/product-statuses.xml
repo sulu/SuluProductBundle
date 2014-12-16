@@ -9,7 +9,7 @@
     </product-status>
     <product-status>
         <de>aktiv</de>
-        <en>aktiv</en>
+        <en>active</en>
     </product-status>
     <product-status>
         <de>abgelehnt</de>
@@ -17,6 +17,6 @@
     </product-status>
     <product-status>
         <de>inaktiv</de>
-        <en>inactiv</en>
+        <en>inactive</en>
     </product-status>
 </product-statuses>
