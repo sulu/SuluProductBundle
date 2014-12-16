@@ -26,10 +26,11 @@ use Sulu\Component\Rest\ListBuilder\Doctrine\DoctrineListBuilderFactory;
 use Sulu\Component\Rest\ListBuilder\ListRepresentation;
 use Sulu\Component\Rest\RestController;
 use Sulu\Component\Rest\RestHelperInterface;
+use Sulu\Component\Security\SecuredControllerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use FOS\RestBundle\Controller\Annotations\Get;
 
-class ProductController extends RestController implements ClassResourceInterface
+class ProductController extends RestController implements ClassResourceInterface, SecuredControllerInterface
 {
     protected static $entityName = 'SuluProductBundle:Product';
 
@@ -97,7 +98,7 @@ class ProductController extends RestController implements ClassResourceInterface
      * @param Request $request
      * @return List $filter
      */
-    private function getFilters(Request $request)
+    protected function getFilters(Request $request)
     {
         $filter = array();
 
@@ -154,46 +155,19 @@ class ProductController extends RestController implements ClassResourceInterface
         $filter = $this->getFilters($request);
 
         if ($request->get('flat') == 'true') {
+            $filterFieldDescriptors = $this->getManager()->getFilterFieldDescriptors();
             $fieldDescriptors = $this->getManager()->getFieldDescriptors(
                 $this->getLocale($request)
             );
 
-            $filterFieldDescriptors = $this->getManager()->getFilterFieldDescriptors();
-
-            /** @var RestHelperInterface $restHelper */
-            $restHelper = $this->get('sulu_core.doctrine_rest_helper');
-
-            /** @var DoctrineListBuilderFactory $factory */
-            $factory = $this->get('sulu_core.doctrine_list_builder_factory');
-
-            $listBuilder = $factory->create(self::$entityName);
-
-            $restHelper->initializeListBuilder(
-                $listBuilder,
-                $fieldDescriptors
+            $list = $this->flatResponse(
+                $request,
+                $filter,
+                $filterFieldDescriptors,
+                $fieldDescriptors,
+                self::$entityName
             );
-
-            foreach ($filter as $key => $value) {
-                if (is_array($value)) {
-                    $listBuilder->in($filterFieldDescriptors[$key], $value);
-                } else {
-                    $listBuilder->where($filterFieldDescriptors[$key], $value);
-                }
-            }
-
-            // TODO, should only be added if "categories" are requested
-            $listBuilder->addGroupBy($fieldDescriptors['id']);
-
-            $list = new ListRepresentation(
-                $listBuilder->execute(),
-                self::$entityKey,
-                'get_products',
-                $request->query->all(),
-                $listBuilder->getCurrentPage(),
-                $listBuilder->getLimit(),
-                $listBuilder->count()
-            );
-        } else if ($request->get('ids') !== '') {
+        } elseif ($request->get('ids') !== '') {
             $list = new CollectionRepresentation(
                 $this->getManager()->findAllByIdsAndLocale($this->getLocale($request), $request->get('ids')),
                 self::$entityKey
@@ -208,6 +182,52 @@ class ProductController extends RestController implements ClassResourceInterface
         $view = $this->view($list, 200);
 
         return $this->handleView($view);
+    }
+
+    /**
+     * Processes the request for a flat response
+     *
+     * @param Request $request
+     *
+     * @return list
+     */
+    protected function flatResponse($request, $filter, $filterFieldDescriptors, $fieldDescriptors, $entityName)
+    {
+        /** @var RestHelperInterface $restHelper */
+        $restHelper = $this->get('sulu_core.doctrine_rest_helper');
+
+        /** @var DoctrineListBuilderFactory $factory */
+        $factory = $this->get('sulu_core.doctrine_list_builder_factory');
+
+        $listBuilder = $factory->create($entityName);
+
+        $restHelper->initializeListBuilder(
+            $listBuilder,
+            $fieldDescriptors
+        );
+
+        foreach ($filter as $key => $value) {
+            if (is_array($value)) {
+                $listBuilder->in($filterFieldDescriptors[$key], $value);
+            } else {
+                $listBuilder->where($filterFieldDescriptors[$key], $value);
+            }
+        }
+
+        // TODO, should only be added if "categories" are requested
+        $listBuilder->addGroupBy($fieldDescriptors['id']);
+
+        $list = new ListRepresentation(
+            $listBuilder->execute(),
+            self::$entityKey,
+            'get_products',
+            $request->query->all(),
+            $listBuilder->getCurrentPage(),
+            $listBuilder->getLimit(),
+            $listBuilder->count()
+        );
+
+        return $list;
     }
 
     /**
@@ -292,5 +312,13 @@ class ProductController extends RestController implements ClassResourceInterface
         $view = $this->responseDelete($id, $delete);
 
         return $this->handleView($view);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getSecurityContext()
+    {
+        return 'sulu.product.products';
     }
 }

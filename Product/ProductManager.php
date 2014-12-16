@@ -17,6 +17,7 @@ use Sulu\Bundle\CategoryBundle\Entity\CategoryRepository;
 use Sulu\Bundle\ProductBundle\Api\Product;
 use Sulu\Bundle\ProductBundle\Api\ProductPrice;
 use Sulu\Bundle\ProductBundle\Api\Status;
+use Sulu\Bundle\ProductBundle\Entity\Status as StatusEntity;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSetRepository;
 use Sulu\Bundle\ProductBundle\Entity\CurrencyRepository;
 use Sulu\Bundle\ProductBundle\Entity\Product as ProductEntity;
@@ -45,6 +46,7 @@ use Sulu\Bundle\ProductBundle\Entity\AttributeRepository;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttributeRepository;
 use Sulu\Bundle\ProductBundle\Entity\UnitRepository;
 use Sulu\Bundle\MediaBundle\Media\Manager\DefaultMediaManager;
+use Symfony\Component\PropertyAccess\PropertyAccess;
 
 class ProductManager implements ProductManagerInterface
 {
@@ -631,13 +633,18 @@ class ProductManager implements ProductManagerInterface
         $skipChanged = false,
         $supplierId = null
     ) {
+        $this->checkData($data, $id === null);
+
+        $publishedProduct = null;
+
         if ($id) {
+            // Update an extisting product
             $product = $this->fetchProduct($id, $locale);
+            $publishedProduct = $this->getExistingPublishedProduct($product, $data['status']['id'], $locale);
+
         } else {
             $product = new Product(new ProductEntity(), $locale);
         }
-
-        $this->checkData($data, $id === null);
 
         $user = $this->userRepository->findUserById($userId);
 
@@ -651,7 +658,7 @@ class ProductManager implements ProductManagerInterface
             )
         );
 
-        if(isset($data['recommendedOrderQuantity']) && is_numeric($data['recommendedOrderQuantity'])) {
+        if (isset($data['recommendedOrderQuantity']) && is_numeric($data['recommendedOrderQuantity'])) {
             $value = $this->getProperty(
                 $data,
                 'recommendedOrderQuantity',
@@ -819,18 +826,19 @@ class ProductManager implements ProductManagerInterface
         }
 
         if (array_key_exists('prices', $data)) {
-            $compare = function (ProductPrice $price, $data) {
-                if (isset($data['id'])) {
-                    return $data['id'] == $price->getId();
-                } else {
-                    $currencyNotChanged = isset($data['currency']) && array_key_exists('name', $data['currency']) &&
-                        $data['currency']['name'] == $price->getCurrency()->getName();
-                    $valueNotChanged = array_key_exists('price', $data) && $data['price'] == $price->getPrice();
-                    $minimumQuantityNotChanged = array_key_exists('minimumQuantity', $data) &&
-                        $data['minimumQuantity'] == $price->getEntity()->getMinimumQuantity();
-                    return $currencyNotChanged && $valueNotChanged && $minimumQuantityNotChanged;
-                }
-            };
+            if ($product->getId() == $data['id']) {
+                $compare = function (ProductPrice $price, $data) {
+                    if (isset($data['id'])) {
+                        return $data['id'] == $price->getId();
+                    } else {
+                        return $this->priceHasChanged($data, $price);
+                    }
+                };
+            } else {
+                $compare = function (ProductPrice $price, $data) {
+                    return $this->priceHasChanged($data, $price);
+                };
+            }
 
             $add = function ($priceData) use ($product) {
                 return $this->addPrice($product->getEntity(), $priceData);
@@ -865,11 +873,181 @@ class ProductManager implements ProductManagerInterface
             $this->em->persist($product->getEntity());
         }
 
+        if ($publishedProduct) {
+            // Since there is already a published product with the same internal id we are going to update the
+            // existing one with the properties of the current product.
+            $product = $this->convertProduct($product, $publishedProduct);
+        }
+
         if ($flush) {
             $this->em->flush();
         }
 
         return $product;
+    }
+
+    /**
+     * Copy all properties from a entity to a 'deprecated' entity.
+     *
+     * @param Product $product
+     * @param Product $publishedProduct
+     */
+    private function convertProduct($product, $publishedProduct)
+    {
+        $publishedProductEntity = $publishedProduct->getEntity();
+        $productEntity = $product->getEntity();
+
+        // Move prices
+        foreach ($publishedProductEntity->getPrices() as $data) {
+            $this->em->remove($data);
+        }
+        foreach ($productEntity->getPrices() as $data) {
+            $data->setProduct($publishedProductEntity);
+        }
+
+        // Move productAttributes
+        foreach ($publishedProductEntity->getProductAttributes() as $data) {
+            $this->em->remove($data);
+        }
+        foreach ($productEntity->getProductAttributes() as $data) {
+            $data->setProduct($publishedProductEntity);
+        }
+
+        // Move translations
+        foreach ($publishedProductEntity->getTranslations() as $data) {
+            $this->em->remove($data);
+        }
+        foreach ($productEntity->getTranslations() as $data) {
+            $data->setProduct($publishedProductEntity);
+        }
+
+        // Move addons
+        foreach ($publishedProductEntity->getAddons() as $data) {
+            $this->em->remove($data);
+        }
+        foreach ($productEntity->getAddons() as $data) {
+            $data->setProduct($publishedProductEntity);
+        }
+
+        // Move sets
+        foreach ($publishedProductEntity->getSets() as $data) {
+            $this->em->remove($data);
+        }
+        foreach ($productEntity->getSets() as $data) {
+            $data->setProduct($publishedProductEntity);
+        }
+
+        // Move relation
+        foreach ($publishedProductEntity->getRelations() as $data) {
+            $this->em->remove($data);
+        }
+        foreach ($productEntity->getRelations() as $data) {
+            $data->setProduct($publishedProductEntity);
+        }
+
+        // Move upsell
+        foreach ($publishedProductEntity->getUpsells() as $data) {
+            $this->em->remove($data);
+        }
+        foreach ($productEntity->getUpsells() as $data) {
+            $data->setProduct($publishedProductEntity);
+        }
+
+        // Move crossells
+        foreach ($publishedProductEntity->getCrosssells() as $data) {
+            $this->em->remove($data);
+        }
+        foreach ($productEntity->getCrosssells() as $data) {
+            $data->setProduct($publishedProductEntity);
+        }
+
+        // Move categories
+        foreach ($publishedProductEntity->getCategories() as $data) {
+            $this->em->remove($data);
+        }
+        foreach ($productEntity->getCategories() as $data) {
+            $data->setProduct($publishedProductEntity);
+        }
+
+        // Move media
+        foreach ($publishedProductEntity->getMedia() as $data) {
+            $this->em->remove($data);
+        }
+        foreach ($productEntity->getMedia() as $data) {
+            $data->setProduct($publishedProductEntity);
+        }
+
+        $publishedProductEntity->setNumber($productEntity->getNumber());
+        $publishedProductEntity->setGlobalTradeItemNumber($productEntity->getGlobalTradeItemNumber());
+        $publishedProductEntity->setInternalItemNumber($productEntity->getInternalItemNumber());
+        $publishedProductEntity->setManufacturer($productEntity->getManufacturer());
+        $publishedProductEntity->setCost($productEntity->getCost());
+        $publishedProductEntity->setPriceInfo($productEntity->getPriceInfo());
+        $publishedProductEntity->setCreated($productEntity->getCreated());
+        $publishedProductEntity->setChanged($productEntity->getChanged());
+        $publishedProductEntity->setManufacturerCountry($productEntity->getManufacturerCountry());
+        $publishedProductEntity->setType($productEntity->getType());
+        // $publishedProductEntity->setAttributeSet($productEntity->getAttributeSet());
+        $publishedProductEntity->setStatus($productEntity->getStatus());
+        $publishedProductEntity->setDeliveryStatus($productEntity->getDeliveryStatus());
+        $publishedProductEntity->setSupplier($productEntity->getSupplier());
+        $publishedProductEntity->setParent($productEntity->getParent());
+        $publishedProductEntity->setContentUnit($productEntity->getContentUnit());
+        $publishedProductEntity->setOrderUnit($productEntity->getOrderUnit());
+        $publishedProductEntity->setOrderContentRatio($productEntity->getOrderContentRatio());
+        $publishedProductEntity->setMinimumOrderQuantity($productEntity->getMinimumOrderQuantity());
+        $publishedProductEntity->setRecommendedOrderQuantity($productEntity->getRecommendedOrderQuantity());
+        $publishedProductEntity->setChanger($productEntity->getChanger());
+        $publishedProductEntity->setCreator($productEntity->getCreator());
+        $publishedProductEntity->setTaxClass($productEntity->getTaxClass());
+
+        // Move children
+        foreach ($publishedProductEntity->getChildren() as $data) {
+            $this->em->remove($data);
+        }
+        foreach ($productEntity->getChildren() as $data) {
+            $data->setParent($publishedProductEntity);
+        }
+
+        $this->em->remove($productEntity);
+
+        return $publishedProduct;
+    }
+
+    private function checkForPriceChange($data, $price)
+    {
+        $currencyNotChanged = isset($data['currency']) && array_key_exists('name', $data['currency']) &&
+            $data['currency']['name'] == $price->getCurrency()->getName();
+        $valueNotChanged = array_key_exists('price', $data) && $data['price'] == $price->getPrice();
+        $minimumQuantityNotChanged = array_key_exists('minimumQuantity', $data) &&
+            $data['minimumQuantity'] == $price->getEntity()->getMinimumQuantity();
+        return $currencyNotChanged && $valueNotChanged && $minimumQuantityNotChanged;
+    }
+
+    /**
+     * Checks if a product with the same internal product id as the given product exists in published state and
+     * returns it.
+     *
+     * @param Product $existingProduct
+     * @param int $statusId
+     * @param string $locale
+     */
+    private function getExistingPublishedProduct($existingProduct, $statusId, $locale)
+    {
+        if ($statusId == StatusEntity::PUBLISHED && $existingProduct->getStatus()->getId() != $statusId) {
+            // Check if the same product already exists in PUBLISHED state
+            $products = $this->productRepository->findByLocaleAndInternalItemNumber(
+                $locale,
+                $existingProduct->getInternalItemNumber()
+            );
+            foreach ($products as $product) {
+                if ($product->isDeprecated() && $existingProduct->getId() != $product->getId()) {
+                    $product->setIsDeprecated(false);
+                    return new Product($product, $locale);
+                }
+            }
+        }
+        return null;
     }
 
     /**

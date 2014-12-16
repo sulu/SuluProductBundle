@@ -29,6 +29,34 @@ define(['config'], function(Config) {
             Config.set('product.status.inactive',{id:5});
             Config.set('product.list.statuses.ids', [3,5]);
 
+            Config.set('suluproduct.components.autocomplete.default', {
+                remoteUrl: '/admin/api/products?flat=true&searchFields=number,name&fields=id,name,number,manufacturer,supplier',
+                resultKey: 'products',
+                getParameter: 'search',
+                value: '',
+                instanceName: 'products',
+                valueKey: 'name',
+                noNewValues: true,
+                fields: [
+                    {
+                        id: 'number',
+                        width: '60px'
+                    },
+                    {
+                        id: 'name',
+                        width: '150px'
+                    },
+                    {
+                        id: 'manufacturer',
+                        width: '150px'
+                    },
+                    {
+                        id: 'supplier',
+                        width: '150px'
+                    }
+                ]
+            });
+
             app.components.addSource('suluproduct', '/bundles/suluproduct/js/components');
 
             //flat list of products
