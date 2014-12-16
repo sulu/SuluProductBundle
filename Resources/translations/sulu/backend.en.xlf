@@ -182,6 +182,18 @@
                 <source>product.recommendedOrderQuantity</source>
                 <target>Amount content unit</target>
             </trans-unit>
+            <trans-unit id="47" resname="product.workfow.set.active">
+                <source>product.workfow.set.active</source>
+                <target>Activate</target>
+            </trans-unit>
+            <trans-unit id="48" resname="product.workfow.set.inactive">
+                <source>product.workfow.set.inactive</source>
+                <target>Deactivate</target>
+            </trans-unit>
+            <trans-unit id="49" resname="product.workflow.state.changed.error">
+                <source>product.workflow.state.changed.error</source>
+                <target>Changing the status failed.</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>

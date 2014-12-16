@@ -113,6 +113,27 @@ define([
 
             // handling media
             this.sandbox.on('sulu.products.media.save', this.saveMedia.bind(this));
+
+            // workflow
+            this.sandbox.on('sulu.products.workflow.triggered', this.triggerWorkflowAction.bind(this));
+        },
+
+        triggerWorkflowAction: function(data) {
+            if (!!data && !!data.ids && !!data.status) {
+                var url = '/?ids=' + data.ids + '&status_id=' + data.status;
+                this.sandbox.util.save(url, 'PUT')
+                    .then(function() {
+                        this.sandbox.emit('sulu.product.workflow.completed');
+                    }.bind(this))
+                    .fail(function(error) {
+                        this.sandbox.emit('sulu.labels.error.show',
+                            this.sandbox.translate('product.workflow.state.changed.error'),
+                            'labels.error',
+                            ''
+                        );
+                        this.sandbox.logger.error('error while changing state of products', error);
+                    }.bind(this));
+            }
         },
 
         saveMedia: function(productId, newMediaIds, removedMediaIds) {
