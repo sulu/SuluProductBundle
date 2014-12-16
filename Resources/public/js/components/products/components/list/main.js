@@ -153,9 +153,11 @@ define(['config'], function (Config) {
                             },
                             {
                                 id: 'workflow',
-                                icon: 'magic',
-                                position: 2,
+                                icon: 'husky-publish',
+                                type: 'select',
+                                position: 30,
                                 disabled: true,
+
                                 items: [
                                     {
                                         id: 'active',
