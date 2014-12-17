@@ -56,12 +56,14 @@ define(['config'], function(Config) {
         },
 
         getToolbarItems: function(locale, status) {
-            var statusTitle = !!status ? status.name : this.sandbox.translate(Config.get('product.status.active').key),
+            var statusTitle,
                 statusIcon;
 
-            if(Config.get('product.status.active').id === status.id || !status){
+            if (status.id === Config.get('product.status.active').id) {
+                statusTitle = this.sandbox.translate(Config.get('product.status.active').key);
                 statusIcon = 'husky-publish';
             } else {
+                statusTitle = this.sandbox.translate(Config.get('product.status.inactive').key);
                 statusIcon = 'husky-test';
             }
 

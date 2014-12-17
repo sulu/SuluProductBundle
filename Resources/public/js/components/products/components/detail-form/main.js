@@ -63,7 +63,7 @@ define([
             }.bind(this));
 
             this.sandbox.on('sulu.header.toolbar.delete', function () {
-                this.sandbox.emit('sulu.products.product.delete', this.sandbox.dom.val('#id'));
+                this.sandbox.emit('sulu.products.delete', this.sandbox.dom.val('#id'));
             }.bind(this));
 
             this.sandbox.on('sulu.products.saved', function (id) {
