@@ -184,11 +184,11 @@
             </trans-unit>
             <trans-unit id="47" resname="product.workfow.set.active">
                 <source>product.workfow.set.active</source>
-                <target>Aktiv</target>
+                <target>aktiv</target>
             </trans-unit>
             <trans-unit id="48" resname="product.workfow.set.inactive">
                 <source>product.workfow.set.inactive</source>
-                <target>Inaktiv</target>
+                <target>inaktiv</target>
             </trans-unit>
             <trans-unit id="49" resname="product.workflow.state.changed.error">
                 <source>product.workflow.state.changed.error</source>

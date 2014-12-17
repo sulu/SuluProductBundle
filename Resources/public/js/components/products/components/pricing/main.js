@@ -7,7 +7,7 @@
  * with this source code in the file LICENSE.
  */
 
-define([], function () {
+define(['config'], function (Config) {
     'use strict';
 
     var formSelector = '#product-pricing-form',
@@ -22,6 +22,13 @@ define([], function () {
         },
 
         bindCustomEvents = function () {
+            this.sandbox.on('product.state.change', function(id) {
+                if (!this.options.data.status || this.options.data.status.id !== id) {
+                    this.status = {id: id};
+                    setHeaderBar.call(this, false);
+                }
+            }, this);
+
             this.sandbox.on('sulu.header.toolbar.save', function () {
                 save.call(this);
             }, this);
@@ -38,7 +45,7 @@ define([], function () {
         save = function () {
             if (this.sandbox.form.validate(formSelector)) {
                 var data = this.sandbox.form.getData(formSelector);
-
+                data.status = this.status;
                 this.sandbox.emit('sulu.products.save', data);
             }
         },
@@ -122,6 +129,8 @@ define([], function () {
         templates: ['/admin/product/template/product/pricing'],
 
         initialize: function () {
+            this.status  = !!this.options.data ? this.options.data.status : Config.get('product.status.active');
+
             bindCustomEvents.call(this);
 
             render.call(this);

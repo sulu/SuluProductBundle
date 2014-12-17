@@ -56,7 +56,15 @@ define(['config'], function(Config) {
         },
 
         getToolbarItems: function(locale, status) {
-            var statusTitle = !!status ? status.name : this.sandbox.translate(Config.get('product.status.active').key);
+            var statusTitle = !!status ? status.name : this.sandbox.translate(Config.get('product.status.active').key),
+                statusIcon;
+
+            if(Config.get('product.status.active').id === status.id || !status){
+                statusIcon = 'husky-publish';
+            } else {
+                statusIcon = 'husky-test';
+            }
+
             return [
                 {
                     id: 'save-button',
@@ -87,21 +95,22 @@ define(['config'], function(Config) {
                 },
                 {
                     id: 'workflow',
+                    icon: statusIcon,
                     title: statusTitle,
                     type: 'select',
                     position: 30,
                     items: [
                         {
-                            id: 'active',
-                            icon: 'husky-publish',
-                            title: this.sandbox.translate('product.workfow.set.active'),
-                            callback: this.setProductActive.bind(this)
-                        },
-                        {
                             id: 'inactive',
                             icon: 'husky-test',
                             title: this.sandbox.translate('product.workfow.set.inactive'),
                             callback: this.setProductInactive.bind(this)
+                        },
+                        {
+                            id: 'active',
+                            icon: 'husky-publish',
+                            title: this.sandbox.translate('product.workfow.set.active'),
+                            callback: this.setProductActive.bind(this)
                         }
                     ]
                 },
