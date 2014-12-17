@@ -52,9 +52,8 @@ define([
 
         bindCustomEvents: function () {
             this.sandbox.on('product.state.change', function(id){
-                if(!this.options.data.status || this.options.data.status.id !== id){
+                if(!this.options.data || !this.options.data.status || this.options.data.status.id !== id){
                     this.status = {id: id};
-                    this.options.data.status = this.status;
                     this.setHeaderBar(false);
                 }
             },this);
@@ -69,6 +68,7 @@ define([
 
             this.sandbox.on('sulu.products.saved', function (id) {
                 this.options.data.id = id;
+                this.options.data.status = this.status;
                 this.setHeaderBar(true);
                 this.setHeaderInformation();
             }, this);

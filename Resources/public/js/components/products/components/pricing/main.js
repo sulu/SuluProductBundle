@@ -40,6 +40,7 @@ define(['config'], function (Config) {
 
             this.sandbox.on('sulu.products.saved', function () {
                 setHeaderBar.call(this, true);
+                this.options.data.status = this.status;
             }, this);
 
             this.sandbox.on('sulu.header.back', function () {

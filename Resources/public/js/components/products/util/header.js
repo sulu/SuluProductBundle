@@ -32,6 +32,19 @@ define(['config'], function(Config) {
             }, this);
         },
 
+        resetToolbar: function(sandbox, locale, status) {
+            this.sandbox = sandbox;
+
+            var items = this.getToolbarItems(locale, status);
+            this.sandbox.emit('sulu.header.set-toolbar', {
+                data: items,
+                groups: [
+                    {id: 'left', align: 'left'},
+                    {id: 'right', align: 'right'}
+                ]});
+
+        },
+
         getLanguageChanger: function() {
             var items = [], i, length;
 
