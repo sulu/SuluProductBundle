@@ -899,17 +899,14 @@ class ProductManager implements ProductManagerInterface
         $supplierId = null
     ) {
         $this->checkData($data, $id === null);
-
         $publishedProduct = null;
 
         if ($id) {
             // Update an extisting product
             $product = $this->fetchProduct($id, $locale);
-
-            if(array_key_exists('status',$data)){
+            if (array_key_exists('status', $data)) {
                 $this->setStatusForProduct($product, $data['status']['id']);
             }
-
         } else {
             throw new ProductNotFoundException($id);
         }

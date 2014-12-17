@@ -127,7 +127,7 @@ define([
 
         triggerWorkflowAction: function(data) {
             if (!!data && !!data.ids && !!data.status) {
-                var url = '/?ids=' + data.ids + '&status_id=' + data.status;
+                var url = 'admin/api/products?action=changeState&ids=' + data.ids + '&statusId=' + data.status;
                 this.sandbox.util.save(url, 'PUT')
                     .then(function() {
                         this.sandbox.emit('sulu.product.workflow.completed');

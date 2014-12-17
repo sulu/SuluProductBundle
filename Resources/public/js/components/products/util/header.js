@@ -23,7 +23,12 @@ define(['config'], function(Config) {
             this.sandbox = sandbox;
             this.sandbox.once('sulu.header.initialized', function() {
                 var items = this.getToolbarItems(locale, status);
-                this.sandbox.emit('sulu.header.set-toolbar', {data: items});
+                this.sandbox.emit('sulu.header.set-toolbar', {
+                    data: items,
+                    groups: [
+                        {id: 'left', align: 'left'},
+                        {id: 'right', align: 'right'}
+                    ]});
             }, this);
         },
 
@@ -59,7 +64,11 @@ define(['config'], function(Config) {
             var statusTitle,
                 statusIcon;
 
-            if (status.id === Config.get('product.status.active').id) {
+            // new product
+            if (!status) {
+                statusTitle = this.sandbox.translate(Config.get('product.status.active').key);
+                statusIcon = 'husky-publish';
+            } else if (status.id === Config.get('product.status.active').id) {
                 statusTitle = this.sandbox.translate(Config.get('product.status.active').key);
                 statusIcon = 'husky-publish';
             } else {
