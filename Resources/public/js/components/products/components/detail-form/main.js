@@ -7,7 +7,9 @@
  * with this source code in the file LICENSE.
  */
 
-define([], function () {
+define([
+    'config'
+], function (Config) {
 
     'use strict';
 
@@ -28,20 +30,9 @@ define([], function () {
 
         templates: ['/admin/product/template/product/form'],
 
-        header: function () {
-            return {
-                toolbar: {
-                    template: 'default',
-                    languageChanger: {
-                        preSelected: this.options.locale
-                    }
-                },
-                tabs: false
-            };
-        },
-
         initialize: function () {
             this.saved = true;
+            this.status  = !!this.options.data ? this.options.data.status : Config.get('product.status.active');
 
             this.initializeValidation();
 
@@ -60,6 +51,13 @@ define([], function () {
         },
 
         bindCustomEvents: function () {
+            this.sandbox.on('product.state.change', function(id){
+                if(!this.options.data.status || this.options.data.status.id !== id){
+                    this.status = {id: id};
+                    this.setHeaderBar(false);
+                }
+            },this);
+
             this.sandbox.on('sulu.header.toolbar.save', function () {
                 this.save();
             }.bind(this));
@@ -95,6 +93,8 @@ define([], function () {
                 if (data.id === '') {
                     delete data.id;
                 }
+
+                data.status = this.status;
 
                 if (!data.type && !!this.options.productType) {
                     data.type = {

@@ -9,7 +9,8 @@
 
 require.config({
     paths: {
-        suluproduct: '../../suluproduct/js'
+        suluproduct: '../../suluproduct/js',
+        'suluproduct/util/header': '../../suluproduct/js/components/products/util/header'
     }
 });
 
@@ -25,9 +26,9 @@ define(['config'], function(Config) {
 
             var sandbox = app.sandbox;
 
-            Config.set('product.status.active',{id:3});
-            Config.set('product.status.inactive',{id:5});
-            Config.set('product.list.statuses.ids', [3,5]);
+            Config.set('product.status.active', {id: 3, key: 'product.workfow.set.active'});
+            Config.set('product.status.inactive', {id: 5, key: 'product.workfow.set.inactive'});
+            Config.set('product.list.statuses.ids', [3, 5]);
 
             Config.set('suluproduct.components.autocomplete.default', {
                 remoteUrl: '/admin/api/products?flat=true&searchFields=number,name&fields=id,name,number,manufacturer,supplier',

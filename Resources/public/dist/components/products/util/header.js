@@ -1,0 +1,1 @@
+define([],function(){"use strict";return{setHeader:function(a){return{toolbar:{template:"default",languageChanger:{preSelected:a}},tabs:!1}}}});

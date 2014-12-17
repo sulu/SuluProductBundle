@@ -10,8 +10,9 @@
 define([
     'suluproduct/models/product',
     'sulucategory/model/category',
-    'app-config'
-], function (Product, Category, AppConfig) {
+    'app-config',
+    'suluproduct/util/header'
+], function (Product, Category, AppConfig, HeaderUtil) {
     'use strict';
 
     var types = {
@@ -65,7 +66,13 @@ define([
             if (this.options.display === 'list') {
                 this.renderList();
             } else if (this.options.display === 'tab') {
-                this.renderTabs();
+                this.renderTabs().then(function(){
+                    HeaderUtil.initToolbar(
+                        this.sandbox,
+                        this.options.locale,
+                        this.product.get('status')
+                    );
+                }.bind(this));
             } else if (this.options.display === 'import') {
                 this.renderImport();
             }
@@ -284,7 +291,8 @@ define([
                         el: $tabContainer,
                         locale: this.options.locale
                     }
-                };
+                },
+                dfd = this.sandbox.data.deferred();
 
             this.html($tabContainer);
 
@@ -297,12 +305,21 @@ define([
                         component.options.data = model.toJSON();
                         component.options.productType = types[model.get('type').id];
                         this.sandbox.start([component]);
+                        dfd.resolve();
+                    }.bind(this),
+                    error: function(){
+                        this.sandbox.logger.error("error while fetching product");
+                        dfd.reject();
                     }.bind(this)
                 });
             } else {
+                this.sandbox.emit('sulu.header.toolbar.item.change', 'workflow', 'inactive');
                 component.options.productType = this.options.productType;
                 this.sandbox.start([component]);
+                dfd.resolve();
             }
+
+            return dfd.promise();
         },
 
         /**
