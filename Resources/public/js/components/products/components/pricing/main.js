@@ -29,6 +29,7 @@ define(['config'], function (Config) {
             this.sandbox.on('product.state.change', function(id) {
                 if (!this.options.data.status || this.options.data.status.id !== id) {
                     this.status = {id: id};
+                    this.options.data.status = this.status;
                     setHeaderBar.call(this, false);
                 }
             }, this);

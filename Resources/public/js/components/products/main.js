@@ -67,11 +67,13 @@ define([
                 this.renderList();
             } else if (this.options.display === 'tab') {
                 this.renderTabs().then(function(){
-                    HeaderUtil.initToolbar(
-                        this.sandbox,
-                        this.options.locale,
-                        this.product.get('status')
-                    );
+                    if(this.options.content !== 'variants'){
+                        HeaderUtil.initToolbar(
+                            this.sandbox,
+                            this.options.locale,
+                            this.product.get('status')
+                        );
+                    }
                 }.bind(this));
             } else if (this.options.display === 'import') {
                 this.renderImport();
