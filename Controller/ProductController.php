@@ -292,7 +292,7 @@ class ProductController extends RestController implements ClassResourceInterface
     }
 
     /**
-     * Delete an account with the given id.
+     * Delete a product with the given id.
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
      * @param integer $id product id
@@ -320,5 +320,31 @@ class ProductController extends RestController implements ClassResourceInterface
     public function getSecurityContext()
     {
         return 'sulu.product.products';
+    }
+
+    /**
+     * Make a partial update of a product
+     *
+     * @param Request $request
+     * @param $id
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function patchAction(Request $request, $id)
+    {
+        try {
+            $product = $this->getManager()->partialUpdate(
+                $request->request->all(),
+                $this->getLocale($request),
+                $this->getUser()->getId(),
+                $id
+            );
+
+            $view = $this->view($product, 200);
+        } catch (ProductNotFoundException $exc) {
+            $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
+            $view = $this->view($exception->toArray(), 404);
+        }
+
+        return $this->handleView($view);
     }
 }

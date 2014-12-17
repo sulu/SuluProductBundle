@@ -98,6 +98,7 @@ define(['config'], function(Config) {
                     icon: statusIcon,
                     title: statusTitle,
                     type: 'select',
+                    group: 'left',
                     position: 30,
                     items: [
                         {
