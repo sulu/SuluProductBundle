@@ -7,7 +7,7 @@
  * with this source code in the file LICENSE.
  */
 
-define(function () {
+define(['config'], function (Config) {
 
     'use strict';
     var TYPE_PRODUCT = 'product',
@@ -15,8 +15,36 @@ define(function () {
         TYPE_PRODUCT_ADDON = 'product-addon',
         TYPE_PRODUCT_SET = 'product-set',
 
+        constants = {
+            toolbarInstanceName: 'productsToolbar'
+        },
+
         addProduct = function (type) {
             this.sandbox.emit('sulu.products.new', type);
+        },
+
+        setProductActive = function(){
+            this.sandbox.emit('husky.datagrid.items.get-selected', function(ids) {
+                this.sandbox.emit(
+                    'sulu.products.workflow.triggered',
+                    {
+                        ids:ids,
+                        status: Config.get('product.status.active').id
+                    }
+                );
+            }.bind(this));
+        },
+
+        setProductInactive = function(){
+            this.sandbox.emit('husky.datagrid.items.get-selected', function(ids) {
+                this.sandbox.emit(
+                    'sulu.products.workflow.triggered',
+                    {
+                        ids:ids,
+                        status: Config.get('product.status.inactive').id
+                    }
+                );
+            }.bind(this));
         },
 
         bindCustomEvents = function () {
@@ -24,10 +52,31 @@ define(function () {
                 this.sandbox.emit('sulu.products.new');
             }.bind(this));
 
+            this.sandbox.on('sulu.product.workflow.completed', function(){
+                this.sandbox.emit('husky.datagrid.update');
+            }, this);
+
             this.sandbox.on('sulu.list-toolbar.delete', function () {
                 this.sandbox.emit('husky.datagrid.items.get-selected', function (ids) {
                     this.sandbox.emit('sulu.products.delete', ids);
                 }.bind(this));
+            }, this);
+
+            // enable toolbar items
+            this.sandbox.on('husky.datagrid.number.selections', function(number) {
+                if (number > 0) {
+                    this.sandbox.emit(
+                            'husky.toolbar.' + constants.toolbarInstanceName + '.item.enable',
+                        'workflow',
+                        false
+                    );
+                } else {
+                    this.sandbox.emit(
+                            'husky.toolbar.' + constants.toolbarInstanceName + '.item.disable',
+                        'workflow',
+                        false
+                    );
+                }
             }, this);
         };
 
@@ -68,7 +117,7 @@ define(function () {
             this.sandbox.sulu.initListToolbarAndList.call(this, 'productsFields', '/admin/api/products/fields',
                 {
                     el: this.$find('#list-toolbar-container'),
-                    instanceName: 'productsToolbar',
+                    instanceName: constants.toolbarInstanceName,
                     parentTemplate: 'default',
                     inHeader: true,
                     template: function () {
@@ -101,13 +150,33 @@ define(function () {
                                         callback: addProduct.bind(this, TYPE_PRODUCT_SET)
                                     }
                                 ]
+                            },
+                            {
+                                id: 'workflow',
+                                icon: 'husky-publish',
+                                type: 'select',
+                                position: 30,
+                                disabled: true,
+
+                                items: [
+                                    {
+                                        id: 'active',
+                                        title: this.sandbox.translate('product.workfow.set.active'),
+                                        callback: setProductActive.bind(this)
+                                    },
+                                    {
+                                        id: 'inactive',
+                                        title: this.sandbox.translate('product.workfow.set.inactive'),
+                                        callback: setProductInactive.bind(this)
+                                    }
+                                ]
                             }
                         ];
                     }.bind(this)
                 },
                 {
                     el: this.sandbox.dom.find('#products-list', this.$el),
-                    url: '/admin/api/products?flat=true',
+                    url: '/admin/api/products?flat=true&status_id='+ Config.get('product.list.statuses.ids'),
                     resultKey: 'products',
                     searchInstanceName: 'productsToolbar',
                     searchFields: ['name','number'],

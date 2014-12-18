@@ -30,6 +30,7 @@ class TemplateController extends RestController
     /**
      * Returns Template for product list
      *
+     * @param \Symfony\Component\HttpFoundation\Request $request
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function productFormAction(Request $request)
@@ -147,7 +148,7 @@ class TemplateController extends RestController
      * @param $language
      * @return array
      */
-    private function getStatus($language)
+    protected function getStatus($language)
     {
         /** @var Status[] $statuses */
         $statuses = $this->get('sulu_product.status_manager')->findAll($language);
@@ -169,7 +170,7 @@ class TemplateController extends RestController
      * @param $language
      * @return array
      */
-    private function getUnits($language)
+    protected function getUnits($language)
     {
         /** @var Status[] $units */
         $units = $this->get('sulu_product.unit_manager')->findAll($language);

@@ -887,10 +887,34 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public function partialUpdate(
+        array $data,
+        $locale,
+        $userId,
+        $id
+    ) {
+        // check if status is set
+        $this->checkDataSet($data, 'status', false) && $this->checkDataSet($data['status'], 'id', false);
+
+        if ($id) {
+            // Update an extisting product
+            $product = $this->fetchProduct($id, $locale);
+            if (array_key_exists('status', $data)) {
+                $this->setStatusForProduct($product, $data['status']['id']);
+            }
+        } else {
+            throw new ProductNotFoundException($id);
+        }
+    }
+
+    /**
      * Copy all properties from a entity to a 'deprecated' entity.
      *
      * @param Product $product
      * @param Product $publishedProduct
+     * @return \Sulu\Bundle\ProductBundle\Api\Product
      */
     private function convertProduct($product, $publishedProduct)
     {
@@ -1031,6 +1055,7 @@ class ProductManager implements ProductManagerInterface
      * @param Product $existingProduct
      * @param int $statusId
      * @param string $locale
+     * @return null|\Sulu\Bundle\ProductBundle\Api\Product
      */
     private function getExistingPublishedProduct($existingProduct, $statusId, $locale)
     {

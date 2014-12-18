@@ -1,18 +1,22 @@
 <product-statuses>
     <product-status>
-        <de>nicht eingereicht</de>
-        <en>not submitted</en>
+        <de>importiert</de>
+        <en>imported</en>
     </product-status>
     <product-status>
         <de>eingereicht</de>
         <en>submitted</en>
     </product-status>
     <product-status>
-        <de>publiziert</de>
-        <en>published</en>
+        <de>aktiv</de>
+        <en>active</en>
     </product-status>
     <product-status>
         <de>abgelehnt</de>
         <en>rejected</en>
+    </product-status>
+    <product-status>
+        <de>inaktiv</de>
+        <en>inactive</en>
     </product-status>
 </product-statuses>

@@ -7,7 +7,7 @@
  * with this source code in the file LICENSE.
  */
 
-define([], function() {
+define(['config'], function(Config) {
 
     'use strict';
 
@@ -64,6 +64,8 @@ define([], function() {
             this.newSelections = [];
             this.removedSelections = [];
             this.currentSelection = this.getPropertyFromArrayOfObject(this.options.data.media, 'id');
+            this.status  = !!this.options.data ? this.options.data.status : Config.get('product.status.active');
+            this.statusChanged = false;
 
             setHeader.call(this);
 
@@ -105,6 +107,18 @@ define([], function() {
         },
 
         bindCustomEvents: function() {
+            this.sandbox.on('sulu.header.toolbar.delete', function () {
+                this.sandbox.emit('sulu.products.delete', this.sandbox.dom.val('#id'));
+            }.bind(this));
+
+            this.sandbox.on('product.state.change', function(id){
+                if(!this.options.data.status || this.options.data.status.id !== id){
+                    this.status = {id: id};
+                    this.statusChanged = true;
+                    this.setHeaderBar(false);
+                }
+            },this);
+
             this.sandbox.on('sulu.header.toolbar.save', function() {
                 this.submit();
             }, this);
@@ -122,6 +136,12 @@ define([], function() {
             this.sandbox.on('sulu.media-selection.document-selection.record-selected', this.selectItem.bind(this));
             this.sandbox.on('husky.dropzone.media-selection-document-selection.files-added', this.addedItems.bind(this));
             this.sandbox.on('sulu.media-selection.document-selection.record-deselected', this.deselectItem.bind(this));
+            this.sandbox.on('sulu.products.saved', this.savedProduct.bind(this));
+        },
+
+        savedProduct: function(){
+            this.options.data.status = this.status;
+            this.setHeaderBar(true);
         },
 
         resetAndRemoveFromCurrent: function(data) {
@@ -184,12 +204,18 @@ define([], function() {
          */
         submit: function() {
             if (this.sandbox.form.validate(constants.formSelector)) {
+
                 this.sandbox.emit(
                     'sulu.products.media.save',
                     this.options.data.id,
                     this.newSelections,
                     this.removedSelections
                 );
+
+                if(!!this.statusChanged){
+                    this.options.data.status = this.status;
+                    this.sandbox.emit('sulu.products.save', this.options.data);
+                }
             }
         },
 

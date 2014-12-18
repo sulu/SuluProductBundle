@@ -7,24 +7,82 @@
  * with this source code in the file LICENSE.
  */
 
-define([], function () {
+define([
+    'config',
+    'suluproduct/util/header'
+], function (Config, HeaderUtil) {
     'use strict';
 
     var constants = {
-            productOverlayName: 'variants'
+            productOverlayName: 'variants',
+            toolbarInstanceName: 'variants'
         },
 
         maxLengthTitle = 60,
 
         renderList = function () {
+            var statusTitle, statusIcon;
+
+            if (this.status.id === Config.get('product.status.active').id) {
+                statusTitle = this.sandbox.translate(Config.get('product.status.active').key);
+                statusIcon = 'husky-publish';
+            } else {
+                statusTitle = this.sandbox.translate(Config.get('product.status.inactive').key);
+                statusIcon = 'husky-test';
+            }
+
             this.sandbox.sulu.initListToolbarAndList.call(
                 this,
                 'product-variants-list',
                 '/admin/api/products/fields',
                 {
-                    // TODO use header function instead for consistency
                     el: '#list-toolbar',
-                    inHeader: true
+                    inHeader: true,
+
+                    instanceName: constants.toolbarInstanceName,
+                    parentTemplate: 'default',
+                    template: function () {
+                        return [
+                            {
+                                id: 'save-button',
+                                icon: 'floppy-o',
+                                iconSize: 'large',
+                                class: 'highlight',
+                                position:11,
+                                group: 'left',
+                                disabled: true,
+                                callback: function() {
+                                    this.sandbox.emit('sulu.header.toolbar.save');
+                                }.bind(this)
+                            },
+                            {
+                                id: 'workflow',
+                                icon: statusIcon,
+                                title: statusTitle,
+                                type: 'select',
+                                group: 'left',
+                                position: 30,
+                                items: [
+                                    {
+                                        id: 'inactive',
+                                        icon: 'husky-test',
+                                        title: this.sandbox.translate('product.workfow.set.inactive'),
+                                        callback: function() {
+                                            changeState.call(this, Config.get('product.status.inactive').id);
+                                        }.bind(this)
+                                    },
+                                    {
+                                        id: 'active',
+                                        icon: 'husky-publish',
+                                        title: this.sandbox.translate('product.workfow.set.active'),
+                                        callback: function() {
+                                            changeState.call(this, Config.get('product.status.active').id);
+                                        }.bind(this)
+                                    }
+                                ]
+                            }
+                        ];
+                    }.bind(this)
                 },
                 {
                     el: '#product-variants',
@@ -34,7 +92,46 @@ define([], function () {
             );
         },
 
-        bindCustomEvents = function () {
+        changeState = function(id) {
+            if (!this.options.data.status || this.options.data.status.id !== id) {
+                this.status = {id: id};
+                setHeaderBar.call(this, false);
+            }
+        },
+
+        save = function() {
+            this.options.data.status = this.status;
+            this.sandbox.emit('sulu.products.save', this.options.data);
+        },
+
+        setHeaderBar = function(saved) {
+            if (saved !== this.saved) {
+                this.sandbox.emit('husky.toolbar.'+constants.toolbarInstanceName+'.item.enable','save-button',true);
+            }
+            this.saved = saved;
+        },
+
+        bindCustomEvents = function() {
+            // resets the toolbar for other tabs
+            this.sandbox.on('husky.tabs.header.item.select', function(){
+                HeaderUtil.resetToolbar(this.sandbox, this.options.locale, this.status);
+            },this);
+
+            this.sandbox.on('sulu.header.toolbar.item.loading', function(button) {
+                this.sandbox.emit('husky.toolbar.'+constants.toolbarInstanceName+'.item.loading', button, true);
+            }, this);
+
+            this.sandbox.on('sulu.products.saved', function(model) {
+                this.options.data = model;
+                this.status = model.status;
+                this.saved = true;
+                this.sandbox.emit('husky.toolbar.'+constants.toolbarInstanceName+'.item.disable', 'save-button', false);
+            }, this);
+
+            this.sandbox.on('sulu.header.toolbar.save', function(){
+                save.call(this);
+            }, this);
+
             this.sandbox.on('sulu.list-toolbar.add', function () {
                 startAddOverlay.call(this);
             }, this);
@@ -121,6 +218,8 @@ define([], function () {
         templates: ['/admin/product/template/product/variants'],
 
         initialize: function () {
+            this.saved = true;
+            this.status  = !!this.options.data ? this.options.data.status : Config.get('product.status.active');
             render.call(this);
 
             bindCustomEvents.call(this);
