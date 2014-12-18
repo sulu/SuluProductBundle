@@ -893,13 +893,10 @@ class ProductManager implements ProductManagerInterface
         array $data,
         $locale,
         $userId,
-        $id = null,
-        $flush = true,
-        $skipChanged = false,
-        $supplierId = null
+        $id
     ) {
-        $this->checkData($data, $id === null);
-        $publishedProduct = null;
+        // check if status is set
+        $this->checkDataSet($data, 'status', false) && $this->checkDataSet($data['status'], 'id', false);
 
         if ($id) {
             // Update an extisting product

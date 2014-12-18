@@ -69,7 +69,7 @@ interface ProductManagerInterface
      * @return Product
      * @throws Exception\ProductNotFoundException
      */
-    public function partialUpdate(array $data, $locale, $userId, $id = null);
+    public function partialUpdate(array $data, $locale, $userId, $id);
 
     /**
      * Adds a variant to a specific product
