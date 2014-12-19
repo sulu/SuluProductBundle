@@ -826,7 +826,7 @@ class ProductManager implements ProductManagerInterface
         }
 
         if (array_key_exists('prices', $data)) {
-            if ($product->getId() == $data['id']) {
+            if (isset($data['id']) && ($product->getId() == $data['id'])) {
                 $compare = function (ProductPrice $price, $data) {
                     if (isset($data['id'])) {
                         return $data['id'] == $price->getId();
