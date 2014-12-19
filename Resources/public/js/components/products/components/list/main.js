@@ -66,13 +66,23 @@ define(['config'], function (Config) {
             this.sandbox.on('husky.datagrid.number.selections', function(number) {
                 if (number > 0) {
                     this.sandbox.emit(
-                            'husky.toolbar.' + constants.toolbarInstanceName + '.item.enable',
+                        'husky.toolbar.' + constants.toolbarInstanceName + '.button.set',
+                        'workflow',
+                        {icon: 'husky-publish'}
+                    );
+                    this.sandbox.emit(
+                        'husky.toolbar.' + constants.toolbarInstanceName + '.item.enable',
                         'workflow',
                         false
                     );
                 } else {
                     this.sandbox.emit(
-                            'husky.toolbar.' + constants.toolbarInstanceName + '.item.disable',
+                        'husky.toolbar.' + constants.toolbarInstanceName + '.button.set',
+                        'workflow',
+                        {icon: 'husky-deactivated'}
+                    );
+                    this.sandbox.emit(
+                        'husky.toolbar.' + constants.toolbarInstanceName + '.item.disable',
                         'workflow',
                         false
                     );
@@ -153,7 +163,7 @@ define(['config'], function (Config) {
                             },
                             {
                                 id: 'workflow',
-                                icon: 'husky-publish',
+                                icon: 'husky-deactivated',
                                 type: 'select',
                                 position: 30,
                                 disabled: true,
