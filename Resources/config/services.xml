@@ -23,6 +23,8 @@
         <parameter key="sulu_product.currency_manager.class">Sulu\Bundle\ProductBundle\Product\CurrencyManager</parameter>
         <parameter key="sulu_product.productwebsite.controller.class">Sulu\Bundle\ProductBundle\Controller\ProductWebsiteController</parameter>
         <parameter key="sulu_product.attribute_value_manager.class">Sulu\Bundle\ProductBundle\Product\AttributeValueManager</parameter>
+        <parameter key="sulu_product.product_entity">SuluProductBundle:Product</parameter>
+        <parameter key="sulu_product.product_api_entity">Sulu\Bundle\ProductBundle\Api\Product</parameter>
     </parameters>
     <services>
         <service id="sulu_product.admin" class="%sulu_product.admin.class%">
@@ -33,7 +35,7 @@
         </service>
         <service id="sulu_product.product_repository" class="%sulu_product.product_repository.class%"
                  factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
-            <argument>SuluProductBundle:Product</argument>
+            <argument>%sulu_product.product_entity%</argument>
         </service>
         <service id="sulu_product.attribute_repository" class="%sulu_product.attribute_repository.class%"
                  factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
@@ -93,6 +95,8 @@
             <argument type="service" id="sulu_security.user_repository" />
             <argument type="service" id="sulu_media.media_manager" />
             <argument type="service" id="doctrine.orm.entity_manager"/>
+            <argument>%sulu_product.product_entity%</argument>
+            <argument>%sulu_product.product_api_entity%</argument>
         </service>
         <service id="sulu_product.attribute_manager" class="%sulu_product.attribute_manager.class%">
             <argument type="service" id="sulu_product.attribute_repository"/>

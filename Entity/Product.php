@@ -4,16 +4,8 @@ namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * Product
- */
 class Product extends BaseProduct
 {
-    // Product with variants
-    const MASTER_PRODUCT = 2;
-    // Product
-    const SIMPLE_PRODUCT = 1;
-
     /**
      * @var \Doctrine\Common\Collections\Collection
      */

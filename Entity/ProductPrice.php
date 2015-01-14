@@ -30,7 +30,7 @@ class ProductPrice
     private $id;
 
     /**
-     * @var \Sulu\Bundle\ProductBundle\Entity\Product
+     * @var \Sulu\Bundle\ProductBundle\Entity\ProductInterface
      */
     private $product;
 
@@ -121,10 +121,10 @@ class ProductPrice
     /**
      * Set product
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\Product $product
+     * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $product
      * @return ProductPrice
      */
-    public function setProduct(\Sulu\Bundle\ProductBundle\Entity\Product $product = null)
+    public function setProduct(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $product = null)
     {
         $this->product = $product;
     
@@ -134,7 +134,7 @@ class ProductPrice
     /**
      * Get product
      *
-     * @return \Sulu\Bundle\ProductBundle\Entity\Product
+     * @return \Sulu\Bundle\ProductBundle\Entity\ProductInterface
      */
     public function getProduct()
     {
