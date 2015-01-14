@@ -11,6 +11,11 @@ use Sulu\Component\Security\UserInterface;
  */
 abstract class BaseProduct implements ProductInterface
 {
+    // Product with variants
+    const MASTER_PRODUCT = 2;
+    // Product
+    const SIMPLE_PRODUCT = 1;
+
     /**
      * @var string
      */

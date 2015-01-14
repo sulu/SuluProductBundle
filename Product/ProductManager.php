@@ -12,15 +12,15 @@ namespace Sulu\Bundle\ProductBundle\Product;
 
 use DateTime;
 use Doctrine\Common\Persistence\ObjectManager;
+use Symfony\Component\PropertyAccess\PropertyAccess;
+
 use Sulu\Bundle\CategoryBundle\Api\Category;
 use Sulu\Bundle\CategoryBundle\Entity\CategoryRepository;
-use Sulu\Bundle\ProductBundle\Api\Product;
 use Sulu\Bundle\ProductBundle\Api\ProductPrice;
 use Sulu\Bundle\ProductBundle\Api\Status;
 use Sulu\Bundle\ProductBundle\Entity\Status as StatusEntity;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSetRepository;
 use Sulu\Bundle\ProductBundle\Entity\CurrencyRepository;
-use Sulu\Bundle\ProductBundle\Entity\Product as ProductEntity;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSet;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductPrice as ProductPriceEntity;
@@ -46,7 +46,9 @@ use Sulu\Bundle\ProductBundle\Entity\AttributeRepository;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttributeRepository;
 use Sulu\Bundle\ProductBundle\Entity\UnitRepository;
 use Sulu\Bundle\MediaBundle\Media\Manager\DefaultMediaManager;
-use Symfony\Component\PropertyAccess\PropertyAccess;
+
+use PoolAlpin\Bundle\ProductBundle\Api\Product;
+use PoolAlpin\Bundle\ProductBundle\Entity\Product as ProductEntity;
 
 class ProductManager implements ProductManagerInterface
 {
@@ -622,9 +624,21 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * {@inheritDoc}
+     * addPropertiesToProduct
+     *
+     * @param array $product
+     * @param array $publishedProduct
+     * @param array $data
+     * @param string $locale
+     * @param string $userId
+     * @param string $id
+     * @param boolean $flush
+     * @param boolean $skipChanged
+     * @param string $supplierId
      */
-    public function save(
+    protected function addPropertiesToProduct(
+        $product,
+        $publishedProduct,
         array $data,
         $locale,
         $userId,
@@ -633,19 +647,6 @@ class ProductManager implements ProductManagerInterface
         $skipChanged = false,
         $supplierId = null
     ) {
-        $this->checkData($data, $id === null);
-
-        $publishedProduct = null;
-
-        if ($id) {
-            // Update an extisting product
-            $product = $this->fetchProduct($id, $locale);
-            $publishedProduct = $this->getExistingPublishedProduct($product, $data['status']['id'], $locale);
-
-        } else {
-            $product = new Product(new ProductEntity(), $locale);
-        }
-
         $user = $this->userRepository->findUserById($userId);
 
         $product->setName($this->getProperty($data, 'name', $product->getName()));
@@ -882,8 +883,45 @@ class ProductManager implements ProductManagerInterface
         if ($flush) {
             $this->em->flush();
         }
-
         return $product;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function save(
+        array $data,
+        $locale,
+        $userId,
+        $id = null,
+        $flush = true,
+        $skipChanged = false,
+        $supplierId = null
+    ) {
+        $this->checkData($data, $id === null);
+
+        $publishedProduct = null;
+
+        if ($id) {
+            // Update an extisting product
+            $product = $this->fetchProduct($id, $locale);
+            $publishedProduct = $this->getExistingPublishedProduct($product, $data['status']['id'], $locale);
+
+        } else {
+            $product = new Product(new ProductEntity(), $locale);
+        }
+
+        return $this->addPropertiesToProduct(
+            $product,
+            $publishedProduct,
+            $data,
+            $locale,
+            $userId,
+            $id = null,
+            $flush = true,
+            $skipChanged = false,
+            $supplierId = null
+        );
     }
 
     /**
@@ -1057,7 +1095,7 @@ class ProductManager implements ProductManagerInterface
      * @param string $locale
      * @return null|\Sulu\Bundle\ProductBundle\Api\Product
      */
-    private function getExistingPublishedProduct($existingProduct, $statusId, $locale)
+    protected function getExistingPublishedProduct($existingProduct, $statusId, $locale)
     {
         if ($statusId == StatusEntity::PUBLISHED && $existingProduct->getStatus()->getId() != $statusId) {
             // Check if the same product already exists in PUBLISHED state
@@ -1258,7 +1296,7 @@ class ProductManager implements ProductManagerInterface
      * @param string $default
      * @return mixed
      */
-    private function getProperty(array $data, $key, $default = null)
+    protected function getProperty(array $data, $key, $default = null)
     {
         return array_key_exists($key, $data) ? $data[$key] : $default;
     }
@@ -1268,7 +1306,7 @@ class ProductManager implements ProductManagerInterface
      * @param array $data The data to check
      * @param boolean $create Defines if check is for new or already existing data
      */
-    private function checkData($data, $create)
+    protected function checkData($data, $create)
     {
         $this->checkDataSet($data, 'type', $create) && $this->checkDataSet($data['type'], 'id', $create);
 

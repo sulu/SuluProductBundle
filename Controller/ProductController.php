@@ -41,7 +41,7 @@ class ProductController extends RestController implements ClassResourceInterface
      *
      * @return ProductManagerInterface
      */
-    private function getManager()
+    protected function getManager()
     {
         return $this->get('sulu_product.product_manager');
     }
