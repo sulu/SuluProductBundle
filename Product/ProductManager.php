@@ -910,11 +910,16 @@ class ProductManager implements ProductManagerInterface
      */
     private function priceHasChanged($data, $price)
     {
-        $currencyNotChanged = isset($data['currency']) && array_key_exists('name', $data['currency']) &&
+        $currencyNotChanged = isset( $data['currency']) &&
+            array_key_exists('name', $data['currency']) &&
             $data['currency']['name'] == $price->getCurrency()->getName();
-        $valueNotChanged = array_key_exists('price', $data) && $data['price'] == $price->getPrice();
+
+        $valueNotChanged = array_key_exists('price', $data) &&
+            $data['price'] == $price->getPrice();
+
         $minimumQuantityNotChanged = array_key_exists('minimumQuantity', $data) &&
             $data['minimumQuantity'] == $price->getEntity()->getMinimumQuantity();
+
         return $currencyNotChanged && $valueNotChanged && $minimumQuantityNotChanged;
     }
 
