@@ -123,7 +123,7 @@ class ProductManager implements ProductManagerInterface
     /**
      * @var UserRepositoryInterface
      */
-    private $userRepository;
+    protected $userRepository;
 
     /**
      * @var DefaultMediaManager
