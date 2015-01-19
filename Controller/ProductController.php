@@ -93,58 +93,6 @@ class ProductController extends RestController implements ClassResourceInterface
     }
 
     /**
-     * Get filters provided by the request
-     *
-     * @param Request $request
-     * @return List $filter
-     */
-    protected function getFilters(Request $request)
-    {
-        $filter = array();
-
-        $statuses = $request->get('status');
-        if ($statuses) {
-            $filter['status'] = explode(',', $statuses);
-        }
-
-        $statusIds = $request->get('status_id');
-        if ($statusIds) {
-            $filter['status_id'] = explode(',', $statusIds);
-        }
-
-        $types = $request->get('type');
-        if ($types) {
-            $filter['type_id'] = explode(',', $types);
-        }
-
-        $typeIds = $request->get('type_id');
-        if ($typeIds) {
-            $filter['type_id'] = explode(',', $typeIds);
-        }
-
-        $supplierId = $request->get('supplier_id');
-        if ($supplierId) {
-            $filter['accounts_supplier_id'] = $supplierId;
-        }
-
-        $isDeprecated = $request->get('is_deprecated');
-        if ($isDeprecated !== null) {
-            $filter['is_deprecated'] = $isDeprecated;
-        }
-
-        $parent = $request->get('parent');
-        if ($parent) {
-            $filter['parent'] = ($parent == 'null') ? null : $parent;
-        }
-
-        $categories = $request->get('categories');
-        if ($categories) {
-            $filter['categories'] = ($categories == 'null') ? null : $categories;
-        }
-        return $filter;
-    }
-
-    /**
      * Returns a list of products
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
@@ -152,7 +100,7 @@ class ProductController extends RestController implements ClassResourceInterface
      */
     public function cgetAction(Request $request)
     {
-        $filter = $this->getFilters($request);
+        $filter = $this->getManager()->getFilters($request);
 
         if ($request->get('flat') == 'true') {
             $filterFieldDescriptors = $this->getManager()->getFilterFieldDescriptors();
