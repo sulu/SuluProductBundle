@@ -1384,5 +1384,4 @@ class ProductManager implements ProductManagerInterface
         }
         return $filter;
     }
-
 }
