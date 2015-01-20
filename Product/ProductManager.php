@@ -714,7 +714,7 @@ class ProductManager implements ProductManagerInterface
 
         if (isset($data['attributes'])) {
             foreach ($data['attributes'] as $attribute) {
-                // TODO: fixme - fails on update
+                // FIXME: - fails on update
                 $attributeId = $attribute['id'];
                 $attributeValue = $attribute['value'];
                 $this->checkDataSet($attribute, 'id', true);
