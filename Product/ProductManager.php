@@ -633,9 +633,9 @@ class ProductManager implements ProductManagerInterface
      * @param string $number
      * @return string
      */
-    public function generateInternalItemNumber($id, $number)
+    public function generateInternalItemNumber($prefix, $id, $number)
     {
-        return $id . '-' . $number;
+        return $prefix . '-' . $id . '-' . $number;
     }
 
     /**
@@ -650,8 +650,6 @@ class ProductManager implements ProductManagerInterface
         $skipChanged = false,
         $supplierId = null
     ) {
-        $this->checkData($data, $id === null);
-
         $publishedProduct = null;
 
         if ($id) {
@@ -660,6 +658,7 @@ class ProductManager implements ProductManagerInterface
             $publishedProduct = $this->getExistingPublishedProduct($product, $data['status']['id'], $locale);
 
         } else {
+            $this->checkData($data, $id === null); 
             $product = new $this->productApiEntity(new $this->productEntity, $locale);
         }
 
@@ -705,16 +704,17 @@ class ProductManager implements ProductManagerInterface
         $product->setManufacturer($this->getProperty($data, 'manufacturer', $product->getManufacturer()));
         $product->setCost($this->getProperty($data, 'cost', $product->getCost()));
         $product->setPriceInfo($this->getProperty($data, 'priceInfo', $product->getPriceInfo()));
-        if (!$supplierId) {
-            $internalId = $userId;
-        } else {
-            $internalId = $supplierId;
+        if (!$product->getInternalItemNumber()) {
+            if ($supplierId) {
+                $product->setInternalItemNumber($this->generateInternalItemNumber('S', $supplierId, $product->getNumber()));
+            } else {
+                $product->setInternalItemNumber($this->generateInternalItemNumber('U', $userId, $product->getNumber()));
+            }
         }
-        $product->setInternalItemNumber($this->generateInternalItemNumber($internalId, $product->getNumber()));
 
         if (isset($data['attributes'])) {
-
             foreach ($data['attributes'] as $attribute) {
+                // FIXME: - fails on update
                 $attributeId = $attribute['id'];
                 $attributeValue = $attribute['value'];
                 $this->checkDataSet($attribute, 'id', true);
@@ -822,10 +822,6 @@ class ProductManager implements ProductManagerInterface
                 return $this->addCategory($product->getEntity(), $categoryData);
             };
 
-            $update = function (Category $category, $matchedEntry) {
-                // do not update categories
-            };
-
             $delete = function (Category $category) use ($product) {
                 $product->removeCategory($category->getEntity());
 
@@ -837,7 +833,7 @@ class ProductManager implements ProductManagerInterface
                 $data['categories'],
                 $get,
                 $add,
-                $update,
+                null,
                 $delete
             );
         }
@@ -1022,12 +1018,12 @@ class ProductManager implements ProductManagerInterface
             $data->setProduct($publishedProductEntity);
         }
 
-        // Move categories
+        // // Move categories
         foreach ($publishedProductEntity->getCategories() as $data) {
-            $this->em->remove($data);
+            $publishedProductEntity->removeCategory($data);
         }
         foreach ($productEntity->getCategories() as $data) {
-            $data->setProduct($publishedProductEntity);
+            $publishedProductEntity->addCategory($data);
         }
 
         // Move media
