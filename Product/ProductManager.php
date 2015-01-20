@@ -633,9 +633,9 @@ class ProductManager implements ProductManagerInterface
      * @param string $number
      * @return string
      */
-    public function generateInternalItemNumber($id, $number)
+    public function generateInternalItemNumber($prefix, $id, $number)
     {
-        return $id . '-' . $number;
+        return $prefix . '-' . $id . '-' . $number;
     }
 
     /**
@@ -704,19 +704,17 @@ class ProductManager implements ProductManagerInterface
         $product->setManufacturer($this->getProperty($data, 'manufacturer', $product->getManufacturer()));
         $product->setCost($this->getProperty($data, 'cost', $product->getCost()));
         $product->setPriceInfo($this->getProperty($data, 'priceInfo', $product->getPriceInfo()));
-        $internalId = 'U-' . $userId;
-        if ($supplierId) {
-            if ($product->getEntity()->getSupplier()) {
-                $internalId = $product->getEntity()->getSupplier()->getId();
+        if (!$product->getInternalItemNumber()) {
+            if ($supplierId) {
+                $product->setInternalItemNumber($this->generateInternalItemNumber('S', $supplierId, $product->getNumber()));
             } else {
-                $internalId = 'S-' . $supplierId;
+                $product->setInternalItemNumber($this->generateInternalItemNumber('U', $userId, $product->getNumber()));
             }
         }
-        $product->setInternalItemNumber($this->generateInternalItemNumber($internalId, $product->getNumber()));
 
         if (isset($data['attributes'])) {
-
             foreach ($data['attributes'] as $attribute) {
+                // TODO: fixme - fails on update
                 $attributeId = $attribute['id'];
                 $attributeValue = $attribute['value'];
                 $this->checkDataSet($attribute, 'id', true);
