@@ -655,7 +655,7 @@ class ProductManager implements ProductManagerInterface
         if ($id) {
             // Update an extisting product
             $product = $this->fetchProduct($id, $locale);
-            $publishedProduct = $this->getExistingPublishedProduct($product, $data['status']['id'], $locale);
+            $publishedProduct = $this->getExistingActiveOrInactiveProduct($product, $data['status']['id'], $locale);
 
         } else {
             $this->checkData($data, $id === null); 
@@ -1090,10 +1090,11 @@ class ProductManager implements ProductManagerInterface
      * @param string $locale
      * @return null|\Sulu\Bundle\ProductBundle\Api\Product
      */
-    protected function getExistingPublishedProduct($existingProduct, $statusId, $locale)
+    protected function getExistingActiveOrInactiveProduct($existingProduct, $statusId, $locale)
     {
-        if ($statusId == StatusEntity::PUBLISHED && $existingProduct->getStatus()->getId() != $statusId) {
-            // Check if the same product already exists in PUBLISHED state
+        if (($statusId == StatusEntity::ACTIVE || $statusId == StatusEntity::INACTIVE) &&
+            $existingProduct->getStatus()->getId() != $statusId) {
+            // Check if the same product already exists in IMPORTED state
             $products = $this->productRepository->findByLocaleAndInternalItemNumber(
                 $locale,
                 $existingProduct->getInternalItemNumber()
