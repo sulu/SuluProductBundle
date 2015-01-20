@@ -19,4 +19,8 @@
         <de>inaktiv</de>
         <en>inactive</en>
     </product-status>
+    <product-status>
+        <de>geändert</de>
+        <en>changed</en>
+    </product-status>
 </product-statuses>
