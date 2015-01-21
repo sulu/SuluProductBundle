@@ -48,11 +48,11 @@ class ProductController extends RestController implements ClassResourceInterface
 
     /**
      * returns all fields that can be used by list
-     * @Get("products/fields")
+     *
      * @param \Symfony\Component\HttpFoundation\Request $request
      * @return mixed
      */
-    public function getFieldsAction(Request $request)
+    public function fieldsAction(Request $request)
     {
         return $this->handleView(
             $this->view(
