@@ -207,15 +207,6 @@ define([
             ]);
         },
 
-        getProductUpdate = function(){
-            var dfdProductUpdate = this.sandbox.data.deferred();
-            this.sandbox.on('sulu.products.product-update', function(data){
-                dfdProductUpdate.resolve(data);
-            }.bind(this));
-            this.sandbox.emit('sulu.products.get-product-update');
-            return dfdProductUpdate.promise();
-        },
-
         startAddOverlay = function () {
             this.sandbox.emit('sulu.products.products-overlay.' + constants.productOverlayName + '.open');
         };
@@ -232,7 +223,7 @@ define([
                 this.options.data = data;
                 this.saved = true;
                 this.status = !!this.options.data ? this.options.data.status : Config.get('product.status.active');
-                
+
                 render.call(this);
                 bindCustomEvents.call(this);
                 setHeaderInformation.call(this);
