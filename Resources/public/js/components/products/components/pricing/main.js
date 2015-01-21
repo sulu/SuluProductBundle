@@ -7,7 +7,7 @@
  * with this source code in the file LICENSE.
  */
 
-define(['config'], function (Config) {
+define(['config', 'suluproduct/util/productUpdate'], function(Config, ProductUpdate) {
     'use strict';
 
     var formSelector = '#product-pricing-form',
@@ -137,14 +137,14 @@ define(['config'], function (Config) {
 
         templates: ['/admin/product/template/product/pricing'],
 
-        initialize: function () {
-            this.status  = !!this.options.data ? this.options.data.status : Config.get('product.status.active');
-
-            bindCustomEvents.call(this);
-
-            render.call(this);
-
-            listenForChange.call(this);
+        initialize: function() {
+            this.sandbox.data.when(ProductUpdate.update(this.sandbox)).then(function(data) {
+                this.options.data = data;
+                this.status = !!this.options.data ? this.options.data.status : Config.get('product.status.active');
+                render.call(this);
+                listenForChange.call(this);
+                bindCustomEvents.call(this);
+            }.bind(this));
         }
     };
 });

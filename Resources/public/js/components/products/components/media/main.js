@@ -7,7 +7,7 @@
  * with this source code in the file LICENSE.
  */
 
-define(['config'], function(Config) {
+define(['config', 'suluproduct/util/productUpdate'], function(Config, ProductUpdate) {
 
     'use strict';
 
@@ -61,16 +61,19 @@ define(['config'], function(Config) {
         templates: ['/admin/product/template/product/documents'],
 
         initialize: function() {
-            this.newSelections = [];
-            this.removedSelections = [];
-            this.currentSelection = this.getPropertyFromArrayOfObject(this.options.data.media, 'id');
-            this.status  = !!this.options.data ? this.options.data.status : Config.get('product.status.active');
-            this.statusChanged = false;
+            this.sandbox.data.when(ProductUpdate.update(this.sandbox)).then(function(data) {
+                this.options.data = data;
+                this.newSelections = [];
+                this.removedSelections = [];
+                this.currentSelection = this.getPropertyFromArrayOfObject(this.options.data.media, 'id');
+                this.status = !!this.options.data ? this.options.data.status : Config.get('product.status.active');
+                this.statusChanged = false;
 
-            setHeader.call(this);
+                setHeader.call(this);
 
-            this.setHeaderBar(true);
-            this.render();
+                this.setHeaderBar(true);
+                this.render();
+            }.bind(this));
         },
 
         getPropertyFromArrayOfObject: function(data, propertyName) {

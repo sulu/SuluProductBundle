@@ -10,7 +10,8 @@
 require.config({
     paths: {
         suluproduct: '../../suluproduct/js',
-        'suluproduct/util/header': '../../suluproduct/js/components/products/util/header'
+        'suluproduct/util/header': '../../suluproduct/js/components/products/util/header',
+        'suluproduct/util/productUpdate': '../../suluproduct/js/components/products/util/productUpdate'
     }
 });
 

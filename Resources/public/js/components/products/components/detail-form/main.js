@@ -8,8 +8,9 @@
  */
 
 define([
-    'config'
-], function (Config) {
+    'config',
+    'suluproduct/util/productUpdate'
+], function (Config, ProductUpdate) {
 
     'use strict';
 
@@ -30,24 +31,18 @@ define([
 
         templates: ['/admin/product/template/product/form'],
 
-        initialize: function () {
-            this.saved = true;
-            this.status  = !!this.options.data ? this.options.data.status : Config.get('product.status.active');
+        initialize: function() {
+            this.sandbox.data.when(ProductUpdate.update(this.sandbox)).then(function(data) {
+                this.options.data = data;
+                this.saved = true;
+                this.status = !!this.options.data ? this.options.data.status : Config.get('product.status.active');
 
-            this.initializeValidation();
-
-            this.bindDOMEvents();
-            this.bindCustomEvents();
-
-            this.setHeaderBar(true);
-
-            this.render();
-
-            this.listenForChange();
-        },
-
-        bindDOMEvents: function () {
-
+                this.initializeValidation();
+                this.bindCustomEvents();
+                this.setHeaderBar(true);
+                this.render();
+                this.listenForChange();
+            }.bind(this));
         },
 
         bindCustomEvents: function () {

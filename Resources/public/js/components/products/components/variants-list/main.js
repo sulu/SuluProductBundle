@@ -9,8 +9,9 @@
 
 define([
     'config',
-    'suluproduct/util/header'
-], function (Config, HeaderUtil) {
+    'suluproduct/util/header',
+    'suluproduct/util/productUpdate'
+], function (Config, HeaderUtil, ProductUpdate) {
     'use strict';
 
     var constants = {
@@ -206,6 +207,15 @@ define([
             ]);
         },
 
+        getProductUpdate = function(){
+            var dfdProductUpdate = this.sandbox.data.deferred();
+            this.sandbox.on('sulu.products.product-update', function(data){
+                dfdProductUpdate.resolve(data);
+            }.bind(this));
+            this.sandbox.emit('sulu.products.get-product-update');
+            return dfdProductUpdate.promise();
+        },
+
         startAddOverlay = function () {
             this.sandbox.emit('sulu.products.products-overlay.' + constants.productOverlayName + '.open');
         };
@@ -217,14 +227,16 @@ define([
 
         templates: ['/admin/product/template/product/variants'],
 
-        initialize: function () {
-            this.saved = true;
-            this.status  = !!this.options.data ? this.options.data.status : Config.get('product.status.active');
-            render.call(this);
-
-            bindCustomEvents.call(this);
-
-            setHeaderInformation.call(this);
+        initialize: function() {
+            this.sandbox.data.when(ProductUpdate.update(this.sandbox)).then(function(data) {
+                this.options.data = data;
+                this.saved = true;
+                this.status = !!this.options.data ? this.options.data.status : Config.get('product.status.active');
+                
+                render.call(this);
+                bindCustomEvents.call(this);
+                setHeaderInformation.call(this);
+            }.bind(this));
         }
     };
 });
