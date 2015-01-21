@@ -113,7 +113,7 @@ class ProductController extends RestController implements ClassResourceInterface
                 $filter,
                 $filterFieldDescriptors,
                 $fieldDescriptors,
-                self::$entityName
+                static::$entityName
             );
         } elseif ($request->get('ids') !== '') {
             $list = new CollectionRepresentation(
@@ -203,7 +203,7 @@ class ProductController extends RestController implements ClassResourceInterface
             $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
             $view = $this->view($exception->toArray(), 400);
         } catch (MissingProductAttributeException $exc) {
-            $exception = new MissingArgumentException(self::$entityName, $exc->getAttribute());
+            $exception = new MissingArgumentException(static::$entityName, $exc->getAttribute());
             $view = $this->view($exception->toArray(), 400);
         } catch (EntityIdAlreadySetException $exc) {
             $view = $this->view($exc->toArray(), 400);
@@ -232,7 +232,7 @@ class ProductController extends RestController implements ClassResourceInterface
             $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
             $view = $this->view($exception->toArray(), 400);
         } catch (MissingProductAttributeException $exc) {
-            $exception = new MissingArgumentException(self::$entityName, $exc->getAttribute());
+            $exception = new MissingArgumentException(static::$entityName, $exc->getAttribute());
             $view = $this->view($exception->toArray(), 400);
         }
 
