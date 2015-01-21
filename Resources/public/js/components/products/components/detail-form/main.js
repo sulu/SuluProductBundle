@@ -68,7 +68,7 @@ define([
 
             this.sandbox.on('sulu.products.saved', function (data) {
                 this.options.data = data;
-                this.options.data.status = this.status;
+                this.status = this.options.data.status;
                 this.setHeaderBar(true);
                 this.setHeaderInformation();
             }, this);

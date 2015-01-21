@@ -139,8 +139,9 @@ define(['config'], function(Config) {
             this.sandbox.on('sulu.products.saved', this.savedProduct.bind(this));
         },
 
-        savedProduct: function(){
-            this.options.data.status = this.status;
+        savedProduct: function(data){
+            this.options.data = data;
+            this.status = this.options.data.status;
             this.setHeaderBar(true);
         },
 

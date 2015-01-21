@@ -38,9 +38,12 @@ define(['config'], function (Config) {
                 save.call(this);
             }, this);
 
-            this.sandbox.on('sulu.products.saved', function () {
+            this.sandbox.on('sulu.products.saved', function (data) {
                 setHeaderBar.call(this, true);
-                this.options.data.status = this.status;
+                this.options.data = data;
+                this.status = this.options.data.status;
+                // fixes problem with new entered prices
+                this.sandbox.form.setData(formSelector, data);
             }, this);
 
             this.sandbox.on('sulu.header.back', function () {
