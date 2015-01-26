@@ -49,6 +49,7 @@ use Sulu\Bundle\MediaBundle\Media\Manager\DefaultMediaManager;
 
 use Sulu\Bundle\ProductBundle\Api\Product;
 use Sulu\Bundle\ProductBundle\Entity\Product as ProductEntity;
+use Symfony\Component\HttpFoundation\Request;
 
 class ProductManager implements ProductManagerInterface
 {
@@ -72,7 +73,7 @@ class ProductManager implements ProductManagerInterface
     /**
      * @var ProductRepositoryInterface
      */
-    private $productRepository;
+    protected $productRepository;
 
     /**
      * @var AttributeRepository
@@ -122,7 +123,7 @@ class ProductManager implements ProductManagerInterface
     /**
      * @var UserRepositoryInterface
      */
-    private $userRepository;
+    protected $userRepository;
 
     /**
      * @var DefaultMediaManager
@@ -195,7 +196,7 @@ class ProductManager implements ProductManagerInterface
             array(
                 self::$productTypeEntityName => new DoctrineJoinDescriptor(
                     self::$productTypeEntityName,
-                    self::$productEntityName . '.type'
+                    static::$productEntityName . '.type'
                 )
             )
         );
@@ -208,7 +209,7 @@ class ProductManager implements ProductManagerInterface
             array(
                 self::$productStatusEntityName => new DoctrineJoinDescriptor(
                     self::$productStatusEntityName,
-                    self::$productEntityName . '.status'
+                    static::$productEntityName . '.status'
                 )
             )
         );
@@ -221,7 +222,7 @@ class ProductManager implements ProductManagerInterface
             array(
                 self::$accountsSupplierEntityName => new DoctrineJoinDescriptor(
                     self::$accountsSupplierEntityName,
-                    self::$productEntityName . '.supplier'
+                    static::$productEntityName . '.supplier'
                 )
             )
         );
@@ -229,7 +230,7 @@ class ProductManager implements ProductManagerInterface
         $fieldDescriptors['is_deprecated'] = new DoctrineFieldDescriptor(
             'isDeprecated',
             'is_deprecated',
-            self::$productEntityName,
+            static::$productEntityName,
             null,
             array()
         );
@@ -237,12 +238,12 @@ class ProductManager implements ProductManagerInterface
         $fieldDescriptors['parent'] = new DoctrineFieldDescriptor(
             'id',
             'parent',
-            self::$productEntityName . 'Parent',
+            static::$productEntityName . 'Parent',
             'product.parent',
             array(
-                self::$productEntityName . 'Parent' => new DoctrineJoinDescriptor(
-                    self::$productEntityName,
-                    self::$productEntityName . '.parent'
+                static::$productEntityName . 'Parent' => new DoctrineJoinDescriptor(
+                    static::$productEntityName,
+                    static::$productEntityName . '.parent'
                 )
             ),
             true
@@ -251,12 +252,12 @@ class ProductManager implements ProductManagerInterface
         $fieldDescriptors['categories'] = new DoctrineFieldDescriptor(
             'id',
             'categories',
-            self::$productEntityName . 'Categories',
+            static::$productEntityName . 'Categories',
             'products.categories',
             array(
-                self::$productEntityName . 'Categories' => new DoctrineJoinDescriptor(
-                    self::$productEntityName,
-                    self::$productEntityName . '.categories'
+                static::$productEntityName . 'Categories' => new DoctrineJoinDescriptor(
+                    static::$productEntityName,
+                    static::$productEntityName . '.categories'
                 )
             ),
             true
@@ -265,12 +266,12 @@ class ProductManager implements ProductManagerInterface
         $fieldDescriptors['attributes'] = new DoctrineFieldDescriptor(
             'id',
             'attributes',
-            self::$productEntityName . 'ProductAttributes',
+            static::$productEntityName . 'ProductAttributes',
             'products.product-attributes',
             array(
-                self::$productEntityName . 'ProductAttributes' => new DoctrineJoinDescriptor(
-                    self::$productEntityName,
-                    self::$productEntityName . '.productAttributes'
+                static::$productEntityName . 'ProductAttributes' => new DoctrineJoinDescriptor(
+                    static::$productEntityName,
+                    static::$productEntityName . '.productAttributes'
                 )
             ),
             true
@@ -289,7 +290,7 @@ class ProductManager implements ProductManagerInterface
         $fieldDescriptors['id'] = new DoctrineFieldDescriptor(
             'id',
             'id',
-            self::$productEntityName,
+            static::$productEntityName,
             'public.id',
             array(),
             true
@@ -303,7 +304,7 @@ class ProductManager implements ProductManagerInterface
             array(
                 self::$productTranslationEntityName => new DoctrineJoinDescriptor(
                     self::$productTranslationEntityName,
-                    self::$productEntityName . '.translations',
+                    static::$productEntityName . '.translations',
                     self::$productTranslationEntityName . '.locale = \'' . $locale . '\''
                 )
             )
@@ -312,7 +313,7 @@ class ProductManager implements ProductManagerInterface
         $fieldDescriptors['number'] = new DoctrineFieldDescriptor(
             'number',
             'number',
-            self::$productEntityName,
+            static::$productEntityName,
             'product.number',
             array(),
             true
@@ -321,7 +322,7 @@ class ProductManager implements ProductManagerInterface
         $fieldDescriptors['internalItemNumber'] = new DoctrineFieldDescriptor(
             'internalItemNumber',
             'internalItemNumber',
-            self::$productEntityName,
+            static::$productEntityName,
             'product.internal-item-number',
             array(),
             true
@@ -330,19 +331,19 @@ class ProductManager implements ProductManagerInterface
         $fieldDescriptors['globalTradeItemNumber'] = new DoctrineFieldDescriptor(
             'globalTradeItemNumber',
             'globalTradeItemNumber',
-            self::$productEntityName,
+            static::$productEntityName,
             'product.global-trade-item-number'
         );
 
         $fieldDescriptors['parent'] = new DoctrineFieldDescriptor(
             'id',
             'parent',
-            self::$productEntityName . 'Parent',
+            static::$productEntityName . 'Parent',
             'product.parent',
             array(
-                self::$productEntityName . 'Parent' => new DoctrineJoinDescriptor(
-                    self::$productEntityName,
-                    self::$productEntityName . '.parent'
+                static::$productEntityName . 'Parent' => new DoctrineJoinDescriptor(
+                    static::$productEntityName,
+                    static::$productEntityName . '.parent'
                 )
             ),
             true
@@ -355,13 +356,13 @@ class ProductManager implements ProductManagerInterface
                 self::$categoryEntityName . 'Translation',
                 'products.categories',
                 array(
-                    self::$productEntityName . 'Categories' => new DoctrineJoinDescriptor(
-                        self::$productEntityName,
-                        self::$productEntityName . '.categories'
+                    static::$productEntityName . 'Categories' => new DoctrineJoinDescriptor(
+                        static::$productEntityName,
+                        static::$productEntityName . '.categories'
                     ),
                     self::$categoryEntityName . 'Translation' => new DoctrineJoinDescriptor(
-                        self::$categoryEntityName . 'Translation',
-                        self::$productEntityName . 'Categories.translations',
+                        static::$categoryEntityName . 'Translation',
+                        static::$productEntityName . 'Categories.translations',
                         self::$categoryEntityName . 'Translation.locale = \'' . $locale . '\''
                     ),
                 )
@@ -376,7 +377,7 @@ class ProductManager implements ProductManagerInterface
         $fieldDescriptors['manufacturer'] = new DoctrineFieldDescriptor(
             'manufacturer',
             'manufacturer',
-            self::$productEntityName,
+            static::$productEntityName,
             'product.manufacturer',
             array(),
             true
@@ -390,7 +391,7 @@ class ProductManager implements ProductManagerInterface
             array(
                 self::$accountsSupplierEntityName => new DoctrineJoinDescriptor(
                     self::$accountsSupplierEntityName,
-                    self::$productEntityName . '.supplier'
+                    static::$productEntityName . '.supplier'
                 )
             ),
             false
@@ -399,7 +400,7 @@ class ProductManager implements ProductManagerInterface
         $fieldDescriptors['cost'] = new DoctrineFieldDescriptor(
             'cost',
             'cost',
-            self::$productEntityName,
+            static::$productEntityName,
             'product.cost',
             array(),
             true
@@ -408,7 +409,7 @@ class ProductManager implements ProductManagerInterface
         $fieldDescriptors['priceInfo'] = new DoctrineFieldDescriptor(
             'priceInfo',
             'priceInfo',
-            self::$productEntityName,
+            static::$productEntityName,
             'product.price-info',
             array(),
             true
@@ -422,7 +423,7 @@ class ProductManager implements ProductManagerInterface
             array(
                 self::$productTypeEntityName => new DoctrineJoinDescriptor(
                     self::$productTypeEntityName,
-                    self::$productEntityName . '.type'
+                    static::$productEntityName . '.type'
                 ),
                 self::$productTypeTranslationEntityName => new DoctrineJoinDescriptor(
                     self::$productTypeTranslationEntityName,
@@ -441,7 +442,7 @@ class ProductManager implements ProductManagerInterface
             array(
                 self::$unitEntityName => new DoctrineJoinDescriptor(
                     self::$unitEntityName,
-                    self::$productEntityName . '.orderUnit'
+                    static::$productEntityName . '.orderUnit'
                 ),
                 self::$unitTranslationEntityName => new DoctrineJoinDescriptor(
                     self::$unitTranslationEntityName,
@@ -460,7 +461,7 @@ class ProductManager implements ProductManagerInterface
             array(
                 self::$productStatusEntityName => new DoctrineJoinDescriptor(
                     self::$productStatusEntityName,
-                    self::$productEntityName . '.status'
+                    static::$productEntityName . '.status'
                 ),
                 self::$productStatusTranslationEntityName => new DoctrineJoinDescriptor(
                     self::$productStatusTranslationEntityName,
@@ -479,7 +480,7 @@ class ProductManager implements ProductManagerInterface
             array(
                 self::$productStatusEntityName => new DoctrineJoinDescriptor(
                     self::$productStatusEntityName,
-                    self::$productEntityName . '.status'
+                    static::$productEntityName . '.status'
                 )
             )
         );
@@ -487,7 +488,7 @@ class ProductManager implements ProductManagerInterface
         $fieldDescriptors['created'] = new DoctrineFieldDescriptor(
             'created',
             'created',
-            self::$productEntityName,
+            static::$productEntityName,
             'public.created',
             array(),
             false,
@@ -498,7 +499,7 @@ class ProductManager implements ProductManagerInterface
         $fieldDescriptors['changed'] = new DoctrineFieldDescriptor(
             'changed',
             'changed',
-            self::$productEntityName,
+            static::$productEntityName,
             'public.changed',
             array(),
             false,
@@ -632,9 +633,9 @@ class ProductManager implements ProductManagerInterface
      * @param string $number
      * @return string
      */
-    public function generateInternalItemNumber($id, $number)
+    public function generateInternalItemNumber($prefix, $id, $number)
     {
-        return $id . '-' . $number;
+        return $prefix . '-' . $id . '-' . $number;
     }
 
     /**
@@ -649,16 +650,15 @@ class ProductManager implements ProductManagerInterface
         $skipChanged = false,
         $supplierId = null
     ) {
-        $this->checkData($data, $id === null);
-
         $publishedProduct = null;
 
         if ($id) {
             // Update an extisting product
             $product = $this->fetchProduct($id, $locale);
-            $publishedProduct = $this->getExistingPublishedProduct($product, $data['status']['id'], $locale);
+            $publishedProduct = $this->getExistingActiveOrInactiveProduct($product, $data['status']['id'], $locale);
 
         } else {
+            $this->checkData($data, $id === null); 
             $product = new $this->productApiEntity(new $this->productEntity, $locale);
         }
 
@@ -704,16 +704,17 @@ class ProductManager implements ProductManagerInterface
         $product->setManufacturer($this->getProperty($data, 'manufacturer', $product->getManufacturer()));
         $product->setCost($this->getProperty($data, 'cost', $product->getCost()));
         $product->setPriceInfo($this->getProperty($data, 'priceInfo', $product->getPriceInfo()));
-        if (!$supplierId) {
-            $internalId = $userId;
-        } else {
-            $internalId = $supplierId;
+        if (!$product->getInternalItemNumber()) {
+            if ($supplierId) {
+                $product->setInternalItemNumber($this->generateInternalItemNumber('S', $supplierId, $product->getNumber()));
+            } else {
+                $product->setInternalItemNumber($this->generateInternalItemNumber('U', $userId, $product->getNumber()));
+            }
         }
-        $product->setInternalItemNumber($this->generateInternalItemNumber($internalId, $product->getNumber()));
 
         if (isset($data['attributes'])) {
-
             foreach ($data['attributes'] as $attribute) {
+                // FIXME: - fails on update
                 $attributeId = $attribute['id'];
                 $attributeValue = $attribute['value'];
                 $this->checkDataSet($attribute, 'id', true);
@@ -753,7 +754,7 @@ class ProductManager implements ProductManagerInterface
             $parentId = $data['parent']['id'];
             $parentProduct = $this->findByIdAndLocale($parentId, $locale, false);
             if (!$parentProduct) {
-                throw new ProductDependencyNotFoundException(self::$productEntityName, $parentId);
+                throw new ProductDependencyNotFoundException(static::$productEntityName, $parentId);
             }
             $product->setParent($parentProduct);
         }
@@ -821,10 +822,6 @@ class ProductManager implements ProductManagerInterface
                 return $this->addCategory($product->getEntity(), $categoryData);
             };
 
-            $update = function (Category $category, $matchedEntry) {
-                // do not update categories
-            };
-
             $delete = function (Category $category) use ($product) {
                 $product->removeCategory($category->getEntity());
 
@@ -836,7 +833,7 @@ class ProductManager implements ProductManagerInterface
                 $data['categories'],
                 $get,
                 $add,
-                $update,
+                null,
                 $delete
             );
         }
@@ -899,6 +896,27 @@ class ProductManager implements ProductManagerInterface
             $this->em->flush();
         }
         return $product;
+    }
+
+    /**
+     * priceHasChanged
+     *
+     * @param array $data
+     * @param float $price
+     */
+    private function priceHasChanged($data, $price)
+    {
+        $currencyNotChanged = isset( $data['currency']) &&
+            array_key_exists('name', $data['currency']) &&
+            $data['currency']['name'] == $price->getCurrency()->getName();
+
+        $valueNotChanged = array_key_exists('price', $data) &&
+            $data['price'] == $price->getPrice();
+
+        $minimumQuantityNotChanged = array_key_exists('minimumQuantity', $data) &&
+            $data['minimumQuantity'] == $price->getEntity()->getMinimumQuantity();
+
+        return $currencyNotChanged && $valueNotChanged && $minimumQuantityNotChanged;
     }
 
     /**
@@ -1000,12 +1018,12 @@ class ProductManager implements ProductManagerInterface
             $data->setProduct($publishedProductEntity);
         }
 
-        // Move categories
+        // // Move categories
         foreach ($publishedProductEntity->getCategories() as $data) {
-            $this->em->remove($data);
+            $publishedProductEntity->removeCategory($data);
         }
         foreach ($productEntity->getCategories() as $data) {
-            $data->setProduct($publishedProductEntity);
+            $publishedProductEntity->addCategory($data);
         }
 
         // Move media
@@ -1072,10 +1090,11 @@ class ProductManager implements ProductManagerInterface
      * @param string $locale
      * @return null|\Sulu\Bundle\ProductBundle\Api\Product
      */
-    protected function getExistingPublishedProduct($existingProduct, $statusId, $locale)
+    protected function getExistingActiveOrInactiveProduct($existingProduct, $statusId, $locale)
     {
-        if ($statusId == StatusEntity::PUBLISHED && $existingProduct->getStatus()->getId() != $statusId) {
-            // Check if the same product already exists in PUBLISHED state
+        if (($statusId == StatusEntity::ACTIVE || $statusId == StatusEntity::INACTIVE) &&
+            $existingProduct->getStatus()->getId() != $statusId) {
+            // Check if the same product already exists in IMPORTED state
             $products = $this->productRepository->findByLocaleAndInternalItemNumber(
                 $locale,
                 $existingProduct->getInternalItemNumber()
@@ -1330,5 +1349,57 @@ class ProductManager implements ProductManagerInterface
             $product->addPrice($price);
             $price->setProduct($product);
         }
+    }
+
+    /**
+     * Get filters provided by the request
+     *
+     * @param Request $request
+     * @return List $filter
+     */
+    public function getFilters(Request $request)
+    {
+        $filter = array();
+
+        $statuses = $request->get('status');
+        if ($statuses) {
+            $filter['status'] = explode(',', $statuses);
+        }
+
+        $statusIds = $request->get('status_id');
+        if ($statusIds) {
+            $filter['status_id'] = explode(',', $statusIds);
+        }
+
+        $types = $request->get('type');
+        if ($types) {
+            $filter['type_id'] = explode(',', $types);
+        }
+
+        $typeIds = $request->get('type_id');
+        if ($typeIds) {
+            $filter['type_id'] = explode(',', $typeIds);
+        }
+
+        $supplierId = $request->get('supplier_id');
+        if ($supplierId) {
+            $filter['accounts_supplier_id'] = $supplierId;
+        }
+
+        $isDeprecated = $request->get('is_deprecated');
+        if ($isDeprecated !== null) {
+            $filter['is_deprecated'] = $isDeprecated;
+        }
+
+        $parent = $request->get('parent');
+        if ($parent) {
+            $filter['parent'] = ($parent == 'null') ? null : $parent;
+        }
+
+        $categories = $request->get('categories');
+        if ($categories) {
+            $filter['categories'] = ($categories == 'null') ? null : $categories;
+        }
+        return $filter;
     }
 }
