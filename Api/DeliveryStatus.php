@@ -20,7 +20,6 @@ use Sulu\Bundle\ProductBundle\Entity\DeliveryStatusTranslation;
 /**
  * The DeliveryStatus class which will be exported to the API
  *
- * @package Sulu\Bundle\ProductBundle\Api
  * @ExclusionPolicy("all")
  */
 class DeliveryStatus extends ApiWrapper
@@ -37,6 +36,7 @@ class DeliveryStatus extends ApiWrapper
 
     /**
      * The id of the type
+     *
      * @return int The id of the type
      * @VirtualProperty
      * @SerializedName("id")
@@ -48,7 +48,8 @@ class DeliveryStatus extends ApiWrapper
 
     /**
      * The name of the type
-     * @return int The name of the type
+     *
+     * @return integer The name of the type
      * @VirtualProperty
      * @SerializedName("name")
      */
@@ -69,6 +70,7 @@ class DeliveryStatus extends ApiWrapper
     /**
      * Returns the translation for the current locale
      *
+     * @return DeliveryStatusTranslation
      */
     public function getTranslation()
     {
