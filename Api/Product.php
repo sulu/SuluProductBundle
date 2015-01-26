@@ -31,6 +31,8 @@ use Sulu\Bundle\ProductBundle\Entity\TaxClass as TaxClassEntity;
 use Hateoas\Configuration\Annotation\Relation;
 use Sulu\Bundle\ProductBundle\Api\Unit;
 use Sulu\Bundle\ProductBundle\Entity\Unit as UnitEntity;
+use Sulu\Bundle\ProductBundle\Entity\DeliveryStatus as DeliveryStatusEntity;
+use Sulu\Bundle\ProductBundle\Api\DeliveryStatus;
 
 /**
  * The product class which will be exported to the API
@@ -417,6 +419,26 @@ class Product extends ApiWrapper
     public function getStatus()
     {
         return new Status($this->entity->getStatus(), $this->locale);
+    }
+
+    /**
+     * Sets the delivery status of the product
+     * @param DeliveryStatusEntity $deliveryStatus The delivery status of the product
+     */
+    public function setDeliveryStatus(DeliveryStatusEntity $deliveryStatus)
+    {
+        $this->entity->setDeliveryStatus($deliveryStatus);
+    }
+
+    /**
+     * Returns the delivery status of the product
+     * @return DeliveryStatus The delivery status of the product
+     * @VirtualProperty
+     * @SerializedName("deliveryStatus")
+     */
+    public function getDeliveryStatus()
+    {
+        return new DeliveryStatus($this->entity->getDeliveryStatus(), $this->locale);
     }
 
     /**
