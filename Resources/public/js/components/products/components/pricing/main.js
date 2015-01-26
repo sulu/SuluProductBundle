@@ -39,11 +39,11 @@ define(['config', 'suluproduct/util/productUpdate'], function(Config, ProductUpd
             }, this);
 
             this.sandbox.on('sulu.products.saved', function (data) {
-                setHeaderBar.call(this, true);
                 this.options.data = data;
                 this.status = this.options.data.status;
                 // fixes problem with new entered prices
                 this.sandbox.form.setData(formSelector, data);
+                setHeaderBar.call(this, true);
             }, this);
 
             this.sandbox.on('sulu.header.back', function () {
@@ -89,6 +89,20 @@ define(['config', 'suluproduct/util/productUpdate'], function(Config, ProductUpd
                 this.sandbox.emit('sulu.header.toolbar.state.change', type, saved, true);
             }
             this.saved = saved;
+            propagateState.call(this);
+        },
+
+        /**
+         * Propagates the state of the content with an event
+         *  sulu.content.saved when the content has been saved
+         *  sulu.content.changed when the content has been changed
+         */
+        propagateState = function() {
+            if (!!this.saved) {
+                this.sandbox.emit('sulu.content.saved');
+            } else {
+                this.sandbox.emit('sulu.content.changed');
+            }
         },
 
         setHeaderInformation = function () {
@@ -122,9 +136,6 @@ define(['config', 'suluproduct/util/productUpdate'], function(Config, ProductUpd
             this.sandbox.dom.on(formSelector, 'keyup', function () {
                 setHeaderBar.call(this, false);
             }.bind(this), 'input, textarea');
-            this.sandbox.on('sulu.content.changed', function () {
-                setHeaderBar.call(this, false);
-            }.bind(this));
             this.sandbox.on('husky.select.tax-class.selected.item', function () {
                 setHeaderBar.call(this, false);
             }.bind(this));

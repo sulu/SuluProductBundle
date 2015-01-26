@@ -186,7 +186,7 @@ define([], function() {
             this.sandbox.dom.on('#attribute-form', 'keyup', function() {
                 this.setHeaderBar(false);
             }.bind(this), 'input, textarea');
-            this.sandbox.on('sulu.content.changed', function() {
+            this.sandbox.on('sulu.content.change', function() {
                 this.setHeaderBar(false);
             }.bind(this));
             this.sandbox.on('husky.select.attribute-types.selected.item', function(id) {

@@ -155,8 +155,22 @@ define([
             if (saved !== this.saved) {
                 var type = (!!this.options.data && !!this.options.data.id) ? 'edit' : 'add';
                 this.sandbox.emit('sulu.header.toolbar.state.change', type, saved, true);
+                this.propagateState(saved);
             }
             this.saved = saved;
+        },
+
+        /**
+         * Propagates the state of the content with an event
+         *  sulu.content.saved when the content has been saved
+         *  sulu.content.changed when the content has been changed
+         */
+        propagateState: function(saved) {
+            if (!!saved) {
+                this.sandbox.emit('sulu.content.saved');
+            } else {
+                this.sandbox.emit('sulu.content.changed');
+            }
         },
 
         listenForChange: function () {
@@ -166,9 +180,6 @@ define([
             this.sandbox.dom.on('#product-form', 'keyup', function () {
                 this.setHeaderBar(false);
             }.bind(this), 'input, textarea');
-            this.sandbox.on('sulu.content.changed', function () {
-                this.setHeaderBar(false);
-            }.bind(this));
             this.sandbox.on('husky.select.status.selected.item', function () {
                 this.setHeaderBar(false);
             }.bind(this));

@@ -110,6 +110,20 @@ define([
                 this.sandbox.emit('husky.toolbar.'+constants.toolbarInstanceName+'.item.enable','save-button',true);
             }
             this.saved = saved;
+            propagateState.call(this);
+        },
+
+        /**
+         * Propagates the state of the content with an event
+         *  sulu.content.saved when the content has been saved
+         *  sulu.content.changed when the content has been changed
+         */
+        propagateState = function() {
+            if (!!this.saved) {
+                this.sandbox.emit('sulu.content.saved');
+            } else {
+                this.sandbox.emit('sulu.content.changed');
+            }
         },
 
         bindCustomEvents = function() {
