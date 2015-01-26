@@ -215,6 +215,7 @@ define([
                     if (!!data.id) {
                         this.sandbox.emit('sulu.products.saved', model);
                     } else {
+                        this.sandbox.emit('sulu.content.saved');
                         this.load(model.id, this.options.locale);
                     }
                 }.bind(this),

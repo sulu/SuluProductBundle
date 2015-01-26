@@ -89,6 +89,7 @@ define(['suluproduct/models/attribute', 'app-config'], function(Attribute, AppCo
                     if (!!data.id) {
                         this.sandbox.emit('sulu.products.attributes.saved', model);
                     } else {
+                        this.sandbox.emit('sulu.content.saved');
                         this.load(model.id, this.options.locale);
                     }
                 }.bind(this),
