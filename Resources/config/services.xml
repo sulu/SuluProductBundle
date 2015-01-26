@@ -10,6 +10,7 @@
         <parameter key="sulu_product.attribute_value_repository.class">Sulu\Bundle\ProductBundle\Entity\AttributeValueRepository</parameter>
         <parameter key="sulu_product.attribute_type_repository.class">Sulu\Bundle\ProductBundle\Entity\AttributeTypeRepository</parameter>
         <parameter key="sulu_product.status_repository.class">Sulu\Bundle\ProductBundle\Entity\StatusRepository</parameter>
+        <parameter key="sulu_product.delivery_status_repository.class">Sulu\Bundle\ProductBundle\Entity\DeliveryStatusRepository</parameter>
         <parameter key="sulu_product.unit_repository.class">Sulu\Bundle\ProductBundle\Entity\UnitRepository</parameter>
         <parameter key="sulu_product.type_repository.class">Sulu\Bundle\ProductBundle\Entity\TypeRepository</parameter>
         <parameter key="sulu_product.tax_class_repository.class">Sulu\Bundle\ProductBundle\Entity\TaxClassRepository</parameter>
@@ -61,6 +62,10 @@
                  factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
             <argument>SuluProductBundle:Status</argument>
         </service>
+        <service id="sulu_product.delivery_status_repository" class="%sulu_product.delivery_status_repository.class%"
+                 factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
+            <argument>SuluProductBundle:DeliveryStatus</argument>
+        </service>
         <service id="sulu_product.type_repository" class="%sulu_product.type_repository.class%"
                  factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
             <argument>SuluProductBundle:Type</argument>
@@ -87,6 +92,7 @@
             <argument type="service" id="sulu_product.attribute_repository"/>
             <argument type="service" id="sulu_product.product_attribute_repository"/>
             <argument type="service" id="sulu_product.status_repository"/>
+            <argument type="service" id="sulu_product.delivery_status_repository"/>
             <argument type="service" id="sulu_product.type_repository"/>
             <argument type="service" id="sulu_product.tax_class_repository"/>
             <argument type="service" id="sulu_product.currency_repository"/>

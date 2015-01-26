@@ -42,6 +42,7 @@ use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineJoinDescrip
 use Sulu\Component\Rest\RestHelperInterface;
 use Sulu\Component\Security\UserRepositoryInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttribute;
+use Sulu\Bundle\ProductBundle\Entity\DeliveryStatusRepository;
 use Sulu\Bundle\ProductBundle\Entity\AttributeRepository;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttributeRepository;
 use Sulu\Bundle\ProductBundle\Entity\UnitRepository;
@@ -94,6 +95,11 @@ class ProductManager implements ProductManagerInterface
      * @var StatusRepository
      */
     private $statusRepository;
+
+    /**
+     * @var DeliveryStatusRepository
+     */
+    private $deliveryStatusRepository;
 
     /**
      * @var TypeRepository
@@ -151,6 +157,7 @@ class ProductManager implements ProductManagerInterface
         AttributeRepository $attributeRepository,
         ProductAttributeRepository $productAttributeRepository,
         StatusRepository $statusRepository,
+        DeliveryStatusRepository $deliveryStatusRepository,
         TypeRepository $typeRepository,
         TaxClassRepository $taxClassRepository,
         CurrencyRepository $currencyRepository,
@@ -167,6 +174,7 @@ class ProductManager implements ProductManagerInterface
         $this->attributeRepository = $attributeRepository;
         $this->productAttributeRepository = $productAttributeRepository;
         $this->statusRepository = $statusRepository;
+        $this->deliveryStatusRepository = $deliveryStatusRepository;
         $this->typeRepository = $typeRepository;
         $this->taxClassRepository = $taxClassRepository;
         $this->currencyRepository = $currencyRepository;
@@ -765,6 +773,12 @@ class ProductManager implements ProductManagerInterface
             $this->setStatusForProduct($product, $statusId);
         }
 
+        if (isset($data['deliveryStatus']) && isset($data['deliveryStatus']['id'])) {
+            $statusId = $data['deliveryStatus']['id'];
+            /** @var DeliveryStatus $status */
+            $this->setDeliveryStatusForProduct($product, $statusId);
+        }
+
         if (isset($data['type']) && isset($data['type']['id'])) {
             $typeId = $data['type']['id'];
             /** @var Type $type */
@@ -1028,10 +1042,10 @@ class ProductManager implements ProductManagerInterface
 
         // Move media
         foreach ($publishedProductEntity->getMedia() as $data) {
-            $this->em->remove($data);
+            $publishedProductEntity->removeMedia($data);
         }
         foreach ($productEntity->getMedia() as $data) {
-            $data->setProduct($publishedProductEntity);
+            $publishedProductEntity->addMedia($data);
         }
 
         $publishedProductEntity->setNumber($productEntity->getNumber());
@@ -1067,6 +1081,7 @@ class ProductManager implements ProductManagerInterface
         }
 
         $this->em->remove($productEntity);
+        $this->em->flush();
 
         return $publishedProduct;
     }
@@ -1123,6 +1138,22 @@ class ProductManager implements ProductManagerInterface
             throw new ProductDependencyNotFoundException(self::$productStatusEntityName, $statusId);
         }
         $product->setStatus($status);
+    }
+
+    /**
+     * Sets the deliveryStatus for a given product
+     *
+     * @param Product $product
+     * @param int $statusId
+     * @throws Exception\ProductDependencyNotFoundException
+     */
+    public function setDeliveryStatusForProduct($product, $statusId)
+    {
+        $status = $this->deliveryStatusRepository->find($statusId);
+        if (!$status) {
+            throw new ProductDependencyNotFoundException(self::$productStatusEntityName, $statusId);
+        }
+        $product->setDeliveryStatus($status);
     }
 
     /**
