@@ -60,7 +60,8 @@ class ProductController extends RestController implements ClassResourceInterface
                     array_diff_key(
                         $this->getManager()->getFieldDescriptors($this->getLocale($request)),
                         array(
-                            'statusId' => false
+                            'statusId' => false,
+                            'categoryIds' => false
                         )
                     )
                 ),
