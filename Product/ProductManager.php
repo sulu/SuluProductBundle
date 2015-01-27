@@ -378,6 +378,26 @@ class ProductManager implements ProductManagerInterface
             'categories',
             'products.categories',
             ', ',
+            true,
+            true
+        );
+
+        $fieldDescriptors['categoryIds'] = new DoctrineGroupConcatFieldDescriptor(
+            new DoctrineFieldDescriptor(
+                'id',
+                'categoryIds',
+                self::$categoryEntityName . 'Translation',
+                'products.categories',
+                array(
+                    static::$productEntityName . 'Categories' => new DoctrineJoinDescriptor(
+                        static::$productEntityName,
+                        static::$productEntityName . '.categories'
+                    )
+                )
+            ),
+            'categoryIds',
+            'products.categories',
+            ', ',
             null,
             true
         );
