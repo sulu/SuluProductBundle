@@ -9,7 +9,6 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class DeliveryStatus
 {
-
     const AVAILABLE = 1;
     const NOT_AVAILABLE = 2;
 

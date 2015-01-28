@@ -438,9 +438,12 @@ class Product extends ApiWrapper
      */
     public function getDeliveryStatus()
     {
-        if(!is_null($this->entity->getDeliveryStatus())){
-            return new DeliveryStatus($this->entity->getDeliveryStatus(), $this->locale);
+        $status = $this->entity->getDeliveryStatus();
+        if($status === NULL) {
+
+            return new DeliveryStatus($status, $this->locale);
         }
+
         return null;
     }
 
