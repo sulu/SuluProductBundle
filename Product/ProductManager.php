@@ -929,7 +929,7 @@ class ProductManager implements ProductManagerInterface
             if (!$deliveryStatus) {
                 throw new ProductDependencyNotFoundException(self::$productDeliveryStatusClassEntityName, $deliveryStatusId);
             }
-            $product->setTaxClass($deliveryStatus);
+            $product->setDeliveryStatus($deliveryStatus);
         } elseif ($product->getDeliveryStatus() === null) {
             // Default delivery status
             $deliveryStatus = $this->deliveryStatusRepository->find(DeliveryStatus::AVAILABLE);
