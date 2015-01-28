@@ -9,6 +9,9 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class DeliveryStatus
 {
+    const AVAILABLE = 1;
+    const NOT_AVAILABLE = 2;
+
     /**
      * @var integer
      */
@@ -41,6 +44,14 @@ class DeliveryStatus
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * @param $id
+    */
+    public function setId($id)
+    {
+        $this->id = $id;
     }
 
     /**
