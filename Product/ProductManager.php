@@ -47,6 +47,7 @@ use Sulu\Bundle\ProductBundle\Entity\AttributeRepository;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttributeRepository;
 use Sulu\Bundle\ProductBundle\Entity\UnitRepository;
 use Sulu\Bundle\MediaBundle\Media\Manager\DefaultMediaManager;
+use Sulu\Bundle\ProductBundle\Entity\DeliveryStatus;
 
 use Sulu\Bundle\ProductBundle\Api\Product;
 use Sulu\Bundle\ProductBundle\Entity\Product as ProductEntity;
@@ -68,6 +69,7 @@ class ProductManager implements ProductManagerInterface
     protected static $attributeEntityName = 'SuluProductBundle:Attribute';
     protected static $productTranslationEntityName = 'SuluProductBundle:ProductTranslation';
     protected static $productTaxClassEntityName = 'SuluProductBundle:TaxClass';
+    protected static $productDeliveryStatusClassEntityName = 'SuluProductBundle:DeliveryStatus';
     protected static $productPriceEntityName = 'SuluProductBundle:ProductPrice';
     protected static $categoryEntityName = 'SuluCategoryBundle:Category';
 
@@ -926,6 +928,20 @@ class ProductManager implements ProductManagerInterface
             $product = $this->convertProduct($product, $publishedProduct);
         }
 
+        if (isset($data['deliveryStatus']) && isset($data['deliveryStatus']['id'])) {
+            $deliveryStatusId = $data['deliveryStatus']['id'];
+            /** @var DeliveryStatus $deliveryStatus */
+            $deliveryStatus = $this->deliveryStatusRepository->find($deliveryStatusId);
+            if (!$deliveryStatus) {
+                throw new ProductDependencyNotFoundException(self::$productDeliveryStatusClassEntityName, $deliveryStatusId);
+            }
+            $product->setTaxClass($deliveryStatus);
+        } elseif ($product->getDeliveryStatus() == null) {
+            // Default delivery status
+            $deliveryStatus = $this->deliveryStatusRepository->find(DeliveryStatus::AVAILABLE);
+            $product->setDeliveryStatus($deliveryStatus);
+        }
+
         if ($flush) {
             $this->em->flush();
         }
@@ -937,6 +953,7 @@ class ProductManager implements ProductManagerInterface
      *
      * @param array $data
      * @param float $price
+     * @return bool
      */
     private function priceHasChanged($data, $price)
     {
