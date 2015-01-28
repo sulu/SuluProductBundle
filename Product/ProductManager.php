@@ -795,12 +795,6 @@ class ProductManager implements ProductManagerInterface
             $this->setStatusForProduct($product, $statusId);
         }
 
-        if (isset($data['deliveryStatus']) && isset($data['deliveryStatus']['id'])) {
-            $statusId = $data['deliveryStatus']['id'];
-            /** @var DeliveryStatus $status */
-            $this->setDeliveryStatusForProduct($product, $statusId);
-        }
-
         if (isset($data['type']) && isset($data['type']['id'])) {
             $typeId = $data['type']['id'];
             /** @var Type $type */
