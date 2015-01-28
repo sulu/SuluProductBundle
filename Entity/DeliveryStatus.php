@@ -47,6 +47,14 @@ class DeliveryStatus
     }
 
     /**
+     * @param $id
+    */
+    public function setId($id)
+    {
+        $this->id = $id;
+    }
+
+    /**
      * Add translations
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\DeliveryStatusTranslation $translations
