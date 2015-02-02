@@ -68,7 +68,7 @@ define([], function() {
          * @returns {boolean}
          */
         appendCurrencyToPrice = function(locale) {
-            // TODO
+            // TODO ???
             return locale !== 'en';
         },
 
@@ -86,6 +86,33 @@ define([], function() {
                 isGreaterThanOrEqualsZero(sandbox, discount)
             ) {
                 sandbox.logger.error('Invalid parameter(s) for price calculation!');
+            }
+        },
+
+        /**
+         * Processes elements for getTotalPricesAndTaxes
+         * @param sandbox
+         * @param el
+         * @param taxes
+         * @param netPrice
+         * @param grossPrice
+         */
+        processPriceForTaxClass = function(sandbox, el, taxes, netPrice, grossPrice) {
+
+            if (isGreaterThanOrEqualsZero(sandbox, el.taxRate)) {
+                var currentTaxRate = getTaxRate(sandbox, el.taxRate),
+                    tax = 0;
+
+                sandbox.util.foreach(el.prices, function(price) {
+                    if (isGreaterThanOrEqualsZero(sandbox, price)) {
+                        netPrice += parseFloat(price);
+                        tax = price * currentTaxRate;
+                        taxes[currentTaxRate] += tax;
+                        grossPrice += ((price * tax) + price);
+                    } else {
+                        // TODO ???
+                    }
+                }.bind(this));
             }
         };
 
@@ -206,15 +233,41 @@ define([], function() {
             return this.getFormattedNumberWithAddition(total, currency, appendCurrencyToPrice(locale));
         },
 
-        getTotalNetPriceAndTaxes: function(valuesTripple) {
+        /**
+         * Sums up all prices to a total net price, calculates a total tax amount per tax class/rate
+         * and returns an overall total price including taxes
+         * @param {Object} sandbox
+         * @param {Object} values
+         * {
+         *  prices: [
+         *   {
+         *      price: 100,
+         *      discount: 5
+         *   }
+         *  ]
+         *  taxRate: 20
+         * }
+         *
+         * @return {Object}
+         */
+        getTotalPricesAndTaxes: function(sandbox, values) {
 
+            var netPrice = 0,
+                taxes = {},
+                grossPrice = 0,
+                el;
+
+            for (el in values) {
+                if (values.hasOwnProperty(el)) {
+                    processPriceForTaxClass.call(this, sandbox, el, taxes, netPrice, grossPrice);
+                }
+            }
+
+            return {
+                taxes: taxes,
+                netPrice: netPrice,
+                grossPrice: grossPrice
+            };
         }
-
-        // mehrere zahlen mit mehreren steuersätzen - (default: netto, standard, euro)
-        // - brutto berechnen
-        // - netto berechnen
-        // parameter währung, brutto/netto, zahlen1 + steuersatz1, zahlen2 + steuersatz2, ...
-        // return objekt mit summe und steuersatz tupel?
-
     };
 });
