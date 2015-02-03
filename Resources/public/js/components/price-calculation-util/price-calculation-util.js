@@ -15,6 +15,7 @@ define([], function() {
     // Defaults should include taxes, currency, unit, locale
 
     var defaults = {
+            discount: 0,
             currency: 'EUR',
             taxRate: 0.20,
             locale: 'en',
@@ -41,29 +42,44 @@ define([], function() {
 
         /**
          * Returns taxrate as float value between 0 and 1
+         * If none is present the default tax rate will be returned
+         * If invalid taxrate is provided (> 100%) an error will be thrown
          * @param {Object} sandbox
          * @param {Number} taxRate
          * @returns {Number}
          */
         getTaxRate = function(sandbox, taxRate) {
-            if (!!sandbox.dom.isNumeric(taxRate)) {
+            if (!!isGreaterThanOrEqualsZero(sandbox, taxRate)) {
                 return parseFloat(taxRate) / 100;
-            } else {
+            } else if (!taxRate) {
                 return defaults.taxRate;
+            } else {
+                // TODO handle invalid value everywhere correctly
+                sandbox.logger.error('Invalid argument for tax rtae!', taxRate);
+                throw new Error(sandbox.translate(constants.invalidInputTranslation));
             }
         },
 
         /**
          * Returns discount as float value between 0 and 1
+         * If discount is greater than 100 or negativ an error will be thrown
+         * If none discount is provided the default discount will be returned
          * @param {Object} sandbox
          * @param {Number} discount
          * @returns {Number}
          */
         getDiscount = function(sandbox, discount) {
-            if (!!sandbox.dom.isNumeric(discount)) {
-                return parseFloat(discount) / 100;
+            if (!!isGreaterThanOrEqualsZero(sandbox, discount) && parseFloat(discount) <= 100) {
+                var result = parseFloat(discount) / 100;
+                if(result <= 1){
+                    return result;
+                }
+            } else if(!discount) {
+                return parseFloat(constants.discount);
             } else {
-                return 0;
+                // TODO handle invalid value everywhere correctly
+                sandbox.logger.error('Invalid argument for discount!', discount);
+                throw new Error(sandbox.translate(constants.invalidInputTranslation));
             }
         },
 
@@ -88,6 +104,7 @@ define([], function() {
             if (!isGreaterThanOrEqualsZero(sandbox, price) ||
                 !isGreaterThanOrEqualsZero(sandbox, taxRate) ||
                 !isGreaterThanOrEqualsZero(sandbox, discount) ||
+                parseFloat(discount) > 100 ||
                 !isGreaterThanOrEqualsZero(sandbox, amount)
             ) {
                 sandbox.logger.error('Invalid parameter(s) for price calculation!');
@@ -101,12 +118,9 @@ define([], function() {
          * Processes elements for getTotalPricesAndTaxes
          * @param sandbox
          * @param items
-         * @param taxes
-         * @param netPrice
-         * @param grossPrice
          */
         processPriceCalculationItem = function(sandbox, items) {
-            var tax = 0, i, item,
+            var tax = 0, i, item, discount, netPrice,
                 result = {
                     taxes: {},
                     netPrice: 0,
@@ -114,10 +128,19 @@ define([], function() {
                 };
 
             for (i in items) {
-                if (isGreaterThanOrEqualsZero(sandbox, items[i].price) && isGreaterThanOrEqualsZero(sandbox, items[i].tax)) {
+                if (validCalculationParams(sandbox, items[i].price, items[i].tax, items[i].discount, 1)) {
                     item = items[i];
-                    result.netPrice += parseFloat(item.price);
-                    tax = item.price * getTaxRate(sandbox, item.tax);
+                    discount = getDiscount(sandbox, item.discount);
+                    netPrice = parseFloat(item.price);
+                    netPrice = netPrice * item.quantity;
+                    if(!!discount) {
+                        netPrice -= (parseFloat(item.price) * discount);
+                    }
+
+                    // TODO test function - wrong discount value?
+
+                    result.netPrice += netPrice;
+                    tax = result.netPrice * getTaxRate(sandbox, item.tax);
                     if (tax > 0) {
                         if (!!result.taxes[item.tax]) {
                             result.taxes[item.tax] += tax;
@@ -125,9 +148,8 @@ define([], function() {
                             result.taxes[item.tax] = tax;
                         }
                     }
-                    result.grossPrice += item.price + tax;
+                    result.grossPrice += netPrice + tax;
                 } else {
-                    sandbox.logger.error('Invalid parameter(s) for price calculation!');
                     throw new Error(sandbox.translate(constants.invalidInputTranslation));
                 }
             }
@@ -151,6 +173,8 @@ define([], function() {
             }
 
             var total, locale;
+
+            // TODO add amount and discount and add try catch
 
             price = parseFloat(price);
             taxRate = getTaxRate(sandbox, taxRate);
@@ -182,6 +206,8 @@ define([], function() {
             currency = currency || defaults.currency;
             locale = sandbox.globalize.getLocale() || defaults.locale;
             total = price - (price * taxRate);
+
+            // TODO test
 
             return this.getFormattedNumberWithAddition(sandbox, total, currency, appendCurrencyToPrice(locale));
         },
@@ -238,12 +264,19 @@ define([], function() {
 
             var total, locale;
 
-            price = parseFloat(price);
-            amount = parseFloat(amount);
-            taxRate = getTaxRate(sandbox, taxRate);
-            currency = currency || defaults.currency;
-            discount = getDiscount(sandbox, discount);
-            locale = sandbox.globalize.getLocale() || defaults.locale;
+            try {
+                price = parseFloat(price);
+                amount = parseFloat(amount);
+                taxRate = getTaxRate(sandbox, taxRate);
+                discount = getDiscount(sandbox, discount);
+                currency = currency || defaults.currency;
+                locale = sandbox.globalize.getLocale() || defaults.locale;
+
+                // TODO test
+
+            } catch (ex) {
+                return sandbox.translate(constants.invalidInputTranslation);
+            }
 
             if (!isNetPrice) {
                 price = price - (price * taxRate);
@@ -263,7 +296,8 @@ define([], function() {
          * [
          *  {
          *   price: 100,
-         *   taxRate: 20
+         *   taxRate: 20,
+         *   discount: 5
          *  }
          * ]
          *
