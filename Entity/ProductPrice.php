@@ -12,7 +12,7 @@ class ProductPrice
     /**
      * @var string
      */
-    private $minimumQuantity;
+    private $minimumQuantity = 1;
 
     /**
      * @var double
