@@ -319,6 +319,20 @@ class ProductManager implements ProductManagerInterface
                 )
             )
         );
+        // Todo: use currency as defined in global settings
+        $fieldDescriptors['price'] = new DoctrineFieldDescriptor(
+            'price',
+            'price',
+            self::$productPriceEntityName,
+            'product.price',
+            array(
+                self::$productPriceEntityName => new DoctrineJoinDescriptor(
+                    self::$productPriceEntityName,
+                    static::$productEntityName . '.prices',
+                    self::$productPriceEntityName . '.minimumQuantity = 1'
+                )
+            )
+        );
 
         $fieldDescriptors['number'] = new DoctrineFieldDescriptor(
             'number',
@@ -688,7 +702,7 @@ class ProductManager implements ProductManagerInterface
             $publishedProduct = $this->getExistingActiveOrInactiveProduct($product, $data['status']['id'], $locale);
 
         } else {
-            $this->checkData($data, $id === null); 
+            $this->checkData($data, $id === null);
             $product = new $this->productApiEntity(new $this->productEntity, $locale);
         }
 
@@ -736,9 +750,21 @@ class ProductManager implements ProductManagerInterface
         $product->setPriceInfo($this->getProperty($data, 'priceInfo', $product->getPriceInfo()));
         if (!$product->getInternalItemNumber()) {
             if ($supplierId) {
-                $product->setInternalItemNumber($this->generateInternalItemNumber('S', $supplierId, $product->getNumber()));
+                $product->setInternalItemNumber(
+                    $this->generateInternalItemNumber(
+                        'S',
+                        $supplierId,
+                        $product->getNumber()
+                    )
+                );
             } else {
-                $product->setInternalItemNumber($this->generateInternalItemNumber('U', $userId, $product->getNumber()));
+                $product->setInternalItemNumber(
+                    $this->generateInternalItemNumber(
+                        'U',
+                        $userId,
+                        $product->getNumber()
+                    )
+                );
             }
         }
 
@@ -813,7 +839,7 @@ class ProductManager implements ProductManagerInterface
                 throw new ProductDependencyNotFoundException(self::$unitEntityName, $orderUnitId);
             }
             $product->setOrderUnit($orderUnit);
-        } else {
+        } elseif (!$id) {
             // Default Unit
             $orderUnit = $this->unitRepository->find(Unit::PIECE_ID);
             $product->setOrderUnit($orderUnit);
@@ -927,7 +953,10 @@ class ProductManager implements ProductManagerInterface
             /** @var DeliveryStatus $deliveryStatus */
             $deliveryStatus = $this->deliveryStatusRepository->find($deliveryStatusId);
             if (!$deliveryStatus) {
-                throw new ProductDependencyNotFoundException(self::$productDeliveryStatusClassEntityName, $deliveryStatusId);
+                throw new ProductDependencyNotFoundException(
+                    self::$productDeliveryStatusClassEntityName,
+                    $deliveryStatusId
+                );
             }
             $product->setDeliveryStatus($deliveryStatus);
         } elseif ($product->getDeliveryStatus() === null) {
