@@ -11,7 +11,7 @@ require.config({
     paths: {
         suluproduct: '../../suluproduct/js',
         'suluproduct/util/header': '../../suluproduct/js/components/products/util/header',
-        'suluproduct/components/numbers':'../../suluproduct/js/components/numbers/numbers'
+        'suluproduct/components/price-calculation-util':'../../suluproduct/js/components/price-calculation-util/price-calculation-util'
     }
 });
 
