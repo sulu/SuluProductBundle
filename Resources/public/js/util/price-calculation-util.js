@@ -49,32 +49,30 @@ define([], function() {
          * @returns {Number}
          */
         getTaxRate = function(sandbox, taxRate) {
-            if (!!isGreaterThanOrEqualsZero(sandbox, taxRate)) {
+            if (isGreaterThanOrEqualsZero(sandbox, taxRate)) {
                 return parseFloat(taxRate) / 100;
             } else if (!taxRate) {
                 return defaults.taxRate;
             } else {
-                sandbox.logger.error('Invalid argument for tax rtae!', taxRate);
-                throw new Error(sandbox.translate(constants.invalidInputTranslation));
+                throw new Error('Invalid argument for tax rate (' + taxRate + ')!');
             }
         },
 
         /**
          * Returns discount as float value between 0 and 1
-         * If discount is greater than 100 or negativ an error will be thrown
-         * If none discount is provided the default discount will be returned
+         * If discount is greater than 100 or negative an error will be thrown
+         * If no discount is provided the default discount will be returned
          * @param {Object} sandbox
          * @param {Number} discount
          * @returns {Number}
          */
         getDiscount = function(sandbox, discount) {
-            if (!!isGreaterThanOrEqualsZero(sandbox, discount) && parseFloat(discount) <= 100) {
+            if (isGreaterThanOrEqualsZero(sandbox, discount) && parseFloat(discount) <= 100) {
                 return parseFloat(discount) / 100;
             } else if (!discount) {
                 return parseFloat(constants.discount);
             } else {
-                sandbox.logger.error('Invalid argument for discount!', discount);
-                throw new Error(sandbox.translate(constants.invalidInputTranslation));
+                throw new Error('Invalid argument for discount (' + discount + ')!');
             }
         },
 
@@ -131,9 +129,10 @@ define([], function() {
          * @param discount
          * @param amount
          */
-        validCalculationParams = function(sandbox, price, taxRate, discount, amount) {
+        areValidCalculationParams = function(sandbox, price, taxRate, discount, amount) {
             if (!isGreaterThanOrEqualsZero(sandbox, price) ||
                 !isGreaterThanOrEqualsZero(sandbox, taxRate) ||
+                parseFloat(taxRate) > 100 ||
                 !isGreaterThanOrEqualsZero(sandbox, discount) ||
                 parseFloat(discount) > 100 ||
                 !isGreaterThanOrEqualsZero(sandbox, amount)
@@ -160,7 +159,7 @@ define([], function() {
 
             try {
                 for (i in items) {
-                    if (validCalculationParams(sandbox, items[i].price, items[i].tax, items[i].discount, 1)) {
+                    if (areValidCalculationParams(sandbox, items[i].price, items[i].tax, items[i].discount, 1)) {
                         item = items[i];
                         discount = getDiscount(sandbox, item.discount);
                         netPrice = parseFloat(item.price);
@@ -187,6 +186,7 @@ define([], function() {
                 }
                 return result;
             } catch (ex) {
+                sandbox.logger.error(ex.message);
                 return null;
             }
         };
@@ -202,7 +202,7 @@ define([], function() {
          * @return {String} formatted price including currency
          */
         getFormattedGrossPrice: function(sandbox, price, currency, taxRate) {
-            if (!validCalculationParams(sandbox, price, taxRate, 0, 0)) {
+            if (!areValidCalculationParams(sandbox, price, taxRate, 0, 0)) {
                 return sandbox.translate(constants.invalidInputTranslation);
             }
 
@@ -218,6 +218,7 @@ define([], function() {
 
                 return this.getFormattedNumberWithAddition(sandbox, total, currency, appendCurrencyToPrice(locale));
             } catch (ex) {
+                sandbox.logger.error(ex.message);
                 return sandbox.translate(constants.invalidInputTranslation);
             }
         },
@@ -232,7 +233,7 @@ define([], function() {
          */
         getFormattedNetPrice: function(sandbox, price, currency, taxRate) {
 
-            if (!validCalculationParams(sandbox, price, taxRate, 0, 0)) {
+            if (!areValidCalculationParams(sandbox, price, taxRate, 0, 0)) {
                 return sandbox.translate(constants.invalidInputTranslation);
             }
 
@@ -295,7 +296,7 @@ define([], function() {
          * @param {Boolean} isNetPrice
          */
         getTotalPrice: function(sandbox, price, currency, discount, amount, taxRate, isNetPrice) {
-            if (!validCalculationParams(sandbox, price, taxRate, discount, amount)) {
+            if (!areValidCalculationParams(sandbox, price, taxRate, discount, amount)) {
                 return sandbox.translate(constants.invalidInputTranslation);
             }
 
@@ -310,6 +311,7 @@ define([], function() {
                 locale = getLocale(sandbox.globalize.getLocale());
 
             } catch (ex) {
+                sandbox.logger.error(ex.message);
                 return sandbox.translate(constants.invalidInputTranslation);
             }
 
