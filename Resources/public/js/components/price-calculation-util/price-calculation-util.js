@@ -70,7 +70,7 @@ define([], function() {
         getDiscount = function(sandbox, discount) {
             if (!!isGreaterThanOrEqualsZero(sandbox, discount) && parseFloat(discount) <= 100) {
                 return parseFloat(discount) / 100;
-            } else if(!discount) {
+            } else if (!discount) {
                 return parseFloat(constants.discount);
             } else {
                 sandbox.logger.error('Invalid argument for discount!', discount);
@@ -84,7 +84,7 @@ define([], function() {
          * @returns {String}
          */
         getCurrency = function(currency) {
-            if(!!currency){
+            if (!!currency) {
                 return currency;
             }
             return defaults.currency;
@@ -96,7 +96,7 @@ define([], function() {
          * @returns {String}
          */
         getUnit = function(unit) {
-            if(!!unit){
+            if (!!unit) {
                 return unit;
             }
             return defaults.unit;
@@ -108,7 +108,7 @@ define([], function() {
          * @returns {String}
          */
         getLocale = function(locale) {
-            if(!!locale){
+            if (!!locale) {
                 return locale;
             }
             return defaults.locale;
@@ -157,7 +157,7 @@ define([], function() {
                     netPrice: 0,
                     grossPrice: 0
                 };
-            
+
             try {
                 for (i in items) {
                     if (validCalculationParams(sandbox, items[i].price, items[i].tax, items[i].discount, 1)) {
