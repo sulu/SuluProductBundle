@@ -194,6 +194,10 @@
                 <source>product.workflow.state.changed.error</source>
                 <target>Der Status konnte nicht geändert werden.</target>
             </trans-unit>
+            <trans-unit id="50" resname="products.price-calculation.invalid.input">
+                <source>products.price-calculation.invalid.input</source>
+                <target>Ungültig</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>
