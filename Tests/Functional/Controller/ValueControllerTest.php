@@ -209,7 +209,7 @@ class ValueControllerTest extends SuluTestCase
         $this->em->persist($this->attributeType5);
         $this->em->flush();
     }
-    
+
     /**
      * Get a existing values for an attribute by it's id
      */
