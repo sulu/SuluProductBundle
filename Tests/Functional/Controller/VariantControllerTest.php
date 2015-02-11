@@ -10,17 +10,17 @@
 
 namespace Sulu\Bundle\ProductBundle\Tests\Functional\Controller;
 
-use Doctrine\ORM\Tools\SchemaTool;
+use Doctrine\ORM\EntityManager;
 use Sulu\Bundle\ProductBundle\Api\Product;
 use Sulu\Bundle\ProductBundle\Entity\Product as ProductEntity;
 use Sulu\Bundle\ProductBundle\Entity\Status;
 use Sulu\Bundle\ProductBundle\Entity\StatusTranslation;
 use Sulu\Bundle\ProductBundle\Entity\Type;
 use Sulu\Bundle\ProductBundle\Entity\TypeTranslation;
-use Sulu\Bundle\TestBundle\Testing\DatabaseTestCase;
-use Symfony\Bundle\FrameworkBundle\Client;
+use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
+use Symfony\Bundle\FrameworkBundle\Client; 
 
-class VariantControllerTest extends DatabaseTestCase
+class VariantControllerTest extends SuluTestCase
 {
     protected static $entities;
 
@@ -40,6 +40,11 @@ class VariantControllerTest extends DatabaseTestCase
     protected $productType;
 
     /**
+     * @var EntityManager
+     */
+    protected $em;
+
+    /**
      * @var Product
      */
     private $product;
@@ -51,114 +56,46 @@ class VariantControllerTest extends DatabaseTestCase
 
     public function setUp()
     {
-        $this->client = static::createClient(
-            array(),
-            array(
-                'PHP_AUTH_USER' => 'test',
-                'PHP_AUTH_PW' => 'test'
-            )
-        );
+        $this->em = $this->db('ORM')->getOm();
+        $this->purgeDatabase();
+        $this->client = $this->createAuthenticatedClient();
+        $this->em->flush();
+    }
 
-        $this->setUpSchema();
-
+    public function createFixtures()
+    {
         $this->productType = new Type();
         $productTypeTranslation = new TypeTranslation();
         $productTypeTranslation->setLocale('en');
         $productTypeTranslation->setName('Product');
         $productTypeTranslation->setType($this->productType);
-        self::$em->persist($this->productType);
-        self::$em->persist($productTypeTranslation);
+        $this->em->persist($this->productType);
+        $this->em->persist($productTypeTranslation);
 
         $this->productWithVariantsType = new Type();
         $productWithVariantsTypeTranslation = new TypeTranslation();
         $productWithVariantsTypeTranslation->setLocale('en');
         $productWithVariantsTypeTranslation->setName('Product with Variants');
         $productWithVariantsTypeTranslation->setType($this->productWithVariantsType);
-        self::$em->persist($this->productWithVariantsType);
-        self::$em->persist($productWithVariantsTypeTranslation);
+        $this->em->persist($this->productWithVariantsType);
+        $this->em->persist($productWithVariantsTypeTranslation);
 
         $this->activeStatus = new Status();
         $activeStatusTranslation = new StatusTranslation();
         $activeStatusTranslation->setLocale('en');
         $activeStatusTranslation->setName('Active');
         $activeStatusTranslation->setStatus($this->activeStatus);
-        self::$em->persist($this->activeStatus);
-        self::$em->persist($activeStatusTranslation);
+        $this->em->persist($this->activeStatus);
+        $this->em->persist($activeStatusTranslation);
 
         $this->product = new Product(new ProductEntity(), 'en');
         $this->product->setName('Product with Variants');
         $this->product->setNumber('1');
         $this->product->setStatus($this->activeStatus);
         $this->product->setType($this->productWithVariantsType);
-        self::$em->persist($this->product->getEntity());
-
-        self::$em->flush();
+        $this->em->persist($this->product->getEntity());
     }
 
-    public function tearDown()
-    {
-        parent::tearDown();
-        self::$tool->dropSchema(self::$entities);
-    }
-
-    private function setUpSchema()
-    {
-        self::$tool = new SchemaTool(self::$em);
-
-        self::$entities = array(
-            self::$em->getClassMetadata('Sulu\Bundle\TestBundle\Entity\TestUser'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Product'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\DeliveryStatus'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\ProductPrice'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Currency'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Type'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\TypeTranslation'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Status'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\StatusTranslation'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\AttributeSet'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\AttributeSetTranslation'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Attribute'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\AttributeTranslation'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\ProductTranslation'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\ProductAttribute'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Addon'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Account'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\AccountCategory'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Activity'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\ActivityStatus'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Address'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\AddressType'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\BankAccount'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Contact'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\ContactLocale'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Country'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Email'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\EmailType'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Note'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Fax'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\FaxType'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Phone'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\PhoneType'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Url'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\UrlType'),
-            self::$em->getClassMetadata('Sulu\Bundle\CategoryBundle\Entity\Category'),
-            self::$em->getClassMetadata('Sulu\Bundle\CategoryBundle\Entity\CategoryTranslation'),
-            self::$em->getClassMetadata('Sulu\Bundle\CategoryBundle\Entity\CategoryMeta'),
-            self::$em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\Media'),
-            self::$em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\MediaType'),
-            self::$em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\FileVersion'),
-            self::$em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\File'),
-            self::$em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\FileVersionMeta'),
-            self::$em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\FileVersionContentLanguage'),
-            self::$em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\FileVersionPublishLanguage'),
-            self::$em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\Collection'),
-            self::$em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\CollectionMeta'),
-            self::$em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\CollectionType'),
-        );
-
-        self::$tool->dropSchema(self::$entities);
-        self::$tool->createSchema(self::$entities);
-    }
 
     public function testGetAll()
     {
@@ -168,7 +105,7 @@ class VariantControllerTest extends DatabaseTestCase
         $productVariant1->setStatus($this->activeStatus);
         $productVariant1->setType($this->productType);
         $productVariant1->setParent($this->product);
-        self::$em->persist($productVariant1->getEntity());
+        $this->em->persist($productVariant1->getEntity());
 
         $productVariant2 = new Product(new ProductEntity(), 'en');
         $productVariant2->setName('Another Productvariant');
@@ -176,16 +113,16 @@ class VariantControllerTest extends DatabaseTestCase
         $productVariant2->setStatus($this->activeStatus);
         $productVariant2->setType($this->productType);
         $productVariant2->setParent($this->product);
-        self::$em->persist($productVariant2->getEntity());
+        $this->em->persist($productVariant2->getEntity());
 
         $anotherProduct = new Product(new ProductEntity(), 'en');
         $anotherProduct->setName('Another product');
         $anotherProduct->setNumber('4');
         $anotherProduct->setStatus($this->activeStatus);
         $anotherProduct->setType($this->productType);
-        self::$em->persist($anotherProduct->getEntity());
+        $this->em->persist($anotherProduct->getEntity());
 
-        self::$em->flush();
+        $this->em->flush();
 
         $this->client->request('GET', '/api/products/1/variants?flat=true');
         $response = json_decode($this->client->getResponse()->getContent());
@@ -204,9 +141,9 @@ class VariantControllerTest extends DatabaseTestCase
         $productVariant->setStatus($this->activeStatus);
         $productVariant->setType($this->productType);
         $productVariant->setParent($this->product);
-        self::$em->persist($productVariant->getEntity());
+        $this->em->persist($productVariant->getEntity());
 
-        self::$em->flush();
+        $this->em->flush();
 
         $this->client->request('POST', '/api/products/1/variants', array('id' => $productVariant->getId()));
 
@@ -230,9 +167,9 @@ class VariantControllerTest extends DatabaseTestCase
         $productVariant->setStatus($this->activeStatus);
         $productVariant->setType($this->productType);
         $productVariant->setParent($this->product);
-        self::$em->persist($productVariant->getEntity());
+        $this->em->persist($productVariant->getEntity());
 
-        self::$em->flush();
+        $this->em->flush();
 
         $this->client->request('POST', '/api/products/3/variants', array('id' => $productVariant->getId()));
 
@@ -266,9 +203,9 @@ class VariantControllerTest extends DatabaseTestCase
         $productVariant1->setStatus($this->activeStatus);
         $productVariant1->setType($this->productType);
         $productVariant1->setParent($this->product);
-        self::$em->persist($productVariant1->getEntity());
+        $this->em->persist($productVariant1->getEntity());
 
-        self::$em->flush();
+        $this->em->flush();
 
         $this->client->request('GET', '/api/products/1/variants/2');
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());

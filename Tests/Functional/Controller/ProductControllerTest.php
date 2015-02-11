@@ -11,6 +11,8 @@
 namespace Sulu\Bundle\ProductBundle\Tests\Functional\Controller;
 
 use DateTime;
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Tools\SchemaTool;
 use Sulu\Bundle\CategoryBundle\Entity\Category;
 use Sulu\Bundle\CategoryBundle\Entity\CategoryTranslation;
@@ -29,12 +31,11 @@ use Sulu\Bundle\ProductBundle\Entity\Type;
 use Sulu\Bundle\ProductBundle\Entity\TypeTranslation;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSet;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSetTranslation;
-use Sulu\Bundle\TestBundle\Entity\TestUser;
-use Sulu\Bundle\TestBundle\Testing\DatabaseTestCase;
+use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Symfony\Component\HttpKernel\Client;
 use Sulu\Bundle\ProductBundle\Entity\AttributeType;
 
-class ProductControllerTest extends DatabaseTestCase
+class ProductControllerTest extends SuluTestCase
 {
     /**
      * @var array
@@ -42,14 +43,14 @@ class ProductControllerTest extends DatabaseTestCase
     protected static $entities;
 
     /**
+     * @var EntityManager
+     */
+    protected $em;
+
+    /**
      * @var Client
      */
     private $client;
-
-    /**
-     * @var TestUser
-     */
-    private $testUser;
 
     /**
      * @var Product
@@ -191,53 +192,31 @@ class ProductControllerTest extends DatabaseTestCase
      */
     private $category2;
 
-    public static function setUpBeforeClass()
-    {
-        parent::setUpBeforeClass();
-
-        static::$kernel->getContainer()->set(
-            'sulu_security.user_repository',
-            static::$kernel->getContainer()->get('test_user_provider')
-        );
-    }
-
     public function setUp()
     {
-        $this->setUpSchema();
-        $this->setUpTestUser();
+        $this->em = $this->db('ORM')->getOm();
+        $this->purgeDatabase();
         $this->setUpTestData();
-        $this->setUpClient();
-    }
-
-    private function setUpTestUser()
-    {
-        $this->testUser = new TestUser();
-        $this->testUser->setUsername('test');
-        $this->testUser->setPassword('test');
-        $this->testUser->setLocale('en');
-    }
-
-    private function setUpClient()
-    {
-        $this->client = static::createClient(
-            array(),
-            array(
-                'PHP_AUTH_USER' => $this->testUser->getUsername(),
-                'PHP_AUTH_PW' => $this->testUser->getPassword()
-            )
-        );
+        $this->client = $this->createAuthenticatedClient();
+        $this->em->flush();
     }
 
     private function setUpTestData()
     {
         $this->currency1 = new Currency();
         $this->currency1->setName('EUR');
+        $this->currency1->setNumber('1');
+        $this->currency1->setCode('eur');
 
         $this->currency2 = new Currency();
         $this->currency2->setName('USD');
+        $this->currency2->setNumber('2');
+        $this->currency2->setCode('usd');
 
         $this->currency3 = new Currency();
         $this->currency3->setName('GBP');
+        $this->currency3->setNumber('3');
+        $this->currency3->setCode('gbp');
 
         // Product 1
         // product type
@@ -248,7 +227,10 @@ class ProductControllerTest extends DatabaseTestCase
         $this->typeTranslation1->setType($this->type1);
 
         // product status
+        $metadata = $this->em->getClassMetaData(get_class(new Status()));
+        $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_NONE);
         $this->productStatus1 = new Status();
+        $this->productStatus1->setId(Status::ACTIVE);
         $this->productStatusTranslation1 = new StatusTranslation();
         $this->productStatusTranslation1->setLocale('en');
         $this->productStatusTranslation1->setName('EnglishProductStatus-1');
@@ -264,7 +246,12 @@ class ProductControllerTest extends DatabaseTestCase
         // Attributes
         $this->attributeType1 = new AttributeType();
         $this->attributeType1->setName('EnglishAttributeType-1');
+
+        $metadata = $this->em->getClassMetaData(get_class(new Attribute()));
+        $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_NONE);
+
         $this->attribute1 = new Attribute();
+        $this->attribute1->setId(Attribute::ATTRIBUTE_TYPE_TEXT);
         $this->attribute1->setCreated(new DateTime());
         $this->attribute1->setChanged(new DateTime());
         $this->attribute1->setType($this->attributeType1);
@@ -318,7 +305,10 @@ class ProductControllerTest extends DatabaseTestCase
         $this->typeTranslation2->setType($this->type2);
 
         // product status
+        $metadata = $this->em->getClassMetaData(get_class(new Status()));
+        $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_NONE);
         $this->productStatus2 = new Status();
+        $this->productStatus2->setId(Status::CHANGED);
         $this->productStatusTranslation2 = new StatusTranslation();
         $this->productStatusTranslation2->setLocale('en');
         $this->productStatusTranslation2->setName('EnglishProductStatus-2');
@@ -368,7 +358,10 @@ class ProductControllerTest extends DatabaseTestCase
         $this->productAttribute2->setProduct($this->product2);
         $this->productAttribute2->setAttribute($this->attribute2);
 
+        $metadata = $this->em->getClassMetaData(get_class(new TaxClass()));
+        $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_NONE);
         $this->taxClass1 = new TaxClass();
+        $this->taxClass1->setId(TaxClass::STANDARD_TAX_RATE);
         $taxClassTranslation1 = new TaxClassTranslation();
         $taxClassTranslation1->setName('20%');
         $taxClassTranslation1->setLocale('en');
@@ -398,102 +391,102 @@ class ProductControllerTest extends DatabaseTestCase
         $categoryTranslation2->setCategory($this->category2);
         $this->category2->addTranslation($categoryTranslation2);
 
-        self::$em->persist($this->category1);
-        self::$em->persist($this->category2);
+        $this->em->persist($this->category1);
+        $this->em->persist($this->category2);
 
-        self::$em->persist($this->taxClass1);
-        self::$em->persist($taxClassTranslation1);
+        $this->em->persist($this->taxClass1);
+        $this->em->persist($taxClassTranslation1);
 
-        self::$em->persist($this->currency1);
-        self::$em->persist($this->currency2);
-        self::$em->persist($this->currency3);
+        $this->em->persist($this->currency1);
+        $this->em->persist($this->currency2);
+        $this->em->persist($this->currency3);
 
-        self::$em->persist($productPrice1);
-        self::$em->persist($productPrice2);
-        self::$em->persist($this->type1);
-        self::$em->persist($this->attributeType1);
-        self::$em->persist($this->typeTranslation1);
-        self::$em->persist($this->attributeSet1);
-        self::$em->persist($this->attributeSetTranslation1);
-        self::$em->persist($this->productStatus1);
-        self::$em->persist($this->productStatusTranslation1);
-        self::$em->persist($this->attribute1);
-        self::$em->persist($this->attributeTranslation1);
-        self::$em->persist($this->product1);
-        self::$em->persist($productTranslation1);
-        self::$em->persist($this->productAttribute1);
+        $this->em->persist($productPrice1);
+        $this->em->persist($productPrice2);
+        $this->em->persist($this->type1);
+        $this->em->persist($this->attributeType1);
+        $this->em->persist($this->typeTranslation1);
+        $this->em->persist($this->attributeSet1);
+        $this->em->persist($this->attributeSetTranslation1);
+        $this->em->persist($this->productStatus1);
+        $this->em->persist($this->productStatusTranslation1);
+        $this->em->persist($this->attribute1);
+        $this->em->persist($this->attributeTranslation1);
+        $this->em->persist($this->product1);
+        $this->em->persist($productTranslation1);
+        $this->em->persist($this->productAttribute1);
 
-        self::$em->persist($this->type2);
-        self::$em->persist($this->attributeType2);
-        self::$em->persist($this->typeTranslation2);
-        self::$em->persist($this->attributeSet2);
-        self::$em->persist($this->attributeSetTranslation2);
-        self::$em->persist($this->productStatus2);
-        self::$em->persist($this->productStatusTranslation2);
-        self::$em->persist($this->attribute2);
-        self::$em->persist($this->attributeTranslation2);
-        self::$em->persist($this->product2);
-        self::$em->persist($productTranslation2);
-        self::$em->persist($this->productAttribute2);
-        self::$em->flush();
+        $this->em->persist($this->type2);
+        $this->em->persist($this->attributeType2);
+        $this->em->persist($this->typeTranslation2);
+        $this->em->persist($this->attributeSet2);
+        $this->em->persist($this->attributeSetTranslation2);
+        $this->em->persist($this->productStatus2);
+        $this->em->persist($this->productStatusTranslation2);
+        $this->em->persist($this->attribute2);
+        $this->em->persist($this->attributeTranslation2);
+        $this->em->persist($this->product2);
+        $this->em->persist($productTranslation2);
+        $this->em->persist($this->productAttribute2);
+        $this->em->flush();
     }
 
     private function setUpSchema()
     {
-        self::$tool = new SchemaTool(self::$em);
+        self::$tool = new SchemaTool($this->em);
 
         self::$entities = array(
-            self::$em->getClassMetadata('Sulu\Bundle\TestBundle\Entity\TestUser'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Product'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\DeliveryStatus'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\ProductPrice'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Type'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\TypeTranslation'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\TaxClass'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\TaxClassTranslation'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Currency'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Status'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\StatusTranslation'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\AttributeSet'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\AttributeSetTranslation'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Attribute'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\AttributeTranslation'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\ProductTranslation'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\ProductAttribute'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Addon'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\AttributeType'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Account'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\AccountCategory'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Activity'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\ActivityStatus'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Address'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\AddressType'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\BankAccount'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Contact'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\ContactLocale'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Country'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Email'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\EmailType'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Note'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Fax'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\FaxType'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Phone'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\PhoneType'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Url'),
-            self::$em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\UrlType'),
-            self::$em->getClassMetadata('Sulu\Bundle\CategoryBundle\Entity\Category'),
-            self::$em->getClassMetadata('Sulu\Bundle\CategoryBundle\Entity\CategoryTranslation'),
-            self::$em->getClassMetadata('Sulu\Bundle\CategoryBundle\Entity\CategoryMeta'),
-            self::$em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\Media'),
-            self::$em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\MediaType'),
-            self::$em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\FileVersion'),
-            self::$em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\File'),
-            self::$em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\FileVersionMeta'),
-            self::$em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\FileVersionContentLanguage'),
-            self::$em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\FileVersionPublishLanguage'),
-            self::$em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\Collection'),
-            self::$em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\CollectionMeta'),
-            self::$em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\CollectionType'),
+            $this->em->getClassMetadata('Sulu\Bundle\TestBundle\Entity\TestUser'),
+            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Product'),
+            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\DeliveryStatus'),
+            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\ProductPrice'),
+            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Type'),
+            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\TypeTranslation'),
+            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\TaxClass'),
+            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\TaxClassTranslation'),
+            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Currency'),
+            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Status'),
+            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\StatusTranslation'),
+            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\AttributeSet'),
+            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\AttributeSetTranslation'),
+            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Attribute'),
+            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\AttributeTranslation'),
+            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\ProductTranslation'),
+            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\ProductAttribute'),
+            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Addon'),
+            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\AttributeType'),
+            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Account'),
+            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\AccountCategory'),
+            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Activity'),
+            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\ActivityStatus'),
+            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Address'),
+            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\AddressType'),
+            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\BankAccount'),
+            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Contact'),
+            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\ContactLocale'),
+            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Country'),
+            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Email'),
+            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\EmailType'),
+            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Note'),
+            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Fax'),
+            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\FaxType'),
+            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Phone'),
+            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\PhoneType'),
+            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Url'),
+            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\UrlType'),
+            $this->em->getClassMetadata('Sulu\Bundle\CategoryBundle\Entity\Category'),
+            $this->em->getClassMetadata('Sulu\Bundle\CategoryBundle\Entity\CategoryTranslation'),
+            $this->em->getClassMetadata('Sulu\Bundle\CategoryBundle\Entity\CategoryMeta'),
+            $this->em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\Media'),
+            $this->em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\MediaType'),
+            $this->em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\FileVersion'),
+            $this->em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\File'),
+            $this->em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\FileVersionMeta'),
+            $this->em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\FileVersionContentLanguage'),
+            $this->em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\FileVersionPublishLanguage'),
+            $this->em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\Collection'),
+            $this->em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\CollectionMeta'),
+            $this->em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\CollectionType'),
         );
 
         self::$tool->dropSchema(self::$entities);
