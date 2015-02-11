@@ -13,7 +13,6 @@ namespace Sulu\Bundle\ProductBundle\Tests\Functional\Controller;
 use DateTime;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Mapping\ClassMetadata;
-use Doctrine\ORM\Tools\SchemaTool;
 use Sulu\Bundle\CategoryBundle\Entity\Category;
 use Sulu\Bundle\CategoryBundle\Entity\CategoryTranslation;
 use Sulu\Bundle\ProductBundle\Entity\Currency;
@@ -429,74 +428,6 @@ class ProductControllerTest extends SuluTestCase
         $this->em->persist($productTranslation2);
         $this->em->persist($this->productAttribute2);
         $this->em->flush();
-    }
-
-    private function setUpSchema()
-    {
-        self::$tool = new SchemaTool($this->em);
-
-        self::$entities = array(
-            $this->em->getClassMetadata('Sulu\Bundle\TestBundle\Entity\TestUser'),
-            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Product'),
-            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\DeliveryStatus'),
-            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\ProductPrice'),
-            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Type'),
-            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\TypeTranslation'),
-            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\TaxClass'),
-            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\TaxClassTranslation'),
-            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Currency'),
-            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Status'),
-            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\StatusTranslation'),
-            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\AttributeSet'),
-            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\AttributeSetTranslation'),
-            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Attribute'),
-            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\AttributeTranslation'),
-            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\ProductTranslation'),
-            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\ProductAttribute'),
-            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Addon'),
-            $this->em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\AttributeType'),
-            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Account'),
-            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\AccountCategory'),
-            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Activity'),
-            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\ActivityStatus'),
-            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Address'),
-            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\AddressType'),
-            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\BankAccount'),
-            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Contact'),
-            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\ContactLocale'),
-            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Country'),
-            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Email'),
-            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\EmailType'),
-            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Note'),
-            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Fax'),
-            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\FaxType'),
-            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Phone'),
-            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\PhoneType'),
-            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\Url'),
-            $this->em->getClassMetadata('Sulu\Bundle\ContactBundle\Entity\UrlType'),
-            $this->em->getClassMetadata('Sulu\Bundle\CategoryBundle\Entity\Category'),
-            $this->em->getClassMetadata('Sulu\Bundle\CategoryBundle\Entity\CategoryTranslation'),
-            $this->em->getClassMetadata('Sulu\Bundle\CategoryBundle\Entity\CategoryMeta'),
-            $this->em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\Media'),
-            $this->em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\MediaType'),
-            $this->em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\FileVersion'),
-            $this->em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\File'),
-            $this->em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\FileVersionMeta'),
-            $this->em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\FileVersionContentLanguage'),
-            $this->em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\FileVersionPublishLanguage'),
-            $this->em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\Collection'),
-            $this->em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\CollectionMeta'),
-            $this->em->getClassMetadata('Sulu\Bundle\MediaBundle\Entity\CollectionType'),
-        );
-
-        self::$tool->dropSchema(self::$entities);
-        self::$tool->createSchema(self::$entities);
-    }
-
-    public function tearDown()
-    {
-        parent::tearDown();
-        self::$tool->dropSchema(self::$entities);
     }
 
     public function testGetById()
