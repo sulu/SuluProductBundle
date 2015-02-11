@@ -132,6 +132,18 @@ class Attribute
     }
 
     /**
+     * Set id
+     * @param $id
+     * @return Attribute
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+
+        return $this;
+    }
+
+    /**
      * Add translations
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\AttributeTranslation $translations

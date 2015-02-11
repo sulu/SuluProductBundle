@@ -11,16 +11,15 @@
 namespace Sulu\Bundle\ProductBundle\Tests\Functional\Controller;
 
 use DateTime;
-use Doctrine\ORM\Tools\SchemaTool;
-use Sulu\Bundle\ProductBundle\Api\Attribute;
-use Sulu\Bundle\ProductBundle\Entity\Attribute as AttributeEntity;
+use Doctrine\ODM\PHPCR\Mapping\ClassMetadata;
+use Doctrine\ORM\EntityManager;
+use Sulu\Bundle\ProductBundle\Entity\Attribute;
 use Sulu\Bundle\ProductBundle\Entity\AttributeTranslation;
-use Sulu\Bundle\TestBundle\Entity\TestUser;
-use Sulu\Bundle\TestBundle\Testing\DatabaseTestCase;
+use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Symfony\Component\HttpKernel\Client;
 use Sulu\Bundle\ProductBundle\Entity\AttributeType;
 
-class AttributeControllerTest extends DatabaseTestCase
+class AttributeControllerTest extends SuluTestCase
 {
     /**
      * @var array
@@ -28,9 +27,14 @@ class AttributeControllerTest extends DatabaseTestCase
     protected static $entities;
 
     /**
-     * @var TestUser
+     * @var EntityManager
      */
-    private $testUser;
+    protected $em;
+
+    /**
+     * @var AttributeType
+     */
+    protected $attributeType2;
 
     /**
      * @var Client
@@ -43,7 +47,7 @@ class AttributeControllerTest extends DatabaseTestCase
     private $attributeType1;
 
     /**
-     * @var AttributeEntity
+     * @var Attribute
      */
     private $attributeEntity1;
 
@@ -53,7 +57,7 @@ class AttributeControllerTest extends DatabaseTestCase
     private $attribute1;
 
     /**
-     * @var AttributeEntity
+     * @var Attribute
      */
     private $attributeEntity2;
 
@@ -64,29 +68,11 @@ class AttributeControllerTest extends DatabaseTestCase
 
     public function setUp()
     {
-        $this->setUpTestUser();
-        $this->setUpClient();
-        $this->setUpSchema();
+        $this->em = $this->db('ORM')->getOm();
+        $this->purgeDatabase();
         $this->setUpTestData();
-    }
-
-    private function setUpTestUser()
-    {
-        $this->testUser = new TestUser();
-        $this->testUser->setUsername('test');
-        $this->testUser->setPassword('test');
-        $this->testUser->setLocale('de');
-    }
-
-    private function setUpClient()
-    {
-        $this->client = static::createClient(
-            array(),
-            array(
-                'PHP_AUTH_USER' => $this->testUser->getUsername(),
-                'PHP_AUTH_PW' => $this->testUser->getPassword()
-            )
-        );
+        $this->client = $this->createAuthenticatedClient();
+        $this->em->flush();
     }
 
     private function setUpTestData()
@@ -96,48 +82,35 @@ class AttributeControllerTest extends DatabaseTestCase
         $this->attributeType2 = new AttributeType();
         $this->attributeType2->setName('some-translation-type-2-string');
 
-        $this->attributeEntity1 = new AttributeEntity();
-        $this->attributeEntity1->setCreated(new DateTime());
-        $this->attributeEntity1->setChanged(new DateTime());
-        $this->attributeEntity1->setType($this->attributeType1);
+        // shipping
+        $metadata = $this->em->getClassMetaData(get_class(new Attribute()));
+        $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_NONE);
 
-        $this->attribute1 = new Attribute($this->attributeEntity1, 'en');
-        $this->attribute1->setName('Gas');
+        $this->attribute1 = new Attribute();
+        $this->attribute1->setId(Attribute::ATTRIBUTE_TYPE_TEXT);
+        $this->attribute1->setCreated(new DateTime());
+        $this->attribute1->setChanged(new DateTime());
+        $this->attribute1->setType($this->attributeType1);
+        $attributeTextTranslation = new AttributeTranslation();
+        $attributeTextTranslation->setName('Gas');
+        $attributeTextTranslation->setLocale('en');
+        $attributeTextTranslation->setAttribute($this->attribute1);
+        $this->attribute1->addTranslation($attributeTextTranslation);
 
-        $this->attributeEntity2 = new AttributeEntity();
-        $this->attributeEntity2->setCreated(new DateTime());
-        $this->attributeEntity2->setChanged(new DateTime());
-        $this->attributeEntity2->setType($this->attributeType2);
+        $this->attribute2 = new Attribute();
+        $this->attribute2->setCreated(new DateTime());
+        $this->attribute2->setChanged(new DateTime());
+        $this->attribute2->setType($this->attributeType2);
+        $attributeTextTranslation2 = new AttributeTranslation();
+        $attributeTextTranslation2->setName('Power');
+        $attributeTextTranslation2->setLocale('en');
+        $attributeTextTranslation2->setAttribute($this->attribute2);
+        $this->attribute2->addTranslation($attributeTextTranslation2);
 
-        $this->attribute2 = new Attribute($this->attributeEntity2, 'en');
-        $this->attribute2->setName('Power');
-
-        self::$em->persist($this->attributeType1);
-        self::$em->persist($this->attribute1->getEntity());
-        self::$em->persist($this->attributeType2);
-        self::$em->persist($this->attribute2->getEntity());
-        self::$em->flush();
-    }
-
-    private function setUpSchema()
-    {
-        self::$tool = new SchemaTool(self::$em);
-
-        self::$entities = array(
-            self::$em->getClassMetadata('Sulu\Bundle\TestBundle\Entity\TestUser'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Attribute'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\AttributeTranslation'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\AttributeType'),
-        );
-
-        self::$tool->dropSchema(self::$entities);
-        self::$tool->createSchema(self::$entities);
-    }
-
-    public function tearDown()
-    {
-        parent::tearDown();
-        self::$tool->dropSchema(self::$entities);
+        $this->em->persist($this->attributeType1);
+        $this->em->persist($this->attribute1);
+        $this->em->persist($this->attributeType2);
+        $this->em->persist($this->attribute2);
     }
 
     /**
@@ -420,13 +393,11 @@ class AttributeControllerTest extends DatabaseTestCase
     {
         $data = array(
             'type' => array(
-                'id' => 2
+                'id' => $this->attributeType2->getId()
             )
         );
 
         $this->client->request('PUT', '/api/attributes/1', $data);
-
-        $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
 
         $this->client->request('GET', '/api/attributes/1');
