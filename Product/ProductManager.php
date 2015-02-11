@@ -146,7 +146,7 @@ class ProductManager implements ProductManagerInterface
     /**
      * @var string
      */
-    private $productApiEntity;
+    protected $productApiEntity;
 
     /**
      * @var string
