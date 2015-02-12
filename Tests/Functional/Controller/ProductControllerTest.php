@@ -536,7 +536,7 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals($this->type2->getId(), $item->type->id);
     }
 
-    // TODO error group concat when making flat response
+    // FIXME Expected known function, got 'GROUP_CONCAT
 //    public function testGetAllFlat()
 //    {
 //        $this->client->request('GET', '/api/products?flat=true');
@@ -685,17 +685,6 @@ class ProductControllerTest extends SuluTestCase
         );
     }
 
-    // TODO status is missing in data
-//    public function testPutMissingType()
-//    {
-//        $this->client->request('PUT', '/api/products/'.$this->product1->getId(), array('type' => null));
-//
-//        $response = json_decode($this->client->getResponse()->getContent());
-//
-//        $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
-//        $this->assertEquals('The "SuluProductBundle:Product"-entity requires a "type"-argument', $response->message);
-//    }
-
     public function testPutNotExistingParentProduct()
     {
         $this->client->request(
@@ -774,31 +763,31 @@ class ProductControllerTest extends SuluTestCase
             $response->message
         );
     }
-// TODO 200 vs 400
-//    public function testPutWithCategories()
-//    {
-//        $this->client->request(
-//            'PUT',
-//            '/api/products/'.$this->product1->getId(),
-//            array(
-//                'number' => 1,
-//                'type' => array('id' => 1),
-//                'status' => array('id' => $this->productStatus1->getId()),
-//                'categories' => array(array('id' => 1), array('id' => 2))
-//            )
-//        );
-//
-//        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
-//
-//        $this->client->request('GET', '/api/products/'.$this->product1->getId());
-//
-//        $response = json_decode($this->client->getResponse()->getContent());
-//
-//        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
-//
-//        $this->assertEquals('Category 1', $response->categories[0]->name);
-//        $this->assertEquals('Category 2', $response->categories[1]->name);
-//    }
+
+    public function testPutWithCategories()
+    {
+        $this->client->request(
+            'PUT',
+            '/api/products/'.$this->product1->getId(),
+            array(
+                'number' => 1,
+                'type' => array('id' => $this->type1->getId()),
+                'status' => array('id' => $this->productStatus1->getId()),
+                'categories' => array(array('id' => $this->category1->getId()), array('id' => $this->category2->getId()))
+            )
+        );
+
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+
+        $this->client->request('GET', '/api/products/'.$this->product1->getId());
+
+        $response = json_decode($this->client->getResponse()->getContent());
+
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+
+        $this->assertEquals('Category 1', $response->categories[0]->name);
+        $this->assertEquals('Category 2', $response->categories[1]->name);
+    }
 
     public function testPost($testParent = false)
     {
@@ -860,21 +849,6 @@ class ProductControllerTest extends SuluTestCase
             $this->assertEquals($this->product2->getId(), $response->parent->id);
         }
     }
-
-    // TODO 400 vs 500
-//    public function testPostMissingNumber()
-//    {
-//        $data = array(
-//            'manufacturer' => $this->product1->getManufacturer(),
-//            'manufacturerCountry' => $this->product1->getManufacturerCountry(),
-//            'cost' => 666.66,
-//            'status' => $this->productStatus1->getId(),
-//            'type' => $this->type1->getId(),
-//        );
-//
-//        $this->client->request('POST', '/api/products', $data);
-//        $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
-//    }
 
     public function testPostWithParent()
     {
@@ -992,7 +966,7 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals('404', $this->client->getResponse()->getStatusCode());
     }
 
-    // embedded not defined
+    // FIXME Expected known function, got 'GROUP_CONCAT
 //    public function testParentFilter()
 //    {
 //        $this->client->request('GET', '/api/products?flat=true&parent=null');
@@ -1003,6 +977,7 @@ class ProductControllerTest extends SuluTestCase
 //        $this->assertEquals('ProductNumber-1', $response->_embedded->products[0]->number);
 //    }
 
+    // FIXME Expected known function, got 'GROUP_CONCAT
 //    public function testTypeFilter()
 //    {
 //        $this->client->request('GET', '/api/products?flat=true&type=1');
@@ -1013,6 +988,7 @@ class ProductControllerTest extends SuluTestCase
 //        $this->assertEquals('ProductNumber-1', $response->_embedded->products[0]->number);
 //    }
 
+    // FIXME Expected known function, got 'GROUP_CONCAT
 //    public function testAllTypeFilter()
 //    {
 //        $this->client->request('GET', '/api/products?flat=true&type=1,2');

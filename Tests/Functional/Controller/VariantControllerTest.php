@@ -100,7 +100,7 @@ class VariantControllerTest extends SuluTestCase
         $this->em->persist($this->product->getEntity());
     }
 
-// TODO group concat
+    // FIXME Expected known function, got 'GROUP_CONCAT
 //    public function testGetAll()
 //    {
 //        $productVariant1 = new Product(new ProductEntity(), 'en');
