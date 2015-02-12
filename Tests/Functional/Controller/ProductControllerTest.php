@@ -536,30 +536,29 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals($this->type2->getId(), $item->type->id);
     }
 
-    // FIXME Expected known function, got 'GROUP_CONCAT
-//    public function testGetAllFlat()
-//    {
-//        $this->client->request('GET', '/api/products?flat=true');
-//        $response = json_decode($this->client->getResponse()->getContent());
-//        $items = $response->_embedded->products;
-//
-//        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
-//        $this->assertEquals(2, count($items));
-//
-//        $item = $items[0];
-//        $this->assertEquals('ProductNumber-1', $item->number);
-//        $this->assertEquals('EnglishManufacturer-1', $item->manufacturer);
-//        $this->assertEquals('EnglishProductType-1', $item->type);
-//        $this->assertEquals('EnglishProductStatus-1', $item->status);
-//        $this->assertEquals('EnglishProductType-1', $item->type);
-//
-//        $item = $items[1];
-//        $this->assertEquals('ProductNumber-1', $item->number);
-//        $this->assertEquals('EnglishManufacturer-2', $item->manufacturer);
-//        $this->assertEquals('EnglishProductType-2', $item->type);
-//        $this->assertEquals('EnglishProductStatus-2', $item->status);
-//        $this->assertEquals('EnglishProductType-2', $item->type);
-//    }
+    public function testGetAllFlat()
+    {
+        $this->client->request('GET', '/api/products?flat=true');
+        $response = json_decode($this->client->getResponse()->getContent());
+        $items = $response->_embedded->products;
+
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+        $this->assertEquals(2, count($items));
+
+        $item = $items[0];
+        $this->assertEquals('ProductNumber-1', $item->number);
+        $this->assertEquals('EnglishManufacturer-1', $item->manufacturer);
+        $this->assertEquals('EnglishProductType-1', $item->type);
+        $this->assertEquals('EnglishProductStatus-1', $item->status);
+        $this->assertEquals('EnglishProductType-1', $item->type);
+
+        $item = $items[1];
+        $this->assertEquals('ProductNumber-1', $item->number);
+        $this->assertEquals('EnglishManufacturer-2', $item->manufacturer);
+        $this->assertEquals('EnglishProductType-2', $item->type);
+        $this->assertEquals('EnglishProductStatus-2', $item->status);
+        $this->assertEquals('EnglishProductType-2', $item->type);
+    }
 
     public function testGetByStatus()
     {
@@ -586,91 +585,92 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals($this->typeTranslation1->getName(), $response->_embedded->products[0]->type->name);
     }
 
-    // TODO existing prices get processed in the add callback
-//    public function testPut()
-//    {
-//        $this->client->request(
-//            'PUT',
-//            '/api/products/'.$this->product1->getId(),
-//            array(
-//                'name' => 'EnglishProductTranslationNameNew-1',
-//                'number' => 'EvilNumber',
-//                'manufacturer' => 'EvilKnievel',
-//                'status' => array(
-//                    'id' => $this->productStatus1->getId()
-//                ),
-//                'type' => array(
-//                    'id' => $this->type1->getId()
-//                ),
-//                'taxClass' => array(
-//                    'id' => $this->taxClass1->getId()
-//                ),
-//                'prices' => array(
-//                    array(
-//                        'id' => $this->productPrice1->getId(),
-//                        'price' => 17.99,
-//                        'currency' => array(
-//                            'id' => $this->currency1->getId(),
-//                            'name' => 'EUR'
-//                        )
-//                    ),
-//                    array(
-//                        'price' => 12.99,
-//                        'currency' => array(
-//                            'id' => $this->currency3->getId(),
-//                            'name' => 'GBP'
-//                        )
-//                    )
-//                )
-//            )
-//        );
-//        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
-//
-//        $this->client->request('GET', '/api/products/'.$this->product1->getId());
-//        $response = json_decode($this->client->getResponse()->getContent(), true);
-//        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
-//        $this->assertEquals('EnglishProductTranslationNameNew-1', $response['name']);
-//        $this->assertEquals('EvilNumber', $response['number']);
-//        $this->assertEquals('EvilKnievel', $response['manufacturer']);
-//        $this->assertEquals('20%', $response['taxClass']['name']);
-//
-//        $this->assertContains(
-//            array(
-//                'id' => $this->productPrice1->getId(),
-//                'price' => 17.99,
-//                'currency' => array(
-//                    'id' => $this->currency1->getId(),
-//                    'name' => 'EUR',
-//                    'number' => '1',
-//                    'code' => 'eur'
-//                )
-//            ),
-//            $response['prices']
-//        );
-//        $this->assertContains(
-//            array(
-//                'currency' => array(
-//                    'id' => $this->currency2->getId(),
-//                    'name' => 'USD',
-//                    'number' => '2',
-//                    'code' => 'usd'
-//
-//                )
-//            ),
-//            $response['prices']
-//        );
-//        $this->assertContains(
-//            array(
-//                'id' => $this->productPrice2->getId()+1,
-//                'price' => 12.99,
-//                'currency' => array(
-//                    'id' => $this->currency3->getId(),
-//                    'name' => 'GBP'
-//                )
-//            ),
-//            $response['prices']
-//        );
-//    }
+    // FIXME existing prices get processed in the add callback
+    public function testPut()
+    {
+        $this->markTestSkipped();
+        $this->client->request(
+            'PUT',
+            '/api/products/'.$this->product1->getId(),
+            array(
+                'name' => 'EnglishProductTranslationNameNew-1',
+                'number' => 'EvilNumber',
+                'manufacturer' => 'EvilKnievel',
+                'status' => array(
+                    'id' => $this->productStatus1->getId()
+                ),
+                'type' => array(
+                    'id' => $this->type1->getId()
+                ),
+                'taxClass' => array(
+                    'id' => $this->taxClass1->getId()
+                ),
+                'prices' => array(
+                    array(
+                        'id' => $this->productPrice1->getId(),
+                        'price' => 17.99,
+                        'currency' => array(
+                            'id' => $this->currency1->getId(),
+                            'name' => 'EUR'
+                        )
+                    ),
+                    array(
+                        'price' => 12.99,
+                        'currency' => array(
+                            'id' => $this->currency3->getId(),
+                            'name' => 'GBP'
+                        )
+                    )
+                )
+            )
+        );
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+
+        $this->client->request('GET', '/api/products/'.$this->product1->getId());
+        $response = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+        $this->assertEquals('EnglishProductTranslationNameNew-1', $response['name']);
+        $this->assertEquals('EvilNumber', $response['number']);
+        $this->assertEquals('EvilKnievel', $response['manufacturer']);
+        $this->assertEquals('20%', $response['taxClass']['name']);
+
+        $this->assertContains(
+            array(
+                'id' => $this->productPrice1->getId(),
+                'price' => 17.99,
+                'currency' => array(
+                    'id' => $this->currency1->getId(),
+                    'name' => 'EUR',
+                    'number' => '1',
+                    'code' => 'eur'
+                )
+            ),
+            $response['prices']
+        );
+        $this->assertContains(
+            array(
+                'currency' => array(
+                    'id' => $this->currency2->getId(),
+                    'name' => 'USD',
+                    'number' => '2',
+                    'code' => 'usd'
+
+                )
+            ),
+            $response['prices']
+        );
+        $this->assertContains(
+            array(
+                'id' => $this->productPrice2->getId()+1,
+                'price' => 12.99,
+                'currency' => array(
+                    'id' => $this->currency3->getId(),
+                    'name' => 'GBP'
+                )
+            ),
+            $response['prices']
+        );
+    }
 
     public function testPutNotExisting()
     {
@@ -966,37 +966,34 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals('404', $this->client->getResponse()->getStatusCode());
     }
 
-    // FIXME Expected known function, got 'GROUP_CONCAT
-//    public function testParentFilter()
-//    {
-//        $this->client->request('GET', '/api/products?flat=true&parent=null');
-//
-//        $response = json_decode($this->client->getResponse()->getContent());
-//
-//        $this->assertCount(1, $response->_embedded->products);
-//        $this->assertEquals('ProductNumber-1', $response->_embedded->products[0]->number);
-//    }
+    public function testParentFilter()
+    {
+        $this->client->request('GET', '/api/products?flat=true&parent=null');
 
-    // FIXME Expected known function, got 'GROUP_CONCAT
-//    public function testTypeFilter()
-//    {
-//        $this->client->request('GET', '/api/products?flat=true&type=1');
-//
-//        $response = json_decode($this->client->getResponse()->getContent());
-//
-//        $this->assertCount(1, $response->_embedded->products);
-//        $this->assertEquals('ProductNumber-1', $response->_embedded->products[0]->number);
-//    }
+        $response = json_decode($this->client->getResponse()->getContent());
 
-    // FIXME Expected known function, got 'GROUP_CONCAT
-//    public function testAllTypeFilter()
-//    {
-//        $this->client->request('GET', '/api/products?flat=true&type=1,2');
-//
-//        $response = json_decode($this->client->getResponse()->getContent());
-//
-//        $this->assertCount(2, $response->_embedded->products);
-//        $this->assertEquals('ProductNumber-1', $response->_embedded->products[0]->number);
-//        $this->assertEquals('ProductNumber-1', $response->_embedded->products[1]->number);
-//    }
+        $this->assertCount(1, $response->_embedded->products);
+        $this->assertEquals('ProductNumber-1', $response->_embedded->products[0]->number);
+    }
+
+    public function testTypeFilter()
+    {
+        $this->client->request('GET', '/api/products?flat=true&type='.$this->type1->getId());
+
+        $response = json_decode($this->client->getResponse()->getContent());
+
+        $this->assertCount(1, $response->_embedded->products);
+        $this->assertEquals('ProductNumber-1', $response->_embedded->products[0]->number);
+    }
+
+    public function testAllTypeFilter()
+    {
+        $this->client->request('GET', '/api/products?flat=true&type='.$this->type1->getId().','.$this->type2->getId());
+
+        $response = json_decode($this->client->getResponse()->getContent());
+
+        $this->assertCount(2, $response->_embedded->products);
+        $this->assertEquals('ProductNumber-1', $response->_embedded->products[0]->number);
+        $this->assertEquals('ProductNumber-1', $response->_embedded->products[1]->number);
+    }
 }

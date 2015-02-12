@@ -100,42 +100,41 @@ class VariantControllerTest extends SuluTestCase
         $this->em->persist($this->product->getEntity());
     }
 
-    // FIXME Expected known function, got 'GROUP_CONCAT
-//    public function testGetAll()
-//    {
-//        $productVariant1 = new Product(new ProductEntity(), 'en');
-//        $productVariant1->setName('Productvariant');
-//        $productVariant1->setNumber('2');
-//        $productVariant1->setStatus($this->activeStatus);
-//        $productVariant1->setType($this->productType);
-//        $productVariant1->setParent($this->product);
-//        $this->em->persist($productVariant1->getEntity());
-//
-//        $productVariant2 = new Product(new ProductEntity(), 'en');
-//        $productVariant2->setName('Another Productvariant');
-//        $productVariant2->setNumber('3');
-//        $productVariant2->setStatus($this->activeStatus);
-//        $productVariant2->setType($this->productType);
-//        $productVariant2->setParent($this->product);
-//        $this->em->persist($productVariant2->getEntity());
-//
-//        $anotherProduct = new Product(new ProductEntity(), 'en');
-//        $anotherProduct->setName('Another product');
-//        $anotherProduct->setNumber('4');
-//        $anotherProduct->setStatus($this->activeStatus);
-//        $anotherProduct->setType($this->productType);
-//        $this->em->persist($anotherProduct->getEntity());
-//
-//        $this->em->flush();
-//
-//        $this->client->request('GET', '/api/products/'.$this->product->getId().'/variants?flat=true');
-//        $response = json_decode($this->client->getResponse()->getContent());
-//
-//        $this->assertEquals(2, $response->total);
-//        $this->assertCount(2, $response->_embedded->products);
-//        $this->assertEquals('Productvariant', $response->_embedded->products[0]->name);
-//        $this->assertEquals('Another Productvariant', $response->_embedded->products[1]->name);
-//    }
+    public function testGetAll()
+    {
+        $productVariant1 = new Product(new ProductEntity(), 'en');
+        $productVariant1->setName('Productvariant');
+        $productVariant1->setNumber('2');
+        $productVariant1->setStatus($this->activeStatus);
+        $productVariant1->setType($this->productType);
+        $productVariant1->setParent($this->product);
+        $this->em->persist($productVariant1->getEntity());
+
+        $productVariant2 = new Product(new ProductEntity(), 'en');
+        $productVariant2->setName('Another Productvariant');
+        $productVariant2->setNumber('3');
+        $productVariant2->setStatus($this->activeStatus);
+        $productVariant2->setType($this->productType);
+        $productVariant2->setParent($this->product);
+        $this->em->persist($productVariant2->getEntity());
+
+        $anotherProduct = new Product(new ProductEntity(), 'en');
+        $anotherProduct->setName('Another product');
+        $anotherProduct->setNumber('4');
+        $anotherProduct->setStatus($this->activeStatus);
+        $anotherProduct->setType($this->productType);
+        $this->em->persist($anotherProduct->getEntity());
+
+        $this->em->flush();
+
+        $this->client->request('GET', '/api/products/'.$this->product->getId().'/variants?flat=true');
+        $response = json_decode($this->client->getResponse()->getContent());
+
+        $this->assertEquals(2, $response->total);
+        $this->assertCount(2, $response->_embedded->products);
+        $this->assertEquals('Productvariant', $response->_embedded->products[0]->name);
+        $this->assertEquals('Another Productvariant', $response->_embedded->products[1]->name);
+    }
 
     public function testPost()
     {
