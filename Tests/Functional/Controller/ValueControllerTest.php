@@ -131,7 +131,7 @@ class ValueControllerTest extends SuluTestCase
         $this->client = $this->createAuthenticatedClient();
         $this->em->flush();
     }
-    
+
     private function setUpTestData()
     {
         // **** Attribute types

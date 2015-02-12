@@ -11,7 +11,6 @@
 namespace Sulu\Bundle\ProductBundle\Product;
 
 use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\Tools\SchemaTool;
 use Sulu\Bundle\ProductBundle\Entity\StatusTranslation as StatusTranslationEntity;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Symfony\Bundle\FrameworkBundle\Client;

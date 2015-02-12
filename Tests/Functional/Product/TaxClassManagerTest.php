@@ -38,7 +38,6 @@ class TaxClassManagerTest extends SuluTestCase
      */
     private $taxClassManager;
 
-
     public function setUp()
     {
 

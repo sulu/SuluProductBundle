@@ -49,17 +49,7 @@ class AttributeControllerTest extends SuluTestCase
     /**
      * @var Attribute
      */
-    private $attributeEntity1;
-
-    /**
-     * @var Attribute
-     */
     private $attribute1;
-
-    /**
-     * @var Attribute
-     */
-    private $attributeEntity2;
 
     /**
      * @var Attribute
@@ -280,8 +270,7 @@ class AttributeControllerTest extends SuluTestCase
     {
         $data = array(
             'name' => 'InvalidTypeId',
-            'type' => array(
-            )
+            'type' => array()
         );
 
         $this->client->request('POST', '/api/attributes', $data);
@@ -413,8 +402,7 @@ class AttributeControllerTest extends SuluTestCase
     public function testPutNewTypeWithoutId()
     {
         $data = array(
-            'type' => array(
-            )
+            'type' => array()
         );
 
         $this->client->request('PUT', '/api/attributes/1', $data);
