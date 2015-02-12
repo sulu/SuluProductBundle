@@ -1,9 +1,29 @@
 sulu_product:
     resource: "@SuluProductBundle/Resources/config/routing.yml"
-    prefix:
 
 sulu_product_api:
     type: rest
     resource: "@SuluProductBundle/Resources/config/routing_api.yml"
-    type: rest
     prefix: /api
+
+sulu_media.collections:
+    type: rest
+    resource: Sulu\Bundle\MediaBundle\Controller\CollectionController
+    prefix: /api
+
+sulu_media.media:
+    type: rest
+    resource: Sulu\Bundle\MediaBundle\Controller\MediaController
+    prefix: /api
+
+sulu_media.website.image.proxy:
+    path: /uploads/media/{slug}
+    defaults: { _controller: SuluMediaBundle:MediaStream:getImage }
+    requirements:
+        slug: .*
+
+sulu_media.website.media.download:
+    path: /media/{id}/download/{slug}
+    defaults: { _controller: SuluMediaBundle:MediaStream:download }
+    requirements:
+        slug: .*

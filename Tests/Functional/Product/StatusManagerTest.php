@@ -10,18 +10,24 @@
 
 namespace Sulu\Bundle\ProductBundle\Product;
 
+use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\SchemaTool;
 use Sulu\Bundle\ProductBundle\Entity\StatusTranslation as StatusTranslationEntity;
-use Sulu\Bundle\TestBundle\Testing\DatabaseTestCase;
+use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Symfony\Bundle\FrameworkBundle\Client;
 use Sulu\Bundle\ProductBundle\Entity\Status as StatusEntity;
 
-class StatusManagerTest extends DatabaseTestCase
+class StatusManagerTest extends SuluTestCase
 {
     /**
      * @var array
      */
     protected static $entities;
+
+    /**
+     * @var EntityManager
+     */
+    protected $em;
 
     /**
      * @var Client
@@ -35,23 +41,11 @@ class StatusManagerTest extends DatabaseTestCase
 
     public function setUp()
     {
-        $this->setUpSchema();
-        
-        $this->client = $this->createClient();
-
+        $this->em = $this->db('ORM')->getOm();
+        $this->purgeDatabase();
+        $this->client = $this->createAuthenticatedClient();
         $this->statusManager = $this->client->getContainer()->get('sulu_product.status_manager');
-    }
-    private function setUpSchema()
-    {
-        self::$tool = new SchemaTool(self::$em);
-
-        self::$entities = array(
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Status'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\StatusTranslation'),
-        );
-
-        self::$tool->dropSchema(self::$entities);
-        self::$tool->createSchema(self::$entities);
+        $this->em->flush();
     }
 
     public function testFindAll()
@@ -76,14 +70,14 @@ class StatusManagerTest extends DatabaseTestCase
         $status2en->setName('English status 2');
         $status2en->setStatus($status2);
 
-        self::$em->persist($status1);
-        self::$em->persist($status1de);
-        self::$em->persist($status1en);
-        self::$em->persist($status2);
-        self::$em->persist($status2de);
-        self::$em->persist($status2en);
+        $this->em->persist($status1);
+        $this->em->persist($status1de);
+        $this->em->persist($status1en);
+        $this->em->persist($status2);
+        $this->em->persist($status2de);
+        $this->em->persist($status2en);
 
-        self::$em->flush();
+        $this->em->flush();
 
         $statuses = $this->statusManager->findAll('de');
 

@@ -10,18 +10,23 @@
 
 namespace Sulu\Bundle\ProductBundle\Product;
 
-use Doctrine\ORM\Tools\SchemaTool;
-use Sulu\Bundle\TestBundle\Testing\DatabaseTestCase;
+use Doctrine\ORM\EntityManager;
+use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Symfony\Bundle\FrameworkBundle\Client;
 use Sulu\Bundle\ProductBundle\Entity\TaxClass as TaxClassEntity;
 use Sulu\Bundle\ProductBundle\Entity\TaxClassTranslation as TaxClassTranslationEntity;
 
-class TaxClassManagerTest extends DatabaseTestCase
+class TaxClassManagerTest extends SuluTestCase
 {
     /**
      * @var array
      */
     protected static $entities;
+
+    /**
+     * @var EntityManager
+     */
+    protected $em;
 
     /**
      * @var Client
@@ -33,31 +38,15 @@ class TaxClassManagerTest extends DatabaseTestCase
      */
     private $taxClassManager;
 
-    public static function setUpBeforeClass()
-    {
-        parent::setUpBeforeClass();
-
-        self::$entities = array(
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\TaxClass'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\TaxClassTranslation'),
-        );
-    }
 
     public function setUp()
     {
-        $this->setUpSchema();
 
-        $this->client = $this->createClient();
-
+        $this->em = $this->db('ORM')->getOm();
+        $this->purgeDatabase();
+        $this->client = $this->createAuthenticatedClient();
         $this->taxClassManager = $this->client->getContainer()->get('sulu_product.tax_class_manager');
-    }
-
-    private function setUpSchema()
-    {
-        self::$tool = new SchemaTool(self::$em);
-
-        self::$tool->dropSchema(self::$entities);
-        self::$tool->createSchema(self::$entities);
+        $this->em->flush();
     }
 
     public function testFindAll()
@@ -82,14 +71,14 @@ class TaxClassManagerTest extends DatabaseTestCase
         $taxClass2en->setName('English tax class 2');
         $taxClass2en->setTaxClass($taxClass2);
 
-        self::$em->persist($taxClass1);
-        self::$em->persist($taxClass1de);
-        self::$em->persist($taxClass1en);
-        self::$em->persist($taxClass2);
-        self::$em->persist($taxClass2de);
-        self::$em->persist($taxClass2en);
+        $this->em->persist($taxClass1);
+        $this->em->persist($taxClass1de);
+        $this->em->persist($taxClass1en);
+        $this->em->persist($taxClass2);
+        $this->em->persist($taxClass2de);
+        $this->em->persist($taxClass2en);
 
-        self::$em->flush();
+        $this->em->flush();
 
         $statuses = $this->taxClassManager->findAll('de');
 
