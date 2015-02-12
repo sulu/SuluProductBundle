@@ -58,7 +58,7 @@ class VariantController extends RestController implements ClassResourceInterface
             function ($id) use ($locale, $parentId) {
                 $product = $this->getManager()->findByIdAndLocale($id, $locale);
 
-                if ($product->getParent() && $product->getParent()->getId() == $parentId) {
+                if ($product !== null && $product->getParent() && $product->getParent()->getId() == $parentId) {
                     return $product;
                 } else {
                     return null;

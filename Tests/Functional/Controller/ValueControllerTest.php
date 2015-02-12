@@ -11,19 +11,17 @@
 namespace Sulu\Bundle\ProductBundle\Tests\Functional\Controller;
 
 use DateTime;
+use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\SchemaTool;
-use Symfony\Component\HttpKernel\Client;
-
 use Sulu\Bundle\ProductBundle\Api\Attribute;
+use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
+use Symfony\Component\HttpKernel\Client;
 use Sulu\Bundle\ProductBundle\Entity\Attribute as AttributeEntity;
-use Sulu\Bundle\ProductBundle\Entity\AttributeTranslation;
-use Sulu\Bundle\TestBundle\Entity\TestUser;
-use Sulu\Bundle\TestBundle\Testing\DatabaseTestCase;
 use Sulu\Bundle\ProductBundle\Entity\AttributeType;
 use Sulu\Bundle\ProductBundle\Api\AttributeValue;
 use Sulu\Bundle\ProductBundle\Entity\AttributeValue as AttributeValueEntity;
 
-class ValueControllerTest extends DatabaseTestCase
+class ValueControllerTest extends SuluTestCase
 {
     /**
      * @var array
@@ -31,14 +29,14 @@ class ValueControllerTest extends DatabaseTestCase
     protected static $entities;
 
     /**
+     * @var EntityManager
+     */
+    protected $em;
+
+    /**
      * @var Client
      */
     private $client;
-
-    /**
-     * @var TestUser
-     */
-    private $testUser;
 
     /**
      * @var AttributeType
@@ -127,34 +125,15 @@ class ValueControllerTest extends DatabaseTestCase
 
     public function setUp()
     {
-        $this->setUpTestUser();
-        $this->setUpClient();
-        $this->setUpSchema();
+        $this->em = $this->db('ORM')->getOm();
+        $this->purgeDatabase();
         $this->setUpTestData();
-    }
-
-    private function setUpTestUser()
-    {
-        $this->testUser = new TestUser();
-        $this->testUser->setUsername('test');
-        $this->testUser->setPassword('test');
-        $this->testUser->setLocale('de');
-    }
-
-    private function setUpClient()
-    {
-        $this->client = static::createClient(
-            array(),
-            array(
-                'PHP_AUTH_USER' => $this->testUser->getUsername(),
-                'PHP_AUTH_PW' => $this->testUser->getPassword()
-            )
-        );
+        $this->client = $this->createAuthenticatedClient();
+        $this->em->flush();
     }
 
     private function setUpTestData()
     {
-
         // **** Attribute types
         $this->attributeType1 = new AttributeType();
         $this->attributeType1->setName('product.attribute.type.text');
@@ -217,41 +196,18 @@ class ValueControllerTest extends DatabaseTestCase
         $this->attributeValue2_1 = new AttributeValue($this->attributeValueEntity2_1, 'en');
         $this->attributeValue2_1->setName('Value2_1');
 
-        self::$em->persist($this->attributeType1);
-        self::$em->persist($this->attribute1->getEntity());
-        self::$em->persist($this->attributeValue1_1->getEntity());
-        self::$em->persist($this->attributeValue1_2->getEntity());
-        self::$em->persist($this->attributeValue2_1->getEntity());
-        self::$em->persist($this->attributeType2);
-        self::$em->persist($this->attribute2->getEntity());
-        self::$em->persist($this->attribute3->getEntity());
-        self::$em->persist($this->attributeType3);
-        self::$em->persist($this->attributeType4);
-        self::$em->persist($this->attributeType5);
-        self::$em->flush();
-    }
-
-    private function setUpSchema()
-    {
-        self::$tool = new SchemaTool(self::$em);
-
-        self::$entities = array(
-            self::$em->getClassMetadata('Sulu\Bundle\TestBundle\Entity\TestUser'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\Attribute'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\AttributeTranslation'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\AttributeType'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\AttributeValue'),
-            self::$em->getClassMetadata('Sulu\Bundle\ProductBundle\Entity\AttributeValueTranslation'),
-        );
-
-        self::$tool->dropSchema(self::$entities);
-        self::$tool->createSchema(self::$entities);
-    }
-
-    public function tearDown()
-    {
-        parent::tearDown();
-        self::$tool->dropSchema(self::$entities);
+        $this->em->persist($this->attributeType1);
+        $this->em->persist($this->attribute1->getEntity());
+        $this->em->persist($this->attributeValue1_1->getEntity());
+        $this->em->persist($this->attributeValue1_2->getEntity());
+        $this->em->persist($this->attributeValue2_1->getEntity());
+        $this->em->persist($this->attributeType2);
+        $this->em->persist($this->attribute2->getEntity());
+        $this->em->persist($this->attribute3->getEntity());
+        $this->em->persist($this->attributeType3);
+        $this->em->persist($this->attributeType4);
+        $this->em->persist($this->attributeType5);
+        $this->em->flush();
     }
 
     /**
