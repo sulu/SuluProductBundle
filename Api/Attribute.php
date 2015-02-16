@@ -182,28 +182,27 @@ class Attribute extends ApiWrapper
      * @param string $locale The locale to return
      * @return AttributeTranslation
      */
+
+    /**
+     * {@inheritDoc}
+     */
     public function getTranslation()
     {
-        $fallback = null;
-        foreach ($this->entity->translations as $translation) {
-            if ($translation->getName() != null) {
-                $fallback = $translation;
-            }
+        $attributeTranslation = null;
+        foreach ($this->entity->getTranslations() as $translation) {
             if ($translation->getLocale() == $this->locale) {
-                return $translation;
+                $attributeTranslation = $translation;
             }
         }
 
-        if ($fallback) {
-            return $fallback;
+        if (!$attributeTranslation) {
+            $attributeTranslation = new AttributeTranslation();
+            $attributeTranslation->setLocale($this->locale);
+            $attributeTranslation->setAttribute($this->entity);
+
+            $this->entity->addTranslation($attributeTranslation);
         }
 
-        // Still no translation found
-        $translation = new AttributeTranslation();
-        $translation->setLocale($this->locale);
-        $translation->setAttribute($this->entity);
-
-        $this->entity->addTranslation($translation);
-        return $translation;
+        return $attributeTranslation;
     }
 }
