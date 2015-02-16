@@ -75,4 +75,22 @@ class ProductPrice extends ApiWrapper
     {
         return new Currency($this->entity->getCurrency(), $this->locale);
     }
-} 
+
+    /**
+     * Returns the minimumQuantity
+     * @return string
+     */
+    public function getMinimumQuantity()
+    {
+        return $this->entity->getMinimumQuantity();
+    }
+
+    /**
+     * Returns the priceInfo
+     * @return string
+     */
+    public function getPriceInfo()
+    {
+        return $this->entity->getPriceInfo();
+    }
+}

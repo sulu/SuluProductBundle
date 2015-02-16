@@ -769,30 +769,25 @@ class ProductManager implements ProductManagerInterface
         }
 
         if (isset($data['attributes'])) {
-            foreach ($data['attributes'] as $attribute) {
-                // FIXME: - fails on update
-                $attributeId = $attribute['id'];
-                $attributeValue = $attribute['value'];
-                $this->checkDataSet($attribute, 'id', true);
-
-                /** @var AttributeSet $attributeSet */
-                $attribute = $this->attributeRepository->find($attributeId);
-                if (!$attribute) {
-                    throw new ProductDependencyNotFoundException(self::$attributeEntityName, $attributeId);
-                }
-
-                $productAttribute = $this->productAttributeRepository->findByAttributeIdAndProductId(
-                    $attributeId,
-                    $product->getId()
-                );
-                if (!$productAttribute) {
+            foreach ($data['attributes'] as $attributeData) {
+                $attributeValue = $attributeData['value'];
+                if (isset($attributeData['id'])) {
+                    $attributeId = $attributeData['id'];
+                    $productAttribute = $this->productAttributeRepository->find(
+                        $attributeId
+                    );
+                    $productAttribute->setValue($attributeValue);
+                } else if ($attributeData['attributeId']) {
                     $productAttribute = new ProductAttribute();
+                    $attribute = $this->attributeRepository->find($attributeData['attributeId']);
+                    if (!$attribute) {
+                        throw new ProductDependencyNotFoundException(self::$attributeEntityName, $attributeId);
+                    }
                     $productAttribute->setAttribute($attribute);
+                    $productAttribute->setValue($attributeValue);
                     $productAttribute->setProduct($product->getEntity());
                     $this->em->persist($productAttribute);
                 }
-
-                $productAttribute->setValue($attributeValue);
             }
         }
 
