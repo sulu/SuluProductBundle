@@ -769,6 +769,19 @@ class ProductManager implements ProductManagerInterface
         }
 
         if (isset($data['attributes'])) {
+            // Delete attributes
+            $attributesIds = [];
+            foreach ($data['attributes'] as $attributeData) {
+                $attributeIds[] = $attributeData['attributeId'];
+            }
+
+            foreach ($product->getAttributes() as $productAttribute) {
+                if (!in_array($productAttribute->getAttribute()->getId(), $attributeIds)) {
+                    $product->getEntity()->removeProductAttribute($productAttribute->getEntity());
+                    $this->em->remove($productAttribute->getEntity());
+                }
+            }
+            // Add and change attributes
             foreach ($data['attributes'] as $attributeData) {
                 $attributeValue = $attributeData['value'];
                 if (isset($attributeData['id'])) {
@@ -778,14 +791,24 @@ class ProductManager implements ProductManagerInterface
                     );
                     $productAttribute->setValue($attributeValue);
                 } else if ($attributeData['attributeId']) {
-                    $productAttribute = new ProductAttribute();
-                    $attribute = $this->attributeRepository->find($attributeData['attributeId']);
-                    if (!$attribute) {
-                        throw new ProductDependencyNotFoundException(self::$attributeEntityName, $attributeId);
+                    $attributeIds[] = $attributeData['attributeId'];
+                    // Check if attribure exists for current product
+                    $productAttribute = $this->productAttributeRepository->findByAttributeIdAndProductId(
+                        $attributeData['attributeId'],
+                        $product->getId()
+                    );
+                    if (!$productAttribute) {
+                        $productAttribute = new ProductAttribute();
+                        $attribute = $this->attributeRepository->find($attributeData['attributeId']);
+                        if (!$attribute) {
+                            throw new ProductDependencyNotFoundException(self::$attributeEntityName, $attributeId);
+                        }
+                        $productAttribute->setAttribute($attribute);
+                        $productAttribute->setValue($attributeValue);
+                        $productAttribute->setProduct($product->getEntity());
+                    } else {
+                        $productAttribute->setValue($attributeValue);
                     }
-                    $productAttribute->setAttribute($attribute);
-                    $productAttribute->setValue($attributeValue);
-                    $productAttribute->setProduct($product->getEntity());
                     $this->em->persist($productAttribute);
                 }
             }
