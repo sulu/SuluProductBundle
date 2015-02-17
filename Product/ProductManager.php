@@ -769,7 +769,7 @@ class ProductManager implements ProductManagerInterface
         }
 
         if (isset($data['attributes'])) {
-            // Delete attribures
+            // Delete attributes
             $attributesIds = [];
             foreach ($data['attributes'] as $attributeData) {
                 $attributeIds[] = $attributeData['attributeId'];
