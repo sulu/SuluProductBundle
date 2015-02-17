@@ -18,6 +18,7 @@ use JMS\Serializer\Annotation\ExclusionPolicy;
 
 use Sulu\Bundle\ProductBundle\Entity\ProductAttribute as ProductAttributeEntity;
 use Sulu\Component\Rest\ApiWrapper;
+use Sulu\Bundle\ProductBundle\Api\Attribute;
 
 /**
  * The ProductAttribute class which will be exported to the API
@@ -59,5 +60,15 @@ class ProductAttribute extends ApiWrapper
     public function getValue()
     {
         return $this->entity->getValue();
+    }
+
+    /**
+     * Returns the value
+     *
+     * @return Sulu\Bundle\ProductBundle\Api\Attribute
+     */
+    public function getAttribute()
+    {
+        return new Attribute($this->entity->getAttribute(), $this->locale);
     }
 }
