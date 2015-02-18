@@ -81,12 +81,12 @@ class ProductManager implements ProductManagerInterface
     /**
      * @var AttributeRepository
      */
-    private $attributeRepository;
+    protected $attributeRepository;
 
     /**
      * @var ProductAttributeRepository
      */
-    private $productAttributeRepository;
+    protected $productAttributeRepository;
 
     /**
      * @var AttributeSetRepository
@@ -768,61 +768,8 @@ class ProductManager implements ProductManagerInterface
             }
         }
 
-        if (isset($data['attributes'])) {
-            // Delete attributes
-            $attributesIds = [];
-            foreach ($data['attributes'] as $attributeData) {
-                $attributeIds[] = $attributeData['attributeId'];
-            }
+        // TODO: handle attributes
 
-            foreach ($product->getAttributes() as $productAttribute) {
-                if (!in_array($productAttribute->getAttribute()->getId(), $attributeIds)) {
-                    $product->getEntity()->removeProductAttribute($productAttribute->getEntity());
-                    $this->em->remove($productAttribute->getEntity());
-                }
-            }
-            // Add and change attributes
-            foreach ($data['attributes'] as $attributeData) {
-                $attributeValue = $attributeData['value'];
-                if (isset($attributeData['id'])) {
-                    $attributeId = $attributeData['id'];
-                    $productAttribute = $this->productAttributeRepository->find(
-                        $attributeId
-                    );
-                    $productAttribute->setValue($attributeValue);
-                } else if ($attributeData['attributeId']) {
-                    $attributeIds[] = $attributeData['attributeId'];
-                    // Check if attribure exists for current product
-                    $productAttribute = $this->productAttributeRepository->findByAttributeIdAndProductId(
-                        $attributeData['attributeId'],
-                        $product->getId()
-                    );
-                    if (!$productAttribute) {
-                        $productAttribute = new ProductAttribute();
-                        $attribute = $this->attributeRepository->find($attributeData['attributeId']);
-                        if (!$attribute) {
-                            throw new ProductDependencyNotFoundException(self::$attributeEntityName, $attributeId);
-                        }
-                        $productAttribute->setAttribute($attribute);
-                        $productAttribute->setValue($attributeValue);
-                        $productAttribute->setProduct($product->getEntity());
-                    } else {
-                        $productAttribute->setValue($attributeValue);
-                    }
-                    $this->em->persist($productAttribute);
-                }
-            }
-        }
-
-        if (isset($data['attributeSet']) && isset($data['attributeSet']['id'])) {
-            $attributeSetId = $data['attributeSet']['id'];
-            /** @var AttributeSet $attributeSet */
-            $attributeSet = $this->attributeSetRepository->find($attributeSetId);
-            if (!$attributeSet) {
-                throw new ProductDependencyNotFoundException(self::$attributeSetEntityName, $attributeSetId);
-            }
-            $product->setAttributeSet($attributeSet);
-        }
 
         if (isset($data['parent']) && isset($data['parent']['id'])) {
             $parentId = $data['parent']['id'];
