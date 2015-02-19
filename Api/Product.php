@@ -439,7 +439,7 @@ class Product extends ApiWrapper
     public function getDeliveryStatus()
     {
         $status = $this->entity->getDeliveryStatus();
-        if($status !== null) {
+        if ($status !== null) {
             return new DeliveryStatus($status, $this->locale);
         }
 
@@ -733,7 +733,12 @@ class Product extends ApiWrapper
      */
     public function getMedia()
     {
-        return $this->media;
+        $media = $this->entity->getMedia();
+        $mediaCollection = [];
+        foreach ($media as $medium) {
+            $mediaCollection[] = new Media($medium, $this->locale);
+        }
+        return $mediaCollection;
     }
 
     /**
