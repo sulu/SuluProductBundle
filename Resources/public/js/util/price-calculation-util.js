@@ -346,6 +346,30 @@ define([], function() {
                 return processPriceCalculationItem.call(this, sandbox, items);
             }
             return null;
+        },
+
+        /**
+         * Sums up an array of prices and returns it formatted
+         * Will parse the price
+         * @param sandbox
+         * @param prices
+         * @param currency
+         * @returns {String}
+         */
+        getTotalFormattedPrice: function(sandbox, prices, currency) {
+            var total = 0,
+                locale = getLocale(sandbox.globalize.getLocale());
+
+            if (!!sandbox && !!prices) {
+                sandbox.util.foreach(prices, function(price){
+                    if(typeof price === 'string') {
+                        total += sandbox.parseFloat(price);
+                    } else {
+                        total += price;
+                    }
+                }.bind(this))
+            }
+            return this.getFormattedNumberWithAddition(sandbox, total, currency, appendCurrencyToPrice(locale));
         }
     };
 });
