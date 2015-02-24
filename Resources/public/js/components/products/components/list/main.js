@@ -88,6 +88,61 @@ define(['config'], function (Config) {
                     );
                 }
             }, this);
+        },
+
+        getToolbarTemplate = function() {
+            return [
+                {
+                    id: 'add',
+                    icon: 'plus-circle',
+                    class: 'highlight-white',
+                    position: 1,
+                    title: this.sandbox.translate('sulu.list-toolbar.add'),
+                    items: [
+                        {
+                            id: 'add-product',
+                            title: this.sandbox.translate('products.add-product'),
+                            callback: addProduct.bind(this, TYPE_PRODUCT)
+                        },
+                        {
+                            id: 'add-product-with-variants',
+                            title: this.sandbox.translate('products.add-product-with-variants'),
+                            callback: addProduct.bind(this, TYPE_PRODUCT_VARIANT)
+                        },
+                        {
+                            id: 'add-product-addon',
+                            title: this.sandbox.translate('products.add-product-addon'),
+                            callback: addProduct.bind(this, TYPE_PRODUCT_ADDON)
+                        },
+                        {
+                            id: 'add-product-set',
+                            title: this.sandbox.translate('products.add-product-set'),
+                            callback: addProduct.bind(this, TYPE_PRODUCT_SET)
+                        }
+                    ]
+                },
+                {
+                    id: 'workflow',
+                    icon: 'husky-deactivated',
+                    type: 'select',
+                    position: 30,
+                    disabled: true,
+
+                    items: [
+                        {
+                            id: 'active',
+                            title: this.sandbox.translate('product.workfow.set.active'),
+                            callback: setProductActive.bind(this)
+                        },
+                        {
+                            id: 'inactive',
+                            title: this.sandbox.translate('product.workfow.set.inactive'),
+                            callback: setProductInactive.bind(this)
+                        }
+                    ]
+                }
+            ];
+
         };
 
     return {
@@ -121,7 +176,15 @@ define(['config'], function (Config) {
         },
 
         renderGrid: function () {
+            var toolbarTemplate = getToolbarTemplate.call(this),
+                toolbarExtension = Config.get('product.toolbar.extension');
+
             this.sandbox.dom.html(this.$el, this.renderTemplate('/admin/product/template/product/list'));
+
+            // extend default products list toolbar with some custom fields
+            if (!!toolbarExtension) {
+                toolbarTemplate.push.apply(toolbarTemplate, toolbarExtension);
+            }
 
             // init list-toolbar and datagrid
             this.sandbox.sulu.initListToolbarAndList.call(this, 'productsFields', '/admin/api/products/fields',
@@ -130,59 +193,17 @@ define(['config'], function (Config) {
                     instanceName: constants.toolbarInstanceName,
                     parentTemplate: 'default',
                     inHeader: true,
-                    template: function () {
-                        return [
-                            {
-                                id: 'add',
-                                icon: 'plus-circle',
-                                class: 'highlight-white',
-                                position: 1,
-                                title: this.sandbox.translate('sulu.list-toolbar.add'),
-                                items: [
-                                    {
-                                        id: 'add-product',
-                                        title: this.sandbox.translate('products.add-product'),
-                                        callback: addProduct.bind(this, TYPE_PRODUCT)
-                                    },
-                                    {
-                                        id: 'add-product-with-variants',
-                                        title: this.sandbox.translate('products.add-product-with-variants'),
-                                        callback: addProduct.bind(this, TYPE_PRODUCT_VARIANT)
-                                    },
-                                    {
-                                        id: 'add-product-addon',
-                                        title: this.sandbox.translate('products.add-product-addon'),
-                                        callback: addProduct.bind(this, TYPE_PRODUCT_ADDON)
-                                    },
-                                    {
-                                        id: 'add-product-set',
-                                        title: this.sandbox.translate('products.add-product-set'),
-                                        callback: addProduct.bind(this, TYPE_PRODUCT_SET)
-                                    }
-                                ]
-                            },
-                            {
-                                id: 'workflow',
-                                icon: 'husky-deactivated',
-                                type: 'select',
-                                position: 30,
-                                disabled: true,
-
-                                items: [
-                                    {
-                                        id: 'active',
-                                        title: this.sandbox.translate('product.workfow.set.active'),
-                                        callback: setProductActive.bind(this)
-                                    },
-                                    {
-                                        id: 'inactive',
-                                        title: this.sandbox.translate('product.workfow.set.inactive'),
-                                        callback: setProductInactive.bind(this)
-                                    }
-                                ]
-                            }
-                        ];
-                    }.bind(this)
+                    template: toolbarTemplate,
+                    groups: [
+                        {
+                            id: 1,
+                            align: 'left'
+                        },
+                        {
+                            id: 2,
+                            align: 'left'
+                        }
+                    ]
                 },
                 {
                     el: this.sandbox.dom.find('#products-list', this.$el),
