@@ -240,13 +240,17 @@ define([
             }.bind(this));
         },
 
-        deleteProduct: function(id){
-            var product = Product.findOrCreate({id: id});
-            product.destroy({
-                success: function() {
-                    this.sandbox.emit('sulu.router.navigate', 'pim/products');
-                }.bind(this)
-            });
+        deleteProduct: function(id) {
+            if (!!id) {
+                var product = Product.findOrCreate({id: id});
+                product.destroy({
+                    success: function() {
+                        this.sandbox.emit('sulu.router.navigate', 'pim/products');
+                    }.bind(this)
+                });
+            } else {
+                this.sandbox.logger.error('no id provided to delete product!');
+            }
         },
 
         addVariant: function (id) {

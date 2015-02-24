@@ -23,7 +23,7 @@ define(['config'], function (Config) {
 
         bindCustomEvents = function () {
             this.sandbox.on('sulu.header.toolbar.delete', function () {
-                this.sandbox.emit('sulu.products.delete', this.sandbox.dom.val('#id'));
+                this.sandbox.emit('sulu.product.delete', this.sandbox.dom.val('#id'));
             }.bind(this));
 
             this.sandbox.on('product.state.change', function(id) {
