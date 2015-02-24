@@ -96,6 +96,10 @@ define([
                 this.del(ids);
             }, this);
 
+            this.sandbox.on('sulu.product.delete', function(id){
+                this.deleteProduct(id);
+            }, this);
+
             this.sandbox.on(PRODUCT_IMPORT, function () {
                 this.sandbox.emit('sulu.router.navigate', 'pim/products/import');
             }.bind(this));
@@ -222,18 +226,31 @@ define([
         },
 
         del: function (ids) {
-            this.confirmDeleteDialog(function (wasConfirmed) {
+            this.confirmDeleteDialog(function(wasConfirmed) {
                 if (wasConfirmed) {
-                    this.sandbox.util.each(ids, function (key, id) {
-                        var product = new Product({id: id});
+                    this.sandbox.util.each(ids, function(key, id) {
+                        var product = Product.findOrCreate({id: id});
                         product.destroy({
-                            success: function () {
+                            success: function() {
                                 this.sandbox.emit('husky.datagrid.record.remove', id);
                             }.bind(this)
                         });
                     }.bind(this));
                 }
             }.bind(this));
+        },
+
+        deleteProduct: function(id) {
+            if (!!id) {
+                var product = Product.findOrCreate({id: id});
+                product.destroy({
+                    success: function() {
+                        this.sandbox.emit('sulu.router.navigate', 'pim/products');
+                    }.bind(this)
+                });
+            } else {
+                this.sandbox.logger.error('no id provided to delete product!');
+            }
         },
 
         addVariant: function (id) {
