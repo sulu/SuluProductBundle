@@ -733,8 +733,11 @@ class Product extends ApiWrapper
      */
     public function getMedia()
     {
-        $media = $this->entity->getMedia();
         $mediaCollection = [];
+        $media = $this->entity->getMedia();
+        if (!$media) {
+            return $mediaCollection;
+        }
         foreach ($media as $medium) {
             $mediaCollection[] = new Media($medium, $this->locale);
         }
