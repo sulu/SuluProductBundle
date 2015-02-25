@@ -1347,12 +1347,9 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * delete one ore more products
-     * 
-     * @param int|array $ids either int (single delete) or array of int (multiple delete)
-     * @throws MissingProductAttributeException
+     * {@inheritDoc}
      */
-    public function delete($ids, $flush = true)
+    public function delete($ids, $userId = null, $flush = true)
     {
         // if ids is array -> multiple delete
         if (is_array($ids) && count($ids) > 0) {
