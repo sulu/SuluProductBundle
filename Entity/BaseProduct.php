@@ -22,7 +22,7 @@ abstract class BaseProduct implements ProductInterface
     private $number;
 
     /**
-     * @var string
+     * @var integer
      */
     private $deliveryTime;
 
