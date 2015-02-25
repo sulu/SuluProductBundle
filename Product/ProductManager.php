@@ -738,6 +738,8 @@ class ProductManager implements ProductManagerInterface
         $product->setShortDescription($this->getProperty($data, 'shortDescription', $product->getShortDescription()));
         $product->setLongDescription($this->getProperty($data, 'longDescription', $product->getLongDescription()));
         $product->setNumber($this->getProperty($data, 'number', $product->getNumber()));
+        $product->setDeliveryTime($this->getProperty($data, 'deliveryTime', $product->getDeliveryTime()));
+        $product->setPriceInfo($this->getProperty($data, 'priceInfo', $product->getPriceInfo()));
         $product->setGlobalTradeItemNumber(
             $this->getProperty(
                 $data,
@@ -1083,9 +1085,9 @@ class ProductManager implements ProductManagerInterface
         $publishedProductEntity->setChanged($productEntity->getChanged());
         $publishedProductEntity->setManufacturerCountry($productEntity->getManufacturerCountry());
         $publishedProductEntity->setType($productEntity->getType());
-        // $publishedProductEntity->setAttributeSet($productEntity->getAttributeSet());
         $publishedProductEntity->setStatus($productEntity->getStatus());
         $publishedProductEntity->setDeliveryStatus($productEntity->getDeliveryStatus());
+        $publishedProductEntity->setDeliveryTime($productEntity->getDeliveryTime());
         $publishedProductEntity->setSupplier($productEntity->getSupplier());
         $publishedProductEntity->setParent($productEntity->getParent());
         $publishedProductEntity->setContentUnit($productEntity->getContentUnit());

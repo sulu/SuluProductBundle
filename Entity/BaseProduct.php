@@ -22,6 +22,11 @@ abstract class BaseProduct implements ProductInterface
     private $number;
 
     /**
+     * @var integer
+     */
+    private $deliveryTime;
+
+    /**
      * @var string
      */
     private $globalTradeItemNumber;
@@ -772,7 +777,7 @@ abstract class BaseProduct implements ProductInterface
     public function addCategory(\Sulu\Bundle\CategoryBundle\Entity\Category $categories)
     {
         $this->categories[] = $categories;
-    
+
         return $this;
     }
 
@@ -789,7 +794,7 @@ abstract class BaseProduct implements ProductInterface
     /**
      * Get categories
      *
-     * @return \Doctrine\Common\Collections\Collection 
+     * @return \Doctrine\Common\Collections\Collection
      */
     public function getCategories()
     {
@@ -942,5 +947,27 @@ abstract class BaseProduct implements ProductInterface
     public function getRecommendedOrderQuantity()
     {
         return $this->recommendedOrderQuantity;
+    }
+
+    /**
+     * Get deliveryTime.
+     *
+     * @return deliveryTime.
+     */
+    public function getDeliveryTime()
+    {
+        return $this->deliveryTime;
+    }
+
+    /**
+     * Set deliveryTime.
+     *
+     * @param deliveryTime the value to set.
+     */
+    public function setDeliveryTime($deliveryTime)
+    {
+        $this->deliveryTime = $deliveryTime;
+
+        return $this;
     }
 }

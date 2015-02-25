@@ -130,6 +130,28 @@ class Product extends ApiWrapper
     }
 
     /**
+     * Set deliveryTime
+     *
+     * @param integer $deliveryTime
+     */
+    public function setDeliveryTime($deliveryTime)
+    {
+        $this->entity->setDeliveryTime($deliveryTime);
+    }
+
+    /**
+     * Get deliveryTime
+     *
+     * @return integer
+     * @VirtualProperty
+     * @SerializedName("deliveryTime")
+     */
+    public function getDeliveryTime()
+    {
+        return $this->entity->getDeliveryTime();
+    }
+
+    /**
      * Set recommendedOrderQuantity
      *
      * @param float $recommendedOrderQuantity
