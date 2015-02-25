@@ -1351,19 +1351,16 @@ class ProductManager implements ProductManagerInterface
      */
     public function delete($ids, $userId = null, $flush = true)
     {
-        // if ids is array -> multiple delete
-        if (is_array($ids) && count($ids) > 0) {
+        if (is_array($ids)) {
+            // if ids is array -> multiple delete
             foreach ($ids as $id) {
                 $this->singleDelete($id, null, false);
             }
-            // if ids is int
-        } elseif (is_int($ids)) {
-            $this->singleDelete($ids, null, false);
-            // no valid id provided
         } else {
-            throw new MissingProductAttributeException('id');
+            // if ids is int
+            $this->singleDelete($ids, null, false);
         }
-
+        
         if ($flush) {
             $this->em->flush();
         }
