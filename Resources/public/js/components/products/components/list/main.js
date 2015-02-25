@@ -210,7 +210,7 @@ define(['config'], function (Config) {
                     url: '/admin/api/products?flat=true&status_id='+ Config.get('product.list.statuses.ids'),
                     resultKey: 'products',
                     searchInstanceName: 'productsToolbar',
-                    searchFields: ['name','number'],
+                    searchFields: ['name','number','supplier'],
                     viewOptions: {
                         table: {
                             fullWidth: true
