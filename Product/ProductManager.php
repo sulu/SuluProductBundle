@@ -12,6 +12,7 @@ namespace Sulu\Bundle\ProductBundle\Product;
 
 use DateTime;
 use Doctrine\Common\Persistence\ObjectManager;
+use Sulu\Bundle\ProductBundle\Product\Exception\InvalidProductAttributeException;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 
 use Sulu\Bundle\CategoryBundle\Api\Category;
@@ -1326,8 +1327,13 @@ class ProductManager implements ProductManagerInterface
     /**
      * {@inheritDoc}
      */
-    public function delete($id, $userId)
+    protected function singleDelete($id)
     {
+        // id must be an integer
+        if (!is_numeric($id)) {
+            throw new InvalidProductAttributeException('id', $id);
+        }
+        
         $product = $this->productRepository->findById($id);
 
         if (!$product) {
@@ -1340,7 +1346,26 @@ class ProductManager implements ProductManagerInterface
         }
 
         $this->em->remove($product);
-        $this->em->flush();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function delete($ids, $userId = null, $flush = true)
+    {
+        if (is_array($ids)) {
+            // if ids is array -> multiple delete
+            foreach ($ids as $id) {
+                $this->singleDelete($id, null, false);
+            }
+        } else {
+            // if ids is int
+            $this->singleDelete($ids, null, false);
+        }
+        
+        if ($flush) {
+            $this->em->flush();
+        }
     }
 
     /**
