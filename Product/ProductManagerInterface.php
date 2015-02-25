@@ -93,5 +93,5 @@ interface ProductManagerInterface
      * @param bool $userId ID of the user that deletes the product
      * @param bool $flush Defines if a flush should be performed
      */
-    public function delete($id, $flush);
+    public function delete($id, $userId= null, $flush = true);
 } 
