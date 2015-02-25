@@ -11,8 +11,9 @@ define([
     'suluproduct/models/product',
     'sulucategory/model/category',
     'app-config',
-    'suluproduct/util/header'
-], function (Product, Category, AppConfig, HeaderUtil) {
+    'suluproduct/util/header',
+    'suluproduct/util/product-delete-dialog'
+], function (Product, Category, AppConfig, HeaderUtil, DeleteDialog) {
     'use strict';
 
     var types = {
@@ -241,16 +242,7 @@ define([
         },
 
         deleteProduct: function(id) {
-            if (!!id) {
-                var product = Product.findOrCreate({id: id});
-                product.destroy({
-                    success: function() {
-                        this.sandbox.emit('sulu.router.navigate', 'pim/products');
-                    }.bind(this)
-                });
-            } else {
-                this.sandbox.logger.error('no id provided to delete product!');
-            }
+            DeleteDialog.show(this.sandbox, Product.findOrCreate({id: id}));
         },
 
         addVariant: function (id) {
