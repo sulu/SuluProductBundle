@@ -1328,7 +1328,7 @@ class ProductManager implements ProductManagerInterface
     protected function singleDelete($id)
     {
         // id must be an integer
-        if (is_int($id)) {
+        if (!is_numeric($id)) {
             throw new InvalidProductAttributeException('id', $id);
         }
         
