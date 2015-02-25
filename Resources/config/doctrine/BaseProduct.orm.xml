@@ -23,6 +23,7 @@
         <field name="orderContentRatio" type="float" nullable="true"/>
         <field name="minimumOrderQuantity" type="float" nullable="true"/>
         <field name="recommendedOrderQuantity" type="float" nullable="true"/>
+        <field name="deliveryTime" type="integer" nullable="true"/>
 
         <many-to-one field="changer" target-entity="Sulu\Component\Security\UserInterface">
             <join-columns>
