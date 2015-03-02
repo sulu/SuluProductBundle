@@ -92,6 +92,7 @@ class ProductMediaController extends RestController
                 throw new RestException('Relation already exists');
             }
 
+            //FIXME this is just a temporary solution
             $this->removeDefaultPrices($product);
             $product->addMedia($media);
             $em->flush();
