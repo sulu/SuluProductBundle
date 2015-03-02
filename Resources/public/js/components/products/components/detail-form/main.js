@@ -123,8 +123,8 @@ define([
 
             this.setHeaderInformation();
 
-            this.initForm(this.options.data);
             this.initSupplierAutocomplete();
+            this.initForm(this.options.data);
         },
 
         initForm: function (data) {

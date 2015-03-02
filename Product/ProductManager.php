@@ -748,7 +748,6 @@ class ProductManager implements ProductManagerInterface
         $product->setShortDescription($this->getProperty($data, 'shortDescription', $product->getShortDescription()));
         $product->setLongDescription($this->getProperty($data, 'longDescription', $product->getLongDescription()));
         $product->setNumber($this->getProperty($data, 'number', $product->getNumber()));
-        $product->setDeliveryTime($this->getProperty($data, 'deliveryTime', $product->getDeliveryTime()));
         $product->setPriceInfo($this->getProperty($data, 'priceInfo', $product->getPriceInfo()));
         $product->setGlobalTradeItemNumber(
             $this->getProperty(
@@ -830,6 +829,12 @@ class ProductManager implements ProductManagerInterface
                 throw new ProductDependencyNotFoundException(self::$unitEntityName, $contentUnitId);
             }
             $product->setContentUnit($contentUnit);
+        }
+
+        if (isset($data['deliveryTime']) && intval($data['deliveryTime']) === 1) {
+            $product->setDeliveryTime(intval($data['deliveryTime']));
+        } else {
+            $product->setDeliveryTime(0);
         }
 
         if (isset($data['supplier']) && isset($data['supplier']['id'])) {
