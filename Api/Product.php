@@ -22,7 +22,7 @@ use JMS\Serializer\Annotation\SerializedName;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductTranslation;
 use Sulu\Component\Rest\ApiWrapper;
-use Sulu\Component\Security\UserInterface;
+use Sulu\Component\Security\Authentication\UserInterface;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSet as AttributeSetEntity;
 use Sulu\Bundle\ProductBundle\Entity\ProductPrice as ProductPriceEntity;
 use Sulu\Bundle\ProductBundle\Entity\Status as StatusEntity;

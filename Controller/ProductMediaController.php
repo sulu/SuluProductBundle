@@ -92,6 +92,8 @@ class ProductMediaController extends RestController
                 throw new RestException('Relation already exists');
             }
 
+            //FIXME this is just a temporary solution
+            $this->removeDefaultPrices($product);
             $product->addMedia($media);
             $em->flush();
 
@@ -105,6 +107,25 @@ class ProductMediaController extends RestController
         }
 
         return $this->handleView($view);
+    }
+
+    /**
+     * Removes default prices from product
+     * @param Product $product
+     */
+    private function removeDefaultPrices(Product $product) {
+        $defaultPrices = [];
+
+        // get default prices
+        foreach($product->getPrices() as $price) {
+            if($price->getId() === null){
+                $defaultPrices[] = $price;
+            }
+        }
+
+        foreach($defaultPrices as $price){
+            $product->removePrice($price->getEntity());
+        }
     }
 
     /**

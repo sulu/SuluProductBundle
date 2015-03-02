@@ -4,7 +4,7 @@ namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Sulu\Bundle\MediaBundle\Entity\Media;
-use Sulu\Component\Security\UserInterface;
+use Sulu\Component\Security\Authentication\UserInterface;
 
 /**
  * BaseProduct
@@ -702,7 +702,7 @@ abstract class BaseProduct implements ProductInterface
     /**
      * Set changer
      *
-     * @param \Sulu\Component\Security\UserInterface $changer
+     * @param \Sulu\Component\Security\Authentication\UserInterface $changer
      * @return BaseProduct
      */
     public function setChanger(UserInterface $changer = null)
@@ -715,7 +715,7 @@ abstract class BaseProduct implements ProductInterface
     /**
      * Get changer
      *
-     * @return \Sulu\Component\Security\UserInterface
+     * @return \Sulu\Component\Security\Authentication\UserInterface
      */
     public function getChanger()
     {
@@ -725,7 +725,7 @@ abstract class BaseProduct implements ProductInterface
     /**
      * Set creator
      *
-     * @param \Sulu\Component\Security\UserInterface $creator
+     * @param \Sulu\Component\Security\Authentication\UserInterface $creator
      * @return BaseProduct
      */
     public function setCreator(UserInterface $creator = null)
@@ -738,7 +738,7 @@ abstract class BaseProduct implements ProductInterface
     /**
      * Get creator
      *
-     * @return \Sulu\Component\Security\UserInterface
+     * @return \Sulu\Component\Security\Authentication\UserInterface
      */
     public function getCreator()
     {
