@@ -305,18 +305,6 @@ class Product extends ApiWrapper
     }
 
     /**
-     * Returns the supplier of the product
-     * @return Object The supplier of the product
-     * @VirtualProperty
-     * @SerializedName("supplier")
-     */
-    public function getSupplier()
-    {
-//        return $this->entity->getSupplier()->getId();
-        return 'asdfasdf';
-    }
-
-    /**
      * Returns the cost of the product
      * @return double The cost of the product
      * @VirtualProperty
