@@ -20,7 +20,12 @@ define([
             'product-set': 4
         },
         formSelector = '#product-form',
-        maxLengthTitle = 60;
+        maxLengthTitle = 60,
+
+        constants = {
+            supplierId: '#supplierField',
+            autocompleteSupplierInstanceName: 'supplier'
+        };
 
     return {
 
@@ -103,6 +108,12 @@ define([
                     };
                 }
 
+                // FIXME auto complete in mapper
+                // only get id, if auto-complete is not empty:
+                data.supplier = {
+                    id: this.sandbox.dom.attr('#'+constants.autocompleteSupplierInstanceName, 'data-id')
+                };
+
                 this.sandbox.emit('sulu.products.save', data);
             }
         },
@@ -113,6 +124,7 @@ define([
             this.setHeaderInformation();
 
             this.initForm(this.options.data);
+            this.initSupplierAutocomplete();
         },
 
         initForm: function (data) {
@@ -129,6 +141,24 @@ define([
             }.bind(this)).fail(function (error) {
                 this.sandbox.logger.error("An error occured when setting data!", error);
             }.bind(this));
+        },
+
+        /**
+         * Initializes the auto complete component with the global configuration for account-auto-completes
+         */
+        initSupplierAutocomplete: function() {
+            var options = Config.get('sulucontact.components.autocomplete.default.account');
+            options.el = constants.supplierId;
+            options.value = !!this.options.data.supplier ? this.options.data.supplier : '';
+            options.instanceName = constants.autocompleteSupplierInstanceName;
+            options.remoteUrl += 'type=3';
+
+            this.sandbox.start([
+                {
+                    name: 'auto-complete@husky',
+                    options: options
+                }
+            ]);
         },
 
         setHeaderInformation: function () {

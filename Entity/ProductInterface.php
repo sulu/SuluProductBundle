@@ -10,6 +10,7 @@
 
 namespace Sulu\Bundle\ProductBundle\Entity;
 
+use Sulu\Bundle\ContactBundle\Entity\Account;
 use Sulu\Bundle\ContactBundle\Entity\Country;
 use Sulu\Bundle\MediaBundle\Entity\Media;
 use Sulu\Bundle\SecurityBundle\Entity\User;
@@ -192,6 +193,13 @@ interface ProductInterface
      * @return Status
      */
     public function getStatus();
+
+    /**
+     * Get supplier
+     *
+     * @return Account Supplier
+     */
+    public function getSupplier();
 
     /**
      * Set taxClass

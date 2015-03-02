@@ -58,7 +58,7 @@ class Product extends BaseProduct
     public function addProductAttribute(\Sulu\Bundle\ProductBundle\Entity\ProductAttribute $productAttributes)
     {
         $this->productAttributes[] = $productAttributes;
-    
+
         return $this;
     }
 

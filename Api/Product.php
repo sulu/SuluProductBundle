@@ -12,6 +12,7 @@ namespace Sulu\Bundle\ProductBundle\Api;
 
 use Sulu\Bundle\CategoryBundle\Api\Category;
 use Sulu\Bundle\CategoryBundle\Entity\Category as CategoryEntity;
+use Sulu\Bundle\ContactBundle\Api\Account;
 use Sulu\Bundle\MediaBundle\Api\Media;
 use Sulu\Bundle\MediaBundle\Entity\Media as MediaEntity;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttribute as ProductAttributeEntity;
@@ -302,6 +303,25 @@ class Product extends ApiWrapper
     public function setSupplier($supplier)
     {
         $this->entity->setSupplier($supplier);
+    }
+
+    /**
+     * Returns the supplier of the product
+     * @return object The supplier of the product
+     * @VirtualProperty
+     * @SerializedName("supplier")
+     */
+    public function getSupplier()
+    {
+        $values = null;
+        $supplier = $this->entity->getSupplier();
+        if ($supplier !== null) {
+            // Returns no api entity because it will cause a nesting level exception
+            $values = array();
+            $values['id'] = $supplier->getId();
+            $values['name'] = $supplier->getName();
+        }
+        return $values;
     }
 
     /**
