@@ -831,7 +831,7 @@ class ProductManager implements ProductManagerInterface
             $product->setContentUnit($contentUnit);
         }
 
-        if (isset($data['deliveryTime']) && intval($data['deliveryTime']) === 1) {
+        if (isset($data['deliveryTime']) && is_int($data['deliveryTime'])) {
             $product->setDeliveryTime(intval($data['deliveryTime']));
         } else {
             $product->setDeliveryTime(0);
