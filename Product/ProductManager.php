@@ -344,7 +344,12 @@ class ProductManager implements ProductManagerInterface
             ),
             false,
             false,
-            'number'
+            'number',
+            '',
+            '',
+            true,
+            false,
+            'align-right'
         );
 
         $fieldDescriptors['number'] = new DoctrineFieldDescriptor(
