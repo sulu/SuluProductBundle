@@ -305,6 +305,26 @@ class Product extends ApiWrapper
     }
 
     /**
+     * Returns the supplier of the product
+     * @return object The supplier of the product
+     * @VirtualProperty
+     * @SerializedName("supplier")
+     */
+    public function getSupplier()
+    {
+        $values = null;
+        $supplier = $this->entity->getSupplier();
+        if ($supplier !== null) {
+            // Returns no api entity because it will cause a nesting level exception
+            $values = array(
+                'id' => $supplier->getId(),
+                'name' => $supplier->getName()
+            );
+        }
+        return $values;
+    }
+
+    /**
      * Returns the cost of the product
      * @return double The cost of the product
      * @VirtualProperty

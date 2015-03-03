@@ -12,6 +12,7 @@ namespace Sulu\Bundle\ProductBundle\Product;
 
 use DateTime;
 use Doctrine\Common\Persistence\ObjectManager;
+use Sulu\Bundle\ContactBundle\Entity\Account;
 use Sulu\Bundle\ProductBundle\Product\Exception\InvalidProductAttributeException;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 
@@ -26,6 +27,7 @@ use Sulu\Bundle\ProductBundle\Entity\AttributeSet;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductPrice as ProductPriceEntity;
 use Sulu\Bundle\ProductBundle\Entity\StatusRepository;
+use Sulu\Bundle\ContactBundle\Entity\AccountRepository;
 use Sulu\Bundle\ProductBundle\Entity\TaxClass;
 use Sulu\Bundle\ProductBundle\Entity\TaxClassRepository;
 use Sulu\Bundle\ProductBundle\Entity\Type;
@@ -136,6 +138,11 @@ class ProductManager implements ProductManagerInterface
     protected $userRepository;
 
     /**
+     * @var AccountRepository
+     */
+    protected $accountRepository;
+
+    /**
      * @var DefaultMediaManager
      */
     protected $mediaManager;
@@ -177,6 +184,7 @@ class ProductManager implements ProductManagerInterface
         ObjectManager $em,
         $productEntity,
         $productApiEntity,
+        AccountRepository $accountRepository,
         $defaultCurrency
     ) {
         $this->productRepository = $productRepository;
@@ -195,6 +203,7 @@ class ProductManager implements ProductManagerInterface
         $this->em = $em;
         $this->productEntity = $productEntity;
         $this->productApiEntity = $productApiEntity;
+        $this->accountRepository = $accountRepository;
         $this->defaultCurrency = $defaultCurrency;
     }
 
@@ -341,15 +350,22 @@ class ProductManager implements ProductManagerInterface
                     static::$productEntityName . '.prices',
                     self::$productPriceEntityName . '.minimumQuantity = 1'
                 )
-            )
-            ,
+            ),
         // TODO: sort by minimum quantity
             array(
                 self::$currencyEntityName => new DoctrineJoinDescriptor(
                     self::$currencyEntityName,
                     static::$productPriceEntityName . '.currency'
                 )
-            )
+            ),
+            false,
+            false,
+            'number',
+            '',
+            '',
+            true,
+            false,
+            'align-right'
         );
 
         $fieldDescriptors['number'] = new DoctrineFieldDescriptor(
@@ -756,7 +772,6 @@ class ProductManager implements ProductManagerInterface
         $product->setShortDescription($this->getProperty($data, 'shortDescription', $product->getShortDescription()));
         $product->setLongDescription($this->getProperty($data, 'longDescription', $product->getLongDescription()));
         $product->setNumber($this->getProperty($data, 'number', $product->getNumber()));
-        $product->setDeliveryTime($this->getProperty($data, 'deliveryTime', $product->getDeliveryTime()));
         $product->setPriceInfo($this->getProperty($data, 'priceInfo', $product->getPriceInfo()));
         $product->setGlobalTradeItemNumber(
             $this->getProperty(
@@ -838,6 +853,24 @@ class ProductManager implements ProductManagerInterface
                 throw new ProductDependencyNotFoundException(self::$unitEntityName, $contentUnitId);
             }
             $product->setContentUnit($contentUnit);
+        }
+
+        if (isset($data['deliveryTime']) && is_int($data['deliveryTime'])) {
+            $product->setDeliveryTime(intval($data['deliveryTime']));
+        } else {
+            $product->setDeliveryTime(0);
+        }
+
+        if (isset($data['supplier']) && isset($data['supplier']['id'])) {
+            $supplierId = $data['supplier']['id'];
+            /** @var Account $supplierId */
+            $supplier = $this->accountRepository->find($supplierId);
+            if (!$supplier) {
+                throw new ProductDependencyNotFoundException(self::$accountsSupplierEntityName, $supplierId);
+            }
+            $product->setSupplier($supplier);
+        } else if (isset($data['supplier']) && !isset($data['supplier']['id'])){
+            $product->setSupplier(null);
         }
 
         if (isset($data['taxClass']) && isset($data['taxClass']['id'])) {
