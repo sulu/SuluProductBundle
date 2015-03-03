@@ -20,11 +20,6 @@ class ProductPrice
     private $price;
 
     /**
-     * @var string
-     */
-    private $priceInfo;
-
-    /**
      * @var integer
      */
     private $id;
@@ -83,29 +78,6 @@ class ProductPrice
     public function getPrice()
     {
         return $this->price;
-    }
-
-    /**
-     * Set priceInfo
-     *
-     * @param string $priceInfo
-     * @return ProductPrice
-     */
-    public function setPriceInfo($priceInfo)
-    {
-        $this->priceInfo = $priceInfo;
-    
-        return $this;
-    }
-
-    /**
-     * Get priceInfo
-     *
-     * @return string 
-     */
-    public function getPriceInfo()
-    {
-        return $this->priceInfo;
     }
 
     /**
