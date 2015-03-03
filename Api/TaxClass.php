@@ -25,14 +25,19 @@ use Sulu\Component\Rest\ApiWrapper;
  */
 class TaxClass extends ApiWrapper
 {
+    private $countryId;
+
     /**
-     * @param Entity $type
+     * @param Entity $taxClass
      * @param string $locale
+     * @param int|null $countryId
+     * @internal param Entity $type
      */
-    public function __construct(Entity $taxClass, $locale)
+    public function __construct(Entity $taxClass, $locale, $countryId = null)
     {
         $this->entity = $taxClass;
         $this->locale = $locale;
+        $this->countryId = $countryId;
     }
 
     /**
@@ -74,5 +79,29 @@ class TaxClass extends ApiWrapper
         }
 
         return $translation;
+    }
+
+    /**
+     * Returns the translation for the given locale
+     * @return TaxClassTranslation
+     * @VirtualProperty
+     * @SerializedName("countryTaxes")
+     */
+    public function getCountryTaxes()
+    {
+        $taxes = null;
+        if (!$this->entity->getCountryTaxes()->isEmpty()) {
+            foreach ($this->entity->getCountryTaxes() as $countryTax) {
+                // if countryId is defined, show only tax of this country
+                if (!$this->countryId ||
+                    ($this->countryId && $countryTax->getCountry()->getId() == $countryTax)
+                ) {
+                    $taxes[] = new CountryTax($countryTax, $this->locale);
+                    break;
+                }
+            }
+        }
+
+        return $taxes;
     }
 } 

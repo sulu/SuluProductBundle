@@ -35,6 +35,11 @@ class TaxClass
      * @var \Doctrine\Common\Collections\Collection
      */
     private $products;
+    
+    /**
+     * @var \Doctrine\Common\Collections\Collection
+     */
+    private $countryTaxes;
 
     /**
      * Constructor
@@ -130,5 +135,38 @@ class TaxClass
     public function getProducts()
     {
         return $this->products;
+    }
+
+    /**
+     * Add tax
+     *
+     * @param \Sulu\Bundle\ProductBundle\Entity\CountryTax $tax
+     * @return TaxClass
+     */
+    public function addCountryTax(\Sulu\Bundle\ProductBundle\Entity\CountryTax $tax)
+    {
+        $this->countryTaxes[] = $tax;
+
+        return $this;
+    }
+
+    /**
+     * Remove tax
+     *
+     * @param \Sulu\Bundle\ProductBundle\Entity\CountryTax $tax
+     */
+    public function removeCountryTax(\Sulu\Bundle\ProductBundle\Entity\CountryTax $tax)
+    {
+        $this->countryTaxes->removeElement($tax);
+    }
+
+    /**
+     * Get countryTaxes
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getCountryTaxes()
+    {
+        return $this->countryTaxes;
     }
 }
