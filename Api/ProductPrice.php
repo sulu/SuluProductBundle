@@ -84,13 +84,4 @@ class ProductPrice extends ApiWrapper
     {
         return $this->entity->getMinimumQuantity();
     }
-
-    /**
-     * Returns the priceInfo
-     * @return string
-     */
-    public function getPriceInfo()
-    {
-        return $this->entity->getPriceInfo();
-    }
 }
