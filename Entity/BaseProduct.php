@@ -179,7 +179,7 @@ abstract class BaseProduct implements ProductInterface
     /**
      * @var boolean
      */
-    private $areGrossPrices;
+    private $areGrossPrices = false;
 
     /**
      * Constructor
