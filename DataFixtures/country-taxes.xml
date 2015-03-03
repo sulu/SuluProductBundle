@@ -1,0 +1,12 @@
+<country-taxes>
+    <country-tax>
+        <tax-class>standard</tax-class>
+        <country>AT</country>
+        <tax>20</tax>
+    </country-tax>
+    <country-tax>
+        <tax-class>reduced</tax-class>
+        <country>AT</country>
+        <tax>10</tax>
+    </country-tax>
+</country-taxes>
