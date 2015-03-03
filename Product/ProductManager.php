@@ -74,6 +74,7 @@ class ProductManager implements ProductManagerInterface
     protected static $productTaxClassEntityName = 'SuluProductBundle:TaxClass';
     protected static $productDeliveryStatusClassEntityName = 'SuluProductBundle:DeliveryStatus';
     protected static $productPriceEntityName = 'SuluProductBundle:ProductPrice';
+    protected static $currencyEntityName = 'SuluProductBundle:Currency';
     protected static $categoryEntityName = 'SuluCategoryBundle:Category';
 
     /**
@@ -155,6 +156,11 @@ class ProductManager implements ProductManagerInterface
      * @var string
      */
     protected $productApiEntity;
+    
+    /**
+     * @var string
+     */
+    protected $defaultCurrency;
 
     /**
      * @var string
@@ -178,7 +184,8 @@ class ProductManager implements ProductManagerInterface
         ObjectManager $em,
         $productEntity,
         $productApiEntity,
-        AccountRepository $accountRepository
+        AccountRepository $accountRepository,
+        $defaultCurrency
     ) {
         $this->productRepository = $productRepository;
         $this->attributeSetRepository = $attributeSetRepository;
@@ -197,6 +204,7 @@ class ProductManager implements ProductManagerInterface
         $this->productEntity = $productEntity;
         $this->productApiEntity = $productApiEntity;
         $this->accountRepository = $accountRepository;
+        $this->defaultCurrency = $defaultCurrency;
     }
 
     /**
@@ -329,7 +337,8 @@ class ProductManager implements ProductManagerInterface
                 )
             )
         );
-        // Todo: use currency as defined in global settings
+        // TODO: currency should be dynamically set
+        $currency = $this->defaultCurrency;
         $fieldDescriptors['price'] = new DoctrineFieldDescriptor(
             'price',
             'price',
@@ -340,6 +349,13 @@ class ProductManager implements ProductManagerInterface
                     self::$productPriceEntityName,
                     static::$productEntityName . '.prices',
                     self::$productPriceEntityName . '.minimumQuantity = 1'
+                )
+            ),
+        // TODO: sort by minimum quantity
+            array(
+                self::$currencyEntityName => new DoctrineJoinDescriptor(
+                    self::$currencyEntityName,
+                    static::$productPriceEntityName . '.currency'
                 )
             ),
             false,

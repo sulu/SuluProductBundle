@@ -30,6 +30,7 @@ class SuluProductExtension extends Extension
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
         $container->setParameter('sulu_product.template', $config['template']);
+        $container->setParameter('sulu_product.default_currency', $config['default_currency']);
 
         $loader = new Loader\XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.xml');
