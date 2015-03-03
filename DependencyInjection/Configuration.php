@@ -30,6 +30,7 @@ class Configuration implements ConfigurationInterface
 
         $rootNode->children()
             ->scalarNode('template')->defaultValue('ClientWebsiteBundle:views:product.html.twig')->end()
+            ->scalarNode('default_currency')->defaultValue('EUR')->end()
         ->end();
 
         return $treeBuilder;
