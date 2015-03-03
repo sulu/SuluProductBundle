@@ -507,4 +507,16 @@ interface ProductInterface
      */
     public function removeMedia(Media $media);
 
+    /**
+     * Are all prices of this products gross prices
+     * @return boolean
+     */
+    public function getAreGrossPrices();
+
+    /**
+     * Sets prices of this products gross prices
+     * @param $areGrossPrices
+     */
+    public function setAreGrossPrices($areGrossPrices);
+
 }

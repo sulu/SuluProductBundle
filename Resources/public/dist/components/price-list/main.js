@@ -1,0 +1,1 @@
+define([],function(){"use strict";var a={instanceName:null,data:[],translations:{}},b="sulu.products.price-list.",c=function(a){return b+(this.options.instanceName?this.options.instanceName+".":"")+a},d=function(){return c.call(this,"initialized")};return{initialize:function(){this.options=this.sandbox.util.extend({},a,this.options),this.sandbox.emit(d.call(this))}}});

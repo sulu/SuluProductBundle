@@ -2,7 +2,7 @@
     <input type="hidden" id="id" data-mapper-property="id"/>
     <input type="hidden" id="type" data-mapper-property="type" data-type="attributes"/>
 
-    <div class="grid-row">
+    <div class="grid-row small">
         <div class="grid-col-6">
             <div class="form-group">
                 <label for="price-info"><%= translate('product.price-info') %></label>
@@ -33,38 +33,67 @@
     </div>
 
     <div class="grid-row">
-        <table class="table">
-            <thead>
-            <tr class="row">
-                <th class="header-cell">
-                    <span class="cell-content"><%=translate('product.currency.iso-code')%></span>
-                </th>
-                <th class="header-cell">
-                    <span class="cell-content"><%=translate('product.price')%></span>
-                </th>
-            </tr>
-            </thead>
-            <tbody data-mapper-property='[{"data":"prices", "tpl":"price-tpl"}]'
-                   data-type="collection">
-            <script type="text/template" id="price-tpl">
-                <~ var price = price ? price : '', id = id ? id : null; ~>
-                <tr class="row">
-                    <td>
-                        <input type="hidden" data-mapper-property="id" data-type="decimal" value="<~=id~>"/>
-                        <span class="cell-content" data-type="label" data-type-label="code"
-                              data-mapper-property="currency">
-                        </span>
-                    </td>
-                    <td>
-                        <div class="input-wrapper" style="display: block">
-                            <input type="text" data-type="decimal" value="<~=price~>"
-                                   class="form-element husky-validate editable-input"
-                                   data-mapper-property="price"/>
-                        </div>
-                    </td>
-                </tr>
-            </script>
-            </tbody>
-        </table>
+        <div class="grid-col-6">
+            <div class="form-group">
+                <label for="cost"><%= translate('product.cost') %></label>
+                <input class="form-element" type="text"
+                       id="cost-info"
+                       data-mapper-property="cost"
+                       data-validation-required="false"
+                       data-type="decimal" />
+            </div>
+        </div>
+        <div class="grid-col-6">
+            <div class="form-group">
+                <label for="areGrossPrices" ><%=translate('product.areGrossPrices')%></label>
+                <div>
+                    <div class="custom-checkbox">
+                        <input class="form-element husky-validate" type="checkbox"
+                               id="areGrossPrices"
+                               data-mapper-property="areGrossPrices"/>
+                        <span class="icon"></span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
     </div>
+
+    <div id="prices"></div>
+
+    {#<div class="grid-row">#}
+        {#<table class="table">#}
+            {#<thead>#}
+            {#<tr class="row">#}
+                {#<th class="header-cell">#}
+                    {#<span class="cell-content"><%=translate('product.currency.iso-code')%></span>#}
+                {#</th>#}
+                {#<th class="header-cell">#}
+                    {#<span class="cell-content"><%=translate('product.price')%></span>#}
+                {#</th>#}
+            {#</tr>#}
+            {#</thead>#}
+            {#<tbody data-mapper-property='[{"data":"prices", "tpl":"price-tpl"}]'#}
+                   {#data-type="collection">#}
+            {#<script type="text/template" id="price-tpl">#}
+                {#<~ var price = price ? price : '', id = id ? id : null; ~>#}
+                {#<tr class="row">#}
+                    {#<td>#}
+                        {#<input type="hidden" data-mapper-property="id" data-type="decimal" value="<~=id~>"/>#}
+                        {#<span class="cell-content" data-type="label" data-type-label="code"#}
+                              {#data-mapper-property="currency">#}
+                        {#</span>#}
+                    {#</td>#}
+                    {#<td>#}
+                        {#<div class="input-wrapper" style="display: block">#}
+                            {#<input type="text" data-type="decimal" value="<~=price~>"#}
+                                   {#class="form-element husky-validate editable-input"#}
+                                   {#data-mapper-property="price"/>#}
+                        {#</div>#}
+                    {#</td>#}
+                {#</tr>#}
+            {#</script>#}
+            {#</tbody>#}
+        {#</table>#}
+    {#</div>#}
 </form>

@@ -11,6 +11,7 @@ define(['config'], function (Config) {
     'use strict';
 
     var formSelector = '#product-pricing-form',
+        pricesSelector = '#prices',
         maxLengthTitle = 60,
 
         render = function () {
@@ -19,6 +20,22 @@ define(['config'], function (Config) {
             setHeaderInformation.call(this);
 
             initForm.call(this, this.options.data);
+
+            if (!!this.options.data.prices) {
+                initPriceList.call(this, this.options.data.prices);
+            }
+        },
+
+        initPriceList = function(data) {
+            var options = {
+                data: data,
+                el: pricesSelector
+            };
+
+            this.sandbox.start([{
+                name: 'price-list@suluproduct',
+                options: options
+            }]);
         },
 
         bindCustomEvents = function () {

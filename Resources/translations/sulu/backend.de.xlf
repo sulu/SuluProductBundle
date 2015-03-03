@@ -202,6 +202,10 @@
                 <source>product.deliveryTime</source>
                 <target>Lieferzeit (Tage)</target>
             </trans-unit>
+            <trans-unit id="52" resname="product.areGrossPrices">
+                <source>product.areGrossPrices</source>
+                <target>Bruttopreise</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>
