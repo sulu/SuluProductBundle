@@ -198,6 +198,10 @@
                 <source>products.price-calculation.invalid.input</source>
                 <target>Ungültig</target>
             </trans-unit>
+            <trans-unit id="51" resname="product.deliveryTime">
+                <source>product.deliveryTime</source>
+                <target>Lieferzeit (Tage)</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>

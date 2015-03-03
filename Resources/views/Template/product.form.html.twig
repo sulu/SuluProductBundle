@@ -19,6 +19,12 @@
                        data-validation-max-length="255" data-mapper-property="number"/>
             </div>
         </div>
+        <div class="grid-col-6">
+            <div class="form-group">
+                <label for="supplier-input"><%=translate('product.supplier')%></label>
+                <div id="supplierField"></div>
+            </div>
+        </div>
     </div>
 
     <div class="grid-row small">
@@ -42,7 +48,13 @@
                 </div>
             </div>
         </div>
-        <div class="grid-col-6"></div>
+        <div class="grid-col-6">
+            <div class="form-group">
+                <label for="deliveryTime"><%= translate('product.deliveryTime') %></label>
+                <input class="form-element" type="text" id="deliveryTime"
+                       data-mapper-property="deliveryTime" data-type="decimal"/>
+            </div>
+        </div>
     </div>
 
     <div class="grid-row small">
