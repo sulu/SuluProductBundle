@@ -341,7 +341,10 @@ class ProductManager implements ProductManagerInterface
                     static::$productEntityName . '.prices',
                     self::$productPriceEntityName . '.minimumQuantity = 1'
                 )
-            )
+            ),
+            false,
+            false,
+            'number'
         );
 
         $fieldDescriptors['number'] = new DoctrineFieldDescriptor(
