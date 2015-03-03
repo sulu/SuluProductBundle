@@ -848,7 +848,7 @@ class ProductManager implements ProductManagerInterface
                 throw new ProductDependencyNotFoundException(self::$accountsSupplierEntityName, $supplierId);
             }
             $product->setSupplier($supplier);
-        } else if (isset($data['supplier']) && (!isset($data['supplier']['id']) || $data['supplier']['id'] === null)){
+        } else if (isset($data['supplier']) && !isset($data['supplier']['id'])){
             $product->setSupplier(null);
         }
 

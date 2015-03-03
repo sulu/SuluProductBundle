@@ -316,9 +316,10 @@ class Product extends ApiWrapper
         $supplier = $this->entity->getSupplier();
         if ($supplier !== null) {
             // Returns no api entity because it will cause a nesting level exception
-            $values = array();
-            $values['id'] = $supplier->getId();
-            $values['name'] = $supplier->getName();
+            $values = array(
+                'id' => $supplier->getId(),
+                'name' => $supplier->getName()
+            );
         }
         return $values;
     }
