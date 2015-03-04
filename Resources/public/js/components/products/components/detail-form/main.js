@@ -149,7 +149,7 @@ define([
         initSupplierAutocomplete: function() {
             var options = Config.get('sulucontact.components.autocomplete.default.account');
             options.el = constants.supplierId;
-            options.value = !!this.options.data.supplier ? this.options.data.supplier : '';
+            options.value = (!!this.options.data && !!this.options.data.supplier) ? this.options.data.supplier : '';
             options.instanceName = constants.autocompleteSupplierInstanceName;
             options.remoteUrl += 'type=3';
 
