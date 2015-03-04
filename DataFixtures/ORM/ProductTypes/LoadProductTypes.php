@@ -31,10 +31,10 @@ class LoadProductTypes implements FixtureInterface, OrderedFixtureInterface
 
         $i = 1;
         $file = dirname(__FILE__) . '/../../product-types.xml';
-        $doc = new DOMDocument();
+        $doc = new \DOMDocument();
         $doc->load($file);
 
-        $xpath = new DOMXpath($doc);
+        $xpath = new \DOMXpath($doc);
         $elements = $xpath->query('/product-types/product-type');
 
         if (!is_null($elements)) {

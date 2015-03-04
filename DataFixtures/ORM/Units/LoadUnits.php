@@ -32,10 +32,10 @@ class LoadUnits implements FixtureInterface, OrderedFixtureInterface
 
         $i = 1;
         $file = dirname(__FILE__) . '/../../units.xml';
-        $doc = new DOMDocument();
+        $doc = new \DOMDocument();
         $doc->load($file);
 
-        $xpath = new DOMXpath($doc);
+        $xpath = new \DOMXpath($doc);
         $elements = $xpath->query('/units/unit');
 
         if (!is_null($elements)) {

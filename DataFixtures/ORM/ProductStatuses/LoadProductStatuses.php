@@ -31,10 +31,10 @@ class LoadProductStatuses implements FixtureInterface, OrderedFixtureInterface
 
         $i = 1;
         $file = dirname(__FILE__) . '/../../product-statuses.xml';
-        $doc = new DOMDocument();
+        $doc = new \DOMDocument();
         $doc->load($file);
 
-        $xpath = new DOMXpath($doc);
+        $xpath = new \DOMXpath($doc);
         $elements = $xpath->query('/product-statuses/product-status');
 
         if (!is_null($elements)) {

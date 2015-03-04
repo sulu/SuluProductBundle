@@ -31,10 +31,10 @@ class LoadTaxClasses implements FixtureInterface, OrderedFixtureInterface
 
         $i = 1;
         $file = dirname(__FILE__) . '/../../tax-classes.xml';
-        $doc = new DOMDocument();
+        $doc = new \DOMDocument();
         $doc->load($file);
 
-        $xpath = new DOMXpath($doc);
+        $xpath = new \DOMXpath($doc);
         $elements = $xpath->query('/tax-classes/tax-class');
 
         if (!is_null($elements)) {
