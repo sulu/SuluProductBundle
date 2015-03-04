@@ -595,9 +595,9 @@ class ProductManager implements ProductManagerInterface
         $product = $this->productRepository->findByIdAndLocale($id, $locale);
 
         if ($product) {
-            if ($loadCurrencies) {
-                $this->addAllCurrencies($product);
-            }
+//            if ($loadCurrencies) {
+//                $this->addAllCurrencies($product);
+//            }
 
             $product = new $this->productApiEntity($product, $locale);
             $media = [];
@@ -1161,16 +1161,6 @@ class ProductManager implements ProductManagerInterface
         $this->em->flush();
 
         return $publishedProduct;
-    }
-
-    private function checkForPriceChange($data, $price)
-    {
-        $currencyNotChanged = isset($data['currency']) && array_key_exists('name', $data['currency']) &&
-            $data['currency']['name'] == $price->getCurrency()->getName();
-        $valueNotChanged = array_key_exists('price', $data) && $data['price'] == $price->getPrice();
-        $minimumQuantityNotChanged = array_key_exists('minimumQuantity', $data) &&
-            $data['minimumQuantity'] == $price->getEntity()->getMinimumQuantity();
-        return $currencyNotChanged && $valueNotChanged && $minimumQuantityNotChanged;
     }
 
     /**
