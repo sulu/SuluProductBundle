@@ -595,6 +595,7 @@ class ProductManager implements ProductManagerInterface
         $product = $this->productRepository->findByIdAndLocale($id, $locale);
 
         if ($product) {
+            // TODO: remove this, when absolutely sure, it is not needed anymore
 //            if ($loadCurrencies) {
 //                $this->addAllCurrencies($product);
 //            }
