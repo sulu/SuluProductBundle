@@ -343,7 +343,7 @@ class ProductManager implements ProductManagerInterface
             'price',
             'price',
             self::$productPriceEntityName,
-            'product.price.' . $this->defaultCurrency,
+            'product.price.' . $currency,
             array(
                 self::$productPriceEntityName => new DoctrineJoinDescriptor(
                     self::$productPriceEntityName,
