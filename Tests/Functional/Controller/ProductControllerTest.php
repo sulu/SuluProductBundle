@@ -499,17 +499,6 @@ class ProductControllerTest extends SuluTestCase
             ),
             $response['prices']
         );
-        $this->assertContains(
-            array(
-                'currency' => array(
-                    'id' => $this->currency3->getId(),
-                    'name' => 'GBP',
-                    'number' => '3',
-                    'code' => 'gbp'
-                )
-            ),
-            $response['prices']
-        );
     }
 
     public function testGetAll()
