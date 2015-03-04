@@ -202,6 +202,14 @@
                 <source>product.deliveryTime</source>
                 <target>Lieferzeit (Tage)</target>
             </trans-unit>
+            <trans-unit id="52" resname="product.price.EUR">
+                <source>product.price.EUR</source>
+                <target>Preis (EUR)</target>
+            </trans-unit>
+            <trans-unit id="53" resname="product.price.CHF">
+                <source>product.price.CHF</source>
+                <target>Preis (CHF)</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>
