@@ -595,10 +595,10 @@ class ProductManager implements ProductManagerInterface
         $product = $this->productRepository->findByIdAndLocale($id, $locale);
 
         if ($product) {
-            // TODO: remove this, when absolutely sure, it is not needed anymore
-//            if ($loadCurrencies) {
-//                $this->addAllCurrencies($product);
-//            }
+            // TODO: remove this, when absolutely sure, it is not needed anymore?
+            if ($loadCurrencies) {
+                $this->addAllCurrencies($product);
+            }
 
             $product = new $this->productApiEntity($product, $locale);
             $media = [];
@@ -869,7 +869,7 @@ class ProductManager implements ProductManagerInterface
                 throw new ProductDependencyNotFoundException(self::$accountsSupplierEntityName, $supplierId);
             }
             $product->setSupplier($supplier);
-        } else if (isset($data['supplier']) && !isset($data['supplier']['id'])){
+        } else if (isset($data['supplier']) && !isset($data['supplier']['id'])) {
             $product->setSupplier(null);
         }
 
