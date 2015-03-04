@@ -206,6 +206,14 @@
                 <source>product.areGrossPrices</source>
                 <target>Bruttopreise</target>
             </trans-unit>
+            <trans-unit id="53" resname="product.bulkprice.price">
+                <source>product.bulkprice.price</source>
+                <target>Verkaufspreis</target>
+            </trans-unit>
+            <trans-unit id="54" resname="product.bulkprice.amount">
+                <source>product.bulkprice.amount</source>
+                <target>Menge</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>

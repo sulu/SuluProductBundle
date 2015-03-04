@@ -1,3 +1,40 @@
-<h1><%= title%></h1>
+<div class="grid-row m-bottom-50">
+    <h2 class="divider"><%= currency.name %></h2>
 
-<table></table>
+    <div class="grid-row">
+        <div class="grid-col-6">
+            <div class="form-group">
+                <label><%= translate('product.bulkprice.price') %></label>
+                <input class="form-element husky-validate" type="text" id="<%= idPrefix +  'salesprice' %>" value="<%= !!salesPrice ? salesPrice.price : '' %>"/>
+            </div>
+        </div>
+        <div class="grid-col-6">
+            <span class="grey-font"><%= currency.code %></span>
+        </div>
+    </div>
+
+    <div class="grid-row">
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr class="row">
+                        <th><%= translate('product.bulkprice.amount') %></th>
+                        <th><%= translate('product.bulkprice.price') %></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% _.each(prices, function(price){ %>
+                    <tr id="bulkprice-<%= price.id %>" class="row">
+                        <td><%= price.minimumQuantity %> <%= translate('product.bulkprice.andMore') %></td>
+                        <td>
+                            <input class="form-element husky-validate" type="text" value="<%= price.price %>"/>
+                        </td>
+                        <td class="grey-font"><%= currency.code %></td>
+                    </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

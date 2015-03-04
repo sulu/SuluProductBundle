@@ -206,6 +206,14 @@
                 <source>product.areGrossPrices</source>
                 <target>Gross prices</target>
             </trans-unit>
+            <trans-unit id="53" resname="product.bulkprice.price">
+                <source>product.bulkprice.price</source>
+                <target>Sales price</target>
+            </trans-unit>
+            <trans-unit id="54" resname="product.bulkprice.amount">
+                <source>product.bulkprice.amount</source>
+                <target>Amount</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>
