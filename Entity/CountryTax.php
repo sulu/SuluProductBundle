@@ -64,6 +64,17 @@ class CountryTax
     }
 
     /**
+     * Set id
+     *
+     * @param int $id
+     * @return CountryTax
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+    }
+
+    /**
      * Set taxClass
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\TaxClass $taxClass

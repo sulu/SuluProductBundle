@@ -15,13 +15,20 @@ use Sulu\Bundle\ProductBundle\Entity\CountryTax;
 
 class LoadCountryTaxes implements FixtureInterface, OrderedFixtureInterface
 {
+
     // Adapt these if there are any changes in database
-    private $mappings = array(
-        'tax-classes' => array(
-            'standard' => 1,
-            'reduced' => 2,
-        ),
+    private static $taxClassMappings = array(
+        'standard' => 1,
+        'reduced1' => 2,
+        'reduced2' => 3,
+        'reduced3' => 4,
     );
+
+    private static $taxClassEntityName = 'SuluProductBundle:TaxClass';
+    private static $countryEntityName = 'SuluContactBundle:Country';
+
+    private $countries = array();
+    private $manager;
 
 //    private static $translations = ['de', 'en'];
     /**
@@ -29,39 +36,83 @@ class LoadCountryTaxes implements FixtureInterface, OrderedFixtureInterface
      */
     public function load(ObjectManager $manager)
     {
+        $this->manager = $manager;
+
         // force id = 1
         $metadata = $manager->getClassMetaData(get_class(new CountryTax()));
         $metadata->setIdGeneratorType(\Doctrine\ORM\Mapping\ClassMetadata::GENERATOR_TYPE_NONE);
 
-//        $i = 1;
-//        $file = dirname(__FILE__) . '/../../country-taxes.xml';
-//        $doc = new DOMDocument();
-//        $doc->load($file);
-//
-//        $xpath = new DOMXpath($doc);
-//        $elements = $xpath->query('/tax-classes/tax-class');
-//
-//        if (!is_null($elements)) {
-//            /** @var $element DOMNode */
-//            foreach ($elements as $element) {
-//                $taxClass = new TaxClass();
-//                $taxClass->setId($i);
-//                $children = $element->childNodes;
-//                /** @var $child DOMNode */
-//                foreach ($children as $child) {
-//                    if (isset($child->nodeName) && (in_array($child->nodeName, self::$translations))) {
-//                        $translation = new TaxClassTranslation();
-//                        $translation->setLocale($child->nodeName);
-//                        $translation->setName($child->nodeValue);
-//                        $translation->setTaxClass($taxClass);
-//                        $manager->persist($translation);
-//                    }
-//                }
-//                $manager->persist($taxClass);
-//                $i++;
-//            }
-//        }
-//        $manager->flush();
+        $taxClassEntities = $manager->getRepository(static::$taxClassEntityName)->findAll();
+        foreach ($taxClassEntities as $taxClass) {
+            $taxClasses[$taxClass->getId()] = $taxClass;
+        }
+
+        $i = 1;
+        $file = dirname(__FILE__) . '/../../country-taxes.xml';
+        $elements = simplexml_load_file($file);
+
+        if (!is_null($elements)) {
+            /** @var $element DOMNode */
+            foreach ($elements as $child) {
+                try {
+                    // check if all necessary parameters are given
+                    if (!isset($child->{"tax-class"}) ||
+                        !isset($child->country) ||
+                        !isset($child->tax)
+                    ) {
+                        throw new Exception('tax-class ' . $i . ' is incomplete');
+                    }
+
+                    $countryTax = new CountryTax();
+                    $countryTax->setId($i);
+
+                    // check if mapping for tax-class exists
+                    $taxClassKey = (string)$child->{"tax-class"};
+                    if (array_key_exists($taxClassKey, static::$taxClassMappings)) {
+                        // set taxclass as defined in mappings array above
+                        $taxClass = $taxClasses[static::$taxClassMappings[$taxClassKey]];
+                        $countryTax->setTaxClass($taxClass);
+                    } else {
+                        throw new Exception('tax-class not defined for element country-tax number ' . $i);
+                    }
+
+                    // set country
+                    $country = $this->getCountryByCode((string)$child->country);
+                    $countryTax->setCountry($country);
+
+                    // set tax
+                    $countryTax->setTax((float)$child->tax);
+
+                    $manager->persist($countryTax);
+                    $i++;
+                } catch (Exception $e) {
+                    throw $e;
+                }
+            }
+
+        }
+        $manager->flush();
+    }
+
+    /**
+     * finds country by code and caches it
+     *
+     * @param $code
+     * @return mixed
+     * @throws \Doctrine\ORM\EntityNotFoundException
+     */
+    private function getCountryByCode($code)
+    {
+        if (array_key_exists($code, $this->countries)) {
+            return $this->countries[$code];
+        }
+        $country = $this->manager->getRepository(static::$countryEntityName)->findOneBy(array('code' => $code));
+        if (!$country) {
+            throw new \Doctrine\ORM\EntityNotFoundException('code = ' . $code);
+        }
+        $this->countries[$code] = $country;
+
+        return $country;
     }
 
     /**
@@ -69,6 +120,6 @@ class LoadCountryTaxes implements FixtureInterface, OrderedFixtureInterface
      */
     public function getOrder()
     {
-        return 1;
+        return 2;
     }
 }
