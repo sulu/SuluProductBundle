@@ -343,19 +343,18 @@ class ProductManager implements ProductManagerInterface
             'price',
             'price',
             self::$productPriceEntityName,
-            'product.price',
+            'product.price.' . $this->defaultCurrency,
             array(
                 self::$productPriceEntityName => new DoctrineJoinDescriptor(
                     self::$productPriceEntityName,
                     static::$productEntityName . '.prices',
-                    self::$productPriceEntityName . '.minimumQuantity = 1'
-                )
-            ),
-        // TODO: sort by minimum quantity
-            array(
+                    self::$productPriceEntityName . '.minimumQuantity = 0'
+                ),
+                // TODO: sort by minimum quantity
                 self::$currencyEntityName => new DoctrineJoinDescriptor(
                     self::$currencyEntityName,
-                    static::$productPriceEntityName . '.currency'
+                    static::$productPriceEntityName . '.currency',
+                    self::$currencyEntityName . '.code = \'' . $currency . '\''
                 )
             ),
             false,
