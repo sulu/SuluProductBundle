@@ -8,6 +8,8 @@
  * with this source code in the file LICENSE.
  */
 
+namespace Sulu\Bundle\ProductBundle\DataFixtures\ORM\ProductStatuses;
+
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -16,8 +18,8 @@ use Sulu\Bundle\ProductBundle\Entity\StatusTranslation;
 
 class LoadProductStatuses implements FixtureInterface, OrderedFixtureInterface
 {
+    private static $translations = array("de", "en");
 
-    private static $translations = ['de', 'en'];
     /**
      * {@inheritDoc}
      */

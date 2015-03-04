@@ -8,6 +8,8 @@
  * with this source code in the file LICENSE.
  */
 
+namespace Sulu\Bundle\ProductBundle\DataFixtures\ORM\Units;
+
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -17,8 +19,8 @@ use Sulu\Bundle\ProductBundle\Entity\UnitMapping;
 
 class LoadUnits implements FixtureInterface, OrderedFixtureInterface
 {
+    private static $translations = array("de", "en");
 
-    private static $translations = ['de', 'en'];
     /**
      * {@inheritDoc}
      */
@@ -54,8 +56,7 @@ class LoadUnits implements FixtureInterface, OrderedFixtureInterface
                                 $manager->persist($translation);
                             }
                         }
-                    }
-                    elseif (isset($child->nodeName) && $child->nodeName == 'mappings') {
+                    } elseif (isset($child->nodeName) && $child->nodeName == 'mappings') {
                         foreach ($child->childNodes as $child) {
                             if (isset($child->nodeName) && $child->nodeName === 'value') {
                                 $mapping = new UnitMapping();

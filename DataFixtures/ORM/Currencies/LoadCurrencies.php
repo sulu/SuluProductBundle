@@ -8,6 +8,8 @@
  * with this source code in the file LICENSE.
  */
 
+namespace Sulu\Bundle\ProductBundle\DataFixtures\ORM\Currencies;
+
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
 use Sulu\Bundle\ProductBundle\Entity\Currency;
@@ -25,10 +27,10 @@ class LoadCurrencies implements FixtureInterface
 
         $i = 1;
         $file = dirname(__FILE__) . '/../../currencies.xml';
-        $doc = new DOMDocument();
+        $doc = new \DOMDocument();
         $doc->load($file);
 
-        $xpath = new DOMXpath($doc);
+        $xpath = new \DOMXpath($doc);
         $elements = $xpath->query('/currencies/currency');
 
         if (!is_null($elements)) {
