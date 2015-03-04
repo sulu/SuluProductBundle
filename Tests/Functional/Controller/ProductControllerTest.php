@@ -482,7 +482,8 @@ class ProductControllerTest extends SuluTestCase
                     'name' => 'EUR',
                     'number' => '1',
                     'code' => 'eur'
-                )
+                ),
+                'minimumQuantity' => 0
             ),
             $response['prices']
         );
@@ -495,7 +496,8 @@ class ProductControllerTest extends SuluTestCase
                     'name' => 'USD',
                     'number' => '2',
                     'code' => 'usd'
-                )
+                ),
+                'minimumQuantity' => 0
             ),
             $response['prices']
         );
@@ -763,10 +765,11 @@ class ProductControllerTest extends SuluTestCase
                 'number' => 1,
                 'type' => array('id' => $this->type1->getId()),
                 'status' => array('id' => $this->productStatus1->getId()),
-                'categories' => array(array('id' => $this->category1->getId()), array('id' => $this->category2->getId()))
+                'categories' => array(array('id' => $this->category1->getId()), array('id' => $this->category2->getId())),
+                'cost' => 99.9
             )
         );
-
+        
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
 
         $this->client->request('GET', '/api/products/'.$this->product1->getId());
@@ -775,6 +778,7 @@ class ProductControllerTest extends SuluTestCase
 
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
 
+        $this->assertEquals(99.9, $response->cost);
         $this->assertEquals('Category 1', $response->categories[0]->name);
         $this->assertEquals('Category 2', $response->categories[1]->name);
     }

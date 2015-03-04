@@ -5,7 +5,7 @@
         <div class="grid-col-6">
             <div class="form-group">
                 <label><%= translate('product.bulkprice.price') %></label>
-                <input class="form-element husky-validate" type="text" id="<%= idPrefix +  'salesprice' %>" value="<%= !!salesPrice ? salesPrice.price : '' %>"/>
+                <input class="form-element husky-validate <%= idPrefix +  'salesprice' %> align-right" type="text"  value="<%= !!salesPrice ? salesPrice.price : '' %>"/>
             </div>
         </div>
         <div class="grid-col-6">
@@ -19,16 +19,22 @@
                 <thead>
                     <tr class="row">
                         <th><%= translate('product.bulkprice.amount') %></th>
+                        <th></th>
                         <th><%= translate('product.bulkprice.price') %></th>
                         <th></th>
                     </tr>
                 </thead>
                 <tbody>
                     <% _.each(prices, function(price){ %>
-                    <tr id="bulkprice-<%= price.id %>" class="row">
-                        <td><%= price.minimumQuantity %> <%= translate('product.bulkprice.andMore') %></td>
+                    <tr id="<%= idPrefix + price.id %>" class="row" data-id="<%= idPrefix %>">
                         <td>
-                            <input class="form-element husky-validate" type="text" value="<%= price.price %>"/>
+                            <input class="form-element husky-validate <%= idPrefix %>quantity align-right" type="text" value="<%= price.minimumQuantity %> "/>
+                        </td>
+                        <td>
+                            <span class="grey-font"><%= translate('product.bulkprice.andMore') %></span>
+                        </td>
+                        <td>
+                            <input class="form-element husky-validate <%= idPrefix %>price align-right" type="text" value="<%= price.price %>"/>
                         </td>
                         <td class="grey-font"><%= currency.code %></td>
                     </tr>

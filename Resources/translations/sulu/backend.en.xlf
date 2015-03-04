@@ -222,6 +222,10 @@
                 <source>product.price.CHF</source>
                 <target>Price (CHF)</target>
             </trans-unit>
+            <trans-unit id="57" resname="product.bulkprice.andMore">
+                <source>product.bulkprice.andMore</source>
+                <target>abnd more ...</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>

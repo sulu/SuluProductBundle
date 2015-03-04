@@ -12,7 +12,7 @@ class ProductPrice
     /**
      * @var string
      */
-    private $minimumQuantity = 1;
+    private $minimumQuantity = 0;
 
     /**
      * @var double
@@ -50,7 +50,7 @@ class ProductPrice
     /**
      * Get minimumQuantity
      *
-     * @return string 
+     * @return double
      */
     public function getMinimumQuantity()
     {

@@ -78,7 +78,7 @@ class ProductPrice extends ApiWrapper
 
     /**
      * Returns the minimumQuantity
-     * @return string
+     * @return float
      * @VirtualProperty
      * @SerializedName("minimumQuantity")
      */

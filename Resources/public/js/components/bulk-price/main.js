@@ -44,7 +44,7 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
         },
 
         /**
-         * Returns the sales price (price with minimum quantity 0)
+         * Returns the sales price (price with minimum quantity 0) and formats prices according locale
          * @param prices
          * @returns price
          */
@@ -53,11 +53,14 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
                 idx = null;
 
             this.sandbox.util.foreach(prices, function(price, index) {
-                if (parseFloat(price.minimumQuantity) === 0) {
+                if (parseFloat(price.minimumQuantity) === 0 && idx !== null) {
                     salesPrice = price;
                     idx = index;
-                    return false;
                 }
+
+                price.minimumQuantity = this.sandbox.numberFormat(price.minimumQuantity, 'n');
+                price.price = this.sandbox.numberFormat(price.price, 'n');
+
             }.bind(this));
 
             // remove sales price

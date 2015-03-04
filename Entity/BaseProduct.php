@@ -47,9 +47,9 @@ abstract class BaseProduct implements ProductInterface
     private $manufacturer;
 
     /**
-     * @var string
+     * @var double
      */
-    private $cost;
+    private $cost = 0;
 
     /**
      * @var string

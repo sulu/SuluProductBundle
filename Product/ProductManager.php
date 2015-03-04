@@ -781,7 +781,7 @@ class ProductManager implements ProductManagerInterface
             )
         );
         $product->setManufacturer($this->getProperty($data, 'manufacturer', $product->getManufacturer()));
-        $product->setCost($this->getProperty($data, 'areGrossPrices', $product->getAreGrossPrices()));
+        $product->setAreGrossPrices($this->getProperty($data, 'areGrossPrices', $product->getAreGrossPrices()));
         $product->setPriceInfo($this->getProperty($data, 'priceInfo', $product->getPriceInfo()));
         if (!$product->getInternalItemNumber()) {
             if ($supplierId) {
@@ -815,11 +815,9 @@ class ProductManager implements ProductManagerInterface
             $product->setParent($parentProduct);
         }
 
-        if (isset($data['cost'])) {
+        if (isset($data['cost']) && is_float($data['cost'])) {
             if (is_float($data['cost'])) {
                 $product->setCost(floatval($data['cost']));
-            } else {
-                $product->setCost(null);
             }
         }
 
