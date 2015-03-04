@@ -25,6 +25,7 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
         },
 
         constants = {
+            maxBulkElements: 4,
             bulkPriceIdPrefix: 'bulk-price-'
         },
 
@@ -53,13 +54,15 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
                 idx = null;
 
             this.sandbox.util.foreach(prices, function(price, index) {
-                if (parseFloat(price.minimumQuantity) === 0 && idx !== null) {
+                if (parseFloat(price.minimumQuantity) === 0 && idx === null) {
                     salesPrice = price;
                     idx = index;
                 }
 
-                price.minimumQuantity = this.sandbox.numberFormat(price.minimumQuantity, 'n');
-                price.price = this.sandbox.numberFormat(price.price, 'n');
+                price.minimumQuantity = (!!price.minimumQuantity || price.minimumQuantity === 0) ?
+                    this.sandbox.numberFormat(parseFloat(price.minimumQuantity), 'n') : '';
+                price.price = (!!price.price || price.price === 0) ?
+                    this.sandbox.numberFormat(price.price, 'n') : '';
 
             }.bind(this));
 
@@ -68,6 +71,19 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
                 prices.splice(idx, 1);
             }
             return salesPrice;
+        },
+
+        addEmptyObjects = function(prices) {
+            var count = prices.length,
+                i = constants.maxBulkElements - (prices.length - 1);
+
+            if (count < constants.maxBulkElements) {
+                for (; i < constants.maxBulkElements; i++) {
+                    prices.push({});
+                }
+            }
+
+            return prices;
         };
 
     return {
@@ -77,6 +93,7 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
 
             this.options = this.sandbox.util.extend({}, defaults, this.options);
             prices = this.sandbox.util.extend([], this.options.data);
+            prices = addEmptyObjects.call(this, prices);
             salesPrice = getSalesPrice.call(this, prices);
             this.render(prices, salesPrice);
 

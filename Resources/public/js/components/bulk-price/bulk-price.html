@@ -26,7 +26,7 @@
                 </thead>
                 <tbody>
                     <% _.each(prices, function(price){ %>
-                    <tr id="<%= idPrefix + price.id %>" class="row" data-id="<%= idPrefix %>">
+                    <tr id="<%= !!price.id ? idPrefix + price.id : 'new' %>" class="row" data-id="<%= !!price.id ? price.id : '' %>">
                         <td>
                             <input class="form-element husky-validate <%= idPrefix %>quantity align-right" type="text" value="<%= price.minimumQuantity %> "/>
                         </td>
