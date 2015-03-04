@@ -343,19 +343,18 @@ class ProductManager implements ProductManagerInterface
             'price',
             'price',
             self::$productPriceEntityName,
-            'product.price',
+            'product.price.' . $currency,
             array(
                 self::$productPriceEntityName => new DoctrineJoinDescriptor(
                     self::$productPriceEntityName,
                     static::$productEntityName . '.prices',
-                    self::$productPriceEntityName . '.minimumQuantity = 1'
-                )
-            ),
-        // TODO: sort by minimum quantity
-            array(
+                    self::$productPriceEntityName . '.minimumQuantity = 0'
+                ),
+                // TODO: sort by minimum quantity
                 self::$currencyEntityName => new DoctrineJoinDescriptor(
                     self::$currencyEntityName,
-                    static::$productPriceEntityName . '.currency'
+                    static::$productPriceEntityName . '.currency',
+                    self::$currencyEntityName . '.code = \'' . $currency . '\''
                 )
             ),
             false,
@@ -596,9 +595,10 @@ class ProductManager implements ProductManagerInterface
         $product = $this->productRepository->findByIdAndLocale($id, $locale);
 
         if ($product) {
-            if ($loadCurrencies) {
-                $this->addAllCurrencies($product);
-            }
+            // TODO: remove this, when absolutely sure, it is not needed anymore
+//            if ($loadCurrencies) {
+//                $this->addAllCurrencies($product);
+//            }
 
             $product = new $this->productApiEntity($product, $locale);
             $media = [];
@@ -1170,16 +1170,6 @@ class ProductManager implements ProductManagerInterface
         $this->em->flush();
 
         return $publishedProduct;
-    }
-
-    private function checkForPriceChange($data, $price)
-    {
-        $currencyNotChanged = isset($data['currency']) && array_key_exists('name', $data['currency']) &&
-            $data['currency']['name'] == $price->getCurrency()->getName();
-        $valueNotChanged = array_key_exists('price', $data) && $data['price'] == $price->getPrice();
-        $minimumQuantityNotChanged = array_key_exists('minimumQuantity', $data) &&
-            $data['minimumQuantity'] == $price->getEntity()->getMinimumQuantity();
-        return $currencyNotChanged && $valueNotChanged && $minimumQuantityNotChanged;
     }
 
     /**

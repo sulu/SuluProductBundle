@@ -214,6 +214,14 @@
                 <source>product.bulkprice.amount</source>
                 <target>Menge</target>
             </trans-unit>
+            <trans-unit id="55" resname="product.price.EUR">
+                <source>product.price.EUR</source>
+                <target>Preis (EUR)</target>
+            </trans-unit>
+            <trans-unit id="56" resname="product.price.CHF">
+                <source>product.price.CHF</source>
+                <target>Preis (CHF)</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>
