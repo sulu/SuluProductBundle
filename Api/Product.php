@@ -775,6 +775,9 @@ class Product extends ApiWrapper
      */
     public function getMedia()
     {
+        if ($this->media) {
+            return $this->media;
+        }
         $mediaCollection = [];
         $media = $this->entity->getMedia();
         if (!$media) {
