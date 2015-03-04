@@ -24,6 +24,12 @@ define([], function() {
             translations: {}
         },
 
+        templates = {
+          bulkPrice: function(idSuffix){
+              return '<div id="bulk-price-'+idSuffix+'"></div>';
+          }
+        },
+
         eventNamespace = 'sulu.products.price-list.',
 
         /** returns normalized event names */
@@ -52,12 +58,34 @@ define([], function() {
 
     return {
 
-
         initialize: function() {
             this.options = this.sandbox.util.extend({}, defaults, this.options);
-            this.prices = groupPrices.call(this, this.options.data);
+            this.groupedPrices = groupPrices.call(this, this.options.data);
+
+            this.initializeBulkPriceComponents();
 
             this.sandbox.emit(INITIALIZED.call(this));
+        },
+
+        /**
+         * Initiailzes the subcomponents which will display the bulk prices for each currency
+         */
+        initializeBulkPriceComponents: function() {
+            var bulkPriceComponents = [],
+                group;
+
+            for (group in this.groupedPrices) {
+                var $el = this.sandbox.dom.createElement(templates.bulkPrice(this.groupedPrices[group][0].currency.code)),
+                    options = {
+                        el: $el,
+                        data: this.groupedPrices[group],
+                        instanceName: this.groupedPrices[group][0].currency.code
+                    };
+                bulkPriceComponents.push({name: 'bulk-price@suluproduct', options: options});
+                this.sandbox.dom.append(this.options.el, $el);
+            }
+
+            this.sandbox.start(bulkPriceComponents);
         }
     };
 });
