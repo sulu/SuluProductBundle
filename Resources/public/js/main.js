@@ -12,7 +12,8 @@ require.config({
         suluproduct: '../../suluproduct/js',
         'suluproduct/util/header': '../../suluproduct/js/components/products/util/header',
         'suluproduct/util/price-calculation-util':'../../suluproduct/js/util/price-calculation-util',
-        'suluproduct/util/product-delete-dialog': '../../suluproduct/js/components/products/util/product-delete-dialog'
+        'suluproduct/util/product-delete-dialog': '../../suluproduct/js/components/products/util/product-delete-dialog',
+        'type/price-list': '../../suluproduct/js/components/price-list/price-list-type'
     }
 });
 

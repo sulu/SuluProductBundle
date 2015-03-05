@@ -27,7 +27,7 @@ define([], function() {
 
         templates = {
           bulkPrice: function(idSuffix){
-              return '<div id="bulk-price-'+idSuffix+'"></div>';
+              return '<div id="bulk-price-'+idSuffix+'"><form id="prices-form"></form></div>';
           }
         },
 
@@ -44,6 +44,26 @@ define([], function() {
          */
         INITIALIZED = function() {
             return createEventName.call(this, 'initialized');
+        },
+
+        bindCustomEvents = function(){
+            this.sandbox.on('sulu.products.bulk-price.changed', function(){
+                updateData.call(this);
+            }, this);
+        },
+
+        updateData = function(){
+            // get all items
+            var $bulkPrices = this.sandbox.dom.children(this.$el),
+                data = [], prices;
+
+            this.sandbox.util.foreach($bulkPrices, function($bulkPrice){
+                prices = this.sandbox.dom.data($bulkPrice, 'items');
+                Array.prototype.push.apply(data, prices);
+            }.bind(this));
+
+            // set properties
+            this.sandbox.dom.data(this.$el, 'prices', data);
         },
 
         groupPrices = function(prices){
@@ -65,6 +85,8 @@ define([], function() {
             if(!!this.options.data && this.options.data.length > 0) {
                 this.groupedPrices = groupPrices.call(this, this.options.data);
             }
+
+            bindCustomEvents.call(this);
 
             this.initializeBulkPriceComponents();
 

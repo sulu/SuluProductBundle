@@ -93,30 +93,51 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
         },
 
         bindDomEvents = function() {
-            this.sandbox.dom.on(this.$el, 'keyup', function(event) {
-                // TODO emit changed event?
+            this.sandbox.dom.on(this.$el, 'keyup', function() {
+                refreshData.call(this);
+                this.sandbox.emit('sulu.products.bulk-price.changed');
             }.bind(this), 'input');
         },
 
-        getData = function(event, data) {
-            //var $tr = this.sandbox.dom.closest(event.currentTarget, 'tr'),
-            //    id = this.sandbox.dom.data($tr, 'id'),
-            //    target = this.sandbox.dom.data(event.currentTarget, 'property'),
-            //    value = this.sandbox.dom.val(event.currentTarget),
-            //    priceIdx = null;
-            //
-            //this.sandbox.util.foreach(data, function(price, idx) {
-            //    if (price.id === id) {
-            //        priceIdx = idx;
-            //        return false;
-            //    }
-            //}.bind(this));
-            //
-            //if (!!priceIdx) {
-            //
-            //} else {
-            //
-            //}
+        refreshData = function() {
+            // get sales price
+            var priceItems = [],
+                $salesPrice = this.sandbox.dom.find('.salesprice', this.$el),
+                salesPriceValue = this.sandbox.dom.val($salesPrice),
+                salesPriceId = this.sandbox.dom.data($salesPrice, 'id'),
+                salesPrice,
+
+                $prices = this.sandbox.dom.find('.table tbody tr', this.$el),
+                priceValue, priceQuantity, priceId;
+
+            // update sales price
+            if (!!salesPriceValue) {
+                salesPrice = {
+                    price: !!salesPriceValue ? this.sandbox.parseFloat(salesPriceValue) : null,
+                    minimumQuantitiy: 0,
+                    id: !!salesPriceId ? salesPriceId : null,
+                    currency: this.options.currency
+                };
+                priceItems.push(salesPrice);
+            }
+
+            // bulk prices
+            this.sandbox.util.foreach($prices, function($price) {
+                priceId = this.sandbox.dom.data($price, 'id');
+                priceQuantity = this.sandbox.dom.val(this.sandbox.dom.find('input.minimumQuantity',$price));
+                priceValue = this.sandbox.dom.val(this.sandbox.dom.find('input.price',$price));
+
+                if (!!priceQuantity && !!priceValue) {
+                    priceItems.push({
+                        minimumQuantity: !!priceQuantity ? this.sandbox.parseFloat(priceQuantity) : null,
+                        price: !!priceValue ? this.sandbox.parseFloat(priceValue) : null,
+                        currency: this.options.currency,
+                        id: !!priceId ? priceId : null
+                    });
+                }
+            }.bind(this));
+
+            this.sandbox.dom.data(this.$el, 'items', priceItems);
         };
 
     return {
@@ -135,6 +156,7 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
             bindDomEvents.call(this);
 
             this.render(prices, salesPrice);
+            refreshData.call(this);
             this.sandbox.emit(INITIALIZED.call(this));
         },
 
