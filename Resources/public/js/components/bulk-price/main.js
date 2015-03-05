@@ -21,7 +21,8 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
     var defaults = {
             instanceName: null,
             data: [],
-            translations: {}
+            translations: {},
+            currency: null
         },
 
         constants = {
@@ -74,36 +75,73 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
         },
 
         addEmptyObjects = function(prices) {
-            var count = prices.length,
-                i = constants.maxBulkElements - (prices.length - 1);
+            var i = prices.length;
 
-            if (count < constants.maxBulkElements) {
+            if (i < constants.maxBulkElements) {
                 for (; i < constants.maxBulkElements; i++) {
                     prices.push({});
                 }
             }
 
             return prices;
+        },
+
+        bindCustomEvents = function() {
+            this.sandbox.on('sulu.products.bulk-price.get-data', function() {
+
+            }, this);
+        },
+
+        bindDomEvents = function() {
+            this.sandbox.dom.on(this.$el, 'keyup', function(event) {
+                // TODO emit changed event?
+            }.bind(this), 'input');
+        },
+
+        getData = function(event, data) {
+            //var $tr = this.sandbox.dom.closest(event.currentTarget, 'tr'),
+            //    id = this.sandbox.dom.data($tr, 'id'),
+            //    target = this.sandbox.dom.data(event.currentTarget, 'property'),
+            //    value = this.sandbox.dom.val(event.currentTarget),
+            //    priceIdx = null;
+            //
+            //this.sandbox.util.foreach(data, function(price, idx) {
+            //    if (price.id === id) {
+            //        priceIdx = idx;
+            //        return false;
+            //    }
+            //}.bind(this));
+            //
+            //if (!!priceIdx) {
+            //
+            //} else {
+            //
+            //}
         };
 
     return {
 
         initialize: function() {
-            var prices, salesPrice;
+            var prices = [], salesPrice;
 
             this.options = this.sandbox.util.extend({}, defaults, this.options);
-            prices = this.sandbox.util.extend([], this.options.data);
-            prices = addEmptyObjects.call(this, prices);
-            salesPrice = getSalesPrice.call(this, prices);
-            this.render(prices, salesPrice);
+            if (!!this.options.data) {
+                prices = this.sandbox.util.extend([], this.options.data);
+                salesPrice = getSalesPrice.call(this, prices);
+            }
 
+            prices = addEmptyObjects.call(this, prices);
+            bindCustomEvents.call(this);
+            bindDomEvents.call(this);
+
+            this.render(prices, salesPrice);
             this.sandbox.emit(INITIALIZED.call(this));
         },
 
         render: function(prices, salesPrice) {
             var data = {
                     idPrefix: constants.bulkPriceIdPrefix,
-                    currency: prices[0].currency,
+                    currency: this.options.currency,
                     salesPrice: salesPrice,
                     translate: this.sandbox.translate,
                     prices: prices

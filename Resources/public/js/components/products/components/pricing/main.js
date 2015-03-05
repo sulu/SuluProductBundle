@@ -28,6 +28,7 @@ define(['config'], function (Config) {
 
         initPriceList = function(data) {
             var options = {
+                currencies: this.currencies,
                 data: data,
                 el: pricesSelector
             };
@@ -62,6 +63,10 @@ define(['config'], function (Config) {
 
             this.sandbox.on('sulu.header.back', function () {
                 this.sandbox.emit('sulu.products.list');
+            }, this);
+
+            this.sandbox.on('sulu.product.set-currencies', function(currencies){
+                this.currencies = currencies;
             }, this);
         },
 

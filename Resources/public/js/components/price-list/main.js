@@ -20,6 +20,7 @@ define([], function() {
 
     var defaults = {
             instanceName: null,
+            currencies: null,
             data: [],
             translations: {}
         },
@@ -48,10 +49,10 @@ define([], function() {
         groupPrices = function(prices){
             var groups = [];
             this.sandbox.util.foreach(prices, function(price){
-                if(!groups[price.currency.name]){
-                    groups[price.currency.name] = [];
+                if(!groups[price.currency.code]){
+                    groups[price.currency.code] = [];
                 }
-                groups[price.currency.name].push(price);
+                groups[price.currency.code].push(price);
             }.bind(this));
             return groups;
         };
@@ -60,7 +61,10 @@ define([], function() {
 
         initialize: function() {
             this.options = this.sandbox.util.extend({}, defaults, this.options);
-            this.groupedPrices = groupPrices.call(this, this.options.data);
+            this.groupedPrices = [];
+            if(!!this.options.data && this.options.data.length > 0) {
+                this.groupedPrices = groupPrices.call(this, this.options.data);
+            }
 
             this.initializeBulkPriceComponents();
 
@@ -68,22 +72,22 @@ define([], function() {
         },
 
         /**
-         * Initiailzes the subcomponents which will display the bulk prices for each currency
+         * Initializes the subcomponents which will display the bulk prices for each currency
          */
         initializeBulkPriceComponents: function() {
-            var bulkPriceComponents = [],
-                group;
+            var bulkPriceComponents = [];
 
-            for (group in this.groupedPrices) {
-                var $el = this.sandbox.dom.createElement(templates.bulkPrice(this.groupedPrices[group][0].currency.code)),
+            this.sandbox.util.foreach(this.options.currencies, function(currency){
+                var $el = this.sandbox.dom.createElement(templates.bulkPrice(currency.code)),
                     options = {
                         el: $el,
-                        data: this.groupedPrices[group],
-                        instanceName: this.groupedPrices[group][0].currency.code
+                        data: !!this.groupedPrices[currency.code] ? this.groupedPrices[currency.code] : [],
+                        instanceName: currency.code,
+                        currency: currency
                     };
                 bulkPriceComponents.push({name: 'bulk-price@suluproduct', options: options});
                 this.sandbox.dom.append(this.options.el, $el);
-            }
+            }.bind(this));
 
             this.sandbox.start(bulkPriceComponents);
         }

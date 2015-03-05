@@ -97,3 +97,12 @@
         {#</table>#}
     {#</div>#}
 </form>
+
+{% block data %}
+    <script type="text/javascript">
+        (function() {
+            var currencies = {{ currencies|json_encode()|raw }};
+            App.emit('sulu.product.set-currencies', currencies);
+        })();
+    </script>
+{% endblock %}

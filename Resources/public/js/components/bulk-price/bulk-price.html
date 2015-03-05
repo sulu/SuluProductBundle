@@ -28,13 +28,13 @@
                     <% _.each(prices, function(price){ %>
                     <tr id="<%= !!price.id ? idPrefix + price.id : 'new' %>" class="row" data-id="<%= !!price.id ? price.id : '' %>">
                         <td>
-                            <input class="form-element husky-validate <%= idPrefix %>quantity align-right" type="text" value="<%= price.minimumQuantity %> "/>
+                            <input data-property="quantity" class="form-element husky-validate align-right" type="text" value="<%= price.minimumQuantity %> "/>
                         </td>
                         <td>
                             <span class="grey-font"><%= translate('product.bulkprice.andMore') %></span>
                         </td>
                         <td>
-                            <input class="form-element husky-validate <%= idPrefix %>price align-right" type="text" value="<%= price.price %>"/>
+                            <input data-property="price" class="form-element husky-validate align-right" type="text" value="<%= price.price %>"/>
                         </td>
                         <td class="grey-font"><%= currency.code %></td>
                     </tr>

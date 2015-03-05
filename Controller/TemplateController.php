@@ -12,6 +12,7 @@ namespace Sulu\Bundle\ProductBundle\Controller;
 
 use Sulu\Bundle\ProductBundle\Api\Status;
 use Sulu\Bundle\ProductBundle\Api\TaxClass;
+use Sulu\Bundle\ProductBundle\Entity\Currency;
 use Symfony\Component\HttpFoundation\Request;
 use Sulu\Component\Rest\RestController;
 
@@ -126,9 +127,14 @@ class TemplateController extends RestController
             );
         }
 
+        $currencies = $this->getCurrencies($language);
+
         return $this->render(
             'SuluProductBundle:Template:product.pricing.html.twig',
-            array('taxClasses' => $taxClassTitles)
+            array(
+                'taxClasses' => $taxClassTitles,
+                'currencies' => $currencies
+                )
         );
     }
 
@@ -184,5 +190,29 @@ class TemplateController extends RestController
         }
 
         return $unitTitles;
+    }
+
+    /**
+     * Returns currencies
+     *
+     * @param $language
+     * @return array
+     */
+    protected function getCurrencies($language)
+    {
+        /** @var Currency[] $currencies */
+        $currencies = $this->get('sulu_product.currency_manager')->findAll($language);
+
+        $currencyTitles = array();
+        foreach ($currencies as $currency) {
+            $currencyTitles[] = array(
+                'id' => $currency->getId(),
+                'name' => $currency->getName(),
+                'code' => $currency->getCode(),
+                'number' => $currency->getNumber()
+            );
+        }
+
+        return $currencyTitles;
     }
 }
