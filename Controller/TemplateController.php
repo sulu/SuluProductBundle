@@ -128,12 +128,14 @@ class TemplateController extends RestController
         }
 
         $currencies = $this->getCurrencies($language);
+        $defaultCurrency = $this->container->getParameter('sulu_product.default_currency');
 
         return $this->render(
             'SuluProductBundle:Template:product.pricing.html.twig',
             array(
                 'taxClasses' => $taxClassTitles,
-                'currencies' => $currencies
+                'currencies' => $currencies,
+                'defaultCurrency' => $defaultCurrency
                 )
         );
     }

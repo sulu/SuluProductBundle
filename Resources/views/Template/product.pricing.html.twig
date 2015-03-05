@@ -66,8 +66,11 @@
 {% block data %}
     <script type="text/javascript">
         (function() {
-            var currencies = {{ currencies|json_encode()|raw }};
+            var currencies = {{ currencies|json_encode()|raw }},
+                defaultCurrency = {{ defaultCurrency|json_encode()|raw }};
+
             App.emit('sulu.product.set-currencies', currencies);
+            App.emit('sulu.product.set-default-currency', defaultCurrency);
         })();
     </script>
 {% endblock %}

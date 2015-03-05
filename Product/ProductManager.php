@@ -1531,4 +1531,8 @@ class ProductManager implements ProductManagerInterface
         }
         return $filter;
     }
+
+    public function getDefaultCurrency(){
+        return $this->defaultCurrency;
+    }
 }

@@ -16,6 +16,8 @@
  */
 define([], function() {
 
+    // TODO Validation
+
     'use strict';
 
     var defaults = {
@@ -66,6 +68,24 @@ define([], function() {
             this.sandbox.dom.data(this.$el, 'prices', data);
         },
 
+        placeDefaultCurrencyFirst = function(defaultCur, currencies){
+            var tmp = null,
+                idxDefault = null;
+            this.sandbox.util.foreach(currencies, function(cur, index){
+                if(cur.code === defaultCur){
+                    idxDefault = index;
+                    return false;
+                }
+            }.bind(this));
+
+            // when index of default currency is set and it is not already on the first position
+            if(!!idxDefault) {
+                tmp = currencies[0];
+                currencies[0] = currencies[idxDefault];
+                currencies[idxDefault] = tmp;
+            }
+        },
+
         groupPrices = function(prices){
             var groups = [];
             this.sandbox.util.foreach(prices, function(price){
@@ -74,6 +94,7 @@ define([], function() {
                 }
                 groups[price.currency.code].push(price);
             }.bind(this));
+
             return groups;
         };
 
@@ -84,6 +105,7 @@ define([], function() {
             this.groupedPrices = [];
             if(!!this.options.data && this.options.data.length > 0) {
                 this.groupedPrices = groupPrices.call(this, this.options.data);
+                placeDefaultCurrencyFirst.call(this, this.options.defaultCurrency, this.options.currencies);
             }
 
             bindCustomEvents.call(this);
