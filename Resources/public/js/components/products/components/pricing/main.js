@@ -100,7 +100,7 @@ define(['config'], function (Config) {
             }.bind(this));
         },
 
-        setHeaderBar = function (saved) {
+        setHeaderBar = function(saved) {
             if (saved !== this.saved) {
                 var type = (!!this.options.data && !!this.options.data.id) ? 'edit' : 'add';
                 this.sandbox.emit('sulu.header.toolbar.state.change', type, saved, true);

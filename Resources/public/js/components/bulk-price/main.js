@@ -26,6 +26,7 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
         },
 
         constants = {
+            minimumQuantity: 0,
             maxBulkElements: 4,
             bulkPriceIdPrefix: 'bulk-price-'
         },
@@ -46,16 +47,17 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
         },
 
         /**
-         * Returns the sales price (price with minimum quantity 0) and formats prices according locale
+         * Returns the sales price and splits salesprice from prices array (price with minimum quantity 0)
+         * additionally formats prices according locale
          * @param prices
          * @returns price
          */
-        getSalesPrice = function(prices) {
+        getSalesPriceAndRemoveFromPrices = function(prices) {
             var salesPrice = null,
                 idx = null;
 
             this.sandbox.util.foreach(prices, function(price, index) {
-                if (parseFloat(price.minimumQuantity) === 0 && idx === null) {
+                if (parseFloat(price.minimumQuantity) === constants.minimumQuantity && idx === null) {
                     salesPrice = price;
                     idx = index;
                 }
@@ -86,12 +88,6 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
             return prices;
         },
 
-        bindCustomEvents = function() {
-            this.sandbox.on('sulu.products.bulk-price.get-data', function() {
-
-            }, this);
-        },
-
         bindDomEvents = function() {
             this.sandbox.dom.on(this.$el, 'keyup', function() {
                 refreshData.call(this);
@@ -113,7 +109,7 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
             if (!!salesPriceValue) {
                 salesPrice = {
                     price: !!salesPriceValue ? this.sandbox.parseFloat(salesPriceValue) : null,
-                    minimumQuantitiy: 0,
+                    minimumQuantitiy: constants.minimumQuantity,
                     id: !!salesPriceId ? salesPriceId : null,
                     currency: this.options.currency
                 };
@@ -128,8 +124,8 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
 
                 if (!!priceQuantity && !!priceValue) {
                     priceItems.push({
-                        minimumQuantity: !!priceQuantity ? this.sandbox.parseFloat(priceQuantity) : null,
-                        price: !!priceValue ? this.sandbox.parseFloat(priceValue) : null,
+                        minimumQuantity: this.sandbox.parseFloat(priceQuantity),
+                        price: this.sandbox.parseFloat(priceValue),
                         currency: this.options.currency,
                         id: !!priceId ? priceId : null
                     });
@@ -148,11 +144,10 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
             this.options = this.sandbox.util.extend({}, defaults, this.options);
             if (!!this.options.data) {
                 prices = this.sandbox.util.extend([], this.options.data);
-                salesPrice = getSalesPrice.call(this, prices);
+                salesPrice = getSalesPriceAndRemoveFromPrices.call(this, prices);
             }
 
             prices = addEmptyObjects.call(this, prices);
-            bindCustomEvents.call(this);
             bindDomEvents.call(this);
 
             this.render(prices, salesPrice);

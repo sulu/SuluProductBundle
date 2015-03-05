@@ -815,10 +815,8 @@ class ProductManager implements ProductManagerInterface
             $product->setParent($parentProduct);
         }
 
-        if (isset($data['cost']) && is_float($data['cost'])) {
-            if (is_float($data['cost'])) {
-                $product->setCost(floatval($data['cost']));
-            }
+        if (isset($data['cost']) && is_numeric($data['cost'])) {
+            $product->setCost(floatval($data['cost']));
         }
 
         if (isset($data['status']) && isset($data['status']['id'])) {
@@ -1530,9 +1528,5 @@ class ProductManager implements ProductManagerInterface
             $filter['categories'] = ($categories == 'null') ? null : $categories;
         }
         return $filter;
-    }
-
-    public function getDefaultCurrency(){
-        return $this->defaultCurrency;
     }
 }

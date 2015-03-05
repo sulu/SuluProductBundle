@@ -224,7 +224,7 @@
             </trans-unit>
             <trans-unit id="57" resname="product.bulkprice.andMore">
                 <source>product.bulkprice.andMore</source>
-                <target>abnd more ...</target>
+                <target>and more ...</target>
             </trans-unit>
         </body>
     </file>
