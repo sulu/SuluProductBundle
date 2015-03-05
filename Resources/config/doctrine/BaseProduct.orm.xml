@@ -24,6 +24,11 @@
         <field name="minimumOrderQuantity" type="float" nullable="true"/>
         <field name="recommendedOrderQuantity" type="float" nullable="true"/>
         <field name="deliveryTime" type="integer" nullable="true"/>
+        <field name="areGrossPrices" type="boolean" nullable="false">
+            <options>
+                <option name="default">0</option>
+            </options>
+        </field>
 
         <many-to-one field="changer" target-entity="Sulu\Component\Security\Authentication\UserInterface">
             <join-columns>

@@ -12,17 +12,12 @@ class ProductPrice
     /**
      * @var string
      */
-    private $minimumQuantity = 1;
+    private $minimumQuantity = 0;
 
     /**
      * @var double
      */
     private $price;
-
-    /**
-     * @var string
-     */
-    private $priceInfo;
 
     /**
      * @var integer
@@ -55,7 +50,7 @@ class ProductPrice
     /**
      * Get minimumQuantity
      *
-     * @return string 
+     * @return double
      */
     public function getMinimumQuantity()
     {
@@ -83,29 +78,6 @@ class ProductPrice
     public function getPrice()
     {
         return $this->price;
-    }
-
-    /**
-     * Set priceInfo
-     *
-     * @param string $priceInfo
-     * @return ProductPrice
-     */
-    public function setPriceInfo($priceInfo)
-    {
-        $this->priceInfo = $priceInfo;
-    
-        return $this;
-    }
-
-    /**
-     * Get priceInfo
-     *
-     * @return string 
-     */
-    public function getPriceInfo()
-    {
-        return $this->priceInfo;
     }
 
     /**

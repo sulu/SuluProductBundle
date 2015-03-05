@@ -796,4 +796,25 @@ class Product extends ApiWrapper
     {
         return $this->entity->getMedia()->contains($media->getEntity());
     }
+
+    /**
+     * Returns a boolean indicating if all prices of the product are gross prices
+     * @return boolean
+     * @VirtualProperty
+     * @SerializedName("areGrossPrices")
+     */
+    public function getAreGrossPrices()
+    {
+        return $this->entity->getAreGrossPrices();
+    }
+
+    /**
+     * Sets the are gross prices flag on a product
+     *
+     * @param boolean $areGrossPrices
+     */
+    public function setAreGrossPrices($areGrossPrices = false)
+    {
+        $this->entity->setAreGrossPrices($areGrossPrices);
+    }
 }

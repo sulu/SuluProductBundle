@@ -94,7 +94,8 @@ define([
 
         save: function () {
             if (this.sandbox.form.validate(formSelector)) {
-                var data = this.sandbox.form.getData(formSelector);
+                var data = this.sandbox.form.getData(formSelector),
+                    supplierId;
 
                 if (data.id === '') {
                     delete data.id;
@@ -110,9 +111,12 @@ define([
 
                 // FIXME auto complete in mapper
                 // only get id, if auto-complete is not empty:
-                data.supplier = {
-                    id: this.sandbox.dom.attr('#'+constants.autocompleteSupplierInstanceName, 'data-id')
-                };
+                supplierId = this.sandbox.dom.attr('#' + constants.autocompleteSupplierInstanceName, 'data-id');
+                if (!!supplierId && supplierId !== 'null') {
+                    data.supplier = {
+                        id: supplierId
+                    };
+                }
 
                 this.sandbox.emit('sulu.products.save', data);
             }

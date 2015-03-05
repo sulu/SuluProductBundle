@@ -202,13 +202,29 @@
                 <source>product.deliveryTime</source>
                 <target>Lieferzeit (Tage)</target>
             </trans-unit>
-            <trans-unit id="52" resname="product.price.EUR">
+            <trans-unit id="52" resname="product.areGrossPrices">
+                <source>product.areGrossPrices</source>
+                <target>Bruttopreise</target>
+            </trans-unit>
+            <trans-unit id="53" resname="product.bulkprice.price">
+                <source>product.bulkprice.price</source>
+                <target>Verkaufspreis</target>
+            </trans-unit>
+            <trans-unit id="54" resname="product.bulkprice.amount">
+                <source>product.bulkprice.amount</source>
+                <target>Menge</target>
+            </trans-unit>
+            <trans-unit id="55" resname="product.price.EUR">
                 <source>product.price.EUR</source>
                 <target>Preis (EUR)</target>
             </trans-unit>
-            <trans-unit id="53" resname="product.price.CHF">
+            <trans-unit id="56" resname="product.price.CHF">
                 <source>product.price.CHF</source>
                 <target>Preis (CHF)</target>
+            </trans-unit>
+            <trans-unit id="57" resname="product.bulkprice.andMore">
+                <source>product.bulkprice.andMore</source>
+                <target>und mehr ...</target>
             </trans-unit>
         </body>
     </file>

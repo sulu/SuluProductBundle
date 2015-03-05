@@ -47,9 +47,9 @@ abstract class BaseProduct implements ProductInterface
     private $manufacturer;
 
     /**
-     * @var string
+     * @var double
      */
-    private $cost;
+    private $cost = 0;
 
     /**
      * @var string
@@ -176,6 +176,10 @@ abstract class BaseProduct implements ProductInterface
      */
     private $orderUnit;
 
+    /**
+     * @var boolean
+     */
+    private $areGrossPrices = false;
 
     /**
      * Constructor
@@ -969,5 +973,28 @@ abstract class BaseProduct implements ProductInterface
         $this->deliveryTime = $deliveryTime;
 
         return $this;
+    }
+
+    /**
+     * Set areGrossPrices
+     *
+     * @param boolean $areGrossPrices
+     * @return BaseProduct
+     */
+    public function setAreGrossPrices($areGrossPrices)
+    {
+        $this->areGrossPrices = $areGrossPrices;
+
+        return $this;
+    }
+
+    /**
+     * Get areGrossPrices
+     *
+     * @return boolean 
+     */
+    public function getAreGrossPrices()
+    {
+        return $this->areGrossPrices;
     }
 }

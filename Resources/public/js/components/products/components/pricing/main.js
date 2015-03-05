@@ -11,6 +11,7 @@ define(['config'], function (Config) {
     'use strict';
 
     var formSelector = '#product-pricing-form',
+        pricesSelector = '#prices',
         maxLengthTitle = 60,
 
         render = function () {
@@ -19,6 +20,24 @@ define(['config'], function (Config) {
             setHeaderInformation.call(this);
 
             initForm.call(this, this.options.data);
+
+            if (!!this.options.data.prices) {
+                initPriceList.call(this, this.options.data.prices);
+            }
+        },
+
+        initPriceList = function(data) {
+            var options = {
+                currencies: this.currencies,
+                defaultCurrency: this.defaultCurrency,
+                data: data,
+                el: pricesSelector
+            };
+
+            this.sandbox.start([{
+                name: 'price-list@suluproduct',
+                options: options
+            }]);
         },
 
         bindCustomEvents = function () {
@@ -38,13 +57,21 @@ define(['config'], function (Config) {
                 save.call(this);
             }, this);
 
-            this.sandbox.on('sulu.products.saved', function () {
+            this.sandbox.on('sulu.products.saved', function(data) {
                 setHeaderBar.call(this, true);
+                this.options.data = data;
                 this.options.data.status = this.status;
             }, this);
 
             this.sandbox.on('sulu.header.back', function () {
                 this.sandbox.emit('sulu.products.list');
+            }, this);
+
+            this.sandbox.on('sulu.product.set-currencies', function(currencies){
+                this.currencies = currencies;
+            }, this);
+            this.sandbox.on('sulu.product.set-default-currency', function(cur){
+                this.defaultCurrency = cur;
             }, this);
         },
 
@@ -62,13 +89,6 @@ define(['config'], function (Config) {
             var formObject = this.sandbox.form.create(formSelector);
             formObject.initialized.then(function () {
                 setFormData.call(this, data);
-                this.sandbox.form.addCollectionFilter(formSelector, 'prices', function (price) {
-                    if (price.id === "") {
-                        delete price.id;
-                    }
-
-                    return price.price !== "";
-                });
             }.bind(this));
         },
 
@@ -80,7 +100,7 @@ define(['config'], function (Config) {
             }.bind(this));
         },
 
-        setHeaderBar = function (saved) {
+        setHeaderBar = function(saved) {
             if (saved !== this.saved) {
                 var type = (!!this.options.data && !!this.options.data.id) ? 'edit' : 'add';
                 this.sandbox.emit('sulu.header.toolbar.state.change', type, saved, true);
