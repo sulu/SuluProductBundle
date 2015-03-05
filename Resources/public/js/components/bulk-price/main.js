@@ -95,7 +95,6 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
         bindDomEvents = function() {
             this.sandbox.dom.on(this.$el, 'keyup', function() {
                 refreshData.call(this);
-                this.sandbox.emit('sulu.products.bulk-price.changed');
             }.bind(this), 'input');
         },
 
@@ -138,6 +137,7 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
             }.bind(this));
 
             this.sandbox.dom.data(this.$el, 'items', priceItems);
+            this.sandbox.emit('sulu.products.bulk-price.changed');
         };
 
     return {

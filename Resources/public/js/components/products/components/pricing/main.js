@@ -56,8 +56,9 @@ define(['config'], function (Config) {
                 save.call(this);
             }, this);
 
-            this.sandbox.on('sulu.products.saved', function () {
+            this.sandbox.on('sulu.products.saved', function (data) {
                 setHeaderBar.call(this, true);
+                this.options.data = data;
                 this.options.data.status = this.status;
             }, this);
 
