@@ -627,6 +627,23 @@ class Product extends ApiWrapper
     }
 
     /**
+     * Returns the base prices for the product by a given currency
+     * @return \Sulu\Bundle\ProductBundle\Api\ProductPrice[]
+     * @VirtualProperty
+     * @SerializedName("basePriceForCurrency")
+     */
+    private function getBasePriceForCurrency($prices, $currency='EUR')
+    {
+        foreach ($prices as $price) {
+            $priceCurrency = $price->getCurrency();
+            if ($priceCurrency->getCode() == $currency && $price->getMinimumOrderQuantity() == 0) {
+                return $price;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Returns the attributes for the product
      * @return \Sulu\Bundle\ProductBundle\Api\ProductAttributes[]
      * @VirtualProperty
