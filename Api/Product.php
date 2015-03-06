@@ -632,11 +632,11 @@ class Product extends ApiWrapper
      * @VirtualProperty
      * @SerializedName("basePriceForCurrency")
      */
-    private function getBasePriceForCurrency($prices, $currency='EUR')
+    public function getBasePriceForCurrency($prices, $currency='EUR')
     {
         foreach ($prices as $price) {
             $priceCurrency = $price->getCurrency();
-            if ($priceCurrency->getCode() == $currency && $price->getMinimumOrderQuantity() == 0) {
+            if ($priceCurrency->getCode() == $currency && $price->getMinimumQuantity() == 0) {
                 return $price;
             }
         }
