@@ -775,6 +775,10 @@ class Product extends ApiWrapper
      */
     public function getMedia()
     {
+        // if media was set by setMedia() use this->media
+        if ($this->media) {
+            return $this->media;
+        }
         $mediaCollection = [];
         $media = $this->entity->getMedia();
         if (!$media) {

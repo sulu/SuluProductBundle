@@ -606,7 +606,7 @@ class ProductManager implements ProductManagerInterface
             // dimensions are added by the mediaManager.
             // TODO: implement proxy object who is responsible for generating the urls
             foreach ($product->getEntity()->getMedia() as $medium) {
-                $media[] = $this->mediaManager->getbyId($medium->getId(), $locale);
+                $media[] = $this->mediaManager->getById($medium->getId(), $locale);
             }
             $product->setMedia($media);
             return $product;
