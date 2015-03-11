@@ -14,6 +14,7 @@ use Sulu\Bundle\ProductBundle\Entity\Unit as Entity;
 use JMS\Serializer\Annotation\VirtualProperty;
 use JMS\Serializer\Annotation\SerializedName;
 use JMS\Serializer\Annotation\ExclusionPolicy;
+use JMS\Serializer\Annotation\Groups;
 use Sulu\Component\Rest\ApiWrapper;
 
 /**
@@ -50,6 +51,7 @@ class Unit extends ApiWrapper
      * @return int The name of the type
      * @VirtualProperty
      * @SerializedName("name")
+     * @Groups({"cart"})
      */
     public function getName()
     {
