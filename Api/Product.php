@@ -649,7 +649,7 @@ class Product extends ApiWrapper
             $bestDifference = PHP_INT_MAX;
             foreach ($prices as $price) {
                 if ($price->getCurrency()->getCode() == $currency &&
-                    $price->getMinimumQuantity() < $quantity &&
+                    $price->getMinimumQuantity() <= $quantity &&
                     ($quantity - $price->getMinimumQuantity()) < $bestDifference
                 ) {
                     $bestDifference = $quantity - $price->getMinimumQuantity();
