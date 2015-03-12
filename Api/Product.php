@@ -638,19 +638,46 @@ class Product extends ApiWrapper
     }
 
     /**
+     * Returns the bulk price for a certain quantity of the product by a given currency
+     *
+     * @return \Sulu\Bundle\ProductBundle\Api\ProductPrice[]
+     */
+    public function getBulkPriceForCurrency($quantity, $currency = 'EUR')
+    {
+        $bulkPrice = null;
+        if ($prices = $this->entity->getPrices()) {
+            $bestDifference = PHP_INT_MAX;
+            foreach ($prices as $price) {
+                if ($price->getCurrency()->getCode() == $currency &&
+                    $price->getMinimumQuantity() < $quantity &&
+                    ($quantity - $price->getMinimumQuantity()) < $bestDifference
+                ) {
+                    $bestDifference = $quantity - $price->getMinimumQuantity();
+                    $bulkPrice = $price;
+                }
+            }
+        }
+
+        return $bulkPrice;
+    }
+
+    /**
      * Returns the base prices for the product by a given currency
+     *
      * @return \Sulu\Bundle\ProductBundle\Api\ProductPrice[]
      * @VirtualProperty
      * @SerializedName("basePriceForCurrency")
      */
-    public function getBasePriceForCurrency($prices, $currency='EUR')
+    public function getBasePriceForCurrency($currency = 'EUR')
     {
-        foreach ($prices as $price) {
-            $priceCurrency = $price->getCurrency();
-            if ($priceCurrency->getCode() == $currency && $price->getMinimumQuantity() == 0) {
-                return $price;
+        if ($prices = $this->entity->getPrices()) {
+            foreach ($prices as $price) {
+                if ($price->getCurrency()->getCode() == $currency && $price->getMinimumQuantity() == 0) {
+                    return $price;
+                }
             }
         }
+
         return null;
     }
 
