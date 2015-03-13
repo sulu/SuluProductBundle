@@ -645,7 +645,8 @@ class Product extends ApiWrapper
     public function getBulkPriceForCurrency($quantity, $currency = 'EUR')
     {
         $bulkPrice = null;
-        if ($prices = $this->entity->getPrices()) {
+        $prices = $this->entity->getPrices();
+        if ($prices) {
             $bestDifference = PHP_INT_MAX;
             foreach ($prices as $price) {
                 if ($price->getCurrency()->getCode() == $currency &&
@@ -665,12 +666,11 @@ class Product extends ApiWrapper
      * Returns the base prices for the product by a given currency
      *
      * @return \Sulu\Bundle\ProductBundle\Api\ProductPrice[]
-     * @VirtualProperty
-     * @SerializedName("basePriceForCurrency")
      */
     public function getBasePriceForCurrency($currency = 'EUR')
     {
-	    if ($prices = $this->entity->getPrices()) {
+        $prices = $this->entity->getPrices();
+            if ($prices) {
             foreach ($prices as $price) {
                 if ($price->getCurrency()->getCode() == $currency && $price->getMinimumQuantity() == 0) {
                     return new ProductPrice($price, $this->locale);
