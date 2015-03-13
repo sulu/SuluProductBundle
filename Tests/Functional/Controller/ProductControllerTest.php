@@ -285,8 +285,6 @@ class ProductControllerTest extends SuluTestCase
         $this->product1->setType($this->type1);
         $this->product1->setStatus($this->productStatus1);
         $this->product1->setAttributeSet($this->attributeSet1);
-        $this->product1->setCreated(new DateTime());
-        $this->product1->setChanged(new DateTime());
 
         $this->productPrice1 = new ProductPrice();
         $this->productPrice1->setCurrency($this->currency1);
@@ -358,8 +356,6 @@ class ProductControllerTest extends SuluTestCase
         $this->product2->setType($this->type2);
         $this->product2->setStatus($this->productStatus2);
         $this->product2->setAttributeSet($this->attributeSet2);
-        $this->product2->setCreated(new DateTime());
-        $this->product2->setChanged(new DateTime());
         $this->product1->setParent($this->product2);
 
         $productTranslation2 = new ProductTranslation();
@@ -387,8 +383,6 @@ class ProductControllerTest extends SuluTestCase
         $this->category1->setLft(1);
         $this->category1->setRgt(2);
         $this->category1->setDepth(1);
-        $this->category1->setCreated(new DateTime());
-        $this->category1->setChanged(new DateTime());
         $categoryTranslation1 = new CategoryTranslation();
         $categoryTranslation1->setLocale('en');
         $categoryTranslation1->setTranslation('Category 1');
@@ -399,8 +393,6 @@ class ProductControllerTest extends SuluTestCase
         $this->category2->setLft(3);
         $this->category2->setRgt(4);
         $this->category2->setDepth(1);
-        $this->category2->setCreated(new DateTime());
-        $this->category2->setChanged(new DateTime());
         $categoryTranslation2 = new CategoryTranslation();
         $categoryTranslation2->setLocale('en');
         $categoryTranslation2->setTranslation('Category 2');

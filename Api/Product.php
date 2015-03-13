@@ -33,6 +33,7 @@ use Sulu\Bundle\ProductBundle\Api\Unit;
 use Sulu\Bundle\ProductBundle\Entity\Unit as UnitEntity;
 use Sulu\Bundle\ProductBundle\Entity\DeliveryStatus as DeliveryStatusEntity;
 use Sulu\Bundle\ProductBundle\Api\DeliveryStatus;
+use JMS\Serializer\Annotation\Groups;
 
 /**
  * The product class which will be exported to the API
@@ -61,6 +62,7 @@ class Product extends ApiWrapper
      * @return int
      * @VirtualProperty
      * @SerializedName("id")
+     * @Groups({"cart"})
      */
     public function getId()
     {
@@ -72,6 +74,7 @@ class Product extends ApiWrapper
      * @return string The name of the product
      * @VirtualProperty
      * @SerializedName("name")
+     * @Groups({"cart"})
      */
     public function getName()
     {
@@ -123,6 +126,7 @@ class Product extends ApiWrapper
      * @return float
      * @VirtualProperty
      * @SerializedName("minimumOrderQuantity")
+     * @Groups({"cart"})
      */
     public function getMinimumOrderQuantity()
     {
@@ -145,6 +149,7 @@ class Product extends ApiWrapper
      * @return integer
      * @VirtualProperty
      * @SerializedName("deliveryTime")
+     * @Groups({"cart"})
      */
     public function getDeliveryTime()
     {
@@ -167,6 +172,7 @@ class Product extends ApiWrapper
      * @return float
      * @VirtualProperty
      * @SerializedName("recommendedOrderQuantity")
+     * @Groups({"cart"})
      */
     public function getRecommendedOrderQuantity()
     {
@@ -240,6 +246,7 @@ class Product extends ApiWrapper
      * @return string The number of the product
      * @VirtualProperty
      * @SerializedName("number")
+     * @Groups({"cart"})
      */
     public function getNumber()
     {
@@ -260,6 +267,7 @@ class Product extends ApiWrapper
      * @return string The globalTradeItemNumber of the product
      * @VirtualProperty
      * @SerializedName("globalTradeItemNumber")
+     * @Groups({"cart"})
      */
     public function getGlobalTradeItemNumber()
     {
@@ -329,6 +337,7 @@ class Product extends ApiWrapper
      * @return double The cost of the product
      * @VirtualProperty
      * @SerializedName("cost")
+     * @Groups({"cart"})
      */
     public function getCost()
     {
@@ -502,6 +511,7 @@ class Product extends ApiWrapper
      * @return Unit
      * @VirtualProperty
      * @SerializedName("orderUnit")
+     * @Groups({"cart"})
      */
     public function getOrderUnit()
     {
@@ -528,6 +538,7 @@ class Product extends ApiWrapper
      * @return Unit
      * @VirtualProperty
      * @SerializedName("contentUnit")
+     * @Groups({"cart"})
      */
     public function getContentUnit()
     {
@@ -627,19 +638,46 @@ class Product extends ApiWrapper
     }
 
     /**
+     * Returns the bulk price for a certain quantity of the product by a given currency
+     *
+     * @return \Sulu\Bundle\ProductBundle\Api\ProductPrice[]
+     */
+    public function getBulkPriceForCurrency($quantity, $currency = 'EUR')
+    {
+        $bulkPrice = null;
+        if ($prices = $this->entity->getPrices()) {
+            $bestDifference = PHP_INT_MAX;
+            foreach ($prices as $price) {
+                if ($price->getCurrency()->getCode() == $currency &&
+                    $price->getMinimumQuantity() <= $quantity &&
+                    ($quantity - $price->getMinimumQuantity()) < $bestDifference
+                ) {
+                    $bestDifference = $quantity - $price->getMinimumQuantity();
+                    $bulkPrice = $price;
+                }
+            }
+        }
+
+        return $bulkPrice;
+    }
+
+    /**
      * Returns the base prices for the product by a given currency
+     *
      * @return \Sulu\Bundle\ProductBundle\Api\ProductPrice[]
      * @VirtualProperty
      * @SerializedName("basePriceForCurrency")
      */
-    public function getBasePriceForCurrency($prices, $currency='EUR')
+    public function getBasePriceForCurrency($currency = 'EUR')
     {
-        foreach ($prices as $price) {
-            $priceCurrency = $price->getCurrency();
-            if ($priceCurrency->getCode() == $currency && $price->getMinimumQuantity() == 0) {
-                return $price;
+        if ($prices = $this->entity->getPrices()) {
+            foreach ($prices as $price) {
+                if ($price->getCurrency()->getCode() == $currency && $price->getMinimumQuantity() == 0) {
+                    return $price;
+                }
             }
         }
+
         return null;
     }
 
@@ -649,6 +687,7 @@ class Product extends ApiWrapper
      * @param String $symbol
      * @param String $locale
      * @return String price
+     * @Groups({"cart"})
      */
     public function getFormattedPrice($price, $symbol = 'EUR', $locale = 'de')
     {
@@ -792,6 +831,9 @@ class Product extends ApiWrapper
         $this->entity->removeMedia($media->getEntity());
     }
 
+    /**
+     * @param $media
+     */
     public function setMedia($media)
     {
         $this->media = $media;
