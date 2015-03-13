@@ -22,6 +22,7 @@
         <parameter key="sulu_product.tax_class_manager.class">Sulu\Bundle\ProductBundle\Product\TaxClassManager</parameter>
         <parameter key="sulu_product.unit_manager.class">Sulu\Bundle\ProductBundle\Product\UnitManager</parameter>
         <parameter key="sulu_product.currency_manager.class">Sulu\Bundle\ProductBundle\Product\CurrencyManager</parameter>
+        <parameter key="sulu_product.price_manager.class">Sulu\Bundle\ProductBundle\Product\ProductPriceManager</parameter>
         <parameter key="sulu_product.productwebsite.controller.class">Sulu\Bundle\ProductBundle\Controller\ProductWebsiteController</parameter>
         <parameter key="sulu_product.attribute_value_manager.class">Sulu\Bundle\ProductBundle\Product\AttributeValueManager</parameter>
         <parameter key="sulu_product.product_entity">Sulu\Bundle\ProductBundle\Entity\Product</parameter>
@@ -111,6 +112,9 @@
             <argument type="service" id="sulu_security.user_repository" />
             <argument type="service" id="sulu_product.attribute_type_repository"/>
             <argument type="service" id="doctrine.orm.entity_manager"/>
+        </service>
+        <service id="sulu_product.price_manager" class="%sulu_product.price_manager.class%">
+            <argument>%sulu_product.default_currency%</argument>
         </service>
         <service id="sulu_product.attribute_value_manager" class="%sulu_product.attribute_value_manager.class%">
             <argument type="service" id="sulu_product.attribute_value_repository"/>
