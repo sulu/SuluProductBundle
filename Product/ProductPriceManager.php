@@ -31,7 +31,7 @@ class ProductPriceManager implements ProductPriceManagerInterface
      *
      * @param ProductInterface $product
      * @param $quantity
-     * @param null $currency
+     * @param null|string $currency
      *
      * @return null|\Sulu\Bundle\ProductBundle\Entity\ProductPrice
      */
@@ -60,7 +60,7 @@ class ProductPriceManager implements ProductPriceManagerInterface
      * Returns the base prices for the product by a given currency
      *
      * @param ProductInterface $product
-     * @param null $currency
+     * @param null|string $currency
      *
      * @return null|\Sulu\Bundle\ProductBundle\Entity\ProductPrice
      */
