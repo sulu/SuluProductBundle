@@ -670,10 +670,10 @@ class Product extends ApiWrapper
      */
     public function getBasePriceForCurrency($currency = 'EUR')
     {
-        if ($prices = $this->entity->getPrices()) {
+	    if ($prices = $this->entity->getPrices()) {
             foreach ($prices as $price) {
                 if ($price->getCurrency()->getCode() == $currency && $price->getMinimumQuantity() == 0) {
-                    return $price;
+                    return new ProductPrice($price, $this->locale);
                 }
             }
         }
