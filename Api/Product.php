@@ -329,6 +329,7 @@ class Product extends ApiWrapper
                 'name' => $supplier->getName()
             );
         }
+
         return $values;
     }
 
@@ -670,7 +671,7 @@ class Product extends ApiWrapper
     public function getBasePriceForCurrency($currency = 'EUR')
     {
         $prices = $this->entity->getPrices();
-            if ($prices) {
+        if ($prices) {
             foreach ($prices as $price) {
                 if ($price->getCurrency()->getCode() == $currency && $price->getMinimumQuantity() == 0) {
                     return new ProductPrice($price, $this->locale);
@@ -693,6 +694,7 @@ class Product extends ApiWrapper
     {
         $formatter = new \NumberFormatter($locale, \NumberFormatter::CURRENCY);
         $formatter->setSymbol(\NumberFormatter::CURRENCY_SYMBOL, $symbol);
+
         return $formatter->format((float)$price);
     }
 
@@ -860,6 +862,7 @@ class Product extends ApiWrapper
         foreach ($media as $medium) {
             $mediaCollection[] = new Media($medium, $this->locale);
         }
+
         return $mediaCollection;
     }
 
