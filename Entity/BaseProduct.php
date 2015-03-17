@@ -193,6 +193,20 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
+     * setId
+     *
+     * @param int $id
+     *
+     * @return BaseProduct
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+
+        return $this;
+    }
+
+    /**
      * Set number
      *
      * @param string $number
@@ -991,7 +1005,7 @@ abstract class BaseProduct implements ProductInterface
     /**
      * Get areGrossPrices
      *
-     * @return boolean 
+     * @return boolean
      */
     public function getAreGrossPrices()
     {
