@@ -60,6 +60,8 @@ class ProductManager implements ProductManagerInterface
 {
     use RelationTrait;
 
+    const MAX_BATCH_DELETE = 20;
+
     protected static $productEntityName = 'SuluProductBundle:Product';
     protected static $productTypeEntityName = 'SuluProductBundle:Type';
     protected static $productTypeTranslationEntityName = 'SuluProductBundle:TypeTranslation';
@@ -1399,8 +1401,15 @@ class ProductManager implements ProductManagerInterface
     {
         if (is_array($ids)) {
             // if ids is array -> multiple delete
+            $counter = 0;
             foreach ($ids as $id) {
+                $counter++;
                 $this->singleDelete($id, null, false);
+                
+                if ($flush && ($counter % self::MAX_BATCH_DELETE) === 0) {
+                    $this->em->flush();
+                    $this->em->clear();
+                }
             }
         } else {
             // if ids is int
