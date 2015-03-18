@@ -90,8 +90,15 @@ class ProductPriceManager implements ProductPriceManagerInterface
      */
     public function getFormattedPrice($price, $symbol = 'EUR', $locale = 'de')
     {
-        $formatter = new \NumberFormatter($locale, \NumberFormatter::CURRENCY);
-        $formatter->setSymbol(\NumberFormatter::CURRENCY_SYMBOL, $symbol);
+        $useSymbol = !empty($symbol);
+        if ($useSymbol) {
+            $formatter = new \NumberFormatter($locale, \NumberFormatter::CURRENCY);
+            $formatter->setSymbol(\NumberFormatter::CURRENCY_SYMBOL, $symbol);
+        } else {
+            $formatter = new \NumberFormatter($locale, \NumberFormatter::DECIMAL);
+            $formatter->setAttribute(\NumberFormatter::DECIMAL_ALWAYS_SHOWN, 1);
+            $formatter->setAttribute(\NumberFormatter::MIN_FRACTION_DIGITS, 2);
+        }
 
         return $formatter->format((float)$price);
     }
