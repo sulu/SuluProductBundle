@@ -28,7 +28,7 @@ use Sulu\Component\Security\Authentication\UserInterface;
  * The Attribute class which will be exported to the API
  *
  * @package Sulu\Bundle\ProductBundle\Api
- * @Relation("self", href="expr('/api/admin/attributes/' ~ object.getId())")
+ * @Relation("self", href="expr('/admin/api/attributes/' ~ object.getId())")
  * @ExclusionPolicy("all")
  */
 class Attribute extends ApiWrapper
