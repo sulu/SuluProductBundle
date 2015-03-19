@@ -45,3 +45,7 @@ sulu_product.product_pricing:
 sulu_product.product_documents:
     pattern: /template/product/documents.html
     defaults: { _controller: SuluProductBundle:Template:productDocuments }
+
+sulu_product.product_attributes:
+    pattern: /template/product/attributes.html
+    defaults: { _controller: SuluProductBundle:Template:productAttributes }

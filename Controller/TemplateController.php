@@ -113,6 +113,7 @@ class TemplateController extends RestController
      */
     public function productPricingAction()
     {
+        xdebug_break();
         // TODO use correct language
         $language = 'en';
 
@@ -148,6 +149,36 @@ class TemplateController extends RestController
     public function productDocumentsAction()
     {
         return $this->render('SuluProductBundle:Template:product.documents.html.twig');
+    }
+
+    /**
+     * Returns the template for product attributes
+     *
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function productAttributesAction()
+    {
+        xdebug_break();
+        $repository = $this->getDoctrine()
+            ->getRepository('SuluProductBundle:ProductAttribute');
+        $types = $repository->findAll();
+
+        $product_attributes = array();
+        foreach ($types as $type) {
+            $product_attributes[] = array(
+                'id' => $type->getId(),
+                'value' => $type->getValue()
+            );
+        }
+
+        return $this->render(
+            'SuluProductBundle:Template:product.attributes.html.twig',
+            array(
+                'attribute_types' => $product_attributes
+            )
+        );
+
+        //return $this->render('SuluProductBundle:Template:product.attributes.html.twig');
     }
 
     /**

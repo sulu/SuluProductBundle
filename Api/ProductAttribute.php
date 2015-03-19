@@ -16,6 +16,7 @@ use JMS\Serializer\Annotation\VirtualProperty;
 use JMS\Serializer\Annotation\SerializedName;
 use JMS\Serializer\Annotation\ExclusionPolicy;
 
+use Sulu\Bundle\ProductBundle\Entity\AttributeType;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttribute as ProductAttributeEntity;
 use Sulu\Component\Rest\ApiWrapper;
 use Sulu\Bundle\ProductBundle\Api\Attribute;
@@ -70,5 +71,39 @@ class ProductAttribute extends ApiWrapper
     public function getAttribute()
     {
         return new Attribute($this->entity->getAttribute(), $this->locale);
+    }
+
+    /**
+     * Returns the value
+     *
+     * @return Sulu\Bundle\ProductBundle\Api\Attribute
+     * @VirtualProperty
+     * @SerializedName("attributeName")
+     */
+    public function getAttributeName()
+    {
+        return $this->getAttribute()->getName();
+    }
+
+    /**
+     * Returns the value
+     *
+     * @return Sulu\Bundle\ProductBundle\Api\AttributeType
+     */
+    public function getAttributeType()
+    {
+        return $this->getAttribute()->getType();
+    }
+
+    /**
+     * Returns the value
+     *
+     * @return Sulu\Bundle\ProductBundle\Api\AttributeType
+     * @VirtualProperty
+     * @SerializedName("attributeType")
+     */
+    public function getAttributeTypeName()
+    {
+        return $this->getAttributeType()->getName();
     }
 }
