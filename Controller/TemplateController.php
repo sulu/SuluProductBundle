@@ -15,6 +15,7 @@ use Sulu\Bundle\ProductBundle\Api\TaxClass;
 use Sulu\Bundle\ProductBundle\Entity\Currency;
 use Symfony\Component\HttpFoundation\Request;
 use Sulu\Component\Rest\RestController;
+use Sulu\Bundle\ProductBundle\Api\Attribute as ApiAttribute;
 
 class TemplateController extends RestController
 {
@@ -113,7 +114,6 @@ class TemplateController extends RestController
      */
     public function productPricingAction()
     {
-        xdebug_break();
         // TODO use correct language
         $language = 'en';
 
@@ -137,7 +137,7 @@ class TemplateController extends RestController
                 'taxClasses' => $taxClassTitles,
                 'currencies' => $currencies,
                 'defaultCurrency' => $defaultCurrency
-                )
+            )
         );
     }
 
@@ -156,29 +156,28 @@ class TemplateController extends RestController
      *
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function productAttributesAction()
+    public function productAttributesAction(Request $request)
     {
-        xdebug_break();
         $repository = $this->getDoctrine()
-            ->getRepository('SuluProductBundle:ProductAttribute');
+            ->getRepository('SuluProductBundle:Attribute');
         $types = $repository->findAll();
 
-        $product_attributes = array();
+        $attributes = array();
         foreach ($types as $type) {
-            $product_attributes[] = array(
+            $apiAttribute = new ApiAttribute($type, $this->getLocale($request));
+
+            $attributes[] = array(
                 'id' => $type->getId(),
-                'value' => $type->getValue()
+                'name' => $apiAttribute->getName()
             );
         }
 
         return $this->render(
             'SuluProductBundle:Template:product.attributes.html.twig',
             array(
-                'attribute_types' => $product_attributes
+                'attribute_types' => $attributes
             )
         );
-
-        //return $this->render('SuluProductBundle:Template:product.attributes.html.twig');
     }
 
     /**
