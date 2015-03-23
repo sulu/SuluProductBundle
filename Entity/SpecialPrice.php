@@ -35,7 +35,7 @@ class SpecialPrice
     private $currency;
 
     /**
-     * @var \PoolAlpin\Bundle\ProductBundle\Entity\Product
+     * @var \Sulu\Bundle\ProductBundle\Entity\ProductInterface
      */
     private $product;
 
@@ -145,10 +145,10 @@ class SpecialPrice
     /**
      * Set product
      *
-     * @param \PoolAlpin\Bundle\ProductBundle\Entity\Product $product
+     * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $product
      * @return SpecialPrice
      */
-    public function setProduct(\PoolAlpin\Bundle\ProductBundle\Entity\Product $product = null)
+    public function setProduct(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $product = null)
     {
         $this->product = $product;
 
@@ -158,7 +158,7 @@ class SpecialPrice
     /**
      * Get product
      *
-     * @return \PoolAlpin\Bundle\ProductBundle\Entity\Product 
+     * @return \Sulu\Bundle\ProductBundle\Entity\ProductInterface
      */
     public function getProduct()
     {
