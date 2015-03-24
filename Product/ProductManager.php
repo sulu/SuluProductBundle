@@ -61,6 +61,8 @@ class ProductManager implements ProductManagerInterface
     use RelationTrait;
 
     const MAX_BATCH_DELETE = 20;
+    const SUPPLIER_PREFIX = 'S';
+    const USER_PREFIX = 'U';
 
     protected static $productEntityName = 'SuluProductBundle:Product';
     protected static $productTypeEntityName = 'SuluProductBundle:Type';
@@ -688,6 +690,21 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
+     * Returns all products for the given internal-number
+     *
+     * @param $internalItemNumber
+     * @return ProductInterface[]
+     */
+    public function findEntitiesByInternalItemNumber($internalItemNumber)
+    {
+        $products = $this->productRepository->findByInternalItemNumber(
+            $internalItemNumber
+        );
+
+        return $products;
+    }
+
+    /**
      * Fetches a product
      *
      * @param $id
@@ -709,13 +726,14 @@ class ProductManager implements ProductManagerInterface
     /**
      * Generates the internal product number
      *
-     * @param $id
-     * @param string $number
+     * @param $prefix Type of product-owner
+     * @param $ownerId Id of Product-owner
+     * @param string $number Number of the product
      * @return string
      */
-    public function generateInternalItemNumber($prefix, $id, $number)
+    public function generateInternalItemNumber($prefix, $ownerId, $number)
     {
-        return $prefix . '-' . $id . '-' . $number;
+        return $prefix . '-' . $ownerId . '-' . $number;
     }
 
     /**
@@ -789,7 +807,7 @@ class ProductManager implements ProductManagerInterface
             if ($supplierId) {
                 $product->setInternalItemNumber(
                     $this->generateInternalItemNumber(
-                        'S',
+                        self::SUPPLIER_PREFIX,
                         $supplierId,
                         $product->getNumber()
                     )
@@ -797,7 +815,7 @@ class ProductManager implements ProductManagerInterface
             } else {
                 $product->setInternalItemNumber(
                     $this->generateInternalItemNumber(
-                        'U',
+                        self::USER_PREFIX,
                         $userId,
                         $product->getNumber()
                     )
