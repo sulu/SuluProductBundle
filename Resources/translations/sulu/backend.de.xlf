@@ -226,6 +226,14 @@
                 <source>product.bulkprice.andMore</source>
                 <target>und mehr ...</target>
             </trans-unit>
+            <trans-unit id="58" resname="content-navigation.product.attributes">
+                <source>content-navigation.product.attributes</source>
+                <target>Attribute</target>
+            </trans-unit>
+            <trans-unit id="59" resname="product.attribute.value">
+                <source>product.attribute.value</source>
+                <target>Wert</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>
