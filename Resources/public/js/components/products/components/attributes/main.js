@@ -213,10 +213,7 @@ define(['config'], function (Config) {
         templates: ['/admin/product/template/product/attributes'],
 
         initialize: function () {
-            debugger;
             this.status  = !!this.options.data ? this.options.data.status : Config.get('product.status.active');
-
-
 
             //this.options = this.sandbox.util.extend({}, defaults, this.options);
             // merge translations
