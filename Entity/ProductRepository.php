@@ -83,6 +83,25 @@ class ProductRepository extends EntityRepository implements ProductRepositoryInt
     }
 
     /**
+     * Returns all products for the given internal number
+     * @param string $internalItemNumber The internal number of the product to load
+     * @return ProductInterface[]
+     */
+    public function findByInternalItemNumber($internalItemNumber)
+    {
+        try {
+            $qb = $this->createQueryBuilder('product')
+                ->where('product.internalItemNumber = :internalItemNumber')
+                ->setParameter('internalItemNumber', $internalItemNumber);
+            $query = $qb->getQuery();
+
+            return $query->getResult();
+        } catch (NoResultException $exc) {
+            return null;
+        }
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function findByLocaleAndFilter($locale, array $filter)
