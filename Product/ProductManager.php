@@ -45,6 +45,7 @@ use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineJoinDescrip
 use Sulu\Component\Rest\RestHelperInterface;
 use Sulu\Component\Security\Authentication\UserRepositoryInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttribute;
+use Sulu\Bundle\ProductBundle\Entity\SpecialPriceRepository;
 use Sulu\Bundle\ProductBundle\Entity\DeliveryStatusRepository;
 use Sulu\Bundle\ProductBundle\Entity\AttributeRepository;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttributeRepository;
@@ -83,6 +84,11 @@ class ProductManager implements ProductManagerInterface
      * @var ProductRepositoryInterface
      */
     protected $productRepository;
+
+    /**
+     * @var SpecialPriceRepository
+     */
+    protected $specialPriceRepository;
 
     /**
      * @var AttributeRepository
@@ -158,7 +164,7 @@ class ProductManager implements ProductManagerInterface
      * @var string
      */
     protected $productApiEntity;
-    
+
     /**
      * @var string
      */
@@ -171,6 +177,7 @@ class ProductManager implements ProductManagerInterface
 
     public function __construct(
         ProductRepositoryInterface $productRepository,
+        SpecialPriceRepository $specialPriceRepository,
         AttributeSetRepository $attributeSetRepository,
         AttributeRepository $attributeRepository,
         ProductAttributeRepository $productAttributeRepository,
@@ -190,6 +197,7 @@ class ProductManager implements ProductManagerInterface
         $defaultCurrency
     ) {
         $this->productRepository = $productRepository;
+        $this->specialPriceRepository = $specialPriceRepository;
         $this->attributeSetRepository = $attributeSetRepository;
         $this->attributeRepository = $attributeRepository;
         $this->productAttributeRepository = $productAttributeRepository;
@@ -657,6 +665,23 @@ class ProductManager implements ProductManagerInterface
                     $product = new $this->productApiEntity($product, $locale);
                 }
             );
+        }
+
+        return $products;
+    }
+
+    /**
+     * Finds and returns a list of products for which a special price is
+     * currently active.
+     *
+     * @return array
+     */
+    public function findCurrentOfferedProducts($locale)
+    {
+        $specialPrices = $this->specialPriceRepository->findAllCurrent();
+        $products = [];
+        foreach ($specialPrices as $specialPrice) {
+            $products[] = new Product($specialPrice->getProduct(), $locale);
         }
 
         return $products;
