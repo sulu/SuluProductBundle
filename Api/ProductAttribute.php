@@ -64,7 +64,7 @@ class ProductAttribute extends ApiWrapper
     }
 
     /**
-     * Returns the value
+     * Returns the attribute object
      *
      * @return Sulu\Bundle\ProductBundle\Api\Attribute
      */
@@ -74,7 +74,7 @@ class ProductAttribute extends ApiWrapper
     }
 
     /**
-     * Returns the value
+     * Returns the attribute name
      *
      * @return Sulu\Bundle\ProductBundle\Api\Attribute
      * @VirtualProperty
@@ -86,7 +86,7 @@ class ProductAttribute extends ApiWrapper
     }
 
     /**
-     * Returns the value
+     * Returns the attribute type
      *
      * @return Sulu\Bundle\ProductBundle\Api\AttributeType
      */
@@ -96,7 +96,7 @@ class ProductAttribute extends ApiWrapper
     }
 
     /**
-     * Returns the value
+     * Returns the attribute type name
      *
      * @return Sulu\Bundle\ProductBundle\Api\AttributeType
      * @VirtualProperty
@@ -105,5 +105,17 @@ class ProductAttribute extends ApiWrapper
     public function getAttributeTypeName()
     {
         return $this->getAttributeType()->getName();
+    }
+
+    /**
+     * Returns the attribute id
+     *
+     * @return Sulu\Bundle\ProductBundle\Api\Attribute
+     * @VirtualProperty
+     * @SerializedName("attributeId")
+     */
+    public function getAttributeId()
+    {
+        return $this->getAttribute()->getId();
     }
 }
