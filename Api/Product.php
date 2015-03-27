@@ -396,7 +396,7 @@ class Product extends ApiWrapper
 
     /**
      * Returns the parent of the product
-     * @return Product The parent of the product
+     * @return ProductInterface The parent of the product
      * @VirtualProperty
      * @SerializedName("parent")
      */
@@ -405,7 +405,7 @@ class Product extends ApiWrapper
         $parent = $this->entity->getParent();
 
         if ($parent) {
-            return new Product($parent, $this->locale);
+            return new static($parent, $this->locale);
         } else {
             return null;
         }
@@ -413,9 +413,9 @@ class Product extends ApiWrapper
 
     /**
      * Sets the parent of the product
-     * @param Product $parent The parent of the product
+     * @param ProductInterface $parent The parent of the product
      */
-    public function setParent(Product $parent = null)
+    public function setParent(ProductInterface $parent = null)
     {
         if ($parent != null) {
             $this->entity->setParent($parent->getEntity());
