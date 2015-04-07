@@ -1,22 +1,13 @@
-<form class="form-horizontal" id="product-attributes-overlay-form">
-    <table>
-        <tr>
-            <td>
-                <div class="form-group">
-                    <label for="title" class="required"><%= translate('product.attribute.name') %></label>
-                    <div id="selectBox"></div>
-                </div>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <div class="form-group">
-                    <label for="title" class="required"><%= translate('product.attribute.value') %></label>
-                    <input class="form-element" type="text" id="attribute-name"
-                           data-validation-max-length="255" data-mapper-property="attributeName"/>
-
-                </div>
-            </td>
-        </tr>
-    </table>
-</form>
+    <div class="grid-row small">
+        <div>
+            <label for="title" class="required"><%= translate('product.attribute.name') %></label>
+        </div>
+        <div id="selectBox"></div>
+    </div>
+    <div class="grid-row">
+        <div>
+            <label for="title" class="required"><%= translate('product.attribute.value') %></label>
+        </div>
+        <input class="form-element" type="text" id="attribute-name"
+               data-validation-max-length="255" data-mapper-property="attributeName"/>
+    </div>

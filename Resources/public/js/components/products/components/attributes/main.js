@@ -153,7 +153,7 @@ define([
                         el: $overlay,
                         supportKeyInput: false,
                         title: "Add attribute to product",
-                        skin: 'small',
+                        skin: 'normal',
                         openOnStart: true,
                         removeOnClose: true,
                         instanceName: overlayInstanceName,

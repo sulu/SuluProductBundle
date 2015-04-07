@@ -1,0 +1,19 @@
+<form class="form-horizontal" id="product-attributes-form">
+    <div id="product-attribute-overlay"></div>
+	<div id="product-attribute-list"></div>
+
+	<br>
+	<div id="product-attribute-selection-toolbar"></div>
+</form>
+<link rel="stylesheet" type="text/css" href="{{ asset('bundles/suluproduct/css/main.css') }}">
+
+{% block data %}
+    <script type="text/javascript">
+        (function() {
+            var types = {
+                        'attributeTypes': {{ attribute_types|json_encode()|raw }}
+                    };
+            App.emit('sulu.products.set-types', types);
+        })();
+    </script>
+{% endblock %}
