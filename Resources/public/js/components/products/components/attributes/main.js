@@ -7,89 +7,238 @@
  * with this source code in the file LICENSE.
  */
 
-define(['config'], function (Config) {
+define([
+    'config',
+    'text!suluproduct/components/products/components/attributes/overlay-content.html',
+], function(Config, OverlayTpl) {
     'use strict';
 
     var formSelector = '#product-attributes-form',
         productAttributesInstanceName = 'product-attribute-list-toolbar',
         datagridInstanceName = 'product-attribute-datagrid',
-        selected = 1,
-        /*
-        defaults = {
-            data: [],
-            isEditable: true,
-            selectionUrl: null,
-            url: null,
-            resultKey: null,
-            matchings: [
-                {
-                    name: 'id',
-                    content: 'id',
-                    disabled: true
-                },
-                {
-                    name: 'value',
-                    content: 'value'
-                }
-            ]
-        },
-        */
+        overlayInstanceName = 'product-attribute-overlay',
+        selectInstanceName = 'product-attribute-select',
+        attrId = 1,
+        maxLengthTitle = 60,
 
         /**
          * bind custom events
          */
         bindCustomEvents = function() {
 
-            // resize overlay after datagrid is initialized
-            this.sandbox.on('husky.datagrid.' + datagridInstanceName + '.data.save', function() {
-                alert("OK11");
-            }, this);
-
-            this.sandbox.on('sulu.header.back', function () {
+            this.sandbox.on('sulu.header.back', function() {
                 this.sandbox.emit('sulu.products.list');
             }, this);
 
-            app.sandbox.on('husky.select.attribute-types.selected.item', function(item) {
-                selected = parseInt(item);
+            this.sandbox.on('sulu.products.saved', function(data) {
+
+                var attributes = data.attributes;
+
+                // Select action
+                if (data.action === 1) {
+                    // ADD RECORD IN DATAGRID
+                    var result = _.findWhere(attributes, {'attributeId': data.attrId});
+                    this.sandbox.emit('husky.datagrid.' + datagridInstanceName + '.record.add', {
+                        id: result.id,
+                        attributeId: result.attributeId,
+                        value: result.value,
+                        attributeName: result.attributeName
+                    });
+                    this.sendData.add = false;
+                } else if (data.action === 2) {
+                    // DELETE RECORDs IN DATAGRID
+                    $.each(data.deleteIds, function (key,id) {
+                        this.sandbox.emit('husky.datagrid.' + datagridInstanceName + '.record.remove', id);
+                    }.bind(this));
+                    this.sendData.delete = false;
+                } else {
+                    // UPDATE RECORD IN DATAGRID
+                    this.sandbox.emit('husky.datagrid.' + datagridInstanceName + '.records.change', attributes);
+                }
+
+                setHeaderBar.call(this, true);
+                this.options.data = data;
+                this.options.data.status = this.status;
+            }, this);
+
+        },
+
+        /**
+         * modify header information
+         */
+        setHeaderBar = function(saved) {
+
+            var type = (!!this.options.data && !!this.options.data.id) ? 'edit' : 'add';
+            this.sandbox.emit('sulu.header.toolbar.state.change', type, saved, true);
+
+        },
+
+        /**
+         * Create overlay content for add attribute overlay
+         */
+        createAddOverlayContent = function() {
+            // create container for overlay
+            var $overlayContent = this.sandbox.dom.createElement(this.sandbox.util.template(OverlayTpl, {
+                translate: this.sandbox.translate
+            }));
+            this.sandbox.dom.append(this.$el, $overlayContent);
+
+            return $overlayContent;
+
+        },
+
+        /**
+         * sets the header information
+         */
+        setHeaderInformation = function () {
+            var title = 'pim.product.title',
+                breadcrumb = [
+                    {title: 'navigation.pim'},
+                    {title: 'pim.products.title'}
+                ];
+            if (!!this.options.data && !!this.options.data.name) {
+                title = this.options.data.name;
+            }
+            title = this.sandbox.util.cropTail(title, maxLengthTitle);
+            this.sandbox.emit('sulu.header.set-title', title);
+
+            if (!!this.options.data && !!this.options.data.number) {
+                breadcrumb.push({
+                    title: '#' + this.options.data.number
+                });
+            } else {
+                breadcrumb.push({
+                    title: 'pim.product.title'
+                });
+            }
+            this.sandbox.emit('sulu.header.set-breadcrumb', breadcrumb);
+        },
+
+        /**
+         * Create the overlay
+         */
+        createAddOverlay = function() {
+            // create container for overlay
+            var $overlay = this.sandbox.dom.createElement('<div>');
+            this.sandbox.dom.append(this.$el, $overlay);
+
+            this.sandbox.once('husky.overlay.' + overlayInstanceName + '.opened', function() {
+
+                var selectOptions = {
+                    el: '#selectBox',
+                    instanceName: selectInstanceName,
+                    multipleSelect: false,
+                    defaultLabel: 'Please choose attribute type',
+                    valueName: 'name',
+                    isNative: true,
+                    data: this.attributeTypes
+                };
+
+                this.sandbox.start([
+                    // start select
+                    {
+                        name: 'select@husky',
+                        options: selectOptions
+                    }
+
+                ]);
+
+            }.bind(this));
+
+            // create content
+            this.sandbox.start([
+                {
+                    name: 'overlay@husky',
+                    options: {
+                        el: $overlay,
+                        supportKeyInput: false,
+                        title: "Add attribute to product",
+                        skin: 'small',
+                        openOnStart: true,
+                        removeOnClose: true,
+                        instanceName: overlayInstanceName,
+                        data: createAddOverlayContent.call(this),
+                        okCallback: overlayOkClicked.bind(this)
+                    }
+                }
+            ]);
+
+            this.sandbox.on('husky.select.' + selectInstanceName + '.selected.item', function(item) {
+                attrId = parseInt(item);
             });
 
         },
 
-        save = function () {
-            //this.sandbox.emit('sulu.products.save', this.options.data);
+        /**
+         * save product attributes
+         */
+        save = function() {
+            this.sandbox.emit('sulu.products.save', this.sendData);
         },
 
         /**
-         * called when add icon was clicked
+         * called when OK on overlay was clicked
          */
-        addButtonClicked = function() {
+        overlayOkClicked = function() {
 
+            this.sendData = new Object();
             var attributeValue = this.sandbox.dom.val('#attribute-name');
-            var attributeName = this.attributeTypes[selected-1].name;
-            //app.sandbox.emit('husky.datagrid.' + datagridInstanceName + '.record.add', { id: selected, value: attributeValue, attributeName: attributeName }, callbackFunc());
 
             var attributes = this.options.data.attributes;
 
-            var result = _.findWhere(attributes, { 'attributeId': selected });
+            var result = _.findWhere(attributes, {'attributeId': attrId});
 
             if (result) {
-                result.attributeValue = attributeValue;
-                console.log('attribute found');
-                app.sandbox.emit('husky.datagrid.' + datagridInstanceName + '.records.change', { id: selected, value: attributeValue, attributeName: attributeName});
-
+                result.value = attributeValue;
+                // update action = 3
+                this.sendData.action = 3;
             } else {
-                var new_attribute = {
-                    "attributeId": selected,
+                var newAttribute = {
+                    "attributeId": attrId,
                     "value": attributeValue
                 };
-                console.log('attribute not found');
-                attributes.push(new_attribute);
-                app.sandbox.emit('husky.datagrid.' + datagridInstanceName + '.record.add', { id: selected, value: attributeValue, attributeName: attributeName });
-            }
-            this.options.data.attributes = attributes;
+                attributes.push(newAttribute);
+                //add action = 1
+                this.sendData.action = 1;
 
-            //this.sandbox.emit('husky.datagrid.records.change', this.options.data);
-            //this.sandbox.emit('husky.datagrid.update');
+            }
+
+            this.sendData.attrId = attrId;
+            this.sendData.attributes = attributes;
+            this.sendData.status = this.status;
+            this.sendData.id = this.options.data.id;
+
+            save.call(this);
+
+        },
+
+        /**
+         * delete action function from toolbar
+         */
+        attributeDelete = function () {
+
+            this.sandbox.emit('husky.datagrid.' + datagridInstanceName + '.items.get-selected', function(ids) {
+
+                var attributes = this.options.data.attributes;
+                this.sendData = new Object();
+                var deleteIds = new Array();
+
+                _.each(ids, function(value,key,list) {
+                    var result = _.findWhere(attributes, {'id': value});
+                    attributes = _.without(attributes, result);
+                    deleteIds.push(value);
+                });
+
+                this.sendData.deleteIds = deleteIds;
+                this.sendData.attributes = attributes;
+                this.sendData.status = this.status;
+                this.sendData.id = this.options.data.id;
+                // delete action = 2
+                this.sendData.action = 2;
+
+                save.call(this);
+            }.bind(this));
+
         },
 
         /**
@@ -100,7 +249,6 @@ define(['config'], function (Config) {
             var datagridOptions = {
                 el: "#product-attribute-list",
                 instanceName: datagridInstanceName,
-                pagination: 'dropdown',
                 resultKey: 'attributes',
                 matchings: [
                     {
@@ -112,35 +260,14 @@ define(['config'], function (Config) {
                         content: "name"
                     }
                 ],
+                viewOptions: {
+                    table: {
+                        type: 'checkbox'
+                    }
+                },
                 data: this.options.data
             };
 
-            //this.sandbox.start('#product-attributes-form');
-
-            /*
-            var selectOptions = {
-                el: '#selectBox',
-                instanceName: selectInstanceName,
-                multipleSelect: false,
-                defaultLabel: 'Please choose attribute type',
-                valueName: 'name',
-                data: [
-                {id: 0, name: 'Deutsch'},
-                {id: 1, name: 'English'},
-                {id: 2, name: 'Spanish'},
-                {id: 3, name: 'Italienisch'}
-                ]
-            };
-
-            this.sandbox.start([
-                // start select
-                {
-                    name: 'select@husky',
-                    options: selectOptions
-                }
-
-            ]);
-            */
             this.sandbox.start([
                 // start datagrid
                 {
@@ -149,35 +276,54 @@ define(['config'], function (Config) {
                 }
             ]);
 
-            if (!!this.options.isEditable) {
-                // start toolbar
-                this.sandbox.start([
-                    {
-                        name: 'toolbar@husky',
-                        options: {
-                            el: '#product-attribute-selection-toolbar',
-                            instanceName: productAttributesInstanceName,
-                            small: false,
-                            data: [
-                                {
-                                    'id': 'add',
-                                    'icon': 'plus-circle',
-                                    'class': 'highlight-gray',
-                                    'callback': addButtonClicked.bind(this)
-                                }
-                            ]
+            this.sandbox.start([
+                {
+                    name: 'toolbar@husky',
+                    options: {
+                        el: '#product-attribute-selection-toolbar',
+                        instanceName: productAttributesInstanceName,
+                        small: false,
+                        data: [
+                            {
+                                id: 'add',
+                                icon: 'plus-circle',
+                                callback: createAddOverlay.bind(this)
+                            },
+                            {
+                                icon: 'trash-o',
+                                disabled: false,
+                                callback: attributeDelete.bind(this)
+                            }
+                        ]
+                    }
+                }
+            ]);
+
+            this.sandbox.start([
+                {
+                    name: 'overlay@husky',
+                    options: {
+                        el: '#product-attribute-overlay',
+                        triggerEl: '#normal',
+                        title: 'This is the title of the overlay and it is too big',
+                        data: '<div style="min-height: 350px"></div>',
+                        closeCallback: function() {
+                            console.log('You clicked on close');
+                        },
+                        okCallback: function() {
+                            console.log('You clicked on ok');
                         }
                     }
-                ]);
-            }
+                }
+            ])
         },
 
+        /**
+         * initialize form components
+         */
         initForm = function() {
-            var formObject = this.sandbox.form.create(formSelector);
-            formObject.initialized.then(function() {
-                this.sandbox.start(formSelector);
-                startFormComponents.call(this);
-            }.bind(this));
+            this.sandbox.start(formSelector);
+            startFormComponents.call(this);
         };
 
     return {
@@ -193,7 +339,7 @@ define(['config'], function (Config) {
             this.attributeTypes = types.attributeTypes;
         },
 
-        render: function () {
+        render: function() {
 
             this.sandbox.once('sulu.products.set-types', this.setTypes.bind(this));
 
@@ -201,25 +347,17 @@ define(['config'], function (Config) {
 
             initForm.call(this);
 
-            //startFormComponents.call(this);
-
-            //setHeaderInformation.call(this);
-
-            //initForm.call(this, this.options.data);
+            setHeaderInformation.call(this);
 
         },
 
-        initialize: function () {
-            debugger;
-            this.status  = !!this.options.data ? this.options.data.status : Config.get('product.status.active');
-            this.render();
-            //this.options = this.sandbox.util.extend({}, defaults, this.options);
-            // merge translations
-            //this.translations = this.sandbox.util.extend({}, translations, this.options.translations);
-
-            this.options.isEditable = (this.options.isEditable === 'false' || this.options.isEditable === false) ? false : true;
+        initialize: function() {
 
             bindCustomEvents.call(this);
+
+            this.status = !!this.options.data ? this.options.data.status : Config.get('product.status.active');
+
+            this.render();
 
         }
     };

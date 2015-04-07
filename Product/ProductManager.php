@@ -835,6 +835,7 @@ class ProductManager implements ProductManagerInterface
                     $productAttribute->setAttribute($attribute);
                     $productAttribute->setValue($attributeValue);
                     $productAttribute->setProduct($product->getEntity());
+                    $product->addProductAttribute($productAttribute);
                 } else {
                     $productAttribute->setValue($attributeValue);
                 }
