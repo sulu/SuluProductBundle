@@ -154,7 +154,7 @@ define([
                         options: {
                             el: $overlay,
                             supportKeyInput: false,
-                            title: "Add attribute to product",
+                            title: this.sandbox.translate('product.attribute.overlay.title'),
                             skin: 'normal',
                             openOnStart: true,
                             removeOnClose: true,
@@ -176,7 +176,7 @@ define([
                     el: '#selectBox',
                     instanceName: selectInstanceName,
                     multipleSelect: false,
-                    defaultLabel: 'Please choose attribute type',
+                    defaultLabel: this.sandbox.translate('product.attribute.overlay.defaultlabel'),
                     valueName: 'name',
                     isNative: true,
                     data: this.attrTypes
@@ -327,24 +327,6 @@ define([
                     }
                 }
             ]);
-
-            this.sandbox.start([
-                {
-                    name: 'overlay@husky',
-                    options: {
-                        el: '#product-attribute-overlay',
-                        triggerEl: '#normal',
-                        title: 'This is the title of the overlay and it is too big',
-                        data: '<div style="min-height: 350px"></div>',
-                        closeCallback: function() {
-                            console.log('You clicked on close');
-                        },
-                        okCallback: function() {
-                            console.log('You clicked on ok');
-                        }
-                    }
-                }
-            ])
         },
 
         /**

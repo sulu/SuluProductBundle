@@ -234,6 +234,14 @@
                 <source>product.attribute.value</source>
                 <target>Value</target>
             </trans-unit>
+            <trans-unit id="60" resname="product.attribute.overlay.title">
+                <source>product.attribute.overlay.title</source>
+                <target>Add attribute</target>
+            </trans-unit>
+            <trans-unit id="61" resname="product.attribute.overlay.defaultlabel">
+                <source>product.attribute.overlay.title</source>
+                <target>Choose attribute</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>
