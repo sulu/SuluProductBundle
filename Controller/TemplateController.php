@@ -158,26 +158,8 @@ class TemplateController extends RestController
      */
     public function productAttributesAction(Request $request)
     {
-        $repository = $this->getDoctrine()
-            ->getRepository('SuluProductBundle:Attribute');
-        $types = $repository->findAll();
-
-        $attributes = array();
-        foreach ($types as $type) {
-            $apiAttribute = new ApiAttribute($type, $this->getLocale($request));
-
-            $attributes[] = array(
-                'id' => $type->getId(),
-                'name' => $apiAttribute->getName()
-            );
-        }
-
         return $this->render(
-            'SuluProductBundle:Template:product.attributes.html.twig',
-            array(
-                'attribute_types' => $attributes
-            )
-        );
+            'SuluProductBundle:Template:product.attributes.html.twig');
     }
 
     /**
