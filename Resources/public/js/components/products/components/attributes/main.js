@@ -9,7 +9,7 @@
 
 define([
     'config',
-    'text!suluproduct/components/products/components/attributes/overlay-content.html',
+    'text!suluproduct/components/products/components/attributes/overlay-content.html'
 ], function(Config, OverlayTpl) {
     'use strict';
 
@@ -60,6 +60,11 @@ define([
                 this.options.data = data;
                 this.options.data.status = this.status;
             }, this);
+
+            this.sandbox.on('husky.overlay' + overlayInstanceName + 'opened', function () {
+                console.log('husky overlay event opened xasdf');
+
+            });
 
         },
 
@@ -118,12 +123,52 @@ define([
          * Create the overlay
          */
         createAddOverlay = function() {
-            // create container for overlay
-            var $overlay = this.sandbox.dom.createElement('<div>');
-            this.sandbox.dom.append(this.$el, $overlay);
 
-            this.sandbox.once('husky.overlay.' + overlayInstanceName + '.opened', function() {
+            // call JSON to get the attributes from the server then create the overlay after it's done
+            var jqxhr = $.getJSON( "api/attributes", function(data) {
+                this.attrTypes = new Array();
 
+                $.each(data._embedded.attributes, function (key, value) {
+                    var newAttribute = {
+                        "id": value.id,
+                        "name": value.name
+                    };
+
+                    this.attrTypes.push(newAttribute);
+
+                }.bind(this));
+
+            }.bind(this))
+            .done(function() {
+                // create container for overlay
+                var $overlay = this.sandbox.dom.createElement('<div>');
+                this.sandbox.dom.append(this.$el, $overlay);
+
+                // create content
+                this.sandbox.start([
+                    {
+                        name: 'overlay@husky',
+                        options: {
+                            el: $overlay,
+                            supportKeyInput: false,
+                            title: "Add attribute to product",
+                            skin: 'normal',
+                            openOnStart: true,
+                            removeOnClose: true,
+                            instanceName: overlayInstanceName,
+                            data: createAddOverlayContent.call(this),
+                            okCallback: overlayOkClicked.bind(this)
+                        }
+                    }
+                ]);
+
+            }.bind(this))
+            .fail(function() {
+                console.log("Error retrieving attributes from server");
+            });
+
+            jqxhr.complete(function() {
+                // create dropbox in overlay
                 var selectOptions = {
                     el: '#selectBox',
                     instanceName: selectInstanceName,
@@ -131,7 +176,7 @@ define([
                     defaultLabel: 'Please choose attribute type',
                     valueName: 'name',
                     isNative: true,
-                    data: this.attributeTypes
+                    data: this.attrTypes
                 };
 
                 this.sandbox.start([
@@ -140,33 +185,19 @@ define([
                         name: 'select@husky',
                         options: selectOptions
                     }
-
                 ]);
 
+                // define select event for dropbox
+                this.sandbox.on('husky.select.' + selectInstanceName + '.selected.item', function(item) {
+                    attrId = parseInt(item);
+                });
             }.bind(this));
 
-            // create content
-            this.sandbox.start([
-                {
-                    name: 'overlay@husky',
-                    options: {
-                        el: $overlay,
-                        supportKeyInput: false,
-                        title: "Add attribute to product",
-                        skin: 'normal',
-                        openOnStart: true,
-                        removeOnClose: true,
-                        instanceName: overlayInstanceName,
-                        data: createAddOverlayContent.call(this),
-                        okCallback: overlayOkClicked.bind(this)
-                    }
-                }
-            ]);
-
+            /*
             this.sandbox.on('husky.select.' + selectInstanceName + '.selected.item', function(item) {
                 attrId = parseInt(item);
             });
-
+            */
         },
 
         /**
