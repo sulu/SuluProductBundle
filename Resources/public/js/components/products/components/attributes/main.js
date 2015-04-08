@@ -357,17 +357,7 @@ define([
 
         templates: ['/admin/product/template/product/attributes'],
 
-        /**
-         * is getting called when template is initialized
-         * @param types
-         */
-        setTypes: function(types) {
-            this.attributeTypes = types.attributeTypes;
-        },
-
         render: function() {
-
-            this.sandbox.once('sulu.products.set-types', this.setTypes.bind(this));
 
             this.sandbox.dom.html(this.$el, this.renderTemplate('/admin/product/template/product/attributes'));
 
