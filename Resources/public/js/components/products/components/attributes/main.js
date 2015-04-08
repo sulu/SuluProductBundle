@@ -134,38 +134,41 @@ define([
                         "name": value.name
                     };
 
-                    this.attrTypes.push(newAttribute);
+                    // at this time we support only text type attributes
+                    if (value.type.name === "product.attribute.type.text") {
+                        this.attrTypes.push(newAttribute);
+                    }
 
                 }.bind(this));
 
             }.bind(this))
-                .done(function() {
-                    // create container for overlay
-                    var $overlay = this.sandbox.dom.createElement('<div>');
-                    this.sandbox.dom.append(this.$el, $overlay);
+            .done(function() {
+                // create container for overlay
+                var $overlay = this.sandbox.dom.createElement('<div>');
+                this.sandbox.dom.append(this.$el, $overlay);
 
-                    // create content
-                    this.sandbox.start([
-                        {
-                            name: 'overlay@husky',
-                            options: {
-                                el: $overlay,
-                                supportKeyInput: false,
-                                title: "Add attribute to product",
-                                skin: 'normal',
-                                openOnStart: true,
-                                removeOnClose: true,
-                                instanceName: overlayInstanceName,
-                                data: createAddOverlayContent.call(this),
-                                okCallback: overlayOkClicked.bind(this)
-                            }
+                // create content
+                this.sandbox.start([
+                    {
+                        name: 'overlay@husky',
+                        options: {
+                            el: $overlay,
+                            supportKeyInput: false,
+                            title: "Add attribute to product",
+                            skin: 'normal',
+                            openOnStart: true,
+                            removeOnClose: true,
+                            instanceName: overlayInstanceName,
+                            data: createAddOverlayContent.call(this),
+                            okCallback: overlayOkClicked.bind(this)
                         }
-                    ]);
+                    }
+                ]);
 
-                }.bind(this))
-                .fail(function() {
-                    console.log("Error retrieving attributes from server");
-                });
+            }.bind(this))
+            .fail(function() {
+                console.log("Error retrieving attributes from server");
+            });
 
             jqxhr.complete(function() {
                 // create dropbox in overlay
