@@ -47,7 +47,7 @@ define([
                     this.sendData.add = false;
                 } else if (data.action === 2) {
                     // DELETE RECORDs IN DATAGRID
-                    $.each(data.deleteIds, function (key,id) {
+                    $.each(data.deleteIds, function(key, id) {
                         this.sandbox.emit('husky.datagrid.' + datagridInstanceName + '.record.remove', id);
                     }.bind(this));
                     this.sendData.delete = false;
@@ -61,7 +61,7 @@ define([
                 this.options.data.status = this.status;
             }, this);
 
-            this.sandbox.on('husky.overlay' + overlayInstanceName + 'opened', function () {
+            this.sandbox.on('husky.overlay' + overlayInstanceName + 'opened', function() {
                 console.log('husky overlay event opened xasdf');
 
             });
@@ -95,7 +95,7 @@ define([
         /**
          * sets the header information
          */
-        setHeaderInformation = function () {
+        setHeaderInformation = function() {
             var title = 'pim.product.title',
                 breadcrumb = [
                     {title: 'navigation.pim'},
@@ -125,10 +125,10 @@ define([
         createAddOverlay = function() {
 
             // call JSON to get the attributes from the server then create the overlay after it's done
-            var jqxhr = $.getJSON( "api/attributes", function(data) {
+            var jqxhr = $.getJSON("api/attributes", function(data) {
                 this.attrTypes = new Array();
 
-                $.each(data._embedded.attributes, function (key, value) {
+                $.each(data._embedded.attributes, function(key, value) {
                     var newAttribute = {
                         "id": value.id,
                         "name": value.name
@@ -139,33 +139,33 @@ define([
                 }.bind(this));
 
             }.bind(this))
-            .done(function() {
-                // create container for overlay
-                var $overlay = this.sandbox.dom.createElement('<div>');
-                this.sandbox.dom.append(this.$el, $overlay);
+                .done(function() {
+                    // create container for overlay
+                    var $overlay = this.sandbox.dom.createElement('<div>');
+                    this.sandbox.dom.append(this.$el, $overlay);
 
-                // create content
-                this.sandbox.start([
-                    {
-                        name: 'overlay@husky',
-                        options: {
-                            el: $overlay,
-                            supportKeyInput: false,
-                            title: "Add attribute to product",
-                            skin: 'normal',
-                            openOnStart: true,
-                            removeOnClose: true,
-                            instanceName: overlayInstanceName,
-                            data: createAddOverlayContent.call(this),
-                            okCallback: overlayOkClicked.bind(this)
+                    // create content
+                    this.sandbox.start([
+                        {
+                            name: 'overlay@husky',
+                            options: {
+                                el: $overlay,
+                                supportKeyInput: false,
+                                title: "Add attribute to product",
+                                skin: 'normal',
+                                openOnStart: true,
+                                removeOnClose: true,
+                                instanceName: overlayInstanceName,
+                                data: createAddOverlayContent.call(this),
+                                okCallback: overlayOkClicked.bind(this)
+                            }
                         }
-                    }
-                ]);
+                    ]);
 
-            }.bind(this))
-            .fail(function() {
-                console.log("Error retrieving attributes from server");
-            });
+                }.bind(this))
+                .fail(function() {
+                    console.log("Error retrieving attributes from server");
+                });
 
             jqxhr.complete(function() {
                 // create dropbox in overlay
@@ -193,11 +193,6 @@ define([
                 });
             }.bind(this));
 
-            /*
-            this.sandbox.on('husky.select.' + selectInstanceName + '.selected.item', function(item) {
-                attrId = parseInt(item);
-            });
-            */
         },
 
         /**
@@ -246,7 +241,7 @@ define([
         /**
          * delete action function from toolbar
          */
-        attributeDelete = function () {
+        attributeDelete = function() {
 
             this.sandbox.emit('husky.datagrid.' + datagridInstanceName + '.items.get-selected', function(ids) {
 
@@ -254,7 +249,7 @@ define([
                 this.sendData = new Object();
                 var deleteIds = new Array();
 
-                _.each(ids, function(value,key,list) {
+                _.each(ids, function(value, key, list) {
                     var result = _.findWhere(attributes, {'id': value});
                     attributes = _.without(attributes, result);
                     deleteIds.push(value);
