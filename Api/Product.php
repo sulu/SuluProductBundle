@@ -16,6 +16,7 @@ use Sulu\Bundle\MediaBundle\Api\Media;
 use Sulu\Bundle\MediaBundle\Entity\Media as MediaEntity;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttribute as ProductAttributeEntity;
 use Sulu\Bundle\ProductBundle\Api\ProductAttribute;
+use Sulu\Bundle\ProductBundle\Api\Product;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface as Entity;
 use JMS\Serializer\Annotation\VirtualProperty;
 use JMS\Serializer\Annotation\SerializedName;
@@ -413,9 +414,9 @@ class Product extends ApiWrapper
 
     /**
      * Sets the parent of the product
-     * @param ProductInterface $parent The parent of the product
+     * @param Product $parent The parent of the product
      */
-    public function setParent(ProductInterface $parent = null)
+    public function setParent(Product $parent = null)
     {
         if ($parent != null) {
             $this->entity->setParent($parent->getEntity());
