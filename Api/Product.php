@@ -414,7 +414,7 @@ class Product extends ApiWrapper
 
     /**
      * Sets the parent of the product
-     * @param ProductInterface $parent The parent of the product
+     * @param Product $parent The parent of the product
      */
     public function setParent(Product $parent = null)
     {
