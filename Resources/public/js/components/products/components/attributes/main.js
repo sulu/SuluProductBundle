@@ -25,7 +25,6 @@ define([
          * bind custom events
          */
         bindCustomEvents = function() {
-
             this.sandbox.on('sulu.header.back', function() {
                 this.sandbox.emit('sulu.products.list');
             }, this);
@@ -71,7 +70,6 @@ define([
          * modify header information
          */
         setHeaderBar = function(saved) {
-
             var type = (!!this.options.data && !!this.options.data.id) ? 'edit' : 'add';
             this.sandbox.emit('sulu.header.toolbar.state.change', type, saved, true);
         },
@@ -120,7 +118,6 @@ define([
          * Create the overlay
          */
         createAddOverlay = function() {
-
             // call JSON to get the attributes from the server then create the overlay after it's done
             var jqxhr = $.getJSON("api/attributes", function(data) {
                 this.attrTypes = new Array();
@@ -205,7 +202,6 @@ define([
          * called when OK on overlay was clicked
          */
         overlayOkClicked = function() {
-
             this.sendData = new Object();
             var attributeValue = this.sandbox.dom.val('#attribute-name');
 
@@ -240,7 +236,6 @@ define([
          * delete action function from toolbar
          */
         attributeDelete = function() {
-
             this.sandbox.emit('husky.datagrid.' + datagridInstanceName + '.items.get-selected', function(ids) {
 
                 var attributes = this.options.data.attributes;
@@ -268,7 +263,6 @@ define([
          * calls basic form components
          */
         startFormComponents = function() {
-
             var datagridOptions = {
                 el: "#product-attribute-list",
                 instanceName: datagridInstanceName,
@@ -337,17 +331,14 @@ define([
         templates: ['/admin/product/template/product/attributes'],
 
         render: function() {
-
             this.sandbox.dom.html(this.$el, this.renderTemplate('/admin/product/template/product/attributes'));
 
             initForm.call(this);
 
             setHeaderInformation.call(this);
-
         },
 
         initialize: function() {
-
             bindCustomEvents.call(this);
 
             this.status = !!this.options.data ? this.options.data.status : Config.get('product.status.active');
