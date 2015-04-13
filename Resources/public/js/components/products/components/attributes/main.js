@@ -65,7 +65,6 @@ define([
                 console.log('husky overlay event opened xasdf');
 
             });
-
         },
 
         /**
@@ -75,7 +74,6 @@ define([
 
             var type = (!!this.options.data && !!this.options.data.id) ? 'edit' : 'add';
             this.sandbox.emit('sulu.header.toolbar.state.change', type, saved, true);
-
         },
 
         /**
@@ -89,7 +87,6 @@ define([
             this.sandbox.dom.append(this.$el, $overlayContent);
 
             return $overlayContent;
-
         },
 
         /**
@@ -195,7 +192,6 @@ define([
                     attrId = parseInt(item);
                 });
             }.bind(this));
-
         },
 
         /**
@@ -238,7 +234,6 @@ define([
             this.sendData.id = this.options.data.id;
 
             save.call(this);
-
         },
 
         /**
@@ -267,7 +262,6 @@ define([
 
                 save.call(this);
             }.bind(this));
-
         },
 
         /**
