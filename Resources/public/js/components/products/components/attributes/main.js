@@ -59,11 +59,6 @@ define([
                 this.options.data = data;
                 this.options.data.status = this.status;
             }, this);
-
-            this.sandbox.on('husky.overlay' + overlayInstanceName + 'opened', function() {
-                console.log('husky overlay event opened xasdf');
-
-            });
         },
 
         /**
