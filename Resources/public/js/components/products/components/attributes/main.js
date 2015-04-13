@@ -18,6 +18,7 @@ define([
         datagridInstanceName = 'product-attribute-datagrid',
         overlayInstanceName = 'product-attribute-overlay',
         selectInstanceName = 'product-attribute-select',
+        typeText = "product.attribute.type.text",
         attributeId = 1,
         maxLengthTitle = 60,
 
@@ -115,17 +116,17 @@ define([
         createAddOverlay = function() {
             // call JSON to get the attributes from the server then create the overlay after it's done
             var ajaxRequest = $.getJSON("api/attributes", function(data) {
-                this.attrTypes = new Array();
+                this.attributeTypes = new Array();
 
                 $.each(data._embedded.attributes, function(key, value) {
                     var newAttribute = {
-                        "id": value.id,
-                        "name": value.name
+                        'id': value.id,
+                        'name': value.name
                     };
 
                     // at this time we support only text type attributes
-                    if (value.type.name === "product.attribute.type.text") {
-                        this.attrTypes.push(newAttribute);
+                    if (value.type.name === typeText) {
+                        this.attributeTypes.push(newAttribute);
                     }
                 }.bind(this));
             }.bind(this));
@@ -156,7 +157,7 @@ define([
             }.bind(this));
 
             ajaxRequest.fail(function() {
-                console.log("Error retrieving attributes from server");
+                console.log('Error retrieving attributes from server');
             }.bind(this));
 
             ajaxRequest.complete(function() {
@@ -168,7 +169,7 @@ define([
                     defaultLabel: this.sandbox.translate('product.attribute.overlay.defaultlabel'),
                     valueName: 'name',
                     isNative: true,
-                    data: this.attrTypes
+                    data: this.attributeTypes
                 };
 
                 this.sandbox.start([
@@ -210,8 +211,8 @@ define([
                 this.sendData.action = 3;
             } else {
                 var newAttribute = {
-                    "attributeId": attributeId,
-                    "value": attributeValue
+                    'attributeId': attributeId,
+                    'value': attributeValue
                 };
                 attributes.push(newAttribute);
                 //add action = 1
@@ -258,7 +259,7 @@ define([
          */
         startFormComponents = function() {
             var datagridOptions = {
-                el: "#product-attribute-list",
+                el: '#product-attribute-list',
                 instanceName: datagridInstanceName,
                 resultKey: 'attributes',
                 matchings: [
