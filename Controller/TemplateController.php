@@ -156,7 +156,7 @@ class TemplateController extends RestController
      *
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function productAttributesAction(Request $request)
+    public function productAttributesAction()
     {
         return $this->render(
             'SuluProductBundle:Template:product.attributes.html.twig');
