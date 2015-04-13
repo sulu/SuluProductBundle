@@ -18,7 +18,7 @@ define([
         datagridInstanceName = 'product-attribute-datagrid',
         overlayInstanceName = 'product-attribute-overlay',
         selectInstanceName = 'product-attribute-select',
-        attrId = 1,
+        attributeId = 1,
         maxLengthTitle = 60,
 
         /**
@@ -36,7 +36,7 @@ define([
                 // Select action
                 if (data.action === 1) {
                     // ADD RECORD IN DATAGRID
-                    var result = _.findWhere(attributes, {'attributeId': data.attrId});
+                    var result = _.findWhere(attributes, {'attributeId': data.attributeId});
                     this.sandbox.emit('husky.datagrid.' + datagridInstanceName + '.record.add', {
                         id: result.id,
                         attributeId: result.attributeId,
@@ -135,8 +135,9 @@ define([
 
                 }.bind(this));
 
-            }.bind(this))
-            .done(function() {
+            }.bind(this));
+
+            jqxhr.done(function() {
                 // create container for overlay
                 var $overlay = this.sandbox.dom.createElement('<div>');
                 this.sandbox.dom.append(this.$el, $overlay);
@@ -159,10 +160,11 @@ define([
                     }
                 ]);
 
-            }.bind(this))
-            .fail(function() {
+            }.bind(this));
+
+            jqxhr.fail(function() {
                 console.log("Error retrieving attributes from server");
-            });
+            }.bind(this));
 
             jqxhr.complete(function() {
                 // create dropbox in overlay
@@ -186,7 +188,7 @@ define([
 
                 // define select event for dropbox
                 this.sandbox.on('husky.select.' + selectInstanceName + '.selected.item', function(item) {
-                    attrId = parseInt(item);
+                    attributeId = parseInt(item);
                 });
             }.bind(this));
         },
@@ -207,7 +209,7 @@ define([
 
             var attributes = this.options.data.attributes;
 
-            var result = _.findWhere(attributes, {'attributeId': attrId});
+            var result = _.findWhere(attributes, {'attributeId': attributeId});
 
             if (result) {
                 result.value = attributeValue;
@@ -215,7 +217,7 @@ define([
                 this.sendData.action = 3;
             } else {
                 var newAttribute = {
-                    "attributeId": attrId,
+                    "attributeId": attributeId,
                     "value": attributeValue
                 };
                 attributes.push(newAttribute);
@@ -223,7 +225,7 @@ define([
                 this.sendData.action = 1;
             }
 
-            this.sendData.attrId = attrId;
+            this.sendData.attributeId = attributeId;
             this.sendData.attributes = attributes;
             this.sendData.status = this.status;
             this.sendData.id = this.options.data.id;
