@@ -221,7 +221,6 @@ define([
                 attributes.push(newAttribute);
                 //add action = 1
                 this.sendData.action = 1;
-
             }
 
             this.sendData.attrId = attrId;
