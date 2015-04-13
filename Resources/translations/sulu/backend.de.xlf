@@ -238,7 +238,7 @@
                 <source>product.attribute.overlay.title</source>
                 <target>Attribut hinzufügen</target>
             </trans-unit>
-            <trans-unit id="62" resname="product.attribute.overlay.defaultlabel">
+            <trans-unit id="61" resname="product.attribute.overlay.defaultlabel">
                 <source>product.attribute.overlay.title</source>
                 <target>Attribut auswählen</target>
             </trans-unit>
