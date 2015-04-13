@@ -114,7 +114,7 @@ define([
          */
         createAddOverlay = function() {
             // call JSON to get the attributes from the server then create the overlay after it's done
-            var jqxhr = $.getJSON("api/attributes", function(data) {
+            var ajaxRequest = $.getJSON("api/attributes", function(data) {
                 this.attrTypes = new Array();
 
                 $.each(data._embedded.attributes, function(key, value) {
@@ -127,12 +127,10 @@ define([
                     if (value.type.name === "product.attribute.type.text") {
                         this.attrTypes.push(newAttribute);
                     }
-
                 }.bind(this));
-
             }.bind(this));
 
-            jqxhr.done(function() {
+            ajaxRequest.done(function() {
                 // create container for overlay
                 var $overlay = this.sandbox.dom.createElement('<div>');
                 this.sandbox.dom.append(this.$el, $overlay);
@@ -157,11 +155,11 @@ define([
 
             }.bind(this));
 
-            jqxhr.fail(function() {
+            ajaxRequest.fail(function() {
                 console.log("Error retrieving attributes from server");
             }.bind(this));
 
-            jqxhr.complete(function() {
+            ajaxRequest.complete(function() {
                 // create dropbox in overlay
                 var selectOptions = {
                     el: '#selectBox',
