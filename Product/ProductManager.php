@@ -811,8 +811,11 @@ class ProductManager implements ProductManagerInterface
                     $attributeIds[] = $attributeData['attributeId'];
                 }
             }
+            // create local array of attributes
+            $productAttributes = array();
             // If attributes is not in current specified attributes remove it from product
             foreach ($product->getAttributes() as $productAttribute) {
+            	$productAttributes[$productAttribute->getAttribute()->getId()] = $productAttribute;
                 if (!in_array($productAttribute->getAttribute()->getId(), $attributeIds)) {
                     $product->getEntity()->removeProductAttribute($productAttribute->getEntity());
                     $this->em->remove($productAttribute->getEntity());
@@ -821,12 +824,10 @@ class ProductManager implements ProductManagerInterface
             // Add and change attributes
             foreach ($data['attributes'] as $attributeData) {
                 $attributeValue = $attributeData['value'];
-                // Check if attribute exists for current product
-                $productAttribute = $this->productAttributeRepository->findByAttributeIdAndProductId(
-                    $attributeData['attributeId'],
-                    $product->getId()
-                );
-                if (!$productAttribute) {
+                $attributeId = $attributeData['attributeId'];
+
+                if (!array_key_exists($attributeId, $productAttributes)) {
+                	// product attribute does not exists
                     $productAttribute = new ProductAttribute();
                     $attribute = $this->attributeRepository->find($attributeData['attributeId']);
                     if (!$attribute) {
@@ -836,10 +837,12 @@ class ProductManager implements ProductManagerInterface
                     $productAttribute->setValue($attributeValue);
                     $productAttribute->setProduct($product->getEntity());
                     $product->addProductAttribute($productAttribute);
+                    $this->em->persist($productAttribute);
                 } else {
+                    // product attribute exists
+                    $productAttribute = $productAttributes[$attributeId]->getEntity();
                     $productAttribute->setValue($attributeValue);
                 }
-                $this->em->persist($productAttribute);
             }
         }
 
