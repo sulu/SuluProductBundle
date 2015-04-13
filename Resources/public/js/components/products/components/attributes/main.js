@@ -353,7 +353,6 @@ define([
             this.status = !!this.options.data ? this.options.data.status : Config.get('product.status.active');
 
             this.render();
-
         }
     };
 });
