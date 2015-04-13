@@ -21,6 +21,11 @@ define([
         typeText = "product.attribute.type.text",
         attributeId = 1,
         maxLengthTitle = 60,
+        actions = {
+            ADD: 1,
+            DELETE: 2,
+            UPDATE: 3
+        },
 
         /**
          * bind custom events
@@ -35,7 +40,7 @@ define([
                 var attributes = data.attributes;
 
                 // Select action
-                if (data.action === 1) {
+                if (data.action === actions.ADD) {
                     // ADD RECORD IN DATAGRID
                     var result = _.findWhere(attributes, {'attributeId': data.attributeId});
                     this.sandbox.emit('husky.datagrid.' + datagridInstanceName + '.record.add', {
@@ -45,13 +50,13 @@ define([
                         attributeName: result.attributeName
                     });
                     this.sendData.add = false;
-                } else if (data.action === 2) {
+                } else if (data.action === actions.DELETE) {
                     // DELETE RECORDs IN DATAGRID
                     $.each(data.deleteIds, function(key, id) {
                         this.sandbox.emit('husky.datagrid.' + datagridInstanceName + '.record.remove', id);
                     }.bind(this));
                     this.sendData.delete = false;
-                } else {
+                } else if (data.action === actions.UPDATE) {
                     // UPDATE RECORD IN DATAGRID
                     this.sandbox.emit('husky.datagrid.' + datagridInstanceName + '.records.change', attributes);
                 }
@@ -207,16 +212,14 @@ define([
 
             if (result) {
                 result.value = attributeValue;
-                // update action = 3
-                this.sendData.action = 3;
+                this.sendData.action = actions.UPDATE;
             } else {
                 var newAttribute = {
                     'attributeId': attributeId,
                     'value': attributeValue
                 };
                 attributes.push(newAttribute);
-                //add action = 1
-                this.sendData.action = 1;
+                this.sendData.action = actions.ADD;
             }
 
             this.sendData.attributeId = attributeId;
@@ -248,7 +251,7 @@ define([
                 this.sendData.status = this.status;
                 this.sendData.id = this.options.data.id;
                 // delete action = 2
-                this.sendData.action = 2;
+                this.sendData.action = actions.DELETE;
 
                 save.call(this);
             }.bind(this));
