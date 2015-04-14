@@ -848,6 +848,7 @@ class Product extends ApiWrapper
      * @return Media[]
      * @VirtualProperty
      * @SerializedName("media")
+     * @Groups({"cart"})
      */
     public function getMedia()
     {
