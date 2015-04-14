@@ -665,9 +665,26 @@ class Product extends ApiWrapper
     }
 
     /**
-     * Returns the base prices for the product by a given currency
+     * Returns the formatted base price for the product by a given currency and locale
      *
-     * @return \Sulu\Bundle\ProductBundle\Api\ProductPrice[]
+     * @param string $currency
+     * @return String
+     */
+    public function getFormattedBasePriceForCurrency($currency = 'EUR')
+    {
+        $price = $this->getBasePriceForCurrency($currency);
+        if ($price) {
+
+            return $this->getFormattedPrice($price->getPrice(), $currency, $this->locale);
+        }
+
+        return '';
+    }
+
+    /**
+     * Returns the base price for the product by a given currency
+     *
+     * @return \Sulu\Bundle\ProductBundle\Api\ProductPrice
      */
     public function getBasePriceForCurrency($currency = 'EUR')
     {
