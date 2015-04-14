@@ -613,14 +613,7 @@ class ProductManager implements ProductManagerInterface
             }
 
             $product = new $this->productApiEntity($product, $locale);
-            $media = [];
-            // We have to replace the media with a media obtained from the mediaManager since the urls and the
-            // dimensions are added by the mediaManager.
-            // TODO: implement proxy object who is responsible for generating the urls
-            foreach ($product->getEntity()->getMedia() as $medium) {
-                $media[] = $this->mediaManager->getById($medium->getId(), $locale);
-            }
-            $product->setMedia($media);
+            $this->createProductMedia($product, $locale);
             return $product;
         } else {
             return null;
@@ -648,6 +641,25 @@ class ProductManager implements ProductManagerInterface
         }
 
         return $products;
+    }
+
+    /**
+     * Sets product media for api-product
+     * Otherwise api-media will not contain additional info like url,..
+     *
+     * @param Product $product
+     * @param $locale
+     */
+    public function createProductMedia(Product $product, $locale)
+    {
+        $media = [];
+        // We have to replace the media with a media obtained from the mediaManager since the urls and the
+        // dimensions are added by the mediaManager.
+        // TODO: implement proxy object who is responsible for generating the urls
+        foreach ($product->getEntity()->getMedia() as $medium) {
+            $media[] = $this->mediaManager->getById($medium->getId(), $locale);
+        }
+        $product->setMedia($media);
     }
 
     /**
