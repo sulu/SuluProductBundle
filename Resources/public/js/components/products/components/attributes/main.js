@@ -49,13 +49,11 @@ define([
                         value: result.value,
                         attributeName: result.attributeName
                     });
-                    this.sendData.add = false;
                 } else if (data.action === actions.DELETE) {
                     // DELETE RECORDs IN DATAGRID
                     $.each(data.deleteIds, function(key, id) {
                         this.sandbox.emit('husky.datagrid.' + datagridInstanceName + '.record.remove', id);
                     }.bind(this));
-                    this.sendData.delete = false;
                 } else if (data.action === actions.UPDATE) {
                     // UPDATE RECORD IN DATAGRID
                     this.sandbox.emit('husky.datagrid.' + datagridInstanceName + '.records.change', attributes);
