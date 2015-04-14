@@ -648,7 +648,7 @@ class ProductManager implements ProductManagerInterface
      * Otherwise api-media will not contain additional info like url,..
      *
      * @param Product $product
-     * @param $locale
+     * @param string $locale
      */
     public function createProductMedia(Product $product, $locale)
     {
