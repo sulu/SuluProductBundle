@@ -18,7 +18,7 @@ define([
         datagridInstanceName = 'product-attribute-datagrid',
         overlayInstanceName = 'product-attribute-overlay',
         selectInstanceName = 'product-attribute-select',
-        typeText = "product.attribute.type.text",
+        typeText = 'product.attribute.type.text',
         attributeId = 1,
         maxLengthTitle = 60,
         actions = {
@@ -118,7 +118,7 @@ define([
          */
         createAddOverlay = function() {
             // call JSON to get the attributes from the server then create the overlay after it's done
-            var ajaxRequest = $.getJSON("api/attributes", function(data) {
+            var ajaxRequest = $.getJSON('api/attributes', function(data) {
                 this.attributeTypes = new Array();
 
                 $.each(data._embedded.attributes, function(key, value) {
@@ -265,12 +265,12 @@ define([
                 resultKey: 'attributes',
                 matchings: [
                     {
-                        name: "value",
-                        content: "value"
+                        name: 'value',
+                        content: this.sandbox.translate('product.attribute.value')
                     },
                     {
-                        name: "attributeName",
-                        content: "name"
+                        name: 'attributeName',
+                        content: 'Name'
                     }
                 ],
                 viewOptions: {
