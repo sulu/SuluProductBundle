@@ -784,7 +784,7 @@ class ProductControllerTest extends SuluTestCase
             	0 => array(
                 	'attributeId' => $this->productAttribute1->getAttribute()->getId(),
                 	'value' => $this->productAttribute1->getValue()
-				),
+            	),
             	1 => array(
             		'attributeId' => $this->productAttribute2->getAttribute()->getId(),
             		'value' => $this->productAttribute2->getValue()
