@@ -99,7 +99,7 @@ class ProductAttribute extends ApiWrapper
      *
      * @return Sulu\Bundle\ProductBundle\Api\AttributeType
      * @VirtualProperty
-     * @SerializedName("attributeType")
+     * @SerializedName("attributeTypeName")
      */
     public function getAttributeTypeName()
     {
