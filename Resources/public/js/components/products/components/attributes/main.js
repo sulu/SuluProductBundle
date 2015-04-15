@@ -270,7 +270,7 @@ define([
                     },
                     {
                         name: 'attributeName',
-                        content: 'Name'
+                        content: this.sandbox.translate('product.attribute.name')
                     }
                 ],
                 viewOptions: {
