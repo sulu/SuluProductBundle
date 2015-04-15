@@ -16,7 +16,6 @@ use JMS\Serializer\Annotation\VirtualProperty;
 use JMS\Serializer\Annotation\SerializedName;
 use JMS\Serializer\Annotation\ExclusionPolicy;
 
-use Sulu\Bundle\ProductBundle\Entity\AttributeType;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttribute as ProductAttributeEntity;
 use Sulu\Component\Rest\ApiWrapper;
 use Sulu\Bundle\ProductBundle\Api\Attribute;
