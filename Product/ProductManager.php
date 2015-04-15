@@ -804,7 +804,6 @@ class ProductManager implements ProductManagerInterface
         }
 
         if (isset($data['attributes'])) {
-            // Delete attributes
             $attributeIds = [];
             foreach ($data['attributes'] as $attributeData) {
                 if (isset($attributeData['attributeId'])) {
@@ -813,7 +812,7 @@ class ProductManager implements ProductManagerInterface
             }
             // create local array of attributes
             $productAttributes = array();
-            // If attributes is not in current specified attributes remove it from product
+            // If attributes are not in current specified attributes remove them from product
             foreach ($product->getAttributes() as $productAttribute) {
             	$productAttributes[$productAttribute->getAttribute()->getId()] = $productAttribute;
                 if (!in_array($productAttribute->getAttribute()->getId(), $attributeIds)) {

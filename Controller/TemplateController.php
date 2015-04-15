@@ -158,8 +158,7 @@ class TemplateController extends RestController
      */
     public function productAttributesAction()
     {
-        return $this->render(
-            'SuluProductBundle:Template:product.attributes.html.twig');
+        return $this->render('SuluProductBundle:Template:product.attributes.html.twig');
     }
 
     /**
