@@ -775,6 +775,31 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals('Category 2', $response->categories[1]->name);
     }
 
+    public function testPutProductAttribute()
+    {
+        $data = array(
+            'id' => array('id' => $this->product1->getId()),
+            'status' => array('id' => $this->productStatus1->getId()),
+            'attributes' => array(
+            	0 => array(
+                	'attributeId' => $this->productAttribute1->getAttribute()->getId(),
+                	'value' => $this->productAttribute1->getValue()
+            	),
+            	1 => array(
+            		'attributeId' => $this->productAttribute2->getAttribute()->getId(),
+            		'value' => $this->productAttribute2->getValue()
+            	)
+            )
+        );
+
+        $this->client->request('PUT', '/api/products/'.$this->product1->getId(), $data);
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+
+        $response = json_decode($this->client->getResponse()->getContent());
+        $this->assertEquals('EnglishProductAttributeValue-1', $response->attributes[0]->value);
+        $this->assertEquals('EnglishProductAttributeValue-2', $response->attributes[1]->value);
+    }
+
     public function testPost($testParent = false)
     {
         $data = array(

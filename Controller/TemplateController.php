@@ -15,6 +15,7 @@ use Sulu\Bundle\ProductBundle\Api\TaxClass;
 use Sulu\Bundle\ProductBundle\Entity\Currency;
 use Symfony\Component\HttpFoundation\Request;
 use Sulu\Component\Rest\RestController;
+use Sulu\Bundle\ProductBundle\Api\Attribute as ApiAttribute;
 
 class TemplateController extends RestController
 {
@@ -136,7 +137,7 @@ class TemplateController extends RestController
                 'taxClasses' => $taxClassTitles,
                 'currencies' => $currencies,
                 'defaultCurrency' => $defaultCurrency
-                )
+            )
         );
     }
 
@@ -148,6 +149,16 @@ class TemplateController extends RestController
     public function productDocumentsAction()
     {
         return $this->render('SuluProductBundle:Template:product.documents.html.twig');
+    }
+
+    /**
+     * Returns the template for product attributes
+     *
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function productAttributesAction()
+    {
+        return $this->render('SuluProductBundle:Template:product.attributes.html.twig');
     }
 
     /**

@@ -860,8 +860,47 @@ class ProductManager implements ProductManagerInterface
             }
         }
 
-        // TODO: handle attributes
+        if (isset($data['attributes'])) {
+            $attributeIds = [];
+            foreach ($data['attributes'] as $attributeData) {
+                if (isset($attributeData['attributeId'])) {
+                    $attributeIds[] = $attributeData['attributeId'];
+                }
+            }
+            // create local array of attributes
+            $productAttributes = array();
+            // If attributes are not in current specified attributes remove them from product
+            foreach ($product->getAttributes() as $productAttribute) {
+            	$productAttributes[$productAttribute->getAttribute()->getId()] = $productAttribute;
+                if (!in_array($productAttribute->getAttribute()->getId(), $attributeIds)) {
+                    $product->getEntity()->removeProductAttribute($productAttribute->getEntity());
+                    $this->em->remove($productAttribute->getEntity());
+                }
+            }
+            // Add and change attributes
+            foreach ($data['attributes'] as $attributeData) {
+                $attributeValue = $attributeData['value'];
+                $attributeId = $attributeData['attributeId'];
 
+                if (!array_key_exists($attributeId, $productAttributes)) {
+                	// product attribute does not exists
+                    $productAttribute = new ProductAttribute();
+                    $attribute = $this->attributeRepository->find($attributeData['attributeId']);
+                    if (!$attribute) {
+                        throw new ProductDependencyNotFoundException(self::$attributeEntityName, $attributeData['attributeId']);
+                    }
+                    $productAttribute->setAttribute($attribute);
+                    $productAttribute->setValue($attributeValue);
+                    $productAttribute->setProduct($product->getEntity());
+                    $product->addProductAttribute($productAttribute);
+                    $this->em->persist($productAttribute);
+                } else {
+                    // product attribute exists
+                    $productAttribute = $productAttributes[$attributeId]->getEntity();
+                    $productAttribute->setValue($attributeValue);
+                }
+            }
+        }
 
         if (isset($data['parent']) && isset($data['parent']['id'])) {
             $parentId = $data['parent']['id'];

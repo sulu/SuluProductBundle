@@ -50,5 +50,14 @@ class SuluProductContentNavigation extends ContentNavigation
         $media->setDisplay(array('edit'));
         $media->setResetStore(false);
         $this->addNavigationItem($media);
+
+        // attributes
+        $attributes = new ContentNavigationItem('content-navigation.product.attributes');
+        $attributes->setAction('attributes');
+        $attributes->setGroups(array('product', 'product-with-variants', 'product-addon', 'product-set'));
+        $attributes->setComponent('products/components/attributes@suluproduct');
+        $attributes->setDisplay(array('edit'));
+        $attributes->setResetStore(false);
+        $this->addNavigationItem($attributes);
     }
 } 

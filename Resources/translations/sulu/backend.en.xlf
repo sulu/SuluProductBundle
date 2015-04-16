@@ -226,6 +226,22 @@
                 <source>product.bulkprice.andMore</source>
                 <target>and more ...</target>
             </trans-unit>
+            <trans-unit id="58" resname="content-navigation.product.attributes">
+                <source>content-navigation.product.attributes</source>
+                <target>Attributes</target>
+            </trans-unit>
+            <trans-unit id="59" resname="product.attribute.value">
+                <source>product.attribute.value</source>
+                <target>Value</target>
+            </trans-unit>
+            <trans-unit id="60" resname="product.attribute.overlay.title">
+                <source>product.attribute.overlay.title</source>
+                <target>Add attribute</target>
+            </trans-unit>
+            <trans-unit id="61" resname="product.attribute.overlay.defaultlabel">
+                <source>product.attribute.overlay.title</source>
+                <target>Choose attribute</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>
