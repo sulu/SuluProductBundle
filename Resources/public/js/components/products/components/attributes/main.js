@@ -31,6 +31,10 @@ define([
          * bind custom events
          */
         bindCustomEvents = function() {
+            this.sandbox.on('sulu.header.toolbar.delete', function () {
+                this.sandbox.emit('sulu.product.delete', this.options.data.id);
+            }.bind(this));
+
             this.sandbox.on('sulu.header.back', function() {
                 this.sandbox.emit('sulu.products.list');
             }, this);
