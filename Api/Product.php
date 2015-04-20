@@ -640,6 +640,26 @@ class Product extends ApiWrapper
     }
 
     /**
+     * Returns the scale price for a certain currency
+     *
+     * @return \Sulu\Bundle\ProductBundle\Api\ProductPrice[]
+     */
+    public function getScalePriceForCurrency($currency = 'EUR')
+    {
+        $scalePrice = null;
+        $prices = $this->entity->getPrices();
+        if ($prices) {
+            foreach ($prices as $price) {
+                if ($price->getCurrency()->getCode() == $currency) {
+                    $scalePrice[] = $price;
+                }
+            }
+        }
+
+        return $scalePrice;
+    }
+
+    /**
      * Returns the bulk price for a certain quantity of the product by a given currency
      *
      * @return \Sulu\Bundle\ProductBundle\Api\ProductPrice[]

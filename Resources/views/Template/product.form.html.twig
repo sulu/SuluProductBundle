@@ -50,9 +50,9 @@
         </div>
         <div class="grid-col-6">
             <div class="form-group">
-                <label for="deliveryTime"><%= translate('product.deliveryTime') %></label>
-                <input class="form-element" type="text" id="deliveryTime"
-                       data-mapper-property="deliveryTime" data-type="decimal"/>
+                <label for="recommendedOrderQuantity"><%= translate('product.recommendedOrderQuantity') %></label>
+                <input class="form-element" type="text" id="recommendedOrderQuantity"
+                       data-mapper-property="recommendedOrderQuantity" data-type="decimal"/>
             </div>
         </div>
     </div>
@@ -82,10 +82,22 @@
         </div>
         <div class="grid-col-6">
             <div class="form-group">
-                <label for="recommendedOrderQuantity"><%= translate('product.recommendedOrderQuantity') %></label>
-                <input class="form-element" type="text" id="recommendedOrderQuantity"
-                       data-mapper-property="recommendedOrderQuantity" data-type="decimal"/>
+                <label for="recommendedOrderQuantity"><%= translate('product.orderContentRatio') %></label>
+                <input class="form-element" type="text" id="orderContentRatio"
+                       data-mapper-property="orderContentRatio" data-type="decimal"/>
             </div>
+        </div>
+    </div>
+
+    <div class="grid-row small">
+        <div class="grid-col-6">
+            <div class="form-group">
+                <label for="deliveryTime"><%= translate('product.deliveryTime') %></label>
+                <input class="form-element" type="text" id="deliveryTime"
+                       data-mapper-property="deliveryTime" data-type="decimal"/>
+            </div>
+        </div>
+        <div class="grid-col-6">
         </div>
     </div>
 
