@@ -19,7 +19,7 @@ define([
         overlayInstanceName = 'product-attribute-overlay',
         selectInstanceName = 'product-attribute-select',
         typeText = 'product.attribute.type.text',
-        attributeId = 1,
+        attributeId = null,
         maxLengthTitle = 60,
         actions = {
             ADD: 1,
@@ -89,6 +89,8 @@ define([
          * Create overlay content for add attribute overlay
          */
         createAddOverlayContent = function() {
+            attributeId = null;
+
             // create container for overlay
             var $overlayContent = this.sandbox.dom.createElement(this.sandbox.util.template(OverlayTpl, {
                 translate: this.sandbox.translate
@@ -213,6 +215,11 @@ define([
          * called when OK on overlay was clicked
          */
         overlayOkClicked = function() {
+            // exit if no attribute is selected in overlay
+            if (!attributeId) {
+                return;
+            }
+
             this.sendData = new Object();
             var attributeValue = this.sandbox.dom.val('#attribute-name');
 
