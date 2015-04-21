@@ -216,7 +216,7 @@ define([
          */
         overlayOkClicked = function() {
             // exit if no attribute is selected in overlay
-            if (attributeId === null) {
+            if (!attributeId) {
                 return;
             }
 
