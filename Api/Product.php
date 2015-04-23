@@ -15,8 +15,6 @@ use Sulu\Bundle\CategoryBundle\Entity\Category as CategoryEntity;
 use Sulu\Bundle\MediaBundle\Api\Media;
 use Sulu\Bundle\MediaBundle\Entity\Media as MediaEntity;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttribute as ProductAttributeEntity;
-use Sulu\Bundle\ProductBundle\Api\ProductAttribute;
-use Sulu\Bundle\ProductBundle\Api\Product;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface as Entity;
 use JMS\Serializer\Annotation\VirtualProperty;
 use JMS\Serializer\Annotation\SerializedName;
@@ -585,6 +583,22 @@ class Product extends ApiWrapper
     public function setTaxClass(TaxClassEntity $taxClass)
     {
         $this->entity->setTaxClass($taxClass);
+    }
+
+    /**
+     * Returns the special prices for the product
+     * @return \Sulu\Bundle\ProductBundle\Api\SpecialPrice[]
+     * @VirtualProperty
+     * @SerializedName("specialPrice")
+     */
+    public function getSpecialPrices()
+    {
+        $specialPrices = $this->entity->getSpecialPrices();
+        $specialPricesList = array();
+        foreach ($specialPrices as $specialPrice) {
+            $specialPricesList[] = new SpecialPrice($specialPrice, $this->$locale);
+        }
+        return $specialPricesList;
     }
 
     /**

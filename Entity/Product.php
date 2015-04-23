@@ -231,6 +231,28 @@ class Product extends BaseProduct
     }
 
     /**
+     * Add special price
+     *
+     * @param \Sulu\Bundle\ProductBundle\Entity\SpecialPrice $specialPrices
+     * @return Product
+     */
+    public function addSpecialPrice(\Sulu\Bundle\ProductBundle\Entity\SpecialPrice $specialPrices)
+    {
+        $this->specialPrices[] = $specialPrices;
+        return $this;
+    }
+
+    /**
+     * Remove special prices
+     *
+     * @param \Sulu\Bundle\ProductBundle\Entity\SpecialPrice $specialPrices
+     */
+    public function removeSpecialPrice(\Sulu\Bundle\ProductBundle\Entity\SpecialPrice $specialPrices)
+    {
+        $this->specialPrices->removeElement($specialPrices);
+    }
+
+    /**
      * Add setProducts
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $setProducts
