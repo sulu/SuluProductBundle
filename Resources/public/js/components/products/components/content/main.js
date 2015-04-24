@@ -22,7 +22,7 @@ define(function () {
                     }
                 },
                 tabs: {
-                    url: '/admin/product/navigation/' + this.options.productType
+                    url: '/admin/content-navigations?alias=' + this.options.productType
                 }
             };
         }
