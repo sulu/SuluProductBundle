@@ -142,6 +142,11 @@ abstract class BaseProduct implements ProductInterface
     private $media;
 
     /**
+     * @var \Doctrine\Common\Collections\Collection
+     */
+    private $specialPrices;
+
+    /**
      * @var \Sulu\Bundle\SecurityBundle\Entity\User
      */
     private $changer;

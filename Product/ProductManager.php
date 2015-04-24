@@ -26,6 +26,7 @@ use Sulu\Bundle\ProductBundle\Entity\CurrencyRepository;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSet;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductPrice as ProductPriceEntity;
+use Sulu\Bundle\ProductBundle\Entity\SpecialPrice;
 use Sulu\Bundle\ProductBundle\Entity\StatusRepository;
 use Sulu\Bundle\ContactBundle\Entity\AccountRepository;
 use Sulu\Bundle\ProductBundle\Entity\TaxClass;
@@ -902,6 +903,36 @@ class ProductManager implements ProductManagerInterface
             }
         }
 
+        if (array_key_exists('specialPrices', $data)) {
+            $specialPricesData = $data['specialPrices'];
+
+             foreach($product->getSpecialPrices() as $specialPrice) {
+                $specialPrices[$specialPrice->getId()] = $specialPrice;
+             }
+
+            /*
+            foreach($specialPricesData as $specialPriceData) {
+                $specialPrice = new SpecialPrice();
+
+                $currency = $this->currencyRepository->findByCode($specialPriceData['code']);
+                $specialPrice->setCurrency($currency);
+
+                $specialPrice->setPrice($specialPriceData['specialPrice']);
+
+                $startDate = date_create($specialPriceData['start']);
+                $specialPrice->setStart($startDate);
+
+                $endDate = date_create($specialPriceData['end']);
+                $specialPrice->setEnd($endDate);
+
+                $specialPrice->setProduct($product->getEntity());
+
+                $product->addSpecialPrice($specialPrice);
+                $this->em->persist($specialPrice);
+            }
+            */
+        }
+
         if (isset($data['parent']) && isset($data['parent']['id'])) {
             $parentId = $data['parent']['id'];
             $parentProduct = $this->findByIdAndLocale($parentId, $locale, false);
@@ -1049,6 +1080,7 @@ class ProductManager implements ProductManagerInterface
                 $delete
             );
         }
+
         if (!$skipChanged || $product->getId() == null) {
             $product->setChanged(new DateTime());
             $product->setChanger($user);
@@ -1473,7 +1505,7 @@ class ProductManager implements ProductManagerInterface
         if (!is_numeric($id)) {
             throw new InvalidProductAttributeException('id', $id);
         }
-        
+
         $product = $this->productRepository->findById($id);
 
         if (!$product) {
@@ -1499,7 +1531,7 @@ class ProductManager implements ProductManagerInterface
             foreach ($ids as $id) {
                 $counter++;
                 $this->singleDelete($id, null, false);
-                
+
                 if ($flush && ($counter % self::MAX_BATCH_DELETE) === 0) {
                     $this->em->flush();
                     $this->em->clear();
@@ -1509,7 +1541,7 @@ class ProductManager implements ProductManagerInterface
             // if ids is int
             $this->singleDelete($ids, null, false);
         }
-        
+
         if ($flush) {
             $this->em->flush();
         }

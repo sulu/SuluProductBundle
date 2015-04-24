@@ -16,6 +16,7 @@ use Sulu\Bundle\MediaBundle\Api\Media;
 use Sulu\Bundle\MediaBundle\Entity\Media as MediaEntity;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttribute as ProductAttributeEntity;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface as Entity;
+use Sulu\Bundle\ProductBundle\Entity\SpecialPrice as SpecialPriceEntity;
 use JMS\Serializer\Annotation\VirtualProperty;
 use JMS\Serializer\Annotation\SerializedName;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
@@ -586,22 +587,6 @@ class Product extends ApiWrapper
     }
 
     /**
-     * Returns the special prices for the product
-     * @return \Sulu\Bundle\ProductBundle\Api\SpecialPrice[]
-     * @VirtualProperty
-     * @SerializedName("specialPrice")
-     */
-    public function getSpecialPrices()
-    {
-        $specialPrices = $this->entity->getSpecialPrices();
-        $specialPricesList = array();
-        foreach ($specialPrices as $specialPrice) {
-            $specialPricesList[] = new SpecialPrice($specialPrice, $this->$locale);
-        }
-        return $specialPricesList;
-    }
-
-    /**
      * Returns the attribute set of the product
      * @return AttributeSet The attribute set of the product
      * @VirtualProperty
@@ -930,4 +915,49 @@ class Product extends ApiWrapper
     {
         $this->entity->setAreGrossPrices($areGrossPrices);
     }
+
+    /**
+     * getSupplier
+     * Has this name because SuluProduct provides a supplier which is just an array
+     * @return Sulu\Bundle\ContactBundle\Entity\Account
+     */
+    public function getApiSupplier()
+    {
+        $account = $this->entity->getSupplier();
+        if ($account) {
+            return new ApiAccount($account, $this->locale);
+        }
+        return null;
+    }
+
+    /**
+     * Returns the special prices for the product
+     * @return \Sulu\Bundle\ProductBundle\Api\SpecialPrice[]
+     * @VirtualProperty
+     * @SerializedName("specialPrice")
+     */
+    public function getSpecialPrices()
+    {
+        $specialPrices = $this->entity->getSpecialPrices();
+
+        if ($specialPrices) {
+            $specialPricesList = array();
+            foreach ($specialPrices as $specialPrice) {
+                $specialPricesList[] = new SpecialPrice($specialPrice, $this->locale);
+            }
+            return $specialPricesList;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Adds a special price to the product
+     * @param SpecialPriceEntity $specialPrice
+     */
+    public function addSpecialPrice(SpecialPriceEntity $specialPrice)
+    {
+        $this->entity->addSpecialPrice($specialPrice);
+    }
+
 }
