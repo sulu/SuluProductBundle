@@ -17,24 +17,24 @@ use Sulu\Bundle\MediaBundle\Entity\Media as MediaEntity;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttribute as ProductAttributeEntity;
 use Sulu\Bundle\ProductBundle\Api\ProductAttribute;
 use Sulu\Bundle\ProductBundle\Api\Product;
+use Sulu\Bundle\ProductBundle\Api\Unit;
+use Sulu\Bundle\ProductBundle\Api\DeliveryStatus;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface as Entity;
-use JMS\Serializer\Annotation\VirtualProperty;
-use JMS\Serializer\Annotation\SerializedName;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductTranslation;
-use Sulu\Component\Rest\ApiWrapper;
-use Sulu\Component\Security\Authentication\UserInterface;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSet as AttributeSetEntity;
 use Sulu\Bundle\ProductBundle\Entity\ProductPrice as ProductPriceEntity;
 use Sulu\Bundle\ProductBundle\Entity\Status as StatusEntity;
 use Sulu\Bundle\ProductBundle\Entity\Type as TypeEntity;
 use Sulu\Bundle\ProductBundle\Entity\TaxClass as TaxClassEntity;
-use Hateoas\Configuration\Annotation\Relation;
-use Sulu\Bundle\ProductBundle\Api\Unit;
 use Sulu\Bundle\ProductBundle\Entity\Unit as UnitEntity;
 use Sulu\Bundle\ProductBundle\Entity\DeliveryStatus as DeliveryStatusEntity;
-use Sulu\Bundle\ProductBundle\Api\DeliveryStatus;
+use Sulu\Component\Rest\ApiWrapper;
+use Sulu\Component\Security\Authentication\UserInterface;
+use Hateoas\Configuration\Annotation\Relation;
 use JMS\Serializer\Annotation\Groups;
+use JMS\Serializer\Annotation\VirtualProperty;
+use JMS\Serializer\Annotation\SerializedName;
 
 /**
  * The product class which will be exported to the API
@@ -60,10 +60,12 @@ class Product extends ApiWrapper
 
     /**
      * Returns the id of the product
-     * @return int
+     *
      * @VirtualProperty
      * @SerializedName("id")
      * @Groups({"cart"})
+     *
+     * @return integer
      */
     public function getId()
     {
@@ -72,10 +74,12 @@ class Product extends ApiWrapper
 
     /**
      * Returns the name of the product
-     * @return string The name of the product
+     *
      * @VirtualProperty
      * @SerializedName("name")
      * @Groups({"cart"})
+     *
+     * @return string The name of the product
      */
     public function getName()
     {
@@ -84,6 +88,7 @@ class Product extends ApiWrapper
 
     /**
      * Sets the name of the product
+     *
      * @param string $name The name of the product
      */
     public function setName($name)
@@ -93,9 +98,11 @@ class Product extends ApiWrapper
 
     /**
      * Returns the deprecated state of a product
-     * @return boolean
+     *
      * @VirtualProperty
      * @SerializedName("isDeprecated")
+     *
+     * @return boolean
      */
     public function isDeprecated()
     {
@@ -104,6 +111,7 @@ class Product extends ApiWrapper
 
     /**
      * Sets the deprecated state of the product
+     *
      * @param boolean $isDeprecated
      */
     public function setIsDeprecated($isDeprecated)
@@ -124,10 +132,11 @@ class Product extends ApiWrapper
     /**
      * Get minimumOrderQuantity
      *
-     * @return float
      * @VirtualProperty
      * @SerializedName("minimumOrderQuantity")
      * @Groups({"cart"})
+     *
+     * @return float
      */
     public function getMinimumOrderQuantity()
     {
@@ -147,10 +156,11 @@ class Product extends ApiWrapper
     /**
      * Get deliveryTime
      *
-     * @return integer
      * @VirtualProperty
      * @SerializedName("deliveryTime")
      * @Groups({"cart"})
+     *
+     * @return integer
      */
     public function getDeliveryTime()
     {
@@ -170,10 +180,11 @@ class Product extends ApiWrapper
     /**
      * Get recommendedOrderQuantity
      *
-     * @return float
      * @VirtualProperty
      * @SerializedName("recommendedOrderQuantity")
      * @Groups({"cart"})
+     *
+     * @return float
      */
     public function getRecommendedOrderQuantity()
     {
@@ -193,9 +204,10 @@ class Product extends ApiWrapper
     /**
      * Get orderContentRatio
      *
-     * @return float
      * @VirtualProperty
      * @SerializedName("orderContentRatio")
+     *
+     * @return float
      */
     public function getOrderContentRatio()
     {
@@ -204,9 +216,11 @@ class Product extends ApiWrapper
 
     /**
      * Returns the short description of the product
-     * @return string The short description of the product
+     *
      * @VirtualProperty
      * @SerializedName("shortDescription")
+     *
+     * @return string The short description of the product
      */
     public function getShortDescription()
     {
@@ -215,6 +229,7 @@ class Product extends ApiWrapper
 
     /**
      * Sets the short description of the product
+     *
      * @param string $shortDescription The short description of the product
      */
     public function setShortDescription($shortDescription)
@@ -224,9 +239,11 @@ class Product extends ApiWrapper
 
     /**
      * Returns the long description of the product
-     * @return string The long description of the product
+     *
      * @VirtualProperty
      * @SerializedName("longDescription")
+     *
+     * @return string The long description of the product
      */
     public function getLongDescription()
     {
@@ -235,6 +252,7 @@ class Product extends ApiWrapper
 
     /**
      * Sets the long description of the product
+     *
      * @param string $longDescription The short description of the product
      */
     public function setLongDescription($longDescription)
@@ -244,10 +262,12 @@ class Product extends ApiWrapper
 
     /**
      * Returns the number of the product
-     * @return string The number of the product
+     *
      * @VirtualProperty
      * @SerializedName("number")
      * @Groups({"cart"})
+     *
+     * @return string The number of the product
      */
     public function getNumber()
     {
@@ -256,6 +276,7 @@ class Product extends ApiWrapper
 
     /**
      * Sets the number of the product
+     *
      * @param string $number The number of the product
      */
     public function setNumber($number)
@@ -265,10 +286,12 @@ class Product extends ApiWrapper
 
     /**
      * Returns the globalTradeItemNumber of the product
-     * @return string The globalTradeItemNumber of the product
+     *
      * @VirtualProperty
      * @SerializedName("globalTradeItemNumber")
      * @Groups({"cart"})
+     *
+     * @return string The globalTradeItemNumber of the product
      */
     public function getGlobalTradeItemNumber()
     {
@@ -277,6 +300,7 @@ class Product extends ApiWrapper
 
     /**
      * Sets the globalTradeItemNumber of the product
+     *
      * @param string $globalTradeItemNumber The globalTradeItemNumber of the product
      */
     public function setGlobalTradeItemNumber($globalTradeItemNumber)
@@ -286,9 +310,11 @@ class Product extends ApiWrapper
 
     /**
      * Returns the internalItemNumber of the product
-     * @return string The internalItemNumber of the product
+     *
      * @VirtualProperty
      * @SerializedName("internalItemNumber")
+     *
+     * @return string The internalItemNumber of the product
      */
     public function getInternalItemNumber()
     {
@@ -297,6 +323,7 @@ class Product extends ApiWrapper
 
     /**
      * Sets the internalItemNumber of the product
+     *
      * @param string $internalItemNumber The number of the product
      */
     public function setInternalItemNumber($internalItemNumber)
@@ -306,6 +333,7 @@ class Product extends ApiWrapper
 
     /**
      * Sets the supplier of the product
+     *
      * @param Sulu\Bundle\ContactBundle\Entity\Account $supplier
      */
     public function setSupplier($supplier)
@@ -315,9 +343,11 @@ class Product extends ApiWrapper
 
     /**
      * Returns the supplier of the product
-     * @return object The supplier of the product
+     *
      * @VirtualProperty
      * @SerializedName("supplier")
+     *
+     * @return object The supplier of the product
      */
     public function getSupplier()
     {
@@ -336,10 +366,12 @@ class Product extends ApiWrapper
 
     /**
      * Returns the cost of the product
-     * @return double The cost of the product
+     *
      * @VirtualProperty
      * @SerializedName("cost")
      * @Groups({"cart"})
+     *
+     * @return double The cost of the product
      */
     public function getCost()
     {
@@ -348,6 +380,7 @@ class Product extends ApiWrapper
 
     /**
      * Sets the cost of the product
+     *
      * @param double $cost The cost of the product
      */
     public function setCost($cost)
@@ -366,9 +399,11 @@ class Product extends ApiWrapper
 
     /**
      * Returns the cost of the product
-     * @return double The cost of the product
+     *
      * @VirtualProperty
      * @SerializedName("priceInfo")
+     *
+     * @return double The cost of the product
      */
     public function getPriceInfo()
     {
@@ -377,9 +412,11 @@ class Product extends ApiWrapper
 
     /**
      * Returns the manufacturer of the product
-     * @return string The manufacturer of the product
+     *
      * @VirtualProperty
      * @SerializedName("manufacturer")
+     *
+     * @return string The manufacturer of the product
      */
     public function getManufacturer()
     {
@@ -388,6 +425,7 @@ class Product extends ApiWrapper
 
     /**
      * Sets the manufacturer of the product
+     *
      * @param string $manufacturer The manufacturer of the product
      */
     public function setManufacturer($manufacturer)
@@ -397,9 +435,11 @@ class Product extends ApiWrapper
 
     /**
      * Returns the parent of the product
-     * @return ProductInterface The parent of the product
+     *
      * @VirtualProperty
      * @SerializedName("parent")
+     *
+     * @return ProductInterface The parent of the product
      */
     public function getParent()
     {
@@ -414,6 +454,7 @@ class Product extends ApiWrapper
 
     /**
      * Sets the parent of the product
+     *
      * @param Product $parent The parent of the product
      */
     public function setParent(Product $parent = null)
@@ -427,6 +468,7 @@ class Product extends ApiWrapper
 
     /**
      * Returns the children of the product
+     *
      * @return ProductInterface[]
      */
     public function getChildren()
@@ -436,6 +478,7 @@ class Product extends ApiWrapper
 
     /**
      * Adds a product attribute to the product
+     *
      * @param ProductAttributeEntity $productAttribute
      */
     public function addProductAttribute(ProductAttributeEntity $productAttribute)
@@ -445,9 +488,11 @@ class Product extends ApiWrapper
 
     /**
      * Returns the type of the product
-     * @return Type The type of the product
+     *
      * @VirtualProperty
      * @SerializedName("type")
+     *
+     * @return Type The type of the product
      */
     public function getType()
     {
@@ -456,6 +501,7 @@ class Product extends ApiWrapper
 
     /**
      * Sets the type of the product
+     *
      * @param TypeEntity $type The type of the product
      */
     public function setType(TypeEntity $type)
@@ -465,9 +511,11 @@ class Product extends ApiWrapper
 
     /**
      * Returns the status of the product
-     * @return Status The status of the product
+     *
      * @VirtualProperty
      * @SerializedName("status")
+     *
+     * @return Status The status of the product
      */
     public function getStatus()
     {
@@ -476,6 +524,7 @@ class Product extends ApiWrapper
 
     /**
      * Sets the delivery status of the product
+     *
      * @param DeliveryStatusEntity $deliveryStatus The delivery status of the product
      */
     public function setDeliveryStatus(DeliveryStatusEntity $deliveryStatus)
@@ -485,9 +534,11 @@ class Product extends ApiWrapper
 
     /**
      * Returns the delivery status of the product
-     * @return DeliveryStatus The delivery status of the product
+     *
      * @VirtualProperty
      * @SerializedName("deliveryStatus")
+     *
+     * @return DeliveryStatus The delivery status of the product
      */
     public function getDeliveryStatus()
     {
@@ -501,6 +552,7 @@ class Product extends ApiWrapper
 
     /**
      * Sets the status of the product
+     *
      * @param StatusEntity $status The status of the product
      */
     public function setStatus(StatusEntity $status)
@@ -510,10 +562,12 @@ class Product extends ApiWrapper
 
     /**
      * Returns the orderUnit of the product
-     * @return Unit
+     *
      * @VirtualProperty
      * @SerializedName("orderUnit")
      * @Groups({"cart"})
+     *
+     * @return Unit
      */
     public function getOrderUnit()
     {
@@ -537,10 +591,12 @@ class Product extends ApiWrapper
 
     /**
      * Returns the contentUnit of the product
-     * @return Unit
+     *
      * @VirtualProperty
      * @SerializedName("contentUnit")
      * @Groups({"cart"})
+     *
+     * @return Unit
      */
     public function getContentUnit()
     {
@@ -564,9 +620,11 @@ class Product extends ApiWrapper
 
     /**
      * Returns the tax class of the product
-     * @return TaxClass The status of the product
+     *
      * @VirtualProperty
      * @SerializedName("taxClass")
+     *
+     * @return TaxClass The status of the product
      */
     public function getTaxClass()
     {
@@ -580,6 +638,7 @@ class Product extends ApiWrapper
 
     /**
      * Sets the tax class of the product
+     *
      * @param TaxClassEntity $taxClass The tax class of the product
      */
     public function setTaxClass(TaxClassEntity $taxClass)
@@ -589,9 +648,11 @@ class Product extends ApiWrapper
 
     /**
      * Returns the attribute set of the product
-     * @return AttributeSet The attribute set of the product
+     *
      * @VirtualProperty
      * @SerializedName("attributeSet")
+     *
+     * @return AttributeSet The attribute set of the product
      */
     public function getAttributeSet()
     {
@@ -605,6 +666,7 @@ class Product extends ApiWrapper
 
     /**
      * Sets the attribute set of the product
+     *
      * @param AttributeSetEntity $attributeSet The attribute set of the product
      */
     public function setAttributeSet(AttributeSetEntity $attributeSet)
@@ -614,6 +676,7 @@ class Product extends ApiWrapper
 
     /**
      * Removes the given price from the product
+     *
      * @param ProductPriceEntity $price
      */
     public function removePrice(ProductPriceEntity $price)
@@ -623,9 +686,11 @@ class Product extends ApiWrapper
 
     /**
      * Returns the prices for the product
-     * @return \Sulu\Bundle\ProductBundle\Api\ProductPrice[]
+     *
      * @VirtualProperty
      * @SerializedName("prices")
+     *
+     * @return ProductPrice[]
      */
     public function getPrices()
     {
@@ -642,7 +707,7 @@ class Product extends ApiWrapper
     /**
      * Returns the scale price for a certain currency
      *
-     * @return \Sulu\Bundle\ProductBundle\Api\ProductPrice[]
+     * @return ProductPrice[]
      */
     public function getScalePriceForCurrency($currency = 'EUR')
     {
@@ -662,7 +727,7 @@ class Product extends ApiWrapper
     /**
      * Returns the bulk price for a certain quantity of the product by a given currency
      *
-     * @return \Sulu\Bundle\ProductBundle\Api\ProductPrice[]
+     * @return ProductPrice[]
      */
     public function getBulkPriceForCurrency($quantity, $currency = 'EUR')
     {
@@ -688,6 +753,7 @@ class Product extends ApiWrapper
      * Returns the formatted base price for the product by a given currency and locale
      *
      * @param string $currency
+     *
      * @return String
      */
     public function getFormattedBasePriceForCurrency($currency = 'EUR')
@@ -704,7 +770,7 @@ class Product extends ApiWrapper
     /**
      * Returns the base price for the product by a given currency
      *
-     * @return \Sulu\Bundle\ProductBundle\Api\ProductPrice
+     * @return ProductPrice
      */
     public function getBasePriceForCurrency($currency = 'EUR')
     {
@@ -722,11 +788,13 @@ class Product extends ApiWrapper
 
     /**
      * Helper function to get a formatted price for a given currency and locale
+     *
      * @param Integer $price
      * @param String $symbol
      * @param String $locale
-     * @return String price
      * @Groups({"cart"})
+     *
+     * @return String price
      */
     public function getFormattedPrice($price, $symbol = 'EUR', $locale = 'de')
     {
@@ -738,9 +806,11 @@ class Product extends ApiWrapper
 
     /**
      * Returns the attributes for the product
-     * @return \Sulu\Bundle\ProductBundle\Api\ProductAttributes[]
+     *
      * @VirtualProperty
      * @SerializedName("attributes")
+     *
+     * @return ProductAttributes[]
      */
     public function getAttributes()
     {
@@ -756,6 +826,7 @@ class Product extends ApiWrapper
 
     /**
      * Adds a category to the product
+     *
      * @param CategoryEntity $category
      */
     public function addCategory(CategoryEntity $category)
@@ -765,6 +836,7 @@ class Product extends ApiWrapper
 
     /**
      * Removes a category from the product
+     *
      * @param CategoryEntity $category
      */
     public function removeCategory(CategoryEntity $category)
@@ -774,9 +846,11 @@ class Product extends ApiWrapper
 
     /**
      * Returns the categories for the product
-     * @return CategoryEntity[]
+     *
      * @VirtualProperty
      * @SerializedName("categories")
+     *
+     * @return CategoryEntity[]
      */
     public function getCategories()
     {
@@ -794,6 +868,7 @@ class Product extends ApiWrapper
 
     /**
      * Sets the changer of the product
+     *
      * @param UserInterface $user The changer of the product
      */
     public function setChanger(UserInterface $user)
@@ -803,6 +878,7 @@ class Product extends ApiWrapper
 
     /**
      * Sets the creator of the product
+     *
      * @param UserInterface $user The creator of the product
      */
     public function setCreator(UserInterface $user)
@@ -812,6 +888,7 @@ class Product extends ApiWrapper
 
     /**
      * Returns the creator of the product
+     *
      * @return creator/owner of the product
      */
     public function getCreator()
@@ -821,6 +898,7 @@ class Product extends ApiWrapper
 
     /**
      * Sets the change time of the product
+     *
      * @param \DateTime $changed
      */
     public function setChanged(\DateTime $changed)
@@ -830,25 +908,12 @@ class Product extends ApiWrapper
 
     /**
      * Sets the created time of the product
+     *
      * @param \DateTime $created
      */
     public function setCreated(\DateTime $created)
     {
         $this->entity->setCreated($created);
-    }
-
-    private function getTranslation()
-    {
-        $productTranslation = $this->entity->getTranslation($this->locale);
-        if (!$productTranslation) {
-            $productTranslation = new ProductTranslation();
-            $productTranslation->setLocale($this->locale);
-            $productTranslation->setProduct($this->entity);
-
-            $this->entity->addTranslation($productTranslation);
-        }
-
-        return $productTranslation;
     }
 
     /**
@@ -882,10 +947,11 @@ class Product extends ApiWrapper
     /**
      * Returns the media for the product
      *
-     * @return Media[]
      * @VirtualProperty
      * @SerializedName("media")
      * @Groups({"cart"})
+     *
+     * @return Media[]
      */
     public function getMedia()
     {
@@ -906,9 +972,66 @@ class Product extends ApiWrapper
     }
 
     /**
+     * Returns the images for the product
+     *
+     * @VirtualProperty
+     * @SerializedName("images")
+     * @Groups({"cart"})
+     *
+     * @return Media[]
+     */
+    public function getImages()
+    {
+        return $this->getMediaByType(Media::MEDIA_TYPE_IMAGE);
+    }
+
+    /**
+     * Returns the videos for the product
+     *
+     * @VirtualProperty
+     * @SerializedName("videos")
+     * @Groups({"cart"})
+     *
+     * @return Media[]
+     */
+    public function getVideos()
+    {
+        return $this->getMediaByType(Media::MEDIA_TYPE_VIDEO);
+    }
+
+    /**
+     * Returns the audios for the product
+     *
+     * @VirtualProperty
+     * @SerializedName("audios")
+     * @Groups({"cart"})
+     *
+     * @return Media[]
+     */
+    public function getAudios()
+    {
+        return $this->getMediaByType(Media::MEDIA_TYPE_AUDIO);
+    }
+
+    /**
+     * Returns the documents for the product
+     *
+     * @VirtualProperty
+     * @SerializedName("documents")
+     * @Groups({"cart"})
+     *
+     * @return Media[]
+     */
+    public function getDocuments()
+    {
+        return $this->getMediaByType(Media::MEDIA_TYPE_DOCUMENT);
+    }
+
+    /**
      * Returns true when collection of media contains media with specific id
      *
      * @param Media $media
+     *
      * @return bool
      */
     public function containsMedia(Media $media)
@@ -918,9 +1041,11 @@ class Product extends ApiWrapper
 
     /**
      * Returns a boolean indicating if all prices of the product are gross prices
-     * @return boolean
+     *
      * @VirtualProperty
      * @SerializedName("areGrossPrices")
+     *
+     * @return boolean
      */
     public function getAreGrossPrices()
     {
@@ -935,5 +1060,47 @@ class Product extends ApiWrapper
     public function setAreGrossPrices($areGrossPrices = false)
     {
         $this->entity->setAreGrossPrices($areGrossPrices);
+    }
+
+    /**
+     * Returns a media array by a given type for the product
+     *
+     * @param string
+     *
+     * @return array
+     */
+    private function getMediaByType($type)
+    {
+        $collection = [];
+        $media = $this->getMedia();
+        if (!$media) {
+            return $collection;
+        }
+        foreach ($media as $asset) {
+            if ($asset->isTypeOf($type)) {
+                $collection[] = $asset;
+            }
+        }
+
+        return $collection;
+    }
+
+    /**
+     * Get Translation
+     *
+     * @return ProductTranslation
+     */
+    private function getTranslation()
+    {
+        $productTranslation = $this->entity->getTranslation($this->locale);
+        if (!$productTranslation) {
+            $productTranslation = new ProductTranslation();
+            $productTranslation->setLocale($this->locale);
+            $productTranslation->setProduct($this->entity);
+
+            $this->entity->addTranslation($productTranslation);
+        }
+
+        return $productTranslation;
     }
 }
