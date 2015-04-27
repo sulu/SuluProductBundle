@@ -940,15 +940,11 @@ class Product extends ApiWrapper
     {
         $specialPrices = $this->entity->getSpecialPrices();
 
-        if ($specialPrices) {
-            $specialPricesList = array();
-            foreach ($specialPrices as $specialPrice) {
-                $specialPricesList[] = new SpecialPrice($specialPrice, $this->locale);
-            }
-            return $specialPricesList;
-        } else {
-            return null;
+        $specialPricesList = array();
+        foreach ($specialPrices as $specialPrice) {
+            $specialPricesList[] = new SpecialPrice($specialPrice, $this->locale);
         }
+        return $specialPricesList;
     }
 
     /**
