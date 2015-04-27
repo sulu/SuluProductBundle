@@ -2,6 +2,8 @@
 
 namespace Sulu\Bundle\ProductBundle\Entity;
 
+use Doctrine\ORM\Mapping as ORM;
+
 class Product extends BaseProduct
 {
     /**
@@ -35,11 +37,6 @@ class Product extends BaseProduct
     private $setProducts;
 
     /**
-     * @var \Doctrine\Common\Collections\Collection
-     */
-    private $specialPrices;
-
-    /**
      * Constructor
      */
     public function __construct()
@@ -50,7 +47,6 @@ class Product extends BaseProduct
         $this->children = new \Doctrine\Common\Collections\ArrayCollection();
         $this->prices = new \Doctrine\Common\Collections\ArrayCollection();
         $this->setProducts = new \Doctrine\Common\Collections\ArrayCollection();
-        $this->specialPrices = new \Doctrine\Common\Collections\ArrayCollection();
     }
 
     /**
@@ -79,7 +75,7 @@ class Product extends BaseProduct
     /**
      * Get productAttributes
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return \Doctrine\Common\Collections\Collection 
      */
     public function getProductAttributes()
     {
@@ -95,7 +91,7 @@ class Product extends BaseProduct
     public function addTranslation(\Sulu\Bundle\ProductBundle\Entity\ProductTranslation $translations)
     {
         $this->translations[] = $translations;
-
+    
         return $this;
     }
 
@@ -112,7 +108,7 @@ class Product extends BaseProduct
     /**
      * Get translations
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return \Doctrine\Common\Collections\Collection 
      */
     public function getTranslations()
     {
@@ -144,7 +140,7 @@ class Product extends BaseProduct
     public function addAddon(\Sulu\Bundle\ProductBundle\Entity\Addon $addons)
     {
         $this->addons[] = $addons;
-
+    
         return $this;
     }
 
@@ -161,7 +157,7 @@ class Product extends BaseProduct
     /**
      * Get addons
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return \Doctrine\Common\Collections\Collection 
      */
     public function getAddons()
     {
@@ -177,7 +173,7 @@ class Product extends BaseProduct
     public function addChildren(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $children)
     {
         $this->children[] = $children;
-
+    
         return $this;
     }
 
@@ -194,7 +190,7 @@ class Product extends BaseProduct
     /**
      * Get children
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return \Doctrine\Common\Collections\Collection 
      */
     public function getChildren()
     {
@@ -210,7 +206,7 @@ class Product extends BaseProduct
     public function addPrice(\Sulu\Bundle\ProductBundle\Entity\ProductPrice $prices)
     {
         $this->prices[] = $prices;
-
+    
         return $this;
     }
 
@@ -227,7 +223,7 @@ class Product extends BaseProduct
     /**
      * Get prices
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return \Doctrine\Common\Collections\Collection 
      */
     public function getPrices()
     {
@@ -243,7 +239,7 @@ class Product extends BaseProduct
     public function addSetProduct(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $setProducts)
     {
         $this->setProducts[] = $setProducts;
-
+    
         return $this;
     }
 
@@ -260,44 +256,10 @@ class Product extends BaseProduct
     /**
      * Get setProducts
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return \Doctrine\Common\Collections\Collection 
      */
     public function getSetProducts()
     {
         return $this->setProducts;
-    }
-
-    /**
-     * Get special prices
-     *
-     * @return \Doctrine\Common\Collections\Collection
-     */
-    public function getSpecialPrices()
-    {
-        return $this->specialPrices;
-    }
-
-    /**
-     * Add special price
-     *
-     * @param \Sulu\Bundle\ProductBundle\Entity\SpecialPrice $specialPrice
-     *
-     * @return Product
-     */
-    public function addSpecialPrice(\Sulu\Bundle\ProductBundle\Entity\SpecialPrice $specialPrice)
-    {
-        $this->specialPrices[] = $specialPrice;
-
-        return $this;
-    }
-
-    /**
-     * Remove special prices
-     *
-     * @param \Sulu\Bundle\ProductBundle\Entity\SpecialPrice $specialPrices
-     */
-    public function removeSpecialPrice(\Sulu\Bundle\ProductBundle\Entity\SpecialPrice $specialPrices)
-    {
-        $this->specialPrices->removeElement($specialPrices);
     }
 }
