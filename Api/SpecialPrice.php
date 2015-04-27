@@ -49,6 +49,8 @@ class SpecialPrice extends ApiWrapper
     /**
      * Get price
      *
+     * @VirtualProperty
+     * @SerializedName("price")
      * @return float
      */
     public function getPrice()
@@ -58,7 +60,8 @@ class SpecialPrice extends ApiWrapper
 
     /**
      * Get start date
-     *
+     * @VirtualProperty
+     * @SerializedName("start")
      * @return \DateTime
      */
     public function getStart()
@@ -69,6 +72,8 @@ class SpecialPrice extends ApiWrapper
     /**
      * Get end date
      *
+     * @VirtualProperty
+     * @SerializedName("End")
      * @return \DateTime
      */
     public function getEnd()
@@ -79,11 +84,13 @@ class SpecialPrice extends ApiWrapper
     /**
      * Get currency
      *
+     * @VirtualProperty
+     * @SerializedName("Currency")
      * @return \Sulu\Bundle\ProductBundle\Entity\Currency
      */
     public function getCurrency()
     {
-        return $this->currency->entity;
+        return $this->entity->getCurrency();
     }
 
     /**

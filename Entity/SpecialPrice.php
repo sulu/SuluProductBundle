@@ -56,7 +56,7 @@ class SpecialPrice
     /**
      * Get price
      *
-     * @return float 
+     * @return float
      */
     public function getPrice()
     {
@@ -79,7 +79,7 @@ class SpecialPrice
     /**
      * Get start
      *
-     * @return \DateTime 
+     * @return \DateTime
      */
     public function getStart()
     {
@@ -102,7 +102,7 @@ class SpecialPrice
     /**
      * Get end
      *
-     * @return \DateTime 
+     * @return \DateTime
      */
     public function getEnd()
     {
@@ -112,7 +112,7 @@ class SpecialPrice
     /**
      * Get id
      *
-     * @return integer 
+     * @return integer
      */
     public function getId()
     {
@@ -135,7 +135,7 @@ class SpecialPrice
     /**
      * Get currency
      *
-     * @return \Sulu\Bundle\ProductBundle\Entity\Currency 
+     * @return \Sulu\Bundle\ProductBundle\Entity\Currency
      */
     public function getCurrency()
     {

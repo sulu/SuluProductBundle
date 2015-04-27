@@ -906,31 +906,64 @@ class ProductManager implements ProductManagerInterface
         if (array_key_exists('specialPrices', $data)) {
             $specialPricesData = $data['specialPrices'];
 
-             foreach($product->getSpecialPrices() as $specialPrice) {
-                $specialPrices[$specialPrice->getId()] = $specialPrice;
+            //array for local special prices storage
+            $specialPrices = array();
+
+            // array of currency codes to be used as keys for special prices
+            $currencyCodes = array();
+
+            // create array of special price currency codes in json request
+            foreach($specialPricesData as $specialPrice) {
+                array_push($currencyCodes, $specialPrice['currency']['code']);
+            }
+
+            // iterate through already added special prices for this specific product
+            foreach($product->getSpecialPrices() as $specialPrice) {
+                // save special prices to array (for later use)
+                $specialPrices[$specialPrice->getCurrency()->getCode()] = $specialPrice;
+
+                // check if special price code already exists in array if not remove it from product ( it was not sent with the json)
+                if(!in_array($specialPrice->getCurrency()->getCode(), $currencyCodes)) {
+                    $product->removeSpecialPrice($specialPrice->getEntity());
+                    $this->em->remove($specialPrice->getEntity());
+                }
              }
 
-            /*
+            // itearate through send json array of special prices
             foreach($specialPricesData as $specialPriceData) {
-                $specialPrice = new SpecialPrice();
+                // if key does not exists add a new special price to product
+                if (!array_key_exists($specialPriceData['currency']['code'], $specialPrices)) {
+                    $specialPrice = new SpecialPrice();
 
-                $currency = $this->currencyRepository->findByCode($specialPriceData['code']);
-                $specialPrice->setCurrency($currency);
+                    $currency = $this->currencyRepository->findByCode($specialPriceData['currency']['code']);
+                    $specialPrice->setCurrency($currency);
 
-                $specialPrice->setPrice($specialPriceData['specialPrice']);
+                    $specialPrice->setPrice($specialPriceData['price']);
 
-                $startDate = date_create($specialPriceData['start']);
-                $specialPrice->setStart($startDate);
+                    $startDate = date_create($specialPriceData['start']);
+                    $specialPrice->setStart($startDate);
 
-                $endDate = date_create($specialPriceData['end']);
-                $specialPrice->setEnd($endDate);
+                    $endDate = date_create($specialPriceData['end']);
+                    $specialPrice->setEnd($endDate);
 
-                $specialPrice->setProduct($product->getEntity());
+                    $specialPrice->setProduct($product->getEntity());
 
-                $product->addSpecialPrice($specialPrice);
-                $this->em->persist($specialPrice);
+                    $product->addSpecialPrice($specialPrice);
+                    $this->em->persist($specialPrice);
+                // else update the already existing special price
+                } else {
+                    $specialPrice = $specialPrices[$specialPriceData['currency']['code']]->getEntity();
+
+                    $specialPrice->setPrice($specialPriceData['price']);
+
+                    $startDate = date_create($specialPriceData['start']);
+                    $specialPrice->setStart($startDate);
+
+                    $endDate = date_create($specialPriceData['end']);
+                    $specialPrice->setEnd($endDate);
+                }
             }
-            */
+
         }
 
         if (isset($data['parent']) && isset($data['parent']['id'])) {

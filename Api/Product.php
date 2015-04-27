@@ -934,7 +934,7 @@ class Product extends ApiWrapper
      * Returns the special prices for the product
      * @return \Sulu\Bundle\ProductBundle\Api\SpecialPrice[]
      * @VirtualProperty
-     * @SerializedName("specialPrice")
+     * @SerializedName("specialPrices")
      */
     public function getSpecialPrices()
     {
@@ -960,4 +960,12 @@ class Product extends ApiWrapper
         $this->entity->addSpecialPrice($specialPrice);
     }
 
+    /**
+     * Removes a special price to the product
+     * @param SpecialPriceEntity $specialPrice
+     */
+    public function removeSpecialPrice(SpecialPriceEntity $specialPrice)
+    {
+        $this->entity->removeSpecialPrice($specialPrice);
+    }
 }
