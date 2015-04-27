@@ -50,7 +50,7 @@ use Sulu\Bundle\ProductBundle\Entity\DeliveryStatusRepository;
 use Sulu\Bundle\ProductBundle\Entity\AttributeRepository;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttributeRepository;
 use Sulu\Bundle\ProductBundle\Entity\UnitRepository;
-use Sulu\Bundle\MediaBundle\Media\Manager\DefaultMediaManager;
+use Sulu\Bundle\MediaBundle\Media\Manager\MediaManager;
 use Sulu\Bundle\ProductBundle\Entity\DeliveryStatus;
 
 use Sulu\Bundle\ProductBundle\Api\Product;
@@ -153,7 +153,7 @@ class ProductManager implements ProductManagerInterface
     protected $accountRepository;
 
     /**
-     * @var DefaultMediaManager
+     * @var MediaManager
      */
     protected $mediaManager;
 
@@ -191,7 +191,7 @@ class ProductManager implements ProductManagerInterface
         UnitRepository $unitRepository,
         CategoryRepository $categoryRepository,
         UserRepositoryInterface $userRepository,
-        DefaultMediaManager $mediaManager,
+        MediaManager $mediaManager,
         ObjectManager $em,
         $productEntity,
         $productApiEntity,
