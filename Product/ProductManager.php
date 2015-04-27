@@ -1113,7 +1113,6 @@ class ProductManager implements ProductManagerInterface
                 $delete
             );
         }
-
         if (!$skipChanged || $product->getId() == null) {
             $product->setChanged(new DateTime());
             $product->setChanger($user);
@@ -1538,7 +1537,7 @@ class ProductManager implements ProductManagerInterface
         if (!is_numeric($id)) {
             throw new InvalidProductAttributeException('id', $id);
         }
-
+        
         $product = $this->productRepository->findById($id);
 
         if (!$product) {
@@ -1564,7 +1563,7 @@ class ProductManager implements ProductManagerInterface
             foreach ($ids as $id) {
                 $counter++;
                 $this->singleDelete($id, null, false);
-
+                
                 if ($flush && ($counter % self::MAX_BATCH_DELETE) === 0) {
                     $this->em->flush();
                     $this->em->clear();
@@ -1574,7 +1573,7 @@ class ProductManager implements ProductManagerInterface
             // if ids is int
             $this->singleDelete($ids, null, false);
         }
-
+        
         if ($flush) {
             $this->em->flush();
         }
