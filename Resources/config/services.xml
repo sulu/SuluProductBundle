@@ -41,7 +41,6 @@
             <argument type="service" id="sulu_security.security_checker"/>
             <argument>%sulu_admin.name%</argument>
         </service>
-        <service id="sulu_product.admin.content_navigation" class="%sulu_product.admin.content_navigation.class%"/>
         <!--FACTORIES-->
         <service id="sulu_product.product_factory" class="%sulu_product.product_factory.class%"></service>
         <!-- REPOSITORIES -->
