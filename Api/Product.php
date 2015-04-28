@@ -917,20 +917,6 @@ class Product extends ApiWrapper
     }
 
     /**
-     * getSupplier
-     * Has this name because SuluProduct provides a supplier which is just an array
-     * @return Sulu\Bundle\ContactBundle\Entity\Account
-     */
-    public function getApiSupplier()
-    {
-        $account = $this->entity->getSupplier();
-        if ($account) {
-            return new ApiAccount($account, $this->locale);
-        }
-        return null;
-    }
-
-    /**
      * Returns the special prices for the product
      * @return \Sulu\Bundle\ProductBundle\Api\SpecialPrice[]
      * @VirtualProperty
