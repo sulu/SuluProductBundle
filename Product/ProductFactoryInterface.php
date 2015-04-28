@@ -8,10 +8,10 @@
  * with this source code in the file LICENSE.
  */
 
-namespace Sulu\Bundle\ProducBundle\Product;
+namespace Sulu\Bundle\ProductBundle\Product;
 
-use Sulu\Bundle\ProducBundle\Api\ApiProductInterface;
-use Sulu\Bundle\ProducBundle\Entity\ProductInterface;
+use Sulu\Bundle\ProductBundle\Api\ApiProductInterface;
+use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 
 interface ProductFactoryInterface
 {

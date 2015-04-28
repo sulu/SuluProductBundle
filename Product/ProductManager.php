@@ -13,9 +13,7 @@ namespace Sulu\Bundle\ProductBundle\Product;
 use DateTime;
 use Doctrine\Common\Persistence\ObjectManager;
 use Sulu\Bundle\ContactBundle\Entity\Account;
-use Sulu\Bundle\ProducBundle\Product\ProductFactoryInterface;
 use Sulu\Bundle\ProductBundle\Product\Exception\InvalidProductAttributeException;
-use Symfony\Component\PropertyAccess\PropertyAccess;
 
 use Sulu\Bundle\CategoryBundle\Api\Category;
 use Sulu\Bundle\CategoryBundle\Entity\CategoryRepository;
@@ -24,7 +22,6 @@ use Sulu\Bundle\ProductBundle\Api\Status;
 use Sulu\Bundle\ProductBundle\Entity\Status as StatusEntity;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSetRepository;
 use Sulu\Bundle\ProductBundle\Entity\CurrencyRepository;
-use Sulu\Bundle\ProductBundle\Entity\AttributeSet;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductPrice as ProductPriceEntity;
 use Sulu\Bundle\ProductBundle\Entity\StatusRepository;
@@ -43,7 +40,6 @@ use Sulu\Component\Rest\Exception\EntityIdAlreadySetException;
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescriptor;
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineGroupConcatFieldDescriptor;
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineJoinDescriptor;
-use Sulu\Component\Rest\RestHelperInterface;
 use Sulu\Component\Security\Authentication\UserRepositoryInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttribute;
 use Sulu\Bundle\ProductBundle\Entity\SpecialPriceRepository;
@@ -171,8 +167,28 @@ class ProductManager implements ProductManagerInterface
     /**
      * @var ProductFactoryInterface
      */
-    private $productFactory;
+    protected $productFactory;
 
+    /**
+     * @param ProductRepositoryInterface $productRepository
+     * @param SpecialPriceRepository $specialPriceRepository
+     * @param AttributeSetRepository $attributeSetRepository
+     * @param AttributeRepository $attributeRepository
+     * @param ProductAttributeRepository $productAttributeRepository
+     * @param StatusRepository $statusRepository
+     * @param DeliveryStatusRepository $deliveryStatusRepository
+     * @param TypeRepository $typeRepository
+     * @param TaxClassRepository $taxClassRepository
+     * @param CurrencyRepository $currencyRepository
+     * @param UnitRepository $unitRepository
+     * @param ProductFactoryInterface $productFactory
+     * @param CategoryRepository $categoryRepository
+     * @param UserRepositoryInterface $userRepository
+     * @param DefaultMediaManager $mediaManager
+     * @param ObjectManager $em
+     * @param AccountRepository $accountRepository
+     * @param string $defaultCurrency
+     */
     public function __construct(
         ProductRepositoryInterface $productRepository,
         SpecialPriceRepository $specialPriceRepository,
