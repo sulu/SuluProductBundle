@@ -2,7 +2,10 @@
            xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
     <parameters>
         <parameter key="sulu_product.admin.class">Sulu\Bundle\ProductBundle\Admin\SuluProductAdmin</parameter>
-        <parameter key="sulu_product.admin.content_navigation.class">Sulu\Bundle\ProductBundle\Admin\SuluProductContentNavigation</parameter>
+        <parameter key="sulu_product.admin.addon_content_navigation_provider.class">Sulu\Bundle\ProductBundle\Admin\ProductAddonContentNavigationProvider</parameter>
+        <parameter key="sulu_product.admin.content_navigation_provider.class">Sulu\Bundle\ProductBundle\Admin\ProductContentNavigationProvider</parameter>
+        <parameter key="sulu_product.admin.set_content_navigation_provider.class">Sulu\Bundle\ProductBundle\Admin\ProductSetNavigationProvider</parameter>
+        <parameter key="sulu_product.admin.with_variants_content_navigation_provider.class">Sulu\Bundle\ProductBundle\Admin\ProductWithVariantsNavigationProvider</parameter>
         <parameter key="sulu_product.product_repository.class">Sulu\Bundle\ProductBundle\Entity\ProductRepository</parameter>
         <parameter key="sulu_product.attribute_set_repository.class">Sulu\Bundle\ProductBundle\Entity\AttributeSetRepository</parameter>
         <parameter key="sulu_product.special_price_repository.class">Sulu\Bundle\ProductBundle\Entity\SpecialPriceRepository</parameter>
@@ -153,6 +156,23 @@
             <argument type="service" id="sulu_core.webspace.request_analyzer" on-invalid="ignore"/>
             <argument type="service" id="sulu_website.resolver.request_analyzer"/>
             <argument>%sulu_product.template%</argument>
+        </service>
+        <!-- NAVIGATION -->
+        <service id="sulu_product.admin.addon_content_navigation_provider" class="%sulu_product.admin.addon_content_navigation_provider.class%">
+            <tag name="sulu_admin.content_navigation" alias="product-addon"/>
+            <tag name="sulu.context" context="admin"/>
+        </service>
+        <service id="sulu_product.admin.content_navigation_provider.class" class="%sulu_product.admin.content_navigation_provider.class%">
+            <tag name="sulu_admin.content_navigation" alias="product"/>
+            <tag name="sulu.context" context="admin"/>
+        </service>
+        <service id="sulu_product.admin.set_content_navigation_provider.class" class="%sulu_product.admin.set_content_navigation_provider.class%">
+            <tag name="sulu_admin.content_navigation" alias="product-set"/>
+            <tag name="sulu.context" context="admin"/>
+        </service>
+        <service id="sulu_product.admin.with_variants_content_navigation_provider.class" class="%sulu_product.admin.with_variants_content_navigation_provider.class%">
+            <tag name="sulu_admin.content_navigation" alias="product-with-variants"/>
+            <tag name="sulu.context" context="admin"/>
         </service>
     </services>
 </container>
