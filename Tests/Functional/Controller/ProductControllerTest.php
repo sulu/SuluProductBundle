@@ -1033,7 +1033,7 @@ class ProductControllerTest extends SuluTestCase
                     'price' => $this->specialPrice1->getPrice(),
                     'start' => $this->specialPrice1->getStart()->format('Y-m-d h:i:s'),
                     'end'   => $this->specialPrice1->getEnd()->format('Y-m-d h:i:s'),
-            	    'currency' => array("code" => $this->specialPrice1->getCurrency()->getCode())
+                    'currency' => array("code" => $this->specialPrice1->getCurrency()->getCode())
             	)
             )
         );
