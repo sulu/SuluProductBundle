@@ -36,7 +36,6 @@ use Sulu\Bundle\ProductBundle\Entity\AttributeSetTranslation;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Symfony\Component\HttpKernel\Client;
 use Sulu\Bundle\ProductBundle\Entity\AttributeType;
-use Sulu\Bundle\ProductBundle\Entity\Sulu\Bundle\ProductBundle\Entity;
 
 class ProductControllerTest extends SuluTestCase
 {
@@ -776,7 +775,7 @@ class ProductControllerTest extends SuluTestCase
                 'cost' => 99.9
             )
         );
-
+        
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
 
         $this->client->request('GET', '/api/products/'.$this->product1->getId());
@@ -1046,5 +1045,5 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals('56', $response->specialPrices[0]->price);
         $this->assertEquals('eur', $response->specialPrices[0]->currency->code);
     }
-
 }
+
