@@ -918,9 +918,11 @@ class Product extends ApiWrapper
 
     /**
      * Returns the special prices for the product
-     * @return \Sulu\Bundle\ProductBundle\Api\SpecialPrice[]
+     *
      * @VirtualProperty
      * @SerializedName("specialPrices")
+     *
+     * @return \Sulu\Bundle\ProductBundle\Api\SpecialPrice[]
      */
     public function getSpecialPrices()
     {
@@ -930,11 +932,13 @@ class Product extends ApiWrapper
         foreach ($specialPrices as $specialPrice) {
             $specialPricesList[] = new SpecialPrice($specialPrice, $this->locale);
         }
+
         return $specialPricesList;
     }
 
     /**
      * Adds a special price to the product
+     *
      * @param SpecialPriceEntity $specialPrice
      */
     public function addSpecialPrice(SpecialPriceEntity $specialPrice)
@@ -943,7 +947,8 @@ class Product extends ApiWrapper
     }
 
     /**
-     * Removes a special price to the product
+     * Removes a special price from the product
+     *
      * @param SpecialPriceEntity $specialPrice
      */
     public function removeSpecialPrice(SpecialPriceEntity $specialPrice)
