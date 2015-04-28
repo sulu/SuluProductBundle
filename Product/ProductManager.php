@@ -940,10 +940,10 @@ class ProductManager implements ProductManagerInterface
 
                     $specialPrice->setPrice($specialPriceData['price']);
 
-                    $startDate = date_create($specialPriceData['start']);
+                    $startDate = new \DateTime($specialPriceData['start']);
                     $specialPrice->setStart($startDate);
 
-                    $endDate = date_create($specialPriceData['end']);
+                    $endDate = new \DateTime($specialPriceData['end']);
                     $specialPrice->setEnd($endDate);
 
                     $specialPrice->setProduct($product->getEntity());
@@ -956,10 +956,10 @@ class ProductManager implements ProductManagerInterface
 
                     $specialPrice->setPrice($specialPriceData['price']);
 
-                    $startDate = date_create($specialPriceData['start']);
+                    $startDate = new \DateTime($specialPriceData['start']);
                     $specialPrice->setStart($startDate);
 
-                    $endDate = date_create($specialPriceData['end']);
+                    $endDate = new \DateTime($specialPriceData['end']);
                     $specialPrice->setEnd($endDate);
                 }
             }
