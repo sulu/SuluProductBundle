@@ -963,7 +963,6 @@ class ProductManager implements ProductManagerInterface
                     $specialPrice->setEnd($endDate);
                 }
             }
-
         }
 
         if (isset($data['parent']) && isset($data['parent']['id'])) {

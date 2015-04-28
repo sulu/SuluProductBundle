@@ -17,7 +17,7 @@ use JMS\Serializer\Annotation\SerializedName;
 use JMS\Serializer\Annotation\ExclusionPolicy;
 
 /**
- * The Status class which will be exported to the API
+ * The Special price class which will be exported to the API
  *
  * @package Sulu\Bundle\ProductBundle\Api
  * @ExclusionPolicy("all")
