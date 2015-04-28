@@ -10,6 +10,10 @@
 
 namespace Sulu\Bundle\ProductBundle\Api;
 
+use Hateoas\Configuration\Annotation\Relation;
+use JMS\Serializer\Annotation\Groups;
+use JMS\Serializer\Annotation\VirtualProperty;
+use JMS\Serializer\Annotation\SerializedName;
 use Sulu\Bundle\CategoryBundle\Api\Category;
 use Sulu\Bundle\CategoryBundle\Entity\Category as CategoryEntity;
 use Sulu\Bundle\MediaBundle\Api\Media;
@@ -31,17 +35,13 @@ use Sulu\Bundle\ProductBundle\Entity\Unit as UnitEntity;
 use Sulu\Bundle\ProductBundle\Entity\DeliveryStatus as DeliveryStatusEntity;
 use Sulu\Component\Rest\ApiWrapper;
 use Sulu\Component\Security\Authentication\UserInterface;
-use Hateoas\Configuration\Annotation\Relation;
-use JMS\Serializer\Annotation\Groups;
-use JMS\Serializer\Annotation\VirtualProperty;
-use JMS\Serializer\Annotation\SerializedName;
 
 /**
  * The product class which will be exported to the API
  * @package Sulu\Bundle\ProductBundle\Api
  * @Relation("self", href="expr('/api/admin/products/' ~ object.getId())")
  */
-class Product extends ApiWrapper
+class Product extends ApiWrapper implements ApiProductInterface
 {
     /**
      * @var Array
