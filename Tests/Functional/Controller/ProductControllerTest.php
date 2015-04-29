@@ -1029,10 +1029,10 @@ class ProductControllerTest extends SuluTestCase
             'id' => array('id' => $this->product1->getId()),
             'status' => array('id' => $this->productStatus1->getId()),
             'specialPrices' => array(
-                0 => array(
+                array(
                     'price' => $this->specialPrice1->getPrice(),
                     'start' => $this->specialPrice1->getStart()->format('Y-m-d h:i:s'),
-                    'end'   => $this->specialPrice1->getEnd()->format('Y-m-d h:i:s'),
+                    'end' => $this->specialPrice1->getEnd()->format('Y-m-d h:i:s'),
                     'currency' => array("code" => $this->specialPrice1->getCurrency()->getCode())
             	)
             )
