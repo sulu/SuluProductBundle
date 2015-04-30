@@ -4,8 +4,8 @@
         <parameter key="sulu_product.admin.class">Sulu\Bundle\ProductBundle\Admin\SuluProductAdmin</parameter>
         <parameter key="sulu_product.admin.addon_content_navigation_provider.class">Sulu\Bundle\ProductBundle\Admin\ProductAddonContentNavigationProvider</parameter>
         <parameter key="sulu_product.admin.content_navigation_provider.class">Sulu\Bundle\ProductBundle\Admin\ProductContentNavigationProvider</parameter>
-        <parameter key="sulu_product.admin.set_content_navigation_provider.class">Sulu\Bundle\ProductBundle\Admin\ProductSetNavigationProvider</parameter>
-        <parameter key="sulu_product.admin.with_variants_content_navigation_provider.class">Sulu\Bundle\ProductBundle\Admin\ProductWithVariantsNavigationProvider</parameter>
+        <parameter key="sulu_product.admin.set_content_navigation_provider.class">Sulu\Bundle\ProductBundle\Admin\ProductSetContentNavigationProvider</parameter>
+        <parameter key="sulu_product.admin.with_variants_content_navigation_provider.class">Sulu\Bundle\ProductBundle\Admin\ProductWithVariantsContentNavigationProvider</parameter>
         <parameter key="sulu_product.product_repository.class">Sulu\Bundle\ProductBundle\Entity\ProductRepository</parameter>
         <parameter key="sulu_product.attribute_set_repository.class">Sulu\Bundle\ProductBundle\Entity\AttributeSetRepository</parameter>
         <parameter key="sulu_product.special_price_repository.class">Sulu\Bundle\ProductBundle\Entity\SpecialPriceRepository</parameter>

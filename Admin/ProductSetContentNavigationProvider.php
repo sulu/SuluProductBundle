@@ -13,7 +13,7 @@ namespace Sulu\Bundle\ProductBundle\Admin;
 use Sulu\Bundle\AdminBundle\Navigation\ContentNavigationProviderInterface;
 use Sulu\Bundle\AdminBundle\Navigation\ContentNavigationItem;
 
-class ProductSetNavigationProvider implements ContentNavigationProviderInterface
+class ProductSetContentNavigationProvider implements ContentNavigationProviderInterface
 {
     /**
      * {@inheritdoc}
