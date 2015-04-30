@@ -43,4 +43,31 @@
             </table>
         </div>
     </div>
+    <div class="grid-row">
+        <table>
+            <tr>
+                <td>
+                    <div class="form-group">
+                        <label><%= translate('product.bulkprice.price') %></label>
+                        <input data-id="<%= !!specialPrice ? specialPrice.id : '' %>" class="form-element husky-validate specialprice align-right" type="text"  value="<%= specialPrice.price %>"/>
+                    </div>
+                </td>
+                <td>
+                    <div class="form-group">
+                        <label>Gültig Ab</label>
+                        <input data-id="" class="form-element husky-validate specialDateFrom align-right" type="text"  value=""/>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>
+                    <div class="form-group">
+                        <label>Gültig Bis</label>
+                        <input data-id="" class="form-element husky-validate specialDateTo align-right" type="text"  value=""/>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
 </div>

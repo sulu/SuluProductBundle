@@ -21,9 +21,17 @@ define(['config'], function (Config) {
 
             initForm.call(this, this.options.data);
 
+            var PriceListData = [];
+
             if (!!this.options.data.prices) {
-                initPriceList.call(this, this.options.data.prices);
+                PriceListData.prices = this.options.data.prices;
             }
+
+            if (!!this.options.data.specialPrices) {
+                PriceListData.specialPrices = this.options.data.specialPrices;
+            }
+
+            initPriceList.call(this, PriceListData);
         },
 
         initPriceList = function(data) {

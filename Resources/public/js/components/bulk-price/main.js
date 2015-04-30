@@ -139,29 +139,35 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
     return {
 
         initialize: function() {
-            var prices = [], salesPrice;
+            var prices = [], salesPrice, specialPrice = [];
 
             this.options = this.sandbox.util.extend({}, defaults, this.options);
-            if (!!this.options.data) {
-                prices = this.sandbox.util.extend([], this.options.data);
+            if (!!this.options.data.prices) {
+                prices = this.sandbox.util.extend([], this.options.data.prices);
                 salesPrice = getSalesPriceAndRemoveFromPrices.call(this, prices);
+            }
+
+            if(!!this.options.data.specialPrice) {
+                specialPrice = this.options.data.specialPrice;
+                specialPrice.price = this.sandbox.numberFormat(specialPrice.price, 'n');
             }
 
             prices = addEmptyObjects.call(this, prices);
             bindDomEvents.call(this);
 
-            this.render(prices, salesPrice);
+            this.render(prices, salesPrice, specialPrice);
             refreshData.call(this);
             this.sandbox.emit(INITIALIZED.call(this));
         },
 
-        render: function(prices, salesPrice) {
+        render: function(prices, salesPrice, specialPrice) {
             var data = {
                     idPrefix: constants.bulkPriceIdPrefix,
                     currency: this.options.currency,
                     salesPrice: salesPrice,
                     translate: this.sandbox.translate,
-                    prices: prices
+                    prices: prices,
+                    specialPrice: specialPrice
                 },
                 $el = this.sandbox.util.template(BulkPriceTemplate, data);
             this.sandbox.dom.append(this.options.el, $el);
