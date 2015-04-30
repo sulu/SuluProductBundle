@@ -134,12 +134,37 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
 
             this.sandbox.dom.data(this.$el, 'items', priceItems);
             this.sandbox.emit('sulu.products.bulk-price.changed');
+        },
+
+        initDateComponents = function (dateId) {
+            this.sandbox.start([
+                {
+                    name: 'input@husky',
+                    options: {
+                        el: '#' + dateId.from,
+                        instanceName: 'instance-' + dateId.from,
+                        skin: 'date',
+                        value: ''
+                    }
+                }
+            ]);
+            this.sandbox.start([
+                {
+                    name: 'input@husky',
+                    options: {
+                        el: '#' + dateId.to,
+                        instanceName: 'instance-' + dateId.to,
+                        skin: 'date',
+                        value: ''
+                    }
+                }
+            ]);
         };
 
     return {
 
         initialize: function() {
-            var prices = [], salesPrice, specialPrice = [];
+            var prices = [], salesPrice, specialPrice = [], dateId = [];
 
             this.options = this.sandbox.util.extend({}, defaults, this.options);
             if (!!this.options.data.prices) {
@@ -150,6 +175,9 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
             if(!!this.options.data.specialPrice) {
                 specialPrice = this.options.data.specialPrice;
                 specialPrice.price = this.sandbox.numberFormat(specialPrice.price, 'n');
+                dateId.from = "dateFrom" + specialPrice.currency.code;
+                dateId.to = "dateTo" + specialPrice.currency.code;
+                specialPrice.dateId = dateId;
             }
 
             prices = addEmptyObjects.call(this, prices);
@@ -157,6 +185,7 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
 
             this.render(prices, salesPrice, specialPrice);
             refreshData.call(this);
+            initDateComponents.call(this, dateId);
             this.sandbox.emit(INITIALIZED.call(this));
         },
 

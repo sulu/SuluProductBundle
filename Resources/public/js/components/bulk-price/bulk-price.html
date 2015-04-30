@@ -55,7 +55,7 @@
                 <td>
                     <div class="form-group">
                         <label>Gültig Ab</label>
-                        <input data-id="" class="form-element husky-validate specialDateFrom align-right" type="text"  value=""/>
+                        <div id="<%= !!specialPrice ? specialPrice.dateId.from : '' %>"></div>
                     </div>
                 </td>
             </tr>
@@ -64,7 +64,7 @@
                 <td>
                     <div class="form-group">
                         <label>Gültig Bis</label>
-                        <input data-id="" class="form-element husky-validate specialDateTo align-right" type="text"  value=""/>
+                        <div id="<%= !!specialPrice ? specialPrice.dateId.to : '' %>"></div>
                     </div>
                 </td>
             </tr>
