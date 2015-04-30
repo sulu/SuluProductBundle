@@ -12,9 +12,9 @@ namespace Sulu\Bundle\ProductBundle\Product;
 
 use DateTime;
 use Doctrine\Common\Persistence\ObjectManager;
+use Symfony\Component\HttpFoundation\Request;
 use Sulu\Bundle\ContactBundle\Entity\Account;
 use Sulu\Bundle\ProductBundle\Product\Exception\InvalidProductAttributeException;
-
 use Sulu\Bundle\CategoryBundle\Api\Category;
 use Sulu\Bundle\CategoryBundle\Entity\CategoryRepository;
 use Sulu\Bundle\ProductBundle\Api\ProductPrice;
@@ -49,10 +49,8 @@ use Sulu\Bundle\ProductBundle\Entity\ProductAttributeRepository;
 use Sulu\Bundle\ProductBundle\Entity\UnitRepository;
 use Sulu\Bundle\MediaBundle\Media\Manager\MediaManager;
 use Sulu\Bundle\ProductBundle\Entity\DeliveryStatus;
-
 use Sulu\Bundle\ProductBundle\Api\Product;
 use Sulu\Bundle\ProductBundle\Entity\Product as ProductEntity;
-use Symfony\Component\HttpFoundation\Request;
 
 class ProductManager implements ProductManagerInterface
 {
