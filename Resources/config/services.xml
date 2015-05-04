@@ -2,7 +2,10 @@
            xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
     <parameters>
         <parameter key="sulu_product.admin.class">Sulu\Bundle\ProductBundle\Admin\SuluProductAdmin</parameter>
-        <parameter key="sulu_product.admin.content_navigation.class">Sulu\Bundle\ProductBundle\Admin\SuluProductContentNavigation</parameter>
+        <parameter key="sulu_product.admin.addon_content_navigation_provider.class">Sulu\Bundle\ProductBundle\Admin\ProductAddonContentNavigationProvider</parameter>
+        <parameter key="sulu_product.admin.content_navigation_provider.class">Sulu\Bundle\ProductBundle\Admin\ProductContentNavigationProvider</parameter>
+        <parameter key="sulu_product.admin.set_content_navigation_provider.class">Sulu\Bundle\ProductBundle\Admin\ProductSetContentNavigationProvider</parameter>
+        <parameter key="sulu_product.admin.with_variants_content_navigation_provider.class">Sulu\Bundle\ProductBundle\Admin\ProductWithVariantsContentNavigationProvider</parameter>
         <parameter key="sulu_product.product_repository.class">Sulu\Bundle\ProductBundle\Entity\ProductRepository</parameter>
         <parameter key="sulu_product.attribute_set_repository.class">Sulu\Bundle\ProductBundle\Entity\AttributeSetRepository</parameter>
         <parameter key="sulu_product.special_price_repository.class">Sulu\Bundle\ProductBundle\Entity\SpecialPriceRepository</parameter>
@@ -26,16 +29,21 @@
         <parameter key="sulu_product.price_manager.class">Sulu\Bundle\ProductBundle\Product\ProductPriceManager</parameter>
         <parameter key="sulu_product.productwebsite.controller.class">Sulu\Bundle\ProductBundle\Controller\ProductWebsiteController</parameter>
         <parameter key="sulu_product.attribute_value_manager.class">Sulu\Bundle\ProductBundle\Product\AttributeValueManager</parameter>
+        <parameter key="sulu_product.product_factory.class">Sulu\Bundle\ProductBundle\Product\ProductFactory</parameter>
         <parameter key="sulu_product.product_entity">Sulu\Bundle\ProductBundle\Entity\Product</parameter>
         <parameter key="sulu_product.product_api_entity">Sulu\Bundle\ProductBundle\Api\Product</parameter>
     </parameters>
     <services>
+        <!-- ADMIN -->
         <service id="sulu_product.admin" class="%sulu_product.admin.class%">
             <tag name="sulu.admin"/>
             <tag name="sulu.context" context="admin"/>
             <argument type="service" id="sulu_security.security_checker"/>
             <argument>%sulu_admin.name%</argument>
         </service>
+        <!--FACTORIES-->
+        <service id="sulu_product.product_factory" class="%sulu_product.product_factory.class%"></service>
+        <!-- REPOSITORIES -->
         <service id="sulu_product.product_repository" class="%sulu_product.product_repository.class%"
                  factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
             <argument>%sulu_product.product_entity%</argument>
@@ -92,6 +100,7 @@
                  factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
             <argument>SuluProductBundle:Unit</argument>
         </service>
+        <!-- MANAGER -->
         <service id="sulu_product.product_manager" class="%sulu_product.product_manager.class%">
             <argument type="service" id="sulu_product.product_repository"/>
             <argument type="service" id="sulu_product.special_price_repository"/>
@@ -104,12 +113,11 @@
             <argument type="service" id="sulu_product.tax_class_repository"/>
             <argument type="service" id="sulu_product.currency_repository"/>
             <argument type="service" id="sulu_product.unit_repository"/>
+            <argument type="service" id="sulu_product.product_factory"/>
             <argument type="service" id="sulu_category.category_repository"/>
             <argument type="service" id="sulu_security.user_repository" />
             <argument type="service" id="sulu_media.media_manager" />
             <argument type="service" id="doctrine.orm.entity_manager"/>
-            <argument>%sulu_product.product_entity%</argument>
-            <argument>%sulu_product.product_api_entity%</argument>
             <argument type="service" id="sulu_contact.account_repository"/>
             <argument>%sulu_product.default_currency%</argument>
         </service>
@@ -127,14 +135,6 @@
             <argument type="service" id="sulu_security.user_repository" />
             <argument type="service" id="doctrine.orm.entity_manager"/>
         </service>
-        <service id="sulu_product.productwebsite.controller" class="%sulu_product.productwebsite.controller.class%"
-                 scope="request">
-            <argument type="service" id="templating"/>
-            <argument type="service" id="sulu_product.product_manager"/>
-            <argument type="service" id="sulu_core.webspace.request_analyzer" on-invalid="ignore"/>
-            <argument type="service" id="sulu_website.resolver.request_analyzer"/>
-            <argument>%sulu_product.template%</argument>
-        </service>
         <service id="sulu_product.status_manager" class="%sulu_product.status_manager.class%">
             <argument type="service" id="sulu_product.status_repository"/>
         </service>
@@ -147,6 +147,31 @@
         <service id="sulu_product.currency_manager" class="%sulu_product.currency_manager.class%">
             <argument type="service" id="sulu_product.currency_repository"/>
         </service>
-        <service id="sulu_product.admin.content_navigation" class="%sulu_product.admin.content_navigation.class%"/>
+        <!-- CONTROLLER -->
+        <service id="sulu_product.productwebsite.controller" class="%sulu_product.productwebsite.controller.class%"
+                 scope="request">
+            <argument type="service" id="templating"/>
+            <argument type="service" id="sulu_product.product_manager"/>
+            <argument type="service" id="sulu_core.webspace.request_analyzer" on-invalid="ignore"/>
+            <argument type="service" id="sulu_website.resolver.request_analyzer"/>
+            <argument>%sulu_product.template%</argument>
+        </service>
+        <!-- NAVIGATION -->
+        <service id="sulu_product.admin.addon_content_navigation_provider" class="%sulu_product.admin.addon_content_navigation_provider.class%">
+            <tag name="sulu_admin.content_navigation" alias="product-addon"/>
+            <tag name="sulu.context" context="admin"/>
+        </service>
+        <service id="sulu_product.admin.content_navigation_provider.class" class="%sulu_product.admin.content_navigation_provider.class%">
+            <tag name="sulu_admin.content_navigation" alias="product"/>
+            <tag name="sulu.context" context="admin"/>
+        </service>
+        <service id="sulu_product.admin.set_content_navigation_provider.class" class="%sulu_product.admin.set_content_navigation_provider.class%">
+            <tag name="sulu_admin.content_navigation" alias="product-set"/>
+            <tag name="sulu.context" context="admin"/>
+        </service>
+        <service id="sulu_product.admin.with_variants_content_navigation_provider.class" class="%sulu_product.admin.with_variants_content_navigation_provider.class%">
+            <tag name="sulu_admin.content_navigation" alias="product-with-variants"/>
+            <tag name="sulu.context" context="admin"/>
+        </service>
     </services>
 </container>

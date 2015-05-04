@@ -8,10 +8,10 @@
  * with this source code in the file LICENSE.
  */
 
-namespace Sulu\Bundle\ProductBundle;
+namespace Sulu\Bundle\ProductBundle\Api;
 
-use Symfony\Component\HttpKernel\Bundle\Bundle;
 
-class SuluProductBundle extends Bundle
+interface ApiProductInterface
 {
+    // TODO: implement
 }

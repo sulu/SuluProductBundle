@@ -12,10 +12,9 @@ namespace Sulu\Bundle\ProductBundle\Product;
 
 use DateTime;
 use Doctrine\Common\Persistence\ObjectManager;
+use Symfony\Component\HttpFoundation\Request;
 use Sulu\Bundle\ContactBundle\Entity\Account;
 use Sulu\Bundle\ProductBundle\Product\Exception\InvalidProductAttributeException;
-use Symfony\Component\PropertyAccess\PropertyAccess;
-
 use Sulu\Bundle\CategoryBundle\Api\Category;
 use Sulu\Bundle\CategoryBundle\Entity\CategoryRepository;
 use Sulu\Bundle\ProductBundle\Api\ProductPrice;
@@ -23,7 +22,6 @@ use Sulu\Bundle\ProductBundle\Api\Status;
 use Sulu\Bundle\ProductBundle\Entity\Status as StatusEntity;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSetRepository;
 use Sulu\Bundle\ProductBundle\Entity\CurrencyRepository;
-use Sulu\Bundle\ProductBundle\Entity\AttributeSet;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductPrice as ProductPriceEntity;
 use Sulu\Bundle\ProductBundle\Entity\SpecialPrice;
@@ -43,7 +41,6 @@ use Sulu\Component\Rest\Exception\EntityIdAlreadySetException;
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescriptor;
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineGroupConcatFieldDescriptor;
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineJoinDescriptor;
-use Sulu\Component\Rest\RestHelperInterface;
 use Sulu\Component\Security\Authentication\UserRepositoryInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttribute;
 use Sulu\Bundle\ProductBundle\Entity\SpecialPriceRepository;
@@ -51,12 +48,10 @@ use Sulu\Bundle\ProductBundle\Entity\DeliveryStatusRepository;
 use Sulu\Bundle\ProductBundle\Entity\AttributeRepository;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttributeRepository;
 use Sulu\Bundle\ProductBundle\Entity\UnitRepository;
-use Sulu\Bundle\MediaBundle\Media\Manager\DefaultMediaManager;
+use Sulu\Bundle\MediaBundle\Media\Manager\MediaManager;
 use Sulu\Bundle\ProductBundle\Entity\DeliveryStatus;
-
 use Sulu\Bundle\ProductBundle\Api\Product;
 use Sulu\Bundle\ProductBundle\Entity\Product as ProductEntity;
-use Symfony\Component\HttpFoundation\Request;
 
 class ProductManager implements ProductManagerInterface
 {
@@ -154,7 +149,7 @@ class ProductManager implements ProductManagerInterface
     protected $accountRepository;
 
     /**
-     * @var DefaultMediaManager
+     * @var MediaManager
      */
     protected $mediaManager;
 
@@ -166,18 +161,33 @@ class ProductManager implements ProductManagerInterface
     /**
      * @var string
      */
-    protected $productApiEntity;
-
-    /**
-     * @var string
-     */
     protected $defaultCurrency;
 
     /**
-     * @var string
+     * @var ProductFactoryInterface
      */
-    private $productEntity;
+    protected $productFactory;
 
+    /**
+     * @param ProductRepositoryInterface $productRepository
+     * @param SpecialPriceRepository $specialPriceRepository
+     * @param AttributeSetRepository $attributeSetRepository
+     * @param AttributeRepository $attributeRepository
+     * @param ProductAttributeRepository $productAttributeRepository
+     * @param StatusRepository $statusRepository
+     * @param DeliveryStatusRepository $deliveryStatusRepository
+     * @param TypeRepository $typeRepository
+     * @param TaxClassRepository $taxClassRepository
+     * @param CurrencyRepository $currencyRepository
+     * @param UnitRepository $unitRepository
+     * @param ProductFactoryInterface $productFactory
+     * @param CategoryRepository $categoryRepository
+     * @param UserRepositoryInterface $userRepository
+     * @param DefaultMediaManager $mediaManager
+     * @param ObjectManager $em
+     * @param AccountRepository $accountRepository
+     * @param string $defaultCurrency
+     */
     public function __construct(
         ProductRepositoryInterface $productRepository,
         SpecialPriceRepository $specialPriceRepository,
@@ -190,12 +200,11 @@ class ProductManager implements ProductManagerInterface
         TaxClassRepository $taxClassRepository,
         CurrencyRepository $currencyRepository,
         UnitRepository $unitRepository,
+        ProductFactoryInterface $productFactory,
         CategoryRepository $categoryRepository,
         UserRepositoryInterface $userRepository,
-        DefaultMediaManager $mediaManager,
+        MediaManager $mediaManager,
         ObjectManager $em,
-        $productEntity,
-        $productApiEntity,
         AccountRepository $accountRepository,
         $defaultCurrency
     ) {
@@ -214,8 +223,7 @@ class ProductManager implements ProductManagerInterface
         $this->userRepository = $userRepository;
         $this->mediaManager = $mediaManager;
         $this->em = $em;
-        $this->productEntity = $productEntity;
-        $this->productApiEntity = $productApiEntity;
+        $this->productFactory = $productFactory;
         $this->accountRepository = $accountRepository;
         $this->defaultCurrency = $defaultCurrency;
     }
@@ -613,7 +621,7 @@ class ProductManager implements ProductManagerInterface
                 $this->addAllCurrencies($product);
             }
 
-            $product = new $this->productApiEntity($product, $locale);
+            $product = $this->productFactory->createApiEntity($product, $locale);
             $this->createProductMedia($product, $locale);
             return $product;
         } else {
@@ -636,7 +644,7 @@ class ProductManager implements ProductManagerInterface
             array_walk(
                 $products,
                 function (&$product) use ($locale) {
-                    $product = new $this->productApiEntity($product, $locale);
+                    $product = $this->productFactory->createApiEntity($product, $locale);
                 }
             );
         }
@@ -677,7 +685,7 @@ class ProductManager implements ProductManagerInterface
             array_walk(
                 $products,
                 function (&$product) use ($locale) {
-                    $product = new $this->productApiEntity($product, $locale);
+                    $product = $this->productFactory->createApiEntity($product, $locale);
                 }
             );
         }
@@ -696,7 +704,7 @@ class ProductManager implements ProductManagerInterface
         $specialPrices = $this->specialPriceRepository->findAllCurrent();
         $products = [];
         foreach ($specialPrices as $specialPrice) {
-            $products[] = new Product($specialPrice->getProduct(), $locale);
+            $products[] = $this->productFactory->createEntity($specialPrice->getProduct(), $locale);
         }
 
         return $products;
@@ -719,7 +727,7 @@ class ProductManager implements ProductManagerInterface
             array_walk(
                 $products,
                 function (&$product) use ($locale) {
-                    $product = new $this->productApiEntity($product, $locale);
+                    $product = $this->productFactory->createApiEntity($product, $locale);
                 }
             );
         }
@@ -758,7 +766,7 @@ class ProductManager implements ProductManagerInterface
             throw new ProductNotFoundException($id);
         }
 
-        return new $this->productApiEntity($product, $locale);
+        return $this->productFactory->createApiEntity($product, $locale);
     }
 
     /**
@@ -795,7 +803,7 @@ class ProductManager implements ProductManagerInterface
 
         } else {
             $this->checkData($data, $id === null);
-            $product = new $this->productApiEntity(new $this->productEntity, $locale);
+            $product = $this->productFactory->createApiEntity($this->productFactory->createEntity(), $locale);
         }
 
         $user = $this->userRepository->findUserById($userId);
@@ -1348,7 +1356,7 @@ class ProductManager implements ProductManagerInterface
             foreach ($products as $product) {
                 if ($product->isDeprecated() && $existingProduct->getId() != $product->getId()) {
                     $product->setIsDeprecated(false);
-                    return new $this->productApiEntity($product, $locale);
+                    return $this->productFactory->createApiEntity($product, $locale);
                 }
             }
         }
@@ -1507,7 +1515,7 @@ class ProductManager implements ProductManagerInterface
 
         $this->em->flush();
 
-        return new $this->productApiEntity($variant, $locale);
+        return $this->productFactory->createApiEntity($variant, $locale);
     }
 
     /**

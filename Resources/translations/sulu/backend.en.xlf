@@ -180,7 +180,7 @@
             </trans-unit>
             <trans-unit id="46" resname="product.recommendedOrderQuantity">
                 <source>product.recommendedOrderQuantity</source>
-                <target>Amount content unit</target>
+                <target>Recommended Order Amount</target>
             </trans-unit>
             <trans-unit id="47" resname="product.workfow.set.active">
                 <source>product.workfow.set.active</source>
@@ -241,6 +241,10 @@
             <trans-unit id="61" resname="product.attribute.overlay.defaultlabel">
                 <source>product.attribute.overlay.title</source>
                 <target>Choose attribute</target>
+            </trans-unit>
+            <trans-unit id="62" resname="product.orderContentRatio">
+                <source>product.orderContentRatio</source>
+                <target>Amount Content Unit</target>
             </trans-unit>
         </body>
     </file>
