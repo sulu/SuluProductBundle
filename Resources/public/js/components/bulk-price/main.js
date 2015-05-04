@@ -89,7 +89,7 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
         },
 
         bindDomEvents = function() {
-            this.sandbox.dom.on(this.$el, 'keyup', function() {
+            this.sandbox.dom.on(this.$el, 'change', function() {
                 refreshData.call(this);
             }.bind(this), 'input');
         },
@@ -132,11 +132,16 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
                 }
             }.bind(this));
 
+            // special prices
+
+            //var specialPrice = $('#input' + this.options.currency).val();
+
+            //this.sandbox.dom.data(this.$el, 'specialPrices', specialPrice);
             this.sandbox.dom.data(this.$el, 'items', priceItems);
             this.sandbox.emit('sulu.products.bulk-price.changed');
         },
 
-        initDateComponents = function (dateId) {
+        initDateComponents = function () {
             this.sandbox.start([
                 {
                     name: 'input@husky',
@@ -175,6 +180,7 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
             if(!!this.options.data.specialPrice) {
                 specialPrice = this.options.data.specialPrice;
                 specialPrice.price = this.sandbox.numberFormat(specialPrice.price, 'n');
+                dateId.inputId = "input" + specialPrice.currency.code;
                 dateId.from = "dateFrom" + specialPrice.currency.code;
                 dateId.to = "dateTo" + specialPrice.currency.code;
                 specialPrice.dateId = dateId;
