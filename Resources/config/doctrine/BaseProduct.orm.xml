@@ -68,7 +68,7 @@
                      inversed-by="products">
             <join-column name="idDeliveryStatus" referenced-column-name="id"/>
         </many-to-one>
-        <many-to-one target-entity="Sulu\Bundle\ContactBundle\Entity\Account" field="supplier">
+        <many-to-one target-entity="Sulu\Bundle\ContactBundle\Entity\AccountInterface" field="supplier">
             <join-column name="idAccountsSupplier" referenced-column-name="id"/>
         </many-to-one>
         <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface" field="parent"

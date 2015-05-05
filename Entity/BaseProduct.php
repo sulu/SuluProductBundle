@@ -102,7 +102,7 @@ abstract class BaseProduct implements ProductInterface
     private $deliveryStatus;
 
     /**
-     * @var \Sulu\Bundle\ContactBundle\Entity\Account
+     * @var \Sulu\Bundle\ContactBundle\Entity\AccountInterface
      */
     private $supplier;
 
@@ -544,7 +544,7 @@ abstract class BaseProduct implements ProductInterface
      * @param \Sulu\Bundle\ContactBundle\Entity\Account $supplier
      * @return BaseProduct
      */
-    public function setSupplier(\Sulu\Bundle\ContactBundle\Entity\Account $supplier = null)
+    public function setSupplier(\Sulu\Bundle\ContactBundle\Entity\AccountInterface $supplier = null)
     {
         $this->supplier = $supplier;
 
