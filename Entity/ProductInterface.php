@@ -197,7 +197,7 @@ interface ProductInterface
     /**
      * Get supplier
      *
-     * @return Account Supplier
+     * @return AccountInterface Supplier
      */
     public function getSupplier();
 
@@ -518,5 +518,4 @@ interface ProductInterface
      * @param $areGrossPrices
      */
     public function setAreGrossPrices($areGrossPrices);
-
 }

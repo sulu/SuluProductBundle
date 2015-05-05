@@ -5,6 +5,7 @@ namespace Sulu\Bundle\ProductBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Sulu\Bundle\MediaBundle\Entity\Media;
 use Sulu\Component\Security\Authentication\UserInterface;
+use Sulu\Bundle\ContactBundle\Entity\AccountInterface;
 
 /**
  * BaseProduct
@@ -102,7 +103,7 @@ abstract class BaseProduct implements ProductInterface
     private $deliveryStatus;
 
     /**
-     * @var \Sulu\Bundle\ContactBundle\Entity\AccountInterface
+     * @var AccountInterface
      */
     private $supplier;
 
@@ -541,10 +542,11 @@ abstract class BaseProduct implements ProductInterface
     /**
      * Set supplier
      *
-     * @param \Sulu\Bundle\ContactBundle\Entity\Account $supplier
+     * @param AccountInterface $supplier
+     *
      * @return BaseProduct
      */
-    public function setSupplier(\Sulu\Bundle\ContactBundle\Entity\AccountInterface $supplier = null)
+    public function setSupplier(AccountInterface $supplier = null)
     {
         $this->supplier = $supplier;
 
@@ -554,13 +556,12 @@ abstract class BaseProduct implements ProductInterface
     /**
      * Get supplier
      *
-     * @return \Sulu\Bundle\ContactBundle\Entity\Account
+     * @return AccountInterface
      */
     public function getSupplier()
     {
         return $this->supplier;
     }
-
 
     /**
      * Set parent
