@@ -921,8 +921,12 @@ class ProductManager implements ProductManagerInterface
             $currencyCodes = array();
 
             // create array of special price currency codes in json request
-            foreach($specialPricesData as $specialPrice) {
-                array_push($currencyCodes, $specialPrice['currency']['code']);
+            foreach($specialPricesData as $key => $specialPrice) {
+                if (!empty($specialPrice['currency']['code']) && !empty($specialPrice['price'])) {
+                    array_push($currencyCodes, $specialPrice['currency']['code']);
+                } else {
+                    unset($specialPricesData[$key]);
+                }
             }
 
             // iterate through already added special prices for this specific product
