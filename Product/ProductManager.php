@@ -703,7 +703,7 @@ class ProductManager implements ProductManagerInterface
         $specialPrices = $this->specialPriceRepository->findAllCurrent();
         $products = [];
         foreach ($specialPrices as $specialPrice) {
-            $products[] = $this->productFactory->createEntity($specialPrice->getProduct(), $locale);
+            $products[] = $this->productFactory->createApiEntity($specialPrice->getProduct(), $locale);
         }
 
         return $products;
