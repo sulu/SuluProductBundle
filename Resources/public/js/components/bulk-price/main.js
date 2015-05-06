@@ -186,11 +186,13 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
             if(!!this.options.data.specialPrice) {
                 specialPrice = this.options.data.specialPrice;
                 specialPrice.price = this.sandbox.numberFormat(specialPrice.price, 'n');
-                dateId.inputId = "input" + specialPrice.currency.code;
-                dateId.from = "dateFrom" + specialPrice.currency.code;
-                dateId.to = "dateTo" + specialPrice.currency.code;
-                specialPrice.dateId = dateId;
             }
+
+            dateId.inputId = "input" + this.options.data.currencyCode;
+            dateId.from = "dateFrom" + this.options.data.currencyCode;
+            dateId.to = "dateTo" + this.options.data.currencyCode;
+            specialPrice.dateId = dateId;
+
 
             prices = addEmptyObjects.call(this, prices);
             bindDomEvents.call(this);

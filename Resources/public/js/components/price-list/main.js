@@ -133,11 +133,13 @@ define([], function() {
 
                 this.bulkPriceData = [];
 
+                this.bulkPriceData.currencyCode = currency.code;
+
                 if (!!this.groupedPrices.prices) {
                     this.bulkPriceData.prices = this.groupedPrices.prices[currency.code];
                 }
-
-                if (!!this.groupedPrices.specialPrices) {
+             
+                if (!!this.groupedPrices.specialPrices && currency.code in this.groupedPrices.specialPrices) {
                     this.bulkPriceData.specialPrice = this.groupedPrices.specialPrices[currency.code].pop();
                 }
 
