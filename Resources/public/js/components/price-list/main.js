@@ -57,15 +57,19 @@ define([], function() {
         updateData = function(){
             // get all items
             var $bulkPrices = this.sandbox.dom.children(this.$el),
-                data = [], prices;
+                pricesData = [], prices, specialPrice, specialPriceData = [];
 
             this.sandbox.util.foreach($bulkPrices, function($bulkPrice){
                 prices = this.sandbox.dom.data($bulkPrice, 'items');
-                Array.prototype.push.apply(data, prices);
+                specialPrice = $.data($bulkPrice, 'itemsSpecialPrice');
+                Array.prototype.push.apply(pricesData, prices);
+                Array.prototype.push.call(specialPriceData, specialPrice);
             }.bind(this));
 
             // set properties
-            this.sandbox.dom.data(this.$el, 'prices', data);
+            this.sandbox.dom.data(this.$el, 'prices', pricesData);
+            var specialPricesEl = $('#specialPrices');
+            this.sandbox.dom.data(specialPricesEl, 'prices', specialPriceData);
         },
 
         placeDefaultCurrencyFirst = function(defaultCur, currencies){

@@ -91,6 +91,10 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
         bindDomEvents = function() {
             this.sandbox.dom.on(this.$el, 'change', function() {
                 refreshData.call(this);
+                this.sandbox.emit("sulu.content.changed");
+            }.bind(this), 'input');
+            this.sandbox.dom.on(this.$el, 'keyup', function() {
+                refreshData.call(this);
             }.bind(this), 'input');
         },
 
@@ -133,23 +137,26 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
             }.bind(this));
 
             // special prices
+            var specialPrice = {};
+            specialPrice.currency = {};
+            specialPrice.start = $('#husky-input-dateFrom' + this.options.currency.code).val()
+            specialPrice.end = $('#husky-input-dateTo' + this.options.currency.code).val();
+            specialPrice.price = $('#input' + this.options.currency.code).val();
+            specialPrice.currency = this.options.currency;
 
-            //var specialPrice = $('#input' + this.options.currency).val();
-
-            //this.sandbox.dom.data(this.$el, 'specialPrices', specialPrice);
+            this.sandbox.dom.data(this.$el, 'itemsSpecialPrice', specialPrice);
             this.sandbox.dom.data(this.$el, 'items', priceItems);
             this.sandbox.emit('sulu.products.bulk-price.changed');
         },
 
-        initDateComponents = function () {
+        initDateComponents = function (dateId, specialPrice) {
             this.sandbox.start([
                 {
                     name: 'input@husky',
                     options: {
                         el: '#' + dateId.from,
-                        instanceName: 'instance-' + dateId.from,
-                        skin: 'date',
-                        value: ''
+                        instanceName: dateId.from,
+                        skin: 'date'
                     }
                 }
             ]);
@@ -158,9 +165,8 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
                     name: 'input@husky',
                     options: {
                         el: '#' + dateId.to,
-                        instanceName: 'instance-' + dateId.to,
-                        skin: 'date',
-                        value: ''
+                        instanceName: dateId.to,
+                        skin: 'date'
                     }
                 }
             ]);
@@ -191,7 +197,7 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
 
             this.render(prices, salesPrice, specialPrice);
             refreshData.call(this);
-            initDateComponents.call(this, dateId);
+            initDateComponents.call(this, dateId, specialPrice);
             this.sandbox.emit(INITIALIZED.call(this));
         },
 

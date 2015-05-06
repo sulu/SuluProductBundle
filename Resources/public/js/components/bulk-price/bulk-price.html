@@ -55,16 +55,35 @@
                 <td>
                     <div class="form-group">
                         <label>Gültig Ab</label>
-                        <div id="<%= !!specialPrice ? specialPrice.dateId.from : '' %>"></div>
+                        <div data-form="true"
+                             data-type="husky-input"
+                             data-aura-component="input@husky"
+                             data-aura-skin="date"
+                             data-aura-instance-name="<%= !!specialPrice ? specialPrice.dateId.from : '' %>"
+                             data-aura-input-id="<%= !!specialPrice ? specialPrice.dateId.from : '' %>"
+                             data-aura-input-name="<%= !!specialPrice ? specialPrice.dateId.from : '' %>"
+                             data-mapper-property="<%= !!specialPrice ? specialPrice.dateId.from : '' %>"
+                             data-value="<%= specialPrice.start %>"
+                             id="<%= !!specialPrice ? specialPrice.dateId.from : '' %>">
+                        </div>
                     </div>
                 </td>
             </tr>
             <tr>
-                <td></td>
                 <td>
                     <div class="form-group">
                         <label>Gültig Bis</label>
-                        <div id="<%= !!specialPrice ? specialPrice.dateId.to : '' %>"></div>
+                        <div data-form="true"
+                             data-type="husky-input"
+                             data-aura-component="input@husky"
+                             data-aura-skin="date"
+                             data-aura-instance-name="<%= !!specialPrice ? specialPrice.dateId.to : '' %>"
+                             data-aura-input-id="<%= !!specialPrice ? specialPrice.dateId.to : '' %>"
+                             data-aura-input-name="<%= !!specialPrice ? specialPrice.dateId.to : '' %>"
+                             data-mapper-property="<%= !!specialPrice ? specialPrice.dateId.to : '' %>"
+                             data-value="<%= specialPrice.end %>"
+                             id="<%= !!specialPrice ? specialPrice.dateId.to : '' %>">
+                        </div>
                     </div>
                 </td>
             </tr>
