@@ -246,6 +246,18 @@
                 <source>product.orderContentRatio</source>
                 <target>Menge Inhaltseinheit</target>
             </trans-unit>
+            <trans-unit id="63" resname="product.bulkprice.validfrom">
+                <source>product.bulkprice.validfrom</source>
+                <target>Gültig ab</target>
+            </trans-unit>
+            <trans-unit id="64" resname="product.bulkprice.validto">
+                <source>product.bulkprice.validto</source>
+                <target>Gültig bis</target>
+            </trans-unit>
+            <trans-unit id="65" resname="product.bulkprice.specialprice">
+                <source>product.bulkprice.specialprice</source>
+                <target>Special price</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>

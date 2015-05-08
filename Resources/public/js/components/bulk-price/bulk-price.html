@@ -48,13 +48,13 @@
             <tr>
                 <td>
                     <div class="form-group">
-                        <label>Special Price</label>
+                        <label><%= translate('product.bulkprice.specialprice') %></label>
                         <input id="<%= !!specialPrice.dateId.inputId ? specialPrice.dateId.inputId : '' %>" class="form-element husky-validate specialprice align-right" type="text"  value="<%= specialPrice.price %>"/>
                     </div>
                 </td>
                 <td>
                     <div class="form-group">
-                        <label>Gültig Ab</label>
+                        <label><%= translate('product.bulkprice.validfrom') %></label>
                         <div data-form="true"
                              data-type="husky-input"
                              data-aura-component="input@husky"
@@ -72,7 +72,7 @@
             <tr>
                 <td>
                     <div class="form-group">
-                        <label>Gültig Bis</label>
+                        <label><%= translate('product.bulkprice.validto') %></label>
                         <div data-form="true"
                              data-type="husky-input"
                              data-aura-component="input@husky"
