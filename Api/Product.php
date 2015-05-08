@@ -14,15 +14,12 @@ use Hateoas\Configuration\Annotation\Relation;
 use JMS\Serializer\Annotation\Groups;
 use JMS\Serializer\Annotation\VirtualProperty;
 use JMS\Serializer\Annotation\SerializedName;
+use Sulu\Component\Rest\ApiWrapper;
+use Sulu\Component\Security\Authentication\UserInterface;
 use Sulu\Bundle\CategoryBundle\Api\Category;
 use Sulu\Bundle\CategoryBundle\Entity\Category as CategoryEntity;
 use Sulu\Bundle\MediaBundle\Api\Media;
-use Sulu\Bundle\MediaBundle\Entity\Media as MediaEntity;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttribute as ProductAttributeEntity;
-use Sulu\Bundle\ProductBundle\Api\ProductAttribute;
-use Sulu\Bundle\ProductBundle\Api\Product;
-use Sulu\Bundle\ProductBundle\Api\Unit;
-use Sulu\Bundle\ProductBundle\Api\DeliveryStatus;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface as Entity;
 use Sulu\Bundle\ProductBundle\Entity\SpecialPrice as SpecialPriceEntity;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
@@ -34,8 +31,6 @@ use Sulu\Bundle\ProductBundle\Entity\Type as TypeEntity;
 use Sulu\Bundle\ProductBundle\Entity\TaxClass as TaxClassEntity;
 use Sulu\Bundle\ProductBundle\Entity\Unit as UnitEntity;
 use Sulu\Bundle\ProductBundle\Entity\DeliveryStatus as DeliveryStatusEntity;
-use Sulu\Component\Rest\ApiWrapper;
-use Sulu\Component\Security\Authentication\UserInterface;
 
 /**
  * The product class which will be exported to the API
