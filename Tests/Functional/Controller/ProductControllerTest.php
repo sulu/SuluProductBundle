@@ -22,6 +22,7 @@ use Sulu\Bundle\ProductBundle\Entity\Product;
 use Sulu\Bundle\ProductBundle\Entity\Attribute;
 use Sulu\Bundle\ProductBundle\Entity\AttributeTranslation;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttribute;
+use Sulu\Bundle\ProductBundle\Entity\SpecialPrice;
 use Sulu\Bundle\ProductBundle\Entity\ProductPrice;
 use Sulu\Bundle\ProductBundle\Entity\ProductTranslation;
 use Sulu\Bundle\ProductBundle\Entity\Status;
@@ -207,6 +208,12 @@ class ProductControllerTest extends SuluTestCase
      * @var Category
      */
     private $category2;
+
+    /**
+     * @var SpecialPrice
+     */
+    private $specialPrice1;
+
 
     public function setUp()
     {
@@ -410,6 +417,12 @@ class ProductControllerTest extends SuluTestCase
         $deliveryStatusAvailableTranslation->setName('available');
         $this->deliveryStatusAvailable->addTranslation($deliveryStatusAvailableTranslation);
 
+        $this->specialPrice1 = new SpecialPrice();
+        $this->specialPrice1->setPrice("56");
+        $this->specialPrice1->setCurrency($this->currency1);
+        $this->specialPrice1->setStart(new \DateTime());
+        $this->specialPrice1->setEnd(new \DateTime());
+
         $this->em->persist($this->deliveryStatusAvailable);
         $this->em->persist($deliveryStatusAvailableTranslation);
 
@@ -450,6 +463,7 @@ class ProductControllerTest extends SuluTestCase
         $this->em->persist($this->product2);
         $this->em->persist($productTranslation2);
         $this->em->persist($this->productAttribute2);
+        $this->em->persist($this->specialPrice1);
         $this->em->flush();
     }
 
@@ -1008,4 +1022,28 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals('ProductNumber-1', $response->_embedded->products[0]->number);
         $this->assertEquals('ProductNumber-1', $response->_embedded->products[1]->number);
     }
+
+    public function testPutSpecialPrice()
+    {
+        $data = array(
+            'id' => array('id' => $this->product1->getId()),
+            'status' => array('id' => $this->productStatus1->getId()),
+            'specialPrices' => array(
+            	0 => array(
+                	'price' => $this->specialPrice1->getPrice(),
+                	'start' => $this->specialPrice1->getStart()->format('Y-m-d h:i:s'),
+            	    'end'   => $this->specialPrice1->getEnd()->format('Y-m-d h:i:s'),
+            	    'currency' => array("code" => $this->specialPrice1->getCurrency()->getCode())
+            	)
+            )
+        );
+
+        $this->client->request('PUT', '/api/products/'.$this->product1->getId(), $data);
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+
+        $response = json_decode($this->client->getResponse()->getContent());
+        $this->assertEquals('56', $response->specialPrices[0]->price);
+        $this->assertEquals('eur', $response->specialPrices[0]->currency->code);
+    }
 }
+
