@@ -24,6 +24,7 @@ use Sulu\Bundle\ProductBundle\Api\Product;
 use Sulu\Bundle\ProductBundle\Api\Unit;
 use Sulu\Bundle\ProductBundle\Api\DeliveryStatus;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface as Entity;
+use Sulu\Bundle\ProductBundle\Entity\SpecialPrice as SpecialPriceEntity;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductTranslation;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSet as AttributeSetEntity;
@@ -1102,5 +1103,45 @@ class Product extends ApiWrapper implements ApiProductInterface
         }
 
         return $productTranslation;
+    }
+
+    /**
+     * Returns the special prices for the product
+     *
+     * @VirtualProperty
+     * @SerializedName("specialPrices")
+     *
+     * @return \Sulu\Bundle\ProductBundle\Api\SpecialPrice[]
+     */
+    public function getSpecialPrices()
+    {
+        $specialPrices = $this->entity->getSpecialPrices();
+
+        $specialPricesList = array();
+        foreach ($specialPrices as $specialPrice) {
+            $specialPricesList[] = new SpecialPrice($specialPrice, $this->locale);
+        }
+
+        return $specialPricesList;
+    }
+
+    /**
+     * Adds a special price to the product
+     *
+     * @param SpecialPriceEntity $specialPrice
+     */
+    public function addSpecialPrice(SpecialPriceEntity $specialPrice)
+    {
+        $this->entity->addSpecialPrice($specialPrice);
+    }
+
+    /**
+     * Removes a special price from the product
+     *
+     * @param SpecialPriceEntity $specialPrice
+     */
+    public function removeSpecialPrice(SpecialPriceEntity $specialPrice)
+    {
+        $this->entity->removeSpecialPrice($specialPrice);
     }
 }
