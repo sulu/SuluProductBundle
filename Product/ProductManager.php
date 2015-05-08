@@ -704,7 +704,7 @@ class ProductManager implements ProductManagerInterface
         $specialPrices = $this->specialPriceRepository->findAllCurrent();
         $products = [];
         foreach ($specialPrices as $specialPrice) {
-            $products[] = $this->productFactory->createEntity($specialPrice->getProduct(), $locale);
+            $products[] = $this->productFactory->createApiEntity($specialPrice->getProduct(), $locale);
         }
 
         return $products;
@@ -828,13 +828,16 @@ class ProductManager implements ProductManagerInterface
             $product->setRecommendedOrderQuantity(floatval($value));
         }
 
-        $product->setOrderContentRatio(
-            $this->getProperty(
+        if (isset($data['orderContentRatio']) && is_numeric($data['orderContentRatio'])) {
+            $value = $this->getProperty(
                 $data,
                 'orderContentRatio',
                 $product->getOrderContentRatio()
-            )
-        );
+            );
+
+            $product->setOrderContentRatio(floatval($value));
+        }
+
         $product->setShortDescription($this->getProperty($data, 'shortDescription', $product->getShortDescription()));
         $product->setLongDescription($this->getProperty($data, 'longDescription', $product->getLongDescription()));
         $product->setNumber($this->getProperty($data, 'number', $product->getNumber()));
