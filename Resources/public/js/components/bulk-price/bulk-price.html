@@ -43,50 +43,47 @@
             </table>
         </div>
     </div>
-    <div class="grid-row">
-        <table>
-            <tr>
-                <td>
-                    <div class="form-group">
-                        <label><%= translate('product.bulkprice.specialprice') %></label>
-                        <input id="<%= !!specialPrice.dateId.inputId ? specialPrice.dateId.inputId : '' %>" class="form-element husky-validate specialprice align-right" type="text"  value="<%= specialPrice.price %>"/>
-                    </div>
-                </td>
-                <td>
-                    <div class="form-group">
-                        <label><%= translate('product.bulkprice.validfrom') %></label>
-                        <div data-form="true"
-                             data-type="husky-input"
-                             data-aura-component="input@husky"
-                             data-aura-skin="date"
-                             data-aura-instance-name="<%= !!specialPrice ? specialPrice.dateId.from : '' %>"
-                             data-aura-input-id="<%= !!specialPrice ? specialPrice.dateId.from : '' %>"
-                             data-aura-input-name="<%= !!specialPrice ? specialPrice.dateId.from : '' %>"
-                             data-mapper-property="<%= !!specialPrice ? specialPrice.dateId.from : '' %>"
-                             data-value="<%= specialPrice.start %>"
-                             id="<%= !!specialPrice ? specialPrice.dateId.from : '' %>">
-                        </div>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <div class="form-group">
-                        <label><%= translate('product.bulkprice.validto') %></label>
-                        <div data-form="true"
-                             data-type="husky-input"
-                             data-aura-component="input@husky"
-                             data-aura-skin="date"
-                             data-aura-instance-name="<%= !!specialPrice ? specialPrice.dateId.to : '' %>"
-                             data-aura-input-id="<%= !!specialPrice ? specialPrice.dateId.to : '' %>"
-                             data-aura-input-name="<%= !!specialPrice ? specialPrice.dateId.to : '' %>"
-                             data-mapper-property="<%= !!specialPrice ? specialPrice.dateId.to : '' %>"
-                             data-value="<%= specialPrice.end %>"
-                             id="<%= !!specialPrice ? specialPrice.dateId.to : '' %>">
-                        </div>
-                    </div>
-                </td>
-            </tr>
-        </table>
+    <div class="grid-row small">
+        <div class="grid-col-6">
+            <div class="form-group">
+                <label><%= translate('product.bulkprice.specialprice') %></label>
+                <input id="<%= !!specialPrice.dateId.inputId ? specialPrice.dateId.inputId : '' %>" class="form-element husky-validate specialprice align-right" type="text"  value="<%= specialPrice.price %>"/>
+            </div>
+        </div>
+        <div class="grid-col-6">
+            <div class="form-group">
+                <label><%= translate('product.bulkprice.validfrom') %></label>
+                <div data-form="true"
+                     data-type="husky-input"
+                     data-aura-component="input@husky"
+                     data-aura-skin="date"
+                     data-aura-instance-name="<%= !!specialPrice ? specialPrice.dateId.from : '' %>"
+                     data-aura-input-id="<%= !!specialPrice ? specialPrice.dateId.from : '' %>"
+                     data-aura-input-name="<%= !!specialPrice ? specialPrice.dateId.from : '' %>"
+                     data-mapper-property="<%= !!specialPrice ? specialPrice.dateId.from : '' %>"
+                     data-value="<%= specialPrice.start %>"
+                     id="<%= !!specialPrice ? specialPrice.dateId.from : '' %>">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="grid-row small">
+        <div class="grid-col-6"></div>
+        <div class="grid-col-6">
+            <div class="form-group">
+                <label><%= translate('product.bulkprice.validto') %></label>
+                <div data-form="true"
+                     data-type="husky-input"
+                     data-aura-component="input@husky"
+                     data-aura-skin="date"
+                     data-aura-instance-name="<%= !!specialPrice ? specialPrice.dateId.to : '' %>"
+                     data-aura-input-id="<%= !!specialPrice ? specialPrice.dateId.to : '' %>"
+                     data-aura-input-name="<%= !!specialPrice ? specialPrice.dateId.to : '' %>"
+                     data-mapper-property="<%= !!specialPrice ? specialPrice.dateId.to : '' %>"
+                     data-value="<%= specialPrice.end %>"
+                     id="<%= !!specialPrice ? specialPrice.dateId.to : '' %>">
+                </div>
+            </div>
+        </div>
     </div>
 </div>
