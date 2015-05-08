@@ -14,7 +14,6 @@ use Hateoas\Configuration\Annotation\Relation;
 use JMS\Serializer\Annotation\Groups;
 use JMS\Serializer\Annotation\VirtualProperty;
 use JMS\Serializer\Annotation\SerializedName;
-use JMS\Serializer\Annotation\MaxDepth;
 use Sulu\Component\Rest\ApiWrapper;
 use Sulu\Component\Security\Authentication\UserInterface;
 use Sulu\Bundle\CategoryBundle\Api\Category;
@@ -31,7 +30,6 @@ use Sulu\Bundle\ProductBundle\Entity\Type as TypeEntity;
 use Sulu\Bundle\ProductBundle\Entity\TaxClass as TaxClassEntity;
 use Sulu\Bundle\ProductBundle\Entity\Unit as UnitEntity;
 use Sulu\Bundle\ProductBundle\Entity\DeliveryStatus as DeliveryStatusEntity;
-
 
 /**
  * The product class which will be exported to the API
@@ -846,7 +844,6 @@ class Product extends ApiWrapper implements ApiProductInterface
      *
      * @VirtualProperty
      * @SerializedName("categories")
-     * @MaxDepth(1)
      *
      * @return CategoryEntity[]
      */
