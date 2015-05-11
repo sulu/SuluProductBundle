@@ -122,8 +122,8 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
             // bulk prices
             this.sandbox.util.foreach($prices, function($price) {
                 priceId = this.sandbox.dom.data($price, 'id');
-                priceQuantity = this.sandbox.dom.val(this.sandbox.dom.find('input.minimumQuantity',$price));
-                priceValue = this.sandbox.dom.val(this.sandbox.dom.find('input.price',$price));
+                priceQuantity = this.sandbox.dom.val(this.sandbox.dom.find('input.minimumQuantity', $price));
+                priceValue = this.sandbox.dom.val(this.sandbox.dom.find('input.price', $price));
 
                 if (!!priceQuantity && !!priceValue) {
                     priceItems.push({
@@ -148,7 +148,7 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
             this.sandbox.emit('sulu.products.bulk-price.changed');
         },
 
-        initDateComponents = function (dateIdsList) {
+        initDateComponents = function(dateIdsList) {
             this.sandbox.start([
                 {
                     name: 'input@husky',
@@ -177,9 +177,9 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
 
         initialize: function() {
             var prices = [],
-            salesPrice,
-            specialPrice = {},
-            dateIdsList = {};
+                salesPrice,
+                specialPrice = {},
+                dateIdsList = {};
 
             this.options = this.sandbox.util.extend({}, defaults, this.options);
             if (this.options.data.prices) {
@@ -187,7 +187,7 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
                 salesPrice = getSalesPriceAndRemoveFromPrices.call(this, prices);
             }
 
-            if(this.options.data.specialPrice) {
+            if (this.options.data.specialPrice) {
                 specialPrice = this.options.data.specialPrice;
                 specialPrice.price = this.sandbox.numberFormat(specialPrice.price, 'n');
             }

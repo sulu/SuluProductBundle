@@ -7,14 +7,14 @@
  * with this source code in the file LICENSE.
  */
 
-define(['config'], function (Config) {
+define(['config'], function(Config) {
     'use strict';
 
     var formSelector = '#product-pricing-form',
         pricesSelector = '#prices',
         maxLengthTitle = 60,
 
-        render = function () {
+        render = function() {
             this.sandbox.dom.html(this.$el, this.renderTemplate('/admin/product/template/product/pricing'));
 
             setHeaderInformation.call(this);
@@ -48,8 +48,8 @@ define(['config'], function (Config) {
             }]);
         },
 
-        bindCustomEvents = function () {
-            this.sandbox.on('sulu.header.toolbar.delete', function () {
+        bindCustomEvents = function() {
+            this.sandbox.on('sulu.header.toolbar.delete', function() {
                 this.sandbox.emit('sulu.product.delete', this.sandbox.dom.val('#id'));
             }.bind(this));
 
@@ -61,7 +61,7 @@ define(['config'], function (Config) {
                 }
             }, this);
 
-            this.sandbox.on('sulu.header.toolbar.save', function () {
+            this.sandbox.on('sulu.header.toolbar.save', function() {
                 save.call(this);
             }, this);
 
@@ -71,19 +71,19 @@ define(['config'], function (Config) {
                 this.options.data.status = this.status;
             }, this);
 
-            this.sandbox.on('sulu.header.back', function () {
+            this.sandbox.on('sulu.header.back', function() {
                 this.sandbox.emit('sulu.products.list');
             }, this);
 
-            this.sandbox.on('sulu.product.set-currencies', function(currencies){
+            this.sandbox.on('sulu.product.set-currencies', function(currencies) {
                 this.currencies = currencies;
             }, this);
-            this.sandbox.on('sulu.product.set-default-currency', function(cur){
+            this.sandbox.on('sulu.product.set-default-currency', function(cur) {
                 this.defaultCurrency = cur;
             }, this);
         },
 
-        save = function () {
+        save = function() {
             if (this.sandbox.form.validate(formSelector)) {
                 var data = this.sandbox.form.getData(formSelector);
                 data.status = this.status;
@@ -92,18 +92,18 @@ define(['config'], function (Config) {
         },
 
     // TODO remove the following functions, as soon as they are extracted somewhere else
-        initForm = function (data) {
+        initForm = function(data) {
             // set form data
             var formObject = this.sandbox.form.create(formSelector);
-            formObject.initialized.then(function () {
+            formObject.initialized.then(function() {
                 setFormData.call(this, data);
             }.bind(this));
         },
 
-        setFormData = function (data) {
-            this.sandbox.form.setData(formSelector, data).then(function () {
+        setFormData = function(data) {
+            this.sandbox.form.setData(formSelector, data).then(function() {
                 this.sandbox.start(formSelector);
-            }.bind(this)).fail(function (error) {
+            }.bind(this)).fail(function(error) {
                 this.sandbox.logger.error("An error occured when setting data!", error);
             }.bind(this));
         },
@@ -116,7 +116,7 @@ define(['config'], function (Config) {
             this.saved = saved;
         },
 
-        setHeaderInformation = function () {
+        setHeaderInformation = function() {
             var title = 'pim.product.title',
                 breadcrumb = [
                     {title: 'navigation.pim'},
@@ -140,17 +140,17 @@ define(['config'], function (Config) {
             this.sandbox.emit('sulu.header.set-breadcrumb', breadcrumb);
         },
 
-        listenForChange = function () {
-            this.sandbox.dom.on(formSelector, 'change', function () {
+        listenForChange = function() {
+            this.sandbox.dom.on(formSelector, 'change', function() {
                 setHeaderBar.call(this, false);
             }.bind(this), 'select');
-            this.sandbox.dom.on(formSelector, 'keyup', function () {
+            this.sandbox.dom.on(formSelector, 'keyup', function() {
                 setHeaderBar.call(this, false);
             }.bind(this), 'input, textarea');
-            this.sandbox.on('sulu.content.changed', function () {
+            this.sandbox.on('sulu.content.changed', function() {
                 setHeaderBar.call(this, false);
             }.bind(this));
-            this.sandbox.on('husky.select.tax-class.selected.item', function () {
+            this.sandbox.on('husky.select.tax-class.selected.item', function() {
                 setHeaderBar.call(this, false);
             }.bind(this));
         };
@@ -162,8 +162,8 @@ define(['config'], function (Config) {
 
         templates: ['/admin/product/template/product/pricing'],
 
-        initialize: function () {
-            this.status  = !!this.options.data ? this.options.data.status : Config.get('product.status.active');
+        initialize: function() {
+            this.status = !!this.options.data ? this.options.data.status : Config.get('product.status.active');
 
             bindCustomEvents.call(this);
 

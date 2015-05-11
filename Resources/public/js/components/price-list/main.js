@@ -28,9 +28,9 @@ define([], function() {
         },
 
         templates = {
-          bulkPrice: function(idSuffix){
-              return '<div id="bulk-price-'+idSuffix+'"><form id="prices-form"></form></div>';
-          }
+            bulkPrice: function(idSuffix) {
+                return '<div id="bulk-price-' + idSuffix + '"><form id="prices-form"></form></div>';
+            }
         },
 
         eventNamespace = 'sulu.products.price-list.',
@@ -48,22 +48,22 @@ define([], function() {
             return createEventName.call(this, 'initialized');
         },
 
-        bindCustomEvents = function(){
-            this.sandbox.on('sulu.products.bulk-price.changed', function(){
+        bindCustomEvents = function() {
+            this.sandbox.on('sulu.products.bulk-price.changed', function() {
                 updateData.call(this);
             }, this);
         },
 
-        updateData = function(){
+        updateData = function() {
             // get all items
             var $bulkPrices = this.sandbox.dom.children(this.$el),
-                pricesData = [], 
-                prices, 
-                specialPrice, 
+                pricesData = [],
+                prices,
+                specialPrice,
                 specialPriceData = [],
                 $specialPrices = $('#specialPrices');
 
-            this.sandbox.util.foreach($bulkPrices, function($bulkPrice){
+            this.sandbox.util.foreach($bulkPrices, function($bulkPrice) {
                 prices = this.sandbox.dom.data($bulkPrice, 'items');
                 specialPrice = $.data($bulkPrice, 'itemsSpecialPrice');
                 pricesData.push.apply(pricesData, prices);
@@ -75,10 +75,10 @@ define([], function() {
             this.sandbox.dom.data($specialPrices, 'prices', specialPriceData);
         },
 
-        placeDefaultCurrencyFirst = function(defaultCur, currencies){
+        placeDefaultCurrencyFirst = function(defaultCur, currencies) {
             var tmp = null,
                 idxDefault = null;
-            this.sandbox.util.foreach(currencies, function(cur, index){
+            this.sandbox.util.foreach(currencies, function(cur, index) {
                 if (cur.code === defaultCur) {
                     idxDefault = index;
                     return false;
@@ -93,9 +93,9 @@ define([], function() {
             }
         },
 
-        groupPrices = function(prices){
+        groupPrices = function(prices) {
             var groups = {};
-            this.sandbox.util.foreach(prices, function(price){
+            this.sandbox.util.foreach(prices, function(price) {
                 if (!groups[price.currency.code]) {
                     groups[price.currency.code] = [];
                 }
@@ -132,7 +132,7 @@ define([], function() {
         initializeBulkPriceComponents: function() {
             var bulkPriceComponents = [];
 
-            this.sandbox.util.foreach(this.options.currencies, function(currency){
+            this.sandbox.util.foreach(this.options.currencies, function(currency) {
 
                 this.bulkPriceData = {};
 
@@ -141,7 +141,7 @@ define([], function() {
                 if (this.groupedPrices.prices) {
                     this.bulkPriceData.prices = this.groupedPrices.prices[currency.code];
                 }
-             
+
                 if (this.groupedPrices.specialPrices && currency.code in this.groupedPrices.specialPrices) {
                     this.bulkPriceData.specialPrice = this.groupedPrices.specialPrices[currency.code].pop();
                 }
@@ -153,7 +153,10 @@ define([], function() {
                         instanceName: currency.code,
                         currency: currency
                     };
-                bulkPriceComponents.push({name: 'bulk-price@suluproduct', options: options});
+                bulkPriceComponents.push({
+                    name: 'bulk-price@suluproduct',
+                    options: options
+                });
                 this.sandbox.dom.append(this.options.el, $el);
             }.bind(this));
 
