@@ -23,11 +23,11 @@ define(['config'], function (Config) {
 
             var priceListData = {};
 
-            if (!!this.options.data.prices) {
+            if (this.options.data.prices) {
                 priceListData.prices = this.options.data.prices;
             }
 
-            if (!!this.options.data.specialPrices) {
+            if (this.options.data.specialPrices) {
                 priceListData.specialPrices = this.options.data.specialPrices;
             }
 
