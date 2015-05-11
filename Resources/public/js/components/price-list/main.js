@@ -57,7 +57,11 @@ define([], function() {
         updateData = function(){
             // get all items
             var $bulkPrices = this.sandbox.dom.children(this.$el),
-                pricesData = [], prices, specialPrice, specialPriceData = [];
+                pricesData = [], 
+                prices, 
+                specialPrice, 
+                specialPriceData,
+                $specialPrices = $('#specialPrices');
 
             this.sandbox.util.foreach($bulkPrices, function($bulkPrice){
                 prices = this.sandbox.dom.data($bulkPrice, 'items');
@@ -68,8 +72,7 @@ define([], function() {
 
             // set properties
             this.sandbox.dom.data(this.$el, 'prices', pricesData);
-            var specialPricesEl = $('#specialPrices');
-            this.sandbox.dom.data(specialPricesEl, 'prices', specialPriceData);
+            this.sandbox.dom.data($specialPrices, 'prices', specialPriceData);
         },
 
         placeDefaultCurrencyFirst = function(defaultCur, currencies){
@@ -106,7 +109,7 @@ define([], function() {
 
         initialize: function() {
             this.options = this.sandbox.util.extend({}, defaults, this.options);
-            this.groupedPrices = [];
+            this.groupedPrices = {};
             if(!!this.options.data.prices && this.options.data.prices.length > 0) {
                 this.groupedPrices.prices = groupPrices.call(this, this.options.data.prices);
                 placeDefaultCurrencyFirst.call(this, this.options.defaultCurrency, this.options.currencies);
@@ -131,7 +134,7 @@ define([], function() {
 
             this.sandbox.util.foreach(this.options.currencies, function(currency){
 
-                this.bulkPriceData = [];
+                this.bulkPriceData = {};
 
                 this.bulkPriceData.currencyCode = currency.code;
 
