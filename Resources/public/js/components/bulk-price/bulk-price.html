@@ -47,7 +47,7 @@
         <div class="grid-col-6">
             <div class="form-group">
                 <label><%= translate('product.bulkprice.specialprice') %></label>
-                <input id="<%= specialPrice.dateIds.inputId %>" class="form-element husky-validate specialprice align-right" type="text" value="<%= specialPrice.price %>"/>
+                <input id="<%= specialPrice.dateIdsList.inputId %>" class="form-element husky-validate specialprice align-right" type="text" value="<%= specialPrice.price %>"/>
             </div>
         </div>
         <div class="grid-col-6">
@@ -57,12 +57,12 @@
                      data-type="husky-input"
                      data-aura-component="input@husky"
                      data-aura-skin="date"
-                     data-aura-instance-name="<%= specialPrice.dateIds.start %>"
-                     data-aura-input-id="<%= specialPrice.dateIds.start %>"
-                     data-aura-input-name="<%= specialPrice.dateIds.start %>"
-                     data-mapper-property="<%= specialPrice.dateIds.start %>"
+                     data-aura-instance-name="<%= specialPrice.dateIdsList.start %>"
+                     data-aura-input-id="<%= specialPrice.dateIdsList.start %>"
+                     data-aura-input-name="<%= specialPrice.dateIdsList.start %>"
+                     data-mapper-property="<%= specialPrice.dateIdsList.start %>"
                      data-value="<%= specialPrice.start %>"
-                     id="<%= specialPrice.dateIds.start %>">
+                     id="<%= specialPrice.dateIdsList.start %>">
                 </div>
             </div>
         </div>
@@ -76,12 +76,12 @@
                      data-type="husky-input"
                      data-aura-component="input@husky"
                      data-aura-skin="date"
-                     data-aura-instance-name="<%= specialPrice.dateIds.end %>"
-                     data-aura-input-id="<%= specialPrice.dateIds.end %>"
-                     data-aura-input-name="<%= specialPrice.dateIds.end %>"
-                     data-mapper-property="<%= specialPrice.dateIds.end %>"
+                     data-aura-instance-name="<%= specialPrice.dateIdsList.end %>"
+                     data-aura-input-id="<%= specialPrice.dateIdsList.end %>"
+                     data-aura-input-name="<%= specialPrice.dateIdsList.end %>"
+                     data-mapper-property="<%= specialPrice.dateIdsList.end %>"
                      data-value="<%= specialPrice.end %>"
-                     id="<%= specialPrice.dateIds.end %>">
+                     id="<%= specialPrice.dateIdsList.end %>">
                 </div>
             </div>
         </div>
