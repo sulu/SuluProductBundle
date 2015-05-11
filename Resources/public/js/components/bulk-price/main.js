@@ -138,9 +138,9 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
             // special prices
             var specialPrice = {};
             specialPrice.currency = {};
-            specialPrice.start = $('#husky-input-js-dateStart' + this.options.currency.code).val();
-            specialPrice.end = $('#husky-input-js-dateEnd' + this.options.currency.code).val();
-            specialPrice.price = $('#js-input' + this.options.currency.code).val();
+            specialPrice.start = $('#js-input-dateStart' + this.options.currency.code).val();
+            specialPrice.end = $('#js-input-dateEnd' + this.options.currency.code).val();
+            specialPrice.price = $('#input' + this.options.currency.code).val();
             specialPrice.currency = this.options.currency;
 
             this.sandbox.dom.data(this.$el, 'itemsSpecialPrice', specialPrice);
@@ -154,7 +154,8 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
                     name: 'input@husky',
                     options: {
                         el: '#' + dateIds.start,
-                        instanceName: dateIds.start,
+                        instanceName: 'js-' + dateIds.start,
+                        inputId: 'js-' + dateIds.start,
                         skin: 'date'
                     }
                 }
@@ -164,7 +165,8 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
                     name: 'input@husky',
                     options: {
                         el: '#' + dateIds.end,
-                        instanceName: dateIds.end,
+                        instanceName: 'js-' + dateIds.end,
+                        inputId: 'js-' + dateIds.end,
                         skin: 'date'
                     }
                 }
@@ -190,9 +192,9 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
                 specialPrice.price = this.sandbox.numberFormat(specialPrice.price, 'n');
             }
 
-            dateIds.inputId = "js-input" + this.options.data.currencyCode;
-            dateIds.start = "js-dateStart" + this.options.data.currencyCode;
-            dateIds.end = "js-dateEnd" + this.options.data.currencyCode;
+            dateIds.inputId = "input" + this.options.data.currencyCode;
+            dateIds.start = "input-dateStart" + this.options.data.currencyCode;
+            dateIds.end = "input-dateEnd" + this.options.data.currencyCode;
             specialPrice.dateIds = dateIds;
 
             prices = addEmptyObjects.call(this, prices);
