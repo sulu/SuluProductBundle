@@ -138,9 +138,9 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
             // special prices
             var specialPrice = {};
             specialPrice.currency = {};
-            specialPrice.start = $('#js-input-dateStart' + this.options.currency.code).val();
-            specialPrice.end = $('#js-input-dateEnd' + this.options.currency.code).val();
-            specialPrice.price = $('#input' + this.options.currency.code).val();
+            specialPrice.dateStart = $('#js-input-dateStart' + this.options.currency.code).val();
+            specialPrice.dateEnd = $('#js-input-dateEnd' + this.options.currency.code).val();
+            specialPrice.price = $('#js-input' + this.options.currency.code).val();
             specialPrice.currency = this.options.currency;
 
             this.sandbox.dom.data(this.$el, 'itemsSpecialPrice', specialPrice);
@@ -148,14 +148,14 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
             this.sandbox.emit('sulu.products.bulk-price.changed');
         },
 
-        initDateComponents = function(dateIdsList) {
+        initDateComponents = function(tmplSelectors) {
             this.sandbox.start([
                 {
                     name: 'input@husky',
                     options: {
-                        el: '#' + dateIdsList.start,
-                        instanceName: 'js-' + dateIdsList.start,
-                        inputId: 'js-' + dateIdsList.start,
+                        el: '#' + tmplSelectors.dateStart,
+                        instanceName: 'js-' + tmplSelectors.dateStart,
+                        inputId: 'js-' + tmplSelectors.dateStart,
                         skin: 'date'
                     }
                 }
@@ -164,9 +164,9 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
                 {
                     name: 'input@husky',
                     options: {
-                        el: '#' + dateIdsList.end,
-                        instanceName: 'js-' + dateIdsList.end,
-                        inputId: 'js-' + dateIdsList.end,
+                        el: '#' + tmplSelectors.dateEnd,
+                        instanceName: 'js-' + tmplSelectors.dateEnd,
+                        inputId: 'js-' + tmplSelectors.dateEnd,
                         skin: 'date'
                     }
                 }
@@ -179,7 +179,7 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
             var prices = [],
                 salesPrice,
                 specialPrice = {},
-                dateIdsList = {};
+                tmplSelectors = {};
 
             this.options = this.sandbox.util.extend({}, defaults, this.options);
             if (this.options.data.prices) {
@@ -192,17 +192,17 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
                 specialPrice.price = this.sandbox.numberFormat(specialPrice.price, 'n');
             }
 
-            dateIdsList.inputId = "input" + this.options.data.currencyCode;
-            dateIdsList.start = "input-dateStart" + this.options.data.currencyCode;
-            dateIdsList.end = "input-dateEnd" + this.options.data.currencyCode;
-            specialPrice.dateIdsList = dateIdsList;
+            tmplSelectors.price = "js-input" + this.options.data.currencyCode;
+            tmplSelectors.dateStart = "input-dateStart" + this.options.data.currencyCode;
+            tmplSelectors.dateEnd = "input-dateEnd" + this.options.data.currencyCode;
+            specialPrice.tmplSelectors = tmplSelectors;
 
             prices = addEmptyObjects.call(this, prices);
             bindDomEvents.call(this);
 
             this.render(prices, salesPrice, specialPrice);
             refreshData.call(this);
-            initDateComponents.call(this, dateIdsList);
+            initDateComponents.call(this, tmplSelectors);
             this.sandbox.emit(INITIALIZED.call(this));
         },
 
