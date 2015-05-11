@@ -148,14 +148,14 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
             this.sandbox.emit('sulu.products.bulk-price.changed');
         },
 
-        initDateComponents = function (dateIds) {
+        initDateComponents = function (dateIdsList) {
             this.sandbox.start([
                 {
                     name: 'input@husky',
                     options: {
-                        el: '#' + dateIds.start,
-                        instanceName: 'js-' + dateIds.start,
-                        inputId: 'js-' + dateIds.start,
+                        el: '#' + dateIdsList.start,
+                        instanceName: 'js-' + dateIdsList.start,
+                        inputId: 'js-' + dateIdsList.start,
                         skin: 'date'
                     }
                 }
@@ -164,9 +164,9 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
                 {
                     name: 'input@husky',
                     options: {
-                        el: '#' + dateIds.end,
-                        instanceName: 'js-' + dateIds.end,
-                        inputId: 'js-' + dateIds.end,
+                        el: '#' + dateIdsList.end,
+                        instanceName: 'js-' + dateIdsList.end,
+                        inputId: 'js-' + dateIdsList.end,
                         skin: 'date'
                     }
                 }
@@ -179,7 +179,7 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
             var prices = [],
             salesPrice,
             specialPrice = {},
-            dateIds = {};
+            dateIdsList = {};
 
             this.options = this.sandbox.util.extend({}, defaults, this.options);
             if (this.options.data.prices) {
@@ -192,17 +192,17 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
                 specialPrice.price = this.sandbox.numberFormat(specialPrice.price, 'n');
             }
 
-            dateIds.inputId = "input" + this.options.data.currencyCode;
-            dateIds.start = "input-dateStart" + this.options.data.currencyCode;
-            dateIds.end = "input-dateEnd" + this.options.data.currencyCode;
-            specialPrice.dateIds = dateIds;
+            dateIdsList.inputId = "input" + this.options.data.currencyCode;
+            dateIdsList.start = "input-dateStart" + this.options.data.currencyCode;
+            dateIdsList.end = "input-dateEnd" + this.options.data.currencyCode;
+            specialPrice.dateIdsList = dateIdsList;
 
             prices = addEmptyObjects.call(this, prices);
             bindDomEvents.call(this);
 
             this.render(prices, salesPrice, specialPrice);
             refreshData.call(this);
-            initDateComponents.call(this, dateIds, specialPrice);
+            initDateComponents.call(this, dateIdsList);
             this.sandbox.emit(INITIALIZED.call(this));
         },
 

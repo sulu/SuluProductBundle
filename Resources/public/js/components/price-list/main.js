@@ -79,14 +79,14 @@ define([], function() {
             var tmp = null,
                 idxDefault = null;
             this.sandbox.util.foreach(currencies, function(cur, index){
-                if(cur.code === defaultCur){
+                if (cur.code === defaultCur) {
                     idxDefault = index;
                     return false;
                 }
             }.bind(this));
 
             // when index of default currency is set and it is not already on the first position
-            if(!!idxDefault) {
+            if (!!idxDefault) {
                 tmp = currencies[0];
                 currencies[0] = currencies[idxDefault];
                 currencies[idxDefault] = tmp;
@@ -94,9 +94,9 @@ define([], function() {
         },
 
         groupPrices = function(prices){
-            var groups = [];
+            var groups = {};
             this.sandbox.util.foreach(prices, function(price){
-                if(!groups[price.currency.code]){
+                if (!groups[price.currency.code]) {
                     groups[price.currency.code] = [];
                 }
                 groups[price.currency.code].push(price);
@@ -110,12 +110,12 @@ define([], function() {
         initialize: function() {
             this.options = this.sandbox.util.extend({}, defaults, this.options);
             this.groupedPrices = {};
-            if(this.options.data.prices && this.options.data.prices.length > 0) {
+            if (this.options.data.prices && this.options.data.prices.length > 0) {
                 this.groupedPrices.prices = groupPrices.call(this, this.options.data.prices);
                 placeDefaultCurrencyFirst.call(this, this.options.defaultCurrency, this.options.currencies);
             }
 
-            if(this.options.data.specialPrices && this.options.data.specialPrices.length > 0) {
+            if (this.options.data.specialPrices && this.options.data.specialPrices.length > 0) {
                 this.groupedPrices.specialPrices = groupPrices.call(this, this.options.data.specialPrices);
             }
 
@@ -138,11 +138,11 @@ define([], function() {
 
                 this.bulkPriceData.currencyCode = currency.code;
 
-                if (!!this.groupedPrices.prices) {
+                if (this.groupedPrices.prices) {
                     this.bulkPriceData.prices = this.groupedPrices.prices[currency.code];
                 }
              
-                if (!!this.groupedPrices.specialPrices && currency.code in this.groupedPrices.specialPrices) {
+                if (this.groupedPrices.specialPrices && currency.code in this.groupedPrices.specialPrices) {
                     this.bulkPriceData.specialPrice = this.groupedPrices.specialPrices[currency.code].pop();
                 }
 
