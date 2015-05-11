@@ -138,9 +138,9 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
             // special prices
             var specialPrice = {};
             specialPrice.currency = {};
-            specialPrice.start = $('#husky-input-dateFrom' + this.options.currency.code).val();
-            specialPrice.end = $('#husky-input-dateTo' + this.options.currency.code).val();
-            specialPrice.price = $('#input' + this.options.currency.code).val();
+            specialPrice.start = $('#husky-input-js-dateFrom' + this.options.currency.code).val();
+            specialPrice.end = $('#husky-input-js-dateTo' + this.options.currency.code).val();
+            specialPrice.price = $('#js-input' + this.options.currency.code).val();
             specialPrice.currency = this.options.currency;
 
             this.sandbox.dom.data(this.$el, 'itemsSpecialPrice', specialPrice);
@@ -180,19 +180,19 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
             dateIds = {};
 
             this.options = this.sandbox.util.extend({}, defaults, this.options);
-            if (!!this.options.data.prices) {
+            if (this.options.data.prices) {
                 prices = this.sandbox.util.extend([], this.options.data.prices);
                 salesPrice = getSalesPriceAndRemoveFromPrices.call(this, prices);
             }
 
-            if(!!this.options.data.specialPrice) {
+            if(this.options.data.specialPrice) {
                 specialPrice = this.options.data.specialPrice;
                 specialPrice.price = this.sandbox.numberFormat(specialPrice.price, 'n');
             }
 
-            dateIds.inputId = "input" + this.options.data.currencyCode;
-            dateIds.from = "dateFrom" + this.options.data.currencyCode;
-            dateIds.to = "dateTo" + this.options.data.currencyCode;
+            dateIds.inputId = "js-input" + this.options.data.currencyCode;
+            dateIds.from = "js-dateFrom" + this.options.data.currencyCode;
+            dateIds.to = "js-dateTo" + this.options.data.currencyCode;
             specialPrice.dateIds = dateIds;
 
 

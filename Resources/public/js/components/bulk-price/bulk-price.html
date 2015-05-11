@@ -5,7 +5,7 @@
         <div class="grid-col-6">
             <div class="form-group">
                 <label><%= translate('product.bulkprice.price') %></label>
-                <input id="<%= salesPrice.id %>" class="form-element husky-validate salesprice align-right" type="text"  value="<%= salesPrice.price %>"/>
+                <input id="<%= !!salesPrice ? salesPrice.id : '' %>" class="form-element husky-validate salesprice align-right" type="text"  value="<%= !!salesPrice ? salesPrice.price : '' %>"/>
             </div>
         </div>
         <div class="grid-col-6">
@@ -47,7 +47,7 @@
         <div class="grid-col-6">
             <div class="form-group">
                 <label><%= translate('product.bulkprice.specialprice') %></label>
-                <input id="<%= specialPrice.dateId.inputId %>" class="form-element husky-validate specialprice align-right" type="text"  value="<%= specialPrice.price %>"/>
+                <input id="<%= specialPrice.dateIds.inputId %>" class="form-element husky-validate specialprice align-right" type="text"  value="<%= specialPrice.price %>"/>
             </div>
         </div>
         <div class="grid-col-6">
@@ -57,12 +57,12 @@
                      data-type="husky-input"
                      data-aura-component="input@husky"
                      data-aura-skin="date"
-                     data-aura-instance-name="<%= specialPrice.dateId.from %>"
-                     data-aura-input-id="<%= specialPrice.dateId.from %>"
-                     data-aura-input-name="<%= specialPrice.dateId.from %>"
-                     data-mapper-property="<%= specialPrice.dateId.from %>"
+                     data-aura-instance-name="<%= specialPrice.dateIds.from %>"
+                     data-aura-input-id="<%= specialPrice.dateIds.from %>"
+                     data-aura-input-name="<%= specialPrice.dateIds.from %>"
+                     data-mapper-property="<%= specialPrice.dateIds.from %>"
                      data-value="<%= specialPrice.start %>"
-                     id="<%= specialPrice.dateId.from %>">
+                     id="<%= specialPrice.dateIds.from %>">
                 </div>
             </div>
         </div>
@@ -76,12 +76,12 @@
                      data-type="husky-input"
                      data-aura-component="input@husky"
                      data-aura-skin="date"
-                     data-aura-instance-name="<%= specialPrice.dateId.to %>"
-                     data-aura-input-id="<%= specialPrice.dateId.to %>"
-                     data-aura-input-name="<%= specialPrice.dateId.to %>"
-                     data-mapper-property="<%= specialPrice.dateId.to %>"
+                     data-aura-instance-name="<%= specialPrice.dateIds.to %>"
+                     data-aura-input-id="<%= specialPrice.dateIds.to %>"
+                     data-aura-input-name="<%= specialPrice.dateIds.to %>"
+                     data-mapper-property="<%= specialPrice.dateIds.to %>"
                      data-value="<%= specialPrice.end %>"
-                     id="<%= specialPrice.dateId.to %>">
+                     id="<%= specialPrice.dateIds.to %>">
                 </div>
             </div>
         </div>

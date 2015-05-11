@@ -60,14 +60,14 @@ define([], function() {
                 pricesData = [], 
                 prices, 
                 specialPrice, 
-                specialPriceData,
+                specialPriceData = [],
                 $specialPrices = $('#specialPrices');
 
             this.sandbox.util.foreach($bulkPrices, function($bulkPrice){
                 prices = this.sandbox.dom.data($bulkPrice, 'items');
                 specialPrice = $.data($bulkPrice, 'itemsSpecialPrice');
-                Array.prototype.push.apply(pricesData, prices);
-                Array.prototype.push.call(specialPriceData, specialPrice);
+                pricesData.push.apply(pricesData, prices);
+                specialPriceData.push(specialPrice);
             }.bind(this));
 
             // set properties
@@ -110,12 +110,12 @@ define([], function() {
         initialize: function() {
             this.options = this.sandbox.util.extend({}, defaults, this.options);
             this.groupedPrices = {};
-            if(!!this.options.data.prices && this.options.data.prices.length > 0) {
+            if(this.options.data.prices && this.options.data.prices.length > 0) {
                 this.groupedPrices.prices = groupPrices.call(this, this.options.data.prices);
                 placeDefaultCurrencyFirst.call(this, this.options.defaultCurrency, this.options.currencies);
             }
 
-            if(!!this.options.data.specialPrices && this.options.data.specialPrices.length > 0) {
+            if(this.options.data.specialPrices && this.options.data.specialPrices.length > 0) {
                 this.groupedPrices.specialPrices = groupPrices.call(this, this.options.data.specialPrices);
             }
 
