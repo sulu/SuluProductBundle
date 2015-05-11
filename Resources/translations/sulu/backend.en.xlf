@@ -257,6 +257,7 @@
             <trans-unit id="65" resname="product.bulkprice.specialprice">
                 <source>product.bulkprice.specialprice</source>
                 <target>Special price</target>
+            </trans-unit>
             <trans-unit id="03588f70b26be004afd6ea794c008e8f" resname="navigation.pim">
                 <source>navigation.pim</source>
                 <target>Products</target>

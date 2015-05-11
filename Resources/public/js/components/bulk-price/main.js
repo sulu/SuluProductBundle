@@ -138,8 +138,8 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
             // special prices
             var specialPrice = {};
             specialPrice.currency = {};
-            specialPrice.start = $('#husky-input-js-dateFrom' + this.options.currency.code).val();
-            specialPrice.end = $('#husky-input-js-dateTo' + this.options.currency.code).val();
+            specialPrice.start = $('#husky-input-js-dateStart' + this.options.currency.code).val();
+            specialPrice.end = $('#husky-input-js-dateEnd' + this.options.currency.code).val();
             specialPrice.price = $('#js-input' + this.options.currency.code).val();
             specialPrice.currency = this.options.currency;
 
@@ -153,8 +153,8 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
                 {
                     name: 'input@husky',
                     options: {
-                        el: '#' + dateIds.from,
-                        instanceName: dateIds.from,
+                        el: '#' + dateIds.start,
+                        instanceName: dateIds.start,
                         skin: 'date'
                     }
                 }
@@ -163,8 +163,8 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
                 {
                     name: 'input@husky',
                     options: {
-                        el: '#' + dateIds.to,
-                        instanceName: dateIds.to,
+                        el: '#' + dateIds.end,
+                        instanceName: dateIds.end,
                         skin: 'date'
                     }
                 }
@@ -191,10 +191,9 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
             }
 
             dateIds.inputId = "js-input" + this.options.data.currencyCode;
-            dateIds.from = "js-dateFrom" + this.options.data.currencyCode;
-            dateIds.to = "js-dateTo" + this.options.data.currencyCode;
+            dateIds.start = "js-dateStart" + this.options.data.currencyCode;
+            dateIds.end = "js-dateEnd" + this.options.data.currencyCode;
             specialPrice.dateIds = dateIds;
-
 
             prices = addEmptyObjects.call(this, prices);
             bindDomEvents.call(this);
