@@ -258,6 +258,10 @@
                 <source>pim.products.title</source>
                 <target>Produkte</target>
             </trans-unit>
+            <trans-unit id="de3e19c8588a08fe9f82442df594228d" resname="pim.product.title">
+                <source>pim.product.title</source>
+                <target>Produkt</target>
+            </trans-unit>
             <trans-unit id="ebe90aa605a30f7e0209542e24978b90" resname="products.key">
                 <source>products.key</source>
                 <target>Schlüssel</target>
