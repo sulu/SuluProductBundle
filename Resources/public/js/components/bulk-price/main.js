@@ -154,8 +154,8 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
                     name: 'input@husky',
                     options: {
                         el: '#' + tmplSelectors.dateStart,
-                        instanceName: 'js-' + tmplSelectors.dateStart,
-                        inputId: 'js-' + tmplSelectors.dateStart,
+                        instanceName: tmplSelectors.dateStart,
+                        inputId: tmplSelectors.dateStart,
                         skin: 'date'
                     }
                 }
@@ -165,8 +165,8 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
                     name: 'input@husky',
                     options: {
                         el: '#' + tmplSelectors.dateEnd,
-                        instanceName: 'js-' + tmplSelectors.dateEnd,
-                        inputId: 'js-' + tmplSelectors.dateEnd,
+                        instanceName: tmplSelectors.dateEnd,
+                        inputId: tmplSelectors.dateEnd,
                         skin: 'date'
                     }
                 }
@@ -193,8 +193,8 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
             }
 
             tmplSelectors.price = "js-input" + this.options.data.currencyCode;
-            tmplSelectors.dateStart = "input-dateStart" + this.options.data.currencyCode;
-            tmplSelectors.dateEnd = "input-dateEnd" + this.options.data.currencyCode;
+            tmplSelectors.dateStart = "js-input-dateStart" + this.options.data.currencyCode;
+            tmplSelectors.dateEnd = "js-input-dateEnd" + this.options.data.currencyCode;
             specialPrice.tmplSelectors = tmplSelectors;
 
             prices = addEmptyObjects.call(this, prices);
