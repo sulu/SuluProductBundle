@@ -10,8 +10,8 @@
 
         <field name="price" type="float"/>
 
-        <field name="start" type="datetime" length="255" nullable="true"/>
-        <field name="end" type="datetime" length="255" nullable="true"/>
+        <field name="startDate" type="datetime" length="255" nullable="true"/>
+        <field name="endDate" type="datetime" length="255" nullable="true"/>
 
         <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface"
                      field="product" inversed-by="prices">

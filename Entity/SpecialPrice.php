@@ -17,12 +17,12 @@ class SpecialPrice
     /**
      * @var \DateTime
      */
-    private $start;
+    private $startDate;
 
     /**
      * @var \DateTime
      */
-    private $end;
+    private $endDate;
 
     /**
      * @var integer
@@ -44,6 +44,7 @@ class SpecialPrice
      * Set price
      *
      * @param float $price
+     *
      * @return SpecialPrice
      */
     public function setPrice($price)
@@ -56,7 +57,7 @@ class SpecialPrice
     /**
      * Get price
      *
-     * @return float 
+     * @return float
      */
     public function getPrice()
     {
@@ -64,55 +65,57 @@ class SpecialPrice
     }
 
     /**
-     * Set start
+     * Set start date
      *
-     * @param \DateTime $start
+     * @param \DateTime $startDate
+     *
      * @return SpecialPrice
      */
-    public function setStart($start)
+    public function setStartDate($startDate)
     {
-        $this->start = $start;
+        $this->startDate = $startDate;
 
         return $this;
     }
 
     /**
-     * Get start
+     * Get start date
      *
-     * @return \DateTime 
+     * @return \DateTime
      */
-    public function getStart()
+    public function getStartDate()
     {
-        return $this->start;
+        return $this->startDate;
     }
 
     /**
-     * Set end
+     * Set end date
      *
-     * @param \DateTime $end
+     * @param \DateTime $endDate
+     *
      * @return SpecialPrice
      */
-    public function setEnd($end)
+    public function setEndDate($endDate)
     {
-        $this->end = $end;
+        $this->endDate = $endDate;
 
         return $this;
     }
 
     /**
-     * Get end
+     * Get end date
      *
-     * @return \DateTime 
+     * @return \DateTime
      */
-    public function getEnd()
+    public function getEndDate()
     {
-        return $this->end;
+        return $this->endDate;
     }
 
     /**
      * Get id
      *
-     * @return integer 
+     * @return integer
      */
     public function getId()
     {
@@ -123,6 +126,7 @@ class SpecialPrice
      * Set currency
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\Currency $currency
+     *
      * @return SpecialPrice
      */
     public function setCurrency(\Sulu\Bundle\ProductBundle\Entity\Currency $currency = null)
@@ -135,7 +139,7 @@ class SpecialPrice
     /**
      * Get currency
      *
-     * @return \Sulu\Bundle\ProductBundle\Entity\Currency 
+     * @return \Sulu\Bundle\ProductBundle\Entity\Currency
      */
     public function getCurrency()
     {
@@ -146,6 +150,7 @@ class SpecialPrice
      * Set product
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $product
+     *
      * @return SpecialPrice
      */
     public function setProduct(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $product = null)

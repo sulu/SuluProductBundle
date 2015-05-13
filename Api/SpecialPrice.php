@@ -64,26 +64,26 @@ class SpecialPrice extends ApiWrapper
      * Get start date
      *
      * @VirtualProperty
-     * @SerializedName("start")
+     * @SerializedName("startDate")
      *
      * @return \DateTime
      */
-    public function getStart()
+    public function getStartDate()
     {
-        return $this->entity->getStart();
+        return $this->entity->getStartDate();
     }
 
     /**
      * Get end date
      *
      * @VirtualProperty
-     * @SerializedName("End")
+     * @SerializedName("endDate")
      *
      * @return \DateTime
      */
-    public function getEnd()
+    public function getEndDate()
     {
-        return $this->entity->getEnd();
+        return $this->entity->getEndDate();
     }
 
     /**
