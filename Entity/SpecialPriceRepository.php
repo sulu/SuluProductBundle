@@ -24,7 +24,7 @@ class SpecialPriceRepository extends EntityRepository
     {
         try {
             $qb = $this->createQueryBuilder('specialPrice')
-                ->where(':now BETWEEN specialPrice.start AND specialPrice.end')
+                ->where(':now BETWEEN specialPrice.startDate AND specialPrice.endDate')
                 ->setParameter('now', new \DateTime());
 
             return $qb->getQuery()->getResult();
