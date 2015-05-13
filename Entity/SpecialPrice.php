@@ -65,7 +65,7 @@ class SpecialPrice
     }
 
     /**
-     * Set start Date
+     * Set start date
      *
      * @param \DateTime $startDate
      *
@@ -79,7 +79,7 @@ class SpecialPrice
     }
 
     /**
-     * Get start Date
+     * Get start date
      *
      * @return \DateTime
      */
@@ -89,7 +89,7 @@ class SpecialPrice
     }
 
     /**
-     * Set end Date
+     * Set end date
      *
      * @param \DateTime $endDate
      *
@@ -103,7 +103,7 @@ class SpecialPrice
     }
 
     /**
-     * Get end Date
+     * Get end date
      *
      * @return \DateTime
      */
