@@ -955,11 +955,11 @@ class ProductManager implements ProductManagerInterface
 
                     $specialPrice->setPrice($specialPriceData['price']);
 
-                    $startDate = new \DateTime($specialPriceData['dateStart']);
-                    $specialPrice->setStart($startDate);
+                    $startDate = new \DateTime($specialPriceData['startDate']);
+                    $specialPrice->setStartDate($startDate);
 
-                    $endDate = new \DateTime($specialPriceData['dateEnd']);
-                    $specialPrice->setEnd($endDate);
+                    $endDate = new \DateTime($specialPriceData['endDate']);
+                    $specialPrice->setEndDate($endDate);
 
                     $specialPrice->setProduct($product->getEntity());
 
@@ -971,11 +971,11 @@ class ProductManager implements ProductManagerInterface
 
                     $specialPrice->setPrice($specialPriceData['price']);
 
-                    $startDate = new \DateTime($specialPriceData['dateStart']);
-                    $specialPrice->setStart($startDate);
+                    $startDate = new \DateTime($specialPriceData['startDate']);
+                    $specialPrice->setStartDate($startDate);
 
-                    $endDate = new \DateTime($specialPriceData['dateEnd']);
-                    $specialPrice->setEnd($endDate);
+                    $endDate = new \DateTime($specialPriceData['endDate']);
+                    $specialPrice->setEndDate($endDate);
                 }
             }
         }
@@ -1551,7 +1551,7 @@ class ProductManager implements ProductManagerInterface
         if (!is_numeric($id)) {
             throw new InvalidProductAttributeException('id', $id);
         }
-        
+
         $product = $this->productRepository->findById($id);
 
         if (!$product) {
@@ -1577,7 +1577,7 @@ class ProductManager implements ProductManagerInterface
             foreach ($ids as $id) {
                 $counter++;
                 $this->singleDelete($id, null, false);
-                
+
                 if ($flush && ($counter % self::MAX_BATCH_DELETE) === 0) {
                     $this->em->flush();
                     $this->em->clear();
@@ -1587,7 +1587,7 @@ class ProductManager implements ProductManagerInterface
             // if ids is int
             $this->singleDelete($ids, null, false);
         }
-        
+
         if ($flush) {
             $this->em->flush();
         }
