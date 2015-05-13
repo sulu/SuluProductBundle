@@ -783,6 +783,28 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
+     * Checks if datetime string is valid
+     *
+     * @param $string DateTime string
+     *
+     * @return DateTime
+     */
+    private function checkDate($dateTimeString)
+    {
+        if ($dateTimeString === null) {
+            $date = null;
+        }
+
+        try {
+            $date = new \DateTime($dateTimeString);
+        } catch (Exception $e) {
+            $date = null;
+        }
+
+        return $date;
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function save(
@@ -955,10 +977,10 @@ class ProductManager implements ProductManagerInterface
 
                     $specialPrice->setPrice($specialPriceData['price']);
 
-                    $startDate = new \DateTime($specialPriceData['startDate']);
+                    $startDate = checkDate($specialPriceData['startDate']);
                     $specialPrice->setStartDate($startDate);
 
-                    $endDate = new \DateTime($specialPriceData['endDate']);
+                    $endDate = checkDate($specialPriceData['endDate']);
                     $specialPrice->setEndDate($endDate);
 
                     $specialPrice->setProduct($product->getEntity());
@@ -971,10 +993,10 @@ class ProductManager implements ProductManagerInterface
 
                     $specialPrice->setPrice($specialPriceData['price']);
 
-                    $startDate = new \DateTime($specialPriceData['startDate']);
+                    $startDate = checkDate($specialPriceData['startDate']);
                     $specialPrice->setStartDate($startDate);
 
-                    $endDate = new \DateTime($specialPriceData['endDate']);
+                    $endDate = checkDate($specialPriceData['endDate']);
                     $specialPrice->setEndDate($endDate);
                 }
             }

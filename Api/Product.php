@@ -721,6 +721,36 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
+     * Returns the special price for a certain currency
+     *
+     * @return ProductPrice[]
+     */
+    public function getSpecialPriceForCurrency($currency = 'EUR')
+    {
+        $specialPrice = null;
+        $specialPrices = $this->entity->getSpecialPrices();
+        if ($specialPrices) {
+            foreach ($specialPrices as $specialPriceEntity) {
+                if ($specialPriceEntity->getCurrency()->getCode() == $currency) {
+                    $startDate = $specialPriceEntity->getStartDate();
+                    $endDate = $specialPriceEntity->getEndDate();
+                    $now = new \DateTime();
+                    if ($now >= $startDate && $now <= $endDate) {
+                        $specialPrice = $specialPriceEntity->getPrice();
+                    } else {
+                        $specialPrice = null;
+                    }
+
+                    //$specialPrice = $specialPrice;
+                }
+            }
+        }
+
+        return $specialPrice;
+    }
+
+
+    /**
      * Returns the bulk price for a certain quantity of the product by a given currency
      *
      * @return ProductPrice[]
