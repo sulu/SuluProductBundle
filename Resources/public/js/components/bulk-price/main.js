@@ -153,7 +153,7 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
                 {
                     name: 'input@husky',
                     options: {
-                        el: '#' + tmplSelectors.startDateDivId,
+                        el: '#' + tmplSelectors.startDateHolder,
                         instanceName: tmplSelectors.startDate,
                         inputId: tmplSelectors.startDate,
                         skin: 'date'
@@ -164,7 +164,7 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
                 {
                     name: 'input@husky',
                     options: {
-                        el: '#' + tmplSelectors.endDateDivId,
+                        el: '#' + tmplSelectors.endDateHolder,
                         instanceName: tmplSelectors.endDate,
                         inputId: tmplSelectors.endDate,
                         skin: 'date'
@@ -195,8 +195,8 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
             tmplSelectors.price = "js-input" + this.options.data.currencyCode;
             tmplSelectors.startDate = "js-husky-input-startDate" + this.options.data.currencyCode;
             tmplSelectors.endDate = "js-husky-input-endDate" + this.options.data.currencyCode;
-            tmplSelectors.startDateDivId = "js-husky-div-startDate" + this.options.data.currencyCode;
-            tmplSelectors.endDateDivId = "js-husky-div-endDate" + this.options.data.currencyCode;
+            tmplSelectors.startDateHolder = "js-husky-div-startDate" + this.options.data.currencyCode;
+            tmplSelectors.endDateHolder = "js-husky-div-endDate" + this.options.data.currencyCode;
             specialPrice.tmplSelectors = tmplSelectors;
 
             prices = addEmptyObjects.call(this, prices);
