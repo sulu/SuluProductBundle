@@ -975,13 +975,19 @@ class ProductManager implements ProductManagerInterface
                     $currency = $this->currencyRepository->findByCode($specialPriceData['currency']['code']);
                     $specialPrice->setCurrency($currency);
 
-                    $specialPrice->setPrice($specialPriceData['price']);
+                    if (isset($specialPriceData['price'])) {
+                        $specialPrice->setPrice($specialPriceData['price']);
+                    }
 
-                    $startDate = $this->checkDateString($specialPriceData['startDate']);
-                    $specialPrice->setStartDate($startDate);
+                    if (isset($specialPriceData['startDate'])) {
+                        $startDate = $this->checkDateString($specialPriceData['startDate']);
+                        $specialPrice->setStartDate($startDate);
+                    }
 
-                    $endDate = $this->checkDateString($specialPriceData['endDate']);
-                    $specialPrice->setEndDate($endDate);
+                    if (isset($specialPriceData['endDate'])) {
+                        $endDate = $this->checkDateString($specialPriceData['endDate']);
+                        $specialPrice->setEndDate($endDate);
+                    }
 
                     $specialPrice->setProduct($product->getEntity());
 
@@ -991,13 +997,19 @@ class ProductManager implements ProductManagerInterface
                 } else {
                     $specialPrice = $specialPrices[$specialPriceData['currency']['code']]->getEntity();
 
-                    $specialPrice->setPrice($specialPriceData['price']);
+                    if (isset($specialPriceData['price'])) {
+                        $specialPrice->setPrice($specialPriceData['price']);
+                    }
 
-                    $startDate = $this->checkDateString($specialPriceData['startDate']);
-                    $specialPrice->setStartDate($startDate);
+                    if (isset($specialPriceData['startDate'])) {
+                        $startDate = $this->checkDateString($specialPriceData['startDate']);
+                        $specialPrice->setStartDate($startDate);
+                    }
 
-                    $endDate = $this->checkDateString($specialPriceData['endDate']);
-                    $specialPrice->setEndDate($endDate);
+                    if (isset($specialPriceData['endDate'])) {
+                        $endDate = $this->checkDateString($specialPriceData['endDate']);
+                        $specialPrice->setEndDate($endDate);
+                    }
                 }
             }
         }
