@@ -789,16 +789,16 @@ class ProductManager implements ProductManagerInterface
      *
      * @return DateTime
      */
-    private function checkDate($dateTimeString)
+    private function checkDateString($dateTimeString)
     {
-        if ($dateTimeString === null) {
-            $date = null;
+        if (empty($dateTimeString)) {
+            return null;
         }
 
         try {
             $date = new \DateTime($dateTimeString);
         } catch (Exception $e) {
-            $date = null;
+            return null;
         }
 
         return $date;
@@ -977,10 +977,10 @@ class ProductManager implements ProductManagerInterface
 
                     $specialPrice->setPrice($specialPriceData['price']);
 
-                    $startDate = checkDate($specialPriceData['startDate']);
+                    $startDate = $this->checkDateString($specialPriceData['startDate']);
                     $specialPrice->setStartDate($startDate);
 
-                    $endDate = checkDate($specialPriceData['endDate']);
+                    $endDate = $this->checkDateString($specialPriceData['endDate']);
                     $specialPrice->setEndDate($endDate);
 
                     $specialPrice->setProduct($product->getEntity());
@@ -993,10 +993,10 @@ class ProductManager implements ProductManagerInterface
 
                     $specialPrice->setPrice($specialPriceData['price']);
 
-                    $startDate = checkDate($specialPriceData['startDate']);
+                    $startDate = $this->checkDateString($specialPriceData['startDate']);
                     $specialPrice->setStartDate($startDate);
 
-                    $endDate = checkDate($specialPriceData['endDate']);
+                    $endDate = $this->checkDateString($specialPriceData['endDate']);
                     $specialPrice->setEndDate($endDate);
                 }
             }

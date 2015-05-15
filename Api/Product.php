@@ -737,11 +737,13 @@ class Product extends ApiWrapper implements ApiProductInterface
                     $now = new \DateTime();
                     if ($now >= $startDate && $now <= $endDate) {
                         $specialPrice = $specialPriceEntity->getPrice();
+                    } else if ($now >= $startDate && empty($endDate)) {
+                        $specialPrice = $specialPriceEntity->getPrice();
+                    } else if (empty($startDate) && empty($endDate)) {
+                        $specialPrice = $specialPriceEntity->getPrice();
                     } else {
                         $specialPrice = null;
                     }
-
-                    //$specialPrice = $specialPrice;
                 }
             }
         }
