@@ -905,7 +905,7 @@ class ProductManager implements ProductManagerInterface
             $productAttributes = array();
             // If attributes are not in current specified attributes remove them from product
             foreach ($product->getAttributes() as $productAttribute) {
-            	$productAttributes[$productAttribute->getAttribute()->getId()] = $productAttribute;
+                $productAttributes[$productAttribute->getAttribute()->getId()] = $productAttribute;
                 if (!in_array($productAttribute->getAttribute()->getId(), $attributeIds)) {
                     $product->getEntity()->removeProductAttribute($productAttribute->getEntity());
                     $this->em->remove($productAttribute->getEntity());
@@ -917,11 +917,14 @@ class ProductManager implements ProductManagerInterface
                 $attributeId = $attributeData['attributeId'];
 
                 if (!array_key_exists($attributeId, $productAttributes)) {
-                	// product attribute does not exists
+                    // product attribute does not exists
                     $productAttribute = new ProductAttribute();
                     $attribute = $this->attributeRepository->find($attributeData['attributeId']);
                     if (!$attribute) {
-                        throw new ProductDependencyNotFoundException(self::$attributeEntityName, $attributeData['attributeId']);
+                        throw new ProductDependencyNotFoundException(
+                            self::$attributeEntityName,
+                            $attributeData['attributeId']
+                        );
                     }
                     $productAttribute->setAttribute($attribute);
                     $productAttribute->setValue($attributeValue);
@@ -946,7 +949,7 @@ class ProductManager implements ProductManagerInterface
             $currencyCodes = array();
 
             // create array of special price currency codes in json request
-            foreach($specialPricesData as $key => $specialPrice) {
+            foreach ($specialPricesData as $key => $specialPrice) {
                 if (!empty($specialPrice['currency']['code']) && !empty($specialPrice['price'])) {
                     array_push($currencyCodes, $specialPrice['currency']['code']);
                 } else {
@@ -955,19 +958,19 @@ class ProductManager implements ProductManagerInterface
             }
 
             // iterate through already added special prices for this specific product
-            foreach($product->getSpecialPrices() as $specialPrice) {
+            foreach ($product->getSpecialPrices() as $specialPrice) {
                 // save special prices to array (for later use)
                 $specialPrices[$specialPrice->getCurrency()->getCode()] = $specialPrice;
 
-                // check if special price code already exists in array if not remove it from product ( it was not sent with the json)
-                if(!in_array($specialPrice->getCurrency()->getCode(), $currencyCodes)) {
+                // check if special price code already exists in array if not remove it from product
+                if (!in_array($specialPrice->getCurrency()->getCode(), $currencyCodes)) {
                     $product->removeSpecialPrice($specialPrice->getEntity());
                     $this->em->remove($specialPrice->getEntity());
                 }
-             }
+            }
 
             // itearate through send json array of special prices
-            foreach($specialPricesData as $specialPriceData) {
+            foreach ($specialPricesData as $specialPriceData) {
                 // if key does not exists add a new special price to product
                 if (!array_key_exists($specialPriceData['currency']['code'], $specialPrices)) {
                     $specialPrice = new SpecialPrice();
@@ -1081,7 +1084,7 @@ class ProductManager implements ProductManagerInterface
                 throw new ProductDependencyNotFoundException(self::$accountsSupplierEntityName, $supplierId);
             }
             $product->setSupplier($supplier);
-        } else if (isset($data['supplier']) && !isset($data['supplier']['id'])) {
+        } elseif (isset($data['supplier']) && !isset($data['supplier']['id'])) {
             $product->setSupplier(null);
         }
 
@@ -1263,6 +1266,7 @@ class ProductManager implements ProductManagerInterface
             $this->em->remove($data);
         }
         foreach ($productEntity->getPrices() as $data) {
+            $publishedProductEntity->addPrice($data);
             $data->setProduct($publishedProductEntity);
         }
 
@@ -1271,6 +1275,7 @@ class ProductManager implements ProductManagerInterface
             $this->em->remove($data);
         }
         foreach ($productEntity->getProductAttributes() as $data) {
+            $publishedProductEntity->addProductAttribute($data);
             $data->setProduct($publishedProductEntity);
         }
 
@@ -1279,50 +1284,56 @@ class ProductManager implements ProductManagerInterface
             $this->em->remove($data);
         }
         foreach ($productEntity->getTranslations() as $data) {
+            $publishedProductEntity->addTranslation($data);
             $data->setProduct($publishedProductEntity);
         }
 
         // Move addons
         foreach ($publishedProductEntity->getAddons() as $data) {
-            $this->em->remove($data);
+            $publishedProductEntity->removeAddon($data);
         }
         foreach ($productEntity->getAddons() as $data) {
+            $publishedProductEntity->addAddon($data);
             $data->setProduct($publishedProductEntity);
         }
 
         // Move sets
         foreach ($publishedProductEntity->getSets() as $data) {
-            $this->em->remove($data);
+            $publishedProductEntity->removeSet($data);
         }
         foreach ($productEntity->getSets() as $data) {
+            $publishedProductEntity->addSet($data);
             $data->setProduct($publishedProductEntity);
         }
 
         // Move relation
         foreach ($publishedProductEntity->getRelations() as $data) {
-            $this->em->remove($data);
+            $publishedProductEntity->removeRelation($data);
         }
         foreach ($productEntity->getRelations() as $data) {
+            $publishedProductEntity->addRelation($data);
             $data->setProduct($publishedProductEntity);
         }
 
         // Move upsell
         foreach ($publishedProductEntity->getUpsells() as $data) {
-            $this->em->remove($data);
+            $publishedProductEntity->removeUpsell($data);
         }
         foreach ($productEntity->getUpsells() as $data) {
+            $publishedProductEntity->addUpsell($data);
             $data->setProduct($publishedProductEntity);
         }
 
         // Move crossells
         foreach ($publishedProductEntity->getCrosssells() as $data) {
-            $this->em->remove($data);
+            $publishedProductEntity->removeCrosssell($data);
         }
         foreach ($productEntity->getCrosssells() as $data) {
+            $publishedProductEntity->addCrosssell($data);
             $data->setProduct($publishedProductEntity);
         }
 
-        // // Move categories
+        // Move categories
         foreach ($publishedProductEntity->getCategories() as $data) {
             $publishedProductEntity->removeCategory($data);
         }
@@ -1336,6 +1347,7 @@ class ProductManager implements ProductManagerInterface
         }
         foreach ($productEntity->getMedia() as $data) {
             $publishedProductEntity->addMedia($data);
+            $data->setProduct($publishedProductEntity);
         }
 
         $publishedProductEntity->setNumber($productEntity->getNumber());
