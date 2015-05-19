@@ -89,10 +89,23 @@ class ProductPriceManager implements ProductPriceManagerInterface
     public function getSpecialPriceForCurrency(ProductInterface $product, $currency = null)
     {
         $currency = $currency ?: $this->defaultCurrency;
-        if ($prices = $product->getSpecialPrices()) {
-            foreach ($prices as $price) {
-                if ($price->getCurrency()->getCode() == $currency) {
-                    return $price;
+        $specialPrices = $product->getSpecialPrices();
+
+        if ($specialPrices) {
+            foreach ($specialPrices as $specialPriceEntity) {
+                if ($specialPriceEntity->getCurrency()->getCode() == $currency) {
+                    $startDate = $specialPriceEntity->getStartDate();
+                    $endDate = $specialPriceEntity->getEndDate();
+                    $now = new \DateTime();
+                    if ($now >= $startDate && $now <= $endDate) {
+                        return $specialPriceEntity;
+                    } else if ($now >= $startDate && empty($endDate)) {
+                        return $specialPriceEntity;
+                    } else if (empty($startDate) && empty($endDate)) {
+                        return $specialPriceEntity;
+                    } else {
+                        return null;
+                    }
                 }
             }
         }
