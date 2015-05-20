@@ -97,11 +97,8 @@ class ProductPriceManager implements ProductPriceManagerInterface
                     $startDate = $specialPriceEntity->getStartDate();
                     $endDate = $specialPriceEntity->getEndDate();
                     $now = new \DateTime();
-                    if ($now >= $startDate && $now <= $endDate) {
-                        return $specialPriceEntity;
-                    } else if ($now >= $startDate && empty($endDate)) {
-                        return $specialPriceEntity;
-                    } else if (empty($startDate) && empty($endDate)) {
+                    if ($now >= $startDate && $now <= $endDate || $now >= $startDate && empty($endDate)
+                    || empty($startDate) && empty($endDate)) {
                         return $specialPriceEntity;
                     } else {
                         return null;
