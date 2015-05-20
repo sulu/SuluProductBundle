@@ -79,6 +79,40 @@ class ProductPriceManager implements ProductPriceManagerInterface
     }
 
     /**
+     * Returns the special price for the product by a given currency
+     *
+     * @param ProductInterface $product
+     * @param null|string $currency
+     *
+     * @return null|\Sulu\Bundle\ProductBundle\Entity\ProductPrice
+     */
+    public function getSpecialPriceForCurrency(ProductInterface $product, $currency = null)
+    {
+        $currency = $currency ?: $this->defaultCurrency;
+        $specialPrices = $product->getSpecialPrices();
+
+        if ($specialPrices) {
+            foreach ($specialPrices as $specialPriceEntity) {
+                if ($specialPriceEntity->getCurrency()->getCode() == $currency) {
+                    $startDate = $specialPriceEntity->getStartDate();
+                    $endDate = $specialPriceEntity->getEndDate();
+                    $now = new \DateTime();
+                    if (($now >= $startDate && $now <= $endDate) ||
+                        ($now >= $startDate && empty($endDate)) ||
+                        (empty($startDate) && empty($endDate))
+                    ) {
+                        return $specialPriceEntity;
+                    }
+
+                    return null;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Helper function to get a formatted price for a given currency and locale
      *
      * @param Integer $price
