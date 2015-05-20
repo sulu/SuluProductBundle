@@ -18,7 +18,7 @@ use Sulu\Bundle\ProductBundle\Entity\StatusTranslation;
 use Sulu\Bundle\ProductBundle\Entity\Type;
 use Sulu\Bundle\ProductBundle\Entity\TypeTranslation;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
-use Symfony\Bundle\FrameworkBundle\Client; 
+use Symfony\Bundle\FrameworkBundle\Client;
 
 class VariantControllerTest extends SuluTestCase
 {
@@ -54,13 +54,14 @@ class VariantControllerTest extends SuluTestCase
      */
     protected $productWithVariantsType;
 
+    private $productVariants = [];
+
     public function setUp()
     {
         $this->em = $this->db('ORM')->getOm();
         $this->purgeDatabase();
         $this->createFixtures();
         $this->client = $this->createAuthenticatedClient();
-        $this->em->flush();
     }
 
     public function createFixtures()
@@ -98,10 +99,7 @@ class VariantControllerTest extends SuluTestCase
         $this->product->setType($this->productWithVariantsType);
 
         $this->em->persist($this->product->getEntity());
-    }
 
-    public function testGetAll()
-    {
         $productVariant1 = new Product(new ProductEntity(), 'en');
         $productVariant1->setName('Productvariant');
         $productVariant1->setNumber('2');
@@ -109,6 +107,7 @@ class VariantControllerTest extends SuluTestCase
         $productVariant1->setType($this->productType);
         $productVariant1->setParent($this->product);
         $this->em->persist($productVariant1->getEntity());
+        $this->productVariants[] = $productVariant1;
 
         $productVariant2 = new Product(new ProductEntity(), 'en');
         $productVariant2->setName('Another Productvariant');
@@ -117,6 +116,7 @@ class VariantControllerTest extends SuluTestCase
         $productVariant2->setType($this->productType);
         $productVariant2->setParent($this->product);
         $this->em->persist($productVariant2->getEntity());
+        $this->productVariants[] = $productVariant2;
 
         $anotherProduct = new Product(new ProductEntity(), 'en');
         $anotherProduct->setName('Another product');
@@ -126,8 +126,14 @@ class VariantControllerTest extends SuluTestCase
         $this->em->persist($anotherProduct->getEntity());
 
         $this->em->flush();
+    }
 
-        $this->client->request('GET', '/api/products/'.$this->product->getId().'/variants?flat=true');
+    public function testGetAll()
+    {
+        $this->client->request(
+            'GET',
+            '/api/products/' . $this->product->getId() . '/variants?flat=true'
+        );
         $response = json_decode($this->client->getResponse()->getContent());
 
         $this->assertEquals(2, $response->total);
@@ -138,24 +144,18 @@ class VariantControllerTest extends SuluTestCase
 
     public function testPost()
     {
-        $productVariant = new Product(new ProductEntity(), 'en');
-        $productVariant->setName('ProductVariant');
-        $productVariant->setNumber('2');
-        $productVariant->setStatus($this->activeStatus);
-        $productVariant->setType($this->productType);
-        $productVariant->setParent($this->product);
-        $this->em->persist($productVariant->getEntity());
-
-        $this->em->flush();
-
-        $this->client->request('POST', '/api/products/'.$this->product->getId().'/variants', array('id' => $productVariant->getId()));
+        $this->client->request(
+            'POST',
+            '/api/products/' . $this->product->getId() . '/variants',
+            array('id' => $this->productVariants[0]->getId())
+        );
 
         $response = json_decode($this->client->getResponse()->getContent());
 
         $this->assertEquals('2', $response->number);
         $this->assertEquals('1', $response->parent->number);
 
-        $this->client->request('GET', '/api/products/'.$productVariant->getId());
+        $this->client->request('GET', '/api/products/'. $this->productVariants[0]->getId());
 
         $response = json_decode($this->client->getResponse()->getContent());
 
@@ -164,17 +164,7 @@ class VariantControllerTest extends SuluTestCase
 
     public function testPostWithNotExistingParent()
     {
-        $productVariant = new Product(new ProductEntity(), 'en');
-        $productVariant->setName('ProductVariant');
-        $productVariant->setNumber('2');
-        $productVariant->setStatus($this->activeStatus);
-        $productVariant->setType($this->productType);
-        $productVariant->setParent($this->product);
-        $this->em->persist($productVariant->getEntity());
-
-        $this->em->flush();
-
-        $this->client->request('POST', '/api/products/3/variants', array('id' => $productVariant->getId()));
+        $this->client->request('POST', '/api/products/3/variants', array('id' => $this->productVariants[0]->getId()));
 
         $response = json_decode($this->client->getResponse()->getContent());
 
@@ -200,23 +190,22 @@ class VariantControllerTest extends SuluTestCase
 
     public function testDelete()
     {
-        $productVariant1 = new Product(new ProductEntity(), 'en');
-        $productVariant1->setName('Productvariant');
-        $productVariant1->setNumber('2');
-        $productVariant1->setStatus($this->activeStatus);
-        $productVariant1->setType($this->productType);
-        $productVariant1->setParent($this->product);
-        $this->em->persist($productVariant1->getEntity());
-
-        $this->em->flush();
-
-        $this->client->request('GET', '/api/products/'.$this->product->getId().'/variants/'.$productVariant1->getId());
+        $this->client->request(
+            'GET',
+            '/api/products/' . $this->product->getId() . '/variants/' . $this->productVariants[1]->getId()
+        );
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
 
-        $this->client->request('DELETE', '/api/products/'.$this->product->getId().'/variants/'.$productVariant1->getId());
+        $this->client->request(
+            'DELETE',
+            '/api/products/' . $this->product->getId() . '/variants/' . $this->productVariants[1]->getId()
+        );
         $this->assertEquals(204, $this->client->getResponse()->getStatusCode());
 
-        $this->client->request('GET', '/api/products/'.$this->product->getId().'/variants/'.$productVariant1->getId());
+        $this->client->request(
+            'GET',
+            '/api/products/' . $this->product->getId() . '/variants/' . $this->productVariants[1]->getId()
+        );
         $this->assertEquals(404, $this->client->getResponse()->getStatusCode());
     }
 }

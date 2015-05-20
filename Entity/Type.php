@@ -55,7 +55,7 @@ class Type
     /**
      * Get id
      *
-     * @return integer 
+     * @return integer
      */
     public function getId()
     {
@@ -71,7 +71,7 @@ class Type
     public function addProduct(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $products)
     {
         $this->products[] = $products;
-    
+
         return $this;
     }
 
@@ -88,7 +88,7 @@ class Type
     /**
      * Get products
      *
-     * @return \Doctrine\Common\Collections\Collection 
+     * @return \Doctrine\Common\Collections\Collection
      */
     public function getProducts()
     {
@@ -104,7 +104,7 @@ class Type
     public function addTranslation(\Sulu\Bundle\ProductBundle\Entity\TypeTranslation $translations)
     {
         $this->translations[] = $translations;
-    
+
         return $this;
     }
 
@@ -121,7 +121,7 @@ class Type
     /**
      * Get translations
      *
-     * @return \Doctrine\Common\Collections\Collection 
+     * @return \Doctrine\Common\Collections\Collection
      */
     public function getTranslations()
     {

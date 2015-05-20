@@ -420,8 +420,8 @@ class ProductControllerTest extends SuluTestCase
         $this->specialPrice1 = new SpecialPrice();
         $this->specialPrice1->setPrice("56");
         $this->specialPrice1->setCurrency($this->currency1);
-        $this->specialPrice1->setStart(new \DateTime());
-        $this->specialPrice1->setEnd(new \DateTime());
+        $this->specialPrice1->setStartDate(new \DateTime());
+        $this->specialPrice1->setEndDate(new \DateTime());
 
         $this->em->persist($this->deliveryStatusAvailable);
         $this->em->persist($deliveryStatusAvailableTranslation);
@@ -733,7 +733,14 @@ class ProductControllerTest extends SuluTestCase
         $this->client->request(
             'PUT',
             '/api/products/'.$this->product1->getId(),
-            array('number' => 1, 'status' => array('id' => $this->productStatus1->getId()), 'type' => array('id' => 666))
+            array(
+                'number' => 1,
+                'status' => array(
+                    'id' => $this->productStatus1->getId()
+                ),
+                'type' => array(
+                    'id' => 666)
+                )
         );
 
         $response = json_decode($this->client->getResponse()->getContent());
@@ -771,11 +778,18 @@ class ProductControllerTest extends SuluTestCase
                 'number' => 1,
                 'type' => array('id' => $this->type1->getId()),
                 'status' => array('id' => $this->productStatus1->getId()),
-                'categories' => array(array('id' => $this->category1->getId()), array('id' => $this->category2->getId())),
+                'categories' => array(
+                    array(
+                        'id' => $this->category1->getId()
+                    ),
+                    array(
+                        'id' => $this->category2->getId()
+                    )
+                ),
                 'cost' => 99.9
             )
         );
-        
+
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
 
         $this->client->request('GET', '/api/products/'.$this->product1->getId());
@@ -795,14 +809,14 @@ class ProductControllerTest extends SuluTestCase
             'id' => array('id' => $this->product1->getId()),
             'status' => array('id' => $this->productStatus1->getId()),
             'attributes' => array(
-            	0 => array(
-                	'attributeId' => $this->productAttribute1->getAttribute()->getId(),
-                	'value' => $this->productAttribute1->getValue()
-            	),
-            	1 => array(
-            		'attributeId' => $this->productAttribute2->getAttribute()->getId(),
-            		'value' => $this->productAttribute2->getValue()
-            	)
+                0 => array(
+                    'attributeId' => $this->productAttribute1->getAttribute()->getId(),
+                    'value' => $this->productAttribute1->getValue()
+                ),
+                1 => array(
+                    'attributeId' => $this->productAttribute2->getAttribute()->getId(),
+                    'value' => $this->productAttribute2->getValue()
+                )
             )
         );
 
@@ -1031,10 +1045,10 @@ class ProductControllerTest extends SuluTestCase
             'specialPrices' => array(
                 array(
                     'price' => $this->specialPrice1->getPrice(),
-                    'start' => $this->specialPrice1->getStart()->format('Y-m-d h:i:s'),
-                    'end' => $this->specialPrice1->getEnd()->format('Y-m-d h:i:s'),
+                    'start' => $this->specialPrice1->getStartDate()->format('Y-m-d h:i:s'),
+                    'end' => $this->specialPrice1->getEndDate()->format('Y-m-d h:i:s'),
                     'currency' => array("code" => $this->specialPrice1->getCurrency()->getCode())
-            	)
+                )
             )
         );
 
@@ -1046,4 +1060,3 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals('eur', $response->specialPrices[0]->currency->code);
     }
 }
-
