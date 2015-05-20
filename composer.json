@@ -26,12 +26,15 @@
 
         "sulu/tag-bundle": "@dev",
         "sulu/category-bundle": "@dev",
-        "sulu/media-bundle": "@dev"
+        "sulu/media-bundle": "@dev",
+
+        "jackalope/jackalope-doctrine-dbal": "~1.2.0",
+        "jackalope/jackalope-jackrabbit": "~1.2.0",
+        "massive/search-bundle": "~1.0@dev"
     },
     "require-dev": {
         "sensio/framework-extra-bundle":  "~3.0",
         "symfony/symfony": "2.6.*",
-        "doctrine/doctrine-bundle": "1.2.*",
         "symfony/monolog-bundle": "2.4.*",
         "phpunit/phpunit": "~4.0.0",
         "symfony-cmf/testing": "~1.2",
