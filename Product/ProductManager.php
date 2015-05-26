@@ -1347,7 +1347,6 @@ class ProductManager implements ProductManagerInterface
         }
         foreach ($productEntity->getMedia() as $data) {
             $publishedProductEntity->addMedia($data);
-            $data->setProduct($publishedProductEntity);
         }
 
         $publishedProductEntity->setNumber($productEntity->getNumber());
