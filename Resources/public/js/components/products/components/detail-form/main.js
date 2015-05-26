@@ -37,7 +37,8 @@ define([
 
         initialize: function () {
             this.saved = true;
-            this.status  = !!this.options.data ? this.options.data.status : Config.get('product.status.active');
+            //this.status  = !!this.options.data.attributes ? this.options.data.status : Config.get('product.status.active');
+            this.status = this.options.data.attributes.status;
 
             this.initializeValidation();
 
@@ -140,7 +141,7 @@ define([
         },
 
         setFormData: function (data) {
-            this.sandbox.form.setData(formSelector, data).then(function () {
+            this.sandbox.form.setData(formSelector, data.toJSON()).then(function () {
                 this.sandbox.start(formSelector);
             }.bind(this)).fail(function (error) {
                 this.sandbox.logger.error("An error occured when setting data!", error);

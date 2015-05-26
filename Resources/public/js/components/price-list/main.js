@@ -149,7 +149,7 @@ define([], function() {
                 var $el = this.sandbox.dom.createElement(templates.bulkPrice(currency.code)),
                     options = {
                         el: $el,
-                        data: this.bulkPriceData,
+                        data: this.options.data,
                         instanceName: currency.code,
                         currency: currency
                     };

@@ -171,6 +171,17 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
                     }
                 }
             ]);
+        },
+
+        getPricesForCurrency = function(prices, currencyCode) {
+            var prices = [];
+            this.sandbox.util.foreach(prices, function(price) {
+                if (price.currency.code === currencyCode) {
+                    prides.push(price);
+                }
+            }.bind(this));
+
+            return prices;
         };
 
     return {
@@ -180,23 +191,34 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
                 salesPrice,
                 specialPrice = {},
                 tmplSelectors = {};
+                this.groupedPrices = {};
+            debugger;
+            var currencyCode = this.options.currency.code;
 
+            if (this.options.data.attributes.prices) {
+                prices = getPricesForCurrency.call(this, this.options.data.attributes.prices, currencyCode);
+            }
+
+            /*
             this.options = this.sandbox.util.extend({}, defaults, this.options);
             if (this.options.data.prices) {
                 prices = this.sandbox.util.extend([], this.options.data.prices);
                 salesPrice = getSalesPriceAndRemoveFromPrices.call(this, prices);
             }
+            */
 
-            if (this.options.data.specialPrice) {
-                specialPrice = this.options.data.specialPrice;
+            /*
+            if (this.options.data.attributes.specialPrice) {
+                specialPrice = this.options.data.attributes.specialPrice;
                 specialPrice.price = this.sandbox.numberFormat(specialPrice.price, 'n');
             }
+            */
 
-            tmplSelectors.price = "js-input" + this.options.data.currencyCode;
-            tmplSelectors.startDate = "js-husky-input-startDate" + this.options.data.currencyCode;
-            tmplSelectors.endDate = "js-husky-input-endDate" + this.options.data.currencyCode;
-            tmplSelectors.startDateHolder = "js-husky-startDate-holder" + this.options.data.currencyCode;
-            tmplSelectors.endDateHolder = "js-husky-endDate-holder" + this.options.data.currencyCode;
+            tmplSelectors.price = "js-input" + currencyCode;
+            tmplSelectors.startDate = "js-husky-input-startDate" + currencyCode;
+            tmplSelectors.endDate = "js-husky-input-endDate" + currencyCode;
+            tmplSelectors.startDateHolder = "js-husky-startDate-holder" + currencyCode;
+            tmplSelectors.endDateHolder = "js-husky-endDate-holder" + currencyCode;
             specialPrice.tmplSelectors = tmplSelectors;
 
             prices = addEmptyObjects.call(this, prices);

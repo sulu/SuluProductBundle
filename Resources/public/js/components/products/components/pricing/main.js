@@ -15,6 +15,7 @@ define(['config'], function(Config) {
         maxLengthTitle = 60,
 
         render = function() {
+            debugger;
             this.sandbox.dom.html(this.$el, this.renderTemplate('/admin/product/template/product/pricing'));
 
             setHeaderInformation.call(this);
@@ -31,7 +32,7 @@ define(['config'], function(Config) {
                 priceListData.specialPrices = this.options.data.specialPrices;
             }
 
-            initPriceList.call(this, priceListData);
+            initPriceList.call(this, this.options.data);
         },
 
         initPriceList = function(data) {
@@ -101,7 +102,7 @@ define(['config'], function(Config) {
         },
 
         setFormData = function(data) {
-            this.sandbox.form.setData(formSelector, data).then(function() {
+            this.sandbox.form.setData(formSelector, data.toJSON()).then(function() {
                 this.sandbox.start(formSelector);
             }.bind(this)).fail(function(error) {
                 this.sandbox.logger.error("An error occured when setting data!", error);
@@ -163,7 +164,8 @@ define(['config'], function(Config) {
         templates: ['/admin/product/template/product/pricing'],
 
         initialize: function() {
-            this.status = !!this.options.data ? this.options.data.status : Config.get('product.status.active');
+            //this.status = !!this.options.data ? this.options.data.status : Config.get('product.status.active');
+            this.status = this.options.data.attributes.status;
 
             bindCustomEvents.call(this);
 
