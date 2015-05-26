@@ -15,7 +15,6 @@ define(['config'], function(Config) {
         maxLengthTitle = 60,
 
         render = function() {
-            debugger;
             this.sandbox.dom.html(this.$el, this.renderTemplate('/admin/product/template/product/pricing'));
 
             setHeaderInformation.call(this);

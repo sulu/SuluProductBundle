@@ -18,14 +18,7 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
 
     'use strict';
 
-    var defaults = {
-            instanceName: null,
-            data: [],
-            translations: {},
-            currency: null
-        },
-
-        constants = {
+        var constants = {
             minimumQuantity: 0,
             maxBulkElements: 4,
             bulkPriceIdPrefix: 'bulk-price-'
@@ -174,14 +167,27 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
         },
 
         getPricesForCurrency = function(prices, currencyCode) {
-            var prices = [];
+            var pricesForCurrency = [];
             this.sandbox.util.foreach(prices, function(price) {
                 if (price.currency.code === currencyCode) {
-                    prides.push(price);
+                    pricesForCurrency.push(price);
                 }
             }.bind(this));
 
-            return prices;
+            return pricesForCurrency;
+        },
+
+        getSpecialPriceForCurrency = function(specialPrices, currencyCode) {
+            var specialPriceForCurrency;
+
+            this.sandbox.util.foreach(specialPrices, function(specialPrice) {
+                if (specialPrice.currency.code === currencyCode) {
+                    specialPriceForCurrency = specialPrice;
+                    return;
+                }
+            }.bind(this));
+
+            return specialPriceForCurrency;
         };
 
     return {
@@ -192,28 +198,20 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
                 specialPrice = {},
                 tmplSelectors = {};
                 this.groupedPrices = {};
-            debugger;
             var currencyCode = this.options.currency.code;
 
             if (this.options.data.attributes.prices) {
                 prices = getPricesForCurrency.call(this, this.options.data.attributes.prices, currencyCode);
-            }
-
-            /*
-            this.options = this.sandbox.util.extend({}, defaults, this.options);
-            if (this.options.data.prices) {
-                prices = this.sandbox.util.extend([], this.options.data.prices);
                 salesPrice = getSalesPriceAndRemoveFromPrices.call(this, prices);
             }
-            */
-
-            /*
-            if (this.options.data.attributes.specialPrice) {
-                specialPrice = this.options.data.attributes.specialPrice;
-                specialPrice.price = this.sandbox.numberFormat(specialPrice.price, 'n');
+            
+            if (this.options.data.attributes.specialPrices) {
+                specialPrice = getSpecialPriceForCurrency.call(this, this.options.data.attributes.specialPrices, currencyCode);
+                if (specialPrice) {
+                    specialPrice.price = this.sandbox.numberFormat(specialPrice.price, 'n');
+                }
             }
-            */
-
+            
             tmplSelectors.price = "js-input" + currencyCode;
             tmplSelectors.startDate = "js-husky-input-startDate" + currencyCode;
             tmplSelectors.endDate = "js-husky-input-endDate" + currencyCode;

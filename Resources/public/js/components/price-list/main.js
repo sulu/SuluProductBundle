@@ -91,18 +91,6 @@ define([], function() {
                 currencies[0] = currencies[idxDefault];
                 currencies[idxDefault] = tmp;
             }
-        },
-
-        groupPrices = function(prices) {
-            var groups = {};
-            this.sandbox.util.foreach(prices, function(price) {
-                if (!groups[price.currency.code]) {
-                    groups[price.currency.code] = [];
-                }
-                groups[price.currency.code].push(price);
-            }.bind(this));
-
-            return groups;
         };
 
     return {
@@ -110,13 +98,8 @@ define([], function() {
         initialize: function() {
             this.options = this.sandbox.util.extend({}, defaults, this.options);
             this.groupedPrices = {};
-            if (this.options.data.prices && this.options.data.prices.length > 0) {
-                this.groupedPrices.prices = groupPrices.call(this, this.options.data.prices);
+            if (this.options.data.attributes.prices && this.options.data.attributes.prices.length > 0) {
                 placeDefaultCurrencyFirst.call(this, this.options.defaultCurrency, this.options.currencies);
-            }
-
-            if (this.options.data.specialPrices && this.options.data.specialPrices.length > 0) {
-                this.groupedPrices.specialPrices = groupPrices.call(this, this.options.data.specialPrices);
             }
 
             bindCustomEvents.call(this);
@@ -133,18 +116,6 @@ define([], function() {
             var bulkPriceComponents = [];
 
             this.sandbox.util.foreach(this.options.currencies, function(currency) {
-
-                this.bulkPriceData = {};
-
-                this.bulkPriceData.currencyCode = currency.code;
-
-                if (this.groupedPrices.prices) {
-                    this.bulkPriceData.prices = this.groupedPrices.prices[currency.code];
-                }
-
-                if (this.groupedPrices.specialPrices && currency.code in this.groupedPrices.specialPrices) {
-                    this.bulkPriceData.specialPrice = this.groupedPrices.specialPrices[currency.code].pop();
-                }
 
                 var $el = this.sandbox.dom.createElement(templates.bulkPrice(currency.code)),
                     options = {

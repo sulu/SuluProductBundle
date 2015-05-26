@@ -195,7 +195,6 @@ define([
         },
 
         save: function (data) {
-            debugger;
             this.sandbox.emit('sulu.header.toolbar.item.loading', 'save-button');
             this.product.set(data);
 
