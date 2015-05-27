@@ -26,15 +26,15 @@ define(['config'], function(Config) {
                     {title: 'pim.products.title'}
                 ];
 
-            if (!!this.options.data && !!this.options.data.name) {
-                title = this.options.data.name;
+            if (!!this.options.data && !!this.options.data.attributes.name) {
+                title = this.options.data.attributes.name;
             }
 
             title = this.sandbox.util.cropTail(title, constants.maxLengthTitle);
 
-            if (!!this.options.data && !!this.options.data.number) {
+            if (!!this.options.data && !!this.options.data.attributes.number) {
                 breadcrumb.push({
-                    title: '#' + this.options.data.number
+                    title: '#' + this.options.data.attributes.number
                 });
             } else {
                 breadcrumb.push({
@@ -61,10 +61,11 @@ define(['config'], function(Config) {
         templates: ['/admin/product/template/product/documents'],
 
         initialize: function() {
+  	    debugger;	
             this.newSelections = [];
             this.removedSelections = [];
-            this.currentSelection = this.getPropertyFromArrayOfObject(this.options.data.media, 'id');
-            this.status  = !!this.options.data ? this.options.data.status : Config.get('product.status.active');
+            this.currentSelection = this.getPropertyFromArrayOfObject(this.options.data.attributes.media, 'id');
+            this.status  = !!this.options.data ? this.options.data.attributes.status : Config.get('product.status.active');
             this.statusChanged = false;
 
             setHeader.call(this);
@@ -112,7 +113,7 @@ define(['config'], function(Config) {
             }.bind(this));
 
             this.sandbox.on('product.state.change', function(id){
-                if(!this.options.data.status || this.options.data.status.id !== id){
+                if(!this.options.data.attributes.status || this.options.data.attributes.status.id !== id){
                     this.status = {id: id};
                     this.statusChanged = true;
                     this.setHeaderBar(false);
@@ -203,6 +204,7 @@ define(['config'], function(Config) {
          * Submits the selection depending on the type
          */
         submit: function() {
+            debugger;
             if (this.sandbox.form.validate(constants.formSelector)) {
 
                 this.sandbox.emit(
@@ -213,8 +215,8 @@ define(['config'], function(Config) {
                 );
 
                 if(!!this.statusChanged){
-                    this.options.data.status = this.status;
-                    this.sandbox.emit('sulu.products.save', this.options.data);
+                    this.options.data.attributes.status = this.status;
+                    this.sandbox.emit('sulu.products.save', this.options.data.attributes);
                 }
             }
         },
@@ -222,7 +224,7 @@ define(['config'], function(Config) {
         /** @var Bool saved - defines if saved state should be shown */
         setHeaderBar: function(saved) {
             if (saved !== this.saved) {
-                var type = (!!this.options.data && !!this.options.data.id) ? 'edit' : 'add';
+                var type = (!!this.options.data && !!this.options.data.attributes.id) ? 'edit' : 'add';
                 this.sandbox.emit('sulu.header.toolbar.state.change', type, saved, true);
             }
             this.saved = saved;
