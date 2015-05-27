@@ -18,7 +18,7 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
 
     'use strict';
 
-        var constants = {
+    var constants = {
             minimumQuantity: 0,
             maxBulkElements: 4,
             bulkPriceIdPrefix: 'bulk-price-'
@@ -178,7 +178,7 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
         },
 
         getSpecialPriceForCurrency = function(specialPrices, currencyCode) {
-            var specialPriceForCurrency;
+            var specialPriceForCurrency = {};
 
             this.sandbox.util.foreach(specialPrices, function(specialPrice) {
                 if (specialPrice.currency.code === currencyCode) {
@@ -197,21 +197,19 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
                 salesPrice,
                 specialPrice = {},
                 tmplSelectors = {};
-                this.groupedPrices = {};
+            this.groupedPrices = {};
             var currencyCode = this.options.currency.code;
 
             if (this.options.data.attributes.prices) {
                 prices = getPricesForCurrency.call(this, this.options.data.attributes.prices, currencyCode);
                 salesPrice = getSalesPriceAndRemoveFromPrices.call(this, prices);
             }
-            
+
             if (this.options.data.attributes.specialPrices) {
                 specialPrice = getSpecialPriceForCurrency.call(this, this.options.data.attributes.specialPrices, currencyCode);
-                if (specialPrice) {
-                    specialPrice.price = this.sandbox.numberFormat(specialPrice.price, 'n');
-                }
+                specialPrice.price = this.sandbox.numberFormat(specialPrice.price, 'n');
             }
-            
+
             tmplSelectors.price = "js-input" + currencyCode;
             tmplSelectors.startDate = "js-husky-input-startDate" + currencyCode;
             tmplSelectors.endDate = "js-husky-input-endDate" + currencyCode;
