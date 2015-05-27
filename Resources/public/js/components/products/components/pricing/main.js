@@ -21,17 +21,7 @@ define(['config'], function(Config) {
 
             initForm.call(this, this.options.data);
 
-            var priceListData = {};
-
-            if (this.options.data.prices) {
-                priceListData.prices = this.options.data.prices;
-            }
-
-            if (this.options.data.specialPrices) {
-                priceListData.specialPrices = this.options.data.specialPrices;
-            }
-
-            initPriceList.call(this, priceListData);
+            initPriceList.call(this, this.options.data);
         },
 
         initPriceList = function(data) {
@@ -54,7 +44,7 @@ define(['config'], function(Config) {
             }.bind(this));
 
             this.sandbox.on('product.state.change', function(id) {
-                if (!this.options.data.status || this.options.data.status.id !== id) {
+                if (!this.options.data.attributes.status || this.options.data.attributes.status.id !== id) {
                     this.status = {id: id};
                     this.options.data.status = this.status;
                     setHeaderBar.call(this, false);
@@ -68,7 +58,7 @@ define(['config'], function(Config) {
             this.sandbox.on('sulu.products.saved', function(data) {
                 setHeaderBar.call(this, true);
                 this.options.data = data;
-                this.options.data.status = this.status;
+                this.options.data.attributes.status = this.status;
             }, this);
 
             this.sandbox.on('sulu.header.back', function() {
@@ -101,7 +91,7 @@ define(['config'], function(Config) {
         },
 
         setFormData = function(data) {
-            this.sandbox.form.setData(formSelector, data).then(function() {
+            this.sandbox.form.setData(formSelector, data.toJSON()).then(function() {
                 this.sandbox.start(formSelector);
             }.bind(this)).fail(function(error) {
                 this.sandbox.logger.error("An error occured when setting data!", error);
@@ -110,7 +100,7 @@ define(['config'], function(Config) {
 
         setHeaderBar = function(saved) {
             if (saved !== this.saved) {
-                var type = (!!this.options.data && !!this.options.data.id) ? 'edit' : 'add';
+                var type = (!!this.options.data && !!this.options.data.attributes.id) ? 'edit' : 'add';
                 this.sandbox.emit('sulu.header.toolbar.state.change', type, saved, true);
             }
             this.saved = saved;
@@ -122,15 +112,15 @@ define(['config'], function(Config) {
                     {title: 'navigation.pim'},
                     {title: 'pim.products.title'}
                 ];
-            if (!!this.options.data && !!this.options.data.name) {
-                title = this.options.data.name;
+            if (!!this.options.data && !!this.options.data.attributes.name) {
+                title = this.options.data.attributes.name;
             }
             title = this.sandbox.util.cropTail(title, maxLengthTitle);
             this.sandbox.emit('sulu.header.set-title', title);
 
-            if (!!this.options.data && !!this.options.data.number) {
+            if (!!this.options.data && !!this.options.data.attributes.number) {
                 breadcrumb.push({
-                    title: '#' + this.options.data.number
+                    title: '#' + this.options.data.attributes.number
                 });
             } else {
                 breadcrumb.push({
@@ -163,7 +153,7 @@ define(['config'], function(Config) {
         templates: ['/admin/product/template/product/pricing'],
 
         initialize: function() {
-            this.status = !!this.options.data ? this.options.data.status : Config.get('product.status.active');
+            this.status = !!this.options.data ? this.options.data.attributes.status : Config.get('product.status.active');
 
             bindCustomEvents.call(this);
 

@@ -37,7 +37,7 @@ define([
 
         initialize: function () {
             this.saved = true;
-            this.status  = !!this.options.data ? this.options.data.status : Config.get('product.status.active');
+            this.status  = !!this.options.data ? this.options.data.attributes.status : Config.get('product.status.active');
 
             this.initializeValidation();
 
@@ -57,7 +57,7 @@ define([
 
         bindCustomEvents: function () {
             this.sandbox.on('product.state.change', function(id){
-                if(!this.options.data || !this.options.data.status || this.options.data.status.id !== id){
+                if(!this.options.data || !this.options.data.attributes.status || this.options.data.attributes.status.id !== id){
                     this.status = {id: id};
                     this.setHeaderBar(false);
                 }
@@ -71,9 +71,9 @@ define([
                 this.sandbox.emit('sulu.product.delete', this.sandbox.dom.val('#id'));
             }.bind(this));
 
-            this.sandbox.on('sulu.products.saved', function (id) {
-                this.options.data.id = id;
-                this.options.data.status = this.status;
+            this.sandbox.on('sulu.products.saved', function (data) {
+                this.options.data.attributes.id = id;
+                this.options.data.attributes.status = this.status;
                 this.setHeaderBar(true);
                 this.setHeaderInformation();
             }, this);
@@ -140,7 +140,7 @@ define([
         },
 
         setFormData: function (data) {
-            this.sandbox.form.setData(formSelector, data).then(function () {
+            this.sandbox.form.setData(formSelector, data.toJSON()).then(function () {
                 this.sandbox.start(formSelector);
             }.bind(this)).fail(function (error) {
                 this.sandbox.logger.error("An error occured when setting data!", error);
@@ -153,7 +153,7 @@ define([
         initSupplierAutocomplete: function() {
             var options = Config.get('sulucontact.components.autocomplete.default.account');
             options.el = constants.supplierId;
-            options.value = (!!this.options.data && !!this.options.data.supplier) ? this.options.data.supplier : '';
+            options.value = (!!this.options.data && !!this.options.data.attributes.supplier) ? this.options.data.attributes.supplier : '';
             options.instanceName = constants.autocompleteSupplierInstanceName;
             options.remoteUrl += 'type=3';
 
@@ -171,15 +171,15 @@ define([
                     {title: 'navigation.pim'},
                     {title: 'pim.products.title'}
                 ];
-            if (!!this.options.data && !!this.options.data.name) {
-                title = this.options.data.name;
+            if (!!this.options.data && !!this.options.data.attributes.name) {
+                title = this.options.data.attributes.name;
             }
             title = this.sandbox.util.cropTail(title, maxLengthTitle);
             this.sandbox.emit('sulu.header.set-title', title);
 
-            if (!!this.options.data && !!this.options.data.number) {
+            if (!!this.options.data && !!this.options.data.attributes.number) {
                 breadcrumb.push({
-                    title: '#' + this.options.data.number
+                    title: '#' + this.options.data.attributes.number
                 });
             } else {
                 breadcrumb.push({
@@ -192,7 +192,7 @@ define([
         // @var Bool saved - defines if saved state should be shown
         setHeaderBar: function (saved) {
             if (saved !== this.saved) {
-                var type = (!!this.options.data && !!this.options.data.id) ? 'edit' : 'add';
+                var type = (!!this.options.data && !!this.options.data.attributes.id) ? 'edit' : 'add';
                 this.sandbox.emit('sulu.header.toolbar.state.change', type, saved, true);
             }
             this.saved = saved;

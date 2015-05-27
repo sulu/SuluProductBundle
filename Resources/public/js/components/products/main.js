@@ -313,7 +313,7 @@ define([
                 this.product.set({id: this.options.id});
                 this.product.fetchLocale(this.options.locale, {
                     success: function (model) {
-                        component.options.data = model.toJSON();
+                        component.options.data = this.product;
                         component.options.productType = types[model.get('type').id];
                         this.sandbox.start([component]);
                         dfd.resolve();

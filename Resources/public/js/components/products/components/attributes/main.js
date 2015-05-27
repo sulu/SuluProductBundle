@@ -72,8 +72,8 @@ define([
                 }
 
                 setHeaderBar.call(this, true);
-                this.options.data = data;
-                this.options.data.status = this.status;
+                //this.options.data = data;
+                this.options.data.attributes.status = this.status;
             }, this);
         },
 
@@ -109,15 +109,15 @@ define([
                     {title: 'navigation.pim'},
                     {title: 'pim.products.title'}
                 ];
-            if (!!this.options.data && !!this.options.data.name) {
-                title = this.options.data.name;
+            if (!!this.options.data && !!this.options.data.attributes.name) {
+                title = this.options.data.attributes.name;
             }
             title = this.sandbox.util.cropTail(title, maxLengthTitle);
             this.sandbox.emit('sulu.header.set-title', title);
 
-            if (!!this.options.data && !!this.options.data.number) {
+            if (!!this.options.data && !!this.options.data.attributes.number) {
                 breadcrumb.push({
-                    title: '#' + this.options.data.number
+                    title: '#' + this.options.data.attributes.number
                 });
             } else {
                 breadcrumb.push({
@@ -223,7 +223,7 @@ define([
             this.sendData = new Object();
             var attributeValue = this.sandbox.dom.val('#attribute-name');
 
-            var attributes = this.options.data.attributes;
+            var attributes = this.options.data.attributes.attributes;
 
             var result = _.findWhere(attributes, {'attributeId': attributeId});
 
@@ -242,7 +242,7 @@ define([
             this.sendData.attributeId = attributeId;
             this.sendData.attributes = attributes;
             this.sendData.status = this.status;
-            this.sendData.id = this.options.data.id;
+            this.sendData.id = this.options.data.attributes.id;
 
             save.call(this);
         },
@@ -253,7 +253,7 @@ define([
         attributeDelete = function() {
             this.sandbox.emit('husky.datagrid.' + datagridInstanceName + '.items.get-selected', function(ids) {
 
-                var attributes = this.options.data.attributes;
+                var attributes = this.options.data.attributes.attributes;
                 this.sendData = new Object();
                 var deleteIds = new Array();
 
@@ -267,7 +267,6 @@ define([
                 this.sendData.attributes = attributes;
                 this.sendData.status = this.status;
                 this.sendData.id = this.options.data.id;
-                // delete action = 2
                 this.sendData.action = actions.DELETE;
 
                 save.call(this);
@@ -297,7 +296,7 @@ define([
                         type: 'checkbox'
                     }
                 },
-                data: this.options.data
+                data: this.options.data.attributes
             };
 
             this.sandbox.start([
@@ -356,7 +355,7 @@ define([
         initialize: function() {
             bindCustomEvents.call(this);
 
-            this.status = !!this.options.data ? this.options.data.status : Config.get('product.status.active');
+            this.status = !!this.options.data ? this.options.data.attributes.status : Config.get('product.status.active');
 
             this.render();
         }
