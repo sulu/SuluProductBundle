@@ -140,11 +140,15 @@ define([
         },
 
         setFormData: function (data) {
-            this.sandbox.form.setData(formSelector, data.toJSON()).then(function () {
+            if (data) {
+                this.sandbox.form.setData(formSelector, data.toJSON()).then(function () {
+                    this.sandbox.start(formSelector);
+                }.bind(this)).fail(function (error) {
+                    this.sandbox.logger.error("An error occured when setting data!", error);
+                }.bind(this));
+            } else {
                 this.sandbox.start(formSelector);
-            }.bind(this)).fail(function (error) {
-                this.sandbox.logger.error("An error occured when setting data!", error);
-            }.bind(this));
+            }
         },
 
         /**
