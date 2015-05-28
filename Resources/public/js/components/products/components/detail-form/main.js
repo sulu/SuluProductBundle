@@ -9,7 +9,7 @@
 
 define([
     'config'
-], function (Config) {
+], function(Config) {
 
     'use strict';
 
@@ -35,9 +35,9 @@ define([
 
         templates: ['/admin/product/template/product/form'],
 
-        initialize: function () {
+        initialize: function() {
             this.saved = true;
-            this.status  = !!this.options.data ? this.options.data.attributes.status : Config.get('product.status.active');
+            this.status = !!this.options.data ? this.options.data.attributes.status : Config.get('product.status.active');
 
             this.initializeValidation();
 
@@ -51,27 +51,27 @@ define([
             this.listenForChange();
         },
 
-        bindDOMEvents: function () {
+        bindDOMEvents: function() {
 
         },
 
-        bindCustomEvents: function () {
-            this.sandbox.on('product.state.change', function(id){
-                if(!this.options.data || !this.options.data.attributes.status || this.options.data.attributes.status.id !== id){
+        bindCustomEvents: function() {
+            this.sandbox.on('product.state.change', function(id) {
+                if (!this.options.data || !this.options.data.attributes.status || this.options.data.attributes.status.id !== id) {
                     this.status = {id: id};
                     this.setHeaderBar(false);
                 }
-            },this);
+            }, this);
 
-            this.sandbox.on('sulu.header.toolbar.save', function () {
+            this.sandbox.on('sulu.header.toolbar.save', function() {
                 this.save();
             }.bind(this));
 
-            this.sandbox.on('sulu.header.toolbar.delete', function () {
+            this.sandbox.on('sulu.header.toolbar.delete', function() {
                 this.sandbox.emit('sulu.product.delete', this.sandbox.dom.val('#id'));
             }.bind(this));
 
-            this.sandbox.on('sulu.products.saved', function (data) {
+            this.sandbox.on('sulu.products.saved', function(data) {
                 this.options.data.attributes.id = id;
                 this.options.data.attributes.status = this.status;
                 this.setHeaderBar(true);
@@ -79,20 +79,20 @@ define([
             }, this);
 
             // back to list
-            this.sandbox.on('sulu.header.back', function () {
+            this.sandbox.on('sulu.header.back', function() {
                 this.sandbox.emit('sulu.products.list');
             }, this);
 
-            this.sandbox.on('sulu.header.initialized', function () {
+            this.sandbox.on('sulu.header.initialized', function() {
                 this.setHeaderInformation();
             }, this);
         },
 
-        initializeValidation: function () {
+        initializeValidation: function() {
             this.sandbox.form.create(formSelector);
         },
 
-        save: function () {
+        save: function() {
             if (this.sandbox.form.validate(formSelector)) {
                 var data = this.sandbox.form.getData(formSelector),
                     supplierId;
@@ -122,7 +122,7 @@ define([
             }
         },
 
-        render: function () {
+        render: function() {
             this.sandbox.dom.html(this.$el, this.renderTemplate('/admin/product/template/product/form'));
 
             this.setHeaderInformation();
@@ -131,19 +131,19 @@ define([
             this.initForm(this.options.data);
         },
 
-        initForm: function (data) {
+        initForm: function(data) {
             // set form data
             var formObject = this.sandbox.form.create(formSelector);
-            formObject.initialized.then(function () {
+            formObject.initialized.then(function() {
                 this.setFormData(data);
             }.bind(this));
         },
 
-        setFormData: function (data) {
+        setFormData: function(data) {
             if (data) {
-                this.sandbox.form.setData(formSelector, data.toJSON()).then(function () {
+                this.sandbox.form.setData(formSelector, data.toJSON()).then(function() {
                     this.sandbox.start(formSelector);
-                }.bind(this)).fail(function (error) {
+                }.bind(this)).fail(function(error) {
                     this.sandbox.logger.error("An error occured when setting data!", error);
                 }.bind(this));
             } else {
@@ -169,7 +169,7 @@ define([
             ]);
         },
 
-        setHeaderInformation: function () {
+        setHeaderInformation: function() {
             var title = 'pim.product.title',
                 breadcrumb = [
                     {title: 'navigation.pim'},
@@ -194,7 +194,7 @@ define([
         },
 
         // @var Bool saved - defines if saved state should be shown
-        setHeaderBar: function (saved) {
+        setHeaderBar: function(saved) {
             if (saved !== this.saved) {
                 var type = (!!this.options.data && !!this.options.data.attributes.id) ? 'edit' : 'add';
                 this.sandbox.emit('sulu.header.toolbar.state.change', type, saved, true);
@@ -202,23 +202,23 @@ define([
             this.saved = saved;
         },
 
-        listenForChange: function () {
-            this.sandbox.dom.on('#product-form', 'change', function () {
+        listenForChange: function() {
+            this.sandbox.dom.on('#product-form', 'change', function() {
                 this.setHeaderBar(false);
             }.bind(this), 'select');
-            this.sandbox.dom.on('#product-form', 'keyup', function () {
+            this.sandbox.dom.on('#product-form', 'keyup', function() {
                 this.setHeaderBar(false);
             }.bind(this), 'input, textarea');
-            this.sandbox.on('sulu.content.changed', function () {
+            this.sandbox.on('sulu.content.changed', function() {
                 this.setHeaderBar(false);
             }.bind(this));
-            this.sandbox.on('husky.select.status.selected.item', function () {
+            this.sandbox.on('husky.select.status.selected.item', function() {
                 this.setHeaderBar(false);
             }.bind(this));
-            this.sandbox.on('husky.select.orderUnit.selected.item', function () {
+            this.sandbox.on('husky.select.orderUnit.selected.item', function() {
                 this.setHeaderBar(false);
             }.bind(this));
-            this.sandbox.on('husky.select.contentUnit.selected.item', function () {
+            this.sandbox.on('husky.select.contentUnit.selected.item', function() {
                 this.setHeaderBar(false);
             }.bind(this));
         }
