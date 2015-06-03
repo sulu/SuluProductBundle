@@ -97,7 +97,7 @@ define([
                 var data = this.sandbox.form.getData(formSelector),
                     supplierId;
 
-                if (data.id === '') {
+                if (!$.isNumeric(data.id)) {
                     delete data.id;
                 }
 

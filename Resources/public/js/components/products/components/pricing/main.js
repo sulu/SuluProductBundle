@@ -76,6 +76,11 @@ define(['config'], function(Config) {
         save = function() {
             if (this.sandbox.form.validate(formSelector)) {
                 var data = this.sandbox.form.getData(formSelector);
+
+                if (!$.isNumeric(data.id)) {
+                    delete data.id;
+                }
+
                 data.status = this.status;
                 this.sandbox.emit('sulu.products.save', data);
             }
