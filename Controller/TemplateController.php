@@ -33,6 +33,7 @@ class TemplateController extends RestController
      * Returns Template for product list
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
+     *
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function productFormAction(Request $request)
@@ -166,7 +167,8 @@ class TemplateController extends RestController
     /**
      * Returns status for products
      *
-     * @param $language
+     * @param string $language
+     *
      * @return array
      */
     protected function getStatus($language)
@@ -188,7 +190,8 @@ class TemplateController extends RestController
     /**
      * Returns units
      *
-     * @param $language
+     * @param string $language
+     *
      * @return array
      */
     protected function getUnits($language)
@@ -210,7 +213,8 @@ class TemplateController extends RestController
     /**
      * Returns currencies
      *
-     * @param $language
+     * @param string $language
+     *
      * @return array
      */
     protected function getCurrencies($language)
@@ -234,12 +238,13 @@ class TemplateController extends RestController
     /**
      * Returns delivery states
      *
-     * @param $language
+     * @param string $language
+     *
      * @return array
      */
     protected function getDeliveryStates($language)
     {
-        $states = $this->get('sulu_product.delivery_status_manager')->findAll($language);
+        $states = $this->getDeliveryStatusManager()->findAll($language);
 
         $deliveryStates = array();
         foreach ($states as $state) {
@@ -250,5 +255,15 @@ class TemplateController extends RestController
         }
 
         return $deliveryStates;
+    }
+
+    /**
+     * Returns the delivery status manager
+     *
+     * @return DeliveryStatusManager
+     */
+    private function getDeliveryStatusManager()
+    {
+        return $this->get('sulu_product.delivery_status_manager');
     }
 }

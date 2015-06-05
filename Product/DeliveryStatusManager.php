@@ -30,8 +30,9 @@ class DeliveryStatusManager
     }
 
     /**
-     * @param $locale
-     * @return null|Status[]
+     * @param string $locale
+     *
+     * @return null|array
      */
     public function findAll($locale)
     {
