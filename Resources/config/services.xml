@@ -23,6 +23,7 @@
         <parameter key="sulu_product.product_manager.class">Sulu\Bundle\ProductBundle\Product\ProductManager</parameter>
         <parameter key="sulu_product.attribute_manager.class">Sulu\Bundle\ProductBundle\Product\AttributeManager</parameter>
         <parameter key="sulu_product.status_manager.class">Sulu\Bundle\ProductBundle\Product\StatusManager</parameter>
+        <parameter key="sulu_product.delivery_status_manager.class">Sulu\Bundle\ProductBundle\Product\DeliveryStatusManager</parameter>
         <parameter key="sulu_product.tax_class_manager.class">Sulu\Bundle\ProductBundle\Product\TaxClassManager</parameter>
         <parameter key="sulu_product.unit_manager.class">Sulu\Bundle\ProductBundle\Product\UnitManager</parameter>
         <parameter key="sulu_product.currency_manager.class">Sulu\Bundle\ProductBundle\Product\CurrencyManager</parameter>
@@ -137,6 +138,9 @@
         </service>
         <service id="sulu_product.status_manager" class="%sulu_product.status_manager.class%">
             <argument type="service" id="sulu_product.status_repository"/>
+        </service>
+        <service id="sulu_product.delivery_status_manager" class="%sulu_product.delivery_status_manager.class%">
+            <argument type="service" id="sulu_product.delivery_status_repository"/>
         </service>
         <service id="sulu_product.tax_class_manager" class="%sulu_product.tax_class_manager.class%">
             <argument type="service" id="sulu_product.tax_class_repository"/>

@@ -41,16 +41,7 @@ class TemplateController extends RestController
 
         $status = $this->getStatus($language);
         $units = $this->getUnits($language);
-        $deliveryStates = [
-            [
-                'id' => 1,
-                'name' => 'verfügbar'
-            ],
-            [
-                'id' => 2,
-                'name' => 'nicht verfügbar'
-            ]
-        ];
+        $deliveryStates = $this->getDeliveryStates($language);
 
         return $this->render(
             'SuluProductBundle:Template:product.form.html.twig',
@@ -238,5 +229,26 @@ class TemplateController extends RestController
         }
 
         return $currencyTitles;
+    }
+
+    /**
+     * Returns delivery states
+     *
+     * @param $language
+     * @return array
+     */
+    protected function getDeliveryStates($language)
+    {
+        $states = $this->get('sulu_product.delivery_status_manager')->findAll($language);
+
+        $deliveryStates = array();
+        foreach ($states as $state) {
+            $deliveryStates[] = array(
+                'id' => $state->getId(),
+                'name' => $state->getName()
+            );
+        }
+
+        return $deliveryStates;
     }
 }
