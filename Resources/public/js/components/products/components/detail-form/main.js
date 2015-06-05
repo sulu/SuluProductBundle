@@ -221,6 +221,9 @@ define([
             this.sandbox.on('husky.select.contentUnit.selected.item', function() {
                 this.setHeaderBar(false);
             }.bind(this));
+            this.sandbox.on('husky.select.idDeliveryStatus.selected.item', function() {
+                this.setHeaderBar(false);
+            }.bind(this));
         }
     };
 });

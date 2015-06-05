@@ -106,6 +106,54 @@
             </div>
         </div>
         <div class="grid-col-6">
+            <div class="form-group">
+                <label for="minimumOrderQuantity"><%= translate('products.minimumOrderQuantity') %></label>
+                <input class="form-element" type="text" id="minimumOrderQuantity"
+                       data-mapper-property="minimumOrderQuantity" data-type="decimal"/>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-row small">
+        <div class="grid-col-6">
+            <div class="form-group">
+                <label for="manufacturer"><%= translate('products.manufacturer') %></label>
+                <input class="form-element" type="text" id="manufacturer"
+                       data-mapper-property="manufacturer" />
+            </div>
+        </div>
+        <div class="grid-col-6">
+            <div class="form-group">
+                <label for="globalTradeItemNumber"><%= translate('product.globalTradeItemNumber') %></label>
+                <input class="form-element" type="text" id="globalTradeItemNumber"
+                       data-mapper-property="globalTradeItemNumber" />
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-row small">
+        <div class="grid-col-6">
+            <div class="form-group">
+                <label for="deliveryTime"><%= translate('product.deliveryStatus') %></label>
+                <div id="idDeliveryStatus"
+                     data-aura-component="select@husky"
+                     data-aura-data="{{ deliveryStates|json_encode() }}"
+                     data-aura-default-label="<%=translate('public.please-choose')%>"
+                     data-aura-multiple-select="false"
+                     data-aura-instance-name="idDeliveryStatus"
+                     data-aura-deselect-field="false"
+                     data-aura-direction="bottom"
+                     data-type-label="id"
+                     data-type-required="idDeliveryStatus"
+                     data-mapper-property="idDeliveryStatus"
+                     data-type="husky-select"
+                     data-validation-required="false"
+                     data-aura-pre-selected-elements="[1]"
+                     data-form="true">
+                </div>
+            </div>
+        </div>
+        <div class="grid-col-6">
         </div>
     </div>
 
