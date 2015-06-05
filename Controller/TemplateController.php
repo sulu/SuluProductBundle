@@ -33,6 +33,7 @@ class TemplateController extends RestController
      * Returns Template for product list
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
+     *
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function productFormAction(Request $request)
@@ -41,12 +42,14 @@ class TemplateController extends RestController
 
         $status = $this->getStatus($language);
         $units = $this->getUnits($language);
+        $deliveryStates = $this->getDeliveryStates($language);
 
         return $this->render(
             'SuluProductBundle:Template:product.form.html.twig',
             array(
                 'status' => $status,
-                'units' => $units
+                'units' => $units,
+                'deliveryStates' => $deliveryStates
             )
         );
     }
@@ -164,7 +167,8 @@ class TemplateController extends RestController
     /**
      * Returns status for products
      *
-     * @param $language
+     * @param string $language
+     *
      * @return array
      */
     protected function getStatus($language)
@@ -186,7 +190,8 @@ class TemplateController extends RestController
     /**
      * Returns units
      *
-     * @param $language
+     * @param string $language
+     *
      * @return array
      */
     protected function getUnits($language)
@@ -208,7 +213,8 @@ class TemplateController extends RestController
     /**
      * Returns currencies
      *
-     * @param $language
+     * @param string $language
+     *
      * @return array
      */
     protected function getCurrencies($language)
@@ -227,5 +233,37 @@ class TemplateController extends RestController
         }
 
         return $currencyTitles;
+    }
+
+    /**
+     * Returns delivery states
+     *
+     * @param string $language
+     *
+     * @return array
+     */
+    protected function getDeliveryStates($language)
+    {
+        $states = $this->getDeliveryStatusManager()->findAll($language);
+
+        $deliveryStates = array();
+        foreach ($states as $state) {
+            $deliveryStates[] = array(
+                'id' => $state->getId(),
+                'name' => $state->getName()
+            );
+        }
+
+        return $deliveryStates;
+    }
+
+    /**
+     * Returns the delivery status manager
+     *
+     * @return DeliveryStatusManager
+     */
+    private function getDeliveryStatusManager()
+    {
+        return $this->get('sulu_product.delivery_status_manager');
     }
 }

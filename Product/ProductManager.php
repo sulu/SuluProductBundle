@@ -1201,6 +1201,7 @@ class ProductManager implements ProductManagerInterface
         if ($flush) {
             $this->em->flush();
         }
+
         return $product;
     }
 
