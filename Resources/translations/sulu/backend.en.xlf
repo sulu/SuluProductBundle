@@ -258,6 +258,18 @@
                 <source>product.bulkprice.specialprice</source>
                 <target>Special price</target>
             </trans-unit>
+            <trans-unit id="66" resname="product.minimumOrderQuantity">
+                <source>product.minimumOrderQuantity</source>
+                <target>Min. order quantity</target>
+            </trans-unit>
+            <trans-unit id="67" resname="product.globalTradeItemNumber">
+                <source>product.globalTradeItemNumber</source>
+                <target>GTIN</target>
+            </trans-unit>
+            <trans-unit id="68" resname="product.deliveryStatus">
+                <source>product.deliveryStatus</source>
+                <target>Delivery status</target>
+            </trans-unit>
             <trans-unit id="03588f70b26be004afd6ea794c008e8f" resname="navigation.pim">
                 <source>navigation.pim</source>
                 <target>Products</target>

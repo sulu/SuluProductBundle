@@ -258,6 +258,18 @@
                 <source>product.bulkprice.specialprice</source>
                 <target>Spezial Preis</target>
             </trans-unit>
+            <trans-unit id="66" resname="product.minimumOrderQuantity">
+                <source>product.minimumOrderQuantity</source>
+                <target>Min. Bestellmenge</target>
+            </trans-unit>
+            <trans-unit id="67" resname="product.globalTradeItemNumber">
+                <source>product.globalTradeItemNumber</source>
+                <target>EAN Nummer</target>
+            </trans-unit>
+            <trans-unit id="68" resname="product.deliveryStatus">
+                <source>product.deliveryStatus</source>
+                <target>Lieferstatus</target>
+            </trans-unit>
             <trans-unit id="03588f70b26be004afd6ea794c008e8f" resname="navigation.pim">
                 <source>navigation.pim</source>
                 <target>Produkte</target>
