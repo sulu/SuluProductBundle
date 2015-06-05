@@ -128,12 +128,15 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
                 }
             }.bind(this));
 
-            // special prices
-            var specialPrice = {};
+            var $specialPriceStart = this.sandbox.dom.find('#js-husky-input-startDate' + this.options.currency.code),
+                $specialPriceEnd = this.sandbox.dom.find('#js-husky-input-endDate' + this.options.currency.code),
+                $specialPrice = this.sandbox.dom.find('#js-input' + this.options.currency.code),
+                specialPrice = {};
+            
             specialPrice.currency = {};
-            specialPrice.startDate = $('#js-husky-input-startDate' + this.options.currency.code).val();
-            specialPrice.endDate = $('#js-husky-input-endDate' + this.options.currency.code).val();
-            specialPrice.price = $('#js-input' + this.options.currency.code).val();
+            specialPrice.startDate = this.sandbox.dom.val($specialPriceStart);
+            specialPrice.endDate = this.sandbox.dom.val($specialPriceEnd);
+            specialPrice.price = this.sandbox.parseFloat(this.sandbox.dom.val($specialPrice));
             specialPrice.currency = this.options.currency;
 
             this.sandbox.dom.data(this.$el, 'itemsSpecialPrice', specialPrice);
