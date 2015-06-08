@@ -77,7 +77,7 @@ define(['config'], function(Config) {
             if (this.sandbox.form.validate(formSelector)) {
                 var data = this.sandbox.form.getData(formSelector);
 
-                if (!this.sandbox.dom.isAlphaNumeric(data.id)) {
+                if (!this.sandbox.util.isAlphaNumeric(data.id)) {
                     data.id = this.options.data.id;
                 }
 
