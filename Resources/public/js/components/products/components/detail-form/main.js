@@ -97,7 +97,7 @@ define([
                 var data = this.sandbox.form.getData(formSelector),
                     supplierId;
 
-                if (data.id === '') {
+                if (!this.sandbox.util.isAlphaNumeric(data.id)) {
                     delete data.id;
                 }
 

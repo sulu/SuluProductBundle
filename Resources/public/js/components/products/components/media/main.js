@@ -61,7 +61,6 @@ define(['config'], function(Config) {
         templates: ['/admin/product/template/product/documents'],
 
         initialize: function() {
-            debugger;
             this.newSelections = [];
             this.removedSelections = [];
             this.currentSelection = this.getPropertyFromArrayOfObject(this.options.data.attributes.media, 'id');
