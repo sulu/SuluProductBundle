@@ -76,11 +76,6 @@ define(['config'], function(Config) {
         save = function() {
             if (this.sandbox.form.validate(formSelector)) {
                 var data = this.sandbox.form.getData(formSelector);
-
-                if (!this.sandbox.util.isAlphaNumeric(data.id)) {
-                    data.id = this.options.data.id;
-                }
-
                 data.status = this.status;
                 this.sandbox.emit('sulu.products.save', data);
             }
