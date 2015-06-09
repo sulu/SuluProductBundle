@@ -832,13 +832,15 @@ class ProductManager implements ProductManagerInterface
 
         $product->setName($this->getProperty($data, 'name', $product->getName()));
 
-        $product->setMinimumOrderQuantity(
-            $this->getProperty(
+        if (isset($data['minimumOrderQuantity']) && is_numeric($data['minimumOrderQuantity'])) {
+            $value = $this->getProperty(
                 $data,
                 'minimumOrderQuantity',
-                $product->getMinimumOrderQuantity()
-            )
-        );
+                $product->getRecommendedOrderQuantity()
+            );
+
+            $product->setRecommendedOrderQuantity(floatval($value));
+        }
 
         if (isset($data['recommendedOrderQuantity']) && is_numeric($data['recommendedOrderQuantity'])) {
             $value = $this->getProperty(
