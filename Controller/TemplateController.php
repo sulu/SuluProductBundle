@@ -115,10 +115,10 @@ class TemplateController extends RestController
      *
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function productPricingAction()
+    public function productPricingAction(Request $request)
     {
         // TODO use correct language
-        $language = 'en';
+        $language = $this->getLocale($request);
 
         /** @var TaxClass[] $taxClasses */
         $taxClasses = $this->get('sulu_product.tax_class_manager')->findAll($language);
