@@ -185,10 +185,14 @@ define([
 
             ajaxRequest.complete(function() {
 
+                var preSelectedElement = [];
+
                 // set pre selected element in checkbox
-                if (typeof this.attributeTypes[0].name === "string" && typeof this.attributeTypes[0] === "object") {
+                if ((this.attributeTypes.length > 0) && 
+                    (typeof this.attributeTypes[0]  === "object") && 
+                    (typeof this.attributeTypes[0].name === "string")
+                    ) {
                     attributeId = this.attributeTypes[0].id;
-                    var preSelectedElement = [];
                     preSelectedElement.push(this.attributeTypes[0].name);
                 }
 
