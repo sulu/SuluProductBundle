@@ -48,7 +48,7 @@ define([
             }, this);
 
             this.sandbox.on('sulu.header.toolbar.save', function() {
-                this.sendData = new Object();
+                this.sendData = {};
                 this.sendData.status = this.status;
                 save.call(this);
             }, this);
