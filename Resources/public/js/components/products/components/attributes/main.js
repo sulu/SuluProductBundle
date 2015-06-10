@@ -189,7 +189,7 @@ define([
 
                 // set pre selected element in checkbox
                 if (this.attributeTypes.length > 0 && 
-                    typeof(this.attributeTypes[0])  === "object" && 
+                    typeof(this.attributeTypes[0]) === "object" && 
                     typeof(this.attributeTypes[0].name) === "string"
                     ) {
                     attributeId = this.attributeTypes[0].id;
