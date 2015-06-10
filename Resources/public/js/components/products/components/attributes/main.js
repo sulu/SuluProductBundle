@@ -47,6 +47,12 @@ define([
                 this.sandbox.emit('sulu.products.list');
             }, this);
 
+            this.sandbox.on('sulu.header.toolbar.save', function() {
+                this.sendData = {};
+                this.sendData.status = this.status;
+                save.call(this);
+            }, this);
+
             this.sandbox.on('sulu.products.saved', function(data) {
 
                 var attributes = data.attributes;
