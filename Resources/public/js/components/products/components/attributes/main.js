@@ -188,9 +188,9 @@ define([
                 var preSelectedElement = [];
 
                 // set pre selected element in checkbox
-                if ((this.attributeTypes.length > 0) && 
-                    (typeof this.attributeTypes[0]  === "object") && 
-                    (typeof this.attributeTypes[0].name === "string")
+                if (this.attributeTypes.length > 0 && 
+                    typeof(this.attributeTypes[0])  === "object" && 
+                    typeof(this.attributeTypes[0].name) === "string"
                     ) {
                     attributeId = this.attributeTypes[0].id;
                     preSelectedElement.push(this.attributeTypes[0].name);
