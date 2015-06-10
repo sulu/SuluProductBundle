@@ -184,12 +184,25 @@ define([
             }.bind(this));
 
             ajaxRequest.complete(function() {
+
+                var preSelectedElement = [];
+
+                // set pre selected element in checkbox
+                if (this.attributeTypes.length > 0 && 
+                    typeof(this.attributeTypes[0]) === "object" && 
+                    typeof(this.attributeTypes[0].name) === "string"
+                    ) {
+                    attributeId = this.attributeTypes[0].id;
+                    preSelectedElement.push(this.attributeTypes[0].name);
+                }
+
                 // create dropbox in overlay
                 var selectOptions = {
                     el: '#selectBox',
                     instanceName: selectInstanceName,
                     multipleSelect: false,
                     defaultLabel: this.sandbox.translate('product.attribute.overlay.defaultlabel'),
+                    preSelectedElements: preSelectedElement,
                     valueName: 'name',
                     isNative: true,
                     data: this.attributeTypes
