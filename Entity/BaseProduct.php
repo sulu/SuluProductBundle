@@ -6,6 +6,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Sulu\Bundle\MediaBundle\Entity\Media;
 use Sulu\Component\Security\Authentication\UserInterface;
 use Sulu\Bundle\ContactBundle\Entity\AccountInterface;
+use Sulu\Bundle\ProductBundle\Entity\Status;
 
 /**
  * BaseProduct
@@ -1011,5 +1012,22 @@ abstract class BaseProduct implements ProductInterface
     public function getAreGrossPrices()
     {
         return $this->areGrossPrices;
+    }
+
+    /**
+     * Helper method to check if the product is
+     * a valid shop product.
+     *
+     * @return bool
+     */
+    public function isValidShopProduct()
+    {
+        if ($this->getStatus()->getId() == Status::ACTIVE &&
+            $this->getPrices() && count($this->getPrices()) > 0
+        ) {
+            return true;
+        }
+
+        return false;
     }
 }
