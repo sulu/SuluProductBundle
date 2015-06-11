@@ -199,8 +199,8 @@ define([
             this.product.set(data);
 
             // FIXME the categories should already be loaded correctly here
-            this.product.get('categories').reset();
             if (!!data.categories) {
+                this.product.get('categories').reset();
                 this.sandbox.util.foreach(data.categories, function (id) {
                     var category = Category.findOrCreate({id: id});
                     this.product.get('categories').add(category);
