@@ -1022,7 +1022,8 @@ abstract class BaseProduct implements ProductInterface
      */
     public function isValidShopProduct()
     {
-        if ($this->getStatus()->getId() == Status::ACTIVE &&
+        if (method_exists($this, 'getPrices') &&
+            $this->getStatus()->getId() == Status::ACTIVE &&
             $this->getPrices() && count($this->getPrices()) > 0
         ) {
             return true;
