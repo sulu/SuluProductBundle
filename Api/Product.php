@@ -765,7 +765,6 @@ class Product extends ApiWrapper implements ApiProductInterface
         return $specialPrice;
     }
 
-
     /**
      * Returns the bulk price for a certain quantity of the product by a given currency
      *
