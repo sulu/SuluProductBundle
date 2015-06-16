@@ -721,6 +721,23 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
+     * Returns the formatted special price for the product by a given currency and locale
+     *
+     * @param string $currency
+     *
+     * @return String
+     */
+    public function getFormattedSpecialPriceForCurrency($currency = 'EUR')
+    {
+        $price = $this->getSpecialPriceForCurrency($currency);
+        if ($price) {
+            return $this->getFormattedPrice($price->getPrice(), $currency, $this->locale);
+        }
+
+        return '';
+    }
+
+    /**
      * Returns the special price for a certain currency
      *
      * @return ProductPrice[]
@@ -739,9 +756,7 @@ class Product extends ApiWrapper implements ApiProductInterface
                         ($now >= $startDate && empty($endDate)) ||
                         (empty($startDate) && empty($endDate))
                     ) {
-                        $specialPrice = $specialPriceEntity->getPrice();
-                    } else {
-                        $specialPrice = null;
+                        $specialPrice = $specialPriceEntity;
                     }
                 }
             }
