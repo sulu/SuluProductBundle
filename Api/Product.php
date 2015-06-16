@@ -744,7 +744,6 @@ class Product extends ApiWrapper implements ApiProductInterface
      */
     public function getSpecialPriceForCurrency($currency = 'EUR')
     {
-        $specialPrice = null;
         $specialPrices = $this->entity->getSpecialPrices();
         if ($specialPrices) {
             foreach ($specialPrices as $specialPriceEntity) {
@@ -756,13 +755,13 @@ class Product extends ApiWrapper implements ApiProductInterface
                         ($now >= $startDate && empty($endDate)) ||
                         (empty($startDate) && empty($endDate))
                     ) {
-                        $specialPrice = $specialPriceEntity;
+                        return $specialPriceEntity;
                     }
                 }
             }
         }
 
-        return $specialPrice;
+        return null;
     }
 
     /**
