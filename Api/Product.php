@@ -725,7 +725,7 @@ class Product extends ApiWrapper implements ApiProductInterface
      *
      * @param string $currency
      *
-     * @return String
+     * @return string
      */
     public function getFormattedSpecialPriceForCurrency($currency = 'EUR')
     {
@@ -794,7 +794,7 @@ class Product extends ApiWrapper implements ApiProductInterface
      *
      * @param string $currency
      *
-     * @return String
+     * @return string
      */
     public function getFormattedBasePriceForCurrency($currency = 'EUR')
     {
@@ -830,11 +830,11 @@ class Product extends ApiWrapper implements ApiProductInterface
      * Helper function to get a formatted price for a given currency and locale
      *
      * @param Integer $price
-     * @param String $symbol
-     * @param String $locale
+     * @param string $symbol
+     * @param string $locale
      * @Groups({"cart"})
      *
-     * @return String price
+     * @return string price
      */
     public function getFormattedPrice($price, $symbol = 'EUR', $locale = 'de')
     {
