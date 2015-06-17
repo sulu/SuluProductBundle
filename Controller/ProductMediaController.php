@@ -164,6 +164,8 @@ class ProductMediaController extends RestController
                     );
                 }
 
+                //FIXME this is just a temporary solution
+                $this->removeDefaultPrices($product);
                 $product->removeMedia($media);
                 $em->flush();
             };
