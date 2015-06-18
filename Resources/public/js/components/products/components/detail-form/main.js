@@ -71,9 +71,7 @@ define([
                 this.sandbox.emit('sulu.product.delete', this.sandbox.dom.val('#id'));
             }.bind(this));
 
-            this.sandbox.on('sulu.products.saved', function(data) {
-                this.options.data.attributes.id = id;
-                this.options.data.attributes.status = this.status;
+            this.sandbox.on('sulu.products.saved', function() {
                 this.setHeaderBar(true);
                 this.setHeaderInformation();
             }, this);

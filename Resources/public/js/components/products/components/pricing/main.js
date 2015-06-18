@@ -55,10 +55,8 @@ define(['config'], function(Config) {
                 save.call(this);
             }, this);
 
-            this.sandbox.on('sulu.products.saved', function(data) {
+            this.sandbox.on('sulu.products.saved', function() {
                 setHeaderBar.call(this, true);
-                this.options.data = data;
-                this.options.data.attributes.status = this.status;
             }, this);
 
             this.sandbox.on('sulu.header.back', function() {
