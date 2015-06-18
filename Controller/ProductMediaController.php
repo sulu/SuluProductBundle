@@ -93,6 +93,7 @@ class ProductMediaController extends RestController
             }
 
             //FIXME this is just a temporary solution
+            // issue https://github.com/massiveart/POOL-ALPIN/issues/1467
             $this->removeDefaultPrices($product);
             $product->addMedia($media);
             $em->flush();
@@ -164,6 +165,9 @@ class ProductMediaController extends RestController
                     );
                 }
 
+                //FIXME this is just a temporary solution
+                // issue https://github.com/massiveart/POOL-ALPIN/issues/1467
+                $this->removeDefaultPrices($product);
                 $product->removeMedia($media);
                 $em->flush();
             };
