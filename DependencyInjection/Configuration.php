@@ -10,6 +10,7 @@
 
 namespace Sulu\Bundle\ProductBundle\DependencyInjection;
 
+use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 
@@ -28,11 +29,38 @@ class Configuration implements ConfigurationInterface
         $treeBuilder = new TreeBuilder();
         $rootNode = $treeBuilder->root('sulu_product');
 
-        $rootNode->children()
-            ->scalarNode('template')->defaultValue('ClientWebsiteBundle:views:product.html.twig')->end()
-            ->scalarNode('default_currency')->defaultValue('EUR')->end()
-        ->end();
+        $rootNode
+            ->children()
+                ->scalarNode('template')->defaultValue('ClientWebsiteBundle:views:product.html.twig')->end()
+                ->scalarNode('default_currency')->defaultValue('EUR')->end()
+            ->end();
+
+        $this->addObjectsSection($rootNode);
 
         return $treeBuilder;
+    }
+
+    /**
+     * Adds `objects` section.
+     *
+     * @param ArrayNodeDefinition $node
+     */
+    private function addObjectsSection(ArrayNodeDefinition $node)
+    {
+        $node
+            ->children()
+                ->arrayNode('objects')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->arrayNode('product')
+                            ->addDefaultsIfNotSet()
+                            ->children()
+                                ->scalarNode('model')->defaultValue('Sulu\Bundle\ProductBundle\Entity\Product')->end()
+                                ->scalarNode('repository')->defaultValue('Sulu\Bundle\ProductBundle\Entity\ProductRepository')->end()
+                            ->end()
+                        ->end()
+                    ->end()
+                ->end()
+            ->end();
     }
 }

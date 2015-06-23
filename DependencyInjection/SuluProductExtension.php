@@ -10,6 +10,7 @@
 
 namespace Sulu\Bundle\ProductBundle\DependencyInjection;
 
+use Sulu\Bundle\PersistenceBundle\DependencyInjection\PersistenceExtensionTrait;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
@@ -22,6 +23,8 @@ use Symfony\Component\DependencyInjection\Loader;
  */
 class SuluProductExtension extends Extension
 {
+    use PersistenceExtensionTrait;
+
     /**
      * {@inheritDoc}
      */
@@ -34,5 +37,7 @@ class SuluProductExtension extends Extension
 
         $loader = new Loader\XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.xml');
+
+        $this->configure($config['objects'], $container);
     }
 }

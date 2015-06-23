@@ -2,6 +2,7 @@
 
 namespace Sulu\Bundle\ProductBundle\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 
 class Product extends BaseProduct
@@ -9,50 +10,51 @@ class Product extends BaseProduct
     /**
      * @var \Doctrine\Common\Collections\Collection
      */
-    private $productAttributes;
+    protected $productAttributes;
 
     /**
      * @var \Doctrine\Common\Collections\Collection
      */
-    private $translations;
+    protected $translations;
 
     /**
      * @var \Doctrine\Common\Collections\Collection
      */
-    private $addons;
+    protected $addons;
 
     /**
      * @var \Doctrine\Common\Collections\Collection
      */
-    private $children;
+    protected $children;
 
     /**
      * @var \Doctrine\Common\Collections\Collection
      */
-    private $prices;
+    protected $prices;
 
     /**
      * @var \Doctrine\Common\Collections\Collection
      */
-    private $setProducts;
+    protected $setProducts;
 
     /**
      * @var \Doctrine\Common\Collections\Collection
      */
-    private $specialPrices;
+    protected $specialPrices;
 
     /**
      * Constructor
      */
     public function __construct()
     {
-        $this->productAttributes = new \Doctrine\Common\Collections\ArrayCollection();
-        $this->translations = new \Doctrine\Common\Collections\ArrayCollection();
-        $this->addons = new \Doctrine\Common\Collections\ArrayCollection();
-        $this->children = new \Doctrine\Common\Collections\ArrayCollection();
-        $this->prices = new \Doctrine\Common\Collections\ArrayCollection();
-        $this->setProducts = new \Doctrine\Common\Collections\ArrayCollection();
-        $this->specialPrices = new \Doctrine\Common\Collections\ArrayCollection();
+        parent::__construct();
+        $this->productAttributes = new ArrayCollection();
+        $this->translations = new ArrayCollection();
+        $this->addons = new ArrayCollection();
+        $this->children = new ArrayCollection();
+        $this->prices = new ArrayCollection();
+        $this->setProducts = new ArrayCollection();
+        $this->specialPrices = new ArrayCollection();
     }
 
     /**
