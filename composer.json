@@ -19,18 +19,9 @@
         "symfony-cmf/routing-bundle": "1.2.*",
 
         "sulu/sulu": "dev-develop",
-        "sulu/admin-bundle": "dev-develop",
-        "sulu/contact-bundle": "dev-develop",
-        "sulu/security-bundle": "dev-develop",
-        "sulu/website-bundle": "dev-develop",
-
-        "sulu/tag-bundle": "@dev",
-        "sulu/category-bundle": "@dev",
-        "sulu/media-bundle": "@dev",
 
         "jackalope/jackalope-doctrine-dbal": "~1.2.0",
-        "jackalope/jackalope-jackrabbit": "~1.2.0",
-        "massive/search-bundle": "~1.0@dev"
+        "jackalope/jackalope-jackrabbit": "~1.2.0"
     },
     "require-dev": {
         "sensio/framework-extra-bundle":  "~3.0",
@@ -38,7 +29,8 @@
         "symfony/monolog-bundle": "2.4.*",
         "phpunit/phpunit": "~4.0.0",
         "symfony-cmf/testing": "~1.2",
-        "sulu/test-bundle": "dev-develop"
+        "sulu/test-bundle": "dev-develop",
+        "massive/search-bundle": "0.6.*"
     },
     "autoload": {
         "psr-0": {
