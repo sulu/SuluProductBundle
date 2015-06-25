@@ -3,7 +3,6 @@
 namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Mapping as ORM;
 
 class Product extends BaseProduct
 {
@@ -60,10 +59,11 @@ class Product extends BaseProduct
     /**
      * Add productAttributes
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\ProductAttribute $productAttributes
+     * @param ProductAttribute $productAttributes
+     *
      * @return Product
      */
-    public function addProductAttribute(\Sulu\Bundle\ProductBundle\Entity\ProductAttribute $productAttributes)
+    public function addProductAttribute(ProductAttribute $productAttributes)
     {
         $this->productAttributes[] = $productAttributes;
 
@@ -73,9 +73,9 @@ class Product extends BaseProduct
     /**
      * Remove productAttributes
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\ProductAttribute $productAttributes
+     * @param ProductAttribute $productAttributes
      */
-    public function removeProductAttribute(\Sulu\Bundle\ProductBundle\Entity\ProductAttribute $productAttributes)
+    public function removeProductAttribute(ProductAttribute $productAttributes)
     {
         $this->productAttributes->removeElement($productAttributes);
     }
@@ -83,7 +83,7 @@ class Product extends BaseProduct
     /**
      * Get productAttributes
      *
-     * @return \Doctrine\Common\Collections\Collection 
+     * @return \Doctrine\Common\Collections\Collection
      */
     public function getProductAttributes()
     {
@@ -93,22 +93,23 @@ class Product extends BaseProduct
     /**
      * Add translations
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\ProductTranslation $translations
+     * @param ProductTranslation $translations
+     *
      * @return Product
      */
-    public function addTranslation(\Sulu\Bundle\ProductBundle\Entity\ProductTranslation $translations)
+    public function addTranslation(ProductTranslation $translations)
     {
         $this->translations[] = $translations;
-    
+
         return $this;
     }
 
     /**
      * Remove translations
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\ProductTranslation $translations
+     * @param ProductTranslation $translations
      */
-    public function removeTranslation(\Sulu\Bundle\ProductBundle\Entity\ProductTranslation $translations)
+    public function removeTranslation(ProductTranslation $translations)
     {
         $this->translations->removeElement($translations);
     }
@@ -116,7 +117,7 @@ class Product extends BaseProduct
     /**
      * Get translations
      *
-     * @return \Doctrine\Common\Collections\Collection 
+     * @return \Doctrine\Common\Collections\Collection
      */
     public function getTranslations()
     {
@@ -142,22 +143,23 @@ class Product extends BaseProduct
     /**
      * Add addons
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\Addon $addons
+     * @param Addon $addons
+     *
      * @return Product
      */
-    public function addAddon(\Sulu\Bundle\ProductBundle\Entity\Addon $addons)
+    public function addAddon(Addon $addons)
     {
         $this->addons[] = $addons;
-    
+
         return $this;
     }
 
     /**
      * Remove addons
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\Addon $addons
+     * @param Addon $addons
      */
-    public function removeAddon(\Sulu\Bundle\ProductBundle\Entity\Addon $addons)
+    public function removeAddon(Addon $addons)
     {
         $this->addons->removeElement($addons);
     }
@@ -165,7 +167,7 @@ class Product extends BaseProduct
     /**
      * Get addons
      *
-     * @return \Doctrine\Common\Collections\Collection 
+     * @return \Doctrine\Common\Collections\Collection
      */
     public function getAddons()
     {
@@ -175,22 +177,23 @@ class Product extends BaseProduct
     /**
      * Add children
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $children
+     * @param ProductInterface $children
+     *
      * @return Product
      */
-    public function addChildren(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $children)
+    public function addChildren(ProductInterface $children)
     {
         $this->children[] = $children;
-    
+
         return $this;
     }
 
     /**
      * Remove children
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $children
+     * @param ProductInterface $children
      */
-    public function removeChildren(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $children)
+    public function removeChildren(ProductInterface $children)
     {
         $this->children->removeElement($children);
     }
@@ -198,7 +201,7 @@ class Product extends BaseProduct
     /**
      * Get children
      *
-     * @return \Doctrine\Common\Collections\Collection 
+     * @return \Doctrine\Common\Collections\Collection
      */
     public function getChildren()
     {
@@ -208,22 +211,23 @@ class Product extends BaseProduct
     /**
      * Add prices
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\ProductPrice $prices
+     * @param ProductPrice $prices
+     *
      * @return Product
      */
-    public function addPrice(\Sulu\Bundle\ProductBundle\Entity\ProductPrice $prices)
+    public function addPrice(ProductPrice $prices)
     {
         $this->prices[] = $prices;
-    
+
         return $this;
     }
 
     /**
      * Remove prices
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\ProductPrice $prices
+     * @param ProductPrice $prices
      */
-    public function removePrice(\Sulu\Bundle\ProductBundle\Entity\ProductPrice $prices)
+    public function removePrice(ProductPrice $prices)
     {
         $this->prices->removeElement($prices);
     }
@@ -231,7 +235,7 @@ class Product extends BaseProduct
     /**
      * Get prices
      *
-     * @return \Doctrine\Common\Collections\Collection 
+     * @return \Doctrine\Common\Collections\Collection
      */
     public function getPrices()
     {
@@ -241,22 +245,23 @@ class Product extends BaseProduct
     /**
      * Add setProducts
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $setProducts
+     * @param ProductInterface $setProducts
+     *
      * @return Product
      */
-    public function addSetProduct(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $setProducts)
+    public function addSetProduct(ProductInterface $setProducts)
     {
         $this->setProducts[] = $setProducts;
-    
+
         return $this;
     }
 
     /**
      * Remove setProducts
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $setProducts
+     * @param ProductInterface $setProducts
      */
-    public function removeSetProduct(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $setProducts)
+    public function removeSetProduct(ProductInterface $setProducts)
     {
         $this->setProducts->removeElement($setProducts);
     }
@@ -264,7 +269,7 @@ class Product extends BaseProduct
     /**
      * Get setProducts
      *
-     * @return \Doctrine\Common\Collections\Collection 
+     * @return \Doctrine\Common\Collections\Collection
      */
     public function getSetProducts()
     {
@@ -284,11 +289,11 @@ class Product extends BaseProduct
     /**
      * Add special price
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\SpecialPrice $specialPrice
+     * @param SpecialPrice $specialPrice
      *
      * @return Product
      */
-    public function addSpecialPrice(\Sulu\Bundle\ProductBundle\Entity\SpecialPrice $specialPrice)
+    public function addSpecialPrice(SpecialPrice $specialPrice)
     {
         $this->specialPrices[] = $specialPrice;
 
@@ -298,9 +303,9 @@ class Product extends BaseProduct
     /**
      * Remove special prices
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\SpecialPrice $specialPrices
+     * @param SpecialPrice $specialPrices
      */
-    public function removeSpecialPrice(\Sulu\Bundle\ProductBundle\Entity\SpecialPrice $specialPrices)
+    public function removeSpecialPrice(SpecialPrice $specialPrices)
     {
         $this->specialPrices->removeElement($specialPrices);
     }
