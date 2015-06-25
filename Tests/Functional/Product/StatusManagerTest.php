@@ -29,11 +29,6 @@ class StatusManagerTest extends SuluTestCase
     protected $em;
 
     /**
-     * @var Client
-     */
-    private $client;
-
-    /**
      * @var StatusManager
      */
     private $statusManager;

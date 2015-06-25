@@ -65,11 +65,6 @@ class ProductControllerTest extends SuluTestCase
     protected $deliveryStatusAvailable;
 
     /**
-     * @var Client
-     */
-    private $client;
-
-    /**
      * @var Product
      */
     private $product1;
