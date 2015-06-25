@@ -28,6 +28,7 @@ use Sulu\Bundle\ProductBundle\Product\Exception\AttributeNotFoundException;
 
 /**
  * Makes product attributes available through a REST API
+ *
  * @package Sulu\Bundle\ProductBundle\Controller
  */
 class AttributeController extends RestController implements ClassResourceInterface, SecuredControllerInterface
@@ -49,7 +50,9 @@ class AttributeController extends RestController implements ClassResourceInterfa
     /**
      * returns all fields that can be used by list
      * @Get("attributes/fields")
+     *
      * @param \Symfony\Component\HttpFoundation\Request $request
+     *
      * @return mixed
      */
     public function getFieldsAction(Request $request)
@@ -64,6 +67,7 @@ class AttributeController extends RestController implements ClassResourceInterfa
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
      * @param integer $id attribute ID
+     *
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function getAction(Request $request, $id)
@@ -76,6 +80,7 @@ class AttributeController extends RestController implements ClassResourceInterfa
             $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
             $view = $this->view($exception->toArray(), 404);
         }
+
         return $this->handleView($view);
     }
 
@@ -83,6 +88,7 @@ class AttributeController extends RestController implements ClassResourceInterfa
      * Returns a list of attributes
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
+     *
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function cgetAction(Request $request)
@@ -97,6 +103,7 @@ class AttributeController extends RestController implements ClassResourceInterfa
         }
 
         $view = $this->view($list, 200);
+
         return $this->handleView($view);
     }
 
@@ -104,6 +111,7 @@ class AttributeController extends RestController implements ClassResourceInterfa
      * Returns a list representation
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
+     *
      * @return Sulu\Component\Rest\ListBuilder\ListRepresentation
      */
     private function getListRepresentation($request)
@@ -130,6 +138,7 @@ class AttributeController extends RestController implements ClassResourceInterfa
             $listBuilder->getLimit(),
             $listBuilder->count()
         );
+
         return $list;
     }
 
@@ -138,6 +147,7 @@ class AttributeController extends RestController implements ClassResourceInterfa
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
      * @param integer $id the attribute id
+     *
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function putAction(Request $request, $id)
@@ -160,6 +170,7 @@ class AttributeController extends RestController implements ClassResourceInterfa
             $exception = new MissingArgumentException(self::$entityName, $exc->getAttribute());
             $view = $this->view($exception->toArray(), 400);
         }
+
         return $this->handleView($view);
     }
 
@@ -167,6 +178,7 @@ class AttributeController extends RestController implements ClassResourceInterfa
      * Creates and stores a new attribute.
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
+     *
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function postAction(Request $request)
@@ -185,6 +197,7 @@ class AttributeController extends RestController implements ClassResourceInterfa
             $exception = new MissingArgumentException(self::$entityName, $exc->getAttribute());
             $view = $this->view($exception->toArray(), 400);
         }
+
         return $this->handleView($view);
     }
 
@@ -193,6 +206,7 @@ class AttributeController extends RestController implements ClassResourceInterfa
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
      * @param integer $id the attribute id
+     *
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function deleteAction(Request $request, $id)
@@ -204,6 +218,7 @@ class AttributeController extends RestController implements ClassResourceInterfa
             $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
             $view = $this->view($exception->toArray(), 404);
         }
+
         return $this->handleView($view);
     }
 
