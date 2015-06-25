@@ -10,23 +10,26 @@
 
 namespace Sulu\Bundle\ProductBundle;
 
-use Sulu\Bundle\PersistenceBundle\PersistenceBundleTrait;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
+use Sulu\Bundle\PersistenceBundle\PersistenceBundleTrait;
 
 class SuluProductBundle extends Bundle
 {
     use PersistenceBundleTrait;
 
     /**
-     * Target entities resolver configuration.
-     * Mapping a interface to a concrete implementation.
-     *
-     * @return array
+     * {@inheritdoc}
      */
-    protected function getModelInterfaces()
+    public function build(ContainerBuilder $container)
     {
-        return array(
-            'Sulu\Bundle\ProductBundle\Entity\ProductInterface' => 'sulu.model.product.class',
+        parent::build($container);
+
+        $this->buildPersistence(
+            array(
+                'Sulu\Bundle\ProductBundle\Entity\ProductInterface' => 'sulu.model.product.class',
+            ),
+            $container
         );
     }
 }
