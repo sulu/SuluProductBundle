@@ -37,11 +37,6 @@ class AttributeControllerTest extends SuluTestCase
     protected $attributeType2;
 
     /**
-     * @var Client
-     */
-    protected $client;
-
-    /**
      * @var AttributeType
      */
     private $attributeType1;
