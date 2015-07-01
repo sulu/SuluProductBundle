@@ -808,13 +808,10 @@ class ProductManager implements ProductManagerInterface
      * Copies all data from a changed product to an active one and
      * unsets deprecated state of active product
      *
-     * @param ProductInterface $changedProduct
-     * @param ProductInterface $activeProduct
+     * @param ProductInterface|Product $changedProduct
+     * @param ProductInterface|Product $activeProduct
      */
-    public function copyDataFromChangedToActiveProduct(
-        ProductInterface $changedProduct,
-        ProductInterface $activeProduct
-    ) {
+    public function copyDataFromChangedToActiveProduct($changedProduct, $activeProduct) {
         // copy all data from changed to active product to ensure
         // that products id does not change
         $this->convertProduct($changedProduct, $activeProduct);
@@ -1199,7 +1196,9 @@ class ProductManager implements ProductManagerInterface
         if ($publishedProduct) {
             // Since there is already a published product with the same internal id we are going to update the
             // existing one with the properties of the current product.
-            $product = $this->convertProduct($product, $publishedProduct);
+            $this->convertProduct($product->getEntity(), $publishedProduct->getEntity());
+
+            $product = $publishedProduct;
         }
 
         if (isset($data['deliveryStatus']) && isset($data['deliveryStatus']['id'])) {
@@ -1274,15 +1273,13 @@ class ProductManager implements ProductManagerInterface
     /**
      * Copy all properties from a entity to a 'deprecated' entity.
      *
-     * @param Product $product
-     * @param Product $publishedProduct
-     * @return \Sulu\Bundle\ProductBundle\Api\Product
+     * @param ProductInterface $productEntity
+     * @param ProductInterface $publishedProductEntity
+     *
+     * @return ProductInterface
      */
-    private function convertProduct($product, $publishedProduct)
+    private function convertProduct(ProductInterface $productEntity, ProductInterface $publishedProductEntity)
     {
-        $publishedProductEntity = $publishedProduct->getEntity();
-        $productEntity = $product->getEntity();
-
         // Move prices
         foreach ($publishedProductEntity->getPrices() as $data) {
             $this->em->remove($data);
@@ -1377,7 +1374,6 @@ class ProductManager implements ProductManagerInterface
         $publishedProductEntity->setManufacturer($productEntity->getManufacturer());
         $publishedProductEntity->setCost($productEntity->getCost());
         $publishedProductEntity->setPriceInfo($productEntity->getPriceInfo());
-        $publishedProductEntity->setCreated($productEntity->getCreated());
         $publishedProductEntity->setChanged($productEntity->getChanged());
         $publishedProductEntity->setManufacturerCountry($productEntity->getManufacturerCountry());
         $publishedProductEntity->setType($productEntity->getType());
@@ -1392,7 +1388,6 @@ class ProductManager implements ProductManagerInterface
         $publishedProductEntity->setMinimumOrderQuantity($productEntity->getMinimumOrderQuantity());
         $publishedProductEntity->setRecommendedOrderQuantity($productEntity->getRecommendedOrderQuantity());
         $publishedProductEntity->setChanger($productEntity->getChanger());
-        $publishedProductEntity->setCreator($productEntity->getCreator());
         $publishedProductEntity->setTaxClass($productEntity->getTaxClass());
 
         // Move children
@@ -1406,7 +1401,7 @@ class ProductManager implements ProductManagerInterface
         $this->em->remove($productEntity);
         $this->em->flush();
 
-        return $publishedProduct;
+        return $publishedProductEntity;
     }
 
     /**
