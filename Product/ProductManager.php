@@ -808,10 +808,13 @@ class ProductManager implements ProductManagerInterface
      * Copies all data from a changed product to an active one and
      * unsets deprecated state of active product
      *
-     * @param ProductInterface|Product $changedProduct
-     * @param ProductInterface|Product $activeProduct
+     * @param ProductInterface $changedProduct
+     * @param ProductInterface $activeProduct
      */
-    public function copyDataFromChangedToActiveProduct($changedProduct, $activeProduct) {
+    public function copyDataFromChangedToActiveProduct(
+        ProductInterface $changedProduct,
+        ProductInterface $activeProduct
+    ) {
         // copy all data from changed to active product to ensure
         // that products id does not change
         $this->convertProduct($changedProduct, $activeProduct);
