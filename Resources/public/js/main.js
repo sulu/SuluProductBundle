@@ -66,7 +66,6 @@ define(['config'], function(Config) {
                     {title: 'navigation.pim'},
                     {title: 'pim.products.title', link: 'pim/products'}
                 ],
-                fields: 'admin/api/contacts/fields',
                 routeToList: 'pim/products'
             });
 
