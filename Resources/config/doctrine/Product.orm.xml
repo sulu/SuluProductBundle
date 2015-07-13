@@ -4,6 +4,11 @@
                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
     <mapped-superclass name="Sulu\Bundle\ProductBundle\Entity\Product" table="pr_products"
         repository-class="Sulu\Bundle\ProductBundle\Entity\ProductRepository">
+
+        <indexes>
+            <index name="IX_INTERNALITEMNUMBER" columns="internalItemNumber"/>
+        </indexes>
+
         <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductAttribute" mapped-by="product"
                      field="productAttributes"/>
         <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductTranslation" mapped-by="product"
