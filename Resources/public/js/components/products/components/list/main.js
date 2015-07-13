@@ -201,6 +201,10 @@ define(['config'], function (Config) {
                         },
                         {
                             id: 2,
+                            align: 'right'
+                        },
+                        {
+                            id: 3,
                             align: 'left'
                         }
                     ]
@@ -211,12 +215,15 @@ define(['config'], function (Config) {
                     resultKey: 'products',
                     searchInstanceName: 'productsToolbar',
                     searchFields: ['name','number','supplier'],
+                    instanceName: 'products',
                     viewOptions: {
                         table: {
                             fullWidth: true
                         }
                     }
-                }
+                },
+                'products',
+                '#products-list-info'
             );
         },
 
