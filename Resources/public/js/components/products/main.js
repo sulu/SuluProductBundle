@@ -105,7 +105,7 @@ define([
                 this.sandbox.emit('sulu.router.navigate', 'pim/products/import');
             }.bind(this));
 
-            this.sandbox.on('husky.datagrid.item.click', function (id) {
+            this.sandbox.on('husky.datagrid.products.item.click', function (id) {
                 this.load(id, AppConfig.getUser().locale);
             }.bind(this));
 
@@ -233,7 +233,7 @@ define([
                         var product = Product.findOrCreate({id: id});
                         product.destroy({
                             success: function() {
-                                this.sandbox.emit('husky.datagrid.record.remove', id);
+                                this.sandbox.emit('husky.datagrid.products.record.remove', id);
                             }.bind(this)
                         });
                     }.bind(this));

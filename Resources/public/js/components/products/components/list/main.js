@@ -16,7 +16,9 @@ define(['config'], function (Config) {
         TYPE_PRODUCT_SET = 'product-set',
 
         constants = {
-            toolbarInstanceName: 'productsToolbar'
+            toolbarInstanceName: 'productsToolbar',
+            datagridInstanceName: 'products'
+
         },
 
         addProduct = function (type) {
@@ -24,7 +26,7 @@ define(['config'], function (Config) {
         },
 
         setProductActive = function(){
-            this.sandbox.emit('husky.datagrid.items.get-selected', function(ids) {
+            this.sandbox.emit('husky.datagrid.'+constants.datagridInstanceName+'.items.get-selected', function(ids) {
                 this.sandbox.emit(
                     'sulu.products.workflow.triggered',
                     {
@@ -36,7 +38,7 @@ define(['config'], function (Config) {
         },
 
         setProductInactive = function(){
-            this.sandbox.emit('husky.datagrid.items.get-selected', function(ids) {
+            this.sandbox.emit('husky.datagrid.'+constants.datagridInstanceName+'.items.get-selected', function(ids) {
                 this.sandbox.emit(
                     'sulu.products.workflow.triggered',
                     {
@@ -52,18 +54,24 @@ define(['config'], function (Config) {
                 this.sandbox.emit('sulu.products.new');
             }.bind(this));
 
-            this.sandbox.on('sulu.product.workflow.completed', function(){
-                this.sandbox.emit('husky.datagrid.update');
+            this.sandbox.on('sulu.product.workflow.completed', function() {
+                this.sandbox.emit('husky.datagrid.' + constants.datagridInstanceName + '.update');
             }, this);
 
-            this.sandbox.on('sulu.list-toolbar.delete', function () {
-                this.sandbox.emit('husky.datagrid.items.get-selected', function (ids) {
+            this.sandbox.on('sulu.list-toolbar.delete', function() {
+                this.sandbox.emit('husky.datagrid.' + constants.datagridInstanceName + '.items.get-selected', function(ids) {
                     this.sandbox.emit('sulu.products.delete', ids);
                 }.bind(this));
             }, this);
 
+            // checkbox clicked
+            this.sandbox.on('husky.datagrid.' + constants.datagridInstanceName + '.number.selections', function(number) {
+                var postfix = number > 0 ? 'enable' : 'disable';
+                this.sandbox.emit('husky.toolbar.' + constants.toolbarInstanceName + '.item.' + postfix, 'delete', false);
+            }.bind(this));
+
             // enable toolbar items
-            this.sandbox.on('husky.datagrid.number.selections', function(number) {
+            this.sandbox.on('husky.datagrid.' + constants.datagridInstanceName + '.number.selections', function(number) {
                 if (number > 0) {
                     this.sandbox.emit(
                         'husky.toolbar.' + constants.toolbarInstanceName + '.button.set',
@@ -215,7 +223,7 @@ define(['config'], function (Config) {
                     resultKey: 'products',
                     searchInstanceName: 'productsToolbar',
                     searchFields: ['name','number','supplier'],
-                    instanceName: 'products',
+                    instanceName: constants.datagridInstanceName,
                     viewOptions: {
                         table: {
                             fullWidth: true
