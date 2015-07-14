@@ -153,7 +153,7 @@ define(['config'], function (Config) {
 
         },
 
-        datagridClicked = function(id) {
+        datagridAction = function(id) {
             this.sandbox.emit('sulu.products.load', id);
         };
 
@@ -226,7 +226,7 @@ define(['config'], function (Config) {
                     searchInstanceName: 'productsToolbar',
                     searchFields: ['name','number','supplier'],
                     instanceName: constants.datagridInstanceName,
-                    actionCallback: datagridClicked.bind(this)
+                    actionCallback: datagridAction.bind(this)
                 },
                 'products',
                 '#products-list-info'

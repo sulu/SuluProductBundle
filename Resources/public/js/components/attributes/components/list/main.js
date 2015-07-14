@@ -25,7 +25,7 @@ define(function() {
             }.bind(this));
         },
 
-        datagridClicked = function(id) {
+        datagridAction = function(id) {
             this.sandbox.emit('sulu.product.attributes.load', id);
         };
 
@@ -75,7 +75,7 @@ define(function() {
                     resultKey: 'attributes',
                     searchInstanceName: 'attributes',
                     searchFields: ['name'],
-                    actionCallback: datagridClicked.bind(this)
+                    actionCallback: datagridAction.bind(this)
                 }
             );
         },
