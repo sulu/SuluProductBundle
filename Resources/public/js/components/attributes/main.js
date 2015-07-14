@@ -81,8 +81,8 @@ define(['suluproduct/models/attribute', 'app-config'], function(Attribute, AppCo
                 this.load(this.options.id, locale);
             }, this);
 
-            this.sandbox.on(ATTRIBUTE_LOAD, function(id, local){
-                this.load(id, local);
+            this.sandbox.on(ATTRIBUTE_LOAD, function(id){
+                this.load(id,  AppConfig.getUser().locale);
             }, this);
         },
 

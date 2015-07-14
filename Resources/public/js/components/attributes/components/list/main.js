@@ -7,7 +7,7 @@
  * with this source code in the file LICENSE.
  */
 
-define(['app-config'], function (AppConfig) {
+define(function() {
 
     'use strict';
 
@@ -26,7 +26,7 @@ define(['app-config'], function (AppConfig) {
         },
 
         datagridClicked = function(id) {
-            this.sandbox.emit('sulu.product.attributes.load', id, AppConfig.getUser().locale);
+            this.sandbox.emit('sulu.product.attributes.load', id);
         };
 
     return {

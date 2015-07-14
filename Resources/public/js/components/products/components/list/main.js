@@ -7,7 +7,7 @@
  * with this source code in the file LICENSE.
  */
 
-define(['config'], function (Config) {
+define(['config', 'app-config'], function (Config, AppConfig) {
 
     'use strict';
     var TYPE_PRODUCT = 'product',
@@ -151,6 +151,10 @@ define(['config'], function (Config) {
                 }
             ];
 
+        },
+
+        datagridClicked = function(id) {
+            this.sandbox.emit('sulu.products.load', id, AppConfig.getUser().locale);
         };
 
     return {
@@ -158,9 +162,7 @@ define(['config'], function (Config) {
 
         layout: {
             content: {
-                width: 'max',
-                leftSpace: false,
-                rightSpace: false
+                width: 'max'
             }
         },
 
@@ -224,11 +226,7 @@ define(['config'], function (Config) {
                     searchInstanceName: 'productsToolbar',
                     searchFields: ['name','number','supplier'],
                     instanceName: constants.datagridInstanceName,
-                    viewOptions: {
-                        table: {
-                            fullWidth: true
-                        }
-                    }
+                    actionCallback: datagridClicked.bind(this)
                 },
                 'products',
                 '#products-list-info'
