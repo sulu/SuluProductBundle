@@ -151,6 +151,10 @@ define(['config'], function (Config) {
                 }
             ];
 
+        },
+
+        datagridAction = function(id) {
+            this.sandbox.emit('sulu.products.load', id);
         };
 
     return {
@@ -158,9 +162,7 @@ define(['config'], function (Config) {
 
         layout: {
             content: {
-                width: 'max',
-                leftSpace: false,
-                rightSpace: false
+                width: 'max'
             }
         },
 
@@ -224,11 +226,7 @@ define(['config'], function (Config) {
                     searchInstanceName: 'productsToolbar',
                     searchFields: ['name','number','supplier'],
                     instanceName: constants.datagridInstanceName,
-                    viewOptions: {
-                        table: {
-                            fullWidth: true
-                        }
-                    }
+                    actionCallback: datagridAction.bind(this)
                 },
                 'products',
                 '#products-list-info'

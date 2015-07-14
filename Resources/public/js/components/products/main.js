@@ -54,6 +54,12 @@ define([
         PRODUCT_LIST = eventNamespace + 'list',
 
         /**
+         * @event sulu.products.load
+         * @description Shows the list for products
+         */
+        PRODUCT_LOAD = eventNamespace + 'load',
+
+        /**
          * @event sulu.products.variants.delete
          * @description Deletes the given variants from the current product
          */
@@ -105,10 +111,6 @@ define([
                 this.sandbox.emit('sulu.router.navigate', 'pim/products/import');
             }.bind(this));
 
-            this.sandbox.on('husky.datagrid.products.item.click', function (id) {
-                this.load(id, AppConfig.getUser().locale);
-            }.bind(this));
-
             this.sandbox.on(PRODUCT_LIST, function () {
                 this.sandbox.emit('sulu.router.navigate', 'pim/products');
             }.bind(this));
@@ -130,6 +132,10 @@ define([
 
             // workflow
             this.sandbox.on('sulu.products.workflow.triggered', this.triggerWorkflowAction.bind(this));
+
+            this.sandbox.on(PRODUCT_LOAD, function(id) {
+                this.load(id, AppConfig.getUser().locale);
+            }, this);
         },
 
         triggerWorkflowAction: function(data) {

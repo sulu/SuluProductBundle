@@ -7,37 +7,35 @@
  * with this source code in the file LICENSE.
  */
 
-define(function () {
+define(function() {
 
     'use strict';
 
     // add ckicked
-    var bindCustomEvents = function () {
-        this.sandbox.on('sulu.list-toolbar.add', function () {
-            this.sandbox.emit('sulu.product.attributes.new');
-        }.bind(this));
-
-        // delete clicked
-        this.sandbox.on('sulu.list-toolbar.delete', function() {
-            this.sandbox.emit('husky.datagrid.items.get-selected', function(ids) {
-                this.sandbox.emit('sulu.product.attributes.delete', ids);
+    var bindCustomEvents = function() {
+            this.sandbox.on('sulu.list-toolbar.add', function() {
+                this.sandbox.emit('sulu.product.attributes.new');
             }.bind(this));
-        }.bind(this));
-    };
+
+            // delete clicked
+            this.sandbox.on('sulu.list-toolbar.delete', function() {
+                this.sandbox.emit('husky.datagrid.items.get-selected', function(ids) {
+                    this.sandbox.emit('sulu.product.attributes.delete', ids);
+                }.bind(this));
+            }.bind(this));
+        },
+
+        datagridAction = function(id) {
+            this.sandbox.emit('sulu.product.attributes.load', id);
+        };
 
     return {
 
         view: true,
 
-        fullSize: {
-            width: true
-        },
-
         layout: {
             content: {
-                width: 'max',
-                leftSpace: false,
-                rightSpace: false
+                width: 'max'
             }
         },
 
@@ -45,7 +43,6 @@ define(function () {
             return {
                 title: 'pim.attributes.title',
                 noBack: true,
-
                 breadcrumb: [
                     {title: 'navigation.pim'},
                     {title: 'pim.attributes.title'}
@@ -69,7 +66,7 @@ define(function () {
                     el: this.$find('#list-toolbar-container'),
                     instanceName: 'attributesToolbar',
                     parentTemplate: 'default',
-                    inHeader: true,
+                    inHeader: true
                 },
                 {
                     el: this.sandbox.dom.find('#attributes-list', this.$el),
@@ -77,11 +74,7 @@ define(function () {
                     resultKey: 'attributes',
                     searchInstanceName: 'attributes',
                     searchFields: ['name'],
-                    viewOptions: {
-                        table: {
-                            fullWidth: true
-                        }
-                    }
+                    actionCallback: datagridAction.bind(this)
                 }
             );
         },

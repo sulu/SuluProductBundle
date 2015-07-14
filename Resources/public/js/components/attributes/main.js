@@ -35,7 +35,13 @@ define(['suluproduct/models/attribute', 'app-config'], function(Attribute, AppCo
          * @event sulu.product.attributes.list
          * @description Shows the list for attributes
          */
-        ATTRIBUTE_LIST = eventNamespace + 'list';
+        ATTRIBUTE_LIST = eventNamespace + 'list',
+
+        /**
+         * @event sulu.product.attributes.load
+         * @description Loads an attribute
+         */
+        ATTRIBUTE_LOAD = eventNamespace + 'load';
 
     return {
 
@@ -67,16 +73,16 @@ define(['suluproduct/models/attribute', 'app-config'], function(Attribute, AppCo
                 }
             }.bind(this));
 
-            this.sandbox.on('husky.datagrid.item.click', function(id) {
-                this.load(id, AppConfig.getUser().locale);
-            }.bind(this));
-
             this.sandbox.on(ATTRIBUTE_LIST, function() {
                 this.sandbox.emit('sulu.router.navigate', 'pim/attributes');
             }.bind(this));
 
             this.sandbox.on('sulu.header.language-changed', function(locale) {
                 this.load(this.options.id, locale);
+            }, this);
+
+            this.sandbox.on(ATTRIBUTE_LOAD, function(id) {
+                this.load(id, AppConfig.getUser().locale);
             }, this);
         },
 
