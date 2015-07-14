@@ -26,11 +26,11 @@ define(['config'], function (Config) {
         },
 
         setProductActive = function(){
-            this.sandbox.emit('husky.datagrid.'+constants.datagridInstanceName+'.items.get-selected', function(ids) {
+            this.sandbox.emit('husky.datagrid.' + constants.datagridInstanceName + '.items.get-selected', function(ids) {
                 this.sandbox.emit(
                     'sulu.products.workflow.triggered',
                     {
-                        ids:ids,
+                        ids: ids,
                         status: Config.get('product.status.active').id
                     }
                 );
@@ -38,11 +38,11 @@ define(['config'], function (Config) {
         },
 
         setProductInactive = function(){
-            this.sandbox.emit('husky.datagrid.'+constants.datagridInstanceName+'.items.get-selected', function(ids) {
+            this.sandbox.emit('husky.datagrid.' + constants.datagridInstanceName + '.items.get-selected', function(ids) {
                 this.sandbox.emit(
                     'sulu.products.workflow.triggered',
                     {
-                        ids:ids,
+                        ids: ids,
                         status: Config.get('product.status.inactive').id
                     }
                 );
