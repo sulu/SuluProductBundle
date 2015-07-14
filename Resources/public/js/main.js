@@ -61,6 +61,14 @@ define(['config'], function(Config) {
                 ]
             });
 
+            Config.set('suluresource.filters.type.products', {
+                breadCrumb: [
+                    {title: 'navigation.pim'},
+                    {title: 'pim.products.title', link: 'pim/products'}
+                ],
+                routeToList: 'pim/products'
+            });
+
             app.components.addSource('suluproduct', '/bundles/suluproduct/js/components');
 
             //flat list of products

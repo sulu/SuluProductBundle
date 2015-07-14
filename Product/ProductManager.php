@@ -342,7 +342,9 @@ class ProductManager implements ProductManagerInterface
             static::$productEntityName,
             'public.id',
             array(),
-            true
+            true,
+            false,
+            'string'
         );
 
         $fieldDescriptors['name'] = new DoctrineFieldDescriptor(
@@ -356,7 +358,10 @@ class ProductManager implements ProductManagerInterface
                     static::$productEntityName . '.translations',
                     self::$productTranslationEntityName . '.locale = \'' . $locale . '\''
                 )
-            )
+            ),
+            false,
+            false,
+            'string'
         );
         // TODO: currency should be dynamically set
         $currency = $this->defaultCurrency;
@@ -394,7 +399,9 @@ class ProductManager implements ProductManagerInterface
             static::$productEntityName,
             'product.number',
             array(),
-            true
+            true,
+            false,
+            'string'
         );
 
         $fieldDescriptors['internalItemNumber'] = new DoctrineFieldDescriptor(
@@ -403,14 +410,20 @@ class ProductManager implements ProductManagerInterface
             static::$productEntityName,
             'product.internal-item-number',
             array(),
-            true
+            true,
+            false,
+            'string'
         );
 
         $fieldDescriptors['globalTradeItemNumber'] = new DoctrineFieldDescriptor(
             'globalTradeItemNumber',
             'globalTradeItemNumber',
             static::$productEntityName,
-            'product.global-trade-item-number'
+            'product.global-trade-item-number',
+            array(),
+            false,
+            false,
+            'string'
         );
 
         $fieldDescriptors['parent'] = new DoctrineFieldDescriptor(
@@ -424,7 +437,9 @@ class ProductManager implements ProductManagerInterface
                     static::$productEntityName . '.parent'
                 )
             ),
-            true
+            true,
+            false,
+            'string'
         );
 
         $fieldDescriptors['categories'] = new DoctrineGroupConcatFieldDescriptor(
@@ -449,7 +464,8 @@ class ProductManager implements ProductManagerInterface
             'products.categories',
             ', ',
             true,
-            true
+            true,
+            'string'
         );
 
         $fieldDescriptors['categoryIds'] = new DoctrineGroupConcatFieldDescriptor(
@@ -469,7 +485,8 @@ class ProductManager implements ProductManagerInterface
             'products.categories',
             ', ',
             null,
-            true
+            true,
+            'string'
         );
 
         $fieldDescriptors['manufacturer'] = new DoctrineFieldDescriptor(
@@ -478,7 +495,9 @@ class ProductManager implements ProductManagerInterface
             static::$productEntityName,
             'product.manufacturer',
             array(),
-            true
+            true,
+            false,
+            'string'
         );
 
         $fieldDescriptors['supplier'] = new DoctrineFieldDescriptor(
@@ -492,7 +511,9 @@ class ProductManager implements ProductManagerInterface
                     static::$productEntityName . '.supplier'
                 )
             ),
-            false
+            false,
+            false,
+            'string'
         );
 
         $fieldDescriptors['cost'] = new DoctrineFieldDescriptor(
@@ -501,7 +522,9 @@ class ProductManager implements ProductManagerInterface
             static::$productEntityName,
             'product.cost',
             array(),
-            true
+            true,
+            false,
+            'float'
         );
 
         $fieldDescriptors['priceInfo'] = new DoctrineFieldDescriptor(
@@ -510,7 +533,9 @@ class ProductManager implements ProductManagerInterface
             static::$productEntityName,
             'product.price-info',
             array(),
-            true
+            true,
+            false,
+            'string'
         );
 
         $fieldDescriptors['type'] = new DoctrineFieldDescriptor(
@@ -529,7 +554,9 @@ class ProductManager implements ProductManagerInterface
                     self::$productTypeTranslationEntityName . '.locale = \'' . $locale . '\''
                 ),
             ),
-            true
+            true,
+            false,
+            'string'
         );
 
         $fieldDescriptors['orderUnit'] = new DoctrineFieldDescriptor(
@@ -548,7 +575,9 @@ class ProductManager implements ProductManagerInterface
                     self::$unitTranslationEntityName . '.locale = \'' . $locale . '\''
                 ),
             ),
-            true
+            true,
+            false,
+            'string'
         );
 
         $fieldDescriptors['status'] = new DoctrineFieldDescriptor(
@@ -567,7 +596,9 @@ class ProductManager implements ProductManagerInterface
                     self::$productStatusTranslationEntityName . '.locale = \'' . $locale . '\''
                 ),
             ),
-            true
+            true,
+            false,
+            'string'
         );
 
         $fieldDescriptors['statusId'] = new DoctrineFieldDescriptor(
@@ -580,7 +611,10 @@ class ProductManager implements ProductManagerInterface
                     self::$productStatusEntityName,
                     static::$productEntityName . '.status'
                 )
-            )
+            ),
+            false,
+            false,
+            'string'
         );
 
         $fieldDescriptors['created'] = new DoctrineFieldDescriptor(
