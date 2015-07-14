@@ -43,7 +43,6 @@ define(function() {
             return {
                 title: 'pim.attributes.title',
                 noBack: true,
-
                 breadcrumb: [
                     {title: 'navigation.pim'},
                     {title: 'pim.attributes.title'}
