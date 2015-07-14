@@ -7,7 +7,7 @@
  * with this source code in the file LICENSE.
  */
 
-define(['config', 'app-config'], function (Config, AppConfig) {
+define(['config'], function (Config) {
 
     'use strict';
     var TYPE_PRODUCT = 'product',
@@ -154,7 +154,7 @@ define(['config', 'app-config'], function (Config, AppConfig) {
         },
 
         datagridClicked = function(id) {
-            this.sandbox.emit('sulu.products.load', id, AppConfig.getUser().locale);
+            this.sandbox.emit('sulu.products.load', id);
         };
 
     return {
