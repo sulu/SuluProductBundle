@@ -167,9 +167,10 @@ class ProductController extends RestController implements ClassResourceInterface
         }
 
         // only add group by id if categories are processed
-        $fields = $request->get('fields');
-        $fields = explode(',', $fields);
+        $fieldsParam = $request->get('fields');
+        $fields = explode(',', $fieldsParam);
         if (isset($filter['categories']) ||
+            !$fieldsParam ||
             array_search('categories', $fields) !== false
         ) {
             $listBuilder->addGroupBy($fieldDescriptors['id']);
