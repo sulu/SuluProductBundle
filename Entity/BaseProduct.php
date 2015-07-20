@@ -51,7 +51,7 @@ abstract class BaseProduct implements ProductInterface
     /**
      * @var double
      */
-    protected $cost = 0;
+    protected $cost;
 
     /**
      * @var string
