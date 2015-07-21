@@ -49,7 +49,7 @@ abstract class BaseProduct implements ProductInterface
     protected $manufacturer;
 
     /**
-     * @var double
+     * @var float
      */
     protected $cost;
 
