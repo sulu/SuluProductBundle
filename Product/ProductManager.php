@@ -344,7 +344,7 @@ class ProductManager implements ProductManagerInterface
             array(),
             true,
             false,
-            'string'
+            'integer'
         );
 
         $fieldDescriptors['name'] = new DoctrineFieldDescriptor(
