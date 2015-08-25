@@ -13,11 +13,13 @@ require.config({
         'suluproduct/util/header': '../../suluproduct/js/components/products/util/header',
         'suluproduct/util/price-calculation-util':'../../suluproduct/js/util/price-calculation-util',
         'suluproduct/util/product-delete-dialog': '../../suluproduct/js/components/products/util/product-delete-dialog',
-        'type/price-list': '../../suluproduct/js/components/price-list/price-list-type'
+        'type/price-list': '../../suluproduct/js/components/price-list/price-list-type',
+
+        'extensions/sulu-buttons-productbundle': '../../suluproduct/js/extensions/sulu-buttons'
     }
 });
 
-define(['config'], function(Config) {
+define(['config', 'extensions/sulu-buttons-productbundle'], function(Config, ProductButtons) {
 
     'use strict';
 
@@ -28,6 +30,8 @@ define(['config'], function(Config) {
         initialize: function(app) {
 
             var sandbox = app.sandbox;
+
+            sandbox.sulu.buttons.push(ProductButtons.getButtons());
 
             Config.set('product.status.active', {id: 3, key: 'product.workfow.set.active'});
             Config.set('product.status.inactive', {id: 5, key: 'product.workfow.set.inactive'});
