@@ -77,9 +77,9 @@ define(['suluproduct/models/attribute', 'app-config'], function(Attribute, AppCo
                 this.sandbox.emit('sulu.router.navigate', 'pim/attributes');
             }.bind(this));
 
-            this.sandbox.on('sulu.header.language-changed', function(locale) {
-                this.load(this.options.id, locale);
-            }, this);
+                this.sandbox.on('sulu.header.language-changed', function(data) {
+                    this.load(this.options.id, data.title);
+                }, this);
 
             this.sandbox.on(ATTRIBUTE_LOAD, function(id) {
                 this.load(id, AppConfig.getUser().locale);
@@ -87,7 +87,7 @@ define(['suluproduct/models/attribute', 'app-config'], function(Attribute, AppCo
         },
 
         save: function(data) {
-            this.sandbox.emit('sulu.header.toolbar.item.loading', 'save-button');
+            this.sandbox.emit('sulu.header.toolbar.item.loading', 'save');
             this.attribute.set(data);
             this.attribute.saveLocale(this.options.locale, {
                 success: function(response) {
@@ -125,7 +125,7 @@ define(['suluproduct/models/attribute', 'app-config'], function(Attribute, AppCo
                         success: function() {
                             this.sandbox.emit(
                                 'sulu.router.navigate',
-                                    'pim/attributes'
+                                'pim/attributes'
                             );
                         }.bind(this)
                     });
@@ -165,7 +165,7 @@ define(['suluproduct/models/attribute', 'app-config'], function(Attribute, AppCo
                 this.sandbox.emit(
                         'sulu.overlay.show-warning',
                         'sulu.overlay.be-careful',
-                        'product.attributes.delete.warning',
+                        'sulu.overlay.delete-desc',
                         callbackFunction.bind(this, false),
                         callbackFunction
                         );

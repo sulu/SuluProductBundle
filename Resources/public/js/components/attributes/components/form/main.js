@@ -11,8 +11,7 @@ define([], function() {
 
     'use strict';
 
-    var formSelector = '#attribute-form',
-        maxLengthTitle = 60;
+    var formSelector = '#attribute-form';
 
     return {
 
@@ -25,9 +24,10 @@ define([], function() {
         header: function() {
             return {
                 toolbar: {
-                    template: 'default',
-                    languageChanger: {
-                        preSelected: this.options.locale
+                    languageChanger: true,
+                    buttons: {
+                        save: {},
+                        delete: {}
                     }
                 }
             };
@@ -43,27 +43,22 @@ define([], function() {
         },
 
         bindCustomEvents: function() {
-            this.sandbox.on('sulu.header.toolbar.save', function() {
+            this.sandbox.on('sulu.toolbar.save', function() {
                 this.save();
             }.bind(this));
 
-            this.sandbox.on('sulu.header.toolbar.delete', function() {
+            this.sandbox.on('sulu.toolbar.delete', function() {
                 this.sandbox.emit('sulu.product.attributes.delete', this.sandbox.dom.val('#id'));
             }.bind(this));
 
             this.sandbox.on('sulu.products.attributes.saved', function(id) {
                 this.options.data.id = id;
                 this.setHeaderBar(true);
-                this.setHeaderInformation();
             }, this);
 
             // back to list
             this.sandbox.on('sulu.header.back', function() {
                 this.sandbox.emit('sulu.product.attributes.list');
-            }, this);
-
-            this.sandbox.on('sulu.header.initialized', function() {
-                this.setHeaderInformation();
             }, this);
         },
 
@@ -101,35 +96,33 @@ define([], function() {
             var id = this.options.data.id,
                 url = '/admin/api/attributes/' + id + '/values?flat=true';
             this.sandbox.start([{
-                    name: 'datagrid@husky',
-                    options: {
-                        el: this.sandbox.dom.find('#attribute-values-list', this.$el),
-                        url: url,
-                        pagination: false,
-                        instanceName: 'product-attributes',
-                        resultKey: 'attributeValues',
-                        view: 'table',
-                        matchings: '/admin/api/attributes/values/fields',
-                        contentFilters: {
-                            selected: 'radio'
+                name: 'datagrid@husky',
+                options: {
+                    el: this.sandbox.dom.find('#attribute-values-list', this.$el),
+                    url: url,
+                    pagination: false,
+                    instanceName: 'product-attributes',
+                    resultKey: 'attributeValues',
+                    view: 'table',
+                    matchings: '/admin/api/attributes/values/fields',
+                    contentFilters: {
+                        selected: 'radio'
+                    },
+                    viewOptions: {
+                        table: {
+                            showHead: true,
+                            editable: true,
+                            validation: true,
+                            fullWidth: false
                         },
-                        viewOptions: {
-                            table: {
-                                showHead: true,
-                                editable: true,
-                                validation: true,
-                                fullWidth: false
-                            },
-                            selectItem: {
-                                type: 'checkbox',
-                                inFirstCell: true
-                            }
+                        selectItem: {
+                            type: 'checkbox',
+                            inFirstCell: true
                         }
                     }
                 }
+            }
             ]);
-
-            this.setHeaderInformation();
 
             this.initForm(this.options.data);
         },
@@ -150,31 +143,13 @@ define([], function() {
             }.bind(this));
         },
 
-        setHeaderInformation: function() {
-            var title = 'pim.attribute.title',
-                breadcrumb = [
-                    {title: 'navigation.pim'},
-                    {title: 'pim.attribute.title'}
-                ];
-            if (!!this.options.data && !!this.options.data.name) {
-                title = this.options.data.name;
-            }
-            title = this.sandbox.util.cropTail(title, maxLengthTitle);
-            this.sandbox.emit('sulu.header.set-title', title);
-
-            if (!!this.options.data && !!this.options.data.id) {
-                breadcrumb.push({
-                    title: '#' + this.options.data.id
-                });
-            }
-            this.sandbox.emit('sulu.header.set-breadcrumb', breadcrumb);
-        },
-
-        // @var Bool saved - defines if saved state should be shown
         setHeaderBar: function(saved) {
             if (saved !== this.saved) {
-                var type = (!!this.options.data && !!this.options.data.id) ? 'edit' : 'add';
-                this.sandbox.emit('sulu.header.toolbar.state.change', type, saved, true);
+                if (!!saved) {
+                    this.sandbox.emit('sulu.header.toolbar.item.disable', 'save', true);
+                } else {
+                    this.sandbox.emit('sulu.header.toolbar.item.enable', 'save', false);
+                }
             }
             this.saved = saved;
         },
