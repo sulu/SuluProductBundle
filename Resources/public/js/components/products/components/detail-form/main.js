@@ -20,7 +20,6 @@ define([
             'product-set': 4
         },
         formSelector = '#product-form',
-        maxLengthTitle = 60,
 
         constants = {
             supplierId: '#supplierField',
@@ -41,7 +40,6 @@ define([
 
             this.initializeValidation();
 
-            this.bindDOMEvents();
             this.bindCustomEvents();
 
             this.setHeaderBar(true);
@@ -49,10 +47,6 @@ define([
             this.render();
 
             this.listenForChange();
-        },
-
-        bindDOMEvents: function() {
-
         },
 
         bindCustomEvents: function() {
@@ -73,16 +67,6 @@ define([
 
             this.sandbox.on('sulu.products.saved', function() {
                 this.setHeaderBar(true);
-                this.setHeaderInformation();
-            }, this);
-
-            // back to list
-            this.sandbox.on('sulu.header.back', function() {
-                this.sandbox.emit('sulu.products.list');
-            }, this);
-
-            this.sandbox.on('sulu.header.initialized', function() {
-                this.setHeaderInformation();
             }, this);
         },
 
@@ -122,9 +106,6 @@ define([
 
         render: function() {
             this.sandbox.dom.html(this.$el, this.renderTemplate('/admin/product/template/product/form'));
-
-            this.setHeaderInformation();
-
             this.initSupplierAutocomplete();
             this.initForm(this.options.data);
         },
@@ -165,30 +146,6 @@ define([
                     options: options
                 }
             ]);
-        },
-
-        setHeaderInformation: function() {
-            var title = 'pim.product.title',
-                breadcrumb = [
-                    {title: 'navigation.pim'},
-                    {title: 'pim.products.title'}
-                ];
-            if (!!this.options.data && !!this.options.data.attributes.name) {
-                title = this.options.data.attributes.name;
-            }
-            title = this.sandbox.util.cropTail(title, maxLengthTitle);
-            this.sandbox.emit('sulu.header.set-title', title);
-
-            if (!!this.options.data && !!this.options.data.attributes.number) {
-                breadcrumb.push({
-                    title: '#' + this.options.data.attributes.number
-                });
-            } else {
-                breadcrumb.push({
-                    title: 'pim.product.title'
-                });
-            }
-            this.sandbox.emit('sulu.header.set-breadcrumb', breadcrumb);
         },
 
         // @var Bool saved - defines if saved state should be shown

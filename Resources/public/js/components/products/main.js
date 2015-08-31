@@ -135,6 +135,11 @@ define([
             this.sandbox.on(PRODUCT_LOAD, function(id) {
                 this.load(id, AppConfig.getUser().locale);
             }, this);
+
+            // back to list
+            this.sandbox.on('sulu.header.back', function() {
+                this.sandbox.emit('sulu.products.list');
+            }, this);
         },
 
         triggerWorkflowAction: function(data) {
@@ -156,7 +161,7 @@ define([
         },
 
         saveMedia: function(productId, newMediaIds, removedMediaIds) {
-            this.sandbox.emit('sulu.header.toolbar.item.loading', 'save-button');
+            this.sandbox.emit('sulu.header.toolbar.item.loading', 'save');
 
             this.processAjaxForMedia(newMediaIds, productId, 'POST');
             this.processAjaxForMedia(removedMediaIds, productId, 'DELETE');

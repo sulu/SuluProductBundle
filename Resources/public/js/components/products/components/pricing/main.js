@@ -12,12 +12,9 @@ define(['config'], function(Config) {
 
     var formSelector = '#product-pricing-form',
         pricesSelector = '#prices',
-        maxLengthTitle = 60,
 
         render = function() {
             this.sandbox.dom.html(this.$el, this.renderTemplate('/admin/product/template/product/pricing'));
-
-            setHeaderInformation.call(this);
 
             initForm.call(this, this.options.data);
 
@@ -39,7 +36,7 @@ define(['config'], function(Config) {
         },
 
         bindCustomEvents = function() {
-            this.sandbox.on('sulu.header.toolbar.delete', function() {
+            this.sandbox.on('sulu.toolbar.delete', function() {
                 this.sandbox.emit('sulu.product.delete', this.sandbox.dom.val('#id'));
             }.bind(this));
 
@@ -51,16 +48,12 @@ define(['config'], function(Config) {
                 }
             }, this);
 
-            this.sandbox.on('sulu.header.toolbar.save', function() {
+            this.sandbox.on('sulu.toolbar.save', function() {
                 save.call(this);
             }, this);
 
             this.sandbox.on('sulu.products.saved', function() {
                 setHeaderBar.call(this, true);
-            }, this);
-
-            this.sandbox.on('sulu.header.back', function() {
-                this.sandbox.emit('sulu.products.list');
             }, this);
 
             this.sandbox.on('sulu.product.set-currencies', function(currencies) {
@@ -96,36 +89,16 @@ define(['config'], function(Config) {
             }.bind(this));
         },
 
+        // @var Bool saved - defines if saved state should be shown
         setHeaderBar = function(saved) {
             if (saved !== this.saved) {
-                var type = (!!this.options.data && !!this.options.data.attributes.id) ? 'edit' : 'add';
-                this.sandbox.emit('sulu.header.toolbar.state.change', type, saved, true);
+                if (!!saved) {
+                    this.sandbox.emit('sulu.header.toolbar.item.disable', 'save', true);
+                } else {
+                    this.sandbox.emit('sulu.header.toolbar.item.enable', 'save', false);
+                }
             }
             this.saved = saved;
-        },
-
-        setHeaderInformation = function() {
-            var title = 'pim.product.title',
-                breadcrumb = [
-                    {title: 'navigation.pim'},
-                    {title: 'pim.products.title'}
-                ];
-            if (!!this.options.data && !!this.options.data.attributes.name) {
-                title = this.options.data.attributes.name;
-            }
-            title = this.sandbox.util.cropTail(title, maxLengthTitle);
-            this.sandbox.emit('sulu.header.set-title', title);
-
-            if (!!this.options.data && !!this.options.data.attributes.number) {
-                breadcrumb.push({
-                    title: '#' + this.options.data.attributes.number
-                });
-            } else {
-                breadcrumb.push({
-                    title: 'pim.product.title'
-                });
-            }
-            this.sandbox.emit('sulu.header.set-breadcrumb', breadcrumb);
         },
 
         listenForChange = function() {
