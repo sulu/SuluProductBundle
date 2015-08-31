@@ -63,11 +63,11 @@ define([
                 }
             }, this);
 
-            this.sandbox.on('sulu.header.toolbar.save', function() {
+            this.sandbox.on('sulu.toolbar.save', function() {
                 this.save();
             }.bind(this));
 
-            this.sandbox.on('sulu.header.toolbar.delete', function() {
+            this.sandbox.on('sulu.toolbar.delete', function() {
                 this.sandbox.emit('sulu.product.delete', this.sandbox.dom.val('#id'));
             }.bind(this));
 
@@ -193,9 +193,10 @@ define([
 
         // @var Bool saved - defines if saved state should be shown
         setHeaderBar: function(saved) {
-            if (saved !== this.saved) {
-                var type = (!!this.options.data && !!this.options.data.attributes.id) ? 'edit' : 'add';
-                this.sandbox.emit('sulu.header.toolbar.state.change', type, saved, true);
+            if (!!saved) {
+                this.sandbox.emit('sulu.header.toolbar.item.disable', 'save', true);
+            } else {
+                this.sandbox.emit('sulu.header.toolbar.item.enable', 'save', false);
             }
             this.saved = saved;
         },

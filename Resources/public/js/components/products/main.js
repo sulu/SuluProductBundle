@@ -77,7 +77,6 @@ define([
                     if(this.options.content !== 'variants'){
                         HeaderUtil.initToolbar(
                             this.sandbox,
-                            this.options.locale,
                             this.product.get('status')
                         );
                     }
@@ -115,8 +114,8 @@ define([
                 this.sandbox.emit('sulu.router.navigate', 'pim/products');
             }.bind(this));
 
-            this.sandbox.on('sulu.header.language-changed', function (locale) {
-                this.load(this.options.id, locale);
+            this.sandbox.on('sulu.header.language-changed', function(data) {
+                this.load(this.options.id, data.title);
             }, this);
 
             this.sandbox.on('sulu.products.products-overlay.variants.add', function (id, callback) {
@@ -201,7 +200,7 @@ define([
         },
 
         save: function (data) {
-            this.sandbox.emit('sulu.header.toolbar.item.loading', 'save-button');
+            this.sandbox.emit('sulu.header.toolbar.item.loading', 'save');
             this.product.set(data);
 
             // FIXME the categories should already be loaded correctly here
@@ -223,7 +222,7 @@ define([
                     }
                 }.bind(this),
                 error: function () {
-                    this.sandbox.logger.log('error while saving product');
+                    this.sandbox.logger.error('error while saving product');
                 }.bind(this)
             });
         },

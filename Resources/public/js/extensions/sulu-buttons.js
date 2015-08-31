@@ -12,6 +12,7 @@
                         name: 'productWorkflow',
                         template: {
                             id: 'workflow',
+                            title: 'product.workfow.set.active',
                             icon: 'husky-deactivated',
                             disabled: true,
                             dropdownItems: [
