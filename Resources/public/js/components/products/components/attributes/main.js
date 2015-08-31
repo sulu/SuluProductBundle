@@ -30,21 +30,22 @@ define([
          * bind custom events
          */
         bindCustomEvents = function() {
-            this.sandbox.on('sulu.header.toolbar.delete', function () {
+            this.sandbox.on('sulu.toolbar.delete', function () {
                 this.sandbox.emit('sulu.product.delete', this.options.data.id);
             }.bind(this));
 
-            this.sandbox.on('product.state.change', function(id) {
-                if (!this.options.data.status || this.options.data.status.id !== id) {
-                    this.status = {id: id};
+            this.sandbox.on('product.state.change', function(status) {
+                if (!this.options.data.status || this.options.data.status.id !== status.id) {
+                    this.status = status;
                     this.options.data.status = this.status;
                     setHeaderBar.call(this, false);
                 }
             }, this);
 
-            this.sandbox.on('sulu.header.toolbar.save', function() {
+            this.sandbox.on('sulu.toolbar.save', function() {
                 this.sendData = {};
                 this.sendData.status = this.status;
+                this.sendData.id = this.options.data.id;
                 save.call(this);
             }, this);
 
@@ -342,10 +343,9 @@ define([
 
         initialize: function() {
             bindCustomEvents.call(this);
-
             this.status = !!this.options.data ? this.options.data.attributes.status : Config.get('product.status.active');
-
             this.render();
+            setHeaderBar.call(this, true);
         }
     };
 });

@@ -69,9 +69,9 @@ define(['config'], function(Config) {
                 this.sandbox.emit('sulu.product.delete', this.options.id);
             }.bind(this));
 
-            this.sandbox.on('product.state.change', function(id) {
-                if (!this.options.data.attributes.status || this.options.data.attributes.status.id !== id) {
-                    this.status = {id: id};
+            this.sandbox.on('product.state.change', function(status) {
+                if (!this.options.data.attributes.status || this.options.data.attributes.status.id !== status.id) {
+                    this.status = status;
                     this.statusChanged = true;
                     this.setHeaderBar(false);
                 }

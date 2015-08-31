@@ -17,8 +17,8 @@ define(['config'], function(Config) {
             this.sandbox.dom.html(this.$el, this.renderTemplate('/admin/product/template/product/pricing'));
 
             initForm.call(this, this.options.data);
-
             initPriceList.call(this, this.options.data);
+            setHeaderBar.call(this, true);
         },
 
         initPriceList = function(data) {
@@ -40,9 +40,9 @@ define(['config'], function(Config) {
                 this.sandbox.emit('sulu.product.delete', this.sandbox.dom.val('#id'));
             }.bind(this));
 
-            this.sandbox.on('product.state.change', function(id) {
-                if (!this.options.data.attributes.status || this.options.data.attributes.status.id !== id) {
-                    this.status = {id: id};
+            this.sandbox.on('product.state.change', function(status) {
+                if (!this.options.data.attributes.status || this.options.data.attributes.status.id !== status.id) {
+                    this.status = status;
                     this.options.data.status = this.status;
                     setHeaderBar.call(this, false);
                 }
