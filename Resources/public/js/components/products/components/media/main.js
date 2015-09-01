@@ -27,6 +27,8 @@ define(['config'], function(Config) {
             this.status = !!this.options.data ? this.options.data.attributes.status : Config.get('product.status.active');
             this.statusChanged = false;
 
+            // reset status if it has been changed before and has not been saved
+            this.sandbox.emit('product.state.change', this.status);
             this.setHeaderBar(true);
             this.render();
         },

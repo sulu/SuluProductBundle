@@ -30,7 +30,7 @@ define([
          * bind custom events
          */
         bindCustomEvents = function() {
-            this.sandbox.on('sulu.toolbar.delete', function () {
+            this.sandbox.on('sulu.toolbar.delete', function() {
                 this.sandbox.emit('sulu.product.delete', this.options.data.id);
             }.bind(this));
 
@@ -76,6 +76,12 @@ define([
                 setHeaderBar.call(this, true);
                 //this.options.data = data;
                 this.options.data.attributes.status = this.status;
+            }, this);
+
+            // enable toolbar items
+            this.sandbox.on('husky.datagrid.' + datagridInstanceName + '.number.selections', function(number) {
+                var postfix = number > 0 ? 'enable' : 'disable';
+                this.sandbox.emit('husky.toolbar.' + productAttributesInstanceName + '.item.' + postfix, 'delete', false)
             }, this);
         },
 
@@ -161,10 +167,10 @@ define([
                 var preSelectedElement = [];
 
                 // set pre selected element in checkbox
-                if (this.attributeTypes.length > 0 && 
-                    typeof(this.attributeTypes[0]) === "object" && 
+                if (this.attributeTypes.length > 0 &&
+                    typeof(this.attributeTypes[0]) === "object" &&
                     typeof(this.attributeTypes[0].name) === "string"
-                    ) {
+                ) {
                     attributeId = this.attributeTypes[0].id;
                     preSelectedElement.push(this.attributeTypes[0].name);
                 }
@@ -200,6 +206,7 @@ define([
          * save product attributes
          */
         save = function() {
+            this.saved = false;
             this.sandbox.emit('sulu.products.save', this.sendData);
         },
 
@@ -313,8 +320,9 @@ define([
                                 callback: createAddOverlay.bind(this)
                             },
                             {
+                                id: 'delete',
                                 icon: 'trash-o',
-                                disabled: false,
+                                disabled: true,
                                 callback: attributeDelete.bind(this)
                             }
                         ]
@@ -344,6 +352,8 @@ define([
         initialize: function() {
             bindCustomEvents.call(this);
             this.status = !!this.options.data ? this.options.data.attributes.status : Config.get('product.status.active');
+            // reset status if it has been changed before and has not been saved
+            this.sandbox.emit('product.state.change', this.status);
             this.render();
             setHeaderBar.call(this, true);
         }

@@ -125,7 +125,8 @@ define(['config'], function(Config) {
 
         initialize: function() {
             this.status = !!this.options.data ? this.options.data.attributes.status : Config.get('product.status.active');
-
+            // reset status if it has been changed before and has not been saved
+            this.sandbox.emit('product.state.change', this.status);
             bindCustomEvents.call(this);
 
             render.call(this);

@@ -37,6 +37,8 @@ define([
         initialize: function() {
             this.saved = true;
             this.status = !!this.options.data ? this.options.data.attributes.status : Config.get('product.status.active');
+            // reset status if it has been changed before and has not been saved
+            this.sandbox.emit('product.state.change', this.status);
 
             this.initializeValidation();
 
@@ -150,10 +152,12 @@ define([
 
         // @var Bool saved - defines if saved state should be shown
         setHeaderBar: function(saved) {
-            if (!!saved) {
-                this.sandbox.emit('sulu.header.toolbar.item.disable', 'save', true);
-            } else {
-                this.sandbox.emit('sulu.header.toolbar.item.enable', 'save', false);
+            if (saved !== this.saved) {
+                if (!!saved) {
+                    this.sandbox.emit('sulu.header.toolbar.item.disable', 'save', true);
+                } else {
+                    this.sandbox.emit('sulu.header.toolbar.item.enable', 'save', false);
+                }
             }
             this.saved = saved;
         },

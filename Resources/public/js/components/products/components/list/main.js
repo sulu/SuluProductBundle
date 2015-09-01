@@ -64,12 +64,6 @@ define(['config'], function(Config) {
                 }.bind(this));
             }, this);
 
-            // checkbox clicked
-            this.sandbox.on('husky.datagrid.' + constants.datagridInstanceName + '.number.selections', function(number) {
-                var postfix = number > 0 ? 'enable' : 'disable';
-                this.sandbox.emit('sulu.header.toolbar.item.' + postfix, 'deleteSelected', false);
-            }.bind(this));
-
             // enable toolbar items
             this.sandbox.on('husky.datagrid.' + constants.datagridInstanceName + '.number.selections', function(number) {
                 var postfix = number > 0 ? 'enable' : 'disable',
@@ -85,6 +79,8 @@ define(['config'], function(Config) {
                     'productWorkflow',
                     {icon: icon}
                 );
+
+                this.sandbox.emit('sulu.header.toolbar.item.' + postfix, 'deleteSelected', false);
             }, this);
 
             this.sandbox.on('sulu.toolbar.productWorkflow.active', setProductActive.bind(this));
