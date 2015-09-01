@@ -204,15 +204,15 @@ define(['config', 'suluproduct/util/product-delete-dialog'], function(Config, De
                     el: this.$find('#list-toolbar-container'),
                     instanceName: constants.instanceName,
                     template: this.getListTemplate(),
-                    hasSearch: false
+                    hasSearch: true
                 },
                 {
                     el: this.$find('#documents-list'),
                     url: this.getListUrl(),
-                    //searchInstanceName: constants.instanceName,
+                    searchInstanceName: constants.instanceName,
                     instanceName: constants.instanceName,
                     resultKey: 'media',
-                    //searchFields: ['name', 'title', 'description'],
+                    searchFields: ['name', 'title', 'description'],
                     viewOptions: {
                         table: {
                             selectItem: {
