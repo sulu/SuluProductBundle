@@ -48,11 +48,7 @@ define(['config'], function(Config) {
                     },
                     {
                         id: 'name',
-                        width: '150px'
-                    },
-                    {
-                        id: 'manufacturer',
-                        width: '150px'
+                        width: '480px'
                     },
                     {
                         id: 'supplier',
