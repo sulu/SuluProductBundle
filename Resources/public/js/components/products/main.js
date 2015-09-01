@@ -167,6 +167,7 @@ define([
             this.processAjaxForMedia(removedMediaIds, productId, 'DELETE');
         },
 
+        // TODO make only one request
         processAjaxForMedia: function(mediaIds, productId, type) {
 
             var requests = [],
