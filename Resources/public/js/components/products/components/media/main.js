@@ -12,8 +12,8 @@ define(['config'], function(Config) {
     'use strict';
 
     var constants = {
-            formSelector: '#documents-form'
-        };
+        formSelector: '#documents-form'
+    };
 
     return {
 
@@ -166,9 +166,6 @@ define(['config'], function(Config) {
          */
         submit: function() {
             if (this.sandbox.form.validate(constants.formSelector)) {
-
-                //var this.sandbox.form.getData(constants.formSelector).media.ids
-
                 this.sandbox.emit(
                     'sulu.products.media.save',
                     this.options.data.id,

@@ -85,7 +85,7 @@ define([
             }, this);
         },
 
-        // @var Bool saved - defines if saved state should be shown
+    // @var Bool saved - defines if saved state should be shown
         setHeaderBar = function(saved) {
             if (saved !== this.saved) {
                 if (!!saved) {

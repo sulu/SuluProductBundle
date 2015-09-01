@@ -19,7 +19,7 @@ define(['config'], function(Config) {
          * @param status
          */
         initToolbar: function(sandbox, status) {
-            if(!this.sandbox) {
+            if (!this.sandbox) {
                 this.sandbox = sandbox;
                 this.bindCustomEvents(status);
             }

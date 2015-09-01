@@ -66,7 +66,7 @@ define(['suluproduct/models/attribute', 'app-config'], function(Attribute, AppCo
             }.bind(this));
 
             this.sandbox.on(ATTRIBUTE_DELETE, function(data) {
-                if(this.sandbox.util.typeOf(data) === 'array') {
+                if (this.sandbox.util.typeOf(data) === 'array') {
                     this.deleteAttributes(data);
                 } else {
                     this.deleteAttribute(data);
@@ -77,9 +77,9 @@ define(['suluproduct/models/attribute', 'app-config'], function(Attribute, AppCo
                 this.sandbox.emit('sulu.router.navigate', 'pim/attributes');
             }.bind(this));
 
-                this.sandbox.on('sulu.header.language-changed', function(data) {
-                    this.load(this.options.id, data.title);
-                }, this);
+            this.sandbox.on('sulu.header.language-changed', function(data) {
+                this.load(this.options.id, data.title);
+            }, this);
 
             this.sandbox.on(ATTRIBUTE_LOAD, function(id) {
                 this.load(id, AppConfig.getUser().locale);
@@ -163,12 +163,12 @@ define(['suluproduct/models/attribute', 'app-config'], function(Attribute, AppCo
             } else {
                 // show dialog
                 this.sandbox.emit(
-                        'sulu.overlay.show-warning',
-                        'sulu.overlay.be-careful',
-                        'sulu.overlay.delete-desc',
-                        callbackFunction.bind(this, false),
-                        callbackFunction
-                        );
+                    'sulu.overlay.show-warning',
+                    'sulu.overlay.be-careful',
+                    'sulu.overlay.delete-desc',
+                    callbackFunction.bind(this, false),
+                    callbackFunction
+                );
             }
         },
 
@@ -213,9 +213,9 @@ define(['suluproduct/models/attribute', 'app-config'], function(Attribute, AppCo
             this.sandbox.start([
                 {
                     name: 'attributes/components/list@suluproduct',
-                     options: {
-                         el: $list
-                     }
+                    options: {
+                        el: $list
+                    }
                 }
             ]);
         }
