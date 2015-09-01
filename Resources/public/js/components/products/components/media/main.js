@@ -7,7 +7,7 @@
  * with this source code in the file LICENSE.
  */
 
-define(['config'], function(Config) {
+define(['config', 'suluproduct/util/product-delete-dialog'], function(Config, DeleteDialog) {
 
     'use strict';
 
@@ -91,7 +91,7 @@ define(['config'], function(Config) {
         /**
          * Removes elements from list
          */
-        removeItemsFromList: function(){
+        removeItemsFromList: function() {
             var ids = this.removedSelections.slice();
             ids.forEach(function(id) {
                 this.sandbox.emit('husky.datagrid.' + constants.instanceName + '.record.remove', id);
@@ -103,7 +103,7 @@ define(['config'], function(Config) {
         /**
          * Adds new elements to the list
          */
-        addItemsToList: function(){
+        addItemsToList: function() {
             this.newSelectionItems.forEach(function(item) {
                 this.sandbox.emit('husky.datagrid.' + constants.instanceName + '.record.add', item);
             }.bind(this));
@@ -185,11 +185,13 @@ define(['config'], function(Config) {
          */
         removeSelected: function() {
             this.sandbox.emit('husky.datagrid.documents.items.get-selected', function(ids) {
-                //DeleteDialog.showDialog(ids, function() {
-                this.currentSelection = this.sandbox.util.removeFromArray(this.currentSelection, ids);
-                this.removedSelections = ids;
-                this.submit();
-                //}.bind(this));
+                DeleteDialog.showMediaRemoveDialog(this.sandbox, function(wasConfirmed) {
+                    if (wasConfirmed) {
+                        this.currentSelection = this.sandbox.util.removeFromArray(this.currentSelection, ids);
+                        this.removedSelections = ids;
+                        this.submit();
+                    }
+                }.bind(this));
             }.bind(this));
         },
 
