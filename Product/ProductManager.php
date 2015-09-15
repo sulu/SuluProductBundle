@@ -731,15 +731,22 @@ class ProductManager implements ProductManagerInterface
      * Finds and returns a list of products for which a special price is
      * currently active.
      *
+     * @param     $locale
+     * @param int $limit
+     * @param int $page
+     *
      * @return array
      */
-    public function findCurrentOfferedProducts($locale)
+    public function findCurrentOfferedProducts($locale, $limit = 20, $page = 1)
     {
-        $specialPrices = $this->specialPriceRepository->findAllCurrent();
+        $specialPrices = $this->specialPriceRepository->findAllCurrent($limit, $page);
         $products = [];
         foreach ($specialPrices as $specialPrice) {
-            $products[] = $this->productFactory->createApiEntity($specialPrice->getProduct(), $locale);
+            $product = $this->productFactory->createApiEntity($specialPrice->getProduct(), $locale);
+            $this->createProductMedia($product, $locale);
+            $products['product'][] = $product;
         }
+        $products['pagerfanta'] = $specialPrices;
 
         return $products;
     }
