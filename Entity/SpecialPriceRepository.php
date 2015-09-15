@@ -25,7 +25,7 @@ class SpecialPriceRepository extends EntityRepository
      *
      * @return null|Pagerfanta
      */
-    public function findAllCurrent($limit = 1000, $page = 0)
+    public function findAllCurrent($limit = 1000, $page = 1)
     {
         try {
             $qb = $this->createQueryBuilder('specialPrice')
