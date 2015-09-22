@@ -50,6 +50,14 @@ define([], function() {
                     }
                 }.bind(this));
             }
+        },
+
+        /**
+         * Shows a dialog when removing media from a product
+         */
+        showMediaRemoveDialog: function(sandbox, callback) {
+            this.sandbox = sandbox;
+            confirmDeleteDialog.call(this, callback);
         }
     };
 });
