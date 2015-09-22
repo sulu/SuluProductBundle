@@ -7,7 +7,7 @@
  * with this source code in the file LICENSE.
  */
 
-define(['config'], function (Config) {
+define(['config'], function(Config) {
 
     'use strict';
     var TYPE_PRODUCT = 'product',
@@ -21,11 +21,11 @@ define(['config'], function (Config) {
 
         },
 
-        addProduct = function (type) {
+        addProduct = function(type) {
             this.sandbox.emit('sulu.products.new', type);
         },
 
-        setProductActive = function(){
+        setProductActive = function() {
             this.sandbox.emit('husky.datagrid.' + constants.datagridInstanceName + '.items.get-selected', function(ids) {
                 this.sandbox.emit(
                     'sulu.products.workflow.triggered',
@@ -37,7 +37,7 @@ define(['config'], function (Config) {
             }.bind(this));
         },
 
-        setProductInactive = function(){
+        setProductInactive = function() {
             this.sandbox.emit('husky.datagrid.' + constants.datagridInstanceName + '.items.get-selected', function(ids) {
                 this.sandbox.emit(
                     'sulu.products.workflow.triggered',
@@ -49,8 +49,8 @@ define(['config'], function (Config) {
             }.bind(this));
         },
 
-        bindCustomEvents = function () {
-            this.sandbox.on('sulu.list-toolbar.add', function () {
+        bindCustomEvents = function() {
+            this.sandbox.on('sulu.toolbar.add', function() {
                 this.sandbox.emit('sulu.products.new');
             }.bind(this));
 
@@ -58,99 +58,48 @@ define(['config'], function (Config) {
                 this.sandbox.emit('husky.datagrid.' + constants.datagridInstanceName + '.update');
             }, this);
 
-            this.sandbox.on('sulu.list-toolbar.delete', function() {
+            this.sandbox.on('sulu.toolbar.delete', function() {
                 this.sandbox.emit('husky.datagrid.' + constants.datagridInstanceName + '.items.get-selected', function(ids) {
                     this.sandbox.emit('sulu.products.delete', ids);
                 }.bind(this));
             }, this);
 
-            // checkbox clicked
-            this.sandbox.on('husky.datagrid.' + constants.datagridInstanceName + '.number.selections', function(number) {
-                var postfix = number > 0 ? 'enable' : 'disable';
-                this.sandbox.emit('husky.toolbar.' + constants.toolbarInstanceName + '.item.' + postfix, 'delete', false);
-            }.bind(this));
-
             // enable toolbar items
             this.sandbox.on('husky.datagrid.' + constants.datagridInstanceName + '.number.selections', function(number) {
-                if (number > 0) {
-                    this.sandbox.emit(
-                        'husky.toolbar.' + constants.toolbarInstanceName + '.button.set',
-                        'workflow',
-                        {icon: 'husky-publish'}
-                    );
-                    this.sandbox.emit(
-                        'husky.toolbar.' + constants.toolbarInstanceName + '.item.enable',
-                        'workflow',
-                        false
-                    );
-                } else {
-                    this.sandbox.emit(
-                        'husky.toolbar.' + constants.toolbarInstanceName + '.button.set',
-                        'workflow',
-                        {icon: 'husky-deactivated'}
-                    );
-                    this.sandbox.emit(
-                        'husky.toolbar.' + constants.toolbarInstanceName + '.item.disable',
-                        'workflow',
-                        false
-                    );
-                }
+                var postfix = number > 0 ? 'enable' : 'disable',
+                    icon = number > 0 ? 'husky-publish' : 'husky-deactivated';
+
+                this.sandbox.emit(
+                    'husky.toolbar.' + constants.toolbarInstanceName + '.item.' + postfix,
+                    'productWorkflow',
+                    false
+                );
+                this.sandbox.emit(
+                    'husky.toolbar.' + constants.toolbarInstanceName + '.button.set',
+                    'productWorkflow',
+                    {icon: icon}
+                );
+
+                this.sandbox.emit('sulu.header.toolbar.item.' + postfix, 'deleteSelected', false);
             }, this);
+
+            this.sandbox.on('sulu.toolbar.productWorkflow.active', setProductActive.bind(this));
+            this.sandbox.on('sulu.toolbar.productWorkflow.inactive', setProductInactive.bind(this));
         },
 
         getToolbarTemplate = function() {
-            return [
-                {
-                    id: 'add',
-                    icon: 'plus-circle',
-                    class: 'highlight-white',
-                    position: 1,
-                    title: this.sandbox.translate('sulu.list-toolbar.add'),
-                    items: [
-                        {
-                            id: 'add-product',
-                            title: this.sandbox.translate('products.add-product'),
-                            callback: addProduct.bind(this, TYPE_PRODUCT)
-                        },
-                        {
-                            id: 'add-product-with-variants',
-                            title: this.sandbox.translate('products.add-product-with-variants'),
-                            callback: addProduct.bind(this, TYPE_PRODUCT_VARIANT)
-                        },
-                        {
-                            id: 'add-product-addon',
-                            title: this.sandbox.translate('products.add-product-addon'),
-                            callback: addProduct.bind(this, TYPE_PRODUCT_ADDON)
-                        },
-                        {
-                            id: 'add-product-set',
-                            title: this.sandbox.translate('products.add-product-set'),
-                            callback: addProduct.bind(this, TYPE_PRODUCT_SET)
-                        }
-                    ]
+            return this.sandbox.sulu.buttons.get({
+                settings: {
+                    options: {
+                        dropdownItems: [
+                            {
+                                type: 'columnOptions'
+                            }
+                        ]
+                    }
                 },
-                {
-                    id: 'workflow',
-                    icon: 'husky-deactivated',
-                    type: 'select',
-                    position: 30,
-                    disabled: true,
-
-                    items: [
-                        {
-                            id: 'active',
-                            title: this.sandbox.translate('product.workfow.set.active'),
-                            callback: setProductActive.bind(this)
-                        },
-                        {
-                            id: 'inactive',
-                            title: this.sandbox.translate('product.workfow.set.inactive'),
-                            callback: setProductInactive.bind(this)
-                        }
-                    ]
-                }
-            ];
-
+                productWorkflow: {}
+            });
         },
 
         datagridAction = function(id) {
@@ -166,26 +115,52 @@ define(['config'], function (Config) {
             }
         },
 
-        header: function () {
+        header: function() {
             return {
                 title: 'pim.products.title',
                 noBack: true,
-
-                breadcrumb: [
-                    {title: 'navigation.pim'},
-                    {title: 'pim.products.title'}
-                ]
+                toolbar: {
+                    buttons: {
+                        add: {
+                            options: {
+                                dropdownItems: [
+                                    {
+                                        id: 'add-product',
+                                        title: this.sandbox.translate('products.add-product'),
+                                        callback: addProduct.bind(this, TYPE_PRODUCT)
+                                    },
+                                    {
+                                        id: 'add-product-with-variants',
+                                        title: this.sandbox.translate('products.add-product-with-variants'),
+                                        callback: addProduct.bind(this, TYPE_PRODUCT_VARIANT)
+                                    },
+                                    {
+                                        id: 'add-product-addon',
+                                        title: this.sandbox.translate('products.add-product-addon'),
+                                        callback: addProduct.bind(this, TYPE_PRODUCT_ADDON)
+                                    },
+                                    {
+                                        id: 'add-product-set',
+                                        title: this.sandbox.translate('products.add-product-set'),
+                                        callback: addProduct.bind(this, TYPE_PRODUCT_SET)
+                                    }
+                                ]
+                            }
+                        },
+                        deleteSelected: {}
+                    }
+                }
             };
         },
 
         templates: ['/admin/product/template/product/list'],
 
-        initialize: function () {
+        initialize: function() {
             this.render();
             bindCustomEvents.call(this);
         },
 
-        renderGrid: function () {
+        renderGrid: function() {
             var toolbarTemplate = getToolbarTemplate.call(this),
                 toolbarExtension = Config.get('product.toolbar.extension');
 
@@ -201,7 +176,6 @@ define(['config'], function (Config) {
                 {
                     el: this.$find('#list-toolbar-container'),
                     instanceName: constants.toolbarInstanceName,
-                    parentTemplate: 'default',
                     inHeader: true,
                     template: toolbarTemplate,
                     groups: [
@@ -221,10 +195,10 @@ define(['config'], function (Config) {
                 },
                 {
                     el: this.sandbox.dom.find('#products-list', this.$el),
-                    url: '/admin/api/products?flat=true&status_id='+ Config.get('product.list.statuses.ids'),
+                    url: '/admin/api/products?flat=true&status_id=' + Config.get('product.list.statuses.ids'),
                     resultKey: 'products',
                     searchInstanceName: 'productsToolbar',
-                    searchFields: ['name','number','supplier'],
+                    searchFields: ['name', 'number', 'supplier'],
                     instanceName: constants.datagridInstanceName,
                     actionCallback: datagridAction.bind(this)
                 },
@@ -233,7 +207,7 @@ define(['config'], function (Config) {
             );
         },
 
-        render: function () {
+        render: function() {
             this.renderGrid();
         }
     };

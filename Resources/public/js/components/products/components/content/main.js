@@ -7,16 +7,45 @@
  * with this source code in the file LICENSE.
  */
 
-define(function () {
+define(['config'], function(Config) {
 
     'use strict';
 
     return {
-        // TODO exclude tabs into own function and remove header
-        header: function () {
+        header: function() {
             return {
                 toolbar: {
-                    template: 'default',
+                    buttons: {
+                        save: {},
+                        delete: {},
+                        productWorkflow: {
+                            options: {
+                                disabled: false,
+                                dropdownItems: [
+                                    {
+                                        id: 'active',
+                                        title: 'product.workfow.set.active',
+                                        callback: function() {
+                                            app.sandbox.emit(
+                                                'product.state.change',
+                                                {id: Config.get('product.status.active').id}
+                                            );
+                                        }
+                                    },
+                                    {
+                                        id: 'inactive',
+                                        title: 'product.workfow.set.inactive',
+                                        callback: function() {
+                                            app.sandbox.emit(
+                                                'product.state.change',
+                                                {id: Config.get('product.status.inactive').id}
+                                            );
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    },
                     languageChanger: {
                         preSelected: this.options.locale
                     }
