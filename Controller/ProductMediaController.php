@@ -10,28 +10,27 @@
 
 namespace Sulu\Bundle\ProductBundle\Controller;
 
-use Sulu\Bundle\ProductBundle\Product\ProductMediaManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use FOS\RestBundle\Controller\Annotations\RouteResource;
-use Sulu\Component\Rest\ListBuilder\ListRepresentation;
 use Sulu\Exception\FeatureNotImplementedException;
-use Sulu\Component\Rest\Exception\EntityIdAlreadySetException;
+use Sulu\Component\Rest\ListBuilder\ListRepresentation;
 use Sulu\Component\Rest\Exception\EntityNotFoundException;
 use Sulu\Component\Rest\Exception\RestException;
 use Sulu\Component\Rest\ListBuilder\Doctrine\DoctrineListBuilderFactory;
 use Sulu\Component\Rest\RestController;
 use Sulu\Component\Rest\RestHelperInterface;
-use Sulu\Bundle\MediaBundle\Api\Media;
 use Sulu\Bundle\MediaBundle\Media\Manager\MediaManagerInterface;
 use Sulu\Bundle\ProductBundle\Api\Product;
 use Sulu\Bundle\ProductBundle\Product\ProductManagerInterface;
+use Sulu\Bundle\ProductBundle\Product\ProductMediaManagerInterface;
 
 // TODO Refactor: use manager for product-media
 
 /**
- * Makes setting and removing of media for a product available through a REST API
+ * Makes setting and removing of media for a product available through a REST API.
+ *
  * @RouteResource("Media")
- * @package Sulu\Bundle\ProductBundle\Controller
  */
 class ProductMediaController extends RestController
 {
@@ -42,7 +41,7 @@ class ProductMediaController extends RestController
     private $productManager;
 
     /**
-     * Returns the product manager
+     * Returns the product manager.
      *
      * @return ProductManagerInterface
      */
@@ -56,7 +55,7 @@ class ProductMediaController extends RestController
     }
 
     /**
-     * Returns the media manager
+     * Returns the media manager.
      *
      * @return MediaManagerInterface
      */
@@ -70,12 +69,12 @@ class ProductMediaController extends RestController
     }
 
     /**
-     * Adds a new media to the account
+     * Adds a new media to the account.
      *
-     * @param $id - the product id
-     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @param int $id - the product id
+     * @param Request $request
      *
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      */
     public function postAction($id, Request $request)
     {
@@ -119,7 +118,7 @@ class ProductMediaController extends RestController
     }
 
     /**
-     * Removes default prices from product
+     * Removes default prices from product.
      *
      * @param Product $product
      */
@@ -140,13 +139,13 @@ class ProductMediaController extends RestController
     }
 
     /**
-     * Removes a media from the relation to the account
+     * Removes a media from the relation to the account.
      *
-     * @param $id - account id
-     * @param $mediaId
-     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @param int $id - account id
+     * @param int $mediaId
+     * @param Request $request
      *
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      */
     public function deleteAction($id, $mediaId, Request $request)
     {
@@ -197,15 +196,15 @@ class ProductMediaController extends RestController
     }
 
     /**
-     * Lists all media of an account
+     * Lists all media of an account.
      * optional parameter 'flat' calls listAction.
      *
-     * @param $id
+     * @param int $id
      * @param Request $request
      *
-     * @return \Symfony\Component\HttpFoundation\Response
-     *
      * @throws FeatureNotImplementedException
+     *
+     * @return Response
      */
     public function cgetAction($id, Request $request)
     {
@@ -224,10 +223,10 @@ class ProductMediaController extends RestController
     }
 
     /**
-     * Returns a list representation
+     * Returns a list representation.
      *
-     * @param $id
-     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @param int $id
+     * @param Request $request
      *
      * @return ListRepresentation
      */
@@ -291,19 +290,9 @@ class ProductMediaController extends RestController
     }
 
     /**
-     * Returns the product media manager
-     *
-     * @return ProductMediaManagerInterface
-     */
-    protected function getManager()
-    {
-        return $this->get('sulu_product.product_media_manager');
-    }
-
-    /**
      * Returns all fields that can be used by list.
      *
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      */
     public function fieldsAction()
     {
@@ -312,5 +301,15 @@ class ProductMediaController extends RestController
                 array_values($this->getManager()->getFieldDescriptors())
             )
         );
+    }
+
+    /**
+     * Returns the product media manager.
+     *
+     * @return ProductMediaManagerInterface
+     */
+    protected function getManager()
+    {
+        return $this->get('sulu_product.product_media_manager');
     }
 }
