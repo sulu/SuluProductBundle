@@ -20,7 +20,6 @@ define([
         selectInstanceName = 'product-attribute-select',
         typeText = 'product.attribute.type.text',
         attributeId = null,
-        maxLengthTitle = 60,
         actions = {
             ADD: 1,
             DELETE: 2,
@@ -31,25 +30,22 @@ define([
          * bind custom events
          */
         bindCustomEvents = function() {
-            this.sandbox.on('sulu.header.toolbar.delete', function () {
+            this.sandbox.on('sulu.toolbar.delete', function() {
                 this.sandbox.emit('sulu.product.delete', this.options.data.id);
             }.bind(this));
 
-            this.sandbox.on('product.state.change', function(id) {
-                if (!this.options.data.status || this.options.data.status.id !== id) {
-                    this.status = {id: id};
+            this.sandbox.on('product.state.change', function(status) {
+                if (!this.options.data.status || this.options.data.status.id !== status.id) {
+                    this.status = status;
                     this.options.data.status = this.status;
                     setHeaderBar.call(this, false);
                 }
             }, this);
 
-            this.sandbox.on('sulu.header.back', function() {
-                this.sandbox.emit('sulu.products.list');
-            }, this);
-
-            this.sandbox.on('sulu.header.toolbar.save', function() {
+            this.sandbox.on('sulu.toolbar.save', function() {
                 this.sendData = {};
                 this.sendData.status = this.status;
+                this.sendData.id = this.options.data.id;
                 save.call(this);
             }, this);
 
@@ -81,14 +77,24 @@ define([
                 //this.options.data = data;
                 this.options.data.attributes.status = this.status;
             }, this);
+
+            // enable toolbar items
+            this.sandbox.on('husky.datagrid.' + datagridInstanceName + '.number.selections', function(number) {
+                var postfix = number > 0 ? 'enable' : 'disable';
+                this.sandbox.emit('husky.toolbar.' + productAttributesInstanceName + '.item.' + postfix, 'delete', false)
+            }, this);
         },
 
-        /**
-         * modify header information
-         */
+    // @var Bool saved - defines if saved state should be shown
         setHeaderBar = function(saved) {
-            var type = (!!this.options.data && !!this.options.data.id) ? 'edit' : 'add';
-            this.sandbox.emit('sulu.header.toolbar.state.change', type, saved, true);
+            if (saved !== this.saved) {
+                if (!!saved) {
+                    this.sandbox.emit('sulu.header.toolbar.item.disable', 'save', true);
+                } else {
+                    this.sandbox.emit('sulu.header.toolbar.item.enable', 'save', false);
+                }
+            }
+            this.saved = saved;
         },
 
         /**
@@ -107,39 +113,12 @@ define([
         },
 
         /**
-         * sets the header information
-         */
-        setHeaderInformation = function() {
-            var title = 'pim.product.title',
-                breadcrumb = [
-                    {title: 'navigation.pim'},
-                    {title: 'pim.products.title'}
-                ];
-            if (!!this.options.data && !!this.options.data.attributes.name) {
-                title = this.options.data.attributes.name;
-            }
-            title = this.sandbox.util.cropTail(title, maxLengthTitle);
-            this.sandbox.emit('sulu.header.set-title', title);
-
-            if (!!this.options.data && !!this.options.data.attributes.number) {
-                breadcrumb.push({
-                    title: '#' + this.options.data.attributes.number
-                });
-            } else {
-                breadcrumb.push({
-                    title: 'pim.product.title'
-                });
-            }
-            this.sandbox.emit('sulu.header.set-breadcrumb', breadcrumb);
-        },
-
-        /**
          * Create the overlay
          */
         createAddOverlay = function() {
             // call JSON to get the attributes from the server then create the overlay after it's done
             var ajaxRequest = $.getJSON('api/attributes', function(data) {
-                this.attributeTypes = new Array();
+                this.attributeTypes = [];
 
                 $.each(data._embedded.attributes, function(key, value) {
                     var newAttribute = {
@@ -188,10 +167,10 @@ define([
                 var preSelectedElement = [];
 
                 // set pre selected element in checkbox
-                if (this.attributeTypes.length > 0 && 
-                    typeof(this.attributeTypes[0]) === "object" && 
+                if (this.attributeTypes.length > 0 &&
+                    typeof(this.attributeTypes[0]) === "object" &&
                     typeof(this.attributeTypes[0].name) === "string"
-                    ) {
+                ) {
                     attributeId = this.attributeTypes[0].id;
                     preSelectedElement.push(this.attributeTypes[0].name);
                 }
@@ -227,6 +206,7 @@ define([
          * save product attributes
          */
         save = function() {
+            this.saved = false;
             this.sandbox.emit('sulu.products.save', this.sendData);
         },
 
@@ -239,7 +219,7 @@ define([
                 return;
             }
 
-            this.sendData = new Object();
+            this.sendData = {};
             var attributeValue = this.sandbox.dom.val('#attribute-name');
 
             var attributes = this.options.data.attributes.attributes;
@@ -273,8 +253,8 @@ define([
             this.sandbox.emit('husky.datagrid.' + datagridInstanceName + '.items.get-selected', function(ids) {
 
                 var attributes = this.options.data.attributes.attributes;
-                this.sendData = new Object();
-                var deleteIds = new Array();
+                this.sendData = {};
+                var deleteIds = [];
 
                 _.each(ids, function(value, key, list) {
                     var result = _.findWhere(attributes, {'id': value});
@@ -333,15 +313,16 @@ define([
                         el: '#product-attribute-selection-toolbar',
                         instanceName: productAttributesInstanceName,
                         small: false,
-                        data: [
+                        buttons: [
                             {
                                 id: 'add',
                                 icon: 'plus-circle',
                                 callback: createAddOverlay.bind(this)
                             },
                             {
+                                id: 'delete',
                                 icon: 'trash-o',
-                                disabled: false,
+                                disabled: true,
                                 callback: attributeDelete.bind(this)
                             }
                         ]
@@ -365,18 +346,16 @@ define([
 
         render: function() {
             this.sandbox.dom.html(this.$el, this.renderTemplate('/admin/product/template/product/attributes'));
-
             initForm.call(this);
-
-            setHeaderInformation.call(this);
         },
 
         initialize: function() {
             bindCustomEvents.call(this);
-
             this.status = !!this.options.data ? this.options.data.attributes.status : Config.get('product.status.active');
-
+            // reset status if it has been changed before and has not been saved
+            this.sandbox.emit('product.state.change', this.status);
             this.render();
+            setHeaderBar.call(this, true);
         }
     };
 });
