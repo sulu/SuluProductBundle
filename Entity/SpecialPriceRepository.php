@@ -10,6 +10,8 @@
 
 namespace Sulu\Bundle\ProductBundle\Entity;
 
+use Pagerfanta\Adapter\DoctrineORMAdapter;
+use Pagerfanta\Pagerfanta;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\NoResultException;
 
@@ -18,16 +20,24 @@ class SpecialPriceRepository extends EntityRepository
     /**
      * Returns the current special prices
      *
-     * @return SpecialPrice[]|null
+     * @param int $limit
+     * @param int $page
+     *
+     * @return null|Pagerfanta
      */
-    public function findAllCurrent()
+    public function findAllCurrent($limit = 1000, $page = 1)
     {
         try {
             $qb = $this->createQueryBuilder('specialPrice')
                 ->where(':now BETWEEN specialPrice.startDate AND specialPrice.endDate')
                 ->setParameter('now', new \DateTime());
 
-            return $qb->getQuery()->getResult();
+            $adapter = new DoctrineORMAdapter($qb);
+            $pagerfanta = new Pagerfanta($adapter);
+            $pagerfanta->setMaxPerPage($limit);
+            $pagerfanta->setCurrentPage($page);
+
+            return $pagerfanta;
         } catch (NoResultException $exc) {
             return null;
         }

@@ -14,7 +14,6 @@ require.config({
         'suluproduct/util/price-calculation-util':'../../suluproduct/js/util/price-calculation-util',
         'suluproduct/util/product-delete-dialog': '../../suluproduct/js/components/products/util/product-delete-dialog',
         'type/price-list': '../../suluproduct/js/components/price-list/price-list-type',
-
         'extensions/sulu-buttons-productbundle': '../../suluproduct/js/extensions/sulu-buttons'
     }
 });
@@ -52,11 +51,7 @@ define(['config', 'extensions/sulu-buttons-productbundle'], function(Config, Pro
                     },
                     {
                         id: 'name',
-                        width: '150px'
-                    },
-                    {
-                        id: 'manufacturer',
-                        width: '150px'
+                        width: '480px'
                     },
                     {
                         id: 'supplier',
