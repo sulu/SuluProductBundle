@@ -33,6 +33,7 @@
         <parameter key="sulu_product.product_factory.class">Sulu\Bundle\ProductBundle\Product\ProductFactory</parameter>
         <parameter key="sulu_product.product_entity">Sulu\Bundle\ProductBundle\Entity\Product</parameter>
         <parameter key="sulu_product.product_api_entity">Sulu\Bundle\ProductBundle\Api\Product</parameter>
+        <parameter key="sulu_product.product_media_manager.class">Sulu\Bundle\ProductBundle\Product\ProductMediaManager</parameter>
     </parameters>
     <services>
         <!-- ADMIN -->
@@ -150,6 +151,10 @@
         </service>
         <service id="sulu_product.currency_manager" class="%sulu_product.currency_manager.class%">
             <argument type="service" id="sulu_product.currency_repository"/>
+        </service>
+        <service id="sulu_product.product_media_manager" class="%sulu_product.product_media_manager.class%">
+            <argument type="service" id="sulu_media.media_manager" />
+            <argument>%sulu_product.product_entity%</argument>
         </service>
         <!-- CONTROLLER -->
         <service id="sulu_product.productwebsite.controller" class="%sulu_product.productwebsite.controller.class%"
