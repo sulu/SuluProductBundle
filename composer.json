@@ -19,7 +19,6 @@
         "symfony-cmf/routing-bundle": "1.2.*",
 
         "sulu/sulu": "dev-develop",
-        "sulu/document-manager": "dev-master",
 
         "jackalope/jackalope-doctrine-dbal": "~1.2.0",
         "jackalope/jackalope-jackrabbit": "~1.2.0"
@@ -30,6 +29,7 @@
         "symfony/monolog-bundle": "2.4.*",
         "phpunit/phpunit": "~4.0.0",
         "symfony-cmf/testing": "~1.2",
+        "sulu/document-manager": "dev-develop",
         "sulu/test-bundle": "dev-develop",
         "massive/search-bundle": "0.7.*"
     },
