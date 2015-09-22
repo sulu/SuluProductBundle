@@ -20,7 +20,6 @@ define([
             'product-set': 4
         },
         formSelector = '#product-form',
-        maxLengthTitle = 60,
 
         constants = {
             supplierId: '#supplierField',
@@ -38,10 +37,11 @@ define([
         initialize: function() {
             this.saved = true;
             this.status = !!this.options.data ? this.options.data.attributes.status : Config.get('product.status.active');
+            // reset status if it has been changed before and has not been saved
+            this.sandbox.emit('product.state.change', this.status);
 
             this.initializeValidation();
 
-            this.bindDOMEvents();
             this.bindCustomEvents();
 
             this.setHeaderBar(true);
@@ -49,10 +49,6 @@ define([
             this.render();
 
             this.listenForChange();
-        },
-
-        bindDOMEvents: function() {
-
         },
 
         bindCustomEvents: function() {
@@ -63,26 +59,16 @@ define([
                 }
             }, this);
 
-            this.sandbox.on('sulu.header.toolbar.save', function() {
+            this.sandbox.on('sulu.toolbar.save', function() {
                 this.save();
             }.bind(this));
 
-            this.sandbox.on('sulu.header.toolbar.delete', function() {
+            this.sandbox.on('sulu.toolbar.delete', function() {
                 this.sandbox.emit('sulu.product.delete', this.sandbox.dom.val('#id'));
             }.bind(this));
 
             this.sandbox.on('sulu.products.saved', function() {
                 this.setHeaderBar(true);
-                this.setHeaderInformation();
-            }, this);
-
-            // back to list
-            this.sandbox.on('sulu.header.back', function() {
-                this.sandbox.emit('sulu.products.list');
-            }, this);
-
-            this.sandbox.on('sulu.header.initialized', function() {
-                this.setHeaderInformation();
             }, this);
         },
 
@@ -122,9 +108,6 @@ define([
 
         render: function() {
             this.sandbox.dom.html(this.$el, this.renderTemplate('/admin/product/template/product/form'));
-
-            this.setHeaderInformation();
-
             this.initSupplierAutocomplete();
             this.initForm(this.options.data);
         },
@@ -167,35 +150,14 @@ define([
             ]);
         },
 
-        setHeaderInformation: function() {
-            var title = 'pim.product.title',
-                breadcrumb = [
-                    {title: 'navigation.pim'},
-                    {title: 'pim.products.title'}
-                ];
-            if (!!this.options.data && !!this.options.data.attributes.name) {
-                title = this.options.data.attributes.name;
-            }
-            title = this.sandbox.util.cropTail(title, maxLengthTitle);
-            this.sandbox.emit('sulu.header.set-title', title);
-
-            if (!!this.options.data && !!this.options.data.attributes.number) {
-                breadcrumb.push({
-                    title: '#' + this.options.data.attributes.number
-                });
-            } else {
-                breadcrumb.push({
-                    title: 'pim.product.title'
-                });
-            }
-            this.sandbox.emit('sulu.header.set-breadcrumb', breadcrumb);
-        },
-
         // @var Bool saved - defines if saved state should be shown
         setHeaderBar: function(saved) {
             if (saved !== this.saved) {
-                var type = (!!this.options.data && !!this.options.data.attributes.id) ? 'edit' : 'add';
-                this.sandbox.emit('sulu.header.toolbar.state.change', type, saved, true);
+                if (!!saved) {
+                    this.sandbox.emit('sulu.header.toolbar.item.disable', 'save', true);
+                } else {
+                    this.sandbox.emit('sulu.header.toolbar.item.enable', 'save', false);
+                }
             }
             this.saved = saved;
         },

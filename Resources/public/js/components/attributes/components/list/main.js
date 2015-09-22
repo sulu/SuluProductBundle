@@ -13,16 +13,22 @@ define(function() {
 
     // add ckicked
     var bindCustomEvents = function() {
-            this.sandbox.on('sulu.list-toolbar.add', function() {
+            this.sandbox.on('sulu.toolbar.add', function() {
                 this.sandbox.emit('sulu.product.attributes.new');
             }.bind(this));
 
             // delete clicked
-            this.sandbox.on('sulu.list-toolbar.delete', function() {
+            this.sandbox.on('sulu.toolbar.delete', function() {
                 this.sandbox.emit('husky.datagrid.items.get-selected', function(ids) {
                     this.sandbox.emit('sulu.product.attributes.delete', ids);
                 }.bind(this));
             }.bind(this));
+
+            // checkbox clicked
+            this.sandbox.on('husky.datagrid.number.selections', function(number) {
+                var postfix = number > 0 ? 'enable' : 'disable';
+                this.sandbox.emit('sulu.header.toolbar.item.' + postfix, 'deleteSelected', false);
+            }, this);
         },
 
         datagridAction = function(id) {
@@ -39,15 +45,15 @@ define(function() {
             }
         },
 
-        header: function () {
-            return {
-                title: 'pim.attributes.title',
-                noBack: true,
-                breadcrumb: [
-                    {title: 'navigation.pim'},
-                    {title: 'pim.attributes.title'}
-                ]
-            };
+        header: {
+            noBack: true,
+            title: 'pim.attributes.title',
+            toolbar: {
+                buttons: {
+                    add: {},
+                    deleteSelected: {}
+                }
+            }
         },
 
         templates: ['/admin/product/template/attribute/list'],
@@ -65,14 +71,23 @@ define(function() {
                 {
                     el: this.$find('#list-toolbar-container'),
                     instanceName: 'attributesToolbar',
-                    parentTemplate: 'default',
-                    inHeader: true
+                    template: this.sandbox.sulu.buttons.get({
+                        settings: {
+                            options: {
+                                dropdownItems: [
+                                    {
+                                        type: 'columnOptions'
+                                    }
+                                ]
+                            }
+                        }
+                    })
                 },
                 {
                     el: this.sandbox.dom.find('#attributes-list', this.$el),
                     url: '/admin/api/attributes?flat=true',
                     resultKey: 'attributes',
-                    searchInstanceName: 'attributes',
+                    searchInstanceName: 'attributesToolbar',
                     searchFields: ['name'],
                     actionCallback: datagridAction.bind(this)
                 }

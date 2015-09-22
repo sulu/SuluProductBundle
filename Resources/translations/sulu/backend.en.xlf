@@ -244,7 +244,7 @@
             </trans-unit>
             <trans-unit id="62" resname="product.orderContentRatio">
                 <source>product.orderContentRatio</source>
-                <target>Amount Content Unit</target>
+                <target>Content amount</target>
             </trans-unit>
             <trans-unit id="63" resname="product.bulkprice.validfrom">
                 <source>product.bulkprice.validfrom</source>
@@ -269,6 +269,10 @@
             <trans-unit id="68" resname="product.deliveryStatus">
                 <source>product.deliveryStatus</source>
                 <target>Delivery status</target>
+            </trans-unit>
+            <trans-unit id="69" resname="product.classification">
+                <source>product.classification</source>
+                <target>Classification</target>
             </trans-unit>
             <trans-unit id="03588f70b26be004afd6ea794c008e8f" resname="navigation.pim">
                 <source>navigation.pim</source>

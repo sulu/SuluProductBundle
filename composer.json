@@ -19,6 +19,7 @@
         "symfony-cmf/routing-bundle": "1.2.*",
 
         "sulu/sulu": "dev-develop",
+        "sulu/document-manager": "dev-master",
 
         "jackalope/jackalope-doctrine-dbal": "~1.2.0",
         "jackalope/jackalope-jackrabbit": "~1.2.0"

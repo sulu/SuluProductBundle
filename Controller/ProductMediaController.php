@@ -10,16 +10,23 @@
 
 namespace Sulu\Bundle\ProductBundle\Controller;
 
+use Sulu\Bundle\ProductBundle\Product\ProductMediaManagerInterface;
+use Symfony\Component\HttpFoundation\Request;
+use FOS\RestBundle\Controller\Annotations\RouteResource;
+use Sulu\Component\Rest\ListBuilder\ListRepresentation;
+use Sulu\Exception\FeatureNotImplementedException;
+use Sulu\Component\Rest\Exception\EntityIdAlreadySetException;
+use Sulu\Component\Rest\Exception\EntityNotFoundException;
+use Sulu\Component\Rest\Exception\RestException;
+use Sulu\Component\Rest\ListBuilder\Doctrine\DoctrineListBuilderFactory;
+use Sulu\Component\Rest\RestController;
+use Sulu\Component\Rest\RestHelperInterface;
 use Sulu\Bundle\MediaBundle\Api\Media;
 use Sulu\Bundle\MediaBundle\Media\Manager\MediaManagerInterface;
 use Sulu\Bundle\ProductBundle\Api\Product;
 use Sulu\Bundle\ProductBundle\Product\ProductManagerInterface;
-use Sulu\Component\Rest\Exception\EntityIdAlreadySetException;
-use Sulu\Component\Rest\Exception\EntityNotFoundException;
-use Sulu\Component\Rest\Exception\RestException;
-use Sulu\Component\Rest\RestController;
-use Symfony\Component\HttpFoundation\Request;
-use FOS\RestBundle\Controller\Annotations\RouteResource;
+
+// TODO Refactor: use manager for product-media
 
 /**
  * Makes setting and removing of media for a product available through a REST API
@@ -67,6 +74,7 @@ class ProductMediaController extends RestController
      *
      * @param $id - the product id
      * @param \Symfony\Component\HttpFoundation\Request $request
+     *
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function postAction($id, Request $request)
@@ -112,19 +120,21 @@ class ProductMediaController extends RestController
 
     /**
      * Removes default prices from product
+     *
      * @param Product $product
      */
-    private function removeDefaultPrices(Product $product) {
+    private function removeDefaultPrices(Product $product)
+    {
         $defaultPrices = [];
 
         // get default prices
-        foreach($product->getPrices() as $price) {
-            if($price->getId() === null){
+        foreach ($product->getPrices() as $price) {
+            if ($price->getId() === null) {
                 $defaultPrices[] = $price;
             }
         }
 
-        foreach($defaultPrices as $price){
+        foreach ($defaultPrices as $price) {
             $product->removePrice($price->getEntity());
         }
     }
@@ -135,6 +145,7 @@ class ProductMediaController extends RestController
      * @param $id - account id
      * @param $mediaId
      * @param \Symfony\Component\HttpFoundation\Request $request
+     *
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function deleteAction($id, $mediaId, Request $request)
@@ -183,5 +194,123 @@ class ProductMediaController extends RestController
         }
 
         return $this->handleView($view);
+    }
+
+    /**
+     * Lists all media of an account
+     * optional parameter 'flat' calls listAction.
+     *
+     * @param $id
+     * @param Request $request
+     *
+     * @return \Symfony\Component\HttpFoundation\Response
+     *
+     * @throws FeatureNotImplementedException
+     */
+    public function cgetAction($id, Request $request)
+    {
+        try {
+            if ($request->get('flat') === 'true') {
+                $list = $this->getListRepresentation($id, $request);
+            } else {
+                throw new FeatureNotImplementedException('');
+            }
+            $view = $this->view($list, 200);
+        } catch (EntityNotFoundException $e) {
+            $view = $this->view($e->toArray(), 404);
+        }
+
+        return $this->handleView($view);
+    }
+
+    /**
+     * Returns a list representation
+     *
+     * @param $id
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     *
+     * @return ListRepresentation
+     */
+    protected function getListRepresentation($id, $request)
+    {
+        $locale = $this->getUser()->getLocale();
+
+        /** @var RestHelperInterface $restHelper */
+        $restHelper = $this->get('sulu_core.doctrine_rest_helper');
+
+        /** @var DoctrineListBuilderFactory $factory */
+        $factory = $this->get('sulu_core.doctrine_list_builder_factory');
+
+        $listBuilder = $factory->create($this->container->getParameter('sulu_product.product_entity'));
+        $fieldDescriptors = $this->getManager()->getFieldDescriptors();
+        $listBuilder->where($fieldDescriptors['product'], $id);
+
+        $restHelper->initializeListBuilder(
+            $listBuilder,
+            $fieldDescriptors
+        );
+
+        $listResponse = $listBuilder->execute();
+        $listResponse = $this->addThumbnails($listResponse, $locale);
+
+        $list = new ListRepresentation(
+            $listResponse,
+            'media',
+            'cget_product_media',
+            array_merge(['id' => $id], $request->query->all()),
+            $listBuilder->getCurrentPage(),
+            $listBuilder->getLimit(),
+            $listBuilder->count()
+        );
+
+        return $list;
+    }
+
+    /**
+     * Takes an array of entities and resets the thumbnails-property containing the media id with
+     * the actual urls to the thumbnails.
+     *
+     * @param array $entities
+     * @param String $locale
+     *
+     * @return array
+     */
+    protected function addThumbnails($entities, $locale)
+    {
+        $ids = array_filter(array_column($entities, 'thumbnails'));
+        $thumbnails = $this->getMediaManager()->getFormatUrls($ids, $locale);
+        $i = 0;
+        foreach ($entities as $key => $entity) {
+            if (array_key_exists('thumbnails', $entity) && $entity['thumbnails']) {
+                $entities[$key]['thumbnails'] = $thumbnails[$i];
+                $i += 1;
+            }
+        }
+
+        return $entities;
+    }
+
+    /**
+     * Returns the product media manager
+     *
+     * @return ProductMediaManagerInterface
+     */
+    protected function getManager()
+    {
+        return $this->get('sulu_product.product_media_manager');
+    }
+
+    /**
+     * Returns all fields that can be used by list.
+     *
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function fieldsAction()
+    {
+        return $this->handleView(
+            $this->view(
+                array_values($this->getManager()->getFieldDescriptors())
+            )
+        );
     }
 }
