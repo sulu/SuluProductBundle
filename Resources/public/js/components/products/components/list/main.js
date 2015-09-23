@@ -70,12 +70,13 @@ define(['config'], function(Config) {
                     icon = number > 0 ? 'husky-publish' : 'husky-deactivated';
 
                 this.sandbox.emit(
-                    'husky.toolbar.' + constants.toolbarInstanceName + '.item.' + postfix,
+                    'sulu.header.toolbar.item.' + postfix,
                     'productWorkflow',
                     false
                 );
+
                 this.sandbox.emit(
-                    'husky.toolbar.' + constants.toolbarInstanceName + '.button.set',
+                    'sulu.header.toolbar.button.set',
                     'productWorkflow',
                     {icon: icon}
                 );
@@ -97,8 +98,7 @@ define(['config'], function(Config) {
                             }
                         ]
                     }
-                },
-                productWorkflow: {}
+                }
             });
         },
 
@@ -118,37 +118,42 @@ define(['config'], function(Config) {
         header: function() {
             return {
                 title: 'pim.products.title',
-                noBack: true,
+
                 toolbar: {
-                    buttons: {
-                        add: {
-                            options: {
-                                dropdownItems: [
-                                    {
-                                        id: 'add-product',
-                                        title: this.sandbox.translate('products.add-product'),
-                                        callback: addProduct.bind(this, TYPE_PRODUCT)
-                                    },
-                                    {
-                                        id: 'add-product-with-variants',
-                                        title: this.sandbox.translate('products.add-product-with-variants'),
-                                        callback: addProduct.bind(this, TYPE_PRODUCT_VARIANT)
-                                    },
-                                    {
-                                        id: 'add-product-addon',
-                                        title: this.sandbox.translate('products.add-product-addon'),
-                                        callback: addProduct.bind(this, TYPE_PRODUCT_ADDON)
-                                    },
-                                    {
-                                        id: 'add-product-set',
-                                        title: this.sandbox.translate('products.add-product-set'),
-                                        callback: addProduct.bind(this, TYPE_PRODUCT_SET)
-                                    }
-                                ]
-                            }
+                    buttons: this.sandbox.util.extend(
+                        true,
+                        {
+                            add: {
+                                options: {
+                                    dropdownItems: [
+                                        {
+                                            id: 'add-product',
+                                            title: this.sandbox.translate('products.add-product'),
+                                            callback: addProduct.bind(this, TYPE_PRODUCT)
+                                        },
+                                        {
+                                            id: 'add-product-with-variants',
+                                            title: this.sandbox.translate('products.add-product-with-variants'),
+                                            callback: addProduct.bind(this, TYPE_PRODUCT_VARIANT)
+                                        },
+                                        {
+                                            id: 'add-product-addon',
+                                            title: this.sandbox.translate('products.add-product-addon'),
+                                            callback: addProduct.bind(this, TYPE_PRODUCT_ADDON)
+                                        },
+                                        {
+                                            id: 'add-product-set',
+                                            title: this.sandbox.translate('products.add-product-set'),
+                                            callback: addProduct.bind(this, TYPE_PRODUCT_SET)
+                                        }
+                                    ]
+                                }
+                            },
+                            deleteSelected: {},
+                            productWorkflow: {}
                         },
-                        deleteSelected: {}
-                    }
+                        Config.get('product.toolbar.extension') || {}
+                    )
                 }
             };
         },
@@ -161,15 +166,9 @@ define(['config'], function(Config) {
         },
 
         renderGrid: function() {
-            var toolbarTemplate = getToolbarTemplate.call(this),
-                toolbarExtension = Config.get('product.toolbar.extension');
+            var toolbarTemplate = getToolbarTemplate.call(this);
 
             this.sandbox.dom.html(this.$el, this.renderTemplate('/admin/product/template/product/list'));
-
-            // extend default products list toolbar with some custom fields
-            if (!!toolbarExtension) {
-                toolbarTemplate.push.apply(toolbarTemplate, toolbarExtension);
-            }
 
             // init list-toolbar and datagrid
             this.sandbox.sulu.initListToolbarAndList.call(this, 'productsFields', '/admin/api/products/fields',
