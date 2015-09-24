@@ -334,6 +334,10 @@
                 <source>sulu.products.unmatched-columns</source>
                 <target>Nicht zugeordnete Spalten</target>
             </trans-unit>
+            <trans-unit id="70" resname="product.workflow.status.title">
+                <source>product.workflow.status.title</source>
+                <target>Produktstatus setzen</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>

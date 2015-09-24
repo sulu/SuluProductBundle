@@ -5,14 +5,13 @@
     define([], function() {
 
         return {
-
             getButtons: function() {
                 return [
                     {
                         name: 'productWorkflow',
                         template: {
                             id: 'workflow',
-                            title: 'product.workfow.set.active',
+                            title: 'product.workfow.activate.title',
                             icon: 'husky-deactivated',
                             disabled: true,
                             dropdownItems: [
