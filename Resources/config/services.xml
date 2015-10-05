@@ -44,7 +44,9 @@
             <argument>%sulu_admin.name%</argument>
         </service>
         <!--FACTORIES-->
-        <service id="sulu_product.product_factory" class="%sulu_product.product_factory.class%"></service>
+        <service id="sulu_product.product_factory" class="%sulu_product.product_factory.class%">
+            <argument type="service" id="sulu_contact.account_manager"></argument>
+        </service>
         <!-- REPOSITORIES -->
         <service id="sulu_product.product_repository" class="%sulu_product.product_repository.class%"
                  factory-method="getRepository" factory-service="doctrine.orm.entity_manager">

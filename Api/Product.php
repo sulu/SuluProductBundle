@@ -45,13 +45,20 @@ class Product extends ApiWrapper implements ApiProductInterface
     private $media;
 
     /**
+     * @var AccountManager
+     */
+    protected $accountManager;
+
+    /**
      * @param Entity $product The product to wrap
      * @param string $locale The locale of this product
+     * @param AccountManager $accountManager
      */
-    public function __construct(Entity $product, $locale)
+    public function __construct(Entity $product, $locale, $accountManager)
     {
         $this->entity = $product;
         $this->locale = $locale;
+        $this->accountManager= $accountManager;
     }
 
     /**

@@ -17,6 +17,19 @@ use Sulu\Bundle\ProductBundle\Api\Product as ApiProduct;
 class ProductFactory implements ProductFactoryInterface
 {
     /**
+     * @var AccountManager
+     */
+    protected $accountManager;
+
+    /**
+     * @param AccountManager $accountManager
+     */
+    public function __construct($accountManager)
+    {
+        $this->accountManager = $accountManager;
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function createEntity()
@@ -29,6 +42,6 @@ class ProductFactory implements ProductFactoryInterface
      */
     public function createApiEntity(ProductInterface $product, $locale)
     {
-        return new ApiProduct($product, $locale);
+        return new ApiProduct($product, $locale, $this->accountManager);
     }
 }
