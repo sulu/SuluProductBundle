@@ -48,7 +48,8 @@ class UnitRepository extends EntityRepository
     public function findAllByLocale($locale)
     {
         try {
-            $qb = $this->getUnitQuery($locale);
+            $qb = $this->getUnitQuery($locale)
+                ->orderBy('unitTranslations.name', 'ASC');
 
             return $qb->getQuery()->getResult();
         } catch (NoResultException $exc) {

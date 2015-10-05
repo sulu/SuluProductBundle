@@ -11,9 +11,11 @@
 namespace Sulu\Bundle\ProductBundle\Api;
 
 use Hateoas\Configuration\Annotation\Relation;
+use JMS\Serializer\Annotation\ExclusionPolicy;
 use JMS\Serializer\Annotation\Groups;
 use JMS\Serializer\Annotation\VirtualProperty;
 use JMS\Serializer\Annotation\SerializedName;
+use Sulu\Bundle\ContactBundle\Contact\AccountManager;
 use Sulu\Component\Rest\ApiWrapper;
 use Sulu\Component\Security\Authentication\UserInterface;
 use Sulu\Bundle\CategoryBundle\Api\Category;
@@ -36,6 +38,7 @@ use Sulu\Bundle\ProductBundle\Entity\DeliveryStatus as DeliveryStatusEntity;
  * The product class which will be exported to the API
  * @package Sulu\Bundle\ProductBundle\Api
  * @Relation("self", href="expr('/api/admin/products/' ~ object.getId())")
+ * @ExclusionPolicy("all")
  */
 class Product extends ApiWrapper implements ApiProductInterface
 {
@@ -54,7 +57,7 @@ class Product extends ApiWrapper implements ApiProductInterface
      * @param string $locale The locale of this product
      * @param AccountManager $accountManager
      */
-    public function __construct(Entity $product, $locale, $accountManager)
+    public function __construct(Entity $product, $locale, AccountManager $accountManager)
     {
         $this->entity = $product;
         $this->locale = $locale;
