@@ -13,26 +13,26 @@ namespace Sulu\Bundle\ProductBundle\Api;
 use Hateoas\Configuration\Annotation\Relation;
 use JMS\Serializer\Annotation\ExclusionPolicy;
 use JMS\Serializer\Annotation\Groups;
-use JMS\Serializer\Annotation\VirtualProperty;
 use JMS\Serializer\Annotation\SerializedName;
-use Sulu\Bundle\ContactBundle\Contact\AccountManager;
-use Sulu\Component\Rest\ApiWrapper;
-use Sulu\Component\Security\Authentication\UserInterface;
+use JMS\Serializer\Annotation\VirtualProperty;
 use Sulu\Bundle\CategoryBundle\Api\Category;
 use Sulu\Bundle\CategoryBundle\Entity\Category as CategoryEntity;
+use Sulu\Bundle\ContactBundle\Contact\AccountManager;
 use Sulu\Bundle\MediaBundle\Api\Media;
-use Sulu\Bundle\ProductBundle\Entity\ProductAttribute as ProductAttributeEntity;
-use Sulu\Bundle\ProductBundle\Entity\SpecialPrice as SpecialPriceEntity;
-use Sulu\Bundle\ProductBundle\Entity\ProductInterface as Entity;
-use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
-use Sulu\Bundle\ProductBundle\Entity\ProductTranslation;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSet as AttributeSetEntity;
-use Sulu\Bundle\ProductBundle\Entity\ProductPrice as ProductPriceEntity;
-use Sulu\Bundle\ProductBundle\Entity\Status as StatusEntity;
-use Sulu\Bundle\ProductBundle\Entity\Type as TypeEntity;
-use Sulu\Bundle\ProductBundle\Entity\TaxClass as TaxClassEntity;
-use Sulu\Bundle\ProductBundle\Entity\Unit as UnitEntity;
 use Sulu\Bundle\ProductBundle\Entity\DeliveryStatus as DeliveryStatusEntity;
+use Sulu\Bundle\ProductBundle\Entity\ProductAttribute as ProductAttributeEntity;
+use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
+use Sulu\Bundle\ProductBundle\Entity\ProductInterface as Entity;
+use Sulu\Bundle\ProductBundle\Entity\ProductPrice as ProductPriceEntity;
+use Sulu\Bundle\ProductBundle\Entity\ProductTranslation;
+use Sulu\Bundle\ProductBundle\Entity\SpecialPrice as SpecialPriceEntity;
+use Sulu\Bundle\ProductBundle\Entity\Status as StatusEntity;
+use Sulu\Bundle\ProductBundle\Entity\TaxClass as TaxClassEntity;
+use Sulu\Bundle\ProductBundle\Entity\Type as TypeEntity;
+use Sulu\Bundle\ProductBundle\Entity\Unit as UnitEntity;
+use Sulu\Component\Rest\ApiWrapper;
+use Sulu\Component\Security\Authentication\UserInterface;
 
 /**
  * The product class which will be exported to the API
@@ -55,13 +55,13 @@ class Product extends ApiWrapper implements ApiProductInterface
     /**
      * @param Entity $product The product to wrap
      * @param string $locale The locale of this product
-     * @param AccountManager $accountManager
+     * @param AccountManager|null $accountManager
      */
-    public function __construct(Entity $product, $locale, AccountManager $accountManager)
+    public function __construct(Entity $product, $locale, AccountManager $accountManager = null)
     {
         $this->entity = $product;
         $this->locale = $locale;
-        $this->accountManager= $accountManager;
+        $this->accountManager = $accountManager;
     }
 
     /**
@@ -396,6 +396,7 @@ class Product extends ApiWrapper implements ApiProductInterface
 
     /**
      * Sets the priceinfo of the product
+     *
      * @param string $priceInfo The cost of the product
      */
     public function setPriceInfo($priceInfo)

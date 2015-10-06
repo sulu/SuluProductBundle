@@ -24,7 +24,7 @@ class ProductFactory implements ProductFactoryInterface
     /**
      * @param AccountManager $accountManager
      */
-    public function __construct($accountManager)
+    public function __construct(AccountManager $accountManager = null)
     {
         $this->accountManager = $accountManager;
     }
