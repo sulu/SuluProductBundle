@@ -10,6 +10,7 @@
 
 namespace Sulu\Bundle\ProductBundle\Product;
 
+use Sulu\Bundle\ContactBundle\Contact\AccountManager;
 use Sulu\Bundle\ProductBundle\Entity\Product;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\ProductBundle\Api\Product as ApiProduct;
@@ -24,7 +25,7 @@ class ProductFactory implements ProductFactoryInterface
     /**
      * @param AccountManager $accountManager
      */
-    public function __construct($accountManager)
+    public function __construct(AccountManager $accountManager = null)
     {
         $this->accountManager = $accountManager;
     }
