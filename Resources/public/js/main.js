@@ -32,8 +32,8 @@ define(['config', 'extensions/sulu-buttons-productbundle'], function(Config, Pro
 
             sandbox.sulu.buttons.push(ProductButtons.getButtons());
 
-            Config.set('product.status.active', {id: 3, key: 'product.workfow.set.active'});
-            Config.set('product.status.inactive', {id: 5, key: 'product.workfow.set.inactive'});
+            Config.set('product.status.active', {id: 3, key: 'product.workflow.set.active'});
+            Config.set('product.status.inactive', {id: 5, key: 'product.workflow.set.inactive'});
             Config.set('product.list.statuses.ids', [3, 5]);
 
             Config.set('suluproduct.components.autocomplete.default', {
