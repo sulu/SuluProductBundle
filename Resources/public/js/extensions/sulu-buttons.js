@@ -11,20 +11,20 @@
                         name: 'productWorkflow',
                         template: {
                             id: 'workflow',
-                            title: 'product.workfow.activate.title',
+                            title: 'product.workflow.status.title',
                             icon: 'husky-deactivated',
                             disabled: true,
                             dropdownItems: [
                                 {
                                     id: 'active',
-                                    title: 'product.workfow.set.active',
+                                    title: 'product.workflow.set.active',
                                     callback: function() {
                                         app.sandbox.emit('sulu.toolbar.productWorkflow.active');
                                     }
                                 },
                                 {
                                     id: 'inactive',
-                                    title: 'product.workfow.set.inactive',
+                                    title: 'product.workflow.set.inactive',
                                     callback: function() {
                                         app.sandbox.emit('sulu.toolbar.productWorkflow.inactive');
                                     }

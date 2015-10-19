@@ -24,7 +24,7 @@ define(['config'], function(Config) {
                                 dropdownItems: [
                                     {
                                         id: 'active',
-                                        title: 'product.workfow.set.active',
+                                        title: 'product.workflow.set.active',
                                         callback: function() {
                                             app.sandbox.emit(
                                                 'product.state.change',
@@ -34,7 +34,7 @@ define(['config'], function(Config) {
                                     },
                                     {
                                         id: 'inactive',
-                                        title: 'product.workfow.set.inactive',
+                                        title: 'product.workflow.set.inactive',
                                         callback: function() {
                                             app.sandbox.emit(
                                                 'product.state.change',

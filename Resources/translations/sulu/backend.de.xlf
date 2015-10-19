@@ -182,12 +182,12 @@
                 <source>product.recommendedOrderQuantity</source>
                 <target>Empf. Bestellmenge</target>
             </trans-unit>
-            <trans-unit id="47" resname="product.workfow.set.active">
-                <source>product.workfow.set.active</source>
+            <trans-unit id="47" resname="product.workflow.set.active">
+                <source>product.workflow.set.active</source>
                 <target>aktiv</target>
             </trans-unit>
-            <trans-unit id="48" resname="product.workfow.set.inactive">
-                <source>product.workfow.set.inactive</source>
+            <trans-unit id="48" resname="product.workflow.set.inactive">
+                <source>product.workflow.set.inactive</source>
                 <target>inaktiv</target>
             </trans-unit>
             <trans-unit id="49" resname="product.workflow.state.changed.error">

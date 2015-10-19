@@ -66,7 +66,7 @@ define([
                                     {
                                         id: 'inactive',
                                         icon: 'husky-test',
-                                        title: this.sandbox.translate('product.workfow.set.inactive'),
+                                        title: this.sandbox.translate('product.workflow.set.inactive'),
                                         callback: function() {
                                             changeState.call(this, Config.get('product.status.inactive').id);
                                         }.bind(this)
@@ -74,7 +74,7 @@ define([
                                     {
                                         id: 'active',
                                         icon: 'husky-publish',
-                                        title: this.sandbox.translate('product.workfow.set.active'),
+                                        title: this.sandbox.translate('product.workflow.set.active'),
                                         callback: function() {
                                             changeState.call(this, Config.get('product.status.active').id);
                                         }.bind(this)
