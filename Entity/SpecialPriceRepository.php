@@ -29,7 +29,11 @@ class SpecialPriceRepository extends EntityRepository
     {
         try {
             $qb = $this->createQueryBuilder('specialPrice')
+                ->leftJoin('specialPrice.product', 'product')
+                ->leftJoin('product.status', 'productStatus')
                 ->where(':now BETWEEN specialPrice.startDate AND specialPrice.endDate')
+                ->andWhere('productStatus.id = :productStatus')
+                ->setParameter('productStatus', Status::ACTIVE)
                 ->setParameter('now', new \DateTime());
 
             $adapter = new DoctrineORMAdapter($qb);

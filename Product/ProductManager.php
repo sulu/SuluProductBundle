@@ -691,7 +691,7 @@ class ProductManager implements ProductManagerInterface
      * Otherwise api-media will not contain additional info like url,..
      *
      * @param Product $product
-     * @param $locale
+     * @param string $locale
      */
     public function createProductMedia(Product $product, $locale)
     {
@@ -706,9 +706,11 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Finds all elements with one of the ids
+     * Finds all elements with one of the ids.
+     *
      * @param string $locale
      * @param string $ids
+     *
      * @return \Sulu\Bundle\ProductBundle\Api\Product[]
      */
     public function findAllByIdsAndLocale($locale, $ids = '')
@@ -731,7 +733,7 @@ class ProductManager implements ProductManagerInterface
      * Finds and returns a list of products for which a special price is
      * currently active.
      *
-     * @param     $locale
+     * @param string $locale
      * @param int $limit
      * @param int $page
      *
@@ -752,10 +754,11 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Returns all simple products in the given locale for the given number
+     * Returns all simple products in the given locale for the given number.
      *
      * @param string $locale The locale of the product to load
      * @param $internalItemNumber
+     *
      * @return ProductInterface[]
      */
     public function findByLocaleAndInternalItemNumber($locale, $internalItemNumber)
@@ -777,9 +780,10 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Returns all products for the given internal-number
+     * Returns all products for the given internal-number.
      *
-     * @param $internalItemNumber
+     * @param string $internalItemNumber
+     *
      * @return ProductInterface[]
      */
     public function findEntitiesByInternalItemNumber($internalItemNumber)
@@ -792,12 +796,14 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Fetches a product
+     * Fetches a product.
      *
-     * @param $id
-     * @param $locale
-     * @return \Sulu\Bundle\ProductBundle\Api\Product
+     * @param int $id
+     * @param string $locale
+     *
      * @throws Exception\ProductNotFoundException
+     *
+     * @return \Sulu\Bundle\ProductBundle\Api\Product
      */
     protected function fetchProduct($id, $locale)
     {
@@ -811,11 +817,12 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Generates the internal product number
+     * Generates the internal product number.
      *
-     * @param $prefix Type of product-owner
-     * @param $ownerId Id of Product-owner
+     * @param string $prefix Type of product-owner
+     * @param int $ownerId Id of Product-owner
      * @param string $number Number of the product
+     *
      * @return string
      */
     public function generateInternalItemNumber($prefix, $ownerId, $number)
@@ -824,9 +831,9 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Checks if datetime string is valid
+     * Checks if datetime string is valid.
      *
-     * @param $string DateTime string
+     * @param string $dateTimeString
      *
      * @return DateTime
      */
@@ -847,7 +854,7 @@ class ProductManager implements ProductManagerInterface
 
     /**
      * Copies all data from a changed product to an active one and
-     * unsets deprecated state of active product
+     * unsets deprecated state of active product.
      *
      * @param ProductInterface $changedProduct
      * @param ProductInterface $activeProduct
