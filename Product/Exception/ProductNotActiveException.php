@@ -13,15 +13,11 @@ namespace Sulu\Bundle\ProductBundle\Product\Exception;
 class ProductNotActiveException extends ProductException
 {
     /**
-     * The name of the entity.
-     *
      * @var string
      */
     private $entityName;
 
     /**
-     * The id of the object not found.
-     *
      * @var integer
      */
     private $id;
@@ -32,8 +28,9 @@ class ProductNotActiveException extends ProductException
      */
     public function __construct($id, $entityName = 'SuluProductBundle:Product')
     {
-        $this->entityName = $entityName;
         $this->id = $id;
+        $this->entityName = $entityName;
+
         parent::__construct('The product with the id "' . $this->id . '" is not active.', 0);
     }
 
