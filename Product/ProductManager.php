@@ -1099,8 +1099,8 @@ class ProductManager implements ProductManagerInterface
         }
 
         if (isset($data['searchTerms'])) {
-            $searchFields = $this->parseCommaSeparatedString($data['searchTerms']);
-            $product->setSearchTerms($searchFields);
+            $searchTerms = $this->parseCommaSeparatedString($data['searchTerms']);
+            $product->setSearchTerms($searchTerms);
         }
 
         if (isset($data['status']) && isset($data['status']['id'])) {
@@ -1312,7 +1312,8 @@ class ProductManager implements ProductManagerInterface
 
         // Check if max length is exceeded
         if (strlen($result) > $maxLength) {
-            $result = substr($string, 0, $maxLength);
+            // shorten to max-length
+            $result = substr($result, 0, $maxLength);
 
             $fields = explode(',', $result);
 
@@ -1332,7 +1333,7 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Trims and validates a field.
+     * Trims, validates and parses a string.
      *
      * @param string $field
      *
@@ -1345,6 +1346,9 @@ class ProductManager implements ProductManagerInterface
         if (strlen($result) === 0) {
             return null;
         }
+
+        // lower case for case insensitivity
+        $result = strtolower($result);
 
         return $result;
     }
