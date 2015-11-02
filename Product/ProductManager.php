@@ -51,7 +51,6 @@ use Sulu\Bundle\ProductBundle\Entity\UnitRepository;
 use Sulu\Bundle\MediaBundle\Media\Manager\MediaManager;
 use Sulu\Bundle\ProductBundle\Entity\DeliveryStatus;
 use Sulu\Bundle\ProductBundle\Api\Product;
-use Sulu\Bundle\ProductBundle\Entity\Product as ProductEntity;
 
 class ProductManager implements ProductManagerInterface
 {
@@ -1099,6 +1098,11 @@ class ProductManager implements ProductManagerInterface
             $product->setCost(floatval($data['cost']));
         }
 
+        if (isset($data['searchTerms'])) {
+            $searchTerms = $this->parseCommaSeparatedString($data['searchTerms']);
+            $product->setSearchTerms($searchTerms);
+        }
+
         if (isset($data['status']) && isset($data['status']['id'])) {
             $statusId = $data['status']['id'];
             /** @var Status $status */
@@ -1274,6 +1278,79 @@ class ProductManager implements ProductManagerInterface
         }
 
         return $product;
+    }
+
+    /**
+     * Parses a comma separated string.
+     * Trims all values and removes empty strings.
+     *
+     * @param string $string
+     * @param int $maxLength
+     *
+     * @return null|string
+     */
+    public function parseCommaSeparatedString($string, $maxLength = 255)
+    {
+        $result = null;
+
+        // check if string is not empty
+        if (strlen(trim($string)) === 0) {
+            return null;
+        }
+
+        // convert string to array
+        $fields = explode(',', $string);
+
+        // validate and trim each field
+        $fields = array_map([$this, 'trimAndValidateField'], $fields);
+
+        // remove null entries
+        $fields = array_filter($fields);
+
+        // parse back into string
+        $result = implode(',', $fields);
+
+        // Check if max length is exceeded
+        if (strlen($result) > $maxLength) {
+            // shorten to max-length
+            $result = substr($result, 0, $maxLength);
+
+            $fields = explode(',', $result);
+
+            // remove last element
+            array_pop($fields);
+
+            // only one search field is provided and exceeds limit
+            if (count($fields) === 0) {
+                return null;
+            }
+
+            // parse back into string
+            $result = implode(',', $fields);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Trims, validates and parses a string.
+     *
+     * @param string $field
+     *
+     * @return string
+     */
+    private function trimAndValidateField($field)
+    {
+        $result = trim($field);
+
+        if (strlen($result) === 0) {
+            return null;
+        }
+
+        // lower case for case insensitivity
+        $result = strtolower($result);
+
+        return $result;
     }
 
     /**

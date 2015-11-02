@@ -74,6 +74,11 @@ abstract class BaseProduct implements ProductInterface
     protected $id;
 
     /**
+     * @var string
+     */
+    protected $searchTerms;
+
+    /**
      * @var \Sulu\Bundle\ContactBundle\Entity\Country
      */
     protected $manufacturerCountry;
@@ -1015,6 +1020,26 @@ abstract class BaseProduct implements ProductInterface
     public function getAreGrossPrices()
     {
         return $this->areGrossPrices;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSearchTerms()
+    {
+        return $this->searchTerms;
+    }
+
+    /**
+     * @param string $searchTerms
+     *
+     * @return BaseProduct
+     */
+    public function setSearchTerms($searchTerms)
+    {
+        $this->searchTerms = $searchTerms;
+
+        return $this;
     }
 
     /**

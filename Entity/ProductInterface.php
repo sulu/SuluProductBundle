@@ -518,4 +518,14 @@ interface ProductInterface
      * @param $areGrossPrices
      */
     public function setAreGrossPrices($areGrossPrices);
+
+    /**
+     * @param string $searchTerms
+     */
+    public function setSearchTerms($searchTerms);
+
+    /**
+     * @return string
+     */
+    public function getSearchTerms();
 }

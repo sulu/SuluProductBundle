@@ -1194,4 +1194,23 @@ class Product extends ApiWrapper implements ApiProductInterface
     {
         $this->entity->removeSpecialPrice($specialPrice);
     }
+
+    /**
+     * @param string $searchTerms
+     */
+    public function setSearchTerms($searchTerms)
+    {
+        $this->entity->setSearchTerms($searchTerms);
+    }
+
+    /**
+     * @VirtualProperty
+     * @SerializedName("searchTerms")
+     *
+     * @return string
+     */
+    public function getSearchTerms()
+    {
+        return $this->entity->getSearchTerms();
+    }
 }
