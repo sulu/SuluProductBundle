@@ -1,0 +1,9 @@
+doctrine:
+    orm:
+        auto_generate_proxy_classes: %kernel.debug%
+        auto_mapping: true
+        resolve_target_entities:
+            Sulu\Bundle\ProductBundle\Entity\ProductInterface: Sulu\Bundle\ProductBundle\Entity\Product
+        dql:
+            string_functions:
+                group_concat:   Oro\ORM\Query\AST\Functions\String\GroupConcat

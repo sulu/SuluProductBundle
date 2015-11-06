@@ -12,7 +12,7 @@ class DeliveryStatusTranslation
     /**
      * @var string
      */
-    private $languageCode;
+    private $locale;
 
     /**
      * @var string
@@ -36,9 +36,9 @@ class DeliveryStatusTranslation
      * @param string $languageCode
      * @return DeliveryStatusTranslation
      */
-    public function setLanguageCode($languageCode)
+    public function setLocale($languageCode)
     {
-        $this->languageCode = $languageCode;
+        $this->locale = $languageCode;
     
         return $this;
     }
@@ -48,9 +48,9 @@ class DeliveryStatusTranslation
      *
      * @return string 
      */
-    public function getLanguageCode()
+    public function getLocale()
     {
-        return $this->languageCode;
+        return $this->locale;
     }
 
     /**

@@ -6,13 +6,21 @@
         <id name="id" type="integer" column="id">
             <generator strategy="AUTO"/>
         </id>
-        <field name="minimumQuantity" type="decimal"/>
-        <field name="price" type="decimal"/>
-        <field name="priceInfo" type="text"/>
+
+        <field name="minimumQuantity" type="decimal" nullable="true">
+            <options>
+                <option name="default">0</option>
+            </options>
+        </field>
+
+        <field name="price" type="float"/>
 
         <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface"
                      field="product" inversed-by="prices">
-            <join-column name="idProducts" referenced-column-name="id"/>
+            <join-column name="idProducts" referenced-column-name="id" on-delete="CASCADE"/>
+        </many-to-one>
+        <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\Currency" field="currency">
+            <join-column name="idCurrencies" referenced-column-name="id"/>
         </many-to-one>
     </entity>
 </doctrine-mapping>

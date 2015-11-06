@@ -21,22 +21,9 @@ module.exports = function (grunt) {
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
         copy: {
-            public: {
-                files: [
-                    {expand: true, cwd: 'Resources/public', src: ['**', '!**/scss/**'], dest: '../../../../../../../web/bundles/suluproductbase/'}
-                ]
-            }
         },
         clean: {
-            options: { force: true },
-            public: {
-                files: [
-                    {
-                        dot: true,
-                        src: ['../../../../../../../web/bundles/suluproductbase/']
-                    }
-                ]
-            }
+            options: { force: true }
         },
         watch: {
             options: {
@@ -90,15 +77,9 @@ module.exports = function (grunt) {
         }
     });
 
-    grunt.registerTask('publish', [
-        'clean:public',
-        'copy:public'
-    ]);
-
     grunt.registerTask('build', [
         'uglify',
-        'replace:build',
-        'publish'
+        'replace:build'
     ]);
 
     grunt.registerTask('default', [

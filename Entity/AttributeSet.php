@@ -91,6 +91,24 @@ class AttributeSet
     }
 
     /**
+     * Returns the translation with the given locale
+     * @param string $locale The locale to return
+     * @return AttributeSetTranslation
+     */
+    public function getTranslation($locale)
+    {
+        $translation = null;
+        foreach ($this->translations as $translationData) {
+            if ($translationData->getLocale() == $locale) {
+                $translation = $translationData;
+                break;
+            }
+        }
+
+        return $translation;
+    }
+
+    /**
      * Add products
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $products

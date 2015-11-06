@@ -7,7 +7,7 @@
             <generator strategy="AUTO"/>
         </id>
         <field name="name" type="string" column="name" length="255"/>
-        <field name="languageCode" type="string" column="languageCode" length="10"/>
+        <field name="locale" type="string" column="locale" length="10"/>
         <many-to-one field="type" target-entity="Sulu\Bundle\ProductBundle\Entity\Type" inversed-by="translations">
             <join-columns>
                 <join-column name="idTypes" referenced-column-name="id" nullable="false"/>

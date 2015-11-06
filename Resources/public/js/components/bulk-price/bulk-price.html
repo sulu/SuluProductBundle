@@ -1,0 +1,87 @@
+<div class="grid-row m-bottom-50">
+    <h2 class="divider"><%= currency.name %></h2>
+
+    <div class="grid-row">
+        <div class="grid-col-6">
+            <div class="form-group">
+                <label><%= translate('product.bulkprice.price') %></label>
+                <input id="<%= salesPrice ? salesPrice.id : '' %>" class="form-element husky-validate salesprice align-right" type="text" value="<%= salesPrice ? salesPrice.price : '' %>"/>
+            </div>
+        </div>
+        <div class="grid-col-6">
+            <span class="grey-font"><%= currency.code %></span>
+        </div>
+    </div>
+
+    <div class="grid-row">
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr class="row">
+                        <th><%= translate('product.bulkprice.amount') %></th>
+                        <th></th>
+                        <th><%= translate('product.bulkprice.price') %></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% _.each(prices, function(price){ %>
+                    <tr id="<%= !!price.id ? idPrefix + price.id : 'new' %>" class="row" data-id="<%= !!price.id ? price.id : '' %>">
+                        <td>
+                            <input class="form-element husky-validate align-right minimumQuantity" type="text" value="<%= price.minimumQuantity %>"/>
+                        </td>
+                        <td>
+                            <span class="grey-font"><%= translate('product.bulkprice.andMore') %></span>
+                        </td>
+                        <td>
+                            <input class="form-element husky-validate align-right price" type="text" value="<%= price.price %>"/>
+                        </td>
+                        <td class="grey-font"><%= currency.code %></td>
+                    </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="grid-row small">
+        <div class="grid-col-6">
+            <div class="form-group">
+                <label><%= translate('product.bulkprice.specialprice') %></label>
+                <input id="<%= specialPrice.tmplSelectors.price %>" class="form-element husky-validate specialprice align-right" type="text" value="<%= specialPrice.price %>"/>
+            </div>
+        </div>
+        <div class="grid-col-6">
+            <div class="form-group">
+                <label><%= translate('product.bulkprice.validfrom') %></label>
+                <div data-form="true"
+                     data-type="husky-input"
+                     data-aura-component="input@husky"
+                     data-aura-skin="date"
+                     data-aura-instance-name="<%= specialPrice.tmplSelectors.startDate %>"
+                     data-aura-input-name="<%= specialPrice.tmplSelectors.startDate %>"
+                     data-mapper-property="<%= specialPrice.tmplSelectors.startDate %>"
+                     data-value="<%= specialPrice.startDate %>"
+                     id="<%= specialPrice.tmplSelectors.startDateHolder %>">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="grid-row small">
+        <div class="grid-col-6"></div>
+        <div class="grid-col-6">
+            <div class="form-group">
+                <label><%= translate('product.bulkprice.validto') %></label>
+                <div data-form="true"
+                     data-type="husky-input"
+                     data-aura-component="input@husky"
+                     data-aura-skin="date"
+                     data-aura-instance-name="<%= specialPrice.tmplSelectors.endDate %>"
+                     data-aura-input-name="<%= specialPrice.tmplSelectors.endDate %>"
+                     data-mapper-property="<%= specialPrice.tmplSelectors.endDate %>"
+                     data-value="<%= specialPrice.endDate %>"
+                     id="<%= specialPrice.tmplSelectors.endDateHolder %>">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,9 +1,0 @@
-parameters:
-    sulu_product_base.admin.class: Sulu\Bundle\ProductBundle\Admin\SuluProductBaseAdmin
-
-services:
-    sulu_product_base.admin:
-        class: %sulu_product_base.admin.class%
-        arguments: [%sulu_admin.name%]
-        tags:
-        - { name: sulu.admin }

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <entity name="Sulu\Bundle\ProductBundle\Entity\SpecialPrice" table="pr_special_prices"
+            repository-class="Sulu\Bundle\ProductBundle\Entity\SpecialPriceRepository">
+        <id name="id" type="integer" column="id">
+            <generator strategy="AUTO"/>
+        </id>
+
+        <field name="price" type="float"/>
+
+        <field name="startDate" type="datetime" length="255" nullable="true"/>
+        <field name="endDate" type="datetime" length="255" nullable="true"/>
+
+        <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface"
+                     field="product" inversed-by="prices">
+            <join-column name="idProducts" referenced-column-name="id" on-delete="CASCADE"/>
+        </many-to-one>
+        <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\Currency" field="currency">
+            <join-column name="idCurrencies" referenced-column-name="id"/>
+        </many-to-one>
+    </entity>
+</doctrine-mapping>

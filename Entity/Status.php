@@ -17,6 +17,13 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class Status
 {
+    const IMPORTED = 1;
+    const SUBMITTED = 2;
+    const ACTIVE = 3;
+    const REJECTED = 4;
+    const INACTIVE = 5;
+    const CHANGED = 6;
+
     /**
      * @var integer
      */
@@ -41,6 +48,17 @@ class Status
         $this->translations = new \Doctrine\Common\Collections\ArrayCollection();
     }
     
+    /**
+     * Set id
+     *
+     * @return integer 
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+        return $this;
+    }
+
     /**
      * Get id
      *
@@ -115,5 +133,23 @@ class Status
     public function getTranslations()
     {
         return $this->translations;
+    }
+
+    /**
+     * Returns the translation for the given locale
+     * @param string $locale
+     * @return TypeTranslation
+     */
+    public function getTranslation($locale)
+    {
+        $translation = null;
+        foreach ($this->translations as $translationData) {
+            if ($translationData->getLocale() == $locale) {
+                $translation = $translationData;
+                break;
+            }
+        }
+
+        return $translation;
     }
 }

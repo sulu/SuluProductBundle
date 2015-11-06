@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+    <file source-language="en" datatype="plaintext" original="file.ext">
+        <body>
+            <trans-unit id="1" resname="product.name">
+                <source>product.name</source>
+                <target>Name</target>
+            </trans-unit>
+            <trans-unit id="2" resname="product.number">
+                <source>product.number</source>
+                <target>Produktnummer</target>
+            </trans-unit>
+            <trans-unit id="3" resname="product.status">
+                <source>product.status</source>
+                <target>Status</target>
+            </trans-unit>
+            <trans-unit id="4" resname="product.long-description">
+                <source>product.long-description</source>
+                <target>Beschreibung</target>
+            </trans-unit>
+            <trans-unit id="5" resname="product.short-description">
+                <source>product.short-description</source>
+                <target>Kurzbeschreibung</target>
+            </trans-unit>
+            <trans-unit id="6" resname="product.description">
+                <source>product.description</source>
+                <target>Produktbeschreibung</target>
+            </trans-unit>
+            <trans-unit id="7" resname="product.code">
+                <source>product.code</source>
+                <target>Produktcode</target>
+            </trans-unit>
+            <trans-unit id="8" resname="product.manufacturer">
+                <source>product.manufacturer</source>
+                <target>Hersteller</target>
+            </trans-unit>
+            <trans-unit id="9" resname="product.cost">
+                <source>product.cost</source>
+                <target>Kosten</target>
+            </trans-unit>
+            <trans-unit id="10" resname="product.price">
+                <source>product.price</source>
+                <target>Preis</target>
+            </trans-unit>
+            <trans-unit id="11" resname="product.price-info">
+                <source>product.price-info</source>
+                <target>Preisinfo</target>
+            </trans-unit>
+            <trans-unit id="12" resname="product.type">
+                <source>product.type</source>
+                <target>Produkttyp</target>
+            </trans-unit>
+            <trans-unit id="13" resname="content-navigation.product.general">
+                <source>content-navigation.product.general</source>
+                <target>Allgemein</target>
+            </trans-unit>
+            <trans-unit id="14" resname="content-navigation.product.variants">
+                <source>content-navigation.product.variants</source>
+                <target>Varianten</target>
+            </trans-unit>
+            <trans-unit id="15" resname="content-navigation.product.pricing">
+                <source>content-navigation.product.pricing</source>
+                <target>Preise</target>
+            </trans-unit>
+            <trans-unit id="16" resname="product.tax-class">
+                <source>product.tax-class</source>
+                <target>Steuerklasse</target>
+            </trans-unit>
+            <trans-unit id="17" resname="product.currency">
+                <source>product.currency</source>
+                <target>Währung</target>
+            </trans-unit>
+            <trans-unit id="18" resname="product.price">
+                <source>product.price</source>
+                <target>Preis</target>
+            </trans-unit>
+            <trans-unit id="19" resname="products.add-product">
+                <source>products.add-product</source>
+                <target>Neues Produkt erstellen</target>
+            </trans-unit>
+            <trans-unit id="20" resname="products.add-product-with-variants">
+                <source>products.add-product-with-variants</source>
+                <target>Neues Produkt mit Varianten erstellen</target>
+            </trans-unit>
+            <trans-unit id="21" resname="products.add-product-addon">
+                <source>products.add-product-addon</source>
+                <target>Neue Produkterweiterung erstellen</target>
+            </trans-unit>
+            <trans-unit id="22" resname="products.add-product-set">
+                <source>products.add-product-set</source>
+                <target>Neues Produktset erstellen</target>
+            </trans-unit>
+            <trans-unit id="23" resname="navigation.pim.attributes">
+                <source>navigation.pim.attributes</source>
+                <target>Attribute</target>
+            </trans-unit>
+            <trans-unit id="25" resname="product.attributes.type">
+                <source>product.attributes.type</source>
+                <target>Typ</target>
+            </trans-unit>
+            <trans-unit id="26" resname="pim.attributes.title">
+                <source>pim.attributes.title</source>
+                <target>Attribute</target>
+            </trans-unit>
+            <trans-unit id="27" resname="product.attribute.type">
+                <source>product.attribute.type</source>
+                <target>Typ</target>
+            </trans-unit>
+            <trans-unit id="28" resname="product.attribute.type.text">
+                <source>product.attribute.type.text</source>
+                <target>Text</target>
+            </trans-unit>
+            <trans-unit id="29" resname="product.attribute.type.date">
+                <source>product.attribute.type.date</source>
+                <target>Datum</target>
+            </trans-unit>
+            <trans-unit id="30" resname="product.attribute.type.dropdown">
+                <source>product.attribute.type.dropdown</source>
+                <target>Dropdown</target>
+            </trans-unit>
+            <trans-unit id="31" resname="product.attribute.type.checkbox">
+                <source>product.attribute.type.checkbox</source>
+                <target>Checkbox</target>
+            </trans-unit>
+            <trans-unit id="32" resname="product.attribute.type.radiobutton">
+                <source>product.attribute.type.radiobutton</source>
+                <target>Radiobutton</target>
+            </trans-unit>
+            <trans-unit id="33" resname="product.attribute.name">
+                <source>product.attribute.name</source>
+                <target>Name</target>
+            </trans-unit>
+            <trans-unit id="34" resname="pim.attribute.title">
+                <source>pim.attribute.title</source>
+                <target>Attribut</target>
+            </trans-unit>
+            <trans-unit id="35" resname="product.attribute.title">
+                <source>product.attribute.title</source>
+                <target>Titel</target>
+            </trans-unit>
+            <trans-unit id="36" resname="product.supplier">
+                <source>product.supplier</source>
+                <target>Lieferant</target>
+            </trans-unit>
+            <trans-unit id="37" resname="product.parent">
+                <source>product.parent</source>
+                <target>Hauptprodukt</target>
+            </trans-unit>
+            <trans-unit id="38" resname="content-navigation.product.media">
+                <source>content-navigation.product.media</source>
+                <target>Dokumente</target>
+            </trans-unit>
+            <trans-unit id="39" resname="product.internal-item-number">
+                <source>product.internal-item-number</source>
+                <target>Interne Id</target>
+            </trans-unit>
+            <trans-unit id="40" resname="product.global-trade-item-number">
+                <source>product.global-trade-item-number</source>
+                <target>GTIN</target>
+            </trans-unit>
+            <trans-unit id="41" resname="product.order-unit">
+                <source>product.order-unit</source>
+                <target>Bestelleinheit</target>
+            </trans-unit>
+            <trans-unit id="42" resname="product.currency.iso-code">
+                <source>product.currency.iso-code</source>
+                <target>ISO-Code</target>
+            </trans-unit>
+            <trans-unit id="43" resname="product.currency.number">
+                <source>product.currency.number</source>
+                <target>Nummer</target>
+            </trans-unit>
+            <trans-unit id="44" resname="product.orderUnit">
+                <source>product.orderUnit</source>
+                <target>Bestelleinheit</target>
+            </trans-unit>
+            <trans-unit id="45" resname="product.contentUnit">
+                <source>product.contentUnit</source>
+                <target>Inhaltseinheit</target>
+            </trans-unit>
+            <trans-unit id="46" resname="product.recommendedOrderQuantity">
+                <source>product.recommendedOrderQuantity</source>
+                <target>Empf. Bestellmenge</target>
+            </trans-unit>
+            <trans-unit id="47" resname="product.workflow.set.active">
+                <source>product.workflow.set.active</source>
+                <target>aktiv</target>
+            </trans-unit>
+            <trans-unit id="48" resname="product.workflow.set.inactive">
+                <source>product.workflow.set.inactive</source>
+                <target>inaktiv</target>
+            </trans-unit>
+            <trans-unit id="49" resname="product.workflow.state.changed.error">
+                <source>product.workflow.state.changed.error</source>
+                <target>Der Status konnte nicht geändert werden.</target>
+            </trans-unit>
+            <trans-unit id="50" resname="products.price-calculation.invalid.input">
+                <source>products.price-calculation.invalid.input</source>
+                <target>Ungültig</target>
+            </trans-unit>
+            <trans-unit id="51" resname="product.deliveryTime">
+                <source>product.deliveryTime</source>
+                <target>Lieferzeit (Tage)</target>
+            </trans-unit>
+            <trans-unit id="52" resname="product.areGrossPrices">
+                <source>product.areGrossPrices</source>
+                <target>Bruttopreise</target>
+            </trans-unit>
+            <trans-unit id="53" resname="product.bulkprice.price">
+                <source>product.bulkprice.price</source>
+                <target>Verkaufspreis</target>
+            </trans-unit>
+            <trans-unit id="54" resname="product.bulkprice.amount">
+                <source>product.bulkprice.amount</source>
+                <target>Menge</target>
+            </trans-unit>
+            <trans-unit id="55" resname="product.price.EUR">
+                <source>product.price.EUR</source>
+                <target>Preis (EUR)</target>
+            </trans-unit>
+            <trans-unit id="56" resname="product.price.CHF">
+                <source>product.price.CHF</source>
+                <target>Preis (CHF)</target>
+            </trans-unit>
+            <trans-unit id="57" resname="product.bulkprice.andMore">
+                <source>product.bulkprice.andMore</source>
+                <target>und mehr ...</target>
+            </trans-unit>
+            <trans-unit id="58" resname="content-navigation.product.attributes">
+                <source>content-navigation.product.attributes</source>
+                <target>Attribute</target>
+            </trans-unit>
+            <trans-unit id="59" resname="product.attribute.value">
+                <source>product.attribute.value</source>
+                <target>Wert</target>
+            </trans-unit>
+            <trans-unit id="60" resname="product.attribute.overlay.title">
+                <source>product.attribute.overlay.title</source>
+                <target>Attribut hinzufügen</target>
+            </trans-unit>
+            <trans-unit id="61" resname="product.attribute.overlay.defaultlabel">
+                <source>product.attribute.overlay.title</source>
+                <target>Attribut auswählen</target>
+            </trans-unit>
+            <trans-unit id="62" resname="product.orderContentRatio">
+                <source>product.orderContentRatio</source>
+                <target>Inhaltsmenge</target>
+            </trans-unit>
+            <trans-unit id="63" resname="product.bulkprice.validfrom">
+                <source>product.bulkprice.validfrom</source>
+                <target>Gültig ab</target>
+            </trans-unit>
+            <trans-unit id="64" resname="product.bulkprice.validto">
+                <source>product.bulkprice.validto</source>
+                <target>Gültig bis</target>
+            </trans-unit>
+            <trans-unit id="65" resname="product.bulkprice.specialprice">
+                <source>product.bulkprice.specialprice</source>
+                <target>Spezial Preis</target>
+            </trans-unit>
+            <trans-unit id="66" resname="product.minimumOrderQuantity">
+                <source>product.minimumOrderQuantity</source>
+                <target>Min. Bestellmenge</target>
+            </trans-unit>
+            <trans-unit id="67" resname="product.globalTradeItemNumber">
+                <source>product.globalTradeItemNumber</source>
+                <target>EAN Nummer</target>
+            </trans-unit>
+            <trans-unit id="68" resname="product.deliveryStatus">
+                <source>product.deliveryStatus</source>
+                <target>Lieferstatus</target>
+            </trans-unit>
+            <trans-unit id="69" resname="product.classification">
+                <source>product.classification</source>
+                <target>Zuordnung</target>
+            </trans-unit>
+            <trans-unit id="03588f70b26be004afd6ea794c008e8f" resname="navigation.pim">
+                <source>navigation.pim</source>
+                <target>Produkte</target>
+            </trans-unit>
+            <trans-unit id="58cb513981ea607cf0fb3db202368f0e" resname="navigation.pim.products">
+                <source>navigation.pim.products</source>
+                <target>Produkte</target>
+            </trans-unit>
+            <trans-unit id="de3e19c8588a08fe9f82442df794228d" resname="pim.products.title">
+                <source>pim.products.title</source>
+                <target>Produkte</target>
+            </trans-unit>
+            <trans-unit id="de3e19c8588a08fe9f82442df594228d" resname="pim.product.title">
+                <source>pim.product.title</source>
+                <target>Produkt</target>
+            </trans-unit>
+            <trans-unit id="ebe90aa605a30f7e0209542e24978b90" resname="products.key">
+                <source>products.key</source>
+                <target>Schlüssel</target>
+            </trans-unit>
+            <trans-unit id="40e391d7afad26a01d92dbc7b38c3e54" resname="products.contractual-article">
+                <source>products.contractual-article</source>
+                <target>Vertraglicher Artikel</target>
+            </trans-unit>
+            <trans-unit id="50b38cc2bbdde289f67a22b86ccb6aee" resname="products.name">
+                <source>products.name</source>
+                <target>Name</target>
+            </trans-unit>
+            <trans-unit id="ce420acf4b9e355e02abf093b1937ce5" resname="products.article-number">
+                <source>products.article-number</source>
+                <target>Artikelnummer</target>
+            </trans-unit>
+            <trans-unit id="73f857fb4aec3a9b7848fcd5826b3326" resname="products.manufacturer">
+                <source>products.manufacturer</source>
+                <target>Hersteller</target>
+            </trans-unit>
+            <trans-unit id="09d4af2742da58c78360f2e22a0d5e1a" resname="products.categories">
+                <source>products.categories</source>
+                <target>Kategorien</target>
+            </trans-unit>
+            <trans-unit id="0948dff11d35dcbad5b69e0e1b979fc3" resname="products.last-imported">
+                <source>products.last-imported</source>
+                <target>Zuletzt importiert</target>
+            </trans-unit>
+            <trans-unit id="51780238a1c0fa9ed158a47e2feede05" resname="sulu.products.import">
+                <source>sulu.products.import</source>
+                <target>Import</target>
+            </trans-unit>
+            <trans-unit id="3bfe10cbcfef0e1626de1015d91bbb1d" resname="sulu.products.map-header">
+                <source>sulu.products.map-header</source>
+                <target>Header zuordnen</target>
+            </trans-unit>
+            <trans-unit id="36a03673d868140980e8e2ec60baf4b4" resname="sulu.products.map-header-desc">
+                <source>sulu.products.map-header-desc</source>
+                <target>Bitte Spalten der existierenden Datenstruktur zuordnen.</target>
+            </trans-unit>
+            <trans-unit id="536fa243219a2512816261794df3121c" resname="sulu.products.unmatched-columns">
+                <source>sulu.products.unmatched-columns</source>
+                <target>Nicht zugeordnete Spalten</target>
+            </trans-unit>
+            <trans-unit id="70" resname="product.workflow.status.title">
+                <source>product.workflow.status.title</source>
+                <target>Produktstatus setzen</target>
+            </trans-unit>
+            <trans-unit id="71" resname="product.workflow.status.updated">
+                <source>product.workflow.status.updated</source>
+                <target>Produktstatus aktualisiert</target>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>

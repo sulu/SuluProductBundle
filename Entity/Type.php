@@ -40,11 +40,22 @@ class Type
         $this->products = new \Doctrine\Common\Collections\ArrayCollection();
         $this->translations = new \Doctrine\Common\Collections\ArrayCollection();
     }
-    
+
+    /**
+     * Set id
+     *
+     * @return Status
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+        return $this;
+    }
+
     /**
      * Get id
      *
-     * @return integer 
+     * @return integer
      */
     public function getId()
     {
@@ -60,7 +71,7 @@ class Type
     public function addProduct(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $products)
     {
         $this->products[] = $products;
-    
+
         return $this;
     }
 
@@ -77,7 +88,7 @@ class Type
     /**
      * Get products
      *
-     * @return \Doctrine\Common\Collections\Collection 
+     * @return \Doctrine\Common\Collections\Collection
      */
     public function getProducts()
     {
@@ -93,7 +104,7 @@ class Type
     public function addTranslation(\Sulu\Bundle\ProductBundle\Entity\TypeTranslation $translations)
     {
         $this->translations[] = $translations;
-    
+
         return $this;
     }
 
@@ -110,10 +121,28 @@ class Type
     /**
      * Get translations
      *
-     * @return \Doctrine\Common\Collections\Collection 
+     * @return \Doctrine\Common\Collections\Collection
      */
     public function getTranslations()
     {
         return $this->translations;
+    }
+
+    /**
+     * Returns the translation for the given locale
+     * @param string $locale
+     * @return TypeTranslation
+     */
+    public function getTranslation($locale)
+    {
+        $translation = null;
+        foreach ($this->translations as $translationData) {
+            if ($translationData->getLocale() == $locale) {
+                $translation = $translationData;
+                break;
+            }
+        }
+
+        return $translation;
     }
 }

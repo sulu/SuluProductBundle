@@ -1,0 +1,10 @@
+<tax-classes>
+    <tax-class>
+        <de>Regelsteuersatz</de>
+        <en>Standard Tax Rate</en>
+    </tax-class>
+    <tax-class>
+        <de>Ermäßigter Steuersatz</de>
+        <en>Reduced Tax Rate</en>
+    </tax-class>
+</tax-classes>

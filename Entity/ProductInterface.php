@@ -10,8 +10,11 @@
 
 namespace Sulu\Bundle\ProductBundle\Entity;
 
+use Sulu\Bundle\ContactBundle\Entity\Account;
 use Sulu\Bundle\ContactBundle\Entity\Country;
+use Sulu\Bundle\MediaBundle\Entity\Media;
 use Sulu\Bundle\SecurityBundle\Entity\User;
+use Sulu\Component\Security\Authentication\UserInterface;
 
 /**
  * Defines the interface for a product
@@ -25,21 +28,6 @@ interface ProductInterface
      * @return integer
      */
     public function getId();
-
-    /**
-     * Set code
-     *
-     * @param string $code
-     * @return BaseProduct
-     */
-    public function setCode($code);
-
-    /**
-     * Get code
-     *
-     * @return string
-     */
-    public function getCode();
 
     /**
      * Set number
@@ -57,6 +45,21 @@ interface ProductInterface
     public function getNumber();
 
     /**
+     * Set globalTradeItemNumber
+     *
+     * @param string $globalTradeItemNumber
+     * @return BaseProduct
+     */
+    public function setGlobalTradeItemNumber($globalTradeItemNumber);
+
+    /**
+     * Get globalTradeItemNumber
+     *
+     * @return string
+     */
+    public function getGlobalTradeItemNumber();
+
+    /**
      * Set manufacturer
      *
      * @param string $manufacturer
@@ -70,6 +73,36 @@ interface ProductInterface
      * @return string
      */
     public function getManufacturer();
+
+    /**
+     * Set cost
+     *
+     * @param double $cost
+     * @return ProductInterface
+     */
+    public function setCost($cost);
+
+    /**
+     * Get cost
+     *
+     * @return double
+     */
+    public function getCost();
+
+    /**
+     * Set priceInfo
+     *
+     * @param string $priceInfo
+     * @return BaseProduct
+     */
+    public function setPriceInfo($priceInfo);
+
+    /**
+     * Get priceInfo
+     *
+     * @return string
+     */
+    public function getPriceInfo();
 
     /**
      * Set created
@@ -162,6 +195,28 @@ interface ProductInterface
     public function getStatus();
 
     /**
+     * Get supplier
+     *
+     * @return AccountInterface Supplier
+     */
+    public function getSupplier();
+
+    /**
+     * Set taxClass
+     *
+     * @param \Sulu\Bundle\ProductBundle\Entity\TaxClass $taxClass
+     * @return BaseProduct
+     */
+    public function setTaxClass(\Sulu\Bundle\ProductBundle\Entity\TaxClass $taxClass = null);
+
+    /**
+     * Get taxClass
+     *
+     * @return \Sulu\Bundle\ProductBundle\Entity\TaxClass
+     */
+    public function getTaxClass();
+
+    /**
      * Add relations
      *
      * @param ProductInterface $relations
@@ -230,30 +285,30 @@ interface ProductInterface
     /**
      * Set changer
      *
-     * @param User $changer
+     * @param \Sulu\Component\Security\Authentication\UserInterface $changer
      * @return ProductInterface
      */
-    public function setChanger(User $changer = null);
+    public function setChanger(UserInterface $changer = null);
 
     /**
      * Get changer
      *
-     * @return User
+     * @return UserInterface
      */
     public function getChanger();
 
     /**
      * Set creator
      *
-     * @param User $creator
+     * @param \Sulu\Component\Security\Authentication\UserInterface $creator
      * @return ProductInterface
      */
-    public function setCreator(User $creator = null);
+    public function setCreator(UserInterface $creator = null);
 
     /**
      * Get creator
      *
-     * @return User
+     * @return UserInterface
      */
     public function getCreator();
 
@@ -293,6 +348,28 @@ interface ProductInterface
      * @return \Doctrine\Common\Collections\Collection
      */
     public function getChildren();
+
+    /**
+     * Add prices
+     *
+     * @param \Sulu\Bundle\ProductBundle\Entity\ProductPrice $prices
+     * @return Product
+     */
+    public function addPrice(\Sulu\Bundle\ProductBundle\Entity\ProductPrice $prices);
+
+    /**
+     * Remove prices
+     *
+     * @param \Sulu\Bundle\ProductBundle\Entity\ProductPrice $prices
+     */
+    public function removePrice(\Sulu\Bundle\ProductBundle\Entity\ProductPrice $prices);
+
+    /**
+     * Get prices
+     *
+     * @return ProductPrice[]
+     */
+    public function getPrices();
 
     /**
      * Add attributes
@@ -339,6 +416,13 @@ interface ProductInterface
     public function getTranslations();
 
     /**
+     * Get one specific translation
+     * @param string $locale The locale of the translation to get
+     * @return ProductTranslation
+     */
+    public function getTranslation($locale);
+
+    /**
      * Add extras
      *
      * @param Addon $addon
@@ -381,4 +465,67 @@ interface ProductInterface
      * @return \Doctrine\Common\Collections\Collection
      */
     public function getSetProducts();
+
+    /**
+     * Add categories
+     *
+     * @param \Sulu\Bundle\CategoryBundle\Entity\Category $categories
+     * @return BaseProduct
+     */
+    public function addCategory(\Sulu\Bundle\CategoryBundle\Entity\Category $categories);
+
+    /**
+     * Remove categories
+     *
+     * @param \Sulu\Bundle\CategoryBundle\Entity\Category $categories
+     */
+    public function removeCategory(\Sulu\Bundle\CategoryBundle\Entity\Category $categories);
+
+    /**
+     * Get categories
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getCategories();
+
+    /**
+     * Get media
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getMedia();
+
+    /**
+     * Get media
+     * @param Media $media
+     */
+    public function addMedia(Media $media);
+
+    /**
+     * Remove media
+     * @param Media $media
+     */
+    public function removeMedia(Media $media);
+
+    /**
+     * Are all prices of this products gross prices
+     * @return boolean
+     */
+    public function getAreGrossPrices();
+
+    /**
+     * Sets prices of this products gross prices
+     * @param $areGrossPrices
+     */
+    public function setAreGrossPrices($areGrossPrices);
+
+    /**
+     * @param string $searchTerms
+     */
+    public function setSearchTerms($searchTerms);
+
+    /**
+     * @return string
+     */
+    public function getSearchTerms();
 }

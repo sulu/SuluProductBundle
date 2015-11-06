@@ -20,7 +20,7 @@ class AttributeTranslation
     /**
      * @var string
      */
-    private $languageCode;
+    private $locale;
 
     /**
      * @var string
@@ -43,9 +43,9 @@ class AttributeTranslation
      * @param string $languageCode
      * @return AttributeTranslation
      */
-    public function setLanguageCode($languageCode)
+    public function setLocale($languageCode)
     {
-        $this->languageCode = $languageCode;
+        $this->locale = $languageCode;
     
         return $this;
     }
@@ -55,9 +55,9 @@ class AttributeTranslation
      *
      * @return string 
      */
-    public function getLanguageCode()
+    public function getLocale()
     {
-        return $this->languageCode;
+        return $this->locale;
     }
 
     /**

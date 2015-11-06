@@ -1,3 +1,22 @@
-sulu_product_base.products:
+sulu_product.products:
     type: rest
-    resource: Sulu\Bundle\ProductBundle\Controller\ProductbaseController
+    resource: Sulu\Bundle\ProductBundle\Controller\ProductController
+
+sulu_product.variants:
+    type: rest
+    parent: sulu_product.products
+    resource: Sulu\Bundle\ProductBundle\Controller\VariantController
+
+sulu_product_base.attributes:
+    type: rest
+    resource: Sulu\Bundle\ProductBundle\Controller\AttributeController
+
+sulu_product_base.attribute_values:
+    type: rest
+    resource: Sulu\Bundle\ProductBundle\Controller\ValueController
+    parent: sulu_product_base.attributes
+
+sulu_product.media:
+    type: rest
+    parent: sulu_product.products
+    resource: Sulu\Bundle\ProductBundle\Controller\ProductMediaController
