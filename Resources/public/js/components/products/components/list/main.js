@@ -39,6 +39,7 @@ define(['config'], function(Config) {
 
         // create chunks of ids and sends multiple request to avoid php timeout with single request
         createChunksAndSend = function(ids, state) {
+            this.sandbox.emit('sulu.header.toolbar.item.loading', 'productWorkflow');
             var chunk = 30;
             for (var i = 0, j = ids.length; i < j; i += chunk) {
                 // check if this is the last chunk - after the last chunk we want to update the table
@@ -61,6 +62,7 @@ define(['config'], function(Config) {
             }.bind(this));
 
             this.sandbox.on('sulu.product.workflow.completed', function() {
+                this.sandbox.emit('sulu.header.toolbar.item.enable', 'productWorkflow');
                 this.sandbox.emit(
                     'sulu.labels.success.show',
                     this.sandbox.translate('product.workflow.status.updated')
