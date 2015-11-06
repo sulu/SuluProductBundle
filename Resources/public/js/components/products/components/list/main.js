@@ -37,6 +37,7 @@ define(['config'], function(Config) {
             }.bind(this));
         },
 
+        // create chunks of ids and sends multiple request to avoid php timeout with single request
         createChunksAndSend = function(ids, state) {
             var chunk = 30;
             for (var i = 0, j = ids.length; i < j; i += chunk) {
@@ -61,7 +62,7 @@ define(['config'], function(Config) {
 
             this.sandbox.on('sulu.product.workflow.completed', function() {
                 this.sandbox.emit(
-                    'sulu.labels.success.show', 
+                    'sulu.labels.success.show',
                     this.sandbox.translate('product.workflow.status.updated')
                 );
                 this.sandbox.emit('husky.datagrid.' + constants.datagridInstanceName + '.update');
