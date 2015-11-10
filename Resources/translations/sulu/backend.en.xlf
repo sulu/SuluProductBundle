@@ -342,6 +342,10 @@
                 <source>product.workflow.status.updated</source>
                 <target>Product status updated</target>
             </trans-unit>
+            <trans-unit id="72" resname="product.search-terms">
+                <source>product.search-terms</source>
+                <target>Search Terms</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>
