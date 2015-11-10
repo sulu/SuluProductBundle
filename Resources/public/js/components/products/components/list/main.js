@@ -27,26 +27,33 @@ define(['config'], function(Config) {
 
         setProductActive = function() {
             this.sandbox.emit('husky.datagrid.' + constants.datagridInstanceName + '.items.get-selected', function(ids) {
-                this.sandbox.emit(
-                    'sulu.products.workflow.triggered',
-                    {
-                        ids: ids,
-                        status: Config.get('product.status.active').id
-                    }
-                );
+                createChunksAndSend.call(this, ids, 'active');
             }.bind(this));
         },
 
         setProductInactive = function() {
             this.sandbox.emit('husky.datagrid.' + constants.datagridInstanceName + '.items.get-selected', function(ids) {
+                createChunksAndSend.call(this, ids, 'inactive');
+            }.bind(this));
+        },
+
+        // create chunks of ids and sends multiple request to avoid php timeout with single request
+        createChunksAndSend = function(ids, state) {
+            this.sandbox.emit('sulu.header.toolbar.item.loading', 'productWorkflow');
+            var chunk = 30;
+            for (var i = 0, j = ids.length; i < j; i += chunk) {
+                // check if this is the last chunk - after the last chunk we want to update the table
+                var updateTable = (j - chunk <= i);
+                var temparray = ids.slice(i, i + chunk);
                 this.sandbox.emit(
                     'sulu.products.workflow.triggered',
                     {
-                        ids: ids,
-                        status: Config.get('product.status.inactive').id
+                        ids: temparray,
+                        status: Config.get('product.status.' + state).id,
+                        updateTable: updateTable
                     }
                 );
-            }.bind(this));
+            }
         },
 
         bindCustomEvents = function() {
@@ -55,6 +62,11 @@ define(['config'], function(Config) {
             }.bind(this));
 
             this.sandbox.on('sulu.product.workflow.completed', function() {
+                this.sandbox.emit('sulu.header.toolbar.item.enable', 'productWorkflow');
+                this.sandbox.emit(
+                    'sulu.labels.success.show',
+                    this.sandbox.translate('product.workflow.status.updated')
+                );
                 this.sandbox.emit('husky.datagrid.' + constants.datagridInstanceName + '.update');
             }, this);
 

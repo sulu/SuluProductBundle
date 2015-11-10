@@ -338,6 +338,14 @@
                 <source>product.workflow.status.title</source>
                 <target>Produktstatus setzen</target>
             </trans-unit>
+            <trans-unit id="71" resname="product.workflow.status.updated">
+                <source>product.workflow.status.updated</source>
+                <target>Produktstatus aktualisiert</target>
+            </trans-unit>
+            <trans-unit id="72" resname="product.search-terms">
+                <source>product.search-terms</source>
+                <target>Suchbegriffe</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>
