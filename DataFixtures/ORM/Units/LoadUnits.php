@@ -53,6 +53,7 @@ class LoadUnits implements FixtureInterface, OrderedFixtureInterface
                                 $translation->setLocale($child->nodeName);
                                 $translation->setName($child->nodeValue);
                                 $translation->setUnit($unit);
+                                $unit->addTranslation($translation);
                                 $manager->persist($translation);
                             }
                         }
