@@ -85,7 +85,7 @@ define(['config', 'suluproduct/util/product-delete-dialog'], function(Config, De
                 this.deselectItem.bind(this)
             );
 
-            this.sandbox.on('husky.overlay.' + constants.instanceName + '.close', this.submit.bind(this));
+            this.sandbox.on('husky.overlay.' + constants.instanceName + '.closed', this.submitMedia.bind(this));
         },
 
         /**
@@ -118,8 +118,10 @@ define(['config', 'suluproduct/util/product-delete-dialog'], function(Config, De
         },
 
         deselectItem: function(id) {
+            var selectionIndex = this.currentSelection.indexOf(id);
+
             // when an element is in current selection and was deselected
-            if (this.currentSelection.indexOf(id) > -1 && this.removedSelections.indexOf(id) === -1) {
+            if (selectionIndex > -1 && this.removedSelections.indexOf(id) === -1) {
                 this.removedSelections.push(id);
             }
 
@@ -127,6 +129,10 @@ define(['config', 'suluproduct/util/product-delete-dialog'], function(Config, De
                 var index = this.newSelections.indexOf(id);
                 this.newSelections.splice(index, 1);
                 this.newSelectionItems.splice(index, 1);
+            }
+
+            if (selectionIndex > -1) {
+                this.currentSelection.splice(selectionIndex, 1);
             }
         },
 
@@ -140,13 +146,14 @@ define(['config', 'suluproduct/util/product-delete-dialog'], function(Config, De
             if (this.removedSelections.indexOf(id) > -1) {
                 this.removedSelections.splice(this.removedSelections.indexOf(id), 1);
             }
+            this.currentSelection.push(id);
         },
 
         /**
-         * Submits the selection depending on the type
+         * Saves / removes media from the product.
          */
-        submit: function() {
-            if (this.newSelections.length > 0 || this.removedSelections.length > 0 || !!this.statusChanged) {
+        submitMedia: function() {
+            if (this.newSelections.length > 0 || this.removedSelections.length > 0) {
                 this.sandbox.emit(
                     'sulu.products.media.save',
                     this.options.data.id,
@@ -154,10 +161,17 @@ define(['config', 'suluproduct/util/product-delete-dialog'], function(Config, De
                     this.removedSelections
                 );
 
-                this.options.data.attributes.status = this.status;
                 this.saved = false;
-                this.sandbox.emit('sulu.products.save', this.options.data.attributes);
             }
+        },
+
+        /**
+         * Saves product when status is changed.
+         */
+        submit: function() {
+            this.options.data.attributes.status = this.status;
+            this.sandbox.emit('sulu.products.save', this.options.data.attributes, true);
+            this.saved = false;
         },
 
         // @var Bool saved - defines if saved state should be shown
@@ -176,7 +190,6 @@ define(['config', 'suluproduct/util/product-delete-dialog'], function(Config, De
          * Opens
          */
         showAddOverlay: function() {
-            this.sandbox.emit('sulu.media-selection-overlay.documents.set-selected', this.currentSelection);
             this.sandbox.emit('sulu.media-selection-overlay.documents.open');
         },
 
@@ -189,7 +202,8 @@ define(['config', 'suluproduct/util/product-delete-dialog'], function(Config, De
                     if (wasConfirmed) {
                         this.currentSelection = this.sandbox.util.removeFromArray(this.currentSelection, ids);
                         this.removedSelections = ids;
-                        this.submit();
+                        this.submitMedia();
+                        this.sandbox.emit('sulu.media-selection-overlay.documents.set-selected', this.currentSelection);
                     }
                 }.bind(this));
             }.bind(this));

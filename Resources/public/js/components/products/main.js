@@ -94,8 +94,8 @@ define([
                 );
             }.bind(this));
 
-            this.sandbox.on(PRODUCT_SAVE, function(data) {
-                this.save(data);
+            this.sandbox.on(PRODUCT_SAVE, function(data, doPatch) {
+                this.save(data, doPatch);
             }.bind(this));
 
             this.sandbox.on(PRODUCT_DELETE, function(ids) {
@@ -207,7 +207,7 @@ define([
             }
         },
 
-        save: function(data) {
+        save: function(data, doPatch) {
             this.sandbox.emit('sulu.header.toolbar.item.loading', 'save');
             this.product.set(data);
 
@@ -221,6 +221,7 @@ define([
             }
 
             this.product.saveLocale(this.options.locale, {
+                patch: true,
                 success: function(response) {
                     var model = response.toJSON();
                     if (!!data.id) {

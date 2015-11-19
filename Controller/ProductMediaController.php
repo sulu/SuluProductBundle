@@ -139,7 +139,7 @@ class ProductMediaController extends RestController
     }
 
     /**
-     * Removes a media from the relation to the account.
+     * Removes a media from the relation.
      *
      * @param int $id - account id
      * @param int $mediaId
