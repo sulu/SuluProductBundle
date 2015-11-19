@@ -1389,10 +1389,8 @@ class ProductManager implements ProductManagerInterface
 
         if ($id) {
             // Update an extisting product
-            $product = $this->fetchProduct($id, $locale);
-            if (array_key_exists('status', $data)) {
-                $this->setStatusForProduct($product, $data['status']['id']);
-            }
+            $product = $this->productRepository->findById($id);
+            $this->setStatusForProduct($product, $data['status']['id']);
         } else {
             throw new ProductNotFoundException($id);
         }
