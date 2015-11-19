@@ -94,8 +94,8 @@ define([
                 );
             }.bind(this));
 
-            this.sandbox.on(PRODUCT_SAVE, function(data) {
-                this.save(data);
+            this.sandbox.on(PRODUCT_SAVE, function(data, doPatch) {
+                this.save(data, doPatch);
             }.bind(this));
 
             this.sandbox.on(PRODUCT_DELETE, function(ids) {
@@ -147,7 +147,9 @@ define([
                 var url = '/admin/api/products?action=changeState&ids=' + data.ids + '&statusId=' + data.status;
                 this.sandbox.util.save(url, 'POST')
                     .then(function() {
-                        this.sandbox.emit('sulu.product.workflow.completed');
+                        if (!!data.updateTable) {
+                            this.sandbox.emit('sulu.product.workflow.completed');
+                        }
                     }.bind(this))
                     .fail(function(error) {
                         this.sandbox.emit('sulu.labels.error.show',
@@ -205,7 +207,7 @@ define([
             }
         },
 
-        save: function(data) {
+        save: function(data, doPatch) {
             this.sandbox.emit('sulu.header.toolbar.item.loading', 'save');
             this.product.set(data);
 
@@ -219,6 +221,7 @@ define([
             }
 
             this.product.saveLocale(this.options.locale, {
+                patch: true,
                 success: function(response) {
                     var model = response.toJSON();
                     if (!!data.id) {

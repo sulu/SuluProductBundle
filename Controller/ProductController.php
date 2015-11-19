@@ -10,6 +10,7 @@
 
 namespace Sulu\Bundle\ProductBundle\Controller;
 
+use Doctrine\Common\Persistence\ObjectManager;
 use FOS\RestBundle\Controller\Annotations\Get;
 use FOS\RestBundle\Routing\ClassResourceInterface;
 use Hateoas\Representation\CollectionRepresentation;
@@ -49,9 +50,9 @@ class ProductController extends RestController implements ClassResourceInterface
     /**
      * Returns all fields that can be used by list
      *
-     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @param Request $request
      *
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      */
     public function fieldsAction(Request $request)
     {
@@ -77,7 +78,7 @@ class ProductController extends RestController implements ClassResourceInterface
      * @param Request $request
      * @param int $id product ID
      *
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      */
     public function getAction(Request $request, $id)
     {
@@ -100,7 +101,7 @@ class ProductController extends RestController implements ClassResourceInterface
      *
      * @param Request $request
      *
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      */
     public function cgetAction(Request $request)
     {
@@ -195,7 +196,7 @@ class ProductController extends RestController implements ClassResourceInterface
      * @param Request $request
      * @param int $id product ID
      *
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      */
     public function putAction(Request $request, $id)
     {
@@ -229,7 +230,7 @@ class ProductController extends RestController implements ClassResourceInterface
      *
      * @param Request $request
      *
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      */
     public function postAction(Request $request)
     {
@@ -258,7 +259,7 @@ class ProductController extends RestController implements ClassResourceInterface
      * @param Request $request
      * @param int $id product id
      *
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      */
     public function deleteAction(Request $request, $id)
     {
@@ -285,12 +286,12 @@ class ProductController extends RestController implements ClassResourceInterface
     }
 
     /**
-     * Make a partial update of a product
+     * Make a partial update of a product.
      *
      * @param Request $request
      * @param int $id
      *
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      */
     public function patchAction(Request $request, $id)
     {
@@ -302,6 +303,8 @@ class ProductController extends RestController implements ClassResourceInterface
                 $id
             );
 
+            $this->getEntityManager()->flush();
+
             $view = $this->view($product, 200);
         } catch (ProductNotFoundException $exc) {
             $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
@@ -309,5 +312,13 @@ class ProductController extends RestController implements ClassResourceInterface
         }
 
         return $this->handleView($view);
+    }
+
+    /**
+     * @return ObjectManager
+     */
+    private function getEntityManager()
+    {
+        return $this->get('doctrine.orm.entity_manager');
     }
 }
