@@ -30,7 +30,6 @@ define(['config', 'suluproduct/util/product-delete-dialog'], function(Config, De
             this.removedSelections = [];
             this.currentSelection = this.sandbox.util.arrayGetColumn(this.options.data.attributes.media, 'id');
             this.status = !!this.options.data ? this.options.data.attributes.status : Config.get('product.status.active');
-            this.statusChanged = false;
 
             // reset status if it has been changed before and has not been saved
             this.sandbox.emit('product.state.change', this.status);
@@ -53,7 +52,6 @@ define(['config', 'suluproduct/util/product-delete-dialog'], function(Config, De
             this.sandbox.on('product.state.change', function(status) {
                 if (!this.options.data.attributes.status || this.options.data.attributes.status.id !== status.id) {
                     this.status = status;
-                    this.statusChanged = true;
                     this.setHeaderBar(false);
                 }
             }, this);
@@ -76,6 +74,10 @@ define(['config', 'suluproduct/util/product-delete-dialog'], function(Config, De
 
             this.sandbox.on('sulu.products.media.saved', this.addItemsToList.bind(this));
 
+            this.sandbox.on('husky.overlay.' + constants.instanceName + '.closed', this.submitMedia.bind(this));
+        },
+
+        bindOverlayEvents: function() {
             this.sandbox.on(
                 'sulu.media-selection-overlay.' + constants.instanceName + '.record-selected',
                 this.selectItem.bind(this)
@@ -84,8 +86,17 @@ define(['config', 'suluproduct/util/product-delete-dialog'], function(Config, De
                 'sulu.media-selection-overlay.' + constants.instanceName + '.record-deselected',
                 this.deselectItem.bind(this)
             );
+        },
 
-            this.sandbox.on('husky.overlay.' + constants.instanceName + '.closed', this.submitMedia.bind(this));
+        unbindOverlayEvents: function() {
+            this.sandbox.off(
+                'sulu.media-selection-overlay.' + constants.instanceName + '.record-selected',
+                this.selectItem.bind(this)
+            );
+            this.sandbox.off(
+                'sulu.media-selection-overlay.' + constants.instanceName + '.record-deselected',
+                this.deselectItem.bind(this)
+            );
         },
 
         /**
@@ -120,15 +131,13 @@ define(['config', 'suluproduct/util/product-delete-dialog'], function(Config, De
         deselectItem: function(id) {
             var selectionIndex = this.currentSelection.indexOf(id);
 
-            // when an element is in current selection and was deselected
-            if (selectionIndex > -1 && this.removedSelections.indexOf(id) === -1) {
-                this.removedSelections.push(id);
-            }
-
             if (this.newSelections.indexOf(id) > -1) {
                 var index = this.newSelections.indexOf(id);
                 this.newSelections.splice(index, 1);
                 this.newSelectionItems.splice(index, 1);
+            // when an element is in current selection and was deselected
+            } else if (selectionIndex > -1 && this.removedSelections.indexOf(id) === -1) {
+                this.removedSelections.push(id);
             }
 
             if (selectionIndex > -1) {
@@ -137,22 +146,23 @@ define(['config', 'suluproduct/util/product-delete-dialog'], function(Config, De
         },
 
         selectItem: function(id, item) {
-            // add element when it is really new and not already selected
-            if (this.currentSelection.indexOf(id) < 0 && this.newSelections.indexOf(id) < 0) {
-                this.newSelections.push(id);
-                this.newSelectionItems.push(item);
-            }
-
             if (this.removedSelections.indexOf(id) > -1) {
                 this.removedSelections.splice(this.removedSelections.indexOf(id), 1);
+                this.currentSelection.push(id);
+            // add element when it is really new and not already selected
+            } else if (this.currentSelection.indexOf(id) < 0 && this.newSelections.indexOf(id) < 0) {
+                this.newSelections.push(id);
+                this.newSelectionItems.push(item);
+                this.currentSelection.push(id);
             }
-            this.currentSelection.push(id);
+
         },
 
         /**
          * Saves / removes media from the product.
          */
         submitMedia: function() {
+            this.unbindOverlayEvents();
             if (this.newSelections.length > 0 || this.removedSelections.length > 0) {
                 this.sandbox.emit(
                     'sulu.products.media.save',
@@ -190,6 +200,7 @@ define(['config', 'suluproduct/util/product-delete-dialog'], function(Config, De
          * Opens
          */
         showAddOverlay: function() {
+            this.bindOverlayEvents();
             this.sandbox.emit('sulu.media-selection-overlay.documents.open');
         },
 
