@@ -31,6 +31,7 @@ use Sulu\Bundle\ProductBundle\Entity\Status as StatusEntity;
 use Sulu\Bundle\ProductBundle\Entity\TaxClass as TaxClassEntity;
 use Sulu\Bundle\ProductBundle\Entity\Type as TypeEntity;
 use Sulu\Bundle\ProductBundle\Entity\Unit as UnitEntity;
+use Sulu\Bundle\Sales\CoreBundle\Pricing\PriceFormatter;
 use Sulu\Component\Rest\ApiWrapper;
 use Sulu\Component\Security\Authentication\UserInterface;
 
@@ -43,7 +44,7 @@ use Sulu\Component\Security\Authentication\UserInterface;
 class Product extends ApiWrapper implements ApiProductInterface
 {
     /**
-     * @var Array
+     * @var array
      */
     private $media;
 
@@ -53,15 +54,26 @@ class Product extends ApiWrapper implements ApiProductInterface
     protected $accountManager;
 
     /**
+     * @var PriceFormatter
+     */
+    protected $priceFormatter;
+
+    /**
      * @param Entity $product The product to wrap
      * @param string $locale The locale of this product
+     * @param PriceFormatter $priceFormatter
      * @param AccountManager|null $accountManager
      */
-    public function __construct(Entity $product, $locale, AccountManager $accountManager = null)
-    {
+    public function __construct(
+        Entity $product,
+        $locale,
+        PriceFormatter $priceFormatter,
+        AccountManager $accountManager = null
+    ) {
         $this->entity = $product;
         $this->locale = $locale;
         $this->accountManager = $accountManager;
+        $this->priceFormatter = $priceFormatter;
     }
 
     /**
@@ -849,10 +861,13 @@ class Product extends ApiWrapper implements ApiProductInterface
      */
     public function getFormattedPrice($price, $symbol = 'EUR', $locale = 'de')
     {
-        $formatter = new \NumberFormatter($locale, \NumberFormatter::CURRENCY);
-        $formatter->setSymbol(\NumberFormatter::CURRENCY_SYMBOL, $symbol);
-
-        return $formatter->format((float)$price);
+        return $this->priceFormatter->format(
+            (float)$price,
+            null,
+            $locale,
+            $symbol,
+            PriceFormatter::CURRENCY_LOCATION_SUFFIX
+        );
     }
 
     /**

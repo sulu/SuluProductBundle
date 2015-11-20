@@ -14,6 +14,7 @@ use Sulu\Bundle\ContactBundle\Contact\AccountManager;
 use Sulu\Bundle\ProductBundle\Entity\Product;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\ProductBundle\Api\Product as ApiProduct;
+use Sulu\Bundle\Sales\CoreBundle\Pricing\PriceFormatter;
 
 class ProductFactory implements ProductFactoryInterface
 {
@@ -23,11 +24,17 @@ class ProductFactory implements ProductFactoryInterface
     protected $accountManager;
 
     /**
+     * @var PriceFormatter
+     */
+    protected $priceFormatter;
+
+    /**
      * @param AccountManager $accountManager
      */
-    public function __construct(AccountManager $accountManager = null)
+    public function __construct(AccountManager $accountManager = null, PriceFormatter $priceFormatter)
     {
         $this->accountManager = $accountManager;
+        $this->priceFormatter = $priceFormatter;
     }
 
     /**
@@ -43,6 +50,6 @@ class ProductFactory implements ProductFactoryInterface
      */
     public function createApiEntity(ProductInterface $product, $locale)
     {
-        return new ApiProduct($product, $locale, $this->accountManager);
+        return new ApiProduct($product, $locale, $this->priceFormatter, $this->accountManager);
     }
 }

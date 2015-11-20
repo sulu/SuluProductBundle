@@ -10,20 +10,29 @@
 
 namespace Sulu\Bundle\ProductBundle\Product;
 
+use JMS\Serializer\Annotation\Groups;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
+use Sulu\Bundle\Sales\CoreBundle\Pricing\PriceFormatter;
 
 class ProductPriceManager implements ProductPriceManagerInterface
 {
     protected $defaultCurrency;
 
     /**
-     * @param $defaultCurrency
+     * @var PriceFormatter
+     */
+    protected $priceFormatter;
+
+    /**
+     * @param string $defaultCurrency
+     * @param PriceFormatter $priceFormatter
      */
     public function __construct(
-        $defaultCurrency
-    )
-    {
+        $defaultCurrency,
+        PriceFormatter $priceFormatter
+    ) {
         $this->defaultCurrency = $defaultCurrency;
+        $this->priceFormatter = $priceFormatter;
     }
 
     /**
@@ -124,17 +133,17 @@ class ProductPriceManager implements ProductPriceManagerInterface
      */
     public function getFormattedPrice($price, $symbol = 'EUR', $locale = 'de')
     {
-        $useSymbol = !empty($symbol);
-        if ($useSymbol) {
-            $formatter = new \NumberFormatter($locale, \NumberFormatter::CURRENCY);
-            $formatter->setSymbol(\NumberFormatter::CURRENCY_SYMBOL, $symbol);
-        } else {
-            $formatter = new \NumberFormatter($locale, \NumberFormatter::DECIMAL);
-            $formatter->setAttribute(\NumberFormatter::DECIMAL_ALWAYS_SHOWN, 1);
-            $formatter->setAttribute(\NumberFormatter::MIN_FRACTION_DIGITS, 2);
-            $formatter->setAttribute(\NumberFormatter::MAX_FRACTION_DIGITS, 2);
+        $location = PriceFormatter::CURRENCY_LOCATION_NONE;
+        if (!empty($symbol)) {
+            $location = PriceFormatter::CURRENCY_LOCATION_SUFFIX;
         }
 
-        return $formatter->format((float)$price);
+        return $this->priceFormatter->format(
+            (float)$price,
+            null,
+            $locale,
+            $symbol,
+            $location
+        );
     }
 }
