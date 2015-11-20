@@ -69,7 +69,7 @@ class Product extends ApiWrapper implements ApiProductInterface
      *
      * @VirtualProperty
      * @SerializedName("id")
-     * @Groups({"cart"})
+     * @Groups({"Default","cart"})
      *
      * @return integer
      */
