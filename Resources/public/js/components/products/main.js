@@ -167,11 +167,38 @@ define([
 
             this.processAjaxForMedia(newMediaIds, productId, 'POST');
             this.processAjaxForMedia(removedMediaIds, productId, 'DELETE');
+
+            var mediaIds = this.sandbox.util.arrayGetColumn(this.product.attributes.media, 'id');
+            var i, len, id;
+
+            // add new media to backbone model
+            for (i = -1, len = newMediaIds.length; ++i < len;) {
+                id = newMediaIds[i];
+
+                if (mediaIds.indexOf(id) === -1) {
+                    this.product.set({
+                       'media': this.product.get('media').concat({'id': id})
+                    });
+                    mediaIds.push(id);
+                }
+            }
+
+            // remove deleted media from backbone model
+            for (i = -1, len = removedMediaIds.length; ++i < len;) {
+                id = removedMediaIds[i];
+
+                var mediaIndex = mediaIds.indexOf(id);
+
+                if (mediaIndex > -1) {
+                    this.product.get('media').splice(mediaIndex, 1);
+                    mediaIds.splice(mediaIndex, 1);
+                }
+            }
+
         },
 
         // TODO make only one request
         processAjaxForMedia: function(mediaIds, productId, type) {
-
             var requests = [],
                 medias = [],
                 url;
@@ -220,8 +247,12 @@ define([
                 }.bind(this));
             }
 
+            if (!doPatch) {
+                doPatch = false;
+            }
+
             this.product.saveLocale(this.options.locale, {
-                patch: true,
+                patch: doPatch,
                 success: function(response) {
                     var model = response.toJSON();
                     if (!!data.id) {
