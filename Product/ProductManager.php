@@ -72,7 +72,8 @@ class ProductManager implements ProductManagerInterface
     protected static $attributeEntityName = 'SuluProductBundle:Attribute';
     protected static $productTranslationEntityName = 'SuluProductBundle:ProductTranslation';
     protected static $productTaxClassEntityName = 'SuluProductBundle:TaxClass';
-    protected static $productDeliveryStatusClassEntityName = 'SuluProductBundle:DeliveryStatus';
+    protected static $productDeliveryStatusEntityName = 'SuluProductBundle:DeliveryStatus';
+    protected static $productDeliveryStatusTranslationEntityName = 'SuluProductBundle:DeliveryStatusTranslation';
     protected static $productPriceEntityName = 'SuluProductBundle:ProductPrice';
     protected static $currencyEntityName = 'SuluProductBundle:Currency';
     protected static $categoryEntityName = 'SuluCategoryBundle:Category';
@@ -485,7 +486,7 @@ class ProductManager implements ProductManagerInterface
             ', ',
             null,
             true,
-            'string'
+            ''
         );
 
         $fieldDescriptors['manufacturer'] = new DoctrineFieldDescriptor(
@@ -612,6 +613,27 @@ class ProductManager implements ProductManagerInterface
                 )
             ),
             false,
+            false,
+            ''
+        );
+
+        $fieldDescriptors['deliveryStatus'] = new DoctrineFieldDescriptor(
+            'name',
+            'deliveryStatus',
+            self::$productDeliveryStatusTranslationEntityName,
+            'product.deliveryStatus',
+            array(
+                self::$productDeliveryStatusEntityName => new DoctrineJoinDescriptor(
+                    self::$productDeliveryStatusEntityName,
+                    static::$productEntityName . '.deliveryStatus'
+                ),
+                self::$productDeliveryStatusTranslationEntityName => new DoctrineJoinDescriptor(
+                    self::$productDeliveryStatusTranslationEntityName,
+                    self::$productDeliveryStatusEntityName . '.translations',
+                    self::$productDeliveryStatusTranslationEntityName . '.locale = \'' . $locale . '\''
+                ),
+            ),
+            true,
             false,
             'string'
         );
@@ -1250,7 +1272,7 @@ class ProductManager implements ProductManagerInterface
             $deliveryStatus = $this->deliveryStatusRepository->find($deliveryStatusId);
             if (!$deliveryStatus) {
                 throw new ProductDependencyNotFoundException(
-                    self::$productDeliveryStatusClassEntityName,
+                    self::$productDeliveryStatusEntityName,
                     $deliveryStatusId
                 );
             }
