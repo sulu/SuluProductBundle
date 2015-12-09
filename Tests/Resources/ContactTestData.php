@@ -173,7 +173,6 @@ class ContactTestData
         $account = $this->accountFactory->createEntity();
         $account->setName('Account ' . $this->accountCount);
         $account->setType($accountType);
-        $account->setDisabled(0);
         $account->setPlaceOfJurisdiction('Feldkirch');
 
         $accountEmail = $this->cloneEntity($this->email);
@@ -203,7 +202,6 @@ class ContactTestData
         $contact->setPosition('CEO');
         $contact->setFormOfAddress(1);
         $contact->setSalutation("Sehr geehrter Herr Dr Mustermann");
-        $contact->setDisabled(0);
 
         $address = $this->createAddress();
         $this->getContactManager()->addAddress($contact, $address, true);
