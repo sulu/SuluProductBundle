@@ -28,13 +28,7 @@ class SpecialPriceRepository extends EntityRepository
     public function findAllCurrent($limit = 1000, $page = 1)
     {
         try {
-            $qb = $this->createQueryBuilder('specialPrice')
-                ->leftJoin('specialPrice.product', 'product')
-                ->leftJoin('product.status', 'productStatus')
-                ->where(':now BETWEEN specialPrice.startDate AND specialPrice.endDate')
-                ->andWhere('productStatus.id = :productStatus')
-                ->setParameter('productStatus', Status::ACTIVE)
-                ->setParameter('now', new \DateTime());
+            $qb = $this->getValidSpecialPriceQuery();
 
             $adapter = new DoctrineORMAdapter($qb);
             $pagerfanta = new Pagerfanta($adapter);
@@ -45,5 +39,47 @@ class SpecialPriceRepository extends EntityRepository
         } catch (NoResultException $exc) {
             return null;
         }
+    }
+
+    /**
+     * Returns the ids of a specific amount of special prices
+     *
+     * @param int $limit
+     *
+     * @return array|null
+     */
+    public function findAllCurrentIds($limit = 1000)
+    {
+        try {
+            $queryBuilder = $this->getValidSpecialPriceQuery()
+                ->select('specialPrice.id')
+                ->addOrderBy('specialPrice.id', 'DESC');
+            $query = $queryBuilder->getQuery()
+                ->useResultCache(true, 3600);
+
+            $ids = $query->getScalarResult();
+
+            return array_column($ids, 'id');
+        } catch (NoResultException $exc) {
+            return null;
+        }
+    }
+
+    /**
+     * Returns special price querybuilder
+     *
+     * @return \Doctrine\ORM\QueryBuilder
+     */
+    protected function getValidSpecialPriceQuery()
+    {
+        $qb = $this->createQueryBuilder('specialPrice')
+            ->leftJoin('specialPrice.product', 'product')
+            ->leftJoin('product.status', 'productStatus')
+            ->where(':now BETWEEN specialPrice.startDate AND specialPrice.endDate')
+            ->andWhere('productStatus.id = :productStatus')
+            ->setParameter('productStatus', Status::ACTIVE)
+            ->setParameter('now', new \DateTime());
+
+        return $qb;
     }
 }
