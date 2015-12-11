@@ -792,6 +792,12 @@ class ProductManager implements ProductManagerInterface
             return [];
         }
 
+        // check if number of desired results does not exceed number of special prices
+        $numberOfIds = count($specialPriceIds);
+        if ($numberResults < 0 || $numberResults > $numberOfIds) {
+            $numberResults = $numberOfIds;
+        }
+
         // get random ids
         $randomIds = array_map(
             function($key) use ($specialPriceIds) {
