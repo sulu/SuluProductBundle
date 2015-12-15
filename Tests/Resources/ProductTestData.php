@@ -5,56 +5,65 @@ namespace Sulu\Bundle\ProductBundle\Tests\Resources;
 use DateTime;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\DependencyInjection\Container;
-use Sulu\Bundle\ProductBundle\DataFixtures\ORM\Currencies\LoadCurrencies;
-use Sulu\Bundle\ProductBundle\Entity\Currency;
-use Sulu\Bundle\ProductBundle\Entity\CurrencyRepository;
-use Sulu\Bundle\ProductBundle\Entity\ProductPrice;
 use Sulu\Bundle\CategoryBundle\Entity\Category;
+use Sulu\Bundle\CategoryBundle\Entity\CategoryTranslation;
+use Sulu\Bundle\ProductBundle\DataFixtures\ORM\Currencies\LoadCurrencies;
 use Sulu\Bundle\ProductBundle\DataFixtures\ORM\ProductStatuses\LoadProductStatuses;
 use Sulu\Bundle\ProductBundle\DataFixtures\ORM\ProductTypes\LoadProductTypes;
 use Sulu\Bundle\ProductBundle\DataFixtures\ORM\Units\LoadUnits;
-use Sulu\Bundle\ProductBundle\Entity\StatusRepository;
-use Sulu\Bundle\ProductBundle\Entity\TypeRepository;
-use Sulu\Bundle\ProductBundle\Entity\ProductTranslation;
+use Sulu\Bundle\ProductBundle\Entity\Currency;
+use Sulu\Bundle\ProductBundle\Entity\CurrencyRepository;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
+use Sulu\Bundle\ProductBundle\Entity\ProductPrice;
+use Sulu\Bundle\ProductBundle\Entity\ProductTranslation;
 use Sulu\Bundle\ProductBundle\Entity\Status;
+use Sulu\Bundle\ProductBundle\Entity\StatusRepository;
 use Sulu\Bundle\ProductBundle\Entity\Type;
+use Sulu\Bundle\ProductBundle\Entity\TypeRepository;
 use Sulu\Bundle\ProductBundle\Entity\Unit;
+use Sulu\Bundle\ProductBundle\Entity\UnitRepository;
 use Sulu\Bundle\ProductBundle\Product\ProductFactoryInterface;
 
 class ProductTestData
 {
     use TestDataTrait;
 
+    const LOCALE = 'de';
+
     /**
      * @var Unit
      */
-    public $orderUnit;
+    private $orderUnit;
 
     /**
      * @var Type
      */
-    public $productType;
+    private $productType;
 
     /**
      * @var Status
      */
-    public $productStatus;
+    private $productStatus;
 
     /**
      * @var Status
      */
-    public $productStatusChanged;
+    private $productStatusChanged;
 
     /**
      * @var ProductInterface
      */
-    public $product;
+    private $product;
 
     /**
      * @var ProductInterface
      */
-    public $product2;
+    private $product2;
+
+    /**
+     * @var Category
+     */
+    private $category;
 
     /**
      * @var ObjectManager
@@ -80,11 +89,6 @@ class ProductTestData
      * @var ContactTestData
      */
     private $contactTestData;
-
-    /**
-     * @var Category
-     */
-    private $category;
 
     /**
      * @var int
@@ -122,15 +126,15 @@ class ProductTestData
 
         $this->eurCurrency = $this->getCurrencyRepository()->findByCode('EUR');
 
-        $unitFixtures =  new LoadUnits();
+        $unitFixtures = new LoadUnits();
         $unitFixtures->load($this->entityManager);
         $this->orderUnit = $this->getProductUnitRepository()->find(1);
 
-        $typeFixtures =  new LoadProductTypes();
+        $typeFixtures = new LoadProductTypes();
         $typeFixtures->load($this->entityManager);
         $this->productType = $this->getProductTypeRepository()->find(1);
 
-        $statusFixtures =  new LoadProductStatuses();
+        $statusFixtures = new LoadProductStatuses();
         $statusFixtures->load($this->entityManager);
         $this->productStatus = $this->getProductStatusRepository()->find(Status::ACTIVE);
         $this->productStatusChanged = $this->getProductStatusRepository()->find(Status::CHANGED);
@@ -195,7 +199,13 @@ class ProductTestData
         $this->categoryCount++;
         $category = new Category();
         $category->setKey('test-category ' . $this->categoryCount);
-        $category->setDefaultLocale('de');
+        $category->setDefaultLocale(self::LOCALE);
+
+        $translation = new CategoryTranslation();
+        $translation->setLocale(self::LOCALE);
+        $translation->setCategory($category);
+        $translation->setTranslation('category-' . $this->categoryCount);
+        $category->addTranslation($translation);
 
         $this->entityManager->persist($category);
 
@@ -203,11 +213,67 @@ class ProductTestData
     }
 
     /**
-     * @return StatusRepository
+     * @return Unit
+     */
+    public function getOrderUnit()
+    {
+        return $this->orderUnit;
+    }
+
+    /**
+     * @return Type
+     */
+    public function getProductType()
+    {
+        return $this->productType;
+    }
+
+    /**
+     * @return Status
+     */
+    public function getProductStatus()
+    {
+        return $this->productStatus;
+    }
+
+    /**
+     * @return Status
+     */
+    public function getProductStatusChanged()
+    {
+        return $this->productStatusChanged;
+    }
+
+    /**
+     * @return ProductInterface
+     */
+    public function getProduct()
+    {
+        return $this->product;
+    }
+
+    /**
+     * @return ProductInterface
+     */
+    public function getProduct2()
+    {
+        return $this->product2;
+    }
+
+    /**
+     * @return Category
+     */
+    public function getCategory()
+    {
+        return $this->category;
+    }
+
+    /**
+     * @return UnitRepository
      */
     private function getProductUnitRepository()
     {
-       return $this->container->get('sulu_product.unit_repository');
+        return $this->container->get('sulu_product.unit_repository');
     }
 
     /**
@@ -215,7 +281,7 @@ class ProductTestData
      */
     private function getProductStatusRepository()
     {
-       return $this->container->get('sulu_product.status_repository');
+        return $this->container->get('sulu_product.status_repository');
     }
 
     /**
@@ -223,7 +289,7 @@ class ProductTestData
      */
     private function getProductTypeRepository()
     {
-       return $this->container->get('sulu_product.type_repository');
+        return $this->container->get('sulu_product.type_repository');
     }
 
     /**
