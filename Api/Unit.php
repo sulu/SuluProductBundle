@@ -61,7 +61,7 @@ class Unit extends ApiWrapper
         if (!$this->entity->getTranslation($this->locale)) {
             return null;
         }
-        
+
         return $this->entity->getTranslation($this->locale)->getName();
     }
 }

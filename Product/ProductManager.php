@@ -775,6 +775,54 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
+     * Finds and returns a list of products for which a special price is
+     * currently active.
+     *
+     * @param string $locale
+     * @param int $numberResults
+     *
+     * @return array
+     */
+    public function findRandomOfferedProducts($locale, $numberResults)
+    {
+        // get ids of special prices
+        $specialPriceIds = $this->specialPriceRepository->findAllCurrentIds();
+
+        if (!$specialPriceIds) {
+            return [];
+        }
+
+        // check if number of desired results does not exceed number of special prices
+        $numberOfIds = count($specialPriceIds);
+        if ($numberResults < 0 || $numberResults > $numberOfIds) {
+            $numberResults = $numberOfIds;
+        }
+
+        // get random ids
+        $randomIds = array_map(
+            function($key) use ($specialPriceIds) {
+                return $specialPriceIds[$key];
+            },
+            array_rand($specialPriceIds, $numberResults)
+        );
+
+        // get special prices
+        $specialPrices = $this->specialPriceRepository->findById($randomIds);
+
+        // shuffle prices
+        shuffle($specialPrices);
+
+        $products = [];
+        foreach ($specialPrices as $specialPrice) {
+            $product = $this->productFactory->createApiEntity($specialPrice->getProduct(), $locale);
+            $this->createProductMedia($product, $locale);
+            $products[] = $product;
+        }
+
+        return $products;
+    }
+
+    /**
      * Returns all simple products in the given locale for the given number.
      *
      * @param string $locale The locale of the product to load
