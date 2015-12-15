@@ -5,11 +5,12 @@ namespace Sulu\Bundle\ProductBundle\Tests\Resources;
 use DateTime;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\DependencyInjection\Container;
+use Sulu\Bundle\CategoryBundle\Entity\Category;
+use Sulu\Bundle\CategoryBundle\Entity\CategoryTranslation;
 use Sulu\Bundle\ProductBundle\DataFixtures\ORM\Currencies\LoadCurrencies;
 use Sulu\Bundle\ProductBundle\Entity\Currency;
 use Sulu\Bundle\ProductBundle\Entity\CurrencyRepository;
 use Sulu\Bundle\ProductBundle\Entity\ProductPrice;
-use Sulu\Bundle\CategoryBundle\Entity\Category;
 use Sulu\Bundle\ProductBundle\DataFixtures\ORM\ProductStatuses\LoadProductStatuses;
 use Sulu\Bundle\ProductBundle\DataFixtures\ORM\ProductTypes\LoadProductTypes;
 use Sulu\Bundle\ProductBundle\DataFixtures\ORM\Units\LoadUnits;
@@ -25,6 +26,8 @@ use Sulu\Bundle\ProductBundle\Product\ProductFactoryInterface;
 class ProductTestData
 {
     use TestDataTrait;
+
+    const LOCALE = 'de';
 
     /**
      * @var Unit
@@ -84,7 +87,7 @@ class ProductTestData
     /**
      * @var Category
      */
-    private $category;
+    public $category;
 
     /**
      * @var int
@@ -195,7 +198,14 @@ class ProductTestData
         $this->categoryCount++;
         $category = new Category();
         $category->setKey('test-category ' . $this->categoryCount);
-        $category->setDefaultLocale('de');
+        $category->setDefaultLocale(self::LOCALE);
+
+        $translation = new CategoryTranslation();
+        $translation->setLocale(self::LOCALE);
+        $translation->setCategory($category);
+        $translation->setTranslation('category-'. $this->categoryCount);
+        $category->addTranslation($translation);
+
 
         $this->entityManager->persist($category);
 
