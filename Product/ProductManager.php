@@ -1572,6 +1572,7 @@ class ProductManager implements ProductManagerInterface
         $publishedProductEntity->setMinimumOrderQuantity($productEntity->getMinimumOrderQuantity());
         $publishedProductEntity->setRecommendedOrderQuantity($productEntity->getRecommendedOrderQuantity());
         $publishedProductEntity->setChanger($productEntity->getChanger());
+        $publishedProductEntity->setSearchTerms($productEntity->getSearchTerms());
         $publishedProductEntity->setTaxClass($productEntity->getTaxClass());
 
         // Move children
