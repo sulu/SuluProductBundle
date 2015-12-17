@@ -4,7 +4,6 @@ namespace Sulu\Bundle\ProductBundle\Tests\Resources;
 
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\DependencyInjection\Container;
-use Sulu\Bundle\ContactExtensionBundle\Entity\Account;
 use Sulu\Bundle\ContactBundle\Contact\AccountManager;
 use Sulu\Bundle\ContactBundle\Contact\AccountFactoryInterface;
 use Sulu\Bundle\ContactBundle\Contact\ContactManagerInterface;
@@ -101,15 +100,24 @@ class ContactTestData
     private $contactCount = 0;
 
     /**
+     * @var bool
+     */
+    private $useContactExtension;
+
+    /**
      * @param Container $container
+     * @param bool $useContactExtension
      */
     public function __construct(
-        Container $container
+        Container $container,
+        $useContactExtension = false
     ) {
         $this->container = $container;
 
         $this->entityManager = $container->get('doctrine.orm.entity_manager');
         $this->accountFactory = $this->container->get('sulu_contact.account_factory');
+
+        $this->useContactExtension = $useContactExtension;
 
         $this->createFixtures();
     }
@@ -147,10 +155,16 @@ class ContactTestData
         // create accounts
         $this->account = $this->createAccount();
 
-        $this->accountCustomer = $this->createAccount(Account::TYPE_CUSTOMER);
-        $this->accountCustomer2 = $this->createAccount(Account::TYPE_CUSTOMER);
-        $this->accountSupplier = $this->createAccount(Account::TYPE_SUPPLIER);
-        $this->accountSupplier2 = $this->createAccount(Account::TYPE_SUPPLIER);
+        $customerType = 1;
+        $supplierType = 2;
+        if ($this->useContactExtension) {
+            $customerType = \Sulu\Bundle\ContactExtensionBundle\Entity\Account::TYPE_CUSTOMER;
+            $supplierType = \Sulu\Bundle\ContactExtensionBundle\Entity\Account::TYPE_SUPPLIER;
+        }
+        $this->accountCustomer = $this->createAccount($customerType);
+        $this->accountCustomer2 = $this->createAccount($customerType);
+        $this->accountSupplier = $this->createAccount($supplierType);
+        $this->accountSupplier2 = $this->createAccount($supplierType);
 
         $this->entityManager->persist($addressType);
         $this->entityManager->persist($country);
@@ -163,12 +177,9 @@ class ContactTestData
      *
      * @return AccountInterface
      */
-    public function createAccount($accountType = null)
+    public function createAccount($accountType = 0)
     {
         $this->accountCount++;
-        if (!$accountType) {
-            $accountType = Account::TYPE_BASIC;
-        }
 
         $account = $this->accountFactory->createEntity();
         $account->setName('Account ' . $this->accountCount);
