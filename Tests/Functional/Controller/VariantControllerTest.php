@@ -92,7 +92,7 @@ class VariantControllerTest extends SuluTestCase
         $this->em->persist($this->activeStatus);
         $this->em->persist($activeStatusTranslation);
 
-        $this->product = new Product(new ProductEntity(), 'en');
+        $this->product = $this->getProductFactory()->createApiEntity($this->getProductFactory()->createEntity(), 'en');
         $this->product->setName('Product with Variants');
         $this->product->setNumber('1');
         $this->product->setStatus($this->activeStatus);
@@ -100,7 +100,7 @@ class VariantControllerTest extends SuluTestCase
 
         $this->em->persist($this->product->getEntity());
 
-        $productVariant1 = new Product(new ProductEntity(), 'en');
+        $productVariant1 = $this->getProductFactory()->createApiEntity($this->getProductFactory()->createEntity(), 'en');
         $productVariant1->setName('Productvariant');
         $productVariant1->setNumber('2');
         $productVariant1->setStatus($this->activeStatus);
@@ -109,7 +109,7 @@ class VariantControllerTest extends SuluTestCase
         $this->em->persist($productVariant1->getEntity());
         $this->productVariants[] = $productVariant1;
 
-        $productVariant2 = new Product(new ProductEntity(), 'en');
+        $productVariant2 = $this->getProductFactory()->createApiEntity($this->getProductFactory()->createEntity(), 'en');
         $productVariant2->setName('Another Productvariant');
         $productVariant2->setNumber('3');
         $productVariant2->setStatus($this->activeStatus);
@@ -118,7 +118,7 @@ class VariantControllerTest extends SuluTestCase
         $this->em->persist($productVariant2->getEntity());
         $this->productVariants[] = $productVariant2;
 
-        $anotherProduct = new Product(new ProductEntity(), 'en');
+        $anotherProduct = $this->getProductFactory()->createApiEntity($this->getProductFactory()->createEntity(), 'en');
         $anotherProduct->setName('Another product');
         $anotherProduct->setNumber('4');
         $anotherProduct->setStatus($this->activeStatus);
@@ -207,5 +207,13 @@ class VariantControllerTest extends SuluTestCase
             '/api/products/' . $this->product->getId() . '/variants/' . $this->productVariants[1]->getId()
         );
         $this->assertEquals(404, $this->client->getResponse()->getStatusCode());
+    }
+
+    /**
+     * @return \Sulu\Bundle\ProductBundle\Product\ProductFactoryInterface
+     */
+    private function getProductFactory()
+    {
+        return $this->container->get('sulu_product.product_factory');
     }
 }
