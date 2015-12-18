@@ -453,7 +453,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the parent of the product
+     * Returns the parent of the product.
      *
      * @VirtualProperty
      * @SerializedName("parent")
@@ -465,10 +465,10 @@ class Product extends ApiWrapper implements ApiProductInterface
         $parent = $this->entity->getParent();
 
         if ($parent) {
-            return new static($parent, $this->locale);
-        } else {
-            return null;
+            return new static($parent, $this->locale, $this->priceFormatter, $this->accountManager);
         }
+
+        return null;
     }
 
     /**

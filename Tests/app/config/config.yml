@@ -7,3 +7,7 @@ doctrine:
         dql:
             string_functions:
                 group_concat:   Oro\ORM\Query\AST\Functions\String\GroupConcat
+
+parameters:
+    mailer_from: test@test.com
+    website_locale: en
