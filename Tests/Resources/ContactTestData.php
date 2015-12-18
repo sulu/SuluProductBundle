@@ -19,6 +19,10 @@ class ContactTestData
 {
     use TestDataTrait;
 
+    const BASIC_TYPE = 0;
+    const CUSTOMER_TYPE = 2;
+    const SUPPLIER_TYPE = 3;
+
     /**
      * @var Contact
      */
@@ -100,24 +104,15 @@ class ContactTestData
     private $contactCount = 0;
 
     /**
-     * @var bool
-     */
-    private $useContactExtension;
-
-    /**
      * @param Container $container
-     * @param bool $useContactExtension
      */
     public function __construct(
-        Container $container,
-        $useContactExtension = false
+        Container $container
     ) {
         $this->container = $container;
 
         $this->entityManager = $container->get('doctrine.orm.entity_manager');
         $this->accountFactory = $this->container->get('sulu_contact.account_factory');
-
-        $this->useContactExtension = $useContactExtension;
 
         $this->createFixtures();
     }
@@ -155,16 +150,10 @@ class ContactTestData
         // create accounts
         $this->account = $this->createAccount();
 
-        $customerType = 1;
-        $supplierType = 2;
-        if ($this->useContactExtension) {
-            $customerType = \Sulu\Bundle\ContactExtensionBundle\Entity\Account::TYPE_CUSTOMER;
-            $supplierType = \Sulu\Bundle\ContactExtensionBundle\Entity\Account::TYPE_SUPPLIER;
-        }
-        $this->accountCustomer = $this->createAccount($customerType);
-        $this->accountCustomer2 = $this->createAccount($customerType);
-        $this->accountSupplier = $this->createAccount($supplierType);
-        $this->accountSupplier2 = $this->createAccount($supplierType);
+        $this->accountCustomer = $this->createAccount(self::CUSTOMER_TYPE);
+        $this->accountCustomer2 = $this->createAccount(self::CUSTOMER_TYPE);
+        $this->accountSupplier = $this->createAccount(self::SUPPLIER_TYPE);
+        $this->accountSupplier2 = $this->createAccount(self::SUPPLIER_TYPE);
 
         $this->entityManager->persist($addressType);
         $this->entityManager->persist($country);
@@ -175,16 +164,23 @@ class ContactTestData
     /**
      * Creates a new Account.
      *
+     * @param int $accountType
+     *
+     * @throws \Exception
+     *
      * @return AccountInterface
      */
-    public function createAccount($accountType = 0)
+    public function createAccount($accountType = self::BASIC_TYPE)
     {
         $this->accountCount++;
 
         $account = $this->accountFactory->createEntity();
         $account->setName('Account ' . $this->accountCount);
-        $account->setType($accountType);
         $account->setPlaceOfJurisdiction('Feldkirch');
+
+        if (method_exists($account, 'setType')) {
+            $account->setType($accountType);
+        }
 
         $accountEmail = $this->cloneEntity($this->email);
         $accountEmail->setEmail('company@company.com');
