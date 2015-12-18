@@ -14,7 +14,7 @@ use Sulu\Bundle\ContactBundle\Contact\AccountManager;
 use Sulu\Bundle\ProductBundle\Entity\Product;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\ProductBundle\Api\Product as ApiProduct;
-use Sulu\Bundle\Sales\CoreBundle\Pricing\PriceFormatter;
+use Sulu\Bundle\PricingBundle\Pricing\PriceFormatter;
 
 class ProductFactory implements ProductFactoryInterface
 {

@@ -4,7 +4,6 @@ namespace Sulu\Bundle\ProductBundle\Tests\Resources;
 
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\DependencyInjection\Container;
-use Sulu\Bundle\ContactExtensionBundle\Entity\Account;
 use Sulu\Bundle\ContactBundle\Contact\AccountManager;
 use Sulu\Bundle\ContactBundle\Contact\AccountFactoryInterface;
 use Sulu\Bundle\ContactBundle\Contact\ContactManagerInterface;
@@ -19,6 +18,10 @@ use Sulu\Bundle\ContactBundle\Entity\EmailType;
 class ContactTestData
 {
     use TestDataTrait;
+
+    const BASIC_TYPE = 0;
+    const CUSTOMER_TYPE = 2;
+    const SUPPLIER_TYPE = 3;
 
     /**
      * @var Contact
@@ -147,10 +150,10 @@ class ContactTestData
         // create accounts
         $this->account = $this->createAccount();
 
-        $this->accountCustomer = $this->createAccount(Account::TYPE_CUSTOMER);
-        $this->accountCustomer2 = $this->createAccount(Account::TYPE_CUSTOMER);
-        $this->accountSupplier = $this->createAccount(Account::TYPE_SUPPLIER);
-        $this->accountSupplier2 = $this->createAccount(Account::TYPE_SUPPLIER);
+        $this->accountCustomer = $this->createAccount(self::CUSTOMER_TYPE);
+        $this->accountCustomer2 = $this->createAccount(self::CUSTOMER_TYPE);
+        $this->accountSupplier = $this->createAccount(self::SUPPLIER_TYPE);
+        $this->accountSupplier2 = $this->createAccount(self::SUPPLIER_TYPE);
 
         $this->entityManager->persist($addressType);
         $this->entityManager->persist($country);
@@ -161,19 +164,23 @@ class ContactTestData
     /**
      * Creates a new Account.
      *
+     * @param int $accountType
+     *
+     * @throws \Exception
+     *
      * @return AccountInterface
      */
-    public function createAccount($accountType = null)
+    public function createAccount($accountType = self::BASIC_TYPE)
     {
         $this->accountCount++;
-        if (!$accountType) {
-            $accountType = Account::TYPE_BASIC;
-        }
 
         $account = $this->accountFactory->createEntity();
         $account->setName('Account ' . $this->accountCount);
-        $account->setType($accountType);
         $account->setPlaceOfJurisdiction('Feldkirch');
+
+        if (method_exists($account, 'setType')) {
+            $account->setType($accountType);
+        }
 
         $accountEmail = $this->cloneEntity($this->email);
         $accountEmail->setEmail('company@company.com');
