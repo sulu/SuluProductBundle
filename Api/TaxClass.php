@@ -10,7 +10,7 @@
 
 namespace Sulu\Bundle\ProductBundle\Api;
 
-use Sulu\Bundle\ProductBundle\Entity\TaxClass as Entity;
+use Sulu\Bundle\ProductBundle\Entity\TaxClass as TaxClassEntity;
 use JMS\Serializer\Annotation\VirtualProperty;
 use JMS\Serializer\Annotation\SerializedName;
 use JMS\Serializer\Annotation\ExclusionPolicy;
@@ -18,22 +18,21 @@ use Sulu\Bundle\ProductBundle\Entity\TaxClassTranslation;
 use Sulu\Component\Rest\ApiWrapper;
 
 /**
- * The TaxClass class which will be exported to the API
- *
- * @package Sulu\Bundle\ProductBundle\Api
  * @ExclusionPolicy("all")
  */
 class TaxClass extends ApiWrapper
 {
+    /**
+     * @var int
+     */
     private $countryId;
 
     /**
-     * @param Entity $taxClass
+     * @param TaxClassEntity $taxClass
      * @param string $locale
      * @param int|null $countryId
-     * @internal param Entity $type
      */
-    public function __construct(Entity $taxClass, $locale, $countryId = null)
+    public function __construct(TaxClassEntity $taxClass, $locale, $countryId = null)
     {
         $this->entity = $taxClass;
         $this->locale = $locale;
@@ -41,10 +40,10 @@ class TaxClass extends ApiWrapper
     }
 
     /**
-     * The id of the taxClass
-     * @return int The id of the taxClass
      * @VirtualProperty
      * @SerializedName("id")
+     *
+     * @return int
      */
     public function getId()
     {
@@ -52,10 +51,10 @@ class TaxClass extends ApiWrapper
     }
 
     /**
-     * The name of the taxClass
-     * @return int The name of the taxClass
      * @VirtualProperty
      * @SerializedName("name")
+     *
+     * @return int
      */
     public function getName()
     {
@@ -63,8 +62,8 @@ class TaxClass extends ApiWrapper
     }
 
     /**
-     * Returns the translation for the given locale
      * @param string $locale
+     *
      * @return TaxClassTranslation
      */
     public function getTranslation($locale)
@@ -82,17 +81,17 @@ class TaxClass extends ApiWrapper
     }
 
     /**
-     * Returns the translation for the given locale
-     * @return TaxClassTranslation
      * @VirtualProperty
      * @SerializedName("countryTaxes")
+     *
+     * @return TaxClassTranslation
      */
     public function getCountryTaxes()
     {
         $taxes = null;
         if (!$this->entity->getCountryTaxes()->isEmpty()) {
             foreach ($this->entity->getCountryTaxes() as $countryTax) {
-                // if countryId is defined, show only tax of this country
+                // If countryId is defined, show only tax of this country
                 if (!$this->countryId ||
                     ($this->countryId && $countryTax->getCountry()->getId() == $countryTax)
                 ) {
@@ -104,4 +103,4 @@ class TaxClass extends ApiWrapper
 
         return $taxes;
     }
-} 
+}

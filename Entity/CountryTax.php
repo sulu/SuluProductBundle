@@ -3,38 +3,53 @@
 namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Sulu\Bundle\ContactBundle\Entity\Country;
+use Sulu\Bundle\ProductBundle\Entity\TaxClass;
 
-/**
- * CountryTax
- */
 class CountryTax
 {
-    /**
-     * @var float
-     */
-    private $tax;
-
     /**
      * @var integer
      */
     private $id;
 
     /**
-     * @var \Sulu\Bundle\ProductBundle\Entity\TaxClass
+     * @var float
+     */
+    private $tax;
+
+    /**
+     * @var TaxClass
      */
     private $taxClass;
 
     /**
-     * @var \Sulu\Bundle\ContactBundle\Entity\Country
+     * @var Country
      */
     private $country;
 
+    /**
+     * @param int $id
+     *
+     * @return self
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+    }
 
     /**
-     * Set tax
-     *
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
      * @param float $tax
-     * @return CountryTax
+     *
+     * @return self
      */
     public function setTax($tax)
     {
@@ -44,9 +59,7 @@ class CountryTax
     }
 
     /**
-     * Get tax
-     *
-     * @return float 
+     * @return float
      */
     public function getTax()
     {
@@ -54,33 +67,11 @@ class CountryTax
     }
 
     /**
-     * Get id
+     * @param TaxClass $taxClass
      *
-     * @return integer 
+     * @return self
      */
-    public function getId()
-    {
-        return $this->id;
-    }
-
-    /**
-     * Set id
-     *
-     * @param int $id
-     * @return CountryTax
-     */
-    public function setId($id)
-    {
-        $this->id = $id;
-    }
-
-    /**
-     * Set taxClass
-     *
-     * @param \Sulu\Bundle\ProductBundle\Entity\TaxClass $taxClass
-     * @return CountryTax
-     */
-    public function setTaxClass(\Sulu\Bundle\ProductBundle\Entity\TaxClass $taxClass = null)
+    public function setTaxClass(TaxClass $taxClass = null)
     {
         $this->taxClass = $taxClass;
 
@@ -88,9 +79,7 @@ class CountryTax
     }
 
     /**
-     * Get taxClass
-     *
-     * @return \Sulu\Bundle\ProductBundle\Entity\TaxClass 
+     * @return TaxClass
      */
     public function getTaxClass()
     {
@@ -98,12 +87,11 @@ class CountryTax
     }
 
     /**
-     * Set country
+     * @param Country $country
      *
-     * @param \Sulu\Bundle\ContactBundle\Entity\Country $country
-     * @return CountryTax
+     * @return self
      */
-    public function setCountry(\Sulu\Bundle\ContactBundle\Entity\Country $country = null)
+    public function setCountry(Country $country = null)
     {
         $this->country = $country;
 
@@ -111,9 +99,7 @@ class CountryTax
     }
 
     /**
-     * Get country
-     *
-     * @return \Sulu\Bundle\ContactBundle\Entity\Country 
+     * @return Country
      */
     public function getCountry()
     {

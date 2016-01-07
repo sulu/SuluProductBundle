@@ -10,11 +10,13 @@
 
 namespace Sulu\Bundle\ProductBundle\Api;
 
-use Sulu\Bundle\ProductBundle\Entity\CountryTax as Entity;
 use JMS\Serializer\Annotation\VirtualProperty;
 use JMS\Serializer\Annotation\SerializedName;
 use JMS\Serializer\Annotation\ExclusionPolicy;
+use Sulu\Bundle\ProductBundle\Entity\CountryTax as CountryTaxEntity;
+use Sulu\Bundle\ProductBundle\Api\TaxClass;
 use Sulu\Bundle\ProductBundle\Entity\TaxClassTranslation;
+use Sulu\Bundle\ContactBundle\Entity\Country;
 use Sulu\Component\Rest\ApiWrapper;
 
 /**
@@ -26,18 +28,16 @@ use Sulu\Component\Rest\ApiWrapper;
 class CountryTax extends ApiWrapper
 {
     /**
-     * @param Entity $entity
+     * @param CountryTaxEntity $entity
      * @param string $locale
      */
-    public function __construct(Entity $entity, $locale)
+    public function __construct(CountryTaxEntity $entity, $locale)
     {
         $this->entity = $entity;
         $this->locale = $locale;
     }
 
     /**
-     * The id of the CountryTax
-     * @return int
      * @VirtualProperty
      * @SerializedName("id")
      */
@@ -47,10 +47,10 @@ class CountryTax extends ApiWrapper
     }
 
     /**
-     * Country of the CountryTax
-     * @return string
      * @VirtualProperty
      * @SerializedName("country")
+     *
+     * @return Country
      */
     public function getCountry()
     {
@@ -58,8 +58,7 @@ class CountryTax extends ApiWrapper
     }
 
     /**
-     * Country of the CountryTax
-     * @return string
+     * @return TaxClass
      */
     public function getTaxClass()
     {
@@ -67,10 +66,10 @@ class CountryTax extends ApiWrapper
     }
 
     /**
-     * Get tax
-     * @return float
      * @VirtualProperty
      * @SerializedName("tax")
+     *
+     * @return float
      */
     public function getTax()
     {
