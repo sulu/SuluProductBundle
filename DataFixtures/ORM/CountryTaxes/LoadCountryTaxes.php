@@ -99,7 +99,6 @@ class LoadCountryTaxes implements FixtureInterface, OrderedFixtureInterface
                     throw $e;
                 }
             }
-
         }
         $manager->flush();
     }
