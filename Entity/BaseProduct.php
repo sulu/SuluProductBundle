@@ -2,9 +2,11 @@
 
 namespace Sulu\Bundle\ProductBundle\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Sulu\Bundle\MediaBundle\Entity\Media;
 use Sulu\Component\Security\Authentication\UserInterface;
+use Sulu\Bundle\ContactBundle\Entity\AccountInterface;
 
 /**
  * BaseProduct
@@ -19,173 +21,198 @@ abstract class BaseProduct implements ProductInterface
     /**
      * @var string
      */
-    private $number;
+    protected $number;
 
     /**
      * @var integer
      */
-    private $deliveryTime;
+    protected $deliveryTime;
 
     /**
      * @var string
      */
-    private $globalTradeItemNumber;
+    protected $globalTradeItemNumber;
 
     /**
      * @var string
      */
-    private $internalItemNumber;
+    protected $internalItemNumber;
 
     /**
-     * @var isDeprecated
+     * @var bool
      */
-    private $isDeprecated = false;
-
-    /**
-     * @var string
-     */
-    private $manufacturer;
+    protected $isDeprecated = false;
 
     /**
      * @var string
      */
-    private $cost;
+    protected $manufacturer;
+
+    /**
+     * @var float
+     */
+    protected $cost;
 
     /**
      * @var string
      */
-    private $priceInfo;
+    protected $priceInfo;
 
     /**
      * @var \DateTime
      */
-    private $created;
+    protected $created;
 
     /**
      * @var \DateTime
      */
-    private $changed;
+    protected $changed;
 
     /**
      * @var integer
      */
-    private $id;
+    protected $id;
+
+    /**
+     * @var string
+     */
+    protected $searchTerms;
 
     /**
      * @var \Sulu\Bundle\ContactBundle\Entity\Country
      */
-    private $manufacturerCountry;
+    protected $manufacturerCountry;
 
     /**
      * @var \Sulu\Bundle\ProductBundle\Entity\Type
      */
-    private $type;
+    protected $type;
 
     /**
      * @var \Sulu\Bundle\ProductBundle\Entity\TaxClass
      */
-    private $taxClass;
+    protected $taxClass;
 
     /**
      * @var \Sulu\Bundle\ProductBundle\Entity\AttributeSet
      */
-    private $attributeSet;
+    protected $attributeSet;
 
     /**
      * @var \Sulu\Bundle\ProductBundle\Entity\Status
      */
-    private $status;
+    protected $status;
 
     /**
      * @var \Sulu\Bundle\ProductBundle\Entity\DeliveryStatus
      */
-    private $deliveryStatus;
+    protected $deliveryStatus;
 
     /**
-     * @var \Sulu\Bundle\ContactBundle\Entity\Account
+     * @var AccountInterface
      */
-    private $supplier;
+    protected $supplier;
 
     /**
      * @var \Sulu\Bundle\ProductBundle\Entity\ProductInterface
      */
-    private $parent;
+    protected $parent;
 
     /**
      * @var \Doctrine\Common\Collections\Collection
      */
-    private $sets;
+    protected $sets;
 
     /**
      * @var \Doctrine\Common\Collections\Collection
      */
-    private $relations;
+    protected $relations;
 
     /**
      * @var \Doctrine\Common\Collections\Collection
      */
-    private $upsells;
+    protected $upsells;
 
     /**
      * @var \Doctrine\Common\Collections\Collection
      */
-    private $crosssells;
+    protected $crosssells;
 
     /**
      * @var \Doctrine\Common\Collections\Collection
      */
-    private $categories;
+    protected $categories;
 
     /**
      * @var \Doctrine\Common\Collections\Collection
      */
-    private $media;
+    protected $media;
 
     /**
      * @var \Sulu\Bundle\SecurityBundle\Entity\User
      */
-    private $changer;
+    protected $changer;
 
     /**
      * @var \Sulu\Bundle\SecurityBundle\Entity\User
      */
-    private $creator;
+    protected $creator;
 
     /**
      * @var float
      */
-    private $minimumOrderQuantity;
+    protected $minimumOrderQuantity;
 
     /**
      * @var float
      */
-    private $recommendedOrderQuantity;
+    protected $recommendedOrderQuantity;
 
     /**
      * @var float
      */
-    private $orderContentRatio;
+    protected $orderContentRatio;
 
     /**
      * @var Unit
      */
-    private $contentUnit;
+    protected $contentUnit;
 
     /**
      * @var Unit
      */
-    private $orderUnit;
+    protected $orderUnit;
 
+    /**
+     * @var boolean
+     */
+    protected $areGrossPrices = false;
 
     /**
      * Constructor
      */
     public function __construct()
     {
-        $this->sets = new \Doctrine\Common\Collections\ArrayCollection();
-        $this->relations = new \Doctrine\Common\Collections\ArrayCollection();
-        $this->upsells = new \Doctrine\Common\Collections\ArrayCollection();
-        $this->crosssells = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->sets = new ArrayCollection();
+        $this->relations = new ArrayCollection();
+        $this->upsells = new ArrayCollection();
+        $this->crosssells = new ArrayCollection();
+        $this->categories = new ArrayCollection();
+        $this->media = new ArrayCollection();
+    }
+
+    /**
+     * setId
+     *
+     * @param int $id
+     *
+     * @return BaseProduct
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+
+        return $this;
     }
 
     /**
@@ -523,10 +550,11 @@ abstract class BaseProduct implements ProductInterface
     /**
      * Set supplier
      *
-     * @param \Sulu\Bundle\ContactBundle\Entity\Account $supplier
+     * @param AccountInterface $supplier
+     *
      * @return BaseProduct
      */
-    public function setSupplier(\Sulu\Bundle\ContactBundle\Entity\Account $supplier = null)
+    public function setSupplier(AccountInterface $supplier = null)
     {
         $this->supplier = $supplier;
 
@@ -536,13 +564,12 @@ abstract class BaseProduct implements ProductInterface
     /**
      * Get supplier
      *
-     * @return \Sulu\Bundle\ContactBundle\Entity\Account
+     * @return AccountInterface
      */
     public function getSupplier()
     {
         return $this->supplier;
     }
-
 
     /**
      * Set parent
@@ -952,7 +979,7 @@ abstract class BaseProduct implements ProductInterface
     /**
      * Get deliveryTime.
      *
-     * @return deliveryTime.
+     * @return int
      */
     public function getDeliveryTime()
     {
@@ -962,12 +989,74 @@ abstract class BaseProduct implements ProductInterface
     /**
      * Set deliveryTime.
      *
-     * @param deliveryTime the value to set.
+     * @param int $deliveryTime
+     * @return BaseProduct
      */
     public function setDeliveryTime($deliveryTime)
     {
         $this->deliveryTime = $deliveryTime;
 
         return $this;
+    }
+
+    /**
+     * Set areGrossPrices
+     *
+     * @param boolean $areGrossPrices
+     * @return BaseProduct
+     */
+    public function setAreGrossPrices($areGrossPrices)
+    {
+        $this->areGrossPrices = $areGrossPrices;
+
+        return $this;
+    }
+
+    /**
+     * Get areGrossPrices
+     *
+     * @return boolean
+     */
+    public function getAreGrossPrices()
+    {
+        return $this->areGrossPrices;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSearchTerms()
+    {
+        return $this->searchTerms;
+    }
+
+    /**
+     * @param string $searchTerms
+     *
+     * @return BaseProduct
+     */
+    public function setSearchTerms($searchTerms)
+    {
+        $this->searchTerms = $searchTerms;
+
+        return $this;
+    }
+
+    /**
+     * Helper method to check if the product is
+     * a valid shop product.
+     *
+     * @return bool
+     */
+    public function isValidShopProduct()
+    {
+        if (method_exists($this, 'getPrices') &&
+            $this->getStatus()->getId() == Status::ACTIVE &&
+            $this->getPrices() && count($this->getPrices()) > 0
+        ) {
+            return true;
+        }
+
+        return false;
     }
 }

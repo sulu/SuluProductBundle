@@ -13,7 +13,7 @@ define([
     'app-config',
     'suluproduct/util/header',
     'suluproduct/util/product-delete-dialog'
-], function (Product, Category, AppConfig, HeaderUtil, DeleteDialog) {
+], function(Product, Category, AppConfig, HeaderUtil, DeleteDialog) {
     'use strict';
 
     var types = {
@@ -54,24 +54,29 @@ define([
         PRODUCT_LIST = eventNamespace + 'list',
 
         /**
+         * @event sulu.products.load
+         * @description Shows the list for products
+         */
+        PRODUCT_LOAD = eventNamespace + 'load',
+
+        /**
          * @event sulu.products.variants.delete
          * @description Deletes the given variants from the current product
          */
         PRODUCT_VARIANT_DELETE = eventNamespace + 'variants.delete';
 
     return {
-        initialize: function () {
+        initialize: function() {
             this.product = null;
 
             this.bindCustomEvents();
             if (this.options.display === 'list') {
                 this.renderList();
             } else if (this.options.display === 'tab') {
-                this.renderTabs().then(function(){
-                    if(this.options.content !== 'variants'){
+                this.renderTabs().then(function() {
+                    if (this.options.content !== 'variants') {
                         HeaderUtil.initToolbar(
                             this.sandbox,
-                            this.options.locale,
                             this.product.get('status')
                         );
                     }
@@ -81,47 +86,43 @@ define([
             }
         },
 
-        bindCustomEvents: function () {
-            this.sandbox.on(PRODUCT_NEW, function (type) {
+        bindCustomEvents: function() {
+            this.sandbox.on(PRODUCT_NEW, function(type) {
                 this.sandbox.emit(
                     'sulu.router.navigate',
-                        'pim/products/' + AppConfig.getUser().locale + '/add/type:' + type
+                    'pim/products/' + AppConfig.getUser().locale + '/add/type:' + type
                 );
             }.bind(this));
 
-            this.sandbox.on(PRODUCT_SAVE, function (data) {
-                this.save(data);
+            this.sandbox.on(PRODUCT_SAVE, function(data, doPatch) {
+                this.save(data, doPatch);
             }.bind(this));
 
-            this.sandbox.on(PRODUCT_DELETE, function (ids) {
+            this.sandbox.on(PRODUCT_DELETE, function(ids) {
                 this.del(ids);
             }, this);
 
-            this.sandbox.on('sulu.product.delete', function(id){
+            this.sandbox.on('sulu.product.delete', function(id) {
                 this.deleteProduct(id);
             }, this);
 
-            this.sandbox.on(PRODUCT_IMPORT, function () {
+            this.sandbox.on(PRODUCT_IMPORT, function() {
                 this.sandbox.emit('sulu.router.navigate', 'pim/products/import');
             }.bind(this));
 
-            this.sandbox.on('husky.datagrid.item.click', function (id) {
-                this.load(id, AppConfig.getUser().locale);
-            }.bind(this));
-
-            this.sandbox.on(PRODUCT_LIST, function () {
+            this.sandbox.on(PRODUCT_LIST, function() {
                 this.sandbox.emit('sulu.router.navigate', 'pim/products');
             }.bind(this));
 
-            this.sandbox.on('sulu.header.language-changed', function (locale) {
-                this.load(this.options.id, locale);
+            this.sandbox.on('sulu.header.language-changed', function(data) {
+                this.load(this.options.id, data.title);
             }, this);
 
-            this.sandbox.on('sulu.products.products-overlay.variants.add', function (id, callback) {
+            this.sandbox.on('sulu.products.products-overlay.variants.add', function(id, callback) {
                 this.addVariant(id, callback);
             }, this);
 
-            this.sandbox.on(PRODUCT_VARIANT_DELETE, function (ids) {
+            this.sandbox.on(PRODUCT_VARIANT_DELETE, function(ids) {
                 this.deleteVariants(ids);
             }, this);
 
@@ -130,6 +131,15 @@ define([
 
             // workflow
             this.sandbox.on('sulu.products.workflow.triggered', this.triggerWorkflowAction.bind(this));
+
+            this.sandbox.on(PRODUCT_LOAD, function(id) {
+                this.load(id, AppConfig.getUser().locale);
+            }, this);
+
+            // back to list
+            this.sandbox.on('sulu.header.back', function() {
+                this.sandbox.emit('sulu.products.list');
+            }, this);
         },
 
         triggerWorkflowAction: function(data) {
@@ -137,7 +147,9 @@ define([
                 var url = '/admin/api/products?action=changeState&ids=' + data.ids + '&statusId=' + data.status;
                 this.sandbox.util.save(url, 'POST')
                     .then(function() {
-                        this.sandbox.emit('sulu.product.workflow.completed');
+                        if (!!data.updateTable) {
+                            this.sandbox.emit('sulu.product.workflow.completed');
+                        }
                     }.bind(this))
                     .fail(function(error) {
                         this.sandbox.emit('sulu.labels.error.show',
@@ -151,14 +163,42 @@ define([
         },
 
         saveMedia: function(productId, newMediaIds, removedMediaIds) {
-            this.sandbox.emit('sulu.header.toolbar.item.loading', 'save-button');
+            this.sandbox.emit('sulu.header.toolbar.item.loading', 'save');
 
             this.processAjaxForMedia(newMediaIds, productId, 'POST');
             this.processAjaxForMedia(removedMediaIds, productId, 'DELETE');
+
+            var mediaIds = this.sandbox.util.arrayGetColumn(this.product.attributes.media, 'id');
+            var i, len, id;
+
+            // add new media to backbone model
+            for (i = -1, len = newMediaIds.length; ++i < len;) {
+                id = newMediaIds[i];
+
+                if (mediaIds.indexOf(id) === -1) {
+                    this.product.set({
+                       'media': this.product.get('media').concat({'id': id})
+                    });
+                    mediaIds.push(id);
+                }
+            }
+
+            // remove deleted media from backbone model
+            for (i = -1, len = removedMediaIds.length; ++i < len;) {
+                id = removedMediaIds[i];
+
+                var mediaIndex = mediaIds.indexOf(id);
+
+                if (mediaIndex > -1) {
+                    this.product.get('media').splice(mediaIndex, 1);
+                    mediaIds.splice(mediaIndex, 1);
+                }
+            }
+
         },
 
+        // TODO make only one request
         processAjaxForMedia: function(mediaIds, productId, type) {
-
             var requests = [],
                 medias = [],
                 url;
@@ -194,21 +234,26 @@ define([
             }
         },
 
-        save: function (data) {
-            this.sandbox.emit('sulu.header.toolbar.item.loading', 'save-button');
+        save: function(data, doPatch) {
+            this.sandbox.emit('sulu.header.toolbar.item.loading', 'save');
             this.product.set(data);
 
             // FIXME the categories should already be loaded correctly here
-            this.product.get('categories').reset();
             if (!!data.categories) {
-                this.sandbox.util.foreach(data.categories, function (id) {
+                this.product.get('categories').reset();
+                this.sandbox.util.foreach(data.categories, function(id) {
                     var category = Category.findOrCreate({id: id});
                     this.product.get('categories').add(category);
                 }.bind(this));
             }
 
+            if (!doPatch) {
+                doPatch = false;
+            }
+
             this.product.saveLocale(this.options.locale, {
-                success: function (response) {
+                patch: doPatch,
+                success: function(response) {
                     var model = response.toJSON();
                     if (!!data.id) {
                         this.sandbox.emit('sulu.products.saved', model);
@@ -216,24 +261,24 @@ define([
                         this.load(model.id, this.options.locale);
                     }
                 }.bind(this),
-                error: function () {
-                    this.sandbox.logger.log('error while saving product');
+                error: function() {
+                    this.sandbox.logger.error('error while saving product');
                 }.bind(this)
             });
         },
 
-        load: function (id, localization) {
+        load: function(id, localization) {
             this.sandbox.emit('sulu.router.navigate', 'pim/products/' + localization + '/edit:' + id + '/details');
         },
 
-        del: function (ids) {
+        del: function(ids) {
             this.confirmDeleteDialog(function(wasConfirmed) {
                 if (wasConfirmed) {
                     this.sandbox.util.each(ids, function(key, id) {
                         var product = Product.findOrCreate({id: id});
                         product.destroy({
                             success: function() {
-                                this.sandbox.emit('husky.datagrid.record.remove', id);
+                                this.sandbox.emit('husky.datagrid.products.record.remove', id);
                             }.bind(this)
                         });
                     }.bind(this));
@@ -245,14 +290,14 @@ define([
             DeleteDialog.show(this.sandbox, Product.findOrCreate({id: id}));
         },
 
-        addVariant: function (id) {
+        addVariant: function(id) {
             this.product.get('variants').fetch(
                 {
                     data: {
                         id: id
                     },
                     type: 'POST',
-                    success: function (collection, response) {
+                    success: function(collection, response) {
                         delete response.parent; // FIXME this is necessary because of husky datagrid
                         this.sandbox.emit('husky.datagrid.variants-datagrid.record.remove', id);
                         this.sandbox.emit('husky.datagrid.record.add', response);
@@ -261,17 +306,17 @@ define([
             );
         },
 
-        deleteVariants: function (ids) {
-            this.confirmDeleteDialog(function (wasConfirmed) {
+        deleteVariants: function(ids) {
+            this.confirmDeleteDialog(function(wasConfirmed) {
                 if (wasConfirmed) {
                     this.product.get('variants').fetch({
-                        success: function (collection) {
-                            this.sandbox.util.each(ids, function (key, id) {
+                        success: function(collection) {
+                            this.sandbox.util.each(ids, function(key, id) {
                                 var product = collection.get(id);
                                 product.urlRoot = collection.url() + '/';
 
                                 product.destroy({
-                                    success: function () {
+                                    success: function() {
                                         this.sandbox.emit('sulu.products.variant.deleted', id);
                                     }.bind(this)
                                 });
@@ -282,7 +327,7 @@ define([
             }.bind(this));
         },
 
-        confirmDeleteDialog: function (callbackFunction) {
+        confirmDeleteDialog: function(callbackFunction) {
             this.sandbox.emit(
                 'sulu.overlay.show-warning',
                 'sulu.overlay.be-careful',
@@ -292,7 +337,7 @@ define([
             );
         },
 
-        renderTabs: function () {
+        renderTabs: function() {
             this.product = new Product();
 
             var $tabContainer = this.sandbox.dom.createElement('<div/>'),
@@ -312,13 +357,13 @@ define([
                 component.options.id = this.options.id;
                 this.product.set({id: this.options.id});
                 this.product.fetchLocale(this.options.locale, {
-                    success: function (model) {
-                        component.options.data = model.toJSON();
+                    success: function(model) {
+                        component.options.data = this.product;
                         component.options.productType = types[model.get('type').id];
                         this.sandbox.start([component]);
                         dfd.resolve();
                     }.bind(this),
-                    error: function(){
+                    error: function() {
                         this.sandbox.logger.error("error while fetching product");
                         dfd.reject();
                     }.bind(this)
@@ -336,22 +381,22 @@ define([
         /**
          * Creates the view for the flat product list
          */
-        renderList: function () {
+        renderList: function() {
             var $list = this.sandbox.dom.createElement('<div id="products-list-container"/>');
             this.html($list);
             this.sandbox.start([
-                {name: 'products/components/list@suluproduct', options: { el: $list}}
+                {name: 'products/components/list@suluproduct', options: {el: $list}}
             ]);
         },
 
         /**
          * Creates the view for the product import
          */
-        renderImport: function () {
+        renderImport: function() {
             var $container = this.sandbox.dom.createElement('<div id="products-import"/>');
             this.html($container);
             this.sandbox.start([
-                {name: 'products/components/import@suluproduct', options: { el: $container}}
+                {name: 'products/components/import@suluproduct', options: {el: $container}}
             ]);
         }
     };

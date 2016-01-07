@@ -2,8 +2,6 @@
 
 namespace Sulu\Bundle\ProductBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
-
 /**
  * ProductPrice
  */
@@ -12,7 +10,7 @@ class ProductPrice
     /**
      * @var string
      */
-    private $minimumQuantity = 1;
+    private $minimumQuantity = 0;
 
     /**
      * @var double
@@ -20,17 +18,12 @@ class ProductPrice
     private $price;
 
     /**
-     * @var string
-     */
-    private $priceInfo;
-
-    /**
      * @var integer
      */
     private $id;
 
     /**
-     * @var \Sulu\Bundle\ProductBundle\Entity\ProductInterface
+     * @var ProductInterface
      */
     private $product;
 
@@ -43,19 +36,20 @@ class ProductPrice
      * Set minimumQuantity
      *
      * @param string $minimumQuantity
+     *
      * @return ProductPrice
      */
     public function setMinimumQuantity($minimumQuantity)
     {
         $this->minimumQuantity = $minimumQuantity;
-    
+
         return $this;
     }
 
     /**
      * Get minimumQuantity
      *
-     * @return string 
+     * @return double
      */
     public function getMinimumQuantity()
     {
@@ -66,12 +60,13 @@ class ProductPrice
      * Set price
      *
      * @param double $price
+     *
      * @return ProductPrice
      */
     public function setPrice($price)
     {
         $this->price = $price;
-    
+
         return $this;
     }
 
@@ -86,32 +81,9 @@ class ProductPrice
     }
 
     /**
-     * Set priceInfo
-     *
-     * @param string $priceInfo
-     * @return ProductPrice
-     */
-    public function setPriceInfo($priceInfo)
-    {
-        $this->priceInfo = $priceInfo;
-    
-        return $this;
-    }
-
-    /**
-     * Get priceInfo
-     *
-     * @return string 
-     */
-    public function getPriceInfo()
-    {
-        return $this->priceInfo;
-    }
-
-    /**
      * Get id
      *
-     * @return integer 
+     * @return integer
      */
     public function getId()
     {
@@ -121,20 +93,21 @@ class ProductPrice
     /**
      * Set product
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $product
+     * @param ProductInterface $product
+     *
      * @return ProductPrice
      */
-    public function setProduct(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $product = null)
+    public function setProduct(ProductInterface $product = null)
     {
         $this->product = $product;
-    
+
         return $this;
     }
 
     /**
      * Get product
      *
-     * @return \Sulu\Bundle\ProductBundle\Entity\ProductInterface
+     * @return ProductInterface
      */
     public function getProduct()
     {
@@ -144,13 +117,14 @@ class ProductPrice
     /**
      * Set currency
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\Currency $currency
+     * @param Currency $currency
+     *
      * @return ProductPrice
      */
-    public function setCurrency(\Sulu\Bundle\ProductBundle\Entity\Currency $currency = null)
+    public function setCurrency(Currency $currency = null)
     {
         $this->currency = $currency;
-    
+
         return $this;
     }
 

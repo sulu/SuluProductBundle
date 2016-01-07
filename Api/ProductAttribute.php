@@ -63,12 +63,58 @@ class ProductAttribute extends ApiWrapper
     }
 
     /**
-     * Returns the value
+     * Returns the attribute object
      *
      * @return Sulu\Bundle\ProductBundle\Api\Attribute
      */
     public function getAttribute()
     {
         return new Attribute($this->entity->getAttribute(), $this->locale);
+    }
+
+    /**
+     * Returns the attribute name
+     *
+     * @return Sulu\Bundle\ProductBundle\Api\Attribute
+     * @VirtualProperty
+     * @SerializedName("attributeName")
+     */
+    public function getAttributeName()
+    {
+        return $this->getAttribute()->getName();
+    }
+
+    /**
+     * Returns the attribute type
+     *
+     * @return Sulu\Bundle\ProductBundle\Api\AttributeType
+     */
+    public function getAttributeType()
+    {
+        return $this->getAttribute()->getType();
+    }
+
+    /**
+     * Returns the attribute type name
+     *
+     * @return Sulu\Bundle\ProductBundle\Api\AttributeType
+     * @VirtualProperty
+     * @SerializedName("attributeTypeName")
+     */
+    public function getAttributeTypeName()
+    {
+        return $this->getAttributeType()->getName();
+    }
+
+    /**
+     * Returns the attribute id
+     *
+     * @return Sulu\Bundle\ProductBundle\Api\Attribute
+     * @VirtualProperty
+     * @SerializedName("attributeId")
+     */
+    public function getAttributeId()
+    {
+        return $this->getAttribute()->getId();
     }
 }

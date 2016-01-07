@@ -197,7 +197,7 @@ interface ProductInterface
     /**
      * Get supplier
      *
-     * @return Account Supplier
+     * @return AccountInterface Supplier
      */
     public function getSupplier();
 
@@ -507,4 +507,25 @@ interface ProductInterface
      */
     public function removeMedia(Media $media);
 
+    /**
+     * Are all prices of this products gross prices
+     * @return boolean
+     */
+    public function getAreGrossPrices();
+
+    /**
+     * Sets prices of this products gross prices
+     * @param $areGrossPrices
+     */
+    public function setAreGrossPrices($areGrossPrices);
+
+    /**
+     * @param string $searchTerms
+     */
+    public function setSearchTerms($searchTerms);
+
+    /**
+     * @return string
+     */
+    public function getSearchTerms();
 }

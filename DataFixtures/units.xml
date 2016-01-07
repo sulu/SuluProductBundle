@@ -200,7 +200,6 @@
             <value>kanister</value>
             <value>canister</value>
             <value>kan</value>
-            <value>can</value>
         </mappings>
     </unit>
     <unit>
@@ -305,6 +304,27 @@
             <value>carton</value>
             <value>ktn</value>
             <value>ctn</value>
+        </mappings>
+    </unit>
+    <unit>
+        <translations>
+            <de>Dose</de>
+            <en>Can</en>
+        </translations>
+        <mappings>
+            <value>dose</value>
+            <value>can</value>
+        </mappings>
+    </unit>
+    <unit>
+        <translations>
+            <de>Gebinde</de>
+            <en>Packages</en>
+        </translations>
+        <mappings>
+            <value>gebinde</value>
+            <value>geb</value>
+            <value>packages</value>
         </mappings>
     </unit>
 </units>

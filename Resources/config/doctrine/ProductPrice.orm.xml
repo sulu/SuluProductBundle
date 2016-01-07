@@ -6,12 +6,14 @@
         <id name="id" type="integer" column="id">
             <generator strategy="AUTO"/>
         </id>
-        <field name="minimumQuantity" type="decimal" nullable="true"/>
+
+        <field name="minimumQuantity" type="decimal" nullable="true">
             <options>
-                <option name="default">1</option>
+                <option name="default">0</option>
             </options>
+        </field>
+
         <field name="price" type="float"/>
-        <field name="priceInfo" type="text" nullable="true"/>
 
         <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface"
                      field="product" inversed-by="prices">

@@ -24,6 +24,12 @@
         <field name="minimumOrderQuantity" type="float" nullable="true"/>
         <field name="recommendedOrderQuantity" type="float" nullable="true"/>
         <field name="deliveryTime" type="integer" nullable="true"/>
+        <field name="searchTerms" type="string" nullable="true" length="255"/>
+        <field name="areGrossPrices" type="boolean" nullable="false">
+            <options>
+                <option name="default">0</option>
+            </options>
+        </field>
 
         <many-to-one field="changer" target-entity="Sulu\Component\Security\Authentication\UserInterface">
             <join-columns>
@@ -63,7 +69,7 @@
                      inversed-by="products">
             <join-column name="idDeliveryStatus" referenced-column-name="id"/>
         </many-to-one>
-        <many-to-one target-entity="Sulu\Bundle\ContactBundle\Entity\Account" field="supplier">
+        <many-to-one target-entity="Sulu\Bundle\ContactBundle\Entity\AccountInterface" field="supplier">
             <join-column name="idAccountsSupplier" referenced-column-name="id"/>
         </many-to-one>
         <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface" field="parent"

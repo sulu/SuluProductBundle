@@ -12,10 +12,9 @@ namespace Sulu\Bundle\ProductBundle\Product;
 
 use DateTime;
 use Doctrine\Common\Persistence\ObjectManager;
+use Symfony\Component\HttpFoundation\Request;
 use Sulu\Bundle\ContactBundle\Entity\Account;
 use Sulu\Bundle\ProductBundle\Product\Exception\InvalidProductAttributeException;
-use Symfony\Component\PropertyAccess\PropertyAccess;
-
 use Sulu\Bundle\CategoryBundle\Api\Category;
 use Sulu\Bundle\CategoryBundle\Entity\CategoryRepository;
 use Sulu\Bundle\ProductBundle\Api\ProductPrice;
@@ -23,9 +22,9 @@ use Sulu\Bundle\ProductBundle\Api\Status;
 use Sulu\Bundle\ProductBundle\Entity\Status as StatusEntity;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSetRepository;
 use Sulu\Bundle\ProductBundle\Entity\CurrencyRepository;
-use Sulu\Bundle\ProductBundle\Entity\AttributeSet;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductPrice as ProductPriceEntity;
+use Sulu\Bundle\ProductBundle\Entity\SpecialPrice;
 use Sulu\Bundle\ProductBundle\Entity\StatusRepository;
 use Sulu\Bundle\ContactBundle\Entity\AccountRepository;
 use Sulu\Bundle\ProductBundle\Entity\TaxClass;
@@ -42,23 +41,24 @@ use Sulu\Component\Rest\Exception\EntityIdAlreadySetException;
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescriptor;
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineGroupConcatFieldDescriptor;
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineJoinDescriptor;
-use Sulu\Component\Rest\RestHelperInterface;
 use Sulu\Component\Security\Authentication\UserRepositoryInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttribute;
+use Sulu\Bundle\ProductBundle\Entity\SpecialPriceRepository;
 use Sulu\Bundle\ProductBundle\Entity\DeliveryStatusRepository;
 use Sulu\Bundle\ProductBundle\Entity\AttributeRepository;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttributeRepository;
 use Sulu\Bundle\ProductBundle\Entity\UnitRepository;
-use Sulu\Bundle\MediaBundle\Media\Manager\DefaultMediaManager;
+use Sulu\Bundle\MediaBundle\Media\Manager\MediaManager;
 use Sulu\Bundle\ProductBundle\Entity\DeliveryStatus;
-
 use Sulu\Bundle\ProductBundle\Api\Product;
-use Sulu\Bundle\ProductBundle\Entity\Product as ProductEntity;
-use Symfony\Component\HttpFoundation\Request;
 
 class ProductManager implements ProductManagerInterface
 {
     use RelationTrait;
+
+    const MAX_BATCH_DELETE = 20;
+    const SUPPLIER_PREFIX = 'S';
+    const USER_PREFIX = 'U';
 
     protected static $productEntityName = 'SuluProductBundle:Product';
     protected static $productTypeEntityName = 'SuluProductBundle:Type';
@@ -72,7 +72,8 @@ class ProductManager implements ProductManagerInterface
     protected static $attributeEntityName = 'SuluProductBundle:Attribute';
     protected static $productTranslationEntityName = 'SuluProductBundle:ProductTranslation';
     protected static $productTaxClassEntityName = 'SuluProductBundle:TaxClass';
-    protected static $productDeliveryStatusClassEntityName = 'SuluProductBundle:DeliveryStatus';
+    protected static $productDeliveryStatusEntityName = 'SuluProductBundle:DeliveryStatus';
+    protected static $productDeliveryStatusTranslationEntityName = 'SuluProductBundle:DeliveryStatusTranslation';
     protected static $productPriceEntityName = 'SuluProductBundle:ProductPrice';
     protected static $currencyEntityName = 'SuluProductBundle:Currency';
     protected static $categoryEntityName = 'SuluCategoryBundle:Category';
@@ -81,6 +82,11 @@ class ProductManager implements ProductManagerInterface
      * @var ProductRepositoryInterface
      */
     protected $productRepository;
+
+    /**
+     * @var SpecialPriceRepository
+     */
+    protected $specialPriceRepository;
 
     /**
      * @var AttributeRepository
@@ -143,7 +149,7 @@ class ProductManager implements ProductManagerInterface
     protected $accountRepository;
 
     /**
-     * @var DefaultMediaManager
+     * @var MediaManager
      */
     protected $mediaManager;
 
@@ -155,20 +161,36 @@ class ProductManager implements ProductManagerInterface
     /**
      * @var string
      */
-    protected $productApiEntity;
-    
-    /**
-     * @var string
-     */
     protected $defaultCurrency;
 
     /**
-     * @var string
+     * @var ProductFactoryInterface
      */
-    private $productEntity;
+    protected $productFactory;
 
+    /**
+     * @param ProductRepositoryInterface $productRepository
+     * @param SpecialPriceRepository $specialPriceRepository
+     * @param AttributeSetRepository $attributeSetRepository
+     * @param AttributeRepository $attributeRepository
+     * @param ProductAttributeRepository $productAttributeRepository
+     * @param StatusRepository $statusRepository
+     * @param DeliveryStatusRepository $deliveryStatusRepository
+     * @param TypeRepository $typeRepository
+     * @param TaxClassRepository $taxClassRepository
+     * @param CurrencyRepository $currencyRepository
+     * @param UnitRepository $unitRepository
+     * @param ProductFactoryInterface $productFactory
+     * @param CategoryRepository $categoryRepository
+     * @param UserRepositoryInterface $userRepository
+     * @param DefaultMediaManager $mediaManager
+     * @param ObjectManager $em
+     * @param AccountRepository $accountRepository
+     * @param string $defaultCurrency
+     */
     public function __construct(
         ProductRepositoryInterface $productRepository,
+        SpecialPriceRepository $specialPriceRepository,
         AttributeSetRepository $attributeSetRepository,
         AttributeRepository $attributeRepository,
         ProductAttributeRepository $productAttributeRepository,
@@ -178,16 +200,16 @@ class ProductManager implements ProductManagerInterface
         TaxClassRepository $taxClassRepository,
         CurrencyRepository $currencyRepository,
         UnitRepository $unitRepository,
+        ProductFactoryInterface $productFactory,
         CategoryRepository $categoryRepository,
         UserRepositoryInterface $userRepository,
-        DefaultMediaManager $mediaManager,
+        MediaManager $mediaManager,
         ObjectManager $em,
-        $productEntity,
-        $productApiEntity,
         AccountRepository $accountRepository,
         $defaultCurrency
     ) {
         $this->productRepository = $productRepository;
+        $this->specialPriceRepository = $specialPriceRepository;
         $this->attributeSetRepository = $attributeSetRepository;
         $this->attributeRepository = $attributeRepository;
         $this->productAttributeRepository = $productAttributeRepository;
@@ -201,8 +223,7 @@ class ProductManager implements ProductManagerInterface
         $this->userRepository = $userRepository;
         $this->mediaManager = $mediaManager;
         $this->em = $em;
-        $this->productEntity = $productEntity;
-        $this->productApiEntity = $productApiEntity;
+        $this->productFactory = $productFactory;
         $this->accountRepository = $accountRepository;
         $this->defaultCurrency = $defaultCurrency;
     }
@@ -321,7 +342,9 @@ class ProductManager implements ProductManagerInterface
             static::$productEntityName,
             'public.id',
             array(),
-            true
+            true,
+            false,
+            'integer'
         );
 
         $fieldDescriptors['name'] = new DoctrineFieldDescriptor(
@@ -335,7 +358,10 @@ class ProductManager implements ProductManagerInterface
                     static::$productEntityName . '.translations',
                     self::$productTranslationEntityName . '.locale = \'' . $locale . '\''
                 )
-            )
+            ),
+            false,
+            false,
+            'string'
         );
         // TODO: currency should be dynamically set
         $currency = $this->defaultCurrency;
@@ -343,19 +369,18 @@ class ProductManager implements ProductManagerInterface
             'price',
             'price',
             self::$productPriceEntityName,
-            'product.price',
+            'product.price.' . $currency,
             array(
                 self::$productPriceEntityName => new DoctrineJoinDescriptor(
                     self::$productPriceEntityName,
                     static::$productEntityName . '.prices',
-                    self::$productPriceEntityName . '.minimumQuantity = 1'
-                )
-            ),
-        // TODO: sort by minimum quantity
-            array(
+                    self::$productPriceEntityName . '.minimumQuantity = 0'
+                ),
+                // TODO: sort by minimum quantity
                 self::$currencyEntityName => new DoctrineJoinDescriptor(
                     self::$currencyEntityName,
-                    static::$productPriceEntityName . '.currency'
+                    static::$productPriceEntityName . '.currency',
+                    self::$currencyEntityName . '.code = \'' . $currency . '\''
                 )
             ),
             false,
@@ -374,7 +399,9 @@ class ProductManager implements ProductManagerInterface
             static::$productEntityName,
             'product.number',
             array(),
-            true
+            true,
+            false,
+            'string'
         );
 
         $fieldDescriptors['internalItemNumber'] = new DoctrineFieldDescriptor(
@@ -383,14 +410,20 @@ class ProductManager implements ProductManagerInterface
             static::$productEntityName,
             'product.internal-item-number',
             array(),
-            true
+            true,
+            false,
+            'string'
         );
 
         $fieldDescriptors['globalTradeItemNumber'] = new DoctrineFieldDescriptor(
             'globalTradeItemNumber',
             'globalTradeItemNumber',
             static::$productEntityName,
-            'product.global-trade-item-number'
+            'product.global-trade-item-number',
+            array(),
+            false,
+            false,
+            'string'
         );
 
         $fieldDescriptors['parent'] = new DoctrineFieldDescriptor(
@@ -404,7 +437,9 @@ class ProductManager implements ProductManagerInterface
                     static::$productEntityName . '.parent'
                 )
             ),
-            true
+            true,
+            false,
+            'string'
         );
 
         $fieldDescriptors['categories'] = new DoctrineGroupConcatFieldDescriptor(
@@ -429,7 +464,8 @@ class ProductManager implements ProductManagerInterface
             'products.categories',
             ', ',
             true,
-            true
+            true,
+            'string'
         );
 
         $fieldDescriptors['categoryIds'] = new DoctrineGroupConcatFieldDescriptor(
@@ -449,7 +485,8 @@ class ProductManager implements ProductManagerInterface
             'products.categories',
             ', ',
             null,
-            true
+            true,
+            ''
         );
 
         $fieldDescriptors['manufacturer'] = new DoctrineFieldDescriptor(
@@ -458,7 +495,9 @@ class ProductManager implements ProductManagerInterface
             static::$productEntityName,
             'product.manufacturer',
             array(),
-            true
+            true,
+            false,
+            'string'
         );
 
         $fieldDescriptors['supplier'] = new DoctrineFieldDescriptor(
@@ -472,7 +511,9 @@ class ProductManager implements ProductManagerInterface
                     static::$productEntityName . '.supplier'
                 )
             ),
-            false
+            false,
+            false,
+            'string'
         );
 
         $fieldDescriptors['cost'] = new DoctrineFieldDescriptor(
@@ -481,7 +522,9 @@ class ProductManager implements ProductManagerInterface
             static::$productEntityName,
             'product.cost',
             array(),
-            true
+            true,
+            false,
+            'float'
         );
 
         $fieldDescriptors['priceInfo'] = new DoctrineFieldDescriptor(
@@ -490,7 +533,9 @@ class ProductManager implements ProductManagerInterface
             static::$productEntityName,
             'product.price-info',
             array(),
-            true
+            true,
+            false,
+            'string'
         );
 
         $fieldDescriptors['type'] = new DoctrineFieldDescriptor(
@@ -509,7 +554,9 @@ class ProductManager implements ProductManagerInterface
                     self::$productTypeTranslationEntityName . '.locale = \'' . $locale . '\''
                 ),
             ),
-            true
+            true,
+            false,
+            'string'
         );
 
         $fieldDescriptors['orderUnit'] = new DoctrineFieldDescriptor(
@@ -528,7 +575,9 @@ class ProductManager implements ProductManagerInterface
                     self::$unitTranslationEntityName . '.locale = \'' . $locale . '\''
                 ),
             ),
-            true
+            true,
+            false,
+            'string'
         );
 
         $fieldDescriptors['status'] = new DoctrineFieldDescriptor(
@@ -547,7 +596,9 @@ class ProductManager implements ProductManagerInterface
                     self::$productStatusTranslationEntityName . '.locale = \'' . $locale . '\''
                 ),
             ),
-            true
+            true,
+            false,
+            'string'
         );
 
         $fieldDescriptors['statusId'] = new DoctrineFieldDescriptor(
@@ -560,7 +611,31 @@ class ProductManager implements ProductManagerInterface
                     self::$productStatusEntityName,
                     static::$productEntityName . '.status'
                 )
-            )
+            ),
+            false,
+            false,
+            ''
+        );
+
+        $fieldDescriptors['deliveryStatus'] = new DoctrineFieldDescriptor(
+            'name',
+            'deliveryStatus',
+            self::$productDeliveryStatusTranslationEntityName,
+            'product.deliveryStatus',
+            array(
+                self::$productDeliveryStatusEntityName => new DoctrineJoinDescriptor(
+                    self::$productDeliveryStatusEntityName,
+                    static::$productEntityName . '.deliveryStatus'
+                ),
+                self::$productDeliveryStatusTranslationEntityName => new DoctrineJoinDescriptor(
+                    self::$productDeliveryStatusTranslationEntityName,
+                    self::$productDeliveryStatusEntityName . '.translations',
+                    self::$productDeliveryStatusTranslationEntityName . '.locale = \'' . $locale . '\''
+                ),
+            ),
+            true,
+            false,
+            'string'
         );
 
         $fieldDescriptors['created'] = new DoctrineFieldDescriptor(
@@ -596,19 +671,13 @@ class ProductManager implements ProductManagerInterface
         $product = $this->productRepository->findByIdAndLocale($id, $locale);
 
         if ($product) {
+            // TODO: remove this, when absolutely sure, it is not needed anymore?
             if ($loadCurrencies) {
                 $this->addAllCurrencies($product);
             }
 
-            $product = new $this->productApiEntity($product, $locale);
-            $media = [];
-            // We have to replace the media with a media obtained from the mediaManager since the urls and the
-            // dimensions are added by the mediaManager.
-            // TODO: implement proxy object who is responsible for generating the urls
-            foreach ($product->getEntity()->getMedia() as $medium) {
-                $media[] = $this->mediaManager->getbyId($medium->getId(), $locale);
-            }
-            $product->setMedia($media);
+            $product = $this->productFactory->createApiEntity($product, $locale);
+            $this->createProductMedia($product, $locale);
             return $product;
         } else {
             return null;
@@ -630,7 +699,7 @@ class ProductManager implements ProductManagerInterface
             array_walk(
                 $products,
                 function (&$product) use ($locale) {
-                    $product = new $this->productApiEntity($product, $locale);
+                    $product = $this->productFactory->createApiEntity($product, $locale);
                 }
             );
         }
@@ -639,9 +708,30 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Finds all elements with one of the ids
+     * Sets product media for api-product
+     * Otherwise api-media will not contain additional info like url,..
+     *
+     * @param Product $product
+     * @param string $locale
+     */
+    public function createProductMedia(Product $product, $locale)
+    {
+        $media = [];
+        // We have to replace the media with a media obtained from the mediaManager since the urls and the
+        // dimensions are added by the mediaManager.
+        // TODO: implement proxy object who is responsible for generating the urls
+        foreach ($product->getEntity()->getMedia() as $medium) {
+            $media[] = $this->mediaManager->getById($medium->getId(), $locale);
+        }
+        $product->setMedia($media);
+    }
+
+    /**
+     * Finds all elements with one of the ids.
+     *
      * @param string $locale
      * @param string $ids
+     *
      * @return \Sulu\Bundle\ProductBundle\Api\Product[]
      */
     public function findAllByIdsAndLocale($locale, $ids = '')
@@ -652,7 +742,7 @@ class ProductManager implements ProductManagerInterface
             array_walk(
                 $products,
                 function (&$product) use ($locale) {
-                    $product = new $this->productApiEntity($product, $locale);
+                    $product = $this->productFactory->createApiEntity($product, $locale);
                 }
             );
         }
@@ -661,10 +751,83 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Returns all simple products in the given locale for the given number
+     * Finds and returns a list of products for which a special price is
+     * currently active.
+     *
+     * @param string $locale
+     * @param int $limit
+     * @param int $page
+     *
+     * @return array
+     */
+    public function findCurrentOfferedProducts($locale, $limit = 20, $page = 1)
+    {
+        $specialPrices = $this->specialPriceRepository->findAllCurrent($limit, $page);
+        $products = [];
+        foreach ($specialPrices as $specialPrice) {
+            $product = $this->productFactory->createApiEntity($specialPrice->getProduct(), $locale);
+            $this->createProductMedia($product, $locale);
+            $products['product'][] = $product;
+        }
+        $products['pagerfanta'] = $specialPrices;
+
+        return $products;
+    }
+
+    /**
+     * Finds and returns a list of products for which a special price is
+     * currently active.
+     *
+     * @param string $locale
+     * @param int $numberResults
+     *
+     * @return array
+     */
+    public function findRandomOfferedProducts($locale, $numberResults)
+    {
+        // get ids of special prices
+        $specialPriceIds = $this->specialPriceRepository->findAllCurrentIds();
+
+        if (!$specialPriceIds) {
+            return [];
+        }
+
+        // check if number of desired results does not exceed number of special prices
+        $numberOfIds = count($specialPriceIds);
+        if ($numberResults < 0 || $numberResults > $numberOfIds) {
+            $numberResults = $numberOfIds;
+        }
+
+        // get random ids
+        $randomIds = array_map(
+            function($key) use ($specialPriceIds) {
+                return $specialPriceIds[$key];
+            },
+            array_rand($specialPriceIds, $numberResults)
+        );
+
+        // get special prices
+        $specialPrices = $this->specialPriceRepository->findById($randomIds);
+
+        // shuffle prices
+        shuffle($specialPrices);
+
+        $products = [];
+        foreach ($specialPrices as $specialPrice) {
+            $product = $this->productFactory->createApiEntity($specialPrice->getProduct(), $locale);
+            $this->createProductMedia($product, $locale);
+            $products[] = $product;
+        }
+
+        return $products;
+    }
+
+    /**
+     * Returns all simple products in the given locale for the given number.
      *
      * @param string $locale The locale of the product to load
      * @param $internalItemNumber
+     *
      * @return ProductInterface[]
      */
     public function findByLocaleAndInternalItemNumber($locale, $internalItemNumber)
@@ -677,7 +840,7 @@ class ProductManager implements ProductManagerInterface
             array_walk(
                 $products,
                 function (&$product) use ($locale) {
-                    $product = new $this->productApiEntity($product, $locale);
+                    $product = $this->productFactory->createApiEntity($product, $locale);
                 }
             );
         }
@@ -686,12 +849,30 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Fetches a product
+     * Returns all products for the given internal-number.
      *
-     * @param $id
-     * @param $locale
-     * @return \Sulu\Bundle\ProductBundle\Api\Product
+     * @param string $internalItemNumber
+     *
+     * @return ProductInterface[]
+     */
+    public function findEntitiesByInternalItemNumber($internalItemNumber)
+    {
+        $products = $this->productRepository->findByInternalItemNumber(
+            $internalItemNumber
+        );
+
+        return $products;
+    }
+
+    /**
+     * Fetches a product.
+     *
+     * @param int $id
+     * @param string $locale
+     *
      * @throws Exception\ProductNotFoundException
+     *
+     * @return \Sulu\Bundle\ProductBundle\Api\Product
      */
     protected function fetchProduct($id, $locale)
     {
@@ -701,19 +882,62 @@ class ProductManager implements ProductManagerInterface
             throw new ProductNotFoundException($id);
         }
 
-        return new $this->productApiEntity($product, $locale);
+        return $this->productFactory->createApiEntity($product, $locale);
     }
 
     /**
-     * Generates the internal product number
+     * Generates the internal product number.
      *
-     * @param $id
-     * @param string $number
+     * @param string $prefix Type of product-owner
+     * @param int $ownerId Id of Product-owner
+     * @param string $number Number of the product
+     *
      * @return string
      */
-    public function generateInternalItemNumber($prefix, $id, $number)
+    public function generateInternalItemNumber($prefix, $ownerId, $number)
     {
-        return $prefix . '-' . $id . '-' . $number;
+        return $prefix . '-' . $ownerId . '-' . $number;
+    }
+
+    /**
+     * Checks if datetime string is valid.
+     *
+     * @param string $dateTimeString
+     *
+     * @return DateTime
+     */
+    private function checkDateString($dateTimeString)
+    {
+        if (empty($dateTimeString)) {
+            return null;
+        }
+
+        try {
+            $date = new \DateTime($dateTimeString);
+        } catch (Exception $e) {
+            return null;
+        }
+
+        return $date;
+    }
+
+    /**
+     * Copies all data from a changed product to an active one and
+     * unsets deprecated state of active product.
+     *
+     * @param ProductInterface $changedProduct
+     * @param ProductInterface $activeProduct
+     */
+    public function copyDataFromChangedToActiveProduct(
+        ProductInterface $changedProduct,
+        ProductInterface $activeProduct
+    ) {
+        // copy all data from changed to active product to ensure
+        // that products id does not change
+        $this->convertProduct($changedProduct, $activeProduct);
+
+        // remove deprecated state
+        $activeProduct->setIsDeprecated(false);
     }
 
     /**
@@ -737,20 +961,22 @@ class ProductManager implements ProductManagerInterface
 
         } else {
             $this->checkData($data, $id === null);
-            $product = new $this->productApiEntity(new $this->productEntity, $locale);
+            $product = $this->productFactory->createApiEntity($this->productFactory->createEntity(), $locale);
         }
 
         $user = $this->userRepository->findUserById($userId);
 
         $product->setName($this->getProperty($data, 'name', $product->getName()));
 
-        $product->setMinimumOrderQuantity(
-            $this->getProperty(
+        if (isset($data['minimumOrderQuantity']) && is_numeric($data['minimumOrderQuantity'])) {
+            $value = $this->getProperty(
                 $data,
                 'minimumOrderQuantity',
                 $product->getMinimumOrderQuantity()
-            )
-        );
+            );
+
+            $product->setMinimumOrderQuantity(floatval($value));
+        }
 
         if (isset($data['recommendedOrderQuantity']) && is_numeric($data['recommendedOrderQuantity'])) {
             $value = $this->getProperty(
@@ -762,13 +988,16 @@ class ProductManager implements ProductManagerInterface
             $product->setRecommendedOrderQuantity(floatval($value));
         }
 
-        $product->setOrderContentRatio(
-            $this->getProperty(
+        if (isset($data['orderContentRatio']) && is_numeric($data['orderContentRatio'])) {
+            $value = $this->getProperty(
                 $data,
                 'orderContentRatio',
                 $product->getOrderContentRatio()
-            )
-        );
+            );
+
+            $product->setOrderContentRatio(floatval($value));
+        }
+
         $product->setShortDescription($this->getProperty($data, 'shortDescription', $product->getShortDescription()));
         $product->setLongDescription($this->getProperty($data, 'longDescription', $product->getLongDescription()));
         $product->setNumber($this->getProperty($data, 'number', $product->getNumber()));
@@ -781,13 +1010,13 @@ class ProductManager implements ProductManagerInterface
             )
         );
         $product->setManufacturer($this->getProperty($data, 'manufacturer', $product->getManufacturer()));
-        $product->setCost($this->getProperty($data, 'cost', $product->getCost()));
+        $product->setAreGrossPrices($this->getProperty($data, 'areGrossPrices', $product->getAreGrossPrices()));
         $product->setPriceInfo($this->getProperty($data, 'priceInfo', $product->getPriceInfo()));
         if (!$product->getInternalItemNumber()) {
             if ($supplierId) {
                 $product->setInternalItemNumber(
                     $this->generateInternalItemNumber(
-                        'S',
+                        self::SUPPLIER_PREFIX,
                         $supplierId,
                         $product->getNumber()
                     )
@@ -795,7 +1024,7 @@ class ProductManager implements ProductManagerInterface
             } else {
                 $product->setInternalItemNumber(
                     $this->generateInternalItemNumber(
-                        'U',
+                        self::USER_PREFIX,
                         $userId,
                         $product->getNumber()
                     )
@@ -803,8 +1032,116 @@ class ProductManager implements ProductManagerInterface
             }
         }
 
-        // TODO: handle attributes
+        if (isset($data['attributes'])) {
+            $attributeIds = [];
+            foreach ($data['attributes'] as $attributeData) {
+                if (isset($attributeData['attributeId'])) {
+                    $attributeIds[] = $attributeData['attributeId'];
+                }
+            }
+            // create local array of attributes
+            $productAttributes = array();
+            // If attributes are not in current specified attributes remove them from product
+            foreach ($product->getAttributes() as $productAttribute) {
+                $productAttributes[$productAttribute->getAttribute()->getId()] = $productAttribute;
+                if (!in_array($productAttribute->getAttribute()->getId(), $attributeIds)) {
+                    $product->getEntity()->removeProductAttribute($productAttribute->getEntity());
+                    $this->em->remove($productAttribute->getEntity());
+                }
+            }
+            // Add and change attributes
+            foreach ($data['attributes'] as $attributeData) {
+                $attributeValue = $attributeData['value'];
+                $attributeId = $attributeData['attributeId'];
 
+                if (!array_key_exists($attributeId, $productAttributes)) {
+                    // product attribute does not exists
+                    $productAttribute = new ProductAttribute();
+                    $attribute = $this->attributeRepository->find($attributeData['attributeId']);
+                    if (!$attribute) {
+                        throw new ProductDependencyNotFoundException(
+                            self::$attributeEntityName,
+                            $attributeData['attributeId']
+                        );
+                    }
+                    $productAttribute->setAttribute($attribute);
+                    $productAttribute->setValue($attributeValue);
+                    $productAttribute->setProduct($product->getEntity());
+                    $product->addProductAttribute($productAttribute);
+                    $this->em->persist($productAttribute);
+                } else {
+                    // product attribute exists
+                    $productAttribute = $productAttributes[$attributeId]->getEntity();
+                    $productAttribute->setValue($attributeValue);
+                }
+            }
+        }
+
+        if (array_key_exists('specialPrices', $data)) {
+            $specialPricesData = $data['specialPrices'];
+
+            //array for local special prices storage
+            $specialPrices = array();
+
+            // array of currency codes to be used as keys for special prices
+            $currencyCodes = array();
+
+            // create array of special price currency codes in json request
+            foreach ($specialPricesData as $key => $specialPrice) {
+                if (!empty($specialPrice['currency']['code']) && !empty($specialPrice['price'])) {
+                    array_push($currencyCodes, $specialPrice['currency']['code']);
+                } else {
+                    unset($specialPricesData[$key]);
+                }
+            }
+
+            // iterate through already added special prices for this specific product
+            foreach ($product->getSpecialPrices() as $specialPrice) {
+                // save special prices to array (for later use)
+                $specialPrices[$specialPrice->getCurrency()->getCode()] = $specialPrice;
+
+                // check if special price code already exists in array if not remove it from product
+                if (!in_array($specialPrice->getCurrency()->getCode(), $currencyCodes)) {
+                    $product->removeSpecialPrice($specialPrice->getEntity());
+                    $this->em->remove($specialPrice->getEntity());
+                }
+            }
+
+            // itearate through send json array of special prices
+            foreach ($specialPricesData as $specialPriceData) {
+                // if key does not exists add a new special price to product
+                if (!array_key_exists($specialPriceData['currency']['code'], $specialPrices)) {
+                    $specialPrice = new SpecialPrice();
+
+                    $currency = $this->currencyRepository->findByCode($specialPriceData['currency']['code']);
+                    $specialPrice->setCurrency($currency);
+
+                    $specialPrice->setProduct($product->getEntity());
+
+                    $product->addSpecialPrice($specialPrice);
+                    $this->em->persist($specialPrice);
+                // else update the already existing special price
+                } else {
+                    $specialPrice = $specialPrices[$specialPriceData['currency']['code']]->getEntity();
+                }
+
+                if (isset($specialPriceData['price'])) {
+                    $specialPrice->setPrice($specialPriceData['price']);
+                }
+
+                if (isset($specialPriceData['startDate'])) {
+                    $startDate = $this->checkDateString($specialPriceData['startDate']);
+                    $specialPrice->setStartDate($startDate);
+                }
+
+                if (isset($specialPriceData['endDate'])) {
+                    $endDate = $this->checkDateString($specialPriceData['endDate']);
+                    // set time to 23:59:59
+                    $endDate->setTime(23, 59, 59);
+                    $specialPrice->setEndDate($endDate);
+                }
+            }
+        }
 
         if (isset($data['parent']) && isset($data['parent']['id'])) {
             $parentId = $data['parent']['id'];
@@ -813,6 +1150,15 @@ class ProductManager implements ProductManagerInterface
                 throw new ProductDependencyNotFoundException(static::$productEntityName, $parentId);
             }
             $product->setParent($parentProduct);
+        }
+
+        if (isset($data['cost']) && is_numeric($data['cost'])) {
+            $product->setCost(floatval($data['cost']));
+        }
+
+        if (isset($data['searchTerms'])) {
+            $searchTerms = $this->parseCommaSeparatedString($data['searchTerms']);
+            $product->setSearchTerms($searchTerms);
         }
 
         if (isset($data['status']) && isset($data['status']['id'])) {
@@ -869,7 +1215,7 @@ class ProductManager implements ProductManagerInterface
                 throw new ProductDependencyNotFoundException(self::$accountsSupplierEntityName, $supplierId);
             }
             $product->setSupplier($supplier);
-        } else if (isset($data['supplier']) && !isset($data['supplier']['id'])){
+        } elseif (isset($data['supplier']) && !isset($data['supplier']['id'])) {
             $product->setSupplier(null);
         }
 
@@ -963,7 +1309,9 @@ class ProductManager implements ProductManagerInterface
         if ($publishedProduct) {
             // Since there is already a published product with the same internal id we are going to update the
             // existing one with the properties of the current product.
-            $product = $this->convertProduct($product, $publishedProduct);
+            $this->convertProduct($product->getEntity(), $publishedProduct->getEntity());
+
+            $product = $publishedProduct;
         }
 
         if (isset($data['deliveryStatus']) && isset($data['deliveryStatus']['id'])) {
@@ -972,7 +1320,7 @@ class ProductManager implements ProductManagerInterface
             $deliveryStatus = $this->deliveryStatusRepository->find($deliveryStatusId);
             if (!$deliveryStatus) {
                 throw new ProductDependencyNotFoundException(
-                    self::$productDeliveryStatusClassEntityName,
+                    self::$productDeliveryStatusEntityName,
                     $deliveryStatusId
                 );
             }
@@ -986,7 +1334,81 @@ class ProductManager implements ProductManagerInterface
         if ($flush) {
             $this->em->flush();
         }
+
         return $product;
+    }
+
+    /**
+     * Parses a comma separated string.
+     * Trims all values and removes empty strings.
+     *
+     * @param string $string
+     * @param int $maxLength
+     *
+     * @return null|string
+     */
+    public function parseCommaSeparatedString($string, $maxLength = 255)
+    {
+        $result = null;
+
+        // check if string is not empty
+        if (strlen(trim($string)) === 0) {
+            return null;
+        }
+
+        // convert string to array
+        $fields = explode(',', $string);
+
+        // validate and trim each field
+        $fields = array_map([$this, 'trimAndValidateField'], $fields);
+
+        // remove null entries
+        $fields = array_filter($fields);
+
+        // parse back into string
+        $result = implode(',', $fields);
+
+        // Check if max length is exceeded
+        if (strlen($result) > $maxLength) {
+            // shorten to max-length
+            $result = substr($result, 0, $maxLength);
+
+            $fields = explode(',', $result);
+
+            // remove last element
+            array_pop($fields);
+
+            // only one search field is provided and exceeds limit
+            if (count($fields) === 0) {
+                return null;
+            }
+
+            // parse back into string
+            $result = implode(',', $fields);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Trims, validates and parses a string.
+     *
+     * @param string $field
+     *
+     * @return string
+     */
+    private function trimAndValidateField($field)
+    {
+        $result = trim($field);
+
+        if (strlen($result) === 0) {
+            return null;
+        }
+
+        // lower case for case insensitivity
+        $result = strtolower($result);
+
+        return $result;
     }
 
     /**
@@ -1025,10 +1447,8 @@ class ProductManager implements ProductManagerInterface
 
         if ($id) {
             // Update an extisting product
-            $product = $this->fetchProduct($id, $locale);
-            if (array_key_exists('status', $data)) {
-                $this->setStatusForProduct($product, $data['status']['id']);
-            }
+            $product = $this->productRepository->findById($id);
+            $this->setStatusForProduct($product, $data['status']['id']);
         } else {
             throw new ProductNotFoundException($id);
         }
@@ -1037,20 +1457,19 @@ class ProductManager implements ProductManagerInterface
     /**
      * Copy all properties from a entity to a 'deprecated' entity.
      *
-     * @param Product $product
-     * @param Product $publishedProduct
-     * @return \Sulu\Bundle\ProductBundle\Api\Product
+     * @param ProductInterface $productEntity
+     * @param ProductInterface $publishedProductEntity
+     *
+     * @return ProductInterface
      */
-    private function convertProduct($product, $publishedProduct)
+    private function convertProduct(ProductInterface $productEntity, ProductInterface $publishedProductEntity)
     {
-        $publishedProductEntity = $publishedProduct->getEntity();
-        $productEntity = $product->getEntity();
-
         // Move prices
         foreach ($publishedProductEntity->getPrices() as $data) {
             $this->em->remove($data);
         }
         foreach ($productEntity->getPrices() as $data) {
+            $publishedProductEntity->addPrice($data);
             $data->setProduct($publishedProductEntity);
         }
 
@@ -1059,6 +1478,7 @@ class ProductManager implements ProductManagerInterface
             $this->em->remove($data);
         }
         foreach ($productEntity->getProductAttributes() as $data) {
+            $publishedProductEntity->addProductAttribute($data);
             $data->setProduct($publishedProductEntity);
         }
 
@@ -1067,50 +1487,56 @@ class ProductManager implements ProductManagerInterface
             $this->em->remove($data);
         }
         foreach ($productEntity->getTranslations() as $data) {
+            $publishedProductEntity->addTranslation($data);
             $data->setProduct($publishedProductEntity);
         }
 
         // Move addons
         foreach ($publishedProductEntity->getAddons() as $data) {
-            $this->em->remove($data);
+            $publishedProductEntity->removeAddon($data);
         }
         foreach ($productEntity->getAddons() as $data) {
+            $publishedProductEntity->addAddon($data);
             $data->setProduct($publishedProductEntity);
         }
 
         // Move sets
         foreach ($publishedProductEntity->getSets() as $data) {
-            $this->em->remove($data);
+            $publishedProductEntity->removeSet($data);
         }
         foreach ($productEntity->getSets() as $data) {
+            $publishedProductEntity->addSet($data);
             $data->setProduct($publishedProductEntity);
         }
 
         // Move relation
         foreach ($publishedProductEntity->getRelations() as $data) {
-            $this->em->remove($data);
+            $publishedProductEntity->removeRelation($data);
         }
         foreach ($productEntity->getRelations() as $data) {
+            $publishedProductEntity->addRelation($data);
             $data->setProduct($publishedProductEntity);
         }
 
         // Move upsell
         foreach ($publishedProductEntity->getUpsells() as $data) {
-            $this->em->remove($data);
+            $publishedProductEntity->removeUpsell($data);
         }
         foreach ($productEntity->getUpsells() as $data) {
+            $publishedProductEntity->addUpsell($data);
             $data->setProduct($publishedProductEntity);
         }
 
         // Move crossells
         foreach ($publishedProductEntity->getCrosssells() as $data) {
-            $this->em->remove($data);
+            $publishedProductEntity->removeCrosssell($data);
         }
         foreach ($productEntity->getCrosssells() as $data) {
+            $publishedProductEntity->addCrosssell($data);
             $data->setProduct($publishedProductEntity);
         }
 
-        // // Move categories
+        // Move categories
         foreach ($publishedProductEntity->getCategories() as $data) {
             $publishedProductEntity->removeCategory($data);
         }
@@ -1132,7 +1558,6 @@ class ProductManager implements ProductManagerInterface
         $publishedProductEntity->setManufacturer($productEntity->getManufacturer());
         $publishedProductEntity->setCost($productEntity->getCost());
         $publishedProductEntity->setPriceInfo($productEntity->getPriceInfo());
-        $publishedProductEntity->setCreated($productEntity->getCreated());
         $publishedProductEntity->setChanged($productEntity->getChanged());
         $publishedProductEntity->setManufacturerCountry($productEntity->getManufacturerCountry());
         $publishedProductEntity->setType($productEntity->getType());
@@ -1147,7 +1572,7 @@ class ProductManager implements ProductManagerInterface
         $publishedProductEntity->setMinimumOrderQuantity($productEntity->getMinimumOrderQuantity());
         $publishedProductEntity->setRecommendedOrderQuantity($productEntity->getRecommendedOrderQuantity());
         $publishedProductEntity->setChanger($productEntity->getChanger());
-        $publishedProductEntity->setCreator($productEntity->getCreator());
+        $publishedProductEntity->setSearchTerms($productEntity->getSearchTerms());
         $publishedProductEntity->setTaxClass($productEntity->getTaxClass());
 
         // Move children
@@ -1161,17 +1586,7 @@ class ProductManager implements ProductManagerInterface
         $this->em->remove($productEntity);
         $this->em->flush();
 
-        return $publishedProduct;
-    }
-
-    private function checkForPriceChange($data, $price)
-    {
-        $currencyNotChanged = isset($data['currency']) && array_key_exists('name', $data['currency']) &&
-            $data['currency']['name'] == $price->getCurrency()->getName();
-        $valueNotChanged = array_key_exists('price', $data) && $data['price'] == $price->getPrice();
-        $minimumQuantityNotChanged = array_key_exists('minimumQuantity', $data) &&
-            $data['minimumQuantity'] == $price->getEntity()->getMinimumQuantity();
-        return $currencyNotChanged && $valueNotChanged && $minimumQuantityNotChanged;
+        return $publishedProductEntity;
     }
 
     /**
@@ -1195,7 +1610,7 @@ class ProductManager implements ProductManagerInterface
             foreach ($products as $product) {
                 if ($product->isDeprecated() && $existingProduct->getId() != $product->getId()) {
                     $product->setIsDeprecated(false);
-                    return new $this->productApiEntity($product, $locale);
+                    return $this->productFactory->createApiEntity($product, $locale);
                 }
             }
         }
@@ -1354,7 +1769,7 @@ class ProductManager implements ProductManagerInterface
 
         $this->em->flush();
 
-        return new $this->productApiEntity($variant, $locale);
+        return $this->productFactory->createApiEntity($variant, $locale);
     }
 
     /**
@@ -1383,7 +1798,7 @@ class ProductManager implements ProductManagerInterface
         if (!is_numeric($id)) {
             throw new InvalidProductAttributeException('id', $id);
         }
-        
+
         $product = $this->productRepository->findById($id);
 
         if (!$product) {
@@ -1405,14 +1820,21 @@ class ProductManager implements ProductManagerInterface
     {
         if (is_array($ids)) {
             // if ids is array -> multiple delete
+            $counter = 0;
             foreach ($ids as $id) {
+                $counter++;
                 $this->singleDelete($id, null, false);
+
+                if ($flush && ($counter % self::MAX_BATCH_DELETE) === 0) {
+                    $this->em->flush();
+                    $this->em->clear();
+                }
             }
         } else {
             // if ids is int
             $this->singleDelete($ids, null, false);
         }
-        
+
         if ($flush) {
             $this->em->flush();
         }

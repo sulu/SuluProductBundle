@@ -37,11 +37,6 @@ class AttributeControllerTest extends SuluTestCase
     protected $attributeType2;
 
     /**
-     * @var Client
-     */
-    private $client;
-
-    /**
      * @var AttributeType
      */
     private $attributeType1;
@@ -101,6 +96,8 @@ class AttributeControllerTest extends SuluTestCase
         $this->em->persist($this->attribute1);
         $this->em->persist($this->attributeType2);
         $this->em->persist($this->attribute2);
+
+        $this->em->flush();
     }
 
     /**

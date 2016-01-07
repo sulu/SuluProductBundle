@@ -12,8 +12,10 @@ namespace Sulu\Bundle\ProductBundle\Controller;
 
 use Sulu\Bundle\ProductBundle\Api\Status;
 use Sulu\Bundle\ProductBundle\Api\TaxClass;
+use Sulu\Bundle\ProductBundle\Entity\Currency;
 use Symfony\Component\HttpFoundation\Request;
 use Sulu\Component\Rest\RestController;
+use Sulu\Bundle\ProductBundle\Api\Attribute as ApiAttribute;
 
 class TemplateController extends RestController
 {
@@ -31,6 +33,7 @@ class TemplateController extends RestController
      * Returns Template for product list
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
+     *
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function productFormAction(Request $request)
@@ -39,12 +42,14 @@ class TemplateController extends RestController
 
         $status = $this->getStatus($language);
         $units = $this->getUnits($language);
+        $deliveryStates = $this->getDeliveryStates($language);
 
         return $this->render(
             'SuluProductBundle:Template:product.form.html.twig',
             array(
                 'status' => $status,
-                'units' => $units
+                'units' => $units,
+                'deliveryStates' => $deliveryStates
             )
         );
     }
@@ -110,10 +115,10 @@ class TemplateController extends RestController
      *
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function productPricingAction()
+    public function productPricingAction(Request $request)
     {
         // TODO use correct language
-        $language = 'en';
+        $language = $this->getLocale($request);
 
         /** @var TaxClass[] $taxClasses */
         $taxClasses = $this->get('sulu_product.tax_class_manager')->findAll($language);
@@ -126,9 +131,16 @@ class TemplateController extends RestController
             );
         }
 
+        $currencies = $this->getCurrencies($language);
+        $defaultCurrency = $this->container->getParameter('sulu_product.default_currency');
+
         return $this->render(
             'SuluProductBundle:Template:product.pricing.html.twig',
-            array('taxClasses' => $taxClassTitles)
+            array(
+                'taxClasses' => $taxClassTitles,
+                'currencies' => $currencies,
+                'defaultCurrency' => $defaultCurrency
+            )
         );
     }
 
@@ -143,9 +155,20 @@ class TemplateController extends RestController
     }
 
     /**
+     * Returns the template for product attributes
+     *
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function productAttributesAction()
+    {
+        return $this->render('SuluProductBundle:Template:product.attributes.html.twig');
+    }
+
+    /**
      * Returns status for products
      *
-     * @param $language
+     * @param string $language
+     *
      * @return array
      */
     protected function getStatus($language)
@@ -167,7 +190,8 @@ class TemplateController extends RestController
     /**
      * Returns units
      *
-     * @param $language
+     * @param string $language
+     *
      * @return array
      */
     protected function getUnits($language)
@@ -184,5 +208,62 @@ class TemplateController extends RestController
         }
 
         return $unitTitles;
+    }
+
+    /**
+     * Returns currencies
+     *
+     * @param string $language
+     *
+     * @return array
+     */
+    protected function getCurrencies($language)
+    {
+        /** @var Currency[] $currencies */
+        $currencies = $this->get('sulu_product.currency_manager')->findAll($language);
+
+        $currencyTitles = array();
+        foreach ($currencies as $currency) {
+            $currencyTitles[] = array(
+                'id' => $currency->getId(),
+                'name' => $currency->getName(),
+                'code' => $currency->getCode(),
+                'number' => $currency->getNumber()
+            );
+        }
+
+        return $currencyTitles;
+    }
+
+    /**
+     * Returns delivery states
+     *
+     * @param string $language
+     *
+     * @return array
+     */
+    protected function getDeliveryStates($language)
+    {
+        $states = $this->getDeliveryStatusManager()->findAll($language);
+
+        $deliveryStates = array();
+        foreach ($states as $state) {
+            $deliveryStates[] = array(
+                'id' => $state->getId(),
+                'name' => $state->getName()
+            );
+        }
+
+        return $deliveryStates;
+    }
+
+    /**
+     * Returns the delivery status manager
+     *
+     * @return DeliveryStatusManager
+     */
+    private function getDeliveryStatusManager()
+    {
+        return $this->get('sulu_product.delivery_status_manager');
     }
 }

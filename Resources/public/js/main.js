@@ -12,11 +12,13 @@ require.config({
         suluproduct: '../../suluproduct/js',
         'suluproduct/util/header': '../../suluproduct/js/components/products/util/header',
         'suluproduct/util/price-calculation-util':'../../suluproduct/js/util/price-calculation-util',
-        'suluproduct/util/product-delete-dialog': '../../suluproduct/js/components/products/util/product-delete-dialog'
+        'suluproduct/util/product-delete-dialog': '../../suluproduct/js/components/products/util/product-delete-dialog',
+        'type/price-list': '../../suluproduct/js/components/price-list/price-list-type',
+        'extensions/sulu-buttons-productbundle': '../../suluproduct/js/extensions/sulu-buttons'
     }
 });
 
-define(['config'], function(Config) {
+define(['config', 'extensions/sulu-buttons-productbundle'], function(Config, ProductButtons) {
 
     'use strict';
 
@@ -28,8 +30,10 @@ define(['config'], function(Config) {
 
             var sandbox = app.sandbox;
 
-            Config.set('product.status.active', {id: 3, key: 'product.workfow.set.active'});
-            Config.set('product.status.inactive', {id: 5, key: 'product.workfow.set.inactive'});
+            sandbox.sulu.buttons.push(ProductButtons.getButtons());
+
+            Config.set('product.status.active', {id: 3, key: 'product.workflow.set.active'});
+            Config.set('product.status.inactive', {id: 5, key: 'product.workflow.set.inactive'});
             Config.set('product.list.statuses.ids', [3, 5]);
 
             Config.set('suluproduct.components.autocomplete.default', {
@@ -47,11 +51,7 @@ define(['config'], function(Config) {
                     },
                     {
                         id: 'name',
-                        width: '150px'
-                    },
-                    {
-                        id: 'manufacturer',
-                        width: '150px'
+                        width: '480px'
                     },
                     {
                         id: 'supplier',
@@ -60,34 +60,42 @@ define(['config'], function(Config) {
                 ]
             });
 
+            Config.set('suluresource.filters.type.products', {
+                breadCrumb: [
+                    {title: 'navigation.pim'},
+                    {title: 'pim.products.title', link: 'pim/products'}
+                ],
+                routeToList: 'pim/products'
+            });
+
             app.components.addSource('suluproduct', '/bundles/suluproduct/js/components');
 
             //flat list of products
             sandbox.mvc.routes.push({
                 route: 'pim/products',
                 callback: function() {
-                    this.html('<div data-aura-component="products@suluproduct" data-aura-display="list"/>');
+                    return '<div data-aura-component="products@suluproduct" data-aura-display="list"/>';
                 }
             });
 
             sandbox.mvc.routes.push({
                 route: 'pim/products/:locale/add/type::type',
                 callback: function(locale, type) {
-                    this.html('<div data-aura-component="products@suluproduct" data-aura-display="tab" data-aura-locale="' + locale + '" data-aura-product-type="' + type + '"/>');
+                    return '<div data-aura-component="products@suluproduct" data-aura-display="tab" data-aura-locale="' + locale + '" data-aura-product-type="' + type + '"/>';
                 }
             });
 
             sandbox.mvc.routes.push({
                 route: 'pim/products/:locale/edit::id/:content',
                 callback: function(locale, id, content) {
-                    this.html('<div data-aura-component="products@suluproduct" data-aura-display="tab" data-aura-content="' + content + '" data-aura-locale="' + locale + '" data-aura-id="' + id + '"/>');
+                    return '<div data-aura-component="products@suluproduct" data-aura-display="tab" data-aura-content="' + content + '" data-aura-locale="' + locale + '" data-aura-id="' + id + '"/>';
                 }
             });
 
             sandbox.mvc.routes.push({
                 route: 'pim/products/import',
                 callback: function() {
-                    this.html('<div data-aura-component="products@suluproduct" data-aura-display="import"/>');
+                    return '<div data-aura-component="products@suluproduct" data-aura-display="import"/>';
                 }
             });
 
@@ -95,21 +103,21 @@ define(['config'], function(Config) {
             sandbox.mvc.routes.push({
                 route: 'pim/attributes',
                 callback: function() {
-                    this.html('<div data-aura-component="attributes@suluproduct" data-aura-display="list"/>');
+                    return '<div data-aura-component="attributes@suluproduct" data-aura-display="list"/>';
                 }
             });
 
             sandbox.mvc.routes.push({
                 route: 'pim/attributes/:locale/add',
                 callback: function(locale, type) {
-                    this.html('<div data-aura-component="attributes@suluproduct" data-aura-display="form" data-aura-locale="' + locale + '"/>');
+                    return '<div data-aura-component="attributes@suluproduct" data-aura-display="form" data-aura-locale="' + locale + '"/>';
                 }
             });
 
             sandbox.mvc.routes.push({
                 route: 'pim/attributes/:locale/edit::id/:details',
                 callback: function(locale, id) {
-                    this.html('<div data-aura-component="attributes@suluproduct" data-aura-display="form" data-aura-locale="' + locale + '" data-aura-id="' + id + '"/>');
+                    return '<div data-aura-component="attributes@suluproduct" data-aura-display="form" data-aura-locale="' + locale + '" data-aura-id="' + id + '"/>';
                 }
             });
         }

@@ -8,6 +8,8 @@
  * with this source code in the file LICENSE.
  */
 
+namespace Sulu\Bundle\ProductBundle\DataFixtures\ORM\DeliveryStatuses;
+
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -15,10 +17,10 @@ use Sulu\Bundle\ProductBundle\Entity\DeliveryStatusTranslation;
 use Sulu\Bundle\ProductBundle\Entity\DeliveryStatus;
 use Sulu\Bundle\ProductBundle\Entity\StatusTranslation;
 
-class DeliveryStatuses implements FixtureInterface, OrderedFixtureInterface
+class LoadDeliveryStatuses implements FixtureInterface, OrderedFixtureInterface
 {
+    private static $translations = array("de", "en");
 
-    private static $translations = ['de', 'en'];
     /**
      * {@inheritDoc}
      */
@@ -30,10 +32,10 @@ class DeliveryStatuses implements FixtureInterface, OrderedFixtureInterface
 
         $i = 1;
         $file = dirname(__FILE__) . '/../../delivery-statuses.xml';
-        $doc = new DOMDocument();
+        $doc = new \DOMDocument();
         $doc->load($file);
 
-        $xpath = new DOMXpath($doc);
+        $xpath = new \DOMXpath($doc);
         $elements = $xpath->query('/delivery-statuses/delivery-status');
 
         if (!is_null($elements)) {

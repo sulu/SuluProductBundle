@@ -50,9 +50,13 @@
         </div>
         <div class="grid-col-6">
             <div class="form-group">
-                <label for="deliveryTime"><%= translate('product.deliveryTime') %></label>
-                <input class="form-element" type="text" id="deliveryTime"
-                       data-mapper-property="deliveryTime" data-type="decimal"/>
+                <label for="recommendedOrderQuantity"><%= translate('product.recommendedOrderQuantity') %></label>
+                <input class="form-element"
+                       type="text"
+                       id="recommendedOrderQuantity"
+                       data-mapper-property="recommendedOrderQuantity"
+                       data-type="decimal"
+                       data-validation-required="false"/>
             </div>
         </div>
     </div>
@@ -82,10 +86,74 @@
         </div>
         <div class="grid-col-6">
             <div class="form-group">
-                <label for="recommendedOrderQuantity"><%= translate('product.recommendedOrderQuantity') %></label>
-                <input class="form-element" type="text" id="recommendedOrderQuantity"
-                       data-mapper-property="recommendedOrderQuantity" data-type="decimal"/>
+                <label for="recommendedOrderQuantity"><%= translate('product.orderContentRatio') %></label>
+                <input class="form-element"
+                       type="text"
+                       id="orderContentRatio"
+                       data-mapper-property="orderContentRatio"
+                       data-type="decimal"
+                       data-validation-required="false"/>
             </div>
+        </div>
+    </div>
+
+    <div class="grid-row small">
+        <div class="grid-col-6">
+            <div class="form-group">
+                <label for="deliveryTime"><%= translate('product.deliveryTime') %></label>
+                <input class="form-element" type="text" id="deliveryTime"
+                       data-mapper-property="deliveryTime" data-type="decimal"/>
+            </div>
+        </div>
+        <div class="grid-col-6">
+            <div class="form-group">
+                <label for="minimumOrderQuantity"><%= translate('product.minimumOrderQuantity') %></label>
+                <input class="form-element" type="text" id="minimumOrderQuantity"
+                       data-mapper-property="minimumOrderQuantity" data-type="decimal"/>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-row small">
+        <div class="grid-col-6">
+            <div class="form-group">
+                <label for="manufacturer"><%= translate('products.manufacturer') %></label>
+                <input class="form-element" type="text" id="manufacturer"
+                       data-mapper-property="manufacturer" />
+            </div>
+        </div>
+        <div class="grid-col-6">
+            <div class="form-group">
+                <label for="globalTradeItemNumber"><%= translate('product.globalTradeItemNumber') %></label>
+                <input class="form-element" type="text" id="globalTradeItemNumber"
+                       data-mapper-property="globalTradeItemNumber" />
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-row">
+        <div class="grid-col-6">
+            <div class="form-group">
+                <label for="deliveryStatus"><%= translate('product.deliveryStatus') %></label>
+                <div id="deliveryStatus"
+                     data-aura-component="select@husky"
+                     data-aura-data="{{ deliveryStates|json_encode() }}"
+                     data-aura-default-label="<%=translate('public.please-choose')%>"
+                     data-aura-multiple-select="false"
+                     data-aura-instance-name="deliveryStatus"
+                     data-aura-deselect-field="false"
+                     data-aura-direction="bottom"
+                     data-type-label="id"
+                     data-type-required="deliveryStatus"
+                     data-mapper-property="deliveryStatus"
+                     data-type="husky-select"
+                     data-validation-required="false"
+                     data-aura-pre-selected-elements="[]"
+                     data-form="true">
+                </div>
+            </div>
+        </div>
+        <div class="grid-col-6">
         </div>
     </div>
 
@@ -118,27 +186,19 @@
         </div>
     </div>
 
-    <h2 class="divider"><%= translate('tag.tags.title') %></h2>
-
     <div class="grid-row small">
         <div class="grid-col-12">
             <div class="form-group">
-                <label for="tags"><%= translate('tag.tags.title') %></label>
-
-                <div id="tags"
-                     data-mapper-property="tags"
-                     data-type="tagList"
-                     data-type-instance-name="tags"
-                     data-form="true"
-                     data-aura-component="auto-complete-list@husky"
-                     data-aura-instance-name="tags"
-                     data-aura-remote-url="/admin/api/tags?flat=true&sortBy=name"
-                     data-aura-get-parameter="search"
-                     data-aura-auto-complete-icon="tag">
-                </div>
+                <label for="short-description" class="top"><%= translate('product.search-terms') %></label>
+                <textarea id="search-terms"
+                          maxlength="255"
+                          class="form-element trigger-save-button"
+                          data-mapper-property="searchTerms"></textarea>
             </div>
         </div>
     </div>
+
+    <h2 class="divider"><%= translate('product.classification') %></h2>
 
     <div class="grid-row small">
         <div class="grid-col-12">

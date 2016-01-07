@@ -10,16 +10,26 @@
 
 namespace Sulu\Bundle\ProductBundle;
 
-use Sulu\Bundle\ProductBundle\DependencyInjection\Compiler\AddContentNavigationPass;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
+use Sulu\Bundle\PersistenceBundle\PersistenceBundleTrait;
 
 class SuluProductBundle extends Bundle
 {
+    use PersistenceBundleTrait;
+
+    /**
+     * {@inheritdoc}
+     */
     public function build(ContainerBuilder $container)
     {
         parent::build($container);
 
-        $container->addCompilerPass(new AddContentNavigationPass);
+        $this->buildPersistence(
+            array(
+                'Sulu\Bundle\ProductBundle\Entity\ProductInterface' => 'sulu.model.product.class',
+            ),
+            $container
+        );
     }
 }

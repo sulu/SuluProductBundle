@@ -8,6 +8,8 @@
  * with this source code in the file LICENSE.
  */
 
+namespace Sulu\Bundle\ProductBundle\DataFixtures\ORM\Units;
+
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -17,8 +19,8 @@ use Sulu\Bundle\ProductBundle\Entity\UnitMapping;
 
 class LoadUnits implements FixtureInterface, OrderedFixtureInterface
 {
+    private static $translations = array("de", "en");
 
-    private static $translations = ['de', 'en'];
     /**
      * {@inheritDoc}
      */
@@ -30,10 +32,10 @@ class LoadUnits implements FixtureInterface, OrderedFixtureInterface
 
         $i = 1;
         $file = dirname(__FILE__) . '/../../units.xml';
-        $doc = new DOMDocument();
+        $doc = new \DOMDocument();
         $doc->load($file);
 
-        $xpath = new DOMXpath($doc);
+        $xpath = new \DOMXpath($doc);
         $elements = $xpath->query('/units/unit');
 
         if (!is_null($elements)) {
@@ -51,11 +53,11 @@ class LoadUnits implements FixtureInterface, OrderedFixtureInterface
                                 $translation->setLocale($child->nodeName);
                                 $translation->setName($child->nodeValue);
                                 $translation->setUnit($unit);
+                                $unit->addTranslation($translation);
                                 $manager->persist($translation);
                             }
                         }
-                    }
-                    elseif (isset($child->nodeName) && $child->nodeName == 'mappings') {
+                    } elseif (isset($child->nodeName) && $child->nodeName == 'mappings') {
                         foreach ($child->childNodes as $child) {
                             if (isset($child->nodeName) && $child->nodeName === 'value') {
                                 $mapping = new UnitMapping();

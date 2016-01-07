@@ -78,19 +78,12 @@ class ProductPrice extends ApiWrapper
 
     /**
      * Returns the minimumQuantity
-     * @return string
+     * @return float
+     * @VirtualProperty
+     * @SerializedName("minimumQuantity")
      */
     public function getMinimumQuantity()
     {
         return $this->entity->getMinimumQuantity();
-    }
-
-    /**
-     * Returns the priceInfo
-     * @return string
-     */
-    public function getPriceInfo()
-    {
-        return $this->entity->getPriceInfo();
     }
 }
