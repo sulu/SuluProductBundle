@@ -11,26 +11,39 @@
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\ORM\EntityNotFoundException;
 use Sulu\Bundle\ProductBundle\Entity\CountryTax;
+use Sulu\Bundle\ContactBundle\Entity\Country;
 
 class LoadCountryTaxes implements FixtureInterface, OrderedFixtureInterface
 {
+    private static $taxClassEntityName = 'SuluProductBundle:TaxClass';
+    private static $countryEntityName = 'SuluContactBundle:Country';
 
-    // Adapt these if there are any changes in database
-    private static $taxClassMappings = array(
+    /**
+     * @var ObjectManager
+     */
+    private $manager;
+
+    /**
+     * Cache for already processed countries.
+     *
+     * @var array
+     */
+    private $countries = [];
+
+    /**
+     * Adapt these if there are any changes in database.
+     *
+     * @var array
+     */
+    private static $taxClassMappings = [
         'standard' => 1,
         'reduced1' => 2,
         'reduced2' => 3,
         'reduced3' => 4,
-    );
+    ];
 
-    private static $taxClassEntityName = 'SuluProductBundle:TaxClass';
-    private static $countryEntityName = 'SuluContactBundle:Country';
-
-    private $countries = array();
-    private $manager;
-
-//    private static $translations = ['de', 'en'];
     /**
      * {@inheritDoc}
      */
@@ -66,21 +79,18 @@ class LoadCountryTaxes implements FixtureInterface, OrderedFixtureInterface
                     $countryTax = new CountryTax();
                     $countryTax->setId($i);
 
-                    // check if mapping for tax-class exists
+                    // Check if mapping for tax-class exists
                     $taxClassKey = (string)$child->{"tax-class"};
                     if (array_key_exists($taxClassKey, static::$taxClassMappings)) {
-                        // set taxclass as defined in mappings array above
+                        // Set taxclass as defined in mappings array above
                         $taxClass = $taxClasses[static::$taxClassMappings[$taxClassKey]];
                         $countryTax->setTaxClass($taxClass);
                     } else {
                         throw new Exception('tax-class not defined for element country-tax number ' . $i);
                     }
 
-                    // set country
                     $country = $this->getCountryByCode((string)$child->country);
                     $countryTax->setCountry($country);
-
-                    // set tax
                     $countryTax->setTax((float)$child->tax);
 
                     $manager->persist($countryTax);
@@ -95,21 +105,26 @@ class LoadCountryTaxes implements FixtureInterface, OrderedFixtureInterface
     }
 
     /**
-     * finds country by code and caches it
+     * Finds country by code and caches it.
      *
-     * @param $code
-     * @return mixed
-     * @throws \Doctrine\ORM\EntityNotFoundException
+     * @param string $code
+     *
+     * @throws EntityNotFoundException
+     *
+     * @return Country
      */
     private function getCountryByCode($code)
     {
+        // Check if country exist in cache.
         if (array_key_exists($code, $this->countries)) {
             return $this->countries[$code];
         }
+        // Fetch country.
         $country = $this->manager->getRepository(static::$countryEntityName)->findOneBy(array('code' => $code));
         if (!$country) {
             throw new \Doctrine\ORM\EntityNotFoundException('code = ' . $code);
         }
+        // Add country to cache.
         $this->countries[$code] = $country;
 
         return $country;
