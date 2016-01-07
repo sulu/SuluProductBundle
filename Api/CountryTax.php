@@ -20,9 +20,6 @@ use Sulu\Bundle\ContactBundle\Entity\Country;
 use Sulu\Component\Rest\ApiWrapper;
 
 /**
- * The TaxClass class which will be exported to the API
- *
- * @package Sulu\Bundle\ProductBundle\Api
  * @ExclusionPolicy("all")
  */
 class CountryTax extends ApiWrapper
