@@ -9,7 +9,7 @@ use Sulu\Bundle\ProductBundle\Entity\TaxClass;
 class CountryTax
 {
     /**
-     * @var integer
+     * @var int
      */
     private $id;
 

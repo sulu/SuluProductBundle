@@ -84,7 +84,7 @@ class TaxClass extends ApiWrapper
      * @VirtualProperty
      * @SerializedName("countryTaxes")
      *
-     * @return TaxClassTranslation
+     * @return CountryTax[]|null
      */
     public function getCountryTaxes()
     {
@@ -93,7 +93,7 @@ class TaxClass extends ApiWrapper
             foreach ($this->entity->getCountryTaxes() as $countryTax) {
                 // If countryId is defined, show only tax of this country
                 if (!$this->countryId ||
-                    ($this->countryId && $countryTax->getCountry()->getId() == $countryTax)
+                    ($this->countryId && $countryTax->getCountry()->getId() === $countryTax->getId())
                 ) {
                     $taxes[] = new CountryTax($countryTax, $this->locale);
                     break;

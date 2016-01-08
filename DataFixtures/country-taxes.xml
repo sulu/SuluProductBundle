@@ -10,6 +10,11 @@
         <tax>10</tax>
     </country-tax>
     <country-tax>
+        <tax-class>reduced2</tax-class>
+        <country>AT</country>
+        <tax>13</tax>
+    </country-tax>
+    <country-tax>
         <tax-class>standard</tax-class>
         <country>DE</country>
         <tax>19</tax>
