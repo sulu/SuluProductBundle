@@ -18,7 +18,7 @@ use Sulu\Bundle\ProductBundle\Entity\TaxClassTranslation;
 
 class LoadTaxClasses implements FixtureInterface, OrderedFixtureInterface
 {
-    private static $translations = array("de", "en");
+    private static $translations = ["de", "en"];
 
     /**
      * {@inheritDoc}

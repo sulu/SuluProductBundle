@@ -11,10 +11,11 @@
 namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\Collection;
+use Sulu\Bundle\ProductBundle\Entity\TaxClassTranslation;
+use Sulu\Bundle\ProductBundle\Entity\Product;
+use Sulu\Bundle\ProductBundle\Entity\CountryTax;
 
-/**
- * TaxClass
- */
 class TaxClass
 {
 
@@ -22,32 +23,34 @@ class TaxClass
     const REDUCED_TAX_RATE = 2;
 
     /**
-     * @var integer
+     * @var int
      */
     private $id;
 
     /**
-     * @var \Doctrine\Common\Collections\Collection
+     * @var Collection
      */
     private $translations;
 
     /**
-     * @var \Doctrine\Common\Collections\Collection
+     * @var Collection
      */
     private $products;
 
     /**
-     * Constructor
+     * @var Collection
      */
+    private $countryTaxes;
+
     public function __construct()
     {
         $this->translations = new \Doctrine\Common\Collections\ArrayCollection();
     }
 
     /**
-     * Set id
+     * @param int $id
      *
-     * @return TaxClass
+     * @return self
      */
     public function setId($id)
     {
@@ -55,11 +58,9 @@ class TaxClass
 
         return $this;
     }
-    
+
     /**
-     * Get id
-     *
-     * @return integer 
+     * @return int
      */
     public function getId()
     {
@@ -67,32 +68,27 @@ class TaxClass
     }
 
     /**
-     * Add translations
+     * @param TaxClassTranslation $translations
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\TaxClassTranslation $translations
-     * @return TaxClass
+     * @return self
      */
-    public function addTranslation(\Sulu\Bundle\ProductBundle\Entity\TaxClassTranslation $translations)
+    public function addTranslation(TaxClassTranslation $translations)
     {
         $this->translations[] = $translations;
-    
+
         return $this;
     }
 
     /**
-     * Remove translations
-     *
-     * @param \Sulu\Bundle\ProductBundle\Entity\TaxClassTranslation $translations
+     * @param TaxClassTranslation $translations
      */
-    public function removeTranslation(\Sulu\Bundle\ProductBundle\Entity\TaxClassTranslation $translations)
+    public function removeTranslation(TaxClassTranslation $translations)
     {
         $this->translations->removeElement($translations);
     }
 
     /**
-     * Get translations
-     *
-     * @return \Doctrine\Common\Collections\Collection 
+     * @return Collection
      */
     public function getTranslations()
     {
@@ -100,35 +96,58 @@ class TaxClass
     }
 
     /**
-     * Add products
+     * @param Product $product
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\Product $products
-     * @return TaxClass
+     * @return self
      */
-    public function addProduct(\Sulu\Bundle\ProductBundle\Entity\Product $products)
+    public function addProduct(Product $product)
     {
-        $this->products[] = $products;
-    
+        $this->products[] = $product;
+
         return $this;
     }
 
     /**
-     * Remove products
-     *
-     * @param \Sulu\Bundle\ProductBundle\Entity\Product $products
+     * @param Product $product
      */
-    public function removeProduct(\Sulu\Bundle\ProductBundle\Entity\Product $products)
+    public function removeProduct(Product $product)
     {
-        $this->products->removeElement($products);
+        $this->products->removeElement($product);
     }
 
     /**
-     * Get products
-     *
-     * @return \Doctrine\Common\Collections\Collection 
+     * @return Collection
      */
     public function getProducts()
     {
         return $this->products;
+    }
+
+    /**
+     * @param CountryTax $tax
+     *
+     * @return self
+     */
+    public function addCountryTax(CountryTax $tax)
+    {
+        $this->countryTaxes[] = $tax;
+
+        return $this;
+    }
+
+    /**
+     * @param CountryTax $tax
+     */
+    public function removeCountryTax(CountryTax $tax)
+    {
+        $this->countryTaxes->removeElement($tax);
+    }
+
+    /**
+     * @return Collection
+     */
+    public function getCountryTaxes()
+    {
+        return $this->countryTaxes;
     }
 }
