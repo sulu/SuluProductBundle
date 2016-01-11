@@ -11,10 +11,15 @@ use Sulu\Bundle\ProductBundle\DataFixtures\ORM\Currencies\LoadCurrencies;
 use Sulu\Bundle\ProductBundle\DataFixtures\ORM\ProductStatuses\LoadProductStatuses;
 use Sulu\Bundle\ProductBundle\DataFixtures\ORM\ProductTypes\LoadProductTypes;
 use Sulu\Bundle\ProductBundle\DataFixtures\ORM\Units\LoadUnits;
+use Sulu\Bundle\ProductBundle\DataFixtures\ORM\Units\LoadTaxClasses;
+use Sulu\Bundle\ProductBundle\DataFixtures\ORM\Units\LoadCountryTaxes;
 use Sulu\Bundle\ProductBundle\Entity\Currency;
 use Sulu\Bundle\ProductBundle\Entity\CurrencyRepository;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductPrice;
+use Sulu\Bundle\ProductBundle\Entity\TaxClass;
+use Sulu\Bundle\ProductBundle\Entity\TaxClassRepository;
+use Sulu\Bundle\ProductBundle\Entity\CountryTax;
 use Sulu\Bundle\ProductBundle\Entity\ProductTranslation;
 use Sulu\Bundle\ProductBundle\Entity\Status;
 use Sulu\Bundle\ProductBundle\Entity\StatusRepository;
@@ -101,6 +106,16 @@ class ProductTestData
     private $eurCurrency;
 
     /**
+     * @var TaxClass
+     */
+    private $taxClass;
+
+    /**
+     * @var CountryTax
+     */
+    private $countryTax;
+
+    /**
      * @param Container $container
      */
     public function __construct(
@@ -129,6 +144,13 @@ class ProductTestData
         $unitFixtures = new LoadUnits();
         $unitFixtures->load($this->entityManager);
         $this->orderUnit = $this->getProductUnitRepository()->find(1);
+
+        $countryTaxes = new LoadCountryTaxes();
+        $countryTaxes->load($this->entityManager);
+
+        $taxClasses = new LoadTaxClasses();
+        $taxClasses->load($this->entityManager);
+        $this->taxClass = $this->getTaxClassRepository()->find(1);
 
         $typeFixtures = new LoadProductTypes();
         $typeFixtures->load($this->entityManager);
@@ -274,6 +296,14 @@ class ProductTestData
     private function getProductUnitRepository()
     {
         return $this->container->get('sulu_product.unit_repository');
+    }
+
+    /**
+     * @return TaxClassRepository
+     */
+    private function getTaxClassRepository()
+    {
+        return $this->container->get('sulu_product.tax_class_repository');
     }
 
     /**
