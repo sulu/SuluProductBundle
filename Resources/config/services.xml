@@ -18,6 +18,7 @@
         <parameter key="sulu_product.unit_repository.class">Sulu\Bundle\ProductBundle\Entity\UnitRepository</parameter>
         <parameter key="sulu_product.type_repository.class">Sulu\Bundle\ProductBundle\Entity\TypeRepository</parameter>
         <parameter key="sulu_product.tax_class_repository.class">Sulu\Bundle\ProductBundle\Entity\TaxClassRepository</parameter>
+        <parameter key="sulu_product.country_tax_repository.class">Sulu\Bundle\ProductBundle\Entity\CountryTaxRepository</parameter>
         <parameter key="sulu_product.currency_repository.class">Sulu\Bundle\ProductBundle\Entity\CurrencyRepository</parameter>
         <parameter key="sulu_product.unit_repository.class">Sulu\Bundle\ProductBundle\Entity\UnitRepository</parameter>
         <parameter key="sulu_product.product_manager.class">Sulu\Bundle\ProductBundle\Product\ProductManager</parameter>
@@ -92,6 +93,10 @@
         <service id="sulu_product.tax_class_repository" class="%sulu_product.tax_class_repository.class%"
                  factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
             <argument>SuluProductBundle:TaxClass</argument>
+        </service>
+        <service id="sulu_product.country_tax_repository" class="%sulu_product.country_tax_repository.class%"
+                 factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
+            <argument>SuluProductBundle:CountryTax</argument>
         </service>
         <service id="sulu_product.currency_repository" class="%sulu_product.currency_repository.class%"
                  factory-method="getRepository" factory-service="doctrine.orm.entity_manager">

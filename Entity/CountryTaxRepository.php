@@ -1,0 +1,36 @@
+<?php
+/*
+ * This file is part of the Sulu CMS.
+ *
+ * (c) MASSIVE ART WebServices GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
+namespace Sulu\Bundle\ProductBundle\Entity;
+
+use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\NoResultException;
+
+class CountryTaxRepository extends EntityRepository
+{
+    /**
+     * @param string $locale The locale to load
+     * @return Status[]|null
+     */
+    public function findByLocaleAndTaxClassId($locale, $taxClassId)
+    {
+        try {
+            $qb = $this->createQueryBuilder('countryTaxes')
+                ->join('countryTaxes.taxClass', 'taxClass', 'WITH', 'taxClass.id = :taxClassId')
+                ->join('countryTaxes.country', 'country', 'WITH', 'country.code = :locale')
+                ->setParameter('taxClassId', $taxClassId)
+                ->setParameter('locale', $locale);
+
+            return $qb->getQuery()->getSingleResult();
+        } catch (NoResultException $exc) {
+            return null;
+        }
+    }
+}
