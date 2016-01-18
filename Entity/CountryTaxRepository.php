@@ -17,7 +17,8 @@ class CountryTaxRepository extends EntityRepository
 {
     /**
      * @param string $locale The locale to load
-     * @return Status[]|null
+     *
+     * @return CountryTax|null
      */
     public function findByLocaleAndTaxClassId($locale, $taxClassId)
     {
