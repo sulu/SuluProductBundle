@@ -36,7 +36,7 @@ define([
 
         initialize: function() {
             this.saved = true;
-            this.status = !!this.options.data ? this.options.data.attributes.status : Config.get('product.status.active');
+            this.status = !!this.options.data ? this.options.data.attributes.status : Config.get('product.status.inactive');
             // reset status if it has been changed before and has not been saved
             this.sandbox.emit('product.state.change', this.status);
 

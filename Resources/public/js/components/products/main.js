@@ -140,6 +140,19 @@ define([
             this.sandbox.on('sulu.header.back', function() {
                 this.sandbox.emit('sulu.products.list');
             }, this);
+
+            // products save-error
+            this.sandbox.on('sulu.products.save-error', function(response) {
+                if (response.responseJSON.message) {
+                    this.sandbox.emit(
+                        'sulu.labels.error.show',
+                        response.responseJSON.message,
+                        'labels.error'
+                    );
+                } else {
+                    this.sandbox.emit('sulu.labels.error.show', 'labels.error.product-save', 'labels.error');
+                }
+            }, this);
         },
 
         triggerWorkflowAction: function(data) {
@@ -261,8 +274,10 @@ define([
                         this.load(model.id, this.options.locale);
                     }
                 }.bind(this),
-                error: function() {
-                    this.sandbox.logger.error('error while saving product');
+                error: function(model, response) {
+                    this.sandbox.logger.log("error while saving product");
+                    this.sandbox.emit('sulu.header.toolbar.item.enable', 'save');
+                    this.sandbox.emit('sulu.products.save-error', response);
                 }.bind(this)
             });
         },

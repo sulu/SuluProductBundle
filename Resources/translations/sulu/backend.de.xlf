@@ -346,6 +346,14 @@
                 <source>product.search-terms</source>
                 <target>Suchbegriffe</target>
             </trans-unit>
+            <trans-unit id="73" resname="labels.error.product-save">
+                <source>labels.error.product-save</source>
+                <target>Produkt konnte nicht gespeichert werden.</target>
+            </trans-unit>
+            <trans-unit id="74" resname="labels.error.no-price-in-default-currency">
+                <source>labels.error.no-price-in-default-currency</source>
+                <target>Kein Preis in der Standard Währung gesetzt.</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>
