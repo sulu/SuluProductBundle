@@ -52,9 +52,10 @@ define([
         },
 
         bindCustomEvents: function() {
-            this.sandbox.on('product.state.change', function(id) {
-                if (!this.options.data || !this.options.data.attributes.status || this.options.data.attributes.status.id !== id) {
-                    this.status = {id: id};
+            this.sandbox.on('product.state.change', function(status) {
+                if (!this.options.data || !this.options.data.attributes.status || this.options.data.attributes.status.id !== status.id) {
+                    this.status = status;
+                    this.options.data.status = this.status;
                     this.setHeaderBar(false);
                 }
             }, this);

@@ -222,7 +222,8 @@ class ProductController extends RestController implements ClassResourceInterface
         } catch (EntityIdAlreadySetException $exc) {
             $view = $this->view($exc->toArray(), 400);
         } catch (ProductException $exc) {
-            $view = $this->view($exc->toArray(), 400);
+            $exception = new RestException($exc->getMessage(), $exc->getCode());
+            $view = $this->view($exception->toArray(), 400);
         }
 
         return $this->handleView($view);
@@ -252,7 +253,8 @@ class ProductController extends RestController implements ClassResourceInterface
             $exception = new MissingArgumentException(static::$entityName, $exc->getAttribute());
             $view = $this->view($exception->toArray(), 400);
         } catch (ProductException $exc) {
-            $view = $this->view($exc->toArray(), 400);
+            $exception = new RestException($exc->getMessage(), $exc->getCode());
+            $view = $this->view($exception->toArray(), 400);
         }
 
         return $this->handleView($view);

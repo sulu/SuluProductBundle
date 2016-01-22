@@ -1045,16 +1045,41 @@ abstract class BaseProduct implements ProductInterface
     /**
      * Helper method to check if the product is
      * a valid shop product.
-     *
+     * @param $defaultCurrency
      * @return bool
      */
-    public function isValidShopProduct()
+    public function isValidShopProduct($defaultCurrency)
     {
         if (method_exists($this, 'getPrices') &&
             $this->getStatus()->getId() == Status::ACTIVE &&
             $this->getPrices() && count($this->getPrices()) > 0
         ) {
+            if(!$this->hasPriceInDefaultCurrency($this->getPrices(), $defaultCurrency)) {
+                return false;
+            }
+            if(!$this->getSupplier()) {
+                return false;
+            }
+
             return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Checks if price in default currency exists
+     *
+     * @param ProductPrice[] $prices
+     * @param $defaultCurrency
+     * @return boolean
+     */
+    private function hasPriceInDefaultCurrency($prices, $defaultCurrency)
+    {
+        foreach ($prices as $price) {
+            if ($price->getCurrency()->getCode() === $defaultCurrency) {
+                return true;
+            }
         }
 
         return false;

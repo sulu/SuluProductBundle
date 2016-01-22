@@ -1228,4 +1228,9 @@ class Product extends ApiWrapper implements ApiProductInterface
     {
         return $this->entity->getSearchTerms();
     }
+
+    public function isValidShopProduct($defaultCurrency)
+    {
+        return $this->entity->isValidShopProduct($defaultCurrency);
+    }
 }

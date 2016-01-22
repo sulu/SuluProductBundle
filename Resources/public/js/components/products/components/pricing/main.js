@@ -41,7 +41,7 @@ define(['config'], function(Config) {
             }.bind(this));
 
             this.sandbox.on('product.state.change', function(status) {
-                if (!this.options.data.attributes.status || this.options.data.attributes.status.id !== status.id) {
+                if (!this.options.data || !this.options.data.attributes.status || this.options.data.attributes.status.id !== status.id) {
                     this.status = status;
                     this.options.data.status = this.status;
                     setHeaderBar.call(this, false);
@@ -124,7 +124,7 @@ define(['config'], function(Config) {
         templates: ['/admin/product/template/product/pricing'],
 
         initialize: function() {
-            this.status = !!this.options.data ? this.options.data.attributes.status : Config.get('product.status.active');
+            this.status = !!this.options.data ? this.options.data.attributes.status : Config.get('product.status.inactive');
             // reset status if it has been changed before and has not been saved
             this.sandbox.emit('product.state.change', this.status);
             bindCustomEvents.call(this);

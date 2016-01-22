@@ -528,4 +528,13 @@ interface ProductInterface
      * @return string
      */
     public function getSearchTerms();
+
+    /**
+     * Helper method to check if the product is
+     * a valid shop product.
+     *
+     * @param $defaultCurrency
+     * @return bool
+     */
+    public function isValidShopProduct($defaultCurrency);
 }

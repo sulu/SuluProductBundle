@@ -12,8 +12,9 @@ define([
     'sulucategory/model/category',
     'app-config',
     'suluproduct/util/header',
-    'suluproduct/util/product-delete-dialog'
-], function(Product, Category, AppConfig, HeaderUtil, DeleteDialog) {
+    'suluproduct/util/product-delete-dialog',
+    'config'
+], function(Product, Category, AppConfig, HeaderUtil, DeleteDialog, Config) {
     'use strict';
 
     var types = {
@@ -143,12 +144,21 @@ define([
 
             // products save-error
             this.sandbox.on('sulu.products.save-error', function(response) {
-                if (response.responseJSON.message) {
-                    this.sandbox.emit(
-                        'sulu.labels.error.show',
-                        response.responseJSON.message,
-                        'labels.error'
-                    );
+                if (response && response.responseJSON && response.responseJSON.code) {
+                    if(response.responseJSON.code == 1) {
+                        this.sandbox.emit(
+                            'sulu.labels.error.show',
+                            'labels.error.product-could-not-be-activated',
+                            'labels.error'
+                        );
+
+                        this.status = Config.get('product.status.inactive');
+                        this.sandbox.emit('product.state.change', this.status);
+                    }
+                    else {
+                        // code not defined
+                        this.sandbox.emit('sulu.labels.error.show', 'labels.error.product-save', 'labels.error');
+                    }
                 } else {
                     this.sandbox.emit('sulu.labels.error.show', 'labels.error.product-save', 'labels.error');
                 }

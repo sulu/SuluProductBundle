@@ -50,7 +50,7 @@ define(['config', 'suluproduct/util/product-delete-dialog'], function(Config, De
             }.bind(this));
 
             this.sandbox.on('product.state.change', function(status) {
-                if (!this.options.data.attributes.status || this.options.data.attributes.status.id !== status.id) {
+                if (!this.options.data || !this.options.data.attributes.status || this.options.data.attributes.status.id !== status.id) {
                     this.status = status;
                     this.setHeaderBar(false);
                 }

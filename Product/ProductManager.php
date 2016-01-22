@@ -12,9 +12,11 @@ namespace Sulu\Bundle\ProductBundle\Product;
 
 use DateTime;
 use Doctrine\Common\Persistence\ObjectManager;
+use Faker\Provider\Base;
 use Sulu\Bundle\ProductBundle\Product\Exception\AttributeNotFoundException;
 use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductException;
+use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Sulu\Bundle\ContactBundle\Entity\Account;
 use Sulu\Bundle\ProductBundle\Product\Exception\InvalidProductAttributeException;
@@ -1334,6 +1336,14 @@ class ProductManager implements ProductManagerInterface
             $product->setDeliveryStatus($deliveryStatus);
         }
 
+        if($product->getStatus()->getId() == StatusEntity::ACTIVE) {
+            // if the status of the product is active then the product must be a valid shop product!
+            if(!$product->isValidShopProduct($this->defaultCurrency)) {
+                $this->setStatusForProduct($product, StatusEntity::INACTIVE);
+                throw new ProductException('No valid product for shop!',1);
+            }
+        }
+
         if ($flush) {
             $this->em->flush();
         }
@@ -1625,7 +1635,8 @@ class ProductManager implements ProductManagerInterface
      *
      * @param Product $product
      * @param int $statusId
-     * @throws Exception\ProductDependencyNotFoundException|Exception\ProductException
+     *
+     * @throws ProductDependencyNotFoundException
      */
     public function setStatusForProduct($product, $statusId)
     {
@@ -1633,12 +1644,14 @@ class ProductManager implements ProductManagerInterface
         if (!$status) {
             throw new ProductDependencyNotFoundException(self::$productStatusEntityName, $statusId);
         }
+        /*
         // when the new status is active then a price in default currency is needed!
-        if($statusId == StatusEntity::ACTIVE) {
-            if(!$this->checkPriceInDefaultCurrency($product)) {
-                throw new ProductException("labels.error.no-price-in-default-currency");
+        if($status->getId() == StatusEntity::ACTIVE) {
+            if(!$this->hasPriceInDefaultCurrency($product)) {
+                throw new ProductException("No price in default currency set", 1);
             }
         }
+        */
 
         $product->setStatus($status);
     }
@@ -1649,7 +1662,7 @@ class ProductManager implements ProductManagerInterface
      * @param Product $product
      * @return boolean
      */
-    public function checkPriceInDefaultCurrency($product)
+    public function hasPriceInDefaultCurrency($product)
     {
         foreach ($product->getPrices() as $price) {
             if ($price->getCurrency()->getCode() === $this->defaultCurrency) {
