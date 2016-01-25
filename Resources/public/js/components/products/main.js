@@ -156,10 +156,11 @@ define([
                         this.sandbox.emit('product.state.change', this.status);
                     }
                     else {
-                        // code not defined
+                        // error code not defined -> show default product save error
                         this.sandbox.emit('sulu.labels.error.show', 'labels.error.product-save', 'labels.error');
                     }
                 } else {
+                    // no valid response -> show default product save error
                     this.sandbox.emit('sulu.labels.error.show', 'labels.error.product-save', 'labels.error');
                 }
             }, this);

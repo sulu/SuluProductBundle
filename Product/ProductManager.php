@@ -12,11 +12,9 @@ namespace Sulu\Bundle\ProductBundle\Product;
 
 use DateTime;
 use Doctrine\Common\Persistence\ObjectManager;
-use Sulu\Bundle\ProductBundle\Product\Exception\ProductException;
 use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Sulu\Bundle\ContactBundle\Entity\Account;
-use Sulu\Bundle\ProductBundle\Product\Exception\InvalidProductAttributeException;
 use Sulu\Bundle\CategoryBundle\Api\Category;
 use Sulu\Bundle\CategoryBundle\Entity\CategoryRepository;
 use Sulu\Bundle\ProductBundle\Api\ProductPrice;
@@ -28,16 +26,17 @@ use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductPrice as ProductPriceEntity;
 use Sulu\Bundle\ProductBundle\Entity\SpecialPrice;
 use Sulu\Bundle\ProductBundle\Entity\StatusRepository;
-use Sulu\Bundle\ContactBundle\Entity\AccountRepository;
 use Sulu\Bundle\ProductBundle\Entity\TaxClass;
 use Sulu\Bundle\ProductBundle\Entity\TaxClassRepository;
 use Sulu\Bundle\ProductBundle\Entity\Type;
 use Sulu\Bundle\ProductBundle\Entity\TypeRepository;
 use Sulu\Bundle\ProductBundle\Entity\Unit;
+use Sulu\Bundle\ProductBundle\Product\Exception\ProductException;
 use Sulu\Bundle\ProductBundle\Product\Exception\MissingProductAttributeException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductChildrenExistException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductDependencyNotFoundException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductNotFoundException;
+use Sulu\Bundle\ProductBundle\Product\Exception\InvalidProductAttributeException;
 use Sulu\Component\Persistence\RelationTrait;
 use Sulu\Component\Rest\Exception\EntityIdAlreadySetException;
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescriptor;
@@ -50,9 +49,10 @@ use Sulu\Bundle\ProductBundle\Entity\DeliveryStatusRepository;
 use Sulu\Bundle\ProductBundle\Entity\AttributeRepository;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttributeRepository;
 use Sulu\Bundle\ProductBundle\Entity\UnitRepository;
-use Sulu\Bundle\MediaBundle\Media\Manager\MediaManager;
 use Sulu\Bundle\ProductBundle\Entity\DeliveryStatus;
 use Sulu\Bundle\ProductBundle\Api\Product;
+use Sulu\Bundle\MediaBundle\Media\Manager\MediaManager;
+use Sulu\Bundle\ContactBundle\Entity\AccountRepository;
 
 class ProductManager implements ProductManagerInterface
 {

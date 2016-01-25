@@ -219,6 +219,7 @@ abstract class BaseProduct implements ProductInterface
      * Set number
      *
      * @param string $number
+     *
      * @return BaseProduct
      */
     public function setNumber($number)
@@ -242,6 +243,7 @@ abstract class BaseProduct implements ProductInterface
      * Set globalTradeItemNumber
      *
      * @param string $globalTradeItemNumber
+     *
      * @return BaseProduct
      */
     public function setGlobalTradeItemNumber($globalTradeItemNumber)
@@ -265,6 +267,7 @@ abstract class BaseProduct implements ProductInterface
      * Set internalItemNumber
      *
      * @param string $internalItemNumber
+     *
      * @return BaseProduct
      */
     public function setInternalItemNumber($internalItemNumber)
@@ -288,6 +291,7 @@ abstract class BaseProduct implements ProductInterface
      * Set isDeprecated
      *
      * @param boolean $isDeprecated
+     *
      * @return BaseProduct
      */
     public function setIsDeprecated($isDeprecated)
@@ -311,6 +315,7 @@ abstract class BaseProduct implements ProductInterface
      * Set manufacturer
      *
      * @param string $manufacturer
+     *
      * @return BaseProduct
      */
     public function setManufacturer($manufacturer)
@@ -334,6 +339,7 @@ abstract class BaseProduct implements ProductInterface
      * Set cost
      *
      * @param double $cost
+     *
      * @return BaseProduct
      */
     public function setCost($cost)
@@ -357,6 +363,7 @@ abstract class BaseProduct implements ProductInterface
      * Set priceInfo
      *
      * @param string $priceInfo
+     *
      * @return BaseProduct
      */
     public function setPriceInfo($priceInfo)
@@ -380,6 +387,7 @@ abstract class BaseProduct implements ProductInterface
      * Set created
      *
      * @param \DateTime $created
+     *
      * @return BaseProduct
      */
     public function setCreated($created)
@@ -403,6 +411,7 @@ abstract class BaseProduct implements ProductInterface
      * Set changed
      *
      * @param \DateTime $changed
+     *
      * @return BaseProduct
      */
     public function setChanged($changed)
@@ -436,6 +445,7 @@ abstract class BaseProduct implements ProductInterface
      * Set manufacturerCountry
      *
      * @param \Sulu\Bundle\ContactBundle\Entity\Country $manufacturerCountry
+     *
      * @return BaseProduct
      */
     public function setManufacturerCountry(\Sulu\Bundle\ContactBundle\Entity\Country $manufacturerCountry = null)
@@ -459,6 +469,7 @@ abstract class BaseProduct implements ProductInterface
      * Set type
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\Type $type
+     *
      * @return BaseProduct
      */
     public function setType(\Sulu\Bundle\ProductBundle\Entity\Type $type)
@@ -482,6 +493,7 @@ abstract class BaseProduct implements ProductInterface
      * Set attributeSet
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\AttributeSet $attributeSet
+     *
      * @return BaseProduct
      */
     public function setAttributeSet(\Sulu\Bundle\ProductBundle\Entity\AttributeSet $attributeSet)
@@ -505,6 +517,7 @@ abstract class BaseProduct implements ProductInterface
      * Set status
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\Status $status
+     *
      * @return BaseProduct
      */
     public function setStatus(\Sulu\Bundle\ProductBundle\Entity\Status $status = null)
@@ -528,6 +541,7 @@ abstract class BaseProduct implements ProductInterface
      * Set deliveryStatus
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\DeliveryStatus $deliveryStatus
+     *
      * @return BaseProduct
      */
     public function setDeliveryStatus(\Sulu\Bundle\ProductBundle\Entity\DeliveryStatus $deliveryStatus = null)
@@ -575,6 +589,7 @@ abstract class BaseProduct implements ProductInterface
      * Set parent
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $parent
+     *
      * @return BaseProduct
      */
     public function setParent(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $parent = null)
@@ -598,6 +613,7 @@ abstract class BaseProduct implements ProductInterface
      * Add sets
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $sets
+     *
      * @return BaseProduct
      */
     public function addSet(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $sets)
@@ -631,6 +647,7 @@ abstract class BaseProduct implements ProductInterface
      * Add relations
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $relations
+     *
      * @return BaseProduct
      */
     public function addRelation(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $relations)
@@ -664,6 +681,7 @@ abstract class BaseProduct implements ProductInterface
      * Add upsells
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $upsells
+     *
      * @return BaseProduct
      */
     public function addUpsell(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $upsells)
@@ -697,6 +715,7 @@ abstract class BaseProduct implements ProductInterface
      * Add crosssells
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $crosssells
+     *
      * @return BaseProduct
      */
     public function addCrosssell(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $crosssells)
@@ -730,6 +749,7 @@ abstract class BaseProduct implements ProductInterface
      * Set changer
      *
      * @param \Sulu\Component\Security\Authentication\UserInterface $changer
+     *
      * @return BaseProduct
      */
     public function setChanger(UserInterface $changer = null)
@@ -753,6 +773,7 @@ abstract class BaseProduct implements ProductInterface
      * Set creator
      *
      * @param \Sulu\Component\Security\Authentication\UserInterface $creator
+     *
      * @return BaseProduct
      */
     public function setCreator(UserInterface $creator = null)
@@ -776,6 +797,7 @@ abstract class BaseProduct implements ProductInterface
      * Set taxClass
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\TaxClass $taxClass
+     *
      * @return BaseProduct
      */
     public function setTaxClass(\Sulu\Bundle\ProductBundle\Entity\TaxClass $taxClass = null)
@@ -799,6 +821,7 @@ abstract class BaseProduct implements ProductInterface
      * Add categories
      *
      * @param \Sulu\Bundle\CategoryBundle\Entity\Category $categories
+     *
      * @return BaseProduct
      */
     public function addCategory(\Sulu\Bundle\CategoryBundle\Entity\Category $categories)
@@ -832,6 +855,7 @@ abstract class BaseProduct implements ProductInterface
      * Add media
      *
      * @param Media $media
+     *
      * @return Product
      */
     public function addMedia(Media $media)
@@ -865,6 +889,7 @@ abstract class BaseProduct implements ProductInterface
      * Set contentUnit
      *
      * @param Unit $contentUnit
+     *
      * @return BaseProduct
      */
     public function setContentUnit(Unit $contentUnit = null)
@@ -888,6 +913,7 @@ abstract class BaseProduct implements ProductInterface
      * Set orderUnit
      *
      * @param Unit $orderUnit
+     *
      * @return BaseProduct
      */
     public function setOrderUnit(Unit $orderUnit = null)
@@ -911,6 +937,7 @@ abstract class BaseProduct implements ProductInterface
      * Set orderContentRatio
      *
      * @param string $orderContentRatio
+     *
      * @return BaseProduct
      */
     public function setOrderContentRatio($orderContentRatio)
@@ -934,6 +961,7 @@ abstract class BaseProduct implements ProductInterface
      * Set minimumOrderQuantity
      *
      * @param float $minimumOrderQuantity
+     *
      * @return BaseProduct
      */
     public function setMinimumOrderQuantity($minimumOrderQuantity)
@@ -957,6 +985,7 @@ abstract class BaseProduct implements ProductInterface
      * Set recommendedOrderQuantity
      *
      * @param float $recommendedOrderQuantity
+     *
      * @return BaseProduct
      */
     public function setRecommendedOrderQuantity($recommendedOrderQuantity)
@@ -990,6 +1019,7 @@ abstract class BaseProduct implements ProductInterface
      * Set deliveryTime.
      *
      * @param int $deliveryTime
+     *
      * @return BaseProduct
      */
     public function setDeliveryTime($deliveryTime)
@@ -1003,6 +1033,7 @@ abstract class BaseProduct implements ProductInterface
      * Set areGrossPrices
      *
      * @param boolean $areGrossPrices
+     *
      * @return BaseProduct
      */
     public function setAreGrossPrices($areGrossPrices)
@@ -1045,26 +1076,26 @@ abstract class BaseProduct implements ProductInterface
     /**
      * Helper method to check if the product is
      * a valid shop product.
+     *
      * @param $defaultCurrency
+     *
      * @return bool
      */
     public function isValidShopProduct($defaultCurrency)
     {
+        $isValid = false;
+
         if (method_exists($this, 'getPrices') &&
             $this->getStatus()->getId() == Status::ACTIVE &&
-            $this->getPrices() && count($this->getPrices()) > 0
+            $this->getPrices() &&
+            count($this->getPrices()) > 0 &&
+            $this->hasPriceInDefaultCurrency($this->getPrices(), $defaultCurrency) &&
+            $this->getSupplier()
         ) {
-            if(!$this->hasPriceInDefaultCurrency($this->getPrices(), $defaultCurrency)) {
-                return false;
-            }
-            if(!$this->getSupplier()) {
-                return false;
-            }
-
-            return true;
+            $isValid = true;
         }
 
-        return false;
+        return $isValid;
     }
 
     /**
@@ -1072,6 +1103,7 @@ abstract class BaseProduct implements ProductInterface
      *
      * @param ProductPrice[] $prices
      * @param $defaultCurrency
+     *
      * @return boolean
      */
     private function hasPriceInDefaultCurrency($prices, $defaultCurrency)

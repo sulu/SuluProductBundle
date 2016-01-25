@@ -534,6 +534,7 @@ interface ProductInterface
      * a valid shop product.
      *
      * @param $defaultCurrency
+     *
      * @return bool
      */
     public function isValidShopProduct($defaultCurrency);
