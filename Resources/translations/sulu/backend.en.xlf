@@ -348,7 +348,7 @@
             </trans-unit>
             <trans-unit id="73" resname="labels.error.product-save">
                 <source>labels.error.product-save</source>
-                <target>Product could not be saved.</target>
+                <target>Product couldn't be saved.</target>
             </trans-unit>
             <trans-unit id="74" resname="labels.error.product-could-not-be-activated">
                 <source>labels.error.product-could-not-be-activated</source>

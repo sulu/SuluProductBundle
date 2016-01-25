@@ -12,9 +12,6 @@ namespace Sulu\Bundle\ProductBundle\Product;
 
 use DateTime;
 use Doctrine\Common\Persistence\ObjectManager;
-use Faker\Provider\Base;
-use Sulu\Bundle\ProductBundle\Product\Exception\AttributeNotFoundException;
-use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductException;
 use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\HttpFoundation\Request;
@@ -188,7 +185,7 @@ class ProductManager implements ProductManagerInterface
      * @param ProductFactoryInterface $productFactory
      * @param CategoryRepository $categoryRepository
      * @param UserRepositoryInterface $userRepository
-     * @param DefaultMediaManager $mediaManager
+     * @param MediaManager $mediaManager
      * @param ObjectManager $em
      * @param AccountRepository $accountRepository
      * @param string $defaultCurrency
@@ -875,7 +872,7 @@ class ProductManager implements ProductManagerInterface
      * @param int $id
      * @param string $locale
      *
-     * @throws Exception\ProductNotFoundException
+     * @throws ProductNotFoundException
      *
      * @return \Sulu\Bundle\ProductBundle\Api\Product
      */
@@ -1644,33 +1641,7 @@ class ProductManager implements ProductManagerInterface
         if (!$status) {
             throw new ProductDependencyNotFoundException(self::$productStatusEntityName, $statusId);
         }
-        /*
-        // when the new status is active then a price in default currency is needed!
-        if($status->getId() == StatusEntity::ACTIVE) {
-            if(!$this->hasPriceInDefaultCurrency($product)) {
-                throw new ProductException("No price in default currency set", 1);
-            }
-        }
-        */
-
         $product->setStatus($status);
-    }
-
-    /**
-     * Checks if price in default currency exists
-     *
-     * @param Product $product
-     * @return boolean
-     */
-    public function hasPriceInDefaultCurrency($product)
-    {
-        foreach ($product->getPrices() as $price) {
-            if ($price->getCurrency()->getCode() === $this->defaultCurrency) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /**
@@ -1678,7 +1649,7 @@ class ProductManager implements ProductManagerInterface
      *
      * @param Product $product
      * @param int $statusId
-     * @throws Exception\ProductDependencyNotFoundException
+     * @throws ProductDependencyNotFoundException
      */
     public function setDeliveryStatusForProduct($product, $statusId)
     {
@@ -1694,7 +1665,7 @@ class ProductManager implements ProductManagerInterface
      *
      * @param ProductPrice $price
      * @param array $matchedEntry
-     * @throws Exception\ProductDependencyNotFoundException
+     * @throws ProductDependencyNotFoundException
      * @return bool
      */
     protected function updatePrice(ProductPrice $price, $matchedEntry)
@@ -1728,7 +1699,7 @@ class ProductManager implements ProductManagerInterface
      * @param array $priceData The array containing the data for the new price
      * @return bool
      * @throws \Sulu\Component\Rest\Exception\EntityIdAlreadySetException
-     * @throws Exception\ProductDependencyNotFoundException
+     * @throws ProductDependencyNotFoundException
      */
     protected function addPrice(ProductInterface $product, $priceData)
     {
@@ -1768,7 +1739,7 @@ class ProductManager implements ProductManagerInterface
      * @param array $categoryData The array containing the data for the additional category
      * @return bool
      * @throws \Sulu\Component\Rest\Exception\EntityIdAlreadySetException
-     * @throws Exception\ProductDependencyNotFoundException
+     * @throws ProductDependencyNotFoundException
      */
     protected function addCategory(ProductInterface $product, $categoryData)
     {
@@ -1910,7 +1881,7 @@ class ProductManager implements ProductManagerInterface
      * @param string $key The array key to check
      * @param bool $create Defines if the is for new or already existing data
      * @return bool
-     * @throws Exception\MissingProductAttributeException
+     * @throws MissingProductAttributeException
      */
     private function checkDataSet(array $data, $key, $create)
     {

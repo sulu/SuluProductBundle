@@ -14,4 +14,5 @@ use Exception;
 
 class ProductException extends Exception
 {
+
 } 
