@@ -1334,7 +1334,7 @@ class ProductManager implements ProductManagerInterface
         }
 
         if($product->getStatus()->getId() == StatusEntity::ACTIVE) {
-            // if the status of the product is active then the product must be a valid shop product!
+            // If the status of the product is active then the product must be a valid shop product!
             if(!$product->isValidShopProduct($this->defaultCurrency)) {
                 $this->setStatusForProduct($product, StatusEntity::INACTIVE);
                 throw new ProductException('No valid product for shop!',1);
@@ -1426,6 +1426,7 @@ class ProductManager implements ProductManagerInterface
      *
      * @param array $data
      * @param float $price
+     *
      * @return bool
      */
     private function priceHasChanged($data, $price)
@@ -1606,6 +1607,7 @@ class ProductManager implements ProductManagerInterface
      * @param Product $existingProduct
      * @param int $statusId
      * @param string $locale
+     *
      * @return null|\Sulu\Bundle\ProductBundle\Api\Product
      */
     protected function getExistingActiveOrInactiveProduct($existingProduct, $statusId, $locale)
@@ -1628,7 +1630,7 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Sets the status for a given product
+     * Sets the status for a given product.
      *
      * @param Product $product
      * @param int $statusId
@@ -1645,10 +1647,11 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Sets the deliveryStatus for a given product
+     * Sets the deliveryStatus for a given product.
      *
      * @param Product $product
      * @param int $statusId
+     *
      * @throws ProductDependencyNotFoundException
      */
     public function setDeliveryStatusForProduct($product, $statusId)
@@ -1661,11 +1664,13 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Updates the given price with the values from the given array
+     * Updates the given price with the values from the given array.
      *
      * @param ProductPrice $price
      * @param array $matchedEntry
+     *
      * @throws ProductDependencyNotFoundException
+     *
      * @return bool
      */
     protected function updatePrice(ProductPrice $price, $matchedEntry)
@@ -1694,12 +1699,15 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Adds a price to the given product
+     * Adds a price to the given product.
+     *
      * @param ProductInterface $product The product to add the price to
      * @param array $priceData The array containing the data for the new price
-     * @return bool
+     *
      * @throws \Sulu\Component\Rest\Exception\EntityIdAlreadySetException
      * @throws ProductDependencyNotFoundException
+     *
+     * @return bool
      */
     protected function addPrice(ProductInterface $product, $priceData)
     {
@@ -1734,12 +1742,15 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Adds a category to the given product
+     * Adds a category to the given product.
+     *
      * @param ProductInterface $product The product to add the price to
      * @param array $categoryData The array containing the data for the additional category
-     * @return bool
+     *
      * @throws \Sulu\Component\Rest\Exception\EntityIdAlreadySetException
      * @throws ProductDependencyNotFoundException
+     *
+     * @return bool
      */
     protected function addCategory(ProductInterface $product, $categoryData)
     {
@@ -1852,10 +1863,12 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Returns the entry from the data with the given key, or the given default value, if the key does not exist
+     * Returns the entry from the data with the given key, or the given default value, if the key does not exist.
+     *
      * @param array $data
      * @param string $key
      * @param string $default
+     *
      * @return mixed
      */
     protected function getProperty(array $data, $key, $default = null)
@@ -1864,7 +1877,8 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Checks if the given data is correct
+     * Checks if the given data is correct.
+     *
      * @param array $data The data to check
      * @param boolean $create Defines if check is for new or already existing data
      */
@@ -1876,12 +1890,15 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Checks if data for the given key is set correctly
+     * Checks if data for the given key is set correctly.
+     *
      * @param array $data The array with the data
      * @param string $key The array key to check
      * @param bool $create Defines if the is for new or already existing data
-     * @return bool
+     *
      * @throws MissingProductAttributeException
+     *
+     * @return bool
      */
     private function checkDataSet(array $data, $key, $create)
     {
@@ -1896,6 +1913,7 @@ class ProductManager implements ProductManagerInterface
 
     /**
      * Adds an ProductPrice for every currency to the Product, if it is no existing already
+     *
      * @param ProductInterface $product The product to fill with currencies
      */
     private function addAllCurrencies(ProductInterface $product)
@@ -1921,6 +1939,7 @@ class ProductManager implements ProductManagerInterface
      * Get filters provided by the request
      *
      * @param Request $request
+     *
      * @return List $filter
      */
     public function getFilters(Request $request)
