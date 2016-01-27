@@ -1138,8 +1138,11 @@ class ProductManager implements ProductManagerInterface
 
                 if (isset($specialPriceData['endDate'])) {
                     $endDate = $this->checkDateString($specialPriceData['endDate']);
-                    // set time to 23:59:59
-                    $endDate->setTime(23, 59, 59);
+
+                    if ($endDate) {
+                        // set time to 23:59:59
+                        $endDate->setTime(23, 59, 59);
+                    }
                     $specialPrice->setEndDate($endDate);
                 }
             }
