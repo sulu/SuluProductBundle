@@ -9,7 +9,8 @@ class AppKernel extends SuluTestKernel
     public function registerBundles()
     {
         $bundles = parent::registerBundles();
-        $bundles[] = new Sulu\Bundle\ProductBundle\SuluProductBundle();
+        $bundles[] = new \Sulu\Bundle\ProductBundle\SuluProductBundle();
+        $bundles[] = new \Sulu\Bundle\PricingBundle\SuluPricingBundle();
         return $bundles;
     }
 

@@ -191,7 +191,7 @@
             <div class="form-group">
                 <label for="short-description" class="top"><%= translate('product.search-terms') %></label>
                 <textarea id="search-terms"
-                          maxlength="255"
+                          maxlength="{{ MAX_SEARCH_TERMS_LENGTH }}"
                           class="form-element trigger-save-button"
                           data-mapper-property="searchTerms"></textarea>
             </div>

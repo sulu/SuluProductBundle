@@ -385,6 +385,7 @@ class ProductControllerTest extends SuluTestCase
         $this->category1->setLft(1);
         $this->category1->setRgt(2);
         $this->category1->setDepth(1);
+        $this->category1->setDefaultLocale('en');
         $categoryTranslation1 = new CategoryTranslation();
         $categoryTranslation1->setLocale('en');
         $categoryTranslation1->setTranslation('Category 1');
@@ -395,6 +396,7 @@ class ProductControllerTest extends SuluTestCase
         $this->category2->setLft(3);
         $this->category2->setRgt(4);
         $this->category2->setDepth(1);
+        $this->category2->setDefaultLocale('en');
         $categoryTranslation2 = new CategoryTranslation();
         $categoryTranslation2->setLocale('en');
         $categoryTranslation2->setTranslation('Category 2');

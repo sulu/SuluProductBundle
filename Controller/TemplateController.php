@@ -10,12 +10,12 @@
 
 namespace Sulu\Bundle\ProductBundle\Controller;
 
+use Symfony\Component\HttpFoundation\Request;
 use Sulu\Bundle\ProductBundle\Api\Status;
 use Sulu\Bundle\ProductBundle\Api\TaxClass;
 use Sulu\Bundle\ProductBundle\Entity\Currency;
-use Symfony\Component\HttpFoundation\Request;
+use Sulu\Bundle\ProductBundle\Product\ProductManager;
 use Sulu\Component\Rest\RestController;
-use Sulu\Bundle\ProductBundle\Api\Attribute as ApiAttribute;
 
 class TemplateController extends RestController
 {
@@ -47,9 +47,10 @@ class TemplateController extends RestController
         return $this->render(
             'SuluProductBundle:Template:product.form.html.twig',
             array(
+                'MAX_SEARCH_TERMS_LENGTH' => ProductManager::MAX_SEARCH_TERMS_LENGTH,
                 'status' => $status,
                 'units' => $units,
-                'deliveryStates' => $deliveryStates
+                'deliveryStates' => $deliveryStates,
             )
         );
     }

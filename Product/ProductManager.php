@@ -57,6 +57,8 @@ class ProductManager implements ProductManagerInterface
     use RelationTrait;
 
     const MAX_BATCH_DELETE = 20;
+    const MAX_SEARCH_TERMS_LENGTH = 500;
+
     const SUPPLIER_PREFIX = 'S';
     const USER_PREFIX = 'U';
 
@@ -1350,7 +1352,7 @@ class ProductManager implements ProductManagerInterface
      *
      * @return null|string
      */
-    public function parseCommaSeparatedString($string, $maxLength = 255)
+    public function parseCommaSeparatedString($string, $maxLength = self::MAX_SEARCH_TERMS_LENGTH)
     {
         $result = null;
 

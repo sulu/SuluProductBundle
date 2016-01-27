@@ -159,6 +159,8 @@ class ContactTestData
         $this->entityManager->persist($country);
         $this->entityManager->persist($emailType);
         $this->entityManager->persist($email);
+
+        $this->entityManager->flush();
     }
 
     /**
