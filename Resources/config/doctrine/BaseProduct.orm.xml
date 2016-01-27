@@ -24,7 +24,7 @@
         <field name="minimumOrderQuantity" type="float" nullable="true"/>
         <field name="recommendedOrderQuantity" type="float" nullable="true"/>
         <field name="deliveryTime" type="integer" nullable="true"/>
-        <field name="searchTerms" type="string" nullable="true" length="255"/>
+        <field name="searchTerms" type="string" nullable="true" length="500"/>
         <field name="areGrossPrices" type="boolean" nullable="false">
             <options>
                 <option name="default">0</option>
