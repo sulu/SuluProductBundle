@@ -1411,7 +1411,7 @@ class ProductManager implements ProductManagerInterface
         }
 
         // lower case for case insensitivity
-        $result = strtolower($result);
+        $result = mb_strtolower($result);
 
         return $result;
     }
