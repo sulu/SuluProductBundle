@@ -13,6 +13,7 @@ namespace Sulu\Bundle\ProductBundle\Tests\Functional\Controller;
 use DateTime;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Mapping\ClassMetadata;
+use Nelmio\Alice\fixtures\Contact;
 use Sulu\Bundle\CategoryBundle\Entity\Category;
 use Sulu\Bundle\CategoryBundle\Entity\CategoryTranslation;
 use Sulu\Bundle\ProductBundle\Entity\Currency;
@@ -33,6 +34,7 @@ use Sulu\Bundle\ProductBundle\Entity\Type;
 use Sulu\Bundle\ProductBundle\Entity\TypeTranslation;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSet;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSetTranslation;
+use Sulu\Bundle\ProductBundle\Tests\Resources\ContactTestData;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Symfony\Component\HttpKernel\Client;
 use Sulu\Bundle\ProductBundle\Entity\AttributeType;
@@ -209,6 +211,11 @@ class ProductControllerTest extends SuluTestCase
      */
     private $specialPrice1;
 
+    /**
+     * @var ContactTestData
+     */
+    private $contactTestData;
+
 
     public function setUp()
     {
@@ -224,17 +231,17 @@ class ProductControllerTest extends SuluTestCase
         $this->currency1 = new Currency();
         $this->currency1->setName('EUR');
         $this->currency1->setNumber('1');
-        $this->currency1->setCode('eur');
+        $this->currency1->setCode('EUR');
 
         $this->currency2 = new Currency();
         $this->currency2->setName('USD');
         $this->currency2->setNumber('2');
-        $this->currency2->setCode('usd');
+        $this->currency2->setCode('USD');
 
         $this->currency3 = new Currency();
         $this->currency3->setName('GBP');
         $this->currency3->setNumber('3');
-        $this->currency3->setCode('gbp');
+        $this->currency3->setCode('GBP');
 
         // Product 1
         // product type
@@ -244,11 +251,21 @@ class ProductControllerTest extends SuluTestCase
         $this->typeTranslation1->setName('EnglishProductType-1');
         $this->typeTranslation1->setType($this->type1);
 
-        // product status
+        // product status active
         $metadata = $this->em->getClassMetaData(get_class(new Status()));
         $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_NONE);
         $this->productStatus1 = new Status();
         $this->productStatus1->setId(Status::ACTIVE);
+        $this->productStatusTranslation1 = new StatusTranslation();
+        $this->productStatusTranslation1->setLocale('en');
+        $this->productStatusTranslation1->setName('EnglishProductStatus-1');
+        $this->productStatusTranslation1->setStatus($this->productStatus1);
+
+        // product status inactive
+        $metadata = $this->em->getClassMetaData(get_class(new Status()));
+        $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_NONE);
+        $this->productStatus1 = new Status();
+        $this->productStatus1->setId(Status::INACTIVE);
         $this->productStatusTranslation1 = new StatusTranslation();
         $this->productStatusTranslation1->setLocale('en');
         $this->productStatusTranslation1->setName('EnglishProductStatus-1');
@@ -420,6 +437,10 @@ class ProductControllerTest extends SuluTestCase
         $this->specialPrice1->setStartDate(new \DateTime());
         $this->specialPrice1->setEndDate(new \DateTime());
 
+        $this->contactTestData = new ContactTestData($this->getContainer());
+        $this->product1->setSupplier($this->contactTestData->accountSupplier);
+        $this->product2->setSupplier($this->contactTestData->accountSupplier2);
+
         $this->em->persist($this->deliveryStatusAvailable);
         $this->em->persist($deliveryStatusAvailableTranslation);
 
@@ -484,7 +505,7 @@ class ProductControllerTest extends SuluTestCase
                     'id' => $this->currency1->getId(),
                     'name' => 'EUR',
                     'number' => '1',
-                    'code' => 'eur'
+                    'code' => 'EUR'
                 ),
                 'minimumQuantity' => 0
             ),
@@ -498,7 +519,7 @@ class ProductControllerTest extends SuluTestCase
                     'id' => $this->currency2->getId(),
                     'name' => 'USD',
                     'number' => '2',
-                    'code' => 'usd'
+                    'code' => 'USD'
                 ),
                 'minimumQuantity' => 0
             ),
@@ -839,7 +860,8 @@ class ProductControllerTest extends SuluTestCase
             'cost' => 666.66,
             'priceInfo' => 'Preis Info',
             'status' => array(
-                'id' => $this->productStatus1->getId()
+                //'id' => $this->productStatus1->getId()
+                'id' => Status::INACTIVE
             ),
             'type' => array(
                 'id' => $this->type1->getId()
@@ -858,6 +880,7 @@ class ProductControllerTest extends SuluTestCase
 
         $this->client->request('POST', '/api/products', $data);
         $response = json_decode($this->client->getResponse()->getContent());
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
 
         $this->client->request('GET', '/api/products/' . $response->id);
         $response = json_decode($this->client->getResponse()->getContent());
@@ -1054,6 +1077,6 @@ class ProductControllerTest extends SuluTestCase
 
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals('56', $response->specialPrices[0]->price);
-        $this->assertEquals('eur', $response->specialPrices[0]->currency->code);
+        $this->assertEquals('EUR', $response->specialPrices[0]->currency->code);
     }
 }
