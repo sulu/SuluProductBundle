@@ -1283,9 +1283,8 @@ class ProductManager implements ProductManagerInterface
                 return $this->updatePrice($price, $matchedEntry);
             };
 
-            $delete = function (ProductPrice $price) {
-                $this->em->remove($price->getEntity());
-                return true;
+            $delete = function (ProductPrice $price) use ($product) {
+                return $this->removePrice($product->getEntity(), $price->getEntity());
             };
 
             $this->compareEntitiesWithData(
@@ -1336,8 +1335,9 @@ class ProductManager implements ProductManagerInterface
         if($product->getStatus()->getId() == StatusEntity::ACTIVE) {
             // If the status of the product is active then the product must be a valid shop product!
             if(!$product->isValidShopProduct($this->defaultCurrency)) {
-                $this->setStatusForProduct($product, StatusEntity::INACTIVE);
-                throw new ProductException('No valid product for shop!',1);
+                // Undo changes
+                $this->em->refresh($product->getEntity());
+                throw new ProductException('No valid product for shop!', ProductException::PRODUCT_NOT_VALID);
             }
         }
 
@@ -1737,6 +1737,22 @@ class ProductManager implements ProductManagerInterface
 
             $this->em->persist($price);
         }
+
+        return true;
+    }
+
+    /**
+     * Removes a price from the given product.
+     *
+     * @param ProductInterface $product
+     * @param ProductPriceEntity $price
+     *
+     * @return bool
+     */
+    protected function removePrice(ProductInterface $product, ProductPriceEntity $price)
+    {
+        $this->em->remove($price);
+        $product->removePrice($price);
 
         return true;
     }

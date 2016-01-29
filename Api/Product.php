@@ -1233,7 +1233,7 @@ class Product extends ApiWrapper implements ApiProductInterface
      * Helper method to check if the product is
      * a valid shop product.
      *
-     * @param $defaultCurrency
+     * @param string $defaultCurrency
      *
      * @return bool
      */

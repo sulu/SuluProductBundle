@@ -36,7 +36,11 @@ define([
 
         initialize: function() {
             this.saved = true;
-            this.status = !!this.options.data ? this.options.data.attributes.status : Config.get('product.status.inactive');
+            if (!!this.options.data) {
+                this.status = this.options.data.attributes.status;
+            } else {
+                this.status = Config.get('product.status.inactive');
+            }
             // reset status if it has been changed before and has not been saved
             this.sandbox.emit('product.state.change', this.status);
 
@@ -53,9 +57,12 @@ define([
 
         bindCustomEvents: function() {
             this.sandbox.on('product.state.change', function(status) {
-                if (!this.options.data || !this.options.data.attributes.status || this.options.data.attributes.status.id !== status.id) {
+                if (!this.options.data ||
+                    !this.options.data.attributes.status ||
+                    this.options.data.attributes.status.id !== status.id
+                ) {
                     this.status = status;
-                    this.options.data.status = this.status;
+                    this.options.data.attributes.status = this.status;
                     this.setHeaderBar(false);
                 }
             }, this);
@@ -125,7 +132,7 @@ define([
             if (data) {
                 this.sandbox.form.setData(formSelector, data.toJSON()).then(function() {
                     this.sandbox.start(formSelector);
-                }.bind(this)).fail(function(error) {
+                    }.bind(this)).fail(function(error) {
                     this.sandbox.logger.error("An error occured when setting data!", error);
                 }.bind(this));
             } else {
@@ -139,7 +146,12 @@ define([
         initSupplierAutocomplete: function() {
             var options = Config.get('sulucontact.components.autocomplete.default.account');
             options.el = constants.supplierId;
-            options.value = (!!this.options.data && !!this.options.data.attributes.supplier) ? this.options.data.attributes.supplier : '';
+            if (!!this.options.data && !!this.options.data.attributes.supplier) {
+                options.value =  this.options.data.attributes.supplier;
+            } else {
+                options.value = '';
+            }
+
             options.instanceName = constants.autocompleteSupplierInstanceName;
             options.remoteUrl += 'type=3';
 

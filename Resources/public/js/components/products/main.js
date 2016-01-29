@@ -142,18 +142,19 @@ define([
                 this.sandbox.emit('sulu.products.list');
             }, this);
 
-            // products save-error
+            // handles save-errors for products
             this.sandbox.on('sulu.products.save-error', function(response) {
                 if (response && response.responseJSON && response.responseJSON.code) {
+                    // response code 1 == ProductException::PRODUCT_NOT_VALID
                     if(response.responseJSON.code == 1) {
                         this.sandbox.emit(
                             'sulu.labels.error.show',
-                            'labels.error.product-could-not-be-activated',
+                            'labels.error.product-not-valid',
                             'labels.error'
                         );
 
-                        this.status = Config.get('product.status.inactive');
-                        this.sandbox.emit('product.state.change', this.status);
+                        // set status to inactive!
+                        this.sandbox.emit('product.state.change', Config.get('product.status.inactive'));
                     }
                     else {
                         // error code not defined -> show default product save error
@@ -384,6 +385,7 @@ define([
                 this.product.set({id: this.options.id});
                 this.product.fetchLocale(this.options.locale, {
                     success: function(model) {
+                        // pass data as backbone model
                         component.options.data = this.product;
                         component.options.productType = types[model.get('type').id];
                         this.sandbox.start([component]);

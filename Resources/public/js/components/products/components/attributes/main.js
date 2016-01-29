@@ -35,9 +35,12 @@ define([
             }.bind(this));
 
             this.sandbox.on('product.state.change', function(status) {
-                if (!this.options.data || !this.options.data.attributes.status || this.options.data.attributes.status.id !== status.id) {
+                if (!this.options.data ||
+                    !this.options.data.attributes.status ||
+                    this.options.data.attributes.status.id !== status.id
+                ) {
                     this.status = status;
-                    this.options.data.status = this.status;
+                    this.options.data.attributes.status = this.status;
                     setHeaderBar.call(this, false);
                 }
             }, this);
@@ -81,7 +84,10 @@ define([
             // enable toolbar items
             this.sandbox.on('husky.datagrid.' + datagridInstanceName + '.number.selections', function(number) {
                 var postfix = number > 0 ? 'enable' : 'disable';
-                this.sandbox.emit('husky.toolbar.' + productAttributesInstanceName + '.item.' + postfix, 'delete', false)
+                this.sandbox.emit(
+                    'husky.toolbar.' + productAttributesInstanceName + '.item.' + postfix,
+                    'delete',
+                    false)
             }, this);
         },
 
@@ -351,7 +357,11 @@ define([
 
         initialize: function() {
             bindCustomEvents.call(this);
-            this.status = !!this.options.data ? this.options.data.attributes.status : Config.get('product.status.inactive');
+            if (!!this.options.data) {
+                this.status = this.options.data.attributes.status;
+            } else {
+                this.status = Config.get('product.status.inactive');
+            }
             // reset status if it has been changed before and has not been saved
             this.sandbox.emit('product.state.change', this.status);
             this.render();

@@ -533,7 +533,7 @@ interface ProductInterface
      * Helper method to check if the product is
      * a valid shop product.
      *
-     * @param $defaultCurrency
+     * @param string $defaultCurrency
      *
      * @return bool
      */
