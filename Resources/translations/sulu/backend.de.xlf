@@ -346,6 +346,14 @@
                 <source>product.search-terms</source>
                 <target>Suchbegriffe</target>
             </trans-unit>
+            <trans-unit id="73" resname="labels.error.product-save">
+                <source>labels.error.product-save</source>
+                <target>Produkt konnte nicht gespeichert werden.</target>
+            </trans-unit>
+            <trans-unit id="74" resname="labels.error.product-not-valid">
+                <source>labels.error.product-not-valid</source>
+                <target>Produkt nicht gültig.</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>
