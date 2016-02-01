@@ -13,7 +13,6 @@ namespace Sulu\Bundle\ProductBundle\Tests\Functional\Controller;
 use DateTime;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Mapping\ClassMetadata;
-use Nelmio\Alice\fixtures\Contact;
 use Sulu\Bundle\CategoryBundle\Entity\Category;
 use Sulu\Bundle\CategoryBundle\Entity\CategoryTranslation;
 use Sulu\Bundle\ProductBundle\Entity\Currency;
@@ -34,6 +33,7 @@ use Sulu\Bundle\ProductBundle\Entity\Type;
 use Sulu\Bundle\ProductBundle\Entity\TypeTranslation;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSet;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSetTranslation;
+use Sulu\Bundle\ProductBundle\Product\Exception\ProductException;
 use Sulu\Bundle\ProductBundle\Tests\Resources\ContactTestData;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Symfony\Component\HttpKernel\Client;
@@ -79,7 +79,32 @@ class ProductControllerTest extends SuluTestCase
     /**
      * @var Status
      */
-    private $productStatus1;
+    private $productStatusActive;
+
+    /**
+     * @var Status
+     */
+    private $productStatusInactive;
+
+    /**
+     * @var Status
+     */
+    private $productStatusChanged;
+
+    /**
+     * @var StatusTranslation
+     */
+    private $productStatusTranslationActive;
+
+    /**
+     * @var StatusTranslation
+     */
+    private $productStatusTranslationInactive;
+
+    /**
+     * @var StatusTranslation
+     */
+    private $productStatusTranslationChanged;
 
     /**
      * @var AttributeType
@@ -107,11 +132,6 @@ class ProductControllerTest extends SuluTestCase
     private $attribute1;
 
     /**
-     * @var StatusTranslation
-     */
-    private $productStatusTranslation1;
-
-    /**
      * @var TypeTranslation
      */
     private $typeTranslation1;
@@ -137,11 +157,6 @@ class ProductControllerTest extends SuluTestCase
     private $type2;
 
     /**
-     * @var Status
-     */
-    private $productStatus2;
-
-    /**
      * @var AttributeSet
      */
     private $attributeSet2;
@@ -155,11 +170,6 @@ class ProductControllerTest extends SuluTestCase
      * @var Attribute
      */
     private $attribute2;
-
-    /**
-     * @var StatusTranslation
-     */
-    private $productStatusTranslation2;
 
     /**
      * @var TypeTranslation
@@ -254,22 +264,32 @@ class ProductControllerTest extends SuluTestCase
         // product status active
         $metadata = $this->em->getClassMetaData(get_class(new Status()));
         $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_NONE);
-        $this->productStatus1 = new Status();
-        $this->productStatus1->setId(Status::ACTIVE);
-        $this->productStatusTranslation1 = new StatusTranslation();
-        $this->productStatusTranslation1->setLocale('en');
-        $this->productStatusTranslation1->setName('EnglishProductStatus-1');
-        $this->productStatusTranslation1->setStatus($this->productStatus1);
+        $this->productStatusActive = new Status();
+        $this->productStatusActive->setId(Status::ACTIVE);
+        $this->productStatusTranslationActive = new StatusTranslation();
+        $this->productStatusTranslationActive->setLocale('en');
+        $this->productStatusTranslationActive->setName('EnglishProductStatus-Active');
+        $this->productStatusTranslationActive->setStatus($this->productStatusActive);
 
         // product status inactive
         $metadata = $this->em->getClassMetaData(get_class(new Status()));
         $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_NONE);
-        $this->productStatus1 = new Status();
-        $this->productStatus1->setId(Status::INACTIVE);
-        $this->productStatusTranslation1 = new StatusTranslation();
-        $this->productStatusTranslation1->setLocale('en');
-        $this->productStatusTranslation1->setName('EnglishProductStatus-1');
-        $this->productStatusTranslation1->setStatus($this->productStatus1);
+        $this->productStatusInactive = new Status();
+        $this->productStatusInactive->setId(Status::INACTIVE);
+        $this->productStatusTranslationInactive = new StatusTranslation();
+        $this->productStatusTranslationInactive->setLocale('en');
+        $this->productStatusTranslationInactive->setName('EnglishProductStatus-Inactive');
+        $this->productStatusTranslationInactive->setStatus($this->productStatusInactive);
+
+        // product status changed
+        $metadata = $this->em->getClassMetaData(get_class(new Status()));
+        $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_NONE);
+        $this->productStatusChanged = new Status();
+        $this->productStatusChanged->setId(Status::CHANGED);
+        $this->productStatusTranslationChanged = new StatusTranslation();
+        $this->productStatusTranslationChanged->setLocale('en');
+        $this->productStatusTranslationChanged->setName('EnglishProductStatus-Changed');
+        $this->productStatusTranslationChanged->setStatus($this->productStatusChanged);
 
         // AttributeSet
         $this->attributeSet1 = new AttributeSet();
@@ -302,7 +322,7 @@ class ProductControllerTest extends SuluTestCase
         $this->product1->setNumber('ProductNumber-1');
         $this->product1->setManufacturer('EnglishManufacturer-1');
         $this->product1->setType($this->type1);
-        $this->product1->setStatus($this->productStatus1);
+        $this->product1->setStatus($this->productStatusInactive);
         $this->product1->setAttributeSet($this->attributeSet1);
 
         $this->productPrice1 = new ProductPrice();
@@ -337,16 +357,6 @@ class ProductControllerTest extends SuluTestCase
         $this->typeTranslation2->setName('EnglishProductType-2');
         $this->typeTranslation2->setType($this->type2);
 
-        // product status
-        $metadata = $this->em->getClassMetaData(get_class(new Status()));
-        $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_NONE);
-        $this->productStatus2 = new Status();
-        $this->productStatus2->setId(Status::CHANGED);
-        $this->productStatusTranslation2 = new StatusTranslation();
-        $this->productStatusTranslation2->setLocale('en');
-        $this->productStatusTranslation2->setName('EnglishProductStatus-2');
-        $this->productStatusTranslation2->setStatus($this->productStatus2);
-
         // AttributeSet
         $this->attributeSet2 = new AttributeSet();
         $this->attributeSetTranslation2 = new AttributeSetTranslation();
@@ -373,7 +383,7 @@ class ProductControllerTest extends SuluTestCase
         $this->product2->setNumber('ProductNumber-1');
         $this->product2->setManufacturer('EnglishManufacturer-2');
         $this->product2->setType($this->type2);
-        $this->product2->setStatus($this->productStatus2);
+        $this->product2->setStatus($this->productStatusActive);
         $this->product2->setAttributeSet($this->attributeSet2);
         $this->product1->setParent($this->product2);
 
@@ -454,6 +464,13 @@ class ProductControllerTest extends SuluTestCase
         $this->em->persist($this->currency2);
         $this->em->persist($this->currency3);
 
+        $this->em->persist($this->productStatusActive);
+        $this->em->persist($this->productStatusInactive);
+        $this->em->persist($this->productStatusChanged);
+        $this->em->persist($this->productStatusTranslationActive);
+        $this->em->persist($this->productStatusTranslationInactive);
+        $this->em->persist($this->productStatusTranslationChanged);
+
         $this->em->persist($this->productPrice1);
         $this->em->persist($this->productPrice2);
         $this->em->persist($this->type1);
@@ -461,8 +478,6 @@ class ProductControllerTest extends SuluTestCase
         $this->em->persist($this->typeTranslation1);
         $this->em->persist($this->attributeSet1);
         $this->em->persist($this->attributeSetTranslation1);
-        $this->em->persist($this->productStatus1);
-        $this->em->persist($this->productStatusTranslation1);
         $this->em->persist($this->attribute1);
         $this->em->persist($this->attributeTranslation1);
         $this->em->persist($this->product1);
@@ -474,8 +489,6 @@ class ProductControllerTest extends SuluTestCase
         $this->em->persist($this->typeTranslation2);
         $this->em->persist($this->attributeSet2);
         $this->em->persist($this->attributeSetTranslation2);
-        $this->em->persist($this->productStatus2);
-        $this->em->persist($this->productStatusTranslation2);
         $this->em->persist($this->attribute2);
         $this->em->persist($this->attributeTranslation2);
         $this->em->persist($this->product2);
@@ -495,8 +508,8 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals('EnglishManufacturer-1', $response['manufacturer']);
         $this->assertEquals($this->type1->getId(), $response['type']['id']);
         $this->assertEquals('EnglishProductType-1', $response['type']['name']);
-        $this->assertEquals($this->productStatus1->getId(), $response['status']['id']);
-        $this->assertEquals('EnglishProductStatus-1', $response['status']['name']);
+        $this->assertEquals($this->productStatusInactive->getId(), $response['status']['id']);
+        $this->assertEquals('EnglishProductStatus-Inactive', $response['status']['name']);
         $this->assertContains(
             array(
                 'id' => $this->productPrice1->getId(),
@@ -540,14 +553,14 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals('ProductNumber-1', $item->number);
         $this->assertEquals('EnglishManufacturer-1', $item->manufacturer);
         $this->assertEquals('EnglishProductType-1', $item->type->name);
-        $this->assertEquals($this->productStatus1->getId(), $item->status->id);
+        $this->assertEquals($this->productStatusInactive->getId(), $item->status->id);
         $this->assertEquals($this->type1->getId(), $item->type->id);
 
         $item = $items[1];
         $this->assertEquals('ProductNumber-1', $item->number);
         $this->assertEquals('EnglishManufacturer-2', $item->manufacturer);
         $this->assertEquals('EnglishProductType-2', $item->type->name);
-        $this->assertEquals($this->productStatus2->getId(), $item->status->id);
+        $this->assertEquals($this->productStatusActive->getId(), $item->status->id);
         $this->assertEquals($this->type2->getId(), $item->type->id);
     }
 
@@ -564,27 +577,27 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals('ProductNumber-1', $item->number);
         $this->assertEquals('EnglishManufacturer-1', $item->manufacturer);
         $this->assertEquals('EnglishProductType-1', $item->type);
-        $this->assertEquals('EnglishProductStatus-1', $item->status);
+        $this->assertEquals('EnglishProductStatus-Inactive', $item->status);
         $this->assertEquals('EnglishProductType-1', $item->type);
 
         $item = $items[1];
         $this->assertEquals('ProductNumber-1', $item->number);
         $this->assertEquals('EnglishManufacturer-2', $item->manufacturer);
         $this->assertEquals('EnglishProductType-2', $item->type);
-        $this->assertEquals('EnglishProductStatus-2', $item->status);
+        $this->assertEquals('EnglishProductStatus-Active', $item->status);
         $this->assertEquals('EnglishProductType-2', $item->type);
     }
 
     public function testGetByStatus()
     {
-        $this->client->request('GET', '/api/products?status=' . $this->productStatus1->getId(), array('ids'=> ''));
+        $this->client->request('GET', '/api/products?status=' . $this->productStatusInactive->getId(), array('ids'=> ''));
         $response = json_decode($this->client->getResponse()->getContent());
 
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
         $this->assertEquals(1, count($response->_embedded->products));
         $this->assertEquals($this->product1->getManufacturer(), $response->_embedded->products[0]->manufacturer);
         $this->assertEquals(
-            $this->productStatusTranslation1->getName(),
+            $this->productStatusTranslationInactive->getName(),
             $response->_embedded->products[0]->status->name
         );
     }
@@ -612,7 +625,7 @@ class ProductControllerTest extends SuluTestCase
                 'number' => 'EvilNumber',
                 'manufacturer' => 'EvilKnievel',
                 'status' => array(
-                    'id' => $this->productStatus1->getId()
+                    'id' => $this->productStatusActive->getId()
                 ),
                 'type' => array(
                     'id' => $this->type1->getId()
@@ -707,7 +720,7 @@ class ProductControllerTest extends SuluTestCase
             '/api/products/'.$this->product1->getId(),
             array(
                 'number' => 1,
-                'status' => array('id' => $this->productStatus1->getId()),
+                'status' => array('id' => $this->productStatusActive->getId()),
                 'type' => array('id' => 1),
                 'attributeSet' => array('id' => $this->attributeSet1->getId()),
                 'parent' => array('id' => 666)
@@ -731,7 +744,7 @@ class ProductControllerTest extends SuluTestCase
             '/api/products/'.$this->product1->getId(),
             array(
                 'number' => 1,
-                'status' => array('id' => $this->productStatus1->getId()),
+                'status' => array('id' => $this->productStatusActive->getId()),
                 'type' => array('id' => 1),
                 'attributeSet' => array('id' => 666)
             )
@@ -754,7 +767,7 @@ class ProductControllerTest extends SuluTestCase
             array(
                 'number' => 1,
                 'status' => array(
-                    'id' => $this->productStatus1->getId()
+                    'id' => $this->productStatusActive->getId()
                 ),
                 'type' => array(
                     'id' => 666)
@@ -795,7 +808,7 @@ class ProductControllerTest extends SuluTestCase
             array(
                 'number' => 1,
                 'type' => array('id' => $this->type1->getId()),
-                'status' => array('id' => $this->productStatus1->getId()),
+                'status' => array('id' => $this->productStatusActive->getId()),
                 'categories' => array(
                     array(
                         'id' => $this->category1->getId()
@@ -825,7 +838,7 @@ class ProductControllerTest extends SuluTestCase
     {
         $data = array(
             'id' => array('id' => $this->product1->getId()),
-            'status' => array('id' => $this->productStatus1->getId()),
+            'status' => array('id' => $this->productStatusActive->getId()),
             'attributes' => array(
                 0 => array(
                     'attributeId' => $this->productAttribute1->getAttribute()->getId(),
@@ -860,7 +873,6 @@ class ProductControllerTest extends SuluTestCase
             'cost' => 666.66,
             'priceInfo' => 'Preis Info',
             'status' => array(
-                //'id' => $this->productStatus1->getId()
                 'id' => Status::INACTIVE
             ),
             'type' => array(
@@ -895,7 +907,7 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals('Preis Info', $response->priceInfo);
         $this->assertEquals($this->product1->getManufacturer(), $response->manufacturer);
 
-        $this->assertEquals('EnglishProductStatus-1', $response->status->name);
+        $this->assertEquals('EnglishProductStatus-Inactive', $response->status->name);
 
         $this->assertEquals('EnglishProductType-1', $response->type->name);
 
@@ -918,7 +930,7 @@ class ProductControllerTest extends SuluTestCase
     {
         $data = array(
             'number' => 'NUMBER:0815',
-            'status' => $this->productStatus1->getId()
+            'status' => $this->productStatusActive->getId()
         );
 
         $this->client->request('POST', '/api/products', $data);
@@ -932,7 +944,7 @@ class ProductControllerTest extends SuluTestCase
     {
         $data = array(
             'number' => 'NUMBER:0815',
-            'status' => array('id' => $this->productStatus1->getId()),
+            'status' => array('id' => $this->productStatusActive->getId()),
             'type' => array('id' => 666),
         );
 
@@ -965,7 +977,7 @@ class ProductControllerTest extends SuluTestCase
         $data = array(
             'number' => 'NUMBER:0815',
             'status' => array('id' => 666),
-            'type' => array('id' => $this->productStatus1->getId()),
+            'type' => array('id' => $this->productStatusActive->getId()),
         );
 
         $this->client->request('POST', '/api/products', $data);
@@ -982,8 +994,8 @@ class ProductControllerTest extends SuluTestCase
     {
         $data = array(
             'number' => 'NUMBER:0815',
-            'status' => array('id' => $this->productStatus1->getId()),
-            'type' => array('id' => $this->productStatus1->getId()),
+            'status' => array('id' => $this->productStatusActive->getId()),
+            'type' => array('id' => $this->productStatusActive->getId()),
             'parent' => array('id' => 666)
         );
 
@@ -1002,8 +1014,8 @@ class ProductControllerTest extends SuluTestCase
         $this->markTestSkipped();
         $data = array(
             'number' => 'NUMBER:0815',
-            'status' => array('id' => $this->productStatus1->getId()),
-            'type' => array('id' => $this->productStatus1->getId()),
+            'status' => array('id' => $this->productStatusActive->getId()),
+            'type' => array('id' => $this->productStatusActive->getId()),
             'attributeSet' => array('id' => 666)
         );
 
@@ -1061,7 +1073,7 @@ class ProductControllerTest extends SuluTestCase
     {
         $data = array(
             'id' => array('id' => $this->product1->getId()),
-            'status' => array('id' => $this->productStatus1->getId()),
+            'status' => array('id' => $this->productStatusActive->getId()),
             'specialPrices' => array(
                 array(
                     'price' => $this->specialPrice1->getPrice(),
@@ -1078,5 +1090,34 @@ class ProductControllerTest extends SuluTestCase
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals('56', $response->specialPrices[0]->price);
         $this->assertEquals('EUR', $response->specialPrices[0]->currency->code);
+    }
+
+    public function testActivateInvalidProduct()
+    {
+        // Trying to delete supplier from product and at the same time trying to activate it
+        $data = array(
+            'id' => array('id' => $this->product1->getId()),
+            'status' => array('id' => Status::ACTIVE),
+            'supplier' => array()
+        );
+
+        $this->client->request('PUT', '/api/products/'.$this->product1->getId(), $data);
+        $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
+
+        $response = json_decode($this->client->getResponse()->getContent());
+        $this->assertEquals(ProductException::PRODUCT_NOT_VALID, $response->code ? $response->code : NULL);
+
+        // Trying to delete prices from product and at the same time trying to activate it
+        $data = array(
+            'id' => array('id' => $this->product1->getId()),
+            'status' => array('id' => Status::ACTIVE),
+            'prices' => array()
+        );
+
+        $this->client->request('PUT', '/api/products/'.$this->product1->getId(), $data);
+        $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
+
+        $response = json_decode($this->client->getResponse()->getContent());
+        $this->assertEquals(ProductException::PRODUCT_NOT_VALID, $response->code ? $response->code : NULL);
     }
 }
