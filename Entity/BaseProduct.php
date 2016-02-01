@@ -1102,9 +1102,9 @@ abstract class BaseProduct implements ProductInterface
      * Checks if price in default currency exists
      *
      * @param ProductPrice[] $prices
-     * @param $defaultCurrency
+     * @param string $defaultCurrency
      *
-     * @return boolean
+     * @return bool
      */
     private function hasPriceInDefaultCurrency($prices, $defaultCurrency)
     {
