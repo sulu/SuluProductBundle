@@ -84,7 +84,7 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
         bindDomEvents = function() {
             this.sandbox.dom.on(this.$el, 'change', function() {
                 refreshData.call(this);
-            }.bind(this), 'input');
+            }.bind(this), 'input, .pickdate');
             this.sandbox.dom.on(this.$el, 'blur', function() {
                 this.sandbox.emit("sulu.content.changed");
             }.bind(this), 'input');

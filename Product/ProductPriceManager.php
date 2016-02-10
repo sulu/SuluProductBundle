@@ -12,7 +12,7 @@ namespace Sulu\Bundle\ProductBundle\Product;
 
 use JMS\Serializer\Annotation\Groups;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
-use Sulu\Bundle\Sales\CoreBundle\Pricing\PriceFormatter;
+use Sulu\Bundle\PricingBundle\Pricing\PriceFormatter;
 
 class ProductPriceManager implements ProductPriceManagerInterface
 {

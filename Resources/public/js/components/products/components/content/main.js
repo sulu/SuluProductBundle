@@ -28,7 +28,7 @@ define(['config'], function(Config) {
                                         callback: function() {
                                             app.sandbox.emit(
                                                 'product.state.change',
-                                                {id: Config.get('product.status.active').id}
+                                                Config.get('product.status.active')
                                             );
                                         }
                                     },
@@ -38,7 +38,7 @@ define(['config'], function(Config) {
                                         callback: function() {
                                             app.sandbox.emit(
                                                 'product.state.change',
-                                                {id: Config.get('product.status.inactive').id}
+                                                Config.get('product.status.inactive')
                                             );
                                         }
                                     }

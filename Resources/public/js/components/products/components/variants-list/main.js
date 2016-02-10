@@ -93,14 +93,14 @@ define([
         },
 
         changeState = function(id) {
-            if (!this.options.data.status || this.options.data.status.id !== id) {
+            if (!this.options.data.attributes.status || this.options.data.attributes.status.id !== id) {
                 this.status = {id: id};
                 setHeaderBar.call(this, false);
             }
         },
 
         save = function() {
-            this.options.data.status = this.status;
+            this.options.data.attributes.status = this.status;
             this.sandbox.emit('sulu.products.save', this.options.data);
         },
 
@@ -218,8 +218,12 @@ define([
         templates: ['/admin/product/template/product/variants'],
 
         initialize: function () {
-            this.saved = true;
-            this.status  = !!this.options.data ? this.options.data.status : Config.get('product.status.active');
+            if (!!this.options.data) {
+                this.status = this.options.data.attributes.status;
+            } else {
+                this.status = Config.get('product.status.inactive');
+            }
+
             render.call(this);
 
             bindCustomEvents.call(this);

@@ -36,7 +36,11 @@ define([
 
         initialize: function() {
             this.saved = true;
-            this.status = !!this.options.data ? this.options.data.attributes.status : Config.get('product.status.active');
+            if (!!this.options.data) {
+                this.status = this.options.data.attributes.status;
+            } else {
+                this.status = Config.get('product.status.inactive');
+            }
             // reset status if it has been changed before and has not been saved
             this.sandbox.emit('product.state.change', this.status);
 
@@ -52,9 +56,13 @@ define([
         },
 
         bindCustomEvents: function() {
-            this.sandbox.on('product.state.change', function(id) {
-                if (!this.options.data || !this.options.data.attributes.status || this.options.data.attributes.status.id !== id) {
-                    this.status = {id: id};
+            this.sandbox.on('product.state.change', function(status) {
+                if (!this.options.data ||
+                    !this.options.data.attributes.status ||
+                    this.options.data.attributes.status.id !== status.id
+                ) {
+                    this.status = status;
+                    this.options.data.attributes.status = this.status;
                     this.setHeaderBar(false);
                 }
             }, this);
@@ -138,7 +146,12 @@ define([
         initSupplierAutocomplete: function() {
             var options = Config.get('sulucontact.components.autocomplete.default.account');
             options.el = constants.supplierId;
-            options.value = (!!this.options.data && !!this.options.data.attributes.supplier) ? this.options.data.attributes.supplier : '';
+            if (!!this.options.data && !!this.options.data.attributes.supplier) {
+                options.value =  this.options.data.attributes.supplier;
+            } else {
+                options.value = '';
+            }
+
             options.instanceName = constants.autocompleteSupplierInstanceName;
             options.remoteUrl += 'type=3';
 

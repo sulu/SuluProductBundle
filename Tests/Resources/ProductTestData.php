@@ -11,10 +11,15 @@ use Sulu\Bundle\ProductBundle\DataFixtures\ORM\Currencies\LoadCurrencies;
 use Sulu\Bundle\ProductBundle\DataFixtures\ORM\ProductStatuses\LoadProductStatuses;
 use Sulu\Bundle\ProductBundle\DataFixtures\ORM\ProductTypes\LoadProductTypes;
 use Sulu\Bundle\ProductBundle\DataFixtures\ORM\Units\LoadUnits;
+use Sulu\Bundle\ProductBundle\DataFixtures\ORM\TaxClasses\LoadTaxClasses;
+use Sulu\Bundle\ProductBundle\DataFixtures\ORM\CountryTaxes\LoadCountryTaxes;
 use Sulu\Bundle\ProductBundle\Entity\Currency;
 use Sulu\Bundle\ProductBundle\Entity\CurrencyRepository;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductPrice;
+use Sulu\Bundle\ProductBundle\Entity\TaxClass;
+use Sulu\Bundle\ProductBundle\Entity\TaxClassRepository;
+use Sulu\Bundle\ProductBundle\Entity\CountryTax;
 use Sulu\Bundle\ProductBundle\Entity\ProductTranslation;
 use Sulu\Bundle\ProductBundle\Entity\Status;
 use Sulu\Bundle\ProductBundle\Entity\StatusRepository;
@@ -23,6 +28,7 @@ use Sulu\Bundle\ProductBundle\Entity\TypeRepository;
 use Sulu\Bundle\ProductBundle\Entity\Unit;
 use Sulu\Bundle\ProductBundle\Entity\UnitRepository;
 use Sulu\Bundle\ProductBundle\Product\ProductFactoryInterface;
+use Sulu\Bundle\ContactBundle\DataFixtures\ORM\LoadCountries;
 
 class ProductTestData
 {
@@ -101,6 +107,11 @@ class ProductTestData
     private $eurCurrency;
 
     /**
+     * @var float
+     */
+    private $taxClass;
+
+    /**
      * @param Container $container
      */
     public function __construct(
@@ -119,6 +130,9 @@ class ProductTestData
      */
     protected function createFixtures()
     {
+        $countries = new LoadCountries();
+        $countries->load($this->entityManager);
+
         $this->contactTestData = new ContactTestData($this->container);
 
         $loadCurrencies = new LoadCurrencies();
@@ -129,6 +143,13 @@ class ProductTestData
         $unitFixtures = new LoadUnits();
         $unitFixtures->load($this->entityManager);
         $this->orderUnit = $this->getProductUnitRepository()->find(1);
+
+        $taxClasses = new LoadTaxClasses();
+        $taxClasses->load($this->entityManager);
+        $this->taxClass = $this->getTaxClassRepository()->find(1);
+
+        $countryTaxes = new LoadCountryTaxes();
+        $countryTaxes->load($this->entityManager);
 
         $typeFixtures = new LoadProductTypes();
         $typeFixtures->load($this->entityManager);
@@ -165,6 +186,8 @@ class ProductTestData
         $product->setChanged(new DateTime());
         $product->setOrderUnit($this->orderUnit);
         $product->setSupplier($this->contactTestData->accountSupplier);
+
+        $product->setTaxClass($this->taxClass);
 
         $price = new ProductPrice();
         $price->setCurrency($this->eurCurrency);
@@ -274,6 +297,14 @@ class ProductTestData
     private function getProductUnitRepository()
     {
         return $this->container->get('sulu_product.unit_repository');
+    }
+
+    /**
+     * @return TaxClassRepository
+     */
+    private function getTaxClassRepository()
+    {
+        return $this->container->get('sulu_product.tax_class_repository');
     }
 
     /**

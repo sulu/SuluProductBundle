@@ -31,7 +31,7 @@ use Sulu\Bundle\ProductBundle\Entity\Status as StatusEntity;
 use Sulu\Bundle\ProductBundle\Entity\TaxClass as TaxClassEntity;
 use Sulu\Bundle\ProductBundle\Entity\Type as TypeEntity;
 use Sulu\Bundle\ProductBundle\Entity\Unit as UnitEntity;
-use Sulu\Bundle\Sales\CoreBundle\Pricing\PriceFormatter;
+use Sulu\Bundle\PricingBundle\Pricing\PriceFormatter;
 use Sulu\Component\Rest\ApiWrapper;
 use Sulu\Component\Security\Authentication\UserInterface;
 
@@ -453,7 +453,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the parent of the product
+     * Returns the parent of the product.
      *
      * @VirtualProperty
      * @SerializedName("parent")
@@ -465,10 +465,10 @@ class Product extends ApiWrapper implements ApiProductInterface
         $parent = $this->entity->getParent();
 
         if ($parent) {
-            return new static($parent, $this->locale);
-        } else {
-            return null;
+            return new static($parent, $this->locale, $this->priceFormatter, $this->accountManager);
         }
+
+        return null;
     }
 
     /**
@@ -1227,5 +1227,18 @@ class Product extends ApiWrapper implements ApiProductInterface
     public function getSearchTerms()
     {
         return $this->entity->getSearchTerms();
+    }
+
+    /**
+     * Helper method to check if the product is
+     * a valid shop product.
+     *
+     * @param string $defaultCurrency
+     *
+     * @return bool
+     */
+    public function isValidShopProduct($defaultCurrency)
+    {
+        return $this->entity->isValidShopProduct($defaultCurrency);
     }
 }

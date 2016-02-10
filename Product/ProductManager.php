@@ -12,9 +12,9 @@ namespace Sulu\Bundle\ProductBundle\Product;
 
 use DateTime;
 use Doctrine\Common\Persistence\ObjectManager;
+use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Sulu\Bundle\ContactBundle\Entity\Account;
-use Sulu\Bundle\ProductBundle\Product\Exception\InvalidProductAttributeException;
 use Sulu\Bundle\CategoryBundle\Api\Category;
 use Sulu\Bundle\CategoryBundle\Entity\CategoryRepository;
 use Sulu\Bundle\ProductBundle\Api\ProductPrice;
@@ -26,16 +26,17 @@ use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductPrice as ProductPriceEntity;
 use Sulu\Bundle\ProductBundle\Entity\SpecialPrice;
 use Sulu\Bundle\ProductBundle\Entity\StatusRepository;
-use Sulu\Bundle\ContactBundle\Entity\AccountRepository;
 use Sulu\Bundle\ProductBundle\Entity\TaxClass;
 use Sulu\Bundle\ProductBundle\Entity\TaxClassRepository;
 use Sulu\Bundle\ProductBundle\Entity\Type;
 use Sulu\Bundle\ProductBundle\Entity\TypeRepository;
 use Sulu\Bundle\ProductBundle\Entity\Unit;
+use Sulu\Bundle\ProductBundle\Product\Exception\ProductException;
 use Sulu\Bundle\ProductBundle\Product\Exception\MissingProductAttributeException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductChildrenExistException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductDependencyNotFoundException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductNotFoundException;
+use Sulu\Bundle\ProductBundle\Product\Exception\InvalidProductAttributeException;
 use Sulu\Component\Persistence\RelationTrait;
 use Sulu\Component\Rest\Exception\EntityIdAlreadySetException;
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescriptor;
@@ -48,15 +49,18 @@ use Sulu\Bundle\ProductBundle\Entity\DeliveryStatusRepository;
 use Sulu\Bundle\ProductBundle\Entity\AttributeRepository;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttributeRepository;
 use Sulu\Bundle\ProductBundle\Entity\UnitRepository;
-use Sulu\Bundle\MediaBundle\Media\Manager\MediaManager;
 use Sulu\Bundle\ProductBundle\Entity\DeliveryStatus;
 use Sulu\Bundle\ProductBundle\Api\Product;
+use Sulu\Bundle\MediaBundle\Media\Manager\MediaManager;
+use Sulu\Bundle\ContactBundle\Entity\AccountRepository;
 
 class ProductManager implements ProductManagerInterface
 {
     use RelationTrait;
 
     const MAX_BATCH_DELETE = 20;
+    const MAX_SEARCH_TERMS_LENGTH = 500;
+
     const SUPPLIER_PREFIX = 'S';
     const USER_PREFIX = 'U';
 
@@ -183,7 +187,7 @@ class ProductManager implements ProductManagerInterface
      * @param ProductFactoryInterface $productFactory
      * @param CategoryRepository $categoryRepository
      * @param UserRepositoryInterface $userRepository
-     * @param DefaultMediaManager $mediaManager
+     * @param MediaManager $mediaManager
      * @param ObjectManager $em
      * @param AccountRepository $accountRepository
      * @param string $defaultCurrency
@@ -870,7 +874,7 @@ class ProductManager implements ProductManagerInterface
      * @param int $id
      * @param string $locale
      *
-     * @throws Exception\ProductNotFoundException
+     * @throws ProductNotFoundException
      *
      * @return \Sulu\Bundle\ProductBundle\Api\Product
      */
@@ -1136,8 +1140,11 @@ class ProductManager implements ProductManagerInterface
 
                 if (isset($specialPriceData['endDate'])) {
                     $endDate = $this->checkDateString($specialPriceData['endDate']);
-                    // set time to 23:59:59
-                    $endDate->setTime(23, 59, 59);
+
+                    if ($endDate) {
+                        // set time to 23:59:59
+                        $endDate->setTime(23, 59, 59);
+                    }
                     $specialPrice->setEndDate($endDate);
                 }
             }
@@ -1281,9 +1288,8 @@ class ProductManager implements ProductManagerInterface
                 return $this->updatePrice($price, $matchedEntry);
             };
 
-            $delete = function (ProductPrice $price) {
-                $this->em->remove($price->getEntity());
-                return true;
+            $delete = function (ProductPrice $price) use ($product) {
+                return $this->removePrice($product->getEntity(), $price->getEntity());
             };
 
             $this->compareEntitiesWithData(
@@ -1331,6 +1337,15 @@ class ProductManager implements ProductManagerInterface
             $product->setDeliveryStatus($deliveryStatus);
         }
 
+        if($product->getStatus()->getId() == StatusEntity::ACTIVE) {
+            // If the status of the product is active then the product must be a valid shop product!
+            if(!$product->isValidShopProduct($this->defaultCurrency)) {
+                // Undo changes
+                $this->em->refresh($product->getEntity());
+                throw new ProductException('No valid product for shop!', ProductException::PRODUCT_NOT_VALID);
+            }
+        }
+
         if ($flush) {
             $this->em->flush();
         }
@@ -1347,7 +1362,7 @@ class ProductManager implements ProductManagerInterface
      *
      * @return null|string
      */
-    public function parseCommaSeparatedString($string, $maxLength = 255)
+    public function parseCommaSeparatedString($string, $maxLength = self::MAX_SEARCH_TERMS_LENGTH)
     {
         $result = null;
 
@@ -1406,7 +1421,7 @@ class ProductManager implements ProductManagerInterface
         }
 
         // lower case for case insensitivity
-        $result = strtolower($result);
+        $result = mb_strtolower($result);
 
         return $result;
     }
@@ -1416,6 +1431,7 @@ class ProductManager implements ProductManagerInterface
      *
      * @param array $data
      * @param float $price
+     *
      * @return bool
      */
     private function priceHasChanged($data, $price)
@@ -1572,6 +1588,7 @@ class ProductManager implements ProductManagerInterface
         $publishedProductEntity->setMinimumOrderQuantity($productEntity->getMinimumOrderQuantity());
         $publishedProductEntity->setRecommendedOrderQuantity($productEntity->getRecommendedOrderQuantity());
         $publishedProductEntity->setChanger($productEntity->getChanger());
+        $publishedProductEntity->setSearchTerms($productEntity->getSearchTerms());
         $publishedProductEntity->setTaxClass($productEntity->getTaxClass());
 
         // Move children
@@ -1595,6 +1612,7 @@ class ProductManager implements ProductManagerInterface
      * @param Product $existingProduct
      * @param int $statusId
      * @param string $locale
+     *
      * @return null|\Sulu\Bundle\ProductBundle\Api\Product
      */
     protected function getExistingActiveOrInactiveProduct($existingProduct, $statusId, $locale)
@@ -1617,11 +1635,12 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Sets the status for a given product
+     * Sets the status for a given product.
      *
      * @param Product $product
      * @param int $statusId
-     * @throws Exception\ProductDependencyNotFoundException
+     *
+     * @throws ProductDependencyNotFoundException
      */
     public function setStatusForProduct($product, $statusId)
     {
@@ -1633,11 +1652,12 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Sets the deliveryStatus for a given product
+     * Sets the deliveryStatus for a given product.
      *
      * @param Product $product
      * @param int $statusId
-     * @throws Exception\ProductDependencyNotFoundException
+     *
+     * @throws ProductDependencyNotFoundException
      */
     public function setDeliveryStatusForProduct($product, $statusId)
     {
@@ -1649,11 +1669,13 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Updates the given price with the values from the given array
+     * Updates the given price with the values from the given array.
      *
      * @param ProductPrice $price
      * @param array $matchedEntry
-     * @throws Exception\ProductDependencyNotFoundException
+     *
+     * @throws ProductDependencyNotFoundException
+     *
      * @return bool
      */
     protected function updatePrice(ProductPrice $price, $matchedEntry)
@@ -1682,12 +1704,15 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Adds a price to the given product
+     * Adds a price to the given product.
+     *
      * @param ProductInterface $product The product to add the price to
      * @param array $priceData The array containing the data for the new price
-     * @return bool
+     *
      * @throws \Sulu\Component\Rest\Exception\EntityIdAlreadySetException
-     * @throws Exception\ProductDependencyNotFoundException
+     * @throws ProductDependencyNotFoundException
+     *
+     * @return bool
      */
     protected function addPrice(ProductInterface $product, $priceData)
     {
@@ -1722,12 +1747,31 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Adds a category to the given product
+     * Removes a price from the given product.
+     *
+     * @param ProductInterface $product
+     * @param ProductPriceEntity $price
+     *
+     * @return bool
+     */
+    protected function removePrice(ProductInterface $product, ProductPriceEntity $price)
+    {
+        $this->em->remove($price);
+        $product->removePrice($price);
+
+        return true;
+    }
+
+    /**
+     * Adds a category to the given product.
+     *
      * @param ProductInterface $product The product to add the price to
      * @param array $categoryData The array containing the data for the additional category
-     * @return bool
+     *
      * @throws \Sulu\Component\Rest\Exception\EntityIdAlreadySetException
-     * @throws Exception\ProductDependencyNotFoundException
+     * @throws ProductDependencyNotFoundException
+     *
+     * @return bool
      */
     protected function addCategory(ProductInterface $product, $categoryData)
     {
@@ -1840,10 +1884,12 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Returns the entry from the data with the given key, or the given default value, if the key does not exist
+     * Returns the entry from the data with the given key, or the given default value, if the key does not exist.
+     *
      * @param array $data
      * @param string $key
      * @param string $default
+     *
      * @return mixed
      */
     protected function getProperty(array $data, $key, $default = null)
@@ -1852,7 +1898,8 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Checks if the given data is correct
+     * Checks if the given data is correct.
+     *
      * @param array $data The data to check
      * @param boolean $create Defines if check is for new or already existing data
      */
@@ -1864,12 +1911,15 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Checks if data for the given key is set correctly
+     * Checks if data for the given key is set correctly.
+     *
      * @param array $data The array with the data
      * @param string $key The array key to check
      * @param bool $create Defines if the is for new or already existing data
+     *
+     * @throws MissingProductAttributeException
+     *
      * @return bool
-     * @throws Exception\MissingProductAttributeException
      */
     private function checkDataSet(array $data, $key, $create)
     {
@@ -1884,6 +1934,7 @@ class ProductManager implements ProductManagerInterface
 
     /**
      * Adds an ProductPrice for every currency to the Product, if it is no existing already
+     *
      * @param ProductInterface $product The product to fill with currencies
      */
     private function addAllCurrencies(ProductInterface $product)
@@ -1909,6 +1960,7 @@ class ProductManager implements ProductManagerInterface
      * Get filters provided by the request
      *
      * @param Request $request
+     *
      * @return List $filter
      */
     public function getFilters(Request $request)

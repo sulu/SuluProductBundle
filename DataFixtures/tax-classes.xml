@@ -4,7 +4,15 @@
         <en>Standard Tax Rate</en>
     </tax-class>
     <tax-class>
-        <de>Ermäßigter Steuersatz</de>
-        <en>Reduced Tax Rate</en>
+        <de>Ermäßigter Steuersatz 1</de>
+        <en>Reduced Tax Rate 1</en>
+    </tax-class>
+    <tax-class>
+        <de>Ermäßigter Steuersatz 2</de>
+        <en>Reduced Tax Rate 2</en>
+    </tax-class>
+    <tax-class>
+        <de>Ermäßigter Steuersatz 3</de>
+        <en>Reduced Tax Rate 3</en>
     </tax-class>
 </tax-classes>

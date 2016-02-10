@@ -14,5 +14,5 @@ use Exception;
 
 class ProductException extends Exception
 {
-
+    const PRODUCT_NOT_VALID = 1;
 } 
