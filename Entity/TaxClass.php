@@ -96,6 +96,21 @@ class TaxClass
     }
 
     /**
+     * @return TaxClassTranslation|null
+     */
+    public function getTranslation($locale)
+    {
+        /** @var TaxClassTranslation $translation */
+        foreach ($this->getTranslations() as $translation) {
+            if ($translation->getLocale() === $locale) {
+                return $translation;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * @param Product $product
      *
      * @return self
