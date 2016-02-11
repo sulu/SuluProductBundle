@@ -181,6 +181,9 @@ define([
             this.sandbox.on('husky.select.contentUnit.selected.item', function() {
                 this.setHeaderBar(false);
             }.bind(this));
+            this.sandbox.on('husky.select.contentUnit.deselected.item', function() {
+                this.setHeaderBar(false);
+            }.bind(this));
             this.sandbox.on('husky.select.deliveryStatus.selected.item', function() {
                 this.setHeaderBar(false);
             }.bind(this));
