@@ -1206,6 +1206,8 @@ class ProductManager implements ProductManagerInterface
                 throw new ProductDependencyNotFoundException(self::$unitEntityName, $contentUnitId);
             }
             $product->setContentUnit($contentUnit);
+        } else {
+            $product->setContentUnit(null);
         }
 
         if (isset($data['deliveryTime']) && is_int($data['deliveryTime'])) {
@@ -1366,39 +1368,42 @@ class ProductManager implements ProductManagerInterface
     {
         $result = null;
 
-        // check if string is not empty
+        // Check if string is not empty.
         if (strlen(trim($string)) === 0) {
             return null;
         }
 
-        // convert string to array
+        // Lower case for case insensitivity.
+        $string = mb_strtolower($string, 'UTF-8');
+
+        // Convert string to array.
         $fields = explode(',', $string);
 
-        // validate and trim each field
+        // Validate and trim each field.
         $fields = array_map([$this, 'trimAndValidateField'], $fields);
 
-        // remove null entries
+        // Remove null entries.
         $fields = array_filter($fields);
 
-        // parse back into string
+        // Parse back into string.
         $result = implode(',', $fields);
 
-        // Check if max length is exceeded
+        // Check if max length is exceeded.
         if (strlen($result) > $maxLength) {
-            // shorten to max-length
+            // Shorten to max-length.
             $result = substr($result, 0, $maxLength);
 
             $fields = explode(',', $result);
 
-            // remove last element
+            // Remove last element.
             array_pop($fields);
 
-            // only one search field is provided and exceeds limit
+            // Only one search field is provided and exceeds limit.
             if (count($fields) === 0) {
                 return null;
             }
 
-            // parse back into string
+            // Parse back into string.
             $result = implode(',', $fields);
         }
 
@@ -1406,28 +1411,7 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Trims, validates and parses a string.
-     *
-     * @param string $field
-     *
-     * @return string
-     */
-    private function trimAndValidateField($field)
-    {
-        $result = trim($field);
-
-        if (strlen($result) === 0) {
-            return null;
-        }
-
-        // lower case for case insensitivity
-        $result = mb_strtolower($result);
-
-        return $result;
-    }
-
-    /**
-     * priceHasChanged
+     * Checks if price of a product has changed.
      *
      * @param array $data
      * @param float $price
@@ -1436,7 +1420,7 @@ class ProductManager implements ProductManagerInterface
      */
     private function priceHasChanged($data, $price)
     {
-        $currencyNotChanged = isset( $data['currency']) &&
+        $currencyNotChanged = isset($data['currency']) &&
             array_key_exists('name', $data['currency']) &&
             $data['currency']['name'] == $price->getCurrency()->getName();
 
@@ -1930,6 +1914,24 @@ class ProductManager implements ProductManagerInterface
         }
 
         return $keyExists;
+    }
+
+    /**
+     * Trims, validates and parses a string.
+     *
+     * @param string $field
+     *
+     * @return string
+     */
+    private function trimAndValidateField($field)
+    {
+        $result = trim($field);
+
+        if (strlen($result) === 0) {
+            return null;
+        }
+
+        return $result;
     }
 
     /**

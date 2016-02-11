@@ -1120,4 +1120,24 @@ class ProductControllerTest extends SuluTestCase
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals(ProductException::PRODUCT_NOT_VALID, $response->code ? $response->code : NULL);
     }
+
+    public function testPutSearchterms()
+    {
+        $productId = $this->product1->getId();
+
+        // Get product data.
+        $this->client->request('GET', '/api/products/' . $productId);
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+
+        // Manipulate search Terms.
+        $content = json_decode($this->client->getResponse()->getContent(), true);
+        $content['searchTerms'] = 'searchterm1,searchTörm2, SeÄrchTerm';
+
+        // Create put request.
+        $this->client->request('PUT', '/api/products/' . $productId, $content);
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+        $content = json_decode($this->client->getResponse()->getContent(), true);
+
+        $this->assertEquals('searchterm1,searchtörm2,seärchterm', $content['searchTerms']);
+    }
 }
