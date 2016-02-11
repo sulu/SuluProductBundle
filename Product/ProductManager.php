@@ -1206,6 +1206,8 @@ class ProductManager implements ProductManagerInterface
                 throw new ProductDependencyNotFoundException(self::$unitEntityName, $contentUnitId);
             }
             $product->setContentUnit($contentUnit);
+        } else {
+            $product->setContentUnit(null);
         }
 
         if (isset($data['deliveryTime']) && is_int($data['deliveryTime'])) {
