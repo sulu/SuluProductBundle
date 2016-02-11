@@ -144,30 +144,47 @@ define([], function() {
         },
 
         /**
+         * Calculates the total net price including
+         * discount and quantity for an item.
+         * @param sandbox
+         * @param item
+         * @return {float} Total net price
+         */
+        calculateNetPrice = function(sandbox, item) {
+            var discount = getDiscount(sandbox, item.discount);
+            var netPrice = parseFloat(item.price);
+            netPrice = netPrice * item.quantity;
+
+            if (!!discount) {
+                netPrice -= (netPrice * discount);
+            }
+
+            return netPrice;
+        },
+
+        /**
          * Processes elements for getTotalPricesAndTaxes
          * Returns null if one value is invalid
          * @param sandbox
          * @param items
          */
-        processPriceCalculationItem = function(sandbox, items) {
-            var tax = 0, i, item, discount, netPrice,
+        processPriceCalculationItem = function(sandbox, items, deliveryCost) {
+            var tax = 0, i, item, netPrice,
                 result = {
                     taxes: {},
                     netPrice: 0,
                     grossPrice: 0
                 };
 
+            if (typeof deliveryCost === 'undefined') {
+                deliveryCost = 0;
+            }
+
             try {
                 for (i in items) {
                     if (areValidCalculationParams(sandbox, items[i].price, items[i].tax, items[i].discount, 1)) {
                         item = items[i];
-                        discount = getDiscount(sandbox, item.discount);
-                        netPrice = parseFloat(item.price);
-                        netPrice = netPrice * item.quantity;
-
-                        if (!!discount) {
-                            netPrice -= (netPrice * discount);
-                        }
+                        netPrice = calculateNetPrice(sandbox, item);
 
                         tax = netPrice * getTaxRate(sandbox, item.tax);
                         if (tax > 0) {
@@ -180,6 +197,19 @@ define([], function() {
 
                         result.netPrice += netPrice;
                         result.grossPrice += netPrice + tax;
+                    } else {
+                        return null;
+                    }
+                }
+
+                // Calculate the delivery costs in relation to the item prices.
+                for (i in items) {
+                    if (areValidCalculationParams(sandbox, items[i].price, items[i].tax, items[i].discount, 1)) {
+                        item = items[i];
+                        netPrice = calculateNetPrice(sandbox, item);
+                        var ratio = netPrice / result.netPrice;
+                        var itemTax = item.tax.toString();
+                        result.taxes[itemTax] += ratio * deliveryCost;
                     } else {
                         return null;
                     }
@@ -331,6 +361,7 @@ define([], function() {
          * and returns the taxes, a total net and a total gross price
          * @param {Object} sandbox
          * @param {Object} items
+         * @param float deliveryCost
          * [
          *  {
          *   price: 100,
@@ -341,9 +372,9 @@ define([], function() {
          *
          * @return {Object}
          */
-        getTotalPricesAndTaxes: function(sandbox, items) {
+        getTotalPricesAndTaxes: function(sandbox, items, deliveryCost) {
             if (!!items) {
-                return processPriceCalculationItem.call(this, sandbox, items);
+                return processPriceCalculationItem.call(this, sandbox, items, deliveryCost);
             }
             return null;
         },
