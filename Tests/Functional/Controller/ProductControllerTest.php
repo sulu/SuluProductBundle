@@ -1056,4 +1056,24 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals('56', $response->specialPrices[0]->price);
         $this->assertEquals('eur', $response->specialPrices[0]->currency->code);
     }
+
+    public function testPutSearchterms()
+    {
+        $productId = $this->product1->getId();
+
+        // Get product data.
+        $this->client->request('GET', '/api/products/' . $productId);
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+
+        // Manipulate search Terms.
+        $content = json_decode($this->client->getResponse()->getContent(), true);
+        $content['searchTerms'] = 'searchterm1,searchTörm2, SeÄrchTerm';
+
+        // Create put request.
+        $this->client->request('PUT', '/api/products/' . $productId, $content);
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+        $content = json_decode($this->client->getResponse()->getContent(), true);
+
+        $this->assertEquals('searchterm1,searchtörm2,seärchterm', $content['searchTerms']);
+    }
 }
