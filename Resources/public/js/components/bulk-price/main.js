@@ -55,10 +55,17 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
                     idx = index;
                 }
 
-                price.minimumQuantity = (!!price.minimumQuantity || price.minimumQuantity === 0) ?
-                    this.sandbox.numberFormat(parseFloat(price.minimumQuantity), 'n') : '';
-                price.price = (!!price.price || price.price === 0) ?
-                    this.sandbox.numberFormat(price.price, 'n') : '';
+                if (!!price.minimumQuantity || price.minimumQuantity === 0) {
+                    price.minimumQuantity = this.sandbox.numberFormat(parseFloat(price.minimumQuantity), 'n');
+                } else {
+                    price.minimumQuantity = '';
+                }
+
+                if (!!price.price || price.price === 0) {
+                    price.price = this.sandbox.numberFormat(price.price, 'n');
+                } else {
+                    price.price = '';
+                }
 
             }.bind(this));
 
@@ -204,12 +211,20 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
             var currencyCode = this.options.currency.code;
 
             if (this.options.data.attributes.prices) {
-                prices = getPricesForCurrency.call(this, this.options.data.attributes.prices, currencyCode);
+                prices = getPricesForCurrency.call(
+                    this,
+                    this.sandbox.util.extend(true, [], this.options.data.attributes.prices),
+                    currencyCode
+                );
                 salesPrice = getSalesPriceAndRemoveFromPrices.call(this, prices);
             }
 
             if (this.options.data.attributes.specialPrices) {
-                specialPrice = getSpecialPriceForCurrency.call(this, this.options.data.attributes.specialPrices, currencyCode);
+                specialPrice = getSpecialPriceForCurrency.call(
+                    this,
+                    this.sandbox.util.extend(true, [], this.options.data.attributes.specialPrices),
+                    currencyCode
+                );
                 specialPrice.price = this.sandbox.numberFormat(specialPrice.price, 'n');
             }
 
