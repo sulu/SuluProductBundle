@@ -182,7 +182,7 @@ define([], function() {
 
             try {
                 for (i in items) {
-                    if (areValidCalculationParams(sandbox, items[i].price, items[i].tax, items[i].discount, 1)) {
+                    if (areValidCalculationParams(sandbox, items[i].price, items[i].tax, items[i].discount, items[i].quantity)) {
                         item = items[i];
                         netPrice = calculateNetPrice(sandbox, item);
 
@@ -203,18 +203,26 @@ define([], function() {
                 }
 
                 if (deliveryCost > 0) {
+                    result.grossPrice = 0;
+                    var ratio = 0;
+                    var itemTax = 0;
                     // Calculate the delivery costs in relation to the item prices.
                     for (i in items) {
-                        if (areValidCalculationParams(sandbox, items[i].price, items[i].tax, items[i].discount, 1)) {
+                        if (areValidCalculationParams(sandbox, items[i].price, items[i].tax, items[i].discount, items[i].quantity)) {
                             item = items[i];
                             netPrice = calculateNetPrice(sandbox, item);
-                            var ratio = netPrice / result.netPrice;
-                            var itemTax = item.tax.toString();
-                            result.taxes[itemTax] += ratio * deliveryCost;
+                            if (result.netPrice > 0) {
+                                ratio = netPrice / result.netPrice;
+                            }
+                            itemTax = item.tax.toString();
+                            result.taxes[itemTax] += ratio * deliveryCost * item.tax / 100;
+                            result.grossPrice += netPrice + result.taxes[itemTax];
                         } else {
                             return null;
                         }
                     }
+                    result.netPrice += deliveryCost;
+                    result.grossPrice += deliveryCost;
                 }
                 return result;
             } catch (ex) {
