@@ -211,10 +211,13 @@ define([], function() {
                         if (areValidCalculationParams(sandbox, items[i].price, items[i].tax, items[i].discount, items[i].quantity)) {
                             item = items[i];
                             netPrice = calculateNetPrice(sandbox, item);
-                            if (result.netPrice > 0) {
-                                ratio = netPrice / result.netPrice;
-                            }
                             itemTax = item.tax.toString();
+                            if (item.price > 0) {
+                                ratio = netPrice / result.netPrice;
+                            } else {
+                                ratio = 0;
+                                result.taxes[itemTax] = 0;
+                            }
                             result.taxes[itemTax] += ratio * deliveryCost * item.tax / 100;
                             result.grossPrice += netPrice + result.taxes[itemTax];
                         } else {
