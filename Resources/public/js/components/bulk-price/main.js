@@ -55,16 +55,14 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
                     idx = index;
                 }
 
+                price.minimumQuantity = '';
                 if (!!price.minimumQuantity || price.minimumQuantity === 0) {
                     price.minimumQuantity = this.sandbox.numberFormat(parseFloat(price.minimumQuantity), 'n');
-                } else {
-                    price.minimumQuantity = '';
                 }
 
+                price.price = '';
                 if (!!price.price || price.price === 0) {
                     price.price = this.sandbox.numberFormat(price.price, 'n');
-                } else {
-                    price.price = '';
                 }
 
             }.bind(this));
@@ -213,7 +211,7 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
             if (this.options.data.attributes.prices) {
                 prices = getPricesForCurrency.call(
                     this,
-                    this.sandbox.util.extend(true, [], this.options.data.attributes.prices),
+                    this.options.data.attributes.prices.slice(0),
                     currencyCode
                 );
                 salesPrice = getSalesPriceAndRemoveFromPrices.call(this, prices);
@@ -222,7 +220,7 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
             if (this.options.data.attributes.specialPrices) {
                 specialPrice = getSpecialPriceForCurrency.call(
                     this,
-                    this.sandbox.util.extend(true, [], this.options.data.attributes.specialPrices),
+                    this.options.data.attributes.specialPrices.slice(0),
                     currencyCode
                 );
                 specialPrice.price = this.sandbox.numberFormat(specialPrice.price, 'n');
