@@ -113,8 +113,10 @@ define([], function() {
         },
 
         /**
-         * Decides if currency should be appended or prepended
+         * Decides if currency should be appended or prepended.
+         *
          * @param {String} locale
+         *
          * @returns {boolean}
          */
         appendCurrencyToPrice = function(locale) {
@@ -122,15 +124,18 @@ define([], function() {
         },
 
         /**
-         * Checks if price, taxrate, discount, amount have valid values
+         * Checks if price, taxrate, discount, amount have valid values.
+         *
          * @param {Object} sandbox
          * @param {Float} price
          * @param {Float} taxRate
          * @param {Float} discount
          * @param {Number} amount
+         *
+         * @return {Bool}
          */
         areValidCalculationParams = function(sandbox, price, taxRate, discount, amount) {
-            if (!isGreaterThanOrEqualsZero(sandbox, price) ||
+            if (!sandbox.dom.isNumeric(price) ||
                 !isGreaterThanOrEqualsZero(sandbox, taxRate) ||
                 parseFloat(taxRate) > 100 ||
                 !isGreaterThanOrEqualsZero(sandbox, discount) ||
@@ -138,8 +143,10 @@ define([], function() {
                 !isGreaterThanOrEqualsZero(sandbox, amount)
             ) {
                 sandbox.logger.error('Invalid parameter(s) for price calculation!');
+
                 return false;
             }
+
             return true;
         },
 
@@ -187,12 +194,11 @@ define([], function() {
                         netPrice = calculateNetPrice(sandbox, item);
 
                         tax = netPrice * getTaxRate(sandbox, item.tax);
-                        if (tax > 0) {
-                            if (!!result.taxes[item.tax]) {
-                                result.taxes[item.tax] += tax;
-                            } else {
-                                result.taxes[item.tax] = tax;
-                            }
+
+                        if (!!result.taxes[item.tax]) {
+                            result.taxes[item.tax] += tax;
+                        } else {
+                            result.taxes[item.tax] = tax;
                         }
 
                         result.netPrice += netPrice;
@@ -202,17 +208,24 @@ define([], function() {
                     }
                 }
 
-                if (deliveryCost > 0) {
+                // Calculate delivery cost
+                if (deliveryCost != 0) {
                     result.grossPrice = 0;
                     var ratio = 0;
                     var itemTax = 0;
                     // Calculate the delivery costs in relation to the item prices.
                     for (i in items) {
-                        if (areValidCalculationParams(sandbox, items[i].price, items[i].tax, items[i].discount, items[i].quantity)) {
+                        if (areValidCalculationParams(
+                                sandbox,
+                                items[i].price,
+                                items[i].tax,
+                                items[i].discount,
+                                items[i].quantity)
+                        ) {
                             item = items[i];
                             netPrice = calculateNetPrice(sandbox, item);
                             itemTax = item.tax.toString();
-                            if (item.price > 0) {
+                            if (result.netPrice != 0) {
                                 ratio = netPrice / result.netPrice;
                             } else {
                                 ratio = 0;
@@ -293,14 +306,16 @@ define([], function() {
         },
 
         /**
-         * Formats an amount of something and adds an addition (unit, currency, ...)
+         * Formats an amount of something and adds an addition (unit, currency, ...).
+         *
          * @param {Object} sandbox
          * @param {Number} amount
          * @param {String} unit
+         *
          * @return {String} formatted string
          */
         getFormattedAmountAndUnit: function(sandbox, amount, unit) {
-            if (!isGreaterThanOrEqualsZero(sandbox, amount)) {
+            if (!sandbox.dom.isNumeric(amount)) {
                 sandbox.logger.error('Invalid parameter in getFormattedAmountAndUnit!');
                 return sandbox.translate(constants.invalidInputTranslation);
             }
