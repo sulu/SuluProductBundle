@@ -27,10 +27,12 @@ define([], function() {
         },
 
         /**
-         * Checks if a value is greater or equals zero
+         * Checks if a value is greater or equals zero.
+         *
          * @param {Object} sandbox
          * @param {String|Number} value
-         * @returns {boolean}
+         *
+         * @returns {Bool}
          */
         isGreaterThanOrEqualsZero = function(sandbox, value) {
             if (!!sandbox.dom.isNumeric(value)) {
@@ -41,11 +43,13 @@ define([], function() {
         },
 
         /**
-         * Returns taxrate as float value between 0 and 1
-         * If none is present the default tax rate will be returned
-         * If invalid taxrate is provided (> 100%) an error will be thrown
+         * Returns taxrate as float value between 0 and 1.
+         * If none is present the default tax rate will be returned.
+         * If invalid taxrate is provided (> 100%) an error will be thrown.
+         *
          * @param {Object} sandbox
          * @param {Number} taxRate
+         *
          * @returns {Number}
          */
         getTaxRate = function(sandbox, taxRate) {
@@ -59,11 +63,13 @@ define([], function() {
         },
 
         /**
-         * Returns discount as float value between 0 and 1
-         * If discount is greater than 100 or negative an error will be thrown
-         * If no discount is provided the default discount will be returned
+         * Returns discount as float value between 0 and 1.
+         * If discount is greater than 100 or negative an error will be thrown.
+         * If no discount is provided the default discount will be returned.
+         *
          * @param {Object} sandbox
          * @param {Number} discount
+         *
          * @returns {Number}
          */
         getDiscount = function(sandbox, discount) {
@@ -77,8 +83,10 @@ define([], function() {
         },
 
         /**
-         * Returns currency or default currency if non is given
-         * @param currency
+         * Returns currency or default currency if non is given.
+         *
+         * @param {String} currency
+         *
          * @returns {String}
          */
         getCurrency = function(currency) {
@@ -89,8 +97,10 @@ define([], function() {
         },
 
         /**
-         * Returns unit or default unit if non is given
-         * @param unit
+         * Returns unit or default unit if non is given.
+         *
+         * @param {String} unit
+         *
          * @returns {String}
          */
         getUnit = function(unit) {
@@ -101,8 +111,10 @@ define([], function() {
         },
 
         /**
-         * Returns locale or default locale if non is given
-         * @param locale
+         * Returns locale or default locale if non is given.
+         *
+         * @param {String} locale
+         *
          * @returns {String}
          */
         getLocale = function(locale) {
@@ -113,24 +125,29 @@ define([], function() {
         },
 
         /**
-         * Decides if currency should be appended or prepended
-         * @param locale
-         * @returns {boolean}
+         * Decides if currency should be appended or prepended.
+         *
+         * @param {String} locale
+         *
+         * @returns {Bool}
          */
         appendCurrencyToPrice = function(locale) {
             return locale !== 'en';
         },
 
         /**
-         * Checks if price, taxrate, discount, amount have valid values
-         * @param sandbox
-         * @param price
-         * @param taxRate
-         * @param discount
-         * @param amount
+         * Checks if price, taxrate, discount, amount have valid values.
+         *
+         * @param {Object} sandbox
+         * @param {Float} price
+         * @param {Float} taxRate
+         * @param {Float} discount
+         * @param {Number} amount
+         *
+         * @return {Bool}
          */
         areValidCalculationParams = function(sandbox, price, taxRate, discount, amount) {
-            if (!isGreaterThanOrEqualsZero(sandbox, price) ||
+            if (!sandbox.dom.isNumeric(price) ||
                 !isGreaterThanOrEqualsZero(sandbox, taxRate) ||
                 parseFloat(taxRate) > 100 ||
                 !isGreaterThanOrEqualsZero(sandbox, discount) ||
@@ -138,44 +155,71 @@ define([], function() {
                 !isGreaterThanOrEqualsZero(sandbox, amount)
             ) {
                 sandbox.logger.error('Invalid parameter(s) for price calculation!');
+
                 return false;
             }
+
             return true;
         },
 
         /**
-         * Processes elements for getTotalPricesAndTaxes
-         * Returns null if one value is invalid
-         * @param sandbox
-         * @param items
+         * Calculates the total net price including
+         * discount and quantity for an item.
+         *
+         * @param {Object} sandbox
+         * @param {Object} item
+         *
+         * @return {Float} Total net price
          */
-        processPriceCalculationItem = function(sandbox, items) {
-            var tax = 0, i, item, discount, netPrice,
+        calculateNetPrice = function(sandbox, item) {
+            var discount = getDiscount(sandbox, item.discount);
+            var netPrice = parseFloat(item.price);
+            netPrice = netPrice * item.quantity;
+
+            if (!!discount) {
+                netPrice -= (netPrice * discount);
+            }
+
+            return netPrice;
+        },
+
+        /**
+         * Processes elements for getTotalPricesAndTaxes.
+         * Returns null if one value is invalid.
+         *
+         * @param {Object} sandbox
+         * @param {Array} items
+         * @param {Number} deliveryCost
+         */
+        processPriceCalculationItem = function(sandbox, items, deliveryCost) {
+            var tax = 0, i, item, netPrice,
                 result = {
                     taxes: {},
                     netPrice: 0,
                     grossPrice: 0
                 };
 
+            if (typeof deliveryCost === 'undefined') {
+                deliveryCost = 0;
+            }
+
             try {
                 for (i in items) {
-                    if (areValidCalculationParams(sandbox, items[i].price, items[i].tax, items[i].discount, 1)) {
+                    if (areValidCalculationParams(sandbox,
+                            items[i].price,
+                            items[i].tax,
+                            items[i].discount,
+                            items[i].quantity)
+                    ) {
                         item = items[i];
-                        discount = getDiscount(sandbox, item.discount);
-                        netPrice = parseFloat(item.price);
-                        netPrice = netPrice * item.quantity;
-
-                        if (!!discount) {
-                            netPrice -= (netPrice * discount);
-                        }
+                        netPrice = calculateNetPrice(sandbox, item);
 
                         tax = netPrice * getTaxRate(sandbox, item.tax);
-                        if (tax > 0) {
-                            if (!!result.taxes[item.tax]) {
-                                result.taxes[item.tax] += tax;
-                            } else {
-                                result.taxes[item.tax] = tax;
-                            }
+
+                        if (!!result.taxes[item.tax]) {
+                            result.taxes[item.tax] += tax;
+                        } else {
+                            result.taxes[item.tax] = tax;
                         }
 
                         result.netPrice += netPrice;
@@ -183,6 +227,39 @@ define([], function() {
                     } else {
                         return null;
                     }
+                }
+
+                // Calculate delivery cost.
+                if (sandbox.dom.isNumeric(deliveryCost) && deliveryCost != 0) {
+                    result.grossPrice = 0;
+                    var ratio = 0;
+                    var itemTax = 0;
+                    // Calculate the delivery costs in relation to the item prices.
+                    for (i in items) {
+                        if (areValidCalculationParams(
+                                sandbox,
+                                items[i].price,
+                                items[i].tax,
+                                items[i].discount,
+                                items[i].quantity)
+                        ) {
+                            item = items[i];
+                            netPrice = calculateNetPrice(sandbox, item);
+                            itemTax = item.tax.toString();
+                            if (result.netPrice != 0) {
+                                ratio = netPrice / result.netPrice;
+                            } else {
+                                ratio = 0;
+                                result.taxes[itemTax] = 0;
+                            }
+                            result.taxes[itemTax] += ratio * deliveryCost * item.tax / 100;
+                            result.grossPrice += netPrice + result.taxes[itemTax];
+                        } else {
+                            return null;
+                        }
+                    }
+                    result.netPrice += deliveryCost;
+                    result.grossPrice += deliveryCost;
                 }
                 return result;
             } catch (ex) {
@@ -194,11 +271,13 @@ define([], function() {
     return {
 
         /**
-         * Returns formatted gross price
+         * Returns formatted gross price.
+         *
          * @param {Object} sandbox
          * @param {Number} price net
          * @param {String} currency
          * @param {Number} taxRate percentage value
+         *
          * @return {String} formatted price including currency
          */
         getFormattedGrossPrice: function(sandbox, price, currency, taxRate) {
@@ -224,11 +303,13 @@ define([], function() {
         },
 
         /**
-         * Returns formatted net price
+         * Returns formatted net price.
+         *
          * @param {Object} sandbox
          * @param {Number} price gross
          * @param {String} currency
          * @param {Number} taxRate
+         *
          * @return {String} formatted price including currency
          */
         getFormattedNetPrice: function(sandbox, price, currency, taxRate) {
@@ -250,14 +331,16 @@ define([], function() {
         },
 
         /**
-         * Formats an amount of something and adds an addition (unit, currency, ...)
+         * Formats an amount of something and adds an addition (unit, currency, ...).
+         *
          * @param {Object} sandbox
          * @param {Number} amount
          * @param {String} unit
+         *
          * @return {String} formatted string
          */
         getFormattedAmountAndUnit: function(sandbox, amount, unit) {
-            if (!isGreaterThanOrEqualsZero(sandbox, amount)) {
+            if (!sandbox.dom.isNumeric(amount)) {
                 sandbox.logger.error('Invalid parameter in getFormattedAmountAndUnit!');
                 return sandbox.translate(constants.invalidInputTranslation);
             }
@@ -267,11 +350,13 @@ define([], function() {
         },
 
         /**
-         * Will format a number and append or prepend the addition
-         * @param sandbox
-         * @param value
-         * @param addition
-         * @param {Boolean} append addition if true else prepend
+         * Will format a number and append or prepend the addition.
+         *
+         * @param {Object} sandbox
+         * @param {Float} value
+         * @param {String} addition
+         * @param {Bool} append addition if true else prepend
+         *
          * @returns {String}
          */
         getFormattedNumberWithAddition: function(sandbox, value, addition, append) {
@@ -286,14 +371,15 @@ define([], function() {
 
         /**
          * Calculates a price from a price and subtracts a discount from the net price
-         * The price can be net or gross depending on the isNetPrice param
+         * The price can be net or gross depending on the isNetPrice param.
+         *
          * @param {Object} sandbox
          * @param {Number} price gross or net
          * @param {String} currency percentage value
          * @param {Number} discount
-         * @param amount
+         * @param {Number} amount
          * @param {Number} taxRate
-         * @param {Boolean} isNetPrice
+         * @param {Bool} isNetPrice
          */
         getTotalPrice: function(sandbox, price, currency, discount, amount, taxRate, isNetPrice) {
             if (!areValidCalculationParams(sandbox, price, taxRate, discount, amount)) {
@@ -328,9 +414,11 @@ define([], function() {
 
         /**
          * Sums up all prices to a total net price, calculates a total tax amount per tax class/rate
-         * and returns the taxes, a total net and a total gross price
+         * and returns the taxes, a total net and a total gross price.
+         *
          * @param {Object} sandbox
          * @param {Object} items
+         * @param {Float} deliveryCost
          * [
          *  {
          *   price: 100,
@@ -341,19 +429,21 @@ define([], function() {
          *
          * @return {Object}
          */
-        getTotalPricesAndTaxes: function(sandbox, items) {
+        getTotalPricesAndTaxes: function(sandbox, items, deliveryCost) {
             if (!!items) {
-                return processPriceCalculationItem.call(this, sandbox, items);
+                return processPriceCalculationItem.call(this, sandbox, items, deliveryCost);
             }
             return null;
         },
 
         /**
-         * Sums up an array of prices and returns it formatted
-         * Will parse the price
-         * @param sandbox
-         * @param prices
-         * @param currency
+         * Sums up an array of prices and returns it formatted.
+         * Will parse the price.
+         *
+         * @param {Object} sandbox
+         * @param {Array} prices
+         * @param {String} currency
+         *
          * @returns {String}
          */
         getTotalFormattedPrice: function(sandbox, prices, currency) {
@@ -361,8 +451,8 @@ define([], function() {
                 locale = getLocale(sandbox.globalize.getLocale());
 
             if (!!sandbox && !!prices) {
-                sandbox.util.foreach(prices, function(price){
-                    if(typeof price === 'string') {
+                sandbox.util.foreach(prices, function(price) {
+                    if (typeof price === 'string') {
                         total += sandbox.parseFloat(price);
                     } else {
                         total += price;
