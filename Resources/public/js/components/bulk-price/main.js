@@ -55,14 +55,16 @@ define(['text!suluproduct/components/bulk-price/bulk-price.html'], function(Bulk
                     idx = index;
                 }
 
-                price.minimumQuantity = '';
                 if (!!price.minimumQuantity || price.minimumQuantity === 0) {
                     price.minimumQuantity = this.sandbox.numberFormat(parseFloat(price.minimumQuantity), 'n');
+                } else {
+                    price.minimumQuantity = '';
                 }
 
-                price.price = '';
                 if (!!price.price || price.price === 0) {
                     price.price = this.sandbox.numberFormat(price.price, 'n');
+                } else {
+                    price.price = '';
                 }
 
             }.bind(this));
