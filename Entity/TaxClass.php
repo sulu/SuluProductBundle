@@ -96,7 +96,9 @@ class TaxClass
     }
 
     /**
-     * @return TaxClassTranslation|null
+     * @param string $locale
+     *
+     * @return null|TaxClassTranslation
      */
     public function getTranslation($locale)
     {
