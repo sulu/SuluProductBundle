@@ -37,7 +37,7 @@ define(['config', 'extensions/sulu-buttons-productbundle'], function(Config, Pro
             Config.set('product.list.statuses.ids', [3, 5]);
 
             Config.set('suluproduct.components.autocomplete.default', {
-                remoteUrl: '/admin/api/products?flat=true&searchFields=number,name&fields=id,name,number,manufacturer,supplier',
+                remoteUrl: '/admin/api/products?flat=true&searchFields=number,name,supplier&fields=id,name,number,supplier',
                 resultKey: 'products',
                 getParameter: 'search',
                 value: '',
