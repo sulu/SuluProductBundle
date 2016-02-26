@@ -954,7 +954,8 @@ class ProductManager implements ProductManagerInterface
         $id = null,
         $flush = true,
         $skipChanged = false,
-        $supplierId = null
+        $supplierId = null,
+        $patch = false
     ) {
         $publishedProduct = null;
 
@@ -1206,7 +1207,7 @@ class ProductManager implements ProductManagerInterface
                 throw new ProductDependencyNotFoundException(self::$unitEntityName, $contentUnitId);
             }
             $product->setContentUnit($contentUnit);
-        } else {
+        } elseif (!$patch) {
             $product->setContentUnit(null);
         }
 
