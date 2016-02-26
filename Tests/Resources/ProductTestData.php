@@ -7,11 +7,12 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\DependencyInjection\Container;
 use Sulu\Bundle\CategoryBundle\Entity\Category;
 use Sulu\Bundle\CategoryBundle\Entity\CategoryTranslation;
+use Sulu\Bundle\ProductBundle\DataFixtures\ORM\DeliveryStatuses\LoadDeliveryStatuses;
+use Sulu\Bundle\ProductBundle\DataFixtures\ORM\TaxClasses\LoadTaxClasses;
 use Sulu\Bundle\ProductBundle\DataFixtures\ORM\Currencies\LoadCurrencies;
 use Sulu\Bundle\ProductBundle\DataFixtures\ORM\ProductStatuses\LoadProductStatuses;
 use Sulu\Bundle\ProductBundle\DataFixtures\ORM\ProductTypes\LoadProductTypes;
 use Sulu\Bundle\ProductBundle\DataFixtures\ORM\Units\LoadUnits;
-use Sulu\Bundle\ProductBundle\DataFixtures\ORM\TaxClasses\LoadTaxClasses;
 use Sulu\Bundle\ProductBundle\DataFixtures\ORM\CountryTaxes\LoadCountryTaxes;
 use Sulu\Bundle\ProductBundle\Entity\Currency;
 use Sulu\Bundle\ProductBundle\Entity\CurrencyRepository;
@@ -19,7 +20,6 @@ use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductPrice;
 use Sulu\Bundle\ProductBundle\Entity\TaxClass;
 use Sulu\Bundle\ProductBundle\Entity\TaxClassRepository;
-use Sulu\Bundle\ProductBundle\Entity\CountryTax;
 use Sulu\Bundle\ProductBundle\Entity\ProductTranslation;
 use Sulu\Bundle\ProductBundle\Entity\Status;
 use Sulu\Bundle\ProductBundle\Entity\StatusRepository;
@@ -36,10 +36,19 @@ class ProductTestData
 
     const LOCALE = 'de';
 
+    const CONTENT_UNIT_ID = 2;
+    const ORDER_UNIT_ID = 1;
+    const PRODUCT_TYPE_ID = 1;
+
     /**
      * @var Unit
      */
     private $orderUnit;
+
+    /**
+     * @var Unit
+     */
+    private $contentUnit;
 
     /**
      * @var Type
@@ -107,7 +116,7 @@ class ProductTestData
     private $eurCurrency;
 
     /**
-     * @var float
+     * @var TaxClass
      */
     private $taxClass;
 
@@ -142,7 +151,9 @@ class ProductTestData
 
         $unitFixtures = new LoadUnits();
         $unitFixtures->load($this->entityManager);
-        $this->orderUnit = $this->getProductUnitRepository()->find(1);
+        $this->orderUnit = $this->getProductUnitRepository()->find(self::ORDER_UNIT_ID);
+
+        $this->contentUnit = $this->getProductUnitRepository()->find(self::CONTENT_UNIT_ID);
 
         $taxClasses = new LoadTaxClasses();
         $taxClasses->load($this->entityManager);
@@ -153,12 +164,18 @@ class ProductTestData
 
         $typeFixtures = new LoadProductTypes();
         $typeFixtures->load($this->entityManager);
-        $this->productType = $this->getProductTypeRepository()->find(1);
+        $this->productType = $this->getProductTypeRepository()->find(self::PRODUCT_TYPE_ID);
 
         $statusFixtures = new LoadProductStatuses();
         $statusFixtures->load($this->entityManager);
         $this->productStatus = $this->getProductStatusRepository()->find(Status::ACTIVE);
         $this->productStatusChanged = $this->getProductStatusRepository()->find(Status::CHANGED);
+
+        $taxFixtures = new LoadTaxClasses();
+        $taxFixtures->load($this->entityManager);
+
+        $deliveryStatusFixtures = new LoadDeliveryStatuses();
+        $deliveryStatusFixtures->load($this->entityManager);
 
         $this->product = $this->createProduct();
         $this->product2 = $this->createProduct();
@@ -177,39 +194,79 @@ class ProductTestData
     {
         $this->productCount++;
 
+        // Create basic product.
         $product = $this->productFactory->createEntity();
+        $this->entityManager->persist($product);
         $product->setNumber('ProductNumber-' . $this->productCount);
         $product->setManufacturer('EnglishManufacturer-' . $this->productCount);
         $product->setType($this->productType);
         $product->setStatus($this->productStatus);
         $product->setCreated(new DateTime());
         $product->setChanged(new DateTime());
-        $product->setOrderUnit($this->orderUnit);
         $product->setSupplier($this->contactTestData->accountSupplier);
-
+        $product->setOrderUnit($this->orderUnit);
+        $product->setContentUnit($this->contentUnit);
+        $product->setOrderContentRatio(2.0);
         $product->setTaxClass($this->taxClass);
 
-        $price = new ProductPrice();
-        $price->setCurrency($this->eurCurrency);
-        $price->setPrice(5.99);
-        $price->setProduct($product);
+        // Add prices
+        $this->addPrice($product, 5.99);
+        $this->addPrice($product, 3.85, 4.0);
 
+        // Product translation
+        $this->addProductTranslation($product);
+
+        return $product;
+    }
+
+    /**
+     * Creates a new price entity and adds it to the product.
+     *
+     * @param ProductInterface $product
+     * @param float $priceValue
+     * @param null|float $minimumQuantity
+     *
+     * @return ProductPrice
+     */
+    public function addPrice($product, $priceValue, $minimumQuantity = null)
+    {
+        $price = new ProductPrice();
+        $this->entityManager->persist($price);
+
+        // Set values.
+        $price->setCurrency($this->eurCurrency);
+        $price->setPrice($priceValue);
+        if ($minimumQuantity !== null) {
+            $price->setMinimumQuantity($minimumQuantity);
+        }
+
+        // Add to product.
+        $price->setProduct($product);
         $product->addPrice($price);
 
-        // product translation
+        return $price;
+    }
+
+    /**
+     * Creates a new translation for a given product.
+     *
+     * @param ProductInterface $product
+     * @param string $locale
+     */
+    public function addProductTranslation($product, $locale = 'en')
+    {
         $productTranslation = new ProductTranslation();
+        $this->entityManager->persist($productTranslation);
+
+        // Set values.
         $productTranslation->setProduct($product);
-        $productTranslation->setLocale('en');
+        $productTranslation->setLocale($locale);
         $productTranslation->setName('EnglishProductTranslationName-' . $this->productCount);
         $productTranslation->setShortDescription('EnglishProductShortDescription-' . $this->productCount);
         $productTranslation->setLongDescription('EnglishProductLongDescription-' . $this->productCount);
+
+        // Add to product.
         $product->addTranslation($productTranslation);
-
-        $this->entityManager->persist($price);
-        $this->entityManager->persist($product);
-        $this->entityManager->persist($productTranslation);
-
-        return $product;
     }
 
     /**
@@ -289,6 +346,14 @@ class ProductTestData
     public function getCategory()
     {
         return $this->category;
+    }
+
+    /**
+     * @return Unit
+     */
+    public function getContentUnit()
+    {
+        return $this->contentUnit;
     }
 
     /**

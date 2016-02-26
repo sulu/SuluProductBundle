@@ -934,9 +934,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Set orderContentRatio
-     *
-     * @param string $orderContentRatio
+     * @param float $orderContentRatio
      *
      * @return BaseProduct
      */
@@ -948,9 +946,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Get orderContentRatio
-     *
-     * @return string
+     * @return float
      */
     public function getOrderContentRatio()
     {
