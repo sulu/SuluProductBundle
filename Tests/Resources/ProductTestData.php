@@ -4,11 +4,11 @@ namespace Sulu\Bundle\ProductBundle\Tests\Resources;
 
 use DateTime;
 use Doctrine\Common\Persistence\ObjectManager;
-use Sulu\Bundle\ProductBundle\DataFixtures\ORM\DeliveryStatuses\LoadDeliveryStatuses;
-use Sulu\Bundle\ProductBundle\DataFixtures\ORM\TaxClasses\LoadTaxClasses;
 use Symfony\Component\DependencyInjection\Container;
 use Sulu\Bundle\CategoryBundle\Entity\Category;
 use Sulu\Bundle\CategoryBundle\Entity\CategoryTranslation;
+use Sulu\Bundle\ProductBundle\DataFixtures\ORM\DeliveryStatuses\LoadDeliveryStatuses;
+use Sulu\Bundle\ProductBundle\DataFixtures\ORM\TaxClasses\LoadTaxClasses;
 use Sulu\Bundle\ProductBundle\DataFixtures\ORM\Currencies\LoadCurrencies;
 use Sulu\Bundle\ProductBundle\DataFixtures\ORM\ProductStatuses\LoadProductStatuses;
 use Sulu\Bundle\ProductBundle\DataFixtures\ORM\ProductTypes\LoadProductTypes;
@@ -190,32 +190,62 @@ class ProductTestData
         $product->setOrderContentRatio(2.0);
 
         // Add prices
-        $price = new ProductPrice();
-        $this->entityManager->persist($price);
-        $price->setCurrency($this->eurCurrency);
-        $price->setPrice(5.99);
-        $price->setProduct($product);
-        $product->addPrice($price);
-
-        $price = new ProductPrice();
-        $this->entityManager->persist($price);
-        $price->setCurrency($this->eurCurrency);
-        $price->setMinimumQuantity(4);
-        $price->setPrice(3.99);
-        $price->setProduct($product);
-        $product->addPrice($price);
+        $this->addPrice($product, 5.99);
+        $this->addPrice($product, 3.85, 4.0);
 
         // Product translation
+        $this->addProductTranslation($product);
+
+        return $product;
+    }
+
+    /**
+     * Creates a new price entity and adds it to the product.
+     *
+     * @param ProductInterface $product
+     * @param float $priceValue
+     * @param null|float $minimumQuantity
+     *
+     * @return ProductPrice
+     */
+    public function addPrice($product, $priceValue, $minimumQuantity = null)
+    {
+        $price = new ProductPrice();
+        $this->entityManager->persist($price);
+
+        // Set values.
+        $price->setCurrency($this->eurCurrency);
+        $price->setPrice($priceValue);
+        if ($minimumQuantity !== null) {
+            $price->setMinimumQuantity($minimumQuantity);
+        }
+
+        // Add to product.
+        $price->setProduct($product);
+        $product->addPrice($price);
+
+        return $price;
+    }
+
+    /**
+     * Creates a new translation for a given product.
+     *
+     * @param ProductInterface $product
+     */
+    public function addProductTranslation($product, $locale = 'en')
+    {
         $productTranslation = new ProductTranslation();
         $this->entityManager->persist($productTranslation);
+
+        // Set values.
         $productTranslation->setProduct($product);
-        $productTranslation->setLocale('en');
+        $productTranslation->setLocale($locale);
         $productTranslation->setName('EnglishProductTranslationName-' . $this->productCount);
         $productTranslation->setShortDescription('EnglishProductShortDescription-' . $this->productCount);
         $productTranslation->setLongDescription('EnglishProductLongDescription-' . $this->productCount);
-        $product->addTranslation($productTranslation);
 
-        return $product;
+        // Add to product.
+        $product->addTranslation($productTranslation);
     }
 
     /**
