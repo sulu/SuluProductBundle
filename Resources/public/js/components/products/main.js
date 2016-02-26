@@ -12,8 +12,9 @@ define([
     'sulucategory/model/category',
     'app-config',
     'suluproduct/util/header',
-    'suluproduct/util/product-delete-dialog'
-], function(Product, Category, AppConfig, HeaderUtil, DeleteDialog) {
+    'suluproduct/util/product-delete-dialog',
+    'config'
+], function(Product, Category, AppConfig, HeaderUtil, DeleteDialog, Config) {
     'use strict';
 
     var types = {
@@ -140,6 +141,30 @@ define([
             this.sandbox.on('sulu.header.back', function() {
                 this.sandbox.emit('sulu.products.list');
             }, this);
+
+            // handles save-errors for products
+            this.sandbox.on('sulu.products.save-error', function(response) {
+                if (response && response.responseJSON && response.responseJSON.code) {
+                    // response code 1 == ProductException::PRODUCT_NOT_VALID
+                    if(response.responseJSON.code == 1) {
+                        this.sandbox.emit(
+                            'sulu.labels.error.show',
+                            'labels.error.product-not-valid',
+                            'labels.error'
+                        );
+
+                        // set status to inactive!
+                        this.sandbox.emit('product.state.change', Config.get('product.status.inactive'));
+                    }
+                    else {
+                        // error code not defined -> show default product save error
+                        this.sandbox.emit('sulu.labels.error.show', 'labels.error.product-save', 'labels.error');
+                    }
+                } else {
+                    // no valid response -> show default product save error
+                    this.sandbox.emit('sulu.labels.error.show', 'labels.error.product-save', 'labels.error');
+                }
+            }, this);
         },
 
         triggerWorkflowAction: function(data) {
@@ -261,8 +286,10 @@ define([
                         this.load(model.id, this.options.locale);
                     }
                 }.bind(this),
-                error: function() {
-                    this.sandbox.logger.error('error while saving product');
+                error: function(model, response) {
+                    this.sandbox.logger.log("error while saving product");
+                    this.sandbox.emit('sulu.header.toolbar.item.enable', 'save');
+                    this.sandbox.emit('sulu.products.save-error', response);
                 }.bind(this)
             });
         },
@@ -358,6 +385,7 @@ define([
                 this.product.set({id: this.options.id});
                 this.product.fetchLocale(this.options.locale, {
                     success: function(model) {
+                        // pass data as backbone model
                         component.options.data = this.product;
                         component.options.productType = types[model.get('type').id];
                         this.sandbox.start([component]);

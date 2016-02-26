@@ -20,6 +20,7 @@ use Sulu\Bundle\ProductBundle\Product\Exception\MissingProductAttributeException
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductChildrenExistException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductDependencyNotFoundException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductNotFoundException;
+use Sulu\Bundle\ProductBundle\Product\Exception\ProductException;
 use Sulu\Bundle\ProductBundle\Product\ProductManagerInterface;
 use Sulu\Component\Rest\Exception\EntityIdAlreadySetException;
 use Sulu\Component\Rest\Exception\EntityNotFoundException;
@@ -177,6 +178,14 @@ class ProductController extends RestController implements ClassResourceInterface
             $listBuilder->addGroupBy($fieldDescriptors['id']);
         }
 
+        if (json_decode($request->get('disablePagination'))) {
+            return [
+                '_embedded' => [
+                    'products' => $listBuilder->execute()
+                ]
+            ];
+        }
+
         $list = new ListRepresentation(
             $listBuilder->execute(),
             self::$entityKey,
@@ -220,6 +229,9 @@ class ProductController extends RestController implements ClassResourceInterface
             $view = $this->view($exception->toArray(), 400);
         } catch (EntityIdAlreadySetException $exc) {
             $view = $this->view($exc->toArray(), 400);
+        } catch (ProductException $exc) {
+            $exception = new RestException($exc->getMessage(), $exc->getCode());
+            $view = $this->view($exception->toArray(), 400);
         }
 
         return $this->handleView($view);
@@ -247,6 +259,9 @@ class ProductController extends RestController implements ClassResourceInterface
             $view = $this->view($exception->toArray(), 400);
         } catch (MissingProductAttributeException $exc) {
             $exception = new MissingArgumentException(static::$entityName, $exc->getAttribute());
+            $view = $this->view($exception->toArray(), 400);
+        } catch (ProductException $exc) {
+            $exception = new RestException($exc->getMessage(), $exc->getCode());
             $view = $this->view($exception->toArray(), 400);
         }
 

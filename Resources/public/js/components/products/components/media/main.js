@@ -29,7 +29,12 @@ define(['config', 'suluproduct/util/product-delete-dialog'], function(Config, De
             this.newSelections = [];
             this.removedSelections = [];
             this.currentSelection = this.sandbox.util.arrayGetColumn(this.options.data.attributes.media, 'id');
-            this.status = !!this.options.data ? this.options.data.attributes.status : Config.get('product.status.active');
+
+            if (!!this.options.data) {
+                this.status = this.options.data.attributes.status;
+            } else {
+                this.status = Config.get('product.status.inactive');
+            }
 
             // reset status if it has been changed before and has not been saved
             this.sandbox.emit('product.state.change', this.status);
@@ -50,8 +55,12 @@ define(['config', 'suluproduct/util/product-delete-dialog'], function(Config, De
             }.bind(this));
 
             this.sandbox.on('product.state.change', function(status) {
-                if (!this.options.data.attributes.status || this.options.data.attributes.status.id !== status.id) {
+                if (!this.options.data ||
+                    !this.options.data.attributes.status ||
+                    this.options.data.attributes.status.id !== status.id
+                ) {
                     this.status = status;
+                    this.options.data.attributes.status = this.status;
                     this.setHeaderBar(false);
                 }
             }, this);
@@ -111,7 +120,7 @@ define(['config', 'suluproduct/util/product-delete-dialog'], function(Config, De
         },
 
         savedProduct: function() {
-            this.options.data.status = this.status;
+            this.options.data.attributes.status = this.status;
             this.setHeaderBar(true);
         },
 

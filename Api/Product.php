@@ -1228,4 +1228,17 @@ class Product extends ApiWrapper implements ApiProductInterface
     {
         return $this->entity->getSearchTerms();
     }
+
+    /**
+     * Helper method to check if the product is
+     * a valid shop product.
+     *
+     * @param string $defaultCurrency
+     *
+     * @return bool
+     */
+    public function isValidShopProduct($defaultCurrency)
+    {
+        return $this->entity->isValidShopProduct($defaultCurrency);
+    }
 }
