@@ -39,6 +39,7 @@ class ProductTestData
     const CONTENT_UNIT_ID = 2;
     const ORDER_UNIT_ID = 1;
     const PRODUCT_TYPE_ID = 1;
+    const TAX_CLASS_ID = 1;
 
     /**
      * @var Unit
@@ -157,7 +158,7 @@ class ProductTestData
 
         $taxClasses = new LoadTaxClasses();
         $taxClasses->load($this->entityManager);
-        $this->taxClass = $this->getTaxClassRepository()->find(1);
+        $this->taxClass = $this->getTaxClassRepository()->find(self::TAX_CLASS_ID);
 
         $countryTaxes = new LoadCountryTaxes();
         $countryTaxes->load($this->entityManager);
@@ -170,9 +171,6 @@ class ProductTestData
         $statusFixtures->load($this->entityManager);
         $this->productStatus = $this->getProductStatusRepository()->find(Status::ACTIVE);
         $this->productStatusChanged = $this->getProductStatusRepository()->find(Status::CHANGED);
-
-        $taxFixtures = new LoadTaxClasses();
-        $taxFixtures->load($this->entityManager);
 
         $deliveryStatusFixtures = new LoadDeliveryStatuses();
         $deliveryStatusFixtures->load($this->entityManager);
