@@ -155,6 +155,11 @@ class ContactTestData
         $this->accountSupplier = $this->createAccount(self::SUPPLIER_TYPE);
         $this->accountSupplier2 = $this->createAccount(self::SUPPLIER_TYPE);
 
+        $this->accountCustomer->setMainEmail($email->getEmail());
+        $this->accountCustomer2->setMainEmail($email->getEmail());
+        $this->accountSupplier->setMainEmail($email->getEmail());
+        $this->accountSupplier2->setMainEmail($email->getEmail());
+
         $this->entityManager->persist($addressType);
         $this->entityManager->persist($country);
         $this->entityManager->persist($emailType);
