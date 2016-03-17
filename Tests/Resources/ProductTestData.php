@@ -114,7 +114,7 @@ class ProductTestData
     /**
      * @var Currency
      */
-    private $eurCurrency;
+    private $currency;
 
     /**
      * @var TaxClass
@@ -132,6 +132,8 @@ class ProductTestData
         $this->entityManager = $container->get('doctrine.orm.entity_manager');
         $this->productFactory = $this->container->get('sulu_product.product_factory');
 
+        $this->defaultCurrencyCode = $container->getParameter('default_currency');
+
         $this->createFixtures();
     }
 
@@ -148,7 +150,7 @@ class ProductTestData
         $loadCurrencies = new LoadCurrencies();
         $loadCurrencies->load($this->entityManager);
 
-        $this->eurCurrency = $this->getCurrencyRepository()->findByCode('EUR');
+        $this->currency = $this->getCurrencyRepository()->findByCode($this->defaultCurrencyCode);
 
         $unitFixtures = new LoadUnits();
         $unitFixtures->load($this->entityManager);
@@ -232,7 +234,7 @@ class ProductTestData
         $this->entityManager->persist($price);
 
         // Set values.
-        $price->setCurrency($this->eurCurrency);
+        $price->setCurrency($this->currency);
         $price->setPrice($priceValue);
         if ($minimumQuantity !== null) {
             $price->setMinimumQuantity($minimumQuantity);
