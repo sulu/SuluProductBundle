@@ -8,7 +8,7 @@ namespace Sulu\Bundle\ProductBundle\Entity;
 class ProductPrice
 {
     /**
-     * @var string
+     * @var double
      */
     private $minimumQuantity = 0;
 
@@ -35,7 +35,7 @@ class ProductPrice
     /**
      * Set minimumQuantity
      *
-     * @param string $minimumQuantity
+     * @param double $minimumQuantity
      *
      * @return ProductPrice
      */

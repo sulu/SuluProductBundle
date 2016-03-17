@@ -804,7 +804,7 @@ class ProductManager implements ProductManagerInterface
 
         // get random ids
         $randomIds = array_map(
-            function($key) use ($specialPriceIds) {
+            function ($key) use ($specialPriceIds) {
                 return $specialPriceIds[$key];
             },
             array_rand($specialPriceIds, $numberResults)
@@ -954,7 +954,8 @@ class ProductManager implements ProductManagerInterface
         $id = null,
         $flush = true,
         $skipChanged = false,
-        $supplierId = null
+        $supplierId = null,
+        $patch = false
     ) {
         $publishedProduct = null;
 
@@ -1206,7 +1207,7 @@ class ProductManager implements ProductManagerInterface
                 throw new ProductDependencyNotFoundException(self::$unitEntityName, $contentUnitId);
             }
             $product->setContentUnit($contentUnit);
-        } else {
+        } elseif (!$patch) {
             $product->setContentUnit(null);
         }
 
@@ -1339,9 +1340,9 @@ class ProductManager implements ProductManagerInterface
             $product->setDeliveryStatus($deliveryStatus);
         }
 
-        if($product->getStatus()->getId() == StatusEntity::ACTIVE) {
+        if ($product->getStatus()->getId() == StatusEntity::ACTIVE) {
             // If the status of the product is active then the product must be a valid shop product!
-            if(!$product->isValidShopProduct($this->defaultCurrency)) {
+            if (!$product->isValidShopProduct($this->defaultCurrency)) {
                 // Undo changes
                 $this->em->refresh($product->getEntity());
                 throw new ProductException('No valid product for shop!', ProductException::PRODUCT_NOT_VALID);
@@ -1945,7 +1946,7 @@ class ProductManager implements ProductManagerInterface
 
         foreach ($product->getPrices() as $price) {
             if (($key = array_search($price->getCurrency(), $currencies)) !== false) {
-                unset ($currencies[$key]);
+                unset($currencies[$key]);
             }
         }
 

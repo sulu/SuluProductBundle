@@ -178,6 +178,14 @@ class ProductController extends RestController implements ClassResourceInterface
             $listBuilder->addGroupBy($fieldDescriptors['id']);
         }
 
+        if (json_decode($request->get('disablePagination'))) {
+            return [
+                '_embedded' => [
+                    'products' => $listBuilder->execute()
+                ]
+            ];
+        }
+
         $list = new ListRepresentation(
             $listBuilder->execute(),
             self::$entityKey,
