@@ -132,7 +132,7 @@ class ProductTestData
         $this->entityManager = $container->get('doctrine.orm.entity_manager');
         $this->productFactory = $this->container->get('sulu_product.product_factory');
 
-        $this->defaultCurrencyCode = $container->getParameter('default_currency');
+        $this->defaultCurrencyCode = $container->getParameter('sulu_product.default_currency');
 
         $this->createFixtures();
     }
