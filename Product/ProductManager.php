@@ -789,31 +789,30 @@ class ProductManager implements ProductManagerInterface
      */
     public function findRandomOfferedProducts($locale, $numberResults)
     {
-        // get ids of special prices
+        // Get ids of special prices.
         $specialPriceIds = $this->specialPriceRepository->findAllCurrentIds();
 
         if (!$specialPriceIds) {
             return [];
         }
 
-        // check if number of desired results does not exceed number of special prices
+        // Check if number of desired results does not exceed number of special prices.
         $numberOfIds = count($specialPriceIds);
-        if ($numberResults < 0 || $numberResults > $numberOfIds) {
-            $numberResults = $numberOfIds;
+        $randomIds = $specialPriceIds;
+        if ($numberResults > 0 && $numberOfIds > $numberResults) {
+            // Get random ids.
+            $randomIds = array_map(
+                function ($key) use ($specialPriceIds) {
+                    return $specialPriceIds[$key];
+                },
+                array_rand($specialPriceIds, $numberResults)
+            );
         }
 
-        // get random ids
-        $randomIds = array_map(
-            function ($key) use ($specialPriceIds) {
-                return $specialPriceIds[$key];
-            },
-            array_rand($specialPriceIds, $numberResults)
-        );
-
-        // get special prices
+        // Get special prices.
         $specialPrices = $this->specialPriceRepository->findById($randomIds);
 
-        // shuffle prices
+        // Shuffle prices.
         shuffle($specialPrices);
 
         $products = [];
