@@ -184,6 +184,54 @@ define([], function() {
         },
 
         /**
+         * Calculates delivery cost and taxes and adds to result.
+         *
+         * @param {Object} sandbox
+         * @param {Object} items
+         * @param {Number} deliveryCost
+         * @param {Object} result
+         */
+        calculateDeliveryCost = function(sandbox, items, deliveryCost, result) {
+            // Calculate delivery cost.
+            if (sandbox.dom.isNumeric(deliveryCost) && deliveryCost != 0) {
+                var item;
+                var itemNetPrice;
+                var itemTax = 0;
+                var ratio = 0;
+                var tax;
+
+                // Calculate taxes for delivery costs in relation to the item prices.
+                for (var i in items) {
+                    if (areValidCalculationParams(
+                            sandbox,
+                            items[i].price,
+                            items[i].tax,
+                            items[i].discount,
+                            items[i].quantity)
+                    ) {
+                        item = items[i];
+                        itemNetPrice = calculateNetPrice(sandbox, item);
+                        itemTax = item.tax.toString();
+
+                        ratio = 0;
+                        if (result.netPrice != 0) {
+                            ratio = itemNetPrice / result.netPrice;
+                        }
+
+                        tax = ratio * deliveryCost * item.tax / 100;
+                        result.taxes[itemTax] += tax;
+                        result.grossPrice += tax;
+                    } else {
+                        return null;
+                    }
+                }
+
+                result.netPrice += deliveryCost;
+                result.grossPrice += deliveryCost;
+            }
+        },
+
+        /**
          * Processes elements for getTotalPricesAndTaxes.
          * Returns null if one value is invalid.
          *
@@ -192,7 +240,7 @@ define([], function() {
          * @param {Number} deliveryCost
          */
         processPriceCalculationItem = function(sandbox, items, deliveryCost) {
-            var tax = 0, i, item, netPrice,
+            var tax = 0, i, item, itemNetPrice,
                 result = {
                     taxes: {},
                     netPrice: 0,
@@ -205,16 +253,17 @@ define([], function() {
 
             try {
                 for (i in items) {
-                    if (areValidCalculationParams(sandbox,
+                    if (areValidCalculationParams(
+                            sandbox,
                             items[i].price,
                             items[i].tax,
                             items[i].discount,
                             items[i].quantity)
                     ) {
                         item = items[i];
-                        netPrice = calculateNetPrice(sandbox, item);
+                        itemNetPrice = calculateNetPrice(sandbox, item);
 
-                        tax = netPrice * getTaxRate(sandbox, item.tax);
+                        tax = itemNetPrice * getTaxRate(sandbox, item.tax);
 
                         if (!!result.taxes[item.tax]) {
                             result.taxes[item.tax] += tax;
@@ -222,48 +271,20 @@ define([], function() {
                             result.taxes[item.tax] = tax;
                         }
 
-                        result.netPrice += netPrice;
-                        result.grossPrice += netPrice + tax;
+                        result.netPrice += itemNetPrice;
+                        result.grossPrice += itemNetPrice + tax;
                     } else {
                         return null;
                     }
                 }
 
-                // Calculate delivery cost.
-                if (sandbox.dom.isNumeric(deliveryCost) && deliveryCost != 0) {
-                    result.grossPrice = 0;
-                    var ratio = 0;
-                    var itemTax = 0;
-                    // Calculate the delivery costs in relation to the item prices.
-                    for (i in items) {
-                        if (areValidCalculationParams(
-                                sandbox,
-                                items[i].price,
-                                items[i].tax,
-                                items[i].discount,
-                                items[i].quantity)
-                        ) {
-                            item = items[i];
-                            netPrice = calculateNetPrice(sandbox, item);
-                            itemTax = item.tax.toString();
-                            if (result.netPrice != 0) {
-                                ratio = netPrice / result.netPrice;
-                            } else {
-                                ratio = 0;
-                                result.taxes[itemTax] = 0;
-                            }
-                            result.taxes[itemTax] += ratio * deliveryCost * item.tax / 100;
-                            result.grossPrice += netPrice + result.taxes[itemTax];
-                        } else {
-                            return null;
-                        }
-                    }
-                    result.netPrice += deliveryCost;
-                    result.grossPrice += deliveryCost;
-                }
+                // Calculate delivery costs.
+                calculateDeliveryCost(sandbox, items, deliveryCost, result);
+
                 return result;
             } catch (ex) {
                 sandbox.logger.error(ex.message);
+
                 return null;
             }
         };
