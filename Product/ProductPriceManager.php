@@ -131,7 +131,7 @@ class ProductPriceManager implements ProductPriceManagerInterface
      * @return String price
      * @Groups({"cart"})
      */
-    public function getFormattedPrice($price, $symbol = 'EUR', $locale = 'de')
+    public function getFormattedPrice($price, $symbol = 'EUR', $locale = null)
     {
         $location = PriceFormatter::CURRENCY_LOCATION_NONE;
         if (!empty($symbol)) {
