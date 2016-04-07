@@ -72,8 +72,8 @@ class Product extends ApiWrapper implements ApiProductInterface
     ) {
         $this->entity = $product;
         $this->locale = $locale;
-        $this->accountManager = $accountManager;
         $this->priceFormatter = $priceFormatter;
+        $this->accountManager = $accountManager;
     }
 
     /**
@@ -634,9 +634,9 @@ class Product extends ApiWrapper implements ApiProductInterface
         $taxClass = $this->entity->getTaxClass();
         if ($taxClass) {
             return new TaxClass($this->entity->getTaxClass(), $this->locale);
-        } else {
-            return null;
         }
+
+        return null;
     }
 
     /**
