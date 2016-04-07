@@ -10,7 +10,7 @@
 
 namespace Sulu\Bundle\ProductBundle\Product\Exception;
 
-class ProductNotActiveException extends ProductException
+class ProductNotValidException extends ProductException
 {
     /**
      * @var string
@@ -31,7 +31,7 @@ class ProductNotActiveException extends ProductException
         $this->id = $id;
         $this->entityName = $entityName;
 
-        parent::__construct('The product with the id "' . $this->id . '" is not active.', 0);
+        parent::__construct('The product with the id "' . $this->id . '" is not valid.', 0);
     }
 
     /**
