@@ -10,7 +10,7 @@ class Unit
     const PIECE_ID = 1;
 
     /**
-     * @var integer
+     * @var int
      */
     private $id;
 
@@ -51,7 +51,7 @@ class Unit
     }
 
     /**
-     * @return integer
+     * @return int
      */
     public function getId()
     {
