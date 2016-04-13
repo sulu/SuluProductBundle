@@ -2,11 +2,8 @@
 
 namespace Sulu\Bundle\ProductBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\Collection;
 
-/**
- * Unit
- */
 class Unit
 {
     // The id for the unit type PIECE which is the default type.
@@ -18,14 +15,19 @@ class Unit
     private $id;
 
     /**
-     * @var \Doctrine\Common\Collections\Collection
+     * @var Collection
      */
     private $translations;
 
     /**
-     * @var \Doctrine\Common\Collections\Collection
+     * @var Collection
      */
     private $products;
+
+    /**
+     * @var Collection
+     */
+    private $mappings;
 
     /**
      * Constructor
@@ -37,10 +39,9 @@ class Unit
     }
 
     /**
-     * Set id
+     * @param int $id
      *
-     * @param $id
-     * @return Unit
+     * @return self
      */
     public function setId($id)
     {
@@ -50,9 +51,7 @@ class Unit
     }
 
     /**
-     * Get id
-     *
-     * @return integer 
+     * @return integer
      */
     public function getId()
     {
@@ -60,12 +59,11 @@ class Unit
     }
 
     /**
-     * Add translations
+     * @param UnitTranslation $translations
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\UnitTranslation $translations
-     * @return Unit
+     * @return self
      */
-    public function addTranslation(\Sulu\Bundle\ProductBundle\Entity\UnitTranslation $translations)
+    public function addTranslation(UnitTranslation $translations)
     {
         $this->translations[] = $translations;
 
@@ -73,19 +71,15 @@ class Unit
     }
 
     /**
-     * Remove translations
-     *
-     * @param \Sulu\Bundle\ProductBundle\Entity\UnitTranslation $translations
+     * @param UnitTranslation $translations
      */
-    public function removeTranslation(\Sulu\Bundle\ProductBundle\Entity\UnitTranslation $translations)
+    public function removeTranslation(UnitTranslation $translations)
     {
         $this->translations->removeElement($translations);
     }
 
     /**
-     * Get translations
-     *
-     * @return \Doctrine\Common\Collections\Collection 
+     * @return Collection
      */
     public function getTranslations()
     {
@@ -93,50 +87,39 @@ class Unit
     }
 
     /**
-     * Add products
+     * @param ProductInterface $product
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\Product $products
-     * @return Unit
+     * @return self
      */
-    public function addProduct(\Sulu\Bundle\ProductBundle\Entity\Product $products)
+    public function addProduct(ProductInterface $product)
     {
-        $this->products[] = $products;
+        $this->products[] = $product;
 
         return $this;
     }
 
     /**
-     * Remove products
-     *
-     * @param \Sulu\Bundle\ProductBundle\Entity\Product $products
+     * @param ProductInterface $product
      */
-    public function removeProduct(\Sulu\Bundle\ProductBundle\Entity\Product $products)
+    public function removeProduct(ProductInterface $product)
     {
-        $this->products->removeElement($products);
+        $this->products->removeElement($product);
     }
 
     /**
-     * Get products
-     *
-     * @return \Doctrine\Common\Collections\Collection 
+     * @return Collection
      */
     public function getProducts()
     {
         return $this->products;
     }
-    /**
-     * @var \Doctrine\Common\Collections\Collection
-     */
-    private $mappings;
-
 
     /**
-     * Add mappings
+     * @param UnitMapping $mappings
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\UnitMapping $mappings
-     * @return Unit
+     * @return self
      */
-    public function addMapping(\Sulu\Bundle\ProductBundle\Entity\UnitMapping $mappings)
+    public function addMapping(UnitMapping $mappings)
     {
         $this->mappings[] = $mappings;
 
@@ -144,19 +127,15 @@ class Unit
     }
 
     /**
-     * Remove mappings
-     *
-     * @param \Sulu\Bundle\ProductBundle\Entity\UnitMapping $mappings
+     * @param UnitMapping $mappings
      */
-    public function removeMapping(\Sulu\Bundle\ProductBundle\Entity\UnitMapping $mappings)
+    public function removeMapping(UnitMapping $mappings)
     {
         $this->mappings->removeElement($mappings);
     }
 
     /**
-     * Get mappings
-     *
-     * @return \Doctrine\Common\Collections\Collection 
+     * @return Collection
      */
     public function getMappings()
     {
@@ -164,14 +143,21 @@ class Unit
     }
 
     /**
-     * Returns the translation for the given locale
+     * Returns the translation for the given locale.
      *
      * @param string $locale
-     * @return UnitTranslation
+     *
+     * @return Translation
      */
     public function getTranslation($locale)
     {
         $translation = null;
+
+        // Use first translation as a fallback.
+        if (count($this->translations) > 0) {
+            $translation = $this->translations[0];
+        }
+
         /** @var UnitTranslation $translationData */
         foreach ($this->translations as $translationData) {
             if ($translationData->getLocale() == $locale) {
