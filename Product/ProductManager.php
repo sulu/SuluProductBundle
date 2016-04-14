@@ -1210,10 +1210,12 @@ class ProductManager implements ProductManagerInterface
             $product->setContentUnit(null);
         }
 
-        if (isset($data['deliveryTime']) && is_int($data['deliveryTime'])) {
-            $product->setDeliveryTime(intval($data['deliveryTime']));
-        } else {
-            $product->setDeliveryTime(0);
+        if (isset($data['deliveryTime'])) {
+            if (is_numeric($data['deliveryTime'])) {
+                $product->setDeliveryTime(intval($data['deliveryTime']));
+            } else {
+                $product->setDeliveryTime(0);
+            }
         }
 
         if (isset($data['supplier']) && isset($data['supplier']['id'])) {
