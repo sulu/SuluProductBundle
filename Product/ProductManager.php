@@ -1043,23 +1043,31 @@ class ProductManager implements ProductManagerInterface
                     $attributeIds[] = $attributeData['attributeId'];
                 }
             }
-            // create local array of attributes
-            $productAttributes = array();
-            // If attributes are not in current specified attributes remove them from product
+            // Create local array of attributes.
+            $productAttributes = [];
+
             foreach ($product->getAttributes() as $productAttribute) {
                 $productAttributes[$productAttribute->getAttribute()->getId()] = $productAttribute;
-                if (!in_array($productAttribute->getAttribute()->getId(), $attributeIds)) {
-                    $product->getEntity()->removeProductAttribute($productAttribute->getEntity());
-                    $this->em->remove($productAttribute->getEntity());
-                }
             }
-            // Add and change attributes
+
+            // Add and change attributes.
             foreach ($data['attributes'] as $attributeData) {
-                $attributeValue = $attributeData['value'];
+                $attributeValue = trim($attributeData['value']);
                 $attributeId = $attributeData['attributeId'];
 
+                // If attribute value is empty do not add.
+                if (!$attributeValue || $attributeValue === '') {
+                    // If already set on product, remove.
+                    if (array_key_exists($attributeId, $productAttributes)) {
+                        $product->getEntity()->removeProductAttribute($productAttribute->getEntity());
+                        $this->em->remove($productAttribute->getEntity());
+                    }
+
+                    continue;
+                }
+
                 if (!array_key_exists($attributeId, $productAttributes)) {
-                    // product attribute does not exists
+                    // Product attribute does not exists.
                     $productAttribute = new ProductAttribute();
                     $attribute = $this->attributeRepository->find($attributeData['attributeId']);
                     if (!$attribute) {
@@ -1074,7 +1082,7 @@ class ProductManager implements ProductManagerInterface
                     $product->addProductAttribute($productAttribute);
                     $this->em->persist($productAttribute);
                 } else {
-                    // product attribute exists
+                    // Product attribute exists.
                     $productAttribute = $productAttributes[$attributeId]->getEntity();
                     $productAttribute->setValue($attributeValue);
                 }
@@ -1084,13 +1092,13 @@ class ProductManager implements ProductManagerInterface
         if (array_key_exists('specialPrices', $data)) {
             $specialPricesData = $data['specialPrices'];
 
-            //array for local special prices storage
+            // Array for local special prices storage.
             $specialPrices = array();
 
-            // array of currency codes to be used as keys for special prices
+            // Array of currency codes to be used as keys for special prices.
             $currencyCodes = array();
 
-            // create array of special price currency codes in json request
+            // Create array of special price currency codes in json request.
             foreach ($specialPricesData as $key => $specialPrice) {
                 if (!empty($specialPrice['currency']['code']) && !empty($specialPrice['price'])) {
                     array_push($currencyCodes, $specialPrice['currency']['code']);
@@ -1099,21 +1107,21 @@ class ProductManager implements ProductManagerInterface
                 }
             }
 
-            // iterate through already added special prices for this specific product
+            // Iterate through already added special prices for this specific product.
             foreach ($product->getSpecialPrices() as $specialPrice) {
-                // save special prices to array (for later use)
+                // Save special prices to array.
                 $specialPrices[$specialPrice->getCurrency()->getCode()] = $specialPrice;
 
-                // check if special price code already exists in array if not remove it from product
+                // Check if special price code already exists in array if not remove it from product.
                 if (!in_array($specialPrice->getCurrency()->getCode(), $currencyCodes)) {
                     $product->removeSpecialPrice($specialPrice->getEntity());
                     $this->em->remove($specialPrice->getEntity());
                 }
             }
 
-            // itearate through send json array of special prices
+            // Iterate through send json array of special prices.
             foreach ($specialPricesData as $specialPriceData) {
-                // if key does not exists add a new special price to product
+                // If key does not exists add a new special price to product.
                 if (!array_key_exists($specialPriceData['currency']['code'], $specialPrices)) {
                     $specialPrice = new SpecialPrice();
 
@@ -1124,7 +1132,7 @@ class ProductManager implements ProductManagerInterface
 
                     $product->addSpecialPrice($specialPrice);
                     $this->em->persist($specialPrice);
-                // else update the already existing special price
+                // Else update the already existing special price.
                 } else {
                     $specialPrice = $specialPrices[$specialPriceData['currency']['code']]->getEntity();
                 }
@@ -1142,7 +1150,7 @@ class ProductManager implements ProductManagerInterface
                     $endDate = $this->checkDateString($specialPriceData['endDate']);
 
                     if ($endDate) {
-                        // set time to 23:59:59
+                        // Set time to 23:59:59.
                         $endDate->setTime(23, 59, 59);
                     }
                     $specialPrice->setEndDate($endDate);
