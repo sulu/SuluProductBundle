@@ -4,7 +4,12 @@ namespace Sulu\Bundle\ProductBundle\Tests\Resources;
 
 use DateTime;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\ORM\EntityRepository;
 use Symfony\Component\DependencyInjection\Container;
+use Sulu\Bundle\MediaBundle\DataFixtures\ORM\LoadCollectionTypes;
+use Sulu\Bundle\MediaBundle\DataFixtures\ORM\LoadMediaTypes;
+use Sulu\Bundle\MediaBundle\Entity\Collection;
+use Sulu\Bundle\MediaBundle\Entity\Media;
 use Sulu\Bundle\CategoryBundle\Entity\Category;
 use Sulu\Bundle\CategoryBundle\Entity\CategoryTranslation;
 use Sulu\Bundle\ContactBundle\DataFixtures\ORM\LoadCountries;
@@ -42,6 +47,8 @@ class ProductTestData
 
     const LOCALE = 'de';
 
+    const MEDIA_TYPE_ID = 1;
+    const COLLECTION_TYPE_ID = 1;
     const ATTRIBUTE_TYPE_ID = 1;
     const CONTENT_UNIT_ID = 2;
     const ORDER_UNIT_ID = 1;
@@ -91,7 +98,7 @@ class ProductTestData
     /**
      * @var ObjectManager
      */
-    private $entityManager;
+    protected $entityManager;
 
     /**
      * @var Container
@@ -201,6 +208,12 @@ class ProductTestData
 
         $countryTaxes = new LoadCountryTaxes();
         $countryTaxes->load($this->entityManager);
+
+        $collectionTypes = new LoadCollectionTypes();
+        $collectionTypes->load($this->entityManager);
+
+        $mediaTypes = new LoadMediaTypes();
+        $mediaTypes->load($this->entityManager);
 
         $typeFixtures = new LoadProductTypes();
         $typeFixtures->load($this->entityManager);
@@ -324,6 +337,25 @@ class ProductTestData
         $this->entityManager->persist($category);
 
         return $category;
+    }
+
+    /**
+     * Create new Media.
+     *
+     * @return Media
+     */
+    public function createMedia()
+    {
+        $collection = new Collection();
+        $this->entityManager->persist($collection);
+        $collection->setType($this->getCollectionTypeRepository()->find(1));
+
+        $media = new Media();
+        $this->entityManager->persist($media);
+        $media->setType($this->getMediaTypeRepository()->find(self::MEDIA_TYPE_ID));
+        $media->setCollection($collection);
+
+        return $media;
     }
 
     /**
@@ -463,7 +495,7 @@ class ProductTestData
     /**
      * @return UnitRepository
      */
-    private function getProductUnitRepository()
+    protected function getProductUnitRepository()
     {
         return $this->container->get('sulu_product.unit_repository');
     }
@@ -471,7 +503,7 @@ class ProductTestData
     /**
      * @return TaxClassRepository
      */
-    private function getTaxClassRepository()
+    protected function getTaxClassRepository()
     {
         return $this->container->get('sulu_product.tax_class_repository');
     }
@@ -479,7 +511,7 @@ class ProductTestData
     /**
      * @return StatusRepository
      */
-    private function getProductStatusRepository()
+    protected function getProductStatusRepository()
     {
         return $this->container->get('sulu_product.status_repository');
     }
@@ -487,7 +519,7 @@ class ProductTestData
     /**
      * @return TypeRepository
      */
-    private function getProductTypeRepository()
+    protected function getProductTypeRepository()
     {
         return $this->container->get('sulu_product.type_repository');
     }
@@ -495,7 +527,7 @@ class ProductTestData
     /**
      * @return CurrencyRepository
      */
-    private function getCurrencyRepository()
+    protected function getCurrencyRepository()
     {
         return $this->container->get('sulu_product.currency_repository');
     }
@@ -503,8 +535,24 @@ class ProductTestData
     /**
      * @return AttributeTypeRepository
      */
-    private function getAttributeTypeRepository()
+    protected function getAttributeTypeRepository()
     {
         return $this->container->get('sulu_product.attribute_type_repository');
+    }
+
+    /**
+     * @return EntityRepository
+     */
+    protected function getMediaTypeRepository()
+    {
+        return $this->entityManager->getRepository('SuluMediaBundle:MediaType');
+    }
+
+    /**
+     * @return EntityRepository
+     */
+    protected function getCollectionTypeRepository()
+    {
+        return $this->entityManager->getRepository('SuluMediaBundle:CollectionType');
     }
 }

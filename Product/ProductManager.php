@@ -972,34 +972,46 @@ class ProductManager implements ProductManagerInterface
 
         $product->setName($this->getProperty($data, 'name', $product->getName()));
 
-        if (isset($data['minimumOrderQuantity']) && is_numeric($data['minimumOrderQuantity'])) {
-            $value = $this->getProperty(
-                $data,
-                'minimumOrderQuantity',
-                $product->getMinimumOrderQuantity()
-            );
+        if (array_key_exists('minimumOrderQuantity', $data)) {
+            if (is_numeric($data['minimumOrderQuantity'])) {
+                $value = $this->getProperty(
+                    $data,
+                    'minimumOrderQuantity',
+                    $product->getMinimumOrderQuantity()
+                );
 
-            $product->setMinimumOrderQuantity(floatval($value));
+                $product->setMinimumOrderQuantity(floatval($value));
+            } else {
+                $product->setMinimumOrderQuantity(null);
+            }
         }
 
-        if (isset($data['recommendedOrderQuantity']) && is_numeric($data['recommendedOrderQuantity'])) {
-            $value = $this->getProperty(
-                $data,
-                'recommendedOrderQuantity',
-                $product->getRecommendedOrderQuantity()
-            );
+        if (array_key_exists('recommendedOrderQuantity', $data)) {
+            if (is_numeric($data['recommendedOrderQuantity'])) {
+                $value = $this->getProperty(
+                    $data,
+                    'recommendedOrderQuantity',
+                    $product->getRecommendedOrderQuantity()
+                );
 
-            $product->setRecommendedOrderQuantity(floatval($value));
+                $product->setRecommendedOrderQuantity(floatval($value));
+            } else {
+                $product->setRecommendedOrderQuantity(null);
+            }
         }
 
-        if (isset($data['orderContentRatio']) && is_numeric($data['orderContentRatio'])) {
-            $value = $this->getProperty(
-                $data,
-                'orderContentRatio',
-                $product->getOrderContentRatio()
-            );
+        if (array_key_exists('orderContentRatio', $data)) {
+            if (is_numeric($data['orderContentRatio'])) {
+                $value = $this->getProperty(
+                    $data,
+                    'orderContentRatio',
+                    $product->getOrderContentRatio()
+                );
 
-            $product->setOrderContentRatio(floatval($value));
+                $product->setOrderContentRatio(floatval($value));
+            } else {
+                $product->setOrderContentRatio(1);
+            }
         }
 
         $product->setShortDescription($this->getProperty($data, 'shortDescription', $product->getShortDescription()));
