@@ -4,15 +4,16 @@ namespace Sulu\Bundle\ProductBundle\Tests\Resources;
 
 use DateTime;
 use Doctrine\Common\Persistence\ObjectManager;
+use Symfony\Component\DependencyInjection\Container;
+use Sulu\Bundle\CategoryBundle\Entity\Category;
+use Sulu\Bundle\CategoryBundle\Entity\CategoryTranslation;
+use Sulu\Bundle\ContactBundle\DataFixtures\ORM\LoadCountries;
 use Sulu\Bundle\ProductBundle\Entity\AttributeType;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttribute;
 use Sulu\Bundle\ProductBundle\Entity\SpecialPrice;
-use Symfony\Component\DependencyInjection\Container;
 use Sulu\Bundle\ProductBundle\DataFixtures\ORM\AttributeTypes\LoadAttributeTypes;
 use Sulu\Bundle\ProductBundle\Entity\Attribute;
 use Sulu\Bundle\ProductBundle\Entity\AttributeTypeRepository;
-use Sulu\Bundle\CategoryBundle\Entity\Category;
-use Sulu\Bundle\CategoryBundle\Entity\CategoryTranslation;
 use Sulu\Bundle\ProductBundle\DataFixtures\ORM\DeliveryStatuses\LoadDeliveryStatuses;
 use Sulu\Bundle\ProductBundle\DataFixtures\ORM\TaxClasses\LoadTaxClasses;
 use Sulu\Bundle\ProductBundle\DataFixtures\ORM\Currencies\LoadCurrencies;
@@ -34,7 +35,6 @@ use Sulu\Bundle\ProductBundle\Entity\TypeRepository;
 use Sulu\Bundle\ProductBundle\Entity\Unit;
 use Sulu\Bundle\ProductBundle\Entity\UnitRepository;
 use Sulu\Bundle\ProductBundle\Product\ProductFactoryInterface;
-use Sulu\Bundle\ContactBundle\DataFixtures\ORM\LoadCountries;
 
 class ProductTestData
 {
@@ -160,6 +160,10 @@ class ProductTestData
         }
     }
 
+    /**
+     * Create two products and add categories.
+     * Function is called by constructor by default.
+     */
     private function createInitialProducts()
     {
         $this->product = $this->createProduct();
@@ -323,7 +327,7 @@ class ProductTestData
     }
 
     /**
-     * Creates a product-attribute.
+     * Creates a product attribute (relation).
      *
      * @param ProductInterface $product
      * @param string $value
@@ -361,7 +365,7 @@ class ProductTestData
     }
 
     /**
-     * Creates a special price valid +/- 1 month.
+     * Creates a special price, which is valid +/- 1 month.
      *
      * @param ProductInterface $product
      * @param float $price
