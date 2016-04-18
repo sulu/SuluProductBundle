@@ -1056,7 +1056,7 @@ class ProductManager implements ProductManagerInterface
                 $attributeId = $attributeData['attributeId'];
 
                 // If attribute value is empty do not add.
-                if (!$attributeValue || $attributeValue === '') {
+                if (!$attributeValue) {
                     // If already set on product, remove.
                     if (array_key_exists($attributeId, $productAttributes)) {
                         $product->getEntity()->removeProductAttribute($productAttribute->getEntity());
@@ -1218,7 +1218,7 @@ class ProductManager implements ProductManagerInterface
             $product->setContentUnit(null);
         }
 
-        if (isset($data['deliveryTime'])) {
+        if (array_key_exists('deliveryTime', $data)) {
             if (is_numeric($data['deliveryTime'])) {
                 $product->setDeliveryTime(intval($data['deliveryTime']));
             } else {
