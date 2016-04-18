@@ -7,6 +7,13 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\DependencyInjection\Container;
 use Sulu\Bundle\CategoryBundle\Entity\Category;
 use Sulu\Bundle\CategoryBundle\Entity\CategoryTranslation;
+use Sulu\Bundle\ContactBundle\DataFixtures\ORM\LoadCountries;
+use Sulu\Bundle\ProductBundle\Entity\AttributeType;
+use Sulu\Bundle\ProductBundle\Entity\ProductAttribute;
+use Sulu\Bundle\ProductBundle\Entity\SpecialPrice;
+use Sulu\Bundle\ProductBundle\DataFixtures\ORM\AttributeTypes\LoadAttributeTypes;
+use Sulu\Bundle\ProductBundle\Entity\Attribute;
+use Sulu\Bundle\ProductBundle\Entity\AttributeTypeRepository;
 use Sulu\Bundle\ProductBundle\DataFixtures\ORM\DeliveryStatuses\LoadDeliveryStatuses;
 use Sulu\Bundle\ProductBundle\DataFixtures\ORM\TaxClasses\LoadTaxClasses;
 use Sulu\Bundle\ProductBundle\DataFixtures\ORM\Currencies\LoadCurrencies;
@@ -28,7 +35,6 @@ use Sulu\Bundle\ProductBundle\Entity\TypeRepository;
 use Sulu\Bundle\ProductBundle\Entity\Unit;
 use Sulu\Bundle\ProductBundle\Entity\UnitRepository;
 use Sulu\Bundle\ProductBundle\Product\ProductFactoryInterface;
-use Sulu\Bundle\ContactBundle\DataFixtures\ORM\LoadCountries;
 
 class ProductTestData
 {
@@ -36,6 +42,7 @@ class ProductTestData
 
     const LOCALE = 'de';
 
+    const ATTRIBUTE_TYPE_ID = 1;
     const CONTENT_UNIT_ID = 2;
     const ORDER_UNIT_ID = 1;
     const PRODUCT_TYPE_ID = 1;
@@ -122,10 +129,22 @@ class ProductTestData
     private $taxClass;
 
     /**
+     * @var string
+     */
+    private $defaultCurrencyCode;
+
+    /**
+     * @var AttributeType
+     */
+    private $attributeType;
+
+    /**
      * @param Container $container
+     * @param bool $doCreateProducts
      */
     public function __construct(
-        Container $container
+        Container $container,
+        $doCreateProducts = true
     ) {
         $this->container = $container;
 
@@ -135,6 +154,24 @@ class ProductTestData
         $this->defaultCurrencyCode = $container->getParameter('sulu_product.default_currency');
 
         $this->createFixtures();
+
+        if ($doCreateProducts) {
+            $this->createInitialProducts();
+        }
+    }
+
+    /**
+     * Create two products and add categories.
+     * Function is called by constructor by default.
+     */
+    private function createInitialProducts()
+    {
+        $this->product = $this->createProduct();
+        $this->product2 = $this->createProduct();
+
+        $this->category = $this->createCategory();
+        $this->product->addCategory($this->category);
+        $this->product2->addCategory($this->category);
     }
 
     /**
@@ -169,6 +206,10 @@ class ProductTestData
         $typeFixtures->load($this->entityManager);
         $this->productType = $this->getProductTypeRepository()->find(self::PRODUCT_TYPE_ID);
 
+        $attributeTypes = new LoadAttributeTypes();
+        $attributeTypes->load($this->entityManager);
+        $this->attributeType = $this->getAttributeTypeRepository()->find(self::ATTRIBUTE_TYPE_ID);
+
         $statusFixtures = new LoadProductStatuses();
         $statusFixtures->load($this->entityManager);
         $this->productStatus = $this->getProductStatusRepository()->find(Status::ACTIVE);
@@ -176,13 +217,6 @@ class ProductTestData
 
         $deliveryStatusFixtures = new LoadDeliveryStatuses();
         $deliveryStatusFixtures->load($this->entityManager);
-
-        $this->product = $this->createProduct();
-        $this->product2 = $this->createProduct();
-
-        $this->category = $this->createCategory();
-        $this->product->addCategory($this->category);
-        $this->product2->addCategory($this->category);
     }
 
     /**
@@ -293,6 +327,68 @@ class ProductTestData
     }
 
     /**
+     * Creates a product attribute (relation).
+     *
+     * @param ProductInterface $product
+     * @param string $value
+     *
+     * @return ProductAttribute
+     */
+    public function createProductAttribute(ProductInterface $product, $value)
+    {
+        $attribute = $this->createAttribute();
+
+        $productAttribute = new ProductAttribute();
+        $this->entityManager->persist($productAttribute);
+        $productAttribute->setAttribute($attribute);
+        $productAttribute->setProduct($product);
+        $productAttribute->setValue($value);
+
+        return $productAttribute;
+    }
+
+    /**
+     * Creates a new Attribute.
+     *
+     * @return Attribute
+     */
+    public function createAttribute()
+    {
+        $attribute = new Attribute();
+        $this->entityManager->persist($attribute);
+        $attributeType = $this->getAttributeTypeRepository()->find(self::ATTRIBUTE_TYPE_ID);
+        $attribute->setType($attributeType);
+        $attribute->setCreated(new DateTime());
+        $attribute->setChanged(new DateTime());
+
+        return $attribute;
+    }
+
+    /**
+     * Creates a special price, which is valid +/- 1 month.
+     *
+     * @param ProductInterface $product
+     * @param float $price
+     *
+     * @return SpecialPrice
+     */
+    public function createSpecialPrice(ProductInterface $product, $price)
+    {
+        $currency = $this->getCurrencyRepository()->find($this->currency->getId());
+        $now = new DateTime();
+
+        $specialPrice = new SpecialPrice();
+        $this->entityManager->persist($specialPrice);
+        $specialPrice->setCurrency($currency);
+        $specialPrice->setPrice($price);
+        $specialPrice->setProduct($product);
+        $specialPrice->setStartDate($now->modify('- 1 month'));
+        $specialPrice->setEndDate($now->modify('+ 1 month'));
+
+        return $specialPrice;
+    }
+
+    /**
      * @return Unit
      */
     public function getOrderUnit()
@@ -357,6 +453,14 @@ class ProductTestData
     }
 
     /**
+     * @return null|TaxClass
+     */
+    public function getTaxClass()
+    {
+        return $this->getTaxClassRepository()->find(self::TAX_CLASS_ID);
+    }
+
+    /**
      * @return UnitRepository
      */
     private function getProductUnitRepository()
@@ -394,5 +498,13 @@ class ProductTestData
     private function getCurrencyRepository()
     {
         return $this->container->get('sulu_product.currency_repository');
+    }
+
+    /**
+     * @return AttributeTypeRepository
+     */
+    private function getAttributeTypeRepository()
+    {
+        return $this->container->get('sulu_product.attribute_type_repository');
     }
 }
