@@ -72,12 +72,12 @@ class Product extends ApiWrapper implements ApiProductInterface
     ) {
         $this->entity = $product;
         $this->locale = $locale;
-        $this->accountManager = $accountManager;
         $this->priceFormatter = $priceFormatter;
+        $this->accountManager = $accountManager;
     }
 
     /**
-     * Returns the id of the product
+     * Returns the id of the product.
      *
      * @VirtualProperty
      * @SerializedName("id")
@@ -91,7 +91,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the name of the product
+     * Returns the name of the product.
      *
      * @VirtualProperty
      * @SerializedName("name")
@@ -105,7 +105,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Sets the name of the product
+     * Sets the name of the product.
      *
      * @param string $name The name of the product
      */
@@ -115,7 +115,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the deprecated state of a product
+     * Returns the deprecated state of a product.
      *
      * @VirtualProperty
      * @SerializedName("isDeprecated")
@@ -128,7 +128,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Sets the deprecated state of the product
+     * Sets the deprecated state of the product.
      *
      * @param boolean $isDeprecated
      */
@@ -138,8 +138,6 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Set minimumOrderQuantity
-     *
      * @param float $minimumOrderQuantity
      */
     public function setMinimumOrderQuantity($minimumOrderQuantity)
@@ -148,8 +146,6 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Get minimumOrderQuantity
-     *
      * @VirtualProperty
      * @SerializedName("minimumOrderQuantity")
      * @Groups({"cart"})
@@ -162,8 +158,6 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Set deliveryTime
-     *
      * @param integer $deliveryTime
      */
     public function setDeliveryTime($deliveryTime)
@@ -172,8 +166,6 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Get deliveryTime
-     *
      * @VirtualProperty
      * @SerializedName("deliveryTime")
      * @Groups({"cart"})
@@ -186,8 +178,6 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Set recommendedOrderQuantity
-     *
      * @param float $recommendedOrderQuantity
      */
     public function setRecommendedOrderQuantity($recommendedOrderQuantity)
@@ -196,8 +186,6 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Get recommendedOrderQuantity
-     *
      * @VirtualProperty
      * @SerializedName("recommendedOrderQuantity")
      * @Groups({"cart"})
@@ -210,8 +198,6 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Set orderContentRatio
-     *
      * @param float $orderContentRatio
      */
     public function setOrderContentRatio($orderContentRatio)
@@ -220,8 +206,6 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Get orderContentRatio
-     *
      * @VirtualProperty
      * @SerializedName("orderContentRatio")
      *
@@ -233,7 +217,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the short description of the product
+     * Returns the short description of the product.
      *
      * @VirtualProperty
      * @SerializedName("shortDescription")
@@ -246,7 +230,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Sets the short description of the product
+     * Sets the short description of the product.
      *
      * @param string $shortDescription The short description of the product
      */
@@ -256,7 +240,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the long description of the product
+     * Returns the long description of the product.
      *
      * @VirtualProperty
      * @SerializedName("longDescription")
@@ -269,7 +253,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Sets the long description of the product
+     * Sets the long description of the product.
      *
      * @param string $longDescription The short description of the product
      */
@@ -279,7 +263,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the number of the product
+     * Returns the number of the product.
      *
      * @VirtualProperty
      * @SerializedName("number")
@@ -293,7 +277,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Sets the number of the product
+     * Sets the number of the product.
      *
      * @param string $number The number of the product
      */
@@ -303,7 +287,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the globalTradeItemNumber of the product
+     * Returns the globalTradeItemNumber of the product.
      *
      * @VirtualProperty
      * @SerializedName("globalTradeItemNumber")
@@ -317,7 +301,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Sets the globalTradeItemNumber of the product
+     * Sets the globalTradeItemNumber of the product.
      *
      * @param string $globalTradeItemNumber The globalTradeItemNumber of the product
      */
@@ -327,7 +311,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the internalItemNumber of the product
+     * Returns the internalItemNumber of the product.
      *
      * @VirtualProperty
      * @SerializedName("internalItemNumber")
@@ -340,7 +324,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Sets the internalItemNumber of the product
+     * Sets the internalItemNumber of the product.
      *
      * @param string $internalItemNumber The number of the product
      */
@@ -350,7 +334,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Sets the supplier of the product
+     * Sets the supplier of the product.
      *
      * @param Sulu\Bundle\ContactBundle\Entity\Account $supplier
      */
@@ -360,7 +344,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the supplier of the product
+     * Returns the supplier of the product.
      *
      * @VirtualProperty
      * @SerializedName("supplier")
@@ -383,7 +367,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the cost of the product
+     * Returns the cost of the product.
      *
      * @VirtualProperty
      * @SerializedName("cost")
@@ -397,7 +381,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Sets the cost of the product
+     * Sets the cost of the product.
      *
      * @param double $cost The cost of the product
      */
@@ -407,7 +391,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Sets the priceinfo of the product
+     * Sets the priceinfo of the product.
      *
      * @param string $priceInfo The cost of the product
      */
@@ -417,7 +401,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the cost of the product
+     * Returns the cost of the product.
      *
      * @VirtualProperty
      * @SerializedName("priceInfo")
@@ -430,7 +414,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the manufacturer of the product
+     * Returns the manufacturer of the product.
      *
      * @VirtualProperty
      * @SerializedName("manufacturer")
@@ -443,7 +427,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Sets the manufacturer of the product
+     * Sets the manufacturer of the product.
      *
      * @param string $manufacturer The manufacturer of the product
      */
@@ -472,7 +456,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Sets the parent of the product
+     * Sets the parent of the product.
      *
      * @param Product $parent The parent of the product
      */
@@ -486,7 +470,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the children of the product
+     * Returns the children of the product.
      *
      * @return ProductInterface[]
      */
@@ -496,7 +480,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Adds a product attribute to the product
+     * Adds a product attribute to the product.
      *
      * @param ProductAttributeEntity $productAttribute
      */
@@ -506,7 +490,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the type of the product
+     * Returns the type of the product.
      *
      * @VirtualProperty
      * @SerializedName("type")
@@ -519,7 +503,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Sets the type of the product
+     * Sets the type of the product.
      *
      * @param TypeEntity $type The type of the product
      */
@@ -529,7 +513,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the status of the product
+     * Returns the status of the product.
      *
      * @VirtualProperty
      * @SerializedName("status")
@@ -542,7 +526,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Sets the delivery status of the product
+     * Sets the delivery status of the product.
      *
      * @param DeliveryStatusEntity $deliveryStatus The delivery status of the product
      */
@@ -552,7 +536,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the delivery status of the product
+     * Returns the delivery status of the product.
      *
      * @VirtualProperty
      * @SerializedName("deliveryStatus")
@@ -570,7 +554,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Sets the status of the product
+     * Sets the status of the product.
      *
      * @param StatusEntity $status The status of the product
      */
@@ -580,7 +564,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the orderUnit of the product
+     * Returns the orderUnit of the product.
      *
      * @VirtualProperty
      * @SerializedName("orderUnit")
@@ -599,7 +583,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Sets the order unit of the product
+     * Sets the order unit of the product.
      *
      * @param UnitEntity $unit
      */
@@ -609,7 +593,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the contentUnit of the product
+     * Returns the contentUnit of the product.
      *
      * @VirtualProperty
      * @SerializedName("contentUnit")
@@ -628,7 +612,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Sets the order contentUnit of the product
+     * Sets the order contentUnit of the product.
      *
      * @param UnitEntity $unit
      */
@@ -638,7 +622,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the tax class of the product
+     * Returns the tax class of the product.
      *
      * @VirtualProperty
      * @SerializedName("taxClass")
@@ -650,13 +634,13 @@ class Product extends ApiWrapper implements ApiProductInterface
         $taxClass = $this->entity->getTaxClass();
         if ($taxClass) {
             return new TaxClass($this->entity->getTaxClass(), $this->locale);
-        } else {
-            return null;
         }
+
+        return null;
     }
 
     /**
-     * Sets the tax class of the product
+     * Sets the tax class of the product.
      *
      * @param TaxClassEntity $taxClass The tax class of the product
      */
@@ -666,7 +650,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the attribute set of the product
+     * Returns the attribute set of the product.
      *
      * @VirtualProperty
      * @SerializedName("attributeSet")
@@ -678,13 +662,13 @@ class Product extends ApiWrapper implements ApiProductInterface
         $attributeSet = $this->entity->getAttributeSet();
         if ($attributeSet) {
             return new AttributeSet($attributeSet, $this->locale);
-        } else {
-            return null;
         }
+
+        return null;
     }
 
     /**
-     * Sets the attribute set of the product
+     * Sets the attribute set of the product.
      *
      * @param AttributeSetEntity $attributeSet The attribute set of the product
      */
@@ -694,7 +678,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Removes the given price from the product
+     * Removes the given price from the product.
      *
      * @param ProductPriceEntity $price
      */
@@ -704,7 +688,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the prices for the product
+     * Returns the prices for the product.
      *
      * @VirtualProperty
      * @SerializedName("prices")
@@ -724,7 +708,9 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the scale price for a certain currency
+     * Returns the scale price for a certain currency.
+     *
+     * @param string $currency
      *
      * @return ProductPrice[]
      */
@@ -744,24 +730,27 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the formatted special price for the product by a given currency and locale
+     * Returns the formatted special price for the product by a given currency and locale.
      *
      * @param string $currency
+     * @param null|string $formatterLocale
      *
      * @return string
      */
-    public function getFormattedSpecialPriceForCurrency($currency = 'EUR')
+    public function getFormattedSpecialPriceForCurrency($currency = 'EUR', $formatterLocale = null)
     {
         $price = $this->getSpecialPriceForCurrency($currency);
         if ($price) {
-            return $this->getFormattedPrice($price->getPrice(), $currency, $this->locale);
+            return $this->getFormattedPrice($price->getPrice(), $currency, $formatterLocale);
         }
 
         return '';
     }
 
     /**
-     * Returns the special price for a certain currency
+     * Returns the special price for a certain currency.
+     *
+     * @param string $currency
      *
      * @return ProductPrice[]
      */
@@ -788,7 +777,10 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the bulk price for a certain quantity of the product by a given currency
+     * Returns the bulk price for a certain quantity of the product by a given currency.
+     *
+     * @param float $quantity
+     * @param string $currency
      *
      * @return ProductPrice[]
      */
@@ -813,7 +805,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the formatted base price for the product by a given currency and locale
+     * Returns the formatted base price for the product by a given currency and locale.
      *
      * @param string $currency
      *
@@ -823,7 +815,6 @@ class Product extends ApiWrapper implements ApiProductInterface
     {
         $price = $this->getBasePriceForCurrency($currency);
         if ($price) {
-
             return $this->getFormattedPrice($price->getPrice(), $currency, $this->locale);
         }
 
@@ -831,7 +822,9 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the base price for the product by a given currency
+     * Returns the base price for the product by a given currency.
+     *
+     * @param string $currency
      *
      * @return ProductPrice
      */
@@ -850,7 +843,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Helper function to get a formatted price for a given currency and locale
+     * Helper function to get a formatted price for a given currency and locale.
      *
      * @param Integer $price
      * @param string $symbol
@@ -871,7 +864,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the attributes for the product
+     * Returns the attributes for the product.
      *
      * @VirtualProperty
      * @SerializedName("attributes")
@@ -891,7 +884,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Adds a category to the product
+     * Adds a category to the product.
      *
      * @param CategoryEntity $category
      */
@@ -901,7 +894,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Removes a category from the product
+     * Removes a category from the product.
      *
      * @param CategoryEntity $category
      */
@@ -911,7 +904,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the categories for the product
+     * Returns the categories for the product.
      *
      * @VirtualProperty
      * @SerializedName("categories")
@@ -933,7 +926,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Sets the changer of the product
+     * Sets the changer of the product.
      *
      * @param UserInterface $user The changer of the product
      */
@@ -943,7 +936,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Sets the creator of the product
+     * Sets the creator of the product.
      *
      * @param UserInterface $user The creator of the product
      */
@@ -953,7 +946,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the creator of the product
+     * Returns the creator of the product.
      *
      * @return creator/owner of the product
      */
@@ -963,7 +956,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Sets the change time of the product
+     * Sets the change time of the product.
      *
      * @param \DateTime $changed
      */
@@ -973,7 +966,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Sets the created time of the product
+     * Sets the created time of the product.
      *
      * @param \DateTime $created
      */
@@ -983,7 +976,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Adds a media to the product
+     * Adds a media to the product.
      *
      * @param Media $media
      */
@@ -993,7 +986,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Removes a media from the product
+     * Removes a media from the product.
      *
      * @param Media $media
      */
@@ -1011,7 +1004,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the media for the product
+     * Returns the media for the product.
      *
      * @VirtualProperty
      * @SerializedName("media")
@@ -1038,7 +1031,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the images for the product
+     * Returns the images for the product.
      *
      * @VirtualProperty
      * @SerializedName("images")
@@ -1052,7 +1045,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the videos for the product
+     * Returns the videos for the product.
      *
      * @VirtualProperty
      * @SerializedName("videos")
@@ -1066,7 +1059,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the audios for the product
+     * Returns the audios for the product.
      *
      * @VirtualProperty
      * @SerializedName("audios")
@@ -1080,7 +1073,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the documents for the product
+     * Returns the documents for the product.
      *
      * @VirtualProperty
      * @SerializedName("documents")
@@ -1094,7 +1087,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns true when collection of media contains media with specific id
+     * Returns true when collection of media contains media with specific id.
      *
      * @param Media $media
      *
@@ -1106,7 +1099,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns a boolean indicating if all prices of the product are gross prices
+     * Returns a boolean indicating if all prices of the product are gross prices.
      *
      * @VirtualProperty
      * @SerializedName("areGrossPrices")
@@ -1119,7 +1112,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Sets the are gross prices flag on a product
+     * Sets the are gross prices flag on a product.
      *
      * @param boolean $areGrossPrices
      */
@@ -1129,7 +1122,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns a media array by a given type for the product
+     * Returns a media array by a given type for the product.
      *
      * @param string
      *
@@ -1152,8 +1145,6 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Get Translation
-     *
      * @return ProductTranslation
      */
     private function getTranslation()
@@ -1171,7 +1162,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns the special prices for the product
+     * Returns the special prices for the product.
      *
      * @VirtualProperty
      * @SerializedName("specialPrices")
@@ -1191,7 +1182,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Adds a special price to the product
+     * Adds a special price to the product.
      *
      * @param SpecialPriceEntity $specialPrice
      */
@@ -1201,7 +1192,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Removes a special price from the product
+     * Removes a special price from the product.
      *
      * @param SpecialPriceEntity $specialPrice
      */

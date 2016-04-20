@@ -789,31 +789,30 @@ class ProductManager implements ProductManagerInterface
      */
     public function findRandomOfferedProducts($locale, $numberResults)
     {
-        // get ids of special prices
+        // Get ids of special prices.
         $specialPriceIds = $this->specialPriceRepository->findAllCurrentIds();
 
         if (!$specialPriceIds) {
             return [];
         }
 
-        // check if number of desired results does not exceed number of special prices
+        // Check if number of desired results does not exceed number of special prices.
         $numberOfIds = count($specialPriceIds);
-        if ($numberResults < 0 || $numberResults > $numberOfIds) {
-            $numberResults = $numberOfIds;
+        $randomIds = $specialPriceIds;
+        if ($numberResults > 0 && $numberOfIds > $numberResults) {
+            // Get random ids.
+            $randomIds = array_map(
+                function ($key) use ($specialPriceIds) {
+                    return $specialPriceIds[$key];
+                },
+                array_rand($specialPriceIds, $numberResults)
+            );
         }
 
-        // get random ids
-        $randomIds = array_map(
-            function ($key) use ($specialPriceIds) {
-                return $specialPriceIds[$key];
-            },
-            array_rand($specialPriceIds, $numberResults)
-        );
-
-        // get special prices
+        // Get special prices.
         $specialPrices = $this->specialPriceRepository->findById($randomIds);
 
-        // shuffle prices
+        // Shuffle prices.
         shuffle($specialPrices);
 
         $products = [];
@@ -973,34 +972,46 @@ class ProductManager implements ProductManagerInterface
 
         $product->setName($this->getProperty($data, 'name', $product->getName()));
 
-        if (isset($data['minimumOrderQuantity']) && is_numeric($data['minimumOrderQuantity'])) {
-            $value = $this->getProperty(
-                $data,
-                'minimumOrderQuantity',
-                $product->getMinimumOrderQuantity()
-            );
+        if (array_key_exists('minimumOrderQuantity', $data)) {
+            if (is_numeric($data['minimumOrderQuantity'])) {
+                $value = $this->getProperty(
+                    $data,
+                    'minimumOrderQuantity',
+                    $product->getMinimumOrderQuantity()
+                );
 
-            $product->setMinimumOrderQuantity(floatval($value));
+                $product->setMinimumOrderQuantity(floatval($value));
+            } else {
+                $product->setMinimumOrderQuantity(null);
+            }
         }
 
-        if (isset($data['recommendedOrderQuantity']) && is_numeric($data['recommendedOrderQuantity'])) {
-            $value = $this->getProperty(
-                $data,
-                'recommendedOrderQuantity',
-                $product->getRecommendedOrderQuantity()
-            );
+        if (array_key_exists('recommendedOrderQuantity', $data)) {
+            if (is_numeric($data['recommendedOrderQuantity'])) {
+                $value = $this->getProperty(
+                    $data,
+                    'recommendedOrderQuantity',
+                    $product->getRecommendedOrderQuantity()
+                );
 
-            $product->setRecommendedOrderQuantity(floatval($value));
+                $product->setRecommendedOrderQuantity(floatval($value));
+            } else {
+                $product->setRecommendedOrderQuantity(null);
+            }
         }
 
-        if (isset($data['orderContentRatio']) && is_numeric($data['orderContentRatio'])) {
-            $value = $this->getProperty(
-                $data,
-                'orderContentRatio',
-                $product->getOrderContentRatio()
-            );
+        if (array_key_exists('orderContentRatio', $data)) {
+            if (is_numeric($data['orderContentRatio'])) {
+                $value = $this->getProperty(
+                    $data,
+                    'orderContentRatio',
+                    $product->getOrderContentRatio()
+                );
 
-            $product->setOrderContentRatio(floatval($value));
+                $product->setOrderContentRatio(floatval($value));
+            } else {
+                $product->setOrderContentRatio(1);
+            }
         }
 
         $product->setShortDescription($this->getProperty($data, 'shortDescription', $product->getShortDescription()));
@@ -1044,23 +1055,31 @@ class ProductManager implements ProductManagerInterface
                     $attributeIds[] = $attributeData['attributeId'];
                 }
             }
-            // create local array of attributes
-            $productAttributes = array();
-            // If attributes are not in current specified attributes remove them from product
+            // Create local array of attributes.
+            $productAttributes = [];
+
             foreach ($product->getAttributes() as $productAttribute) {
                 $productAttributes[$productAttribute->getAttribute()->getId()] = $productAttribute;
-                if (!in_array($productAttribute->getAttribute()->getId(), $attributeIds)) {
-                    $product->getEntity()->removeProductAttribute($productAttribute->getEntity());
-                    $this->em->remove($productAttribute->getEntity());
-                }
             }
-            // Add and change attributes
+
+            // Add and change attributes.
             foreach ($data['attributes'] as $attributeData) {
-                $attributeValue = $attributeData['value'];
+                $attributeValue = trim($attributeData['value']);
                 $attributeId = $attributeData['attributeId'];
 
+                // If attribute value is empty do not add.
+                if (!$attributeValue) {
+                    // If already set on product, remove.
+                    if (array_key_exists($attributeId, $productAttributes)) {
+                        $product->getEntity()->removeProductAttribute($productAttribute->getEntity());
+                        $this->em->remove($productAttribute->getEntity());
+                    }
+
+                    continue;
+                }
+
                 if (!array_key_exists($attributeId, $productAttributes)) {
-                    // product attribute does not exists
+                    // Product attribute does not exists.
                     $productAttribute = new ProductAttribute();
                     $attribute = $this->attributeRepository->find($attributeData['attributeId']);
                     if (!$attribute) {
@@ -1075,7 +1094,7 @@ class ProductManager implements ProductManagerInterface
                     $product->addProductAttribute($productAttribute);
                     $this->em->persist($productAttribute);
                 } else {
-                    // product attribute exists
+                    // Product attribute exists.
                     $productAttribute = $productAttributes[$attributeId]->getEntity();
                     $productAttribute->setValue($attributeValue);
                 }
@@ -1085,13 +1104,13 @@ class ProductManager implements ProductManagerInterface
         if (array_key_exists('specialPrices', $data)) {
             $specialPricesData = $data['specialPrices'];
 
-            //array for local special prices storage
+            // Array for local special prices storage.
             $specialPrices = array();
 
-            // array of currency codes to be used as keys for special prices
+            // Array of currency codes to be used as keys for special prices.
             $currencyCodes = array();
 
-            // create array of special price currency codes in json request
+            // Create array of special price currency codes in json request.
             foreach ($specialPricesData as $key => $specialPrice) {
                 if (!empty($specialPrice['currency']['code']) && !empty($specialPrice['price'])) {
                     array_push($currencyCodes, $specialPrice['currency']['code']);
@@ -1100,21 +1119,21 @@ class ProductManager implements ProductManagerInterface
                 }
             }
 
-            // iterate through already added special prices for this specific product
+            // Iterate through already added special prices for this specific product.
             foreach ($product->getSpecialPrices() as $specialPrice) {
-                // save special prices to array (for later use)
+                // Save special prices to array.
                 $specialPrices[$specialPrice->getCurrency()->getCode()] = $specialPrice;
 
-                // check if special price code already exists in array if not remove it from product
+                // Check if special price code already exists in array if not remove it from product.
                 if (!in_array($specialPrice->getCurrency()->getCode(), $currencyCodes)) {
                     $product->removeSpecialPrice($specialPrice->getEntity());
                     $this->em->remove($specialPrice->getEntity());
                 }
             }
 
-            // itearate through send json array of special prices
+            // Iterate through send json array of special prices.
             foreach ($specialPricesData as $specialPriceData) {
-                // if key does not exists add a new special price to product
+                // If key does not exists add a new special price to product.
                 if (!array_key_exists($specialPriceData['currency']['code'], $specialPrices)) {
                     $specialPrice = new SpecialPrice();
 
@@ -1125,7 +1144,7 @@ class ProductManager implements ProductManagerInterface
 
                     $product->addSpecialPrice($specialPrice);
                     $this->em->persist($specialPrice);
-                // else update the already existing special price
+                // Else update the already existing special price.
                 } else {
                     $specialPrice = $specialPrices[$specialPriceData['currency']['code']]->getEntity();
                 }
@@ -1143,7 +1162,7 @@ class ProductManager implements ProductManagerInterface
                     $endDate = $this->checkDateString($specialPriceData['endDate']);
 
                     if ($endDate) {
-                        // set time to 23:59:59
+                        // Set time to 23:59:59.
                         $endDate->setTime(23, 59, 59);
                     }
                     $specialPrice->setEndDate($endDate);
@@ -1211,10 +1230,12 @@ class ProductManager implements ProductManagerInterface
             $product->setContentUnit(null);
         }
 
-        if (isset($data['deliveryTime']) && is_int($data['deliveryTime'])) {
-            $product->setDeliveryTime(intval($data['deliveryTime']));
-        } else {
-            $product->setDeliveryTime(0);
+        if (array_key_exists('deliveryTime', $data)) {
+            if (is_numeric($data['deliveryTime'])) {
+                $product->setDeliveryTime(intval($data['deliveryTime']));
+            } else {
+                $product->setDeliveryTime(0);
+            }
         }
 
         if (isset($data['supplier']) && isset($data['supplier']['id'])) {

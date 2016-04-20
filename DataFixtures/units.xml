@@ -327,4 +327,16 @@
             <value>packages</value>
         </mappings>
     </unit>
+    <unit>
+        <translations>
+            <de>Fass</de>
+            <en>Barrel</en>
+        </translations>
+        <mappings>
+            <value>fass</value>
+            <value>barrel</value>
+            <value>bbl</value>
+            <value>bl</value>
+        </mappings>
+    </unit>
 </units>

@@ -44,5 +44,5 @@ interface ProductPriceManagerInterface
      *
      * @return String price
      */
-    public function getFormattedPrice($price, $symbol = 'EUR', $locale = 'de');
+    public function getFormattedPrice($price, $symbol = 'EUR', $locale = null);
 }
