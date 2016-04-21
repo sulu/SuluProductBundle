@@ -85,6 +85,7 @@ define([
 
         // Check if users locale contains localization.
         var userLanguage = user.locale.split('_');
+        userLanguage = userLanguage[0];
 
         for (var i = -1, len = locales.length; ++i <len;) {
             var current = locales[i];

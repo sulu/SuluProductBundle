@@ -32,6 +32,8 @@ class SuluProductExtension extends Extension
         $container->setParameter('sulu_product.fallback_locale', $config['fallback_locale']);
         $container->setParameter('sulu_product.locales', $config['locales']);
 
+        $container->setParameter('sulu_product', $config);
+
         $loader = new Loader\XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.xml');
 
