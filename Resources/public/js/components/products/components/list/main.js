@@ -21,6 +21,17 @@ define(['config'], function(Config) {
 
         },
 
+        /**
+         * Returns url for retrieving products from backend.
+         *
+         * @returns {string}
+         */
+        retrieveProductsUrl = function() {
+            return '/admin/api/products?flat=true'
+                + '&status_id=' + Config.get('product.list.statuses.ids')
+                + '&locale' + this.options.locale;
+        },
+
         addProduct = function(type) {
             this.sandbox.emit('sulu.products.new', type);
         },
@@ -37,7 +48,12 @@ define(['config'], function(Config) {
             }.bind(this));
         },
 
-        // create chunks of ids and sends multiple request to avoid php timeout with single request
+        /**
+         * Create chunks of ids and sends multiple request to avoid php timeout with single request.
+         *
+         * @param {Array} ids
+         * @param {Object} state
+         */
         createChunksAndSend = function(ids, state) {
             this.sandbox.emit('sulu.header.toolbar.item.loading', 'productWorkflow');
             var chunk = 30;
@@ -182,7 +198,7 @@ define(['config'], function(Config) {
 
             this.sandbox.dom.html(this.$el, this.renderTemplate('/admin/product/template/product/list'));
 
-            // init list-toolbar and datagrid
+            // Init list-toolbar and datagrid.
             this.sandbox.sulu.initListToolbarAndList.call(this, 'productsFields', '/admin/api/products/fields',
                 {
                     el: this.$find('#list-toolbar-container'),
@@ -206,7 +222,7 @@ define(['config'], function(Config) {
                 },
                 {
                     el: this.sandbox.dom.find('#products-list', this.$el),
-                    url: '/admin/api/products?flat=true&status_id=' + Config.get('product.list.statuses.ids'),
+                    url: retrieveProductsUrl.call(this),
                     resultKey: 'products',
                     searchInstanceName: 'productsToolbar',
                     searchFields: ['name', 'number', 'supplier'],

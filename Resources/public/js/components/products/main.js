@@ -74,7 +74,7 @@ define([
      * If there are no matches at all, the default-locale as defined in the config
      * is returned.
      *
-     * @returns {*}
+     * @returns {String}
      */
     var retrieveDefaultLocale = function() {
         var user = this.sandbox.sulu.user;
@@ -170,25 +170,25 @@ define([
                 this.deleteVariants(ids);
             }, this);
 
-            // handling media
+            // Handling media.
             this.sandbox.on('sulu.products.media.save', this.saveMedia.bind(this));
 
-            // workflow
+            // Workflow.
             this.sandbox.on('sulu.products.workflow.triggered', this.triggerWorkflowAction.bind(this));
 
             this.sandbox.on(PRODUCT_LOAD, function(id) {
                 this.load(id, retrieveDefaultLocale.call(this));
             }, this);
 
-            // back to list
+            // Back to list.
             this.sandbox.on('sulu.header.back', function() {
                 this.sandbox.emit('sulu.products.list');
             }, this);
 
-            // handles save-errors for products
+            // Handles save-errors for products.
             this.sandbox.on('sulu.products.save-error', function(response) {
                 if (response && response.responseJSON && response.responseJSON.code) {
-                    // response code 1 == ProductException::PRODUCT_NOT_VALID
+                    // Response code 1 == ProductException::PRODUCT_NOT_VALID
                     if(response.responseJSON.code == 1) {
                         this.sandbox.emit(
                             'sulu.labels.error.show',
@@ -196,15 +196,15 @@ define([
                             'labels.error'
                         );
 
-                        // set status to inactive!
+                        // Aet status to inactive!
                         this.sandbox.emit('product.state.change', Config.get('product.status.inactive'));
                     }
                     else {
-                        // error code not defined -> show default product save error
+                        // Error code not defined -> show default product save error.
                         this.sandbox.emit('sulu.labels.error.show', 'labels.error.product-save', 'labels.error');
                     }
                 } else {
-                    // no valid response -> show default product save error
+                    // No valid response -> show default product save error.
                     this.sandbox.emit('sulu.labels.error.show', 'labels.error.product-save', 'labels.error');
                 }
             }, this);
@@ -239,7 +239,7 @@ define([
             var mediaIds = this.sandbox.util.arrayGetColumn(this.product.attributes.media, 'id');
             var i, len, id;
 
-            // add new media to backbone model
+            // Add new media to backbone model.
             for (i = -1, len = newMediaIds.length; ++i < len;) {
                 id = newMediaIds[i];
 
@@ -251,7 +251,7 @@ define([
                 }
             }
 
-            // remove deleted media from backbone model
+            // Remove deleted media from backbone model.
             for (i = -1, len = removedMediaIds.length; ++i < len;) {
                 id = removedMediaIds[i];
 
@@ -450,18 +450,22 @@ define([
         },
 
         /**
-         * Creates the view for the flat product list
+         * Creates the view for the flat product list.
          */
         renderList: function() {
             var $list = this.sandbox.dom.createElement('<div id="products-list-container"/>');
             this.html($list);
-            this.sandbox.start([
-                {name: 'products/components/list@suluproduct', options: {el: $list}}
-            ]);
+            this.sandbox.start([{
+                name: 'products/components/list@suluproduct',
+                options: {
+                    el: $list,
+                    locale: retrieveDefaultLocale.call(this)
+                }
+            }]);
         },
 
         /**
-         * Creates the view for the product import
+         * Creates the view for the product import.
          */
         renderImport: function() {
             var $container = this.sandbox.dom.createElement('<div id="products-import"/>');
