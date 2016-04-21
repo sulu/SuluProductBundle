@@ -66,6 +66,49 @@ define([
          */
         PRODUCT_VARIANT_DELETE = eventNamespace + 'variants.delete';
 
+    /**
+     * Function returns the locale that should be used by default for current user.
+     * If users locale matches any of the given product locales, that one is taken
+     * as default.
+     * If locale does not match exactly, the users language is compared as well.
+     * If there are no matches at all, the default-locale as defined in the config
+     * is returned.
+     *
+     * @returns {*}
+     */
+    var retrieveDefaultLocale = function() {
+        var user = this.sandbox.sulu.user;
+        var productConfig = Config.get('sulu-product');
+        var defaultLocale = productConfig['fallback_locale'];
+        var locales = productConfig['locales'];
+        var languageMatch = null;
+
+        // Check if users locale contains localization.
+        var userLanguage = user.locale.split('_');
+
+        for (var i = -1, len = locales.length; ++i <len;) {
+            var current = locales[i];
+
+            // If locale matches users locale, the exact matching was found.
+            if (user.locale == current) {
+                return current;
+            }
+
+            // Check if users language (without locale) matches.
+            if (userLanguage == current) {
+                languageMatch = current;
+            }
+        }
+
+        // If language matches.
+        if (languageMatch) {
+            return languageMatch;
+        }
+
+        // Return default locale if no match was found.
+        return defaultLocale;
+    };
+
     return {
         initialize: function() {
             this.product = null;
@@ -134,7 +177,7 @@ define([
             this.sandbox.on('sulu.products.workflow.triggered', this.triggerWorkflowAction.bind(this));
 
             this.sandbox.on(PRODUCT_LOAD, function(id) {
-                this.load(id, AppConfig.getUser().locale);
+                this.load(id, retrieveDefaultLocale.call(this));
             }, this);
 
             // back to list
@@ -373,6 +416,7 @@ define([
                     options: {
                         el: $tabContainer,
                         locale: this.options.locale
+                        //locale: retrieveDefaultLocale.call(this)
                     }
                 },
                 dfd = this.sandbox.data.deferred();

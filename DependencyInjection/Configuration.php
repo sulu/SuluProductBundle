@@ -31,6 +31,13 @@ class Configuration implements ConfigurationInterface
 
         $rootNode
             ->children()
+                ->scalarNode('fallback_locale')
+                    ->defaultValue('en')
+                ->end()
+                ->arrayNode('locales')
+                    ->addDefaultChildrenIfNoneSet()
+                    ->prototype('scalar')->defaultValue('en')->end()
+                ->end()
                 ->scalarNode('template')->defaultValue('ClientWebsiteBundle:views:product.html.twig')->end()
                 ->scalarNode('default_currency')->defaultValue('EUR')->end()
             ->end();
