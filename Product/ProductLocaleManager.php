@@ -43,14 +43,13 @@ class ProductLocaleManager
      */
     public function retrieveLocale(UserInterface $user, $requestLocale = null)
     {
-        $languageMatch = null;
-        $userLanguage = explode('_', $user->getLocale());
-        $userLanguage = $userLanguage[0];
-
         // Use request locale if defined.
         if ($requestLocale && is_string($requestLocale)) {
             return $requestLocale;
         }
+
+        $languageMatch = null;
+        $userLanguage = strstr($user->getLocale(), '_', true);
 
         foreach ($this->configuration['locales'] as $locale) {
             // If locale matches users locale, the exact matching was found.

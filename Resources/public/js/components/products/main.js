@@ -84,8 +84,7 @@ define([
         var languageMatch = null;
 
         // Check if users locale contains localization.
-        var userLanguage = user.locale.split('_');
-        userLanguage = userLanguage[0];
+        var userLanguage = user.locale.substring(0, user.locale.indexOf('_'));
 
         for (var i = -1, len = locales.length; ++i <len;) {
             var current = locales[i];
@@ -456,13 +455,15 @@ define([
         renderList: function() {
             var $list = this.sandbox.dom.createElement('<div id="products-list-container"/>');
             this.html($list);
-            this.sandbox.start([{
-                name: 'products/components/list@suluproduct',
-                options: {
-                    el: $list,
-                    locale: retrieveDefaultLocale.call(this)
+            this.sandbox.start([
+                {
+                    name: 'products/components/list@suluproduct',
+                    options: {
+                        el: $list,
+                        locale: retrieveDefaultLocale.call(this)
+                    }
                 }
-            }]);
+            ]);
         },
 
         /**
@@ -472,7 +473,12 @@ define([
             var $container = this.sandbox.dom.createElement('<div id="products-import"/>');
             this.html($container);
             this.sandbox.start([
-                {name: 'products/components/import@suluproduct', options: {el: $container}}
+                {
+                    name: 'products/components/import@suluproduct',
+                    options: {
+                        el: $container
+                    }
+                }
             ]);
         }
     };
