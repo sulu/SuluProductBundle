@@ -22,6 +22,7 @@
         <parameter key="sulu_product.currency_repository.class">Sulu\Bundle\ProductBundle\Entity\CurrencyRepository</parameter>
         <parameter key="sulu_product.unit_repository.class">Sulu\Bundle\ProductBundle\Entity\UnitRepository</parameter>
         <parameter key="sulu_product.product_manager.class">Sulu\Bundle\ProductBundle\Product\ProductManager</parameter>
+        <parameter key="sulu_product.product_locale_manager.class">Sulu\Bundle\ProductBundle\Product\ProductLocaleManager</parameter>
         <parameter key="sulu_product.attribute_manager.class">Sulu\Bundle\ProductBundle\Product\AttributeManager</parameter>
         <parameter key="sulu_product.status_manager.class">Sulu\Bundle\ProductBundle\Product\StatusManager</parameter>
         <parameter key="sulu_product.delivery_status_manager.class">Sulu\Bundle\ProductBundle\Product\DeliveryStatusManager</parameter>
@@ -35,6 +36,7 @@
         <parameter key="sulu_product.product_entity">Sulu\Bundle\ProductBundle\Entity\Product</parameter>
         <parameter key="sulu_product.product_api_entity">Sulu\Bundle\ProductBundle\Api\Product</parameter>
         <parameter key="sulu_product.product_media_manager.class">Sulu\Bundle\ProductBundle\Product\ProductMediaManager</parameter>
+        <parameter key="sulu_product.js_config.class">Sulu\Bundle\AdminBundle\Admin\JsConfig</parameter>
     </parameters>
     <services>
         <!-- ADMIN -->
@@ -165,6 +167,9 @@
             <argument type="service" id="sulu_media.media_manager" />
             <argument>%sulu_product.product_entity%</argument>
         </service>
+        <service id="sulu_product.product_locale_manager" class="%sulu_product.product_locale_manager.class%">
+            <argument>%sulu_product%</argument>
+        </service>
         <!-- CONTROLLER -->
         <service id="sulu_product.productwebsite.controller" class="%sulu_product.productwebsite.controller.class%"
                  scope="request">
@@ -190,6 +195,15 @@
         <service id="sulu_product.admin.with_variants_content_navigation_provider.class" class="%sulu_product.admin.with_variants_content_navigation_provider.class%">
             <tag name="sulu_admin.content_navigation" alias="product-with-variants"/>
             <tag name="sulu.context" context="admin"/>
+        </service>
+        <!--JS CONFIG-->
+        <service id="sulu_product.js_config" class="%sulu_product.js_config.class%">
+            <tag name="sulu.js_config"/>
+            <argument>sulu-product</argument>
+            <argument type="collection">
+                <argument key="fallback_locale">%sulu_product.fallback_locale%</argument>
+                <argument key="locales">%sulu_product.locales%</argument>
+            </argument>
         </service>
     </services>
 </container>

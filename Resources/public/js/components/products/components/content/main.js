@@ -11,6 +11,23 @@ define(['config'], function(Config) {
 
     'use strict';
 
+    /**
+     * Returns all product locales.
+     *
+     * @returns []
+     */
+    var getProductLocales = function() {
+        var productConfig = Config.get('sulu-product');
+
+        // Map to dropdown specific format.
+        return _.map(productConfig['locales'], function(value) {
+            return {
+                id: value,
+                title: value
+            };
+        });
+    };
+
     return {
         header: function() {
             return {
@@ -47,6 +64,7 @@ define(['config'], function(Config) {
                         }
                     },
                     languageChanger: {
+                        data: getProductLocales(),
                         preSelected: this.options.locale
                     }
                 },

@@ -15,12 +15,14 @@ use FOS\RestBundle\Controller\Annotations\Get;
 use FOS\RestBundle\Routing\ClassResourceInterface;
 use Hateoas\Representation\CollectionRepresentation;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Sulu\Bundle\ProductBundle\Api\Product;
 use Sulu\Bundle\ProductBundle\Product\Exception\MissingProductAttributeException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductChildrenExistException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductDependencyNotFoundException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductNotFoundException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductException;
+use Sulu\Bundle\ProductBundle\Product\ProductLocaleManager;
 use Sulu\Bundle\ProductBundle\Product\ProductManagerInterface;
 use Sulu\Component\Rest\Exception\EntityIdAlreadySetException;
 use Sulu\Component\Rest\Exception\EntityNotFoundException;
@@ -39,7 +41,7 @@ class ProductController extends RestController implements ClassResourceInterface
     protected static $entityKey = 'products';
 
     /**
-     * Returns the repository object for AdvancedProduct
+     * Returns the repository object for AdvancedProduct.
      *
      * @return ProductManagerInterface
      */
@@ -49,7 +51,7 @@ class ProductController extends RestController implements ClassResourceInterface
     }
 
     /**
-     * Returns all fields that can be used by list
+     * Returns all fields that can be used by list.
      *
      * @param Request $request
      *
@@ -74,7 +76,7 @@ class ProductController extends RestController implements ClassResourceInterface
     }
 
     /**
-     * Retrieves and shows a product with the given ID
+     * Retrieves and shows a product with the given ID.
      *
      * @param Request $request
      * @param int $id product ID
@@ -83,7 +85,7 @@ class ProductController extends RestController implements ClassResourceInterface
      */
     public function getAction(Request $request, $id)
     {
-        $locale = $this->getLocale($request);
+        $locale = $this->getProductLocaleManager()->retrieveLocale($this->getUser(), $request->get('locale'));
         $view = $this->responseGetById(
             $id,
             function ($id) use ($locale) {
@@ -98,7 +100,7 @@ class ProductController extends RestController implements ClassResourceInterface
     }
 
     /**
-     * Returns a list of products
+     * Returns a list of products.
      *
      * @param Request $request
      *
@@ -107,11 +109,12 @@ class ProductController extends RestController implements ClassResourceInterface
     public function cgetAction(Request $request)
     {
         $filter = $this->getManager()->getFilters($request);
+        $locale = $this->getProductLocaleManager()->retrieveLocale($this->getUser(), $request->get('locale'));
 
         if ($request->get('flat') == 'true') {
             $filterFieldDescriptors = $this->getManager()->getFilterFieldDescriptors();
             $fieldDescriptors = $this->getManager()->getFieldDescriptors(
-                $this->getLocale($request)
+                $locale
             );
 
             $list = $this->flatResponse(
@@ -123,12 +126,12 @@ class ProductController extends RestController implements ClassResourceInterface
             );
         } elseif ($request->get('ids') !== '') {
             $list = new CollectionRepresentation(
-                $this->getManager()->findAllByIdsAndLocale($this->getLocale($request), $request->get('ids')),
+                $this->getManager()->findAllByIdsAndLocale($locale, $request->get('ids')),
                 self::$entityKey
             );
         } else {
             $list = new CollectionRepresentation(
-                $this->getManager()->findAllByLocale($this->getLocale($request), $filter),
+                $this->getManager()->findAllByLocale($locale, $filter),
                 self::$entityKey
             );
         }
@@ -139,14 +142,23 @@ class ProductController extends RestController implements ClassResourceInterface
     }
 
     /**
-     * Processes the request for a flat response
+     * Processes the request for a flat response.
      *
      * @param Request $request
+     * @param array $filter
+     * @param array $filterFieldDescriptors
+     * @param array $fieldDescriptors
+     * @param string $entityName
      *
      * @return ListRepresentation
      */
-    protected function flatResponse($request, $filter, $filterFieldDescriptors, $fieldDescriptors, $entityName)
-    {
+    protected function flatResponse(
+        Request $request,
+        $filter,
+        $filterFieldDescriptors,
+        $fieldDescriptors,
+        $entityName
+    ) {
         /** @var RestHelperInterface $restHelper */
         $restHelper = $this->get('sulu_core.doctrine_rest_helper');
 
@@ -168,7 +180,7 @@ class ProductController extends RestController implements ClassResourceInterface
             }
         }
 
-        // only add group by id if categories are processed
+        // Only add group by id if categories are processed.
         $fieldsParam = $request->get('fields');
         $fields = explode(',', $fieldsParam);
         if (isset($filter['categories']) ||
@@ -209,10 +221,12 @@ class ProductController extends RestController implements ClassResourceInterface
      */
     public function putAction(Request $request, $id)
     {
+        $locale = $this->getProductLocaleManager()->retrieveLocale($this->getUser(), $request->get('locale'));
+
         try {
             $product = $this->getManager()->save(
                 $request->request->all(),
-                $this->getLocale($request),
+                $locale,
                 $this->getUser()->getId(),
                 $id
             );
@@ -246,10 +260,12 @@ class ProductController extends RestController implements ClassResourceInterface
      */
     public function postAction(Request $request)
     {
+        $locale = $this->getProductLocaleManager()->retrieveLocale($this->getUser(), $request->get('locale'));
+
         try {
             $product = $this->getManager()->save(
                 $request->request->all(),
-                $this->getLocale($request),
+                $locale,
                 $this->getUser()->getId()
             );
 
@@ -278,7 +294,7 @@ class ProductController extends RestController implements ClassResourceInterface
      */
     public function deleteAction(Request $request, $id)
     {
-        $locale = $this->getLocale($request);
+        $locale = $this->getProductLocaleManager()->retrieveLocale($this->getUser(), $request->get('locale'));
 
         $delete = function ($id) use ($locale) {
             try {
@@ -310,10 +326,12 @@ class ProductController extends RestController implements ClassResourceInterface
      */
     public function patchAction(Request $request, $id)
     {
+        $locale = $this->getProductLocaleManager()->retrieveLocale($this->getUser(), $request->get('locale'));
+
         try {
             $product = $this->getManager()->partialUpdate(
                 $request->request->all(),
-                $this->getLocale($request),
+                $locale,
                 $this->getUser()->getId(),
                 $id
             );
@@ -335,5 +353,13 @@ class ProductController extends RestController implements ClassResourceInterface
     private function getEntityManager()
     {
         return $this->get('doctrine.orm.entity_manager');
+    }
+
+    /**
+     * @return ProductLocaleManager
+     */
+    private function getProductLocaleManager()
+    {
+        return $this->get('sulu_product.product_locale_manager');
     }
 }
