@@ -416,7 +416,6 @@ define([
                     options: {
                         el: $tabContainer,
                         locale: this.options.locale
-                        //locale: retrieveDefaultLocale.call(this)
                     }
                 },
                 dfd = this.sandbox.data.deferred();
