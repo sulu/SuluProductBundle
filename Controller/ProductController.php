@@ -145,7 +145,6 @@ class ProductController extends RestController implements ClassResourceInterface
      * Processes the request for a flat response.
      *
      * @param Request $request
-     *
      * @param array $filter
      * @param array $filterFieldDescriptors
      * @param array $fieldDescriptors
@@ -153,8 +152,13 @@ class ProductController extends RestController implements ClassResourceInterface
      *
      * @return ListRepresentation
      */
-    protected function flatResponse($request, $filter, $filterFieldDescriptors, $fieldDescriptors, $entityName)
-    {
+    protected function flatResponse(
+        Request $request,
+        $filter,
+        $filterFieldDescriptors,
+        $fieldDescriptors,
+        $entityName
+    ) {
         /** @var RestHelperInterface $restHelper */
         $restHelper = $this->get('sulu_core.doctrine_rest_helper');
 
