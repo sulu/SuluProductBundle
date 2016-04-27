@@ -7,7 +7,11 @@
  * with this source code in the file LICENSE.
  */
 
-define(['suluproduct/models/attribute', 'app-config'], function(Attribute, AppConfig) {
+define([
+    'suluproduct/models/attribute',
+    'app-config',
+    'suluproduct/util/locale-util'
+], function(Attribute, AppConfig, LocaleUtil) {
 
     'use strict';
 
@@ -82,7 +86,7 @@ define(['suluproduct/models/attribute', 'app-config'], function(Attribute, AppCo
             }, this);
 
             this.sandbox.on(ATTRIBUTE_LOAD, function(id) {
-                this.load(id, AppConfig.getUser().locale);
+                this.load(id, LocaleUtil.retrieveDefaultLocale(this.sandbox));
             }, this);
         },
 
@@ -107,7 +111,7 @@ define(['suluproduct/models/attribute', 'app-config'], function(Attribute, AppCo
         newAttribute: function() {
             this.sandbox.emit(
                 'sulu.router.navigate',
-                'pim/attributes/' + AppConfig.getUser().locale + '/add'
+                'pim/attributes/' + LocaleUtil.retrieveDefaultLocale(this.sandbox) + '/add'
             );
         },
 
@@ -184,7 +188,7 @@ define(['suluproduct/models/attribute', 'app-config'], function(Attribute, AppCo
                     name: 'attributes/components/form@suluproduct',
                     options: {
                         el: $form,
-                        locale: this.options.locale,
+                        locale: LocaleUtil.retrieveDefaultLocale(this.sandbox),
                         data: this.attribute.defaults()
                     }
                 };
@@ -214,7 +218,8 @@ define(['suluproduct/models/attribute', 'app-config'], function(Attribute, AppCo
                 {
                     name: 'attributes/components/list@suluproduct',
                     options: {
-                        el: $list
+                        el: $list,
+                        locale: LocaleUtil.retrieveDefaultLocale(this.sandbox)
                     }
                 }
             ]);

@@ -12,25 +12,21 @@ namespace Sulu\Bundle\ProductBundle\Controller;
 
 use FOS\RestBundle\Routing\ClassResourceInterface;
 use FOS\RestBundle\Controller\Annotations\Get;
-
 use Hateoas\Representation\CollectionRepresentation;
-
-use Sulu\Component\Security\SecuredControllerInterface;
 use Symfony\Component\HttpFoundation\Request;
-
+use Symfony\Component\HttpFoundation\Response;
 use Sulu\Component\Rest\RestController;
 use Sulu\Component\Rest\Exception\EntityNotFoundException;
 use Sulu\Component\Rest\Exception\MissingArgumentException;
 use Sulu\Component\Rest\ListBuilder\ListRepresentation;
+use Sulu\Component\Rest\ListBuilder\Doctrine\DoctrineListBuilderFactory;
+use Sulu\Component\Rest\RestHelperInterface;
+use Sulu\Component\Security\SecuredControllerInterface;
+use Sulu\Bundle\ProductBundle\Product\AttributeManagerInterface;
 use Sulu\Bundle\ProductBundle\Product\Exception\AttributeDependencyNotFoundException;
 use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeException;
 use Sulu\Bundle\ProductBundle\Product\Exception\AttributeNotFoundException;
 
-/**
- * Makes product attributes available through a REST API
- *
- * @package Sulu\Bundle\ProductBundle\Controller
- */
 class AttributeController extends RestController implements ClassResourceInterface, SecuredControllerInterface
 {
     protected static $entityName = 'SuluProductBundle:Attribute';
@@ -38,7 +34,7 @@ class AttributeController extends RestController implements ClassResourceInterfa
     protected static $entityKey = 'attributes';
 
     /**
-     * Returns the manager for Attributes
+     * Returns the manager for Attributes.
      *
      * @return AttributeManagerInterface
      */
@@ -48,12 +44,13 @@ class AttributeController extends RestController implements ClassResourceInterfa
     }
 
     /**
-     * returns all fields that can be used by list
+     * Returns all fields that can be used by list.
+     *
+     * @param Request $request
+     *
      * @Get("attributes/fields")
      *
-     * @param \Symfony\Component\HttpFoundation\Request $request
-     *
-     * @return mixed
+     * @return Response
      */
     public function getFieldsAction(Request $request)
     {
@@ -63,16 +60,16 @@ class AttributeController extends RestController implements ClassResourceInterfa
     }
 
     /**
-     * Retrieves and shows a attribute with the given ID
+     * Retrieves and shows a attribute with the given ID.
      *
-     * @param \Symfony\Component\HttpFoundation\Request $request
-     * @param integer $id attribute ID
+     * @param Request $request
+     * @param int $id attribute ID
      *
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      */
     public function getAction(Request $request, $id)
     {
-        $locale = $this->getLocale($request);
+        $locale = $this->getProductLocaleManager()->retrieveLocale($this->getUser(), $request->get('locale'));
         try {
             $attribute = $this->getManager()->findByIdAndLocale($id, $locale);
             $view = $this->view($attribute, 200);
@@ -85,19 +82,21 @@ class AttributeController extends RestController implements ClassResourceInterfa
     }
 
     /**
-     * Returns a list of attributes
+     * Returns a list of attributes.
      *
-     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @param Request $request
      *
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      */
     public function cgetAction(Request $request)
     {
+        $locale = $this->getProductLocaleManager()->retrieveLocale($this->getUser(), $request->get('locale'));
+
         if ($request->get('flat') == 'true') {
             $list = $this->getListRepresentation($request);
         } else {
             $list = new CollectionRepresentation(
-                $this->getManager()->findAllByLocale($this->getLocale($request)),
+                $this->getManager()->findAllByLocale($locale),
                 self::$entityKey
             );
         }
@@ -108,11 +107,11 @@ class AttributeController extends RestController implements ClassResourceInterfa
     }
 
     /**
-     * Returns a list representation
+     * Returns a list representation.
      *
-     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @param Request $request
      *
-     * @return Sulu\Component\Rest\ListBuilder\ListRepresentation
+     * @return \Sulu\Component\Rest\ListBuilder\ListRepresentation
      */
     private function getListRepresentation($request)
     {
@@ -124,9 +123,11 @@ class AttributeController extends RestController implements ClassResourceInterfa
 
         $listBuilder = $factory->create(self::$entityName);
 
+        $locale = $this->getProductLocaleManager()->retrieveLocale($this->getUser(), $request->get('locale'));
+
         $restHelper->initializeListBuilder(
             $listBuilder,
-            $this->getManager()->getFieldDescriptors($this->getLocale($request))
+            $this->getManager()->getFieldDescriptors($locale)
         );
 
         $list = new ListRepresentation(
@@ -145,17 +146,19 @@ class AttributeController extends RestController implements ClassResourceInterfa
     /**
      * Change a attribute by the given id.
      *
-     * @param \Symfony\Component\HttpFoundation\Request $request
-     * @param integer $id the attribute id
+     * @param Request $request
+     * @param int $id the attribute id
      *
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      */
     public function putAction(Request $request, $id)
     {
+        $locale = $this->getProductLocaleManager()->retrieveLocale($this->getUser(), $request->get('locale'));
+
         try {
             $attribute = $this->getManager()->save(
                 $request->request->all(),
-                $this->getLocale($request),
+                $locale,
                 $this->getUser()->getId(),
                 $id
             );
@@ -177,9 +180,9 @@ class AttributeController extends RestController implements ClassResourceInterfa
     /**
      * Creates and stores a new attribute.
      *
-     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @param Request $request
      *
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      */
     public function postAction(Request $request)
     {
@@ -204,12 +207,11 @@ class AttributeController extends RestController implements ClassResourceInterfa
     /**
      * Delete an product attribute with the given id.
      *
-     * @param \Symfony\Component\HttpFoundation\Request $request
-     * @param integer $id the attribute id
+     * @param int $id the attribute id
      *
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      */
-    public function deleteAction(Request $request, $id)
+    public function deleteAction($id)
     {
         try {
             $this->getManager()->delete($id, $this->getUser()->getId());
@@ -228,5 +230,13 @@ class AttributeController extends RestController implements ClassResourceInterfa
     public function getSecurityContext()
     {
         return 'sulu.product.attributes';
+    }
+
+    /**
+     * @return ProductLocaleManager
+     */
+    private function getProductLocaleManager()
+    {
+        return $this->get('sulu_product.product_locale_manager');
     }
 }
