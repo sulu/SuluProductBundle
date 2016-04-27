@@ -7,26 +7,9 @@
  * with this source code in the file LICENSE.
  */
 
-define(['config'], function(Config) {
+define(['config', 'suluproduct/util/locale-util'], function(Config, LocaleUtil) {
 
     'use strict';
-
-    /**
-     * Returns all product locales.
-     *
-     * @returns []
-     */
-    var getProductLocales = function() {
-        var productConfig = Config.get('sulu-product');
-
-        // Map to dropdown specific format.
-        return _.map(productConfig['locales'], function(value) {
-            return {
-                id: value,
-                title: value
-            };
-        });
-    };
 
     return {
         header: function() {
@@ -64,7 +47,7 @@ define(['config'], function(Config) {
                         }
                     },
                     languageChanger: {
-                        data: getProductLocales(),
+                        data: LocaleUtil.getProductLocalesForDropdown(),
                         preSelected: this.options.locale
                     }
                 },
