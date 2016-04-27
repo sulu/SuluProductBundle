@@ -7,7 +7,7 @@
  * with this source code in the file LICENSE.
  */
 
-define([], function() {
+define(['suluproduct/util/locale-util'], function(LocaleUtil) {
 
     'use strict';
 
@@ -24,7 +24,10 @@ define([], function() {
         header: function() {
             return {
                 toolbar: {
-                    languageChanger: true,
+                    languageChanger: {
+                        data: LocaleUtil.getProductLocalesForDropdown(),
+                        preSelected: this.options.locale
+                    },
                     buttons: {
                         save: {},
                         delete: {}

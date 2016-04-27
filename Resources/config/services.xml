@@ -37,6 +37,7 @@
         <parameter key="sulu_product.product_api_entity">Sulu\Bundle\ProductBundle\Api\Product</parameter>
         <parameter key="sulu_product.product_media_manager.class">Sulu\Bundle\ProductBundle\Product\ProductMediaManager</parameter>
         <parameter key="sulu_product.js_config.class">Sulu\Bundle\AdminBundle\Admin\JsConfig</parameter>
+        <parameter key="sulu_product.localization_provider.class">Sulu\Component\Localization\Provider\LocalizationProvider</parameter>
     </parameters>
     <services>
         <!-- ADMIN -->
@@ -195,6 +196,11 @@
         <service id="sulu_product.admin.with_variants_content_navigation_provider.class" class="%sulu_product.admin.with_variants_content_navigation_provider.class%">
             <tag name="sulu_admin.content_navigation" alias="product-with-variants"/>
             <tag name="sulu.context" context="admin"/>
+        </service>
+        <!--PROVIDER-->
+        <service id="sulu.core.localization_manager.core_provider" class="%sulu.core.localization_manager.core_provider.class%">
+            <argument>%sulu_product.locales%</argument>
+            <tag name="sulu.localization_provider"/>
         </service>
         <!--JS CONFIG-->
         <service id="sulu_product.js_config" class="%sulu_product.js_config.class%">
