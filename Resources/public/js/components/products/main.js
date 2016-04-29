@@ -12,9 +12,10 @@ define([
     'sulucategory/model/category',
     'app-config',
     'suluproduct/util/header',
+    'suluproduct/util/locale-util',
     'suluproduct/util/product-delete-dialog',
     'config'
-], function(Product, Category, AppConfig, HeaderUtil, DeleteDialog, Config) {
+], function(Product, Category, AppConfig, HeaderUtil, LocaleUtil, DeleteDialog, Config) {
     'use strict';
 
     var types = {
@@ -66,49 +67,6 @@ define([
          */
         PRODUCT_VARIANT_DELETE = eventNamespace + 'variants.delete';
 
-    /**
-     * Function returns the locale that should be used by default for current user.
-     * If users locale matches any of the given product locales, that one is taken
-     * as default.
-     * If locale does not match exactly, the users language is compared as well.
-     * If there are no matches at all, the default-locale as defined in the config
-     * is returned.
-     *
-     * @returns {String}
-     */
-    var retrieveDefaultLocale = function() {
-        var user = this.sandbox.sulu.user;
-        var productConfig = Config.get('sulu-product');
-        var defaultLocale = productConfig['fallback_locale'];
-        var locales = productConfig['locales'];
-        var languageMatch = null;
-
-        // Check if users locale contains localization.
-        var userLanguage = user.locale.substring(0, user.locale.indexOf('_'));
-
-        for (var i = -1, len = locales.length; ++i <len;) {
-            var current = locales[i];
-
-            // If locale matches users locale, the exact matching was found.
-            if (user.locale == current) {
-                return current;
-            }
-
-            // Check if users language (without locale) matches.
-            if (userLanguage == current) {
-                languageMatch = current;
-            }
-        }
-
-        // If language matches.
-        if (languageMatch) {
-            return languageMatch;
-        }
-
-        // Return default locale if no match was found.
-        return defaultLocale;
-    };
-
     return {
         initialize: function() {
             this.product = null;
@@ -134,7 +92,7 @@ define([
             this.sandbox.on(PRODUCT_NEW, function(type) {
                 this.sandbox.emit(
                     'sulu.router.navigate',
-                    'pim/products/' + AppConfig.getUser().locale + '/add/type:' + type
+                    'pim/products/' + LocaleUtil.retrieveDefaultLocale(this.sandbox) + '/add/type:' + type
                 );
             }.bind(this));
 
@@ -177,7 +135,7 @@ define([
             this.sandbox.on('sulu.products.workflow.triggered', this.triggerWorkflowAction.bind(this));
 
             this.sandbox.on(PRODUCT_LOAD, function(id) {
-                this.load(id, retrieveDefaultLocale.call(this));
+                this.load(id, LocaleUtil.retrieveDefaultLocale(this.sandbox));
             }, this);
 
             // Back to list.
@@ -460,7 +418,7 @@ define([
                     name: 'products/components/list@suluproduct',
                     options: {
                         el: $list,
-                        locale: retrieveDefaultLocale.call(this)
+                        locale: LocaleUtil.retrieveDefaultLocale(this.sandbox)
                     }
                 }
             ]);
