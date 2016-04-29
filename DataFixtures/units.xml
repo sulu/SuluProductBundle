@@ -3,6 +3,7 @@
         <!-- Piece is the default Unit and therefore must be the first one in this list-->
         <translations>
             <de>Stück</de>
+            <de_CH>Stück</de_CH>
             <en>Piece</en>
         </translations>
         <mappings>
@@ -19,6 +20,7 @@
     <unit>
         <translations>
             <de>Packung</de>
+            <de_CH>Packung</de_CH>
             <en>Package</en>
         </translations>
         <mappings>
@@ -34,6 +36,7 @@
     <unit>
         <translations>
             <de>Gramm</de>
+            <de_CH>Gramm</de_CH>
             <en>Gram</en>
         </translations>
         <mappings>
@@ -45,6 +48,7 @@
     <unit>
         <translations>
             <de>Kilogramm</de>
+            <de_CH>Kilogramm</de_CH>
             <en>Kilogram</en>
         </translations>
         <mappings>
@@ -57,6 +61,7 @@
     <unit>
         <translations>
             <de>Box</de>
+            <de_CH>Box</de_CH>
             <en>Box</en>
         </translations>
         <mappings>
@@ -66,6 +71,7 @@
     <unit>
         <translations>
             <de>Container</de>
+            <de_CH>Container</de_CH>
             <en>Container</en>
         </translations>
         <mappings>
@@ -77,6 +83,7 @@
     <unit>
         <translations>
             <de>Palette</de>
+            <de_CH>Palette</de_CH>
             <en>Pallet</en>
         </translations>
         <mappings>
@@ -88,6 +95,7 @@
     <unit>
         <translations>
             <de>Blatt</de>
+            <de_CH>Blatt</de_CH>
             <en>Page</en>
         </translations>
         <mappings>
@@ -99,6 +107,7 @@
     <unit>
         <translations>
             <de>Rolle</de>
+            <de_CH>Rolle</de_CH>
             <en>Roll</en>
         </translations>
         <mappings>
@@ -109,6 +118,7 @@
     <unit>
         <translations>
             <de>Meter</de>
+            <de_CH>Meter</de_CH>
             <en>Meter</en>
         </translations>
         <mappings>
@@ -120,6 +130,7 @@
     <unit>
         <translations>
             <de>Bogen</de>
+            <de_CH>Bogen</de_CH>
             <en>Sheet</en>
         </translations>
         <mappings>
@@ -133,6 +144,7 @@
     <unit>
         <translations>
             <de>Streifen</de>
+            <de_CH>Streifen</de_CH>
             <en>Stripe</en>
         </translations>
         <mappings>
@@ -144,6 +156,7 @@
     <unit>
         <translations>
             <de>Paar</de>
+            <de_CH>Paar</de_CH>
             <en>Pair</en>
         </translations>
         <mappings>
@@ -155,6 +168,7 @@
     <unit>
         <translations>
             <de>Flasche</de>
+            <de_CH>Flasche</de_CH>
             <en>Bottle</en>
         </translations>
         <mappings>
@@ -168,6 +182,7 @@
     <unit>
         <translations>
             <de>Quadratmeter</de>
+            <de_CH>Quadratmeter</de_CH>
             <en>Square Meter</en>
         </translations>
         <mappings>
@@ -182,6 +197,7 @@
     <unit>
         <translations>
             <de>Tonne</de>
+            <de_CH>Tonne</de_CH>
             <en>Tonne</en>
         </translations>
         <mappings>
@@ -194,6 +210,7 @@
     <unit>
         <translations>
             <de>Kanister</de>
+            <de_CH>Kanister</de_CH>
             <en>Canister</en>
         </translations>
         <mappings>
@@ -205,6 +222,7 @@
     <unit>
         <translations>
             <de>Liter</de>
+            <de_CH>Liter</de_CH>
             <en>Liter</en>
         </translations>
         <mappings>
@@ -217,6 +235,7 @@
     <unit>
         <translations>
             <de>Eimer</de>
+            <de_CH>Eimer</de_CH>
             <en>Bucket</en>
         </translations>
         <mappings>
@@ -228,6 +247,7 @@
     <unit>
         <translations>
             <de>Verstärkung</de>
+            <de_CH>Verstärkung</de_CH>
             <en>Boost</en>
         </translations>
         <mappings>
@@ -240,6 +260,7 @@
     <unit>
         <translations>
             <de>Laufmeter</de>
+            <de_CH>Laufmeter</de_CH>
             <en>Running Meter</en>
         </translations>
         <mappings>
@@ -256,6 +277,7 @@
     <unit>
         <translations>
             <de>Sack</de>
+            <de_CH>Sack</de_CH>
             <en>Bag</en>
         </translations>
         <mappings>
@@ -266,6 +288,7 @@
     <unit>
         <translations>
             <de>Duzend</de>
+            <de_CH>Duzend</de_CH>
             <en>Dozen</en>
         </translations>
         <mappings>
@@ -278,6 +301,7 @@
     <unit>
         <translations>
             <de>Set</de>
+            <de_CH>Set</de_CH>
             <en>Set</en>
         </translations>
         <mappings>
@@ -287,6 +311,7 @@
     <unit>
         <translations>
             <de>Etui</de>
+            <de_CH>Etui</de_CH>
             <en>Case</en>
         </translations>
         <mappings>
@@ -297,6 +322,7 @@
     <unit>
         <translations>
             <de>Karton</de>
+            <de_CH>Karton</de_CH>
             <en>Carton</en>
         </translations>
         <mappings>
@@ -309,6 +335,7 @@
     <unit>
         <translations>
             <de>Dose</de>
+            <de_CH>Dose</de_CH>
             <en>Can</en>
         </translations>
         <mappings>
@@ -319,6 +346,7 @@
     <unit>
         <translations>
             <de>Gebinde</de>
+            <de_CH>Gebinde</de_CH>
             <en>Packages</en>
         </translations>
         <mappings>
@@ -330,6 +358,7 @@
     <unit>
         <translations>
             <de>Fass</de>
+            <de_CH>Fass</de_CH>
             <en>Barrel</en>
         </translations>
         <mappings>

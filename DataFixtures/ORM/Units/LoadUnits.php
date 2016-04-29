@@ -19,7 +19,7 @@ use Sulu\Bundle\ProductBundle\Entity\UnitMapping;
 
 class LoadUnits implements FixtureInterface, OrderedFixtureInterface
 {
-    private static $translations = array("de", "en");
+    private static $translations = ["de", "de_CH", "en"];
 
     /**
      * {@inheritDoc}
