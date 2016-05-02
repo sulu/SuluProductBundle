@@ -30,15 +30,18 @@ class SuluProductAdmin extends Admin
 
         $pim = new NavigationItem('navigation.pim');
         $pim->setIcon('asterisk');
+        $pim->setPosition(10);
 
         if ($this->securityChecker->hasPermission('sulu.product.products', 'view')) {
             $products = new NavigationItem('navigation.pim.products', $pim);
             $products->setAction('pim/products');
+            $products->setPosition(10);
         }
 
         if ($this->securityChecker->hasPermission('sulu.product.attributes', 'view')) {
             $attributes = new NavigationItem('navigation.pim.attributes', $pim);
             $attributes->setAction('pim/attributes');
+            $attributes->setPosition(20);
         }
 
         if ($pim->hasChildren()) {
