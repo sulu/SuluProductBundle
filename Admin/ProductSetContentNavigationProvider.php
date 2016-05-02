@@ -18,29 +18,32 @@ class ProductSetContentNavigationProvider implements ContentNavigationProviderIn
     /**
      * {@inheritdoc}
      */
-    public function getNavigationItems(array $options = array())
+    public function getNavigationItems(array $options = [])
     {
         $details = new ContentNavigationItem('content-navigation.product.general');
         $details->setAction('details');
+        $details->setPosition(10);
         $details->setComponent('products/components/detail-form@suluproduct');
         $details->setResetStore(false);
 
         $pricing = new ContentNavigationItem('content-navigation.product.pricing');
         $pricing->setAction('pricing');
+        $pricing->setPosition(20);
         $pricing->setComponent('products/components/pricing@suluproduct');
-        $pricing->setDisplay(array('edit'));
+        $pricing->setDisplay(['edit']);
         $pricing->setResetStore(false);
 
         $attributes = new ContentNavigationItem('content-navigation.product.attributes');
         $attributes->setAction('attributes');
+        $attributes->setAction(30);
         $attributes->setComponent('products/components/attributes@suluproduct');
-        $attributes->setDisplay(array('edit'));
+        $attributes->setDisplay(['edit']);
         $attributes->setResetStore(false);
 
-        return array(
+        return [
             $details,
             $pricing,
             $attributes
-        );
+        ];
     }
 }
