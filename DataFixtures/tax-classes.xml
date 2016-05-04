@@ -1,22 +1,22 @@
 <tax-classes>
     <tax-class>
         <de>Regelsteuersatz</de>
-        <de_CH>Regelsteuersatz</de_CH>
+        <de_ch>Regelsteuersatz</de_ch>
         <en>Standard Tax Rate</en>
     </tax-class>
     <tax-class>
         <de>Ermäßigter Steuersatz 1</de>
-        <de_CH>Ermäßigter Steuersatz 1</de_CH>
+        <de_ch>Ermäßigter Steuersatz 1</de_ch>
         <en>Reduced Tax Rate 1</en>
     </tax-class>
     <tax-class>
         <de>Ermäßigter Steuersatz 2</de>
-        <de_CH>Ermäßigter Steuersatz 2</de_CH>
+        <de_ch>Ermäßigter Steuersatz 2</de_ch>
         <en>Reduced Tax Rate 2</en>
     </tax-class>
     <tax-class>
         <de>Ermäßigter Steuersatz 3</de>
-        <de_CH>Ermäßigter Steuersatz 3</de_CH>
+        <de_ch>Ermäßigter Steuersatz 3</de_ch>
         <en>Reduced Tax Rate 3</en>
     </tax-class>
 </tax-classes>
