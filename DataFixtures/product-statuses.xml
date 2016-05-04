@@ -1,32 +1,32 @@
 <product-statuses>
     <product-status>
         <de>importiert</de>
-        <de_CH>importiert</de_CH>
+        <de_ch>importiert</de_ch>
         <en>imported</en>
     </product-status>
     <product-status>
         <de>eingereicht</de>
-        <de_CH>eingereicht</de_CH>
+        <de_ch>eingereicht</de_ch>
         <en>submitted</en>
     </product-status>
     <product-status>
         <de>aktiv</de>
-        <de_CH>aktiv</de_CH>
+        <de_ch>aktiv</de_ch>
         <en>active</en>
     </product-status>
     <product-status>
         <de>abgelehnt</de>
-        <de_CH>abgelehnt</de_CH>
+        <de_ch>abgelehnt</de_ch>
         <en>rejected</en>
     </product-status>
     <product-status>
         <de>inaktiv</de>
-        <de_CH>inaktiv</de_CH>
+        <de_ch>inaktiv</de_ch>
         <en>inactive</en>
     </product-status>
     <product-status>
         <de>geändert</de>
-        <de_CH>geändert</de_CH>
+        <de_ch>geändert</de_ch>
         <en>changed</en>
     </product-status>
 </product-statuses>

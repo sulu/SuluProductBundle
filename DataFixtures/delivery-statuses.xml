@@ -1,12 +1,12 @@
 <delivery-statuses>
     <delivery-status>
         <de>lieferbar</de>
-        <de_CH>lieferbar</de_CH>
+        <de_ch>lieferbar</de_ch>
         <en>available</en>
     </delivery-status>
     <delivery-status>
         <de>nicht lieferbar</de>
-        <de_CH>nicht lieferbar</de_CH>
+        <de_ch>nicht lieferbar</de_ch>
         <en>not available</en>
     </delivery-status>
 </delivery-statuses>

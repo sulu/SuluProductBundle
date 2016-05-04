@@ -18,7 +18,7 @@ use Sulu\Bundle\ProductBundle\Entity\TypeTranslation;
 
 class LoadProductTypes implements FixtureInterface, OrderedFixtureInterface
 {
-    private static $translations = ["de", "de_CH", "en"];
+    private static $translations = ["de", "de_ch", "en"];
 
     /**
      * {@inheritDoc}

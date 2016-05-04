@@ -1,22 +1,22 @@
 <product-types>
     <product-type>
         <de>Produkt</de>
-        <de_CH>Produkt</de_CH>
+        <de_ch>Produkt</de_ch>
         <en>Product</en>
     </product-type>
     <product-type>
         <de>Produkt mit Varianten</de>
-        <de_CH>Produkt mit Varianten</de_CH>
+        <de_ch>Produkt mit Varianten</de_ch>
         <en>Product with Variants</en>
     </product-type>
     <product-type>
         <de>Produkt Erweiterung</de>
-        <de_CH>Produkt Erweiterung</de_CH>
+        <de_ch>Produkt Erweiterung</de_ch>
         <en>Product Add-on</en>
     </product-type>
     <product-type>
         <de>Produkt Gruppe</de>
-        <de_CH>Produkt Gruppe</de_CH>
+        <de_ch>Produkt Gruppe</de_ch>
         <en>Product Set</en>
     </product-type>
 </product-types>
