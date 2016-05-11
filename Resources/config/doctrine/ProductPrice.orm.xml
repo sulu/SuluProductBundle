@@ -7,13 +7,13 @@
             <generator strategy="AUTO"/>
         </id>
 
-        <field name="minimumQuantity" type="decimal" nullable="true">
+        <field name="minimumQuantity" type="decimal" nullable="true" column="minimumQuantity">
             <options>
                 <option name="default">0</option>
             </options>
         </field>
 
-        <field name="price" type="float"/>
+        <field name="price" type="float" column="price"/>
 
         <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface"
                      field="product" inversed-by="prices">

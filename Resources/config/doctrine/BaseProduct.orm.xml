@@ -7,25 +7,25 @@
             <generator strategy="AUTO"/>
         </id>
 
-        <field name="number" type="string" length="255" nullable="true"/>
-        <field name="globalTradeItemNumber" type="string" length="255" nullable="true"/>
-        <field name="internalItemNumber" type="string" length="255" nullable="true"/>
-        <field name="manufacturer" type="string" length="255" nullable="true"/>
-        <field name="cost" type="decimal" precision="15" scale="2" nullable="true"/>
-        <field name="priceInfo" type="text" nullable="true"/>
-        <field name="created" type="datetime" nullable="true"/>
-        <field name="changed" type="datetime" nullable="true"/>
-        <field name="isDeprecated" type="boolean" nullable="false">
+        <field name="number" type="string" length="255" nullable="true" column="number"/>
+        <field name="globalTradeItemNumber" type="string" length="255" nullable="true" column="globalTradeItemNumber"/>
+        <field name="internalItemNumber" type="string" length="255" nullable="true" column="internalItemNumber"/>
+        <field name="manufacturer" type="string" length="255" nullable="true" column="manufacturer"/>
+        <field name="cost" type="decimal" precision="15" scale="2" nullable="true" column="cost"/>
+        <field name="priceInfo" type="text" nullable="true" column="priceInfo"/>
+        <field name="created" type="datetime" nullable="true" column="created"/>
+        <field name="changed" type="datetime" nullable="true" column="changed"/>
+        <field name="isDeprecated" type="boolean" nullable="false" column="isDeprecated">
             <options>
                 <option name="default">0</option>
             </options>
         </field>
-        <field name="orderContentRatio" type="float" nullable="true"/>
-        <field name="minimumOrderQuantity" type="float" nullable="true"/>
-        <field name="recommendedOrderQuantity" type="float" nullable="true"/>
-        <field name="deliveryTime" type="integer" nullable="true"/>
-        <field name="searchTerms" type="string" nullable="true" length="500"/>
-        <field name="areGrossPrices" type="boolean" nullable="false">
+        <field name="orderContentRatio" type="float" nullable="true" column="orderContentRatio"/>
+        <field name="minimumOrderQuantity" type="float" nullable="true" column="minimumOrderQuantity"/>
+        <field name="recommendedOrderQuantity" type="float" nullable="true" column="recommendedOrderQuantity"/>
+        <field name="deliveryTime" type="integer" nullable="true" column="deliveryTime"/>
+        <field name="searchTerms" type="string" nullable="true" length="500" column="searchTerms"/>
+        <field name="areGrossPrices" type="boolean" nullable="false" column="areGrossPrices">
             <options>
                 <option name="default">0</option>
             </options>

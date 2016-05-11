@@ -8,10 +8,10 @@
             <generator strategy="AUTO"/>
         </id>
 
-        <field name="price" type="float"/>
+        <field name="price" type="float" column="price"/>
 
-        <field name="startDate" type="datetime" length="255" nullable="true"/>
-        <field name="endDate" type="datetime" length="255" nullable="true"/>
+        <field name="startDate" type="datetime" length="255" nullable="true" column="startDate"/>
+        <field name="endDate" type="datetime" length="255" nullable="true" column="endDate"/>
 
         <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface"
                      field="product" inversed-by="prices">

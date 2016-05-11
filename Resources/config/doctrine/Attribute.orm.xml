@@ -8,8 +8,8 @@
             <generator strategy="AUTO"/>
         </id>
 
-        <field name="created" type="datetime" length="255"/>
-        <field name="changed" type="datetime" length="255"/>
+        <field name="created" type="datetime" length="255" column="created"/>
+        <field name="changed" type="datetime" length="255" column="changed"/>
 
         <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\AttributeTranslation" mapped-by="attribute"
                      field="translations">
