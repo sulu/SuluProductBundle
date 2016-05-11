@@ -8,7 +8,7 @@
         <id name="id" type="integer" column="id">
             <generator strategy="AUTO"/>
         </id>
-        <field name="tax" type="float" nullable="false"/>
+        <field name="tax" type="float" nullable="false" column="tax"/>
 
         <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\TaxClass" field="taxClass"
                      inversed-by="taxes">

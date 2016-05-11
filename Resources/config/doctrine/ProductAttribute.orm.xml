@@ -8,7 +8,7 @@
             <generator strategy="AUTO"/>
         </id>
 
-        <field name="value" type="text" />
+        <field name="value" type="text" column="value"/>
 
         <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface" field="product"
                      inversed-by="productAttributes">
