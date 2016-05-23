@@ -107,7 +107,7 @@ define(['config'], function(Config) {
         listenForChange = function() {
             this.sandbox.dom.on(formSelector, 'change', function() {
                 setHeaderBar.call(this, false);
-            }.bind(this), 'select');
+            }.bind(this), 'input[type="checkbox"], select');
             this.sandbox.dom.on(formSelector, 'keyup', function() {
                 setHeaderBar.call(this, false);
             }.bind(this), 'input, textarea');
