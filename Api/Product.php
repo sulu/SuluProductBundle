@@ -32,6 +32,7 @@ use Sulu\Bundle\ProductBundle\Entity\TaxClass as TaxClassEntity;
 use Sulu\Bundle\ProductBundle\Entity\Type as TypeEntity;
 use Sulu\Bundle\ProductBundle\Entity\Unit as UnitEntity;
 use Sulu\Bundle\PricingBundle\Pricing\PriceFormatter;
+use Sulu\Bundle\ProductBundle\Product\ProductLocaleManager;
 use Sulu\Component\Rest\ApiWrapper;
 use Sulu\Component\Security\Authentication\UserInterface;
 
@@ -59,21 +60,29 @@ class Product extends ApiWrapper implements ApiProductInterface
     protected $priceFormatter;
 
     /**
+     * @var ProductLocaleManager
+     */
+    protected $productLocaleManager;
+
+    /**
      * @param Entity $product The product to wrap
      * @param string $locale The locale of this product
      * @param PriceFormatter $priceFormatter
+     * @param ProductLocaleManager $productLocaleManager
      * @param AccountManager|null $accountManager
      */
     public function __construct(
         Entity $product,
         $locale,
         PriceFormatter $priceFormatter,
+        ProductLocaleManager $productLocaleManager,
         AccountManager $accountManager = null
     ) {
         $this->entity = $product;
         $this->locale = $locale;
         $this->priceFormatter = $priceFormatter;
         $this->accountManager = $accountManager;
+        $this->productLocaleManager = $productLocaleManager;
     }
 
     /**
@@ -449,7 +458,11 @@ class Product extends ApiWrapper implements ApiProductInterface
         $parent = $this->entity->getParent();
 
         if ($parent) {
-            return new static($parent, $this->locale, $this->priceFormatter, $this->accountManager);
+            return new static(
+                $parent,
+                $this->locale,
+                $this->priceFormatter,
+                $this->productLocaleManager);
         }
 
         return null;
@@ -877,7 +890,11 @@ class Product extends ApiWrapper implements ApiProductInterface
 
         $attributes = array();
         foreach ($attributeEntities as $attributesEntity) {
-            $attributes[] = new ProductAttribute($attributesEntity, $this->locale);
+            $attributes[] = new ProductAttribute(
+                $attributesEntity,
+                $this->locale,
+                $this->productLocaleManager->getFallbackLocale()
+            );
         }
 
         return $attributes;

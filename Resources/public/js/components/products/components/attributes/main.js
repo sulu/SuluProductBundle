@@ -63,7 +63,7 @@ define([
                     this.sandbox.emit('husky.datagrid.' + datagridInstanceName + '.record.add', {
                         id: result.id,
                         attributeId: result.attributeId,
-                        value: result.value,
+                        attributeValueName: result.attributeValueName,
                         attributeName: result.attributeName
                     });
                 } else if (data.action === actions.DELETE) {
@@ -123,7 +123,8 @@ define([
          */
         createAddOverlay = function() {
             // call JSON to get the attributes from the server then create the overlay after it's done
-            var ajaxRequest = $.getJSON('api/attributes', function(data) {
+            var attributesUrl = 'api/attributes?locale=' + this.options.locale;
+            var ajaxRequest = $.getJSON(attributesUrl, function(data) {
                 this.attributeTypes = [];
 
                 $.each(data._embedded.attributes, function(key, value) {
@@ -226,19 +227,19 @@ define([
             }
 
             this.sendData = {};
-            var attributeValue = this.sandbox.dom.val('#attribute-name');
+            var attributeValueName = this.sandbox.dom.val('#attribute-name');
 
             var attributes = this.options.data.attributes.attributes;
 
             var result = _.findWhere(attributes, {'attributeId': attributeId});
 
             if (result) {
-                result.value = attributeValue;
+                result.attributeValueName = attributeValueName;
                 this.sendData.action = actions.UPDATE;
             } else {
                 var newAttribute = {
                     'attributeId': attributeId,
-                    'value': attributeValue
+                    'attributeValueName': attributeValueName
                 };
                 attributes.push(newAttribute);
                 this.sendData.action = actions.ADD;
@@ -285,10 +286,11 @@ define([
             var datagridOptions = {
                 el: '#product-attribute-list',
                 instanceName: datagridInstanceName,
+                idKey: 'attributeId',
                 resultKey: 'attributes',
                 matchings: [
                     {
-                        name: 'value',
+                        name: 'attributeValueName',
                         content: this.sandbox.translate('product.attribute.value')
                     },
                     {
@@ -298,7 +300,35 @@ define([
                 ],
                 viewOptions: {
                     table: {
-                        type: 'checkbox'
+                        type: 'checkbox',
+                        badges: [
+                            {
+                                column: 'attributeValueName',
+                                callback: function(item, badge) {
+                                    if (
+                                        item.attributeValueLocale == item.fallbackLocale
+                                        && item.attributeValueLocale != this.locale
+                                    ) {
+                                        badge.title = item.attributeValueLocale;
+
+                                        return badge;
+                                    }
+                                }.bind(this)
+                            },
+                            {
+                                column: 'attributeName',
+                                callback: function(item, badge) {
+                                    if (
+                                        item.attributeLocale == item.fallbackLocale
+                                        && item.attributeLocale != this.locale
+                                    ) {
+                                        badge.title = item.attributeLocale;
+
+                                        return badge;
+                                    }
+                                }.bind(this)
+                            }
+                        ]
                     }
                 },
                 data: this.options.data.attributes

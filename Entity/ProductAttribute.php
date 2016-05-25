@@ -18,11 +18,6 @@ use Doctrine\ORM\Mapping as ORM;
 class ProductAttribute
 {
     /**
-     * @var string
-     */
-    private $value;
-
-    /**
      * @var integer
      */
     private $id;
@@ -38,31 +33,11 @@ class ProductAttribute
     private $attribute;
 
     /**
-     * Set value
-     *
-     * @param string $value
-     * @return ProductAttribute
+     * @var \Sulu\Bundle\ProductBundle\Entity\AttributeValue
      */
-    public function setValue($value)
-    {
-        $this->value = $value;
-    
-        return $this;
-    }
+    private $attributeValue;
 
     /**
-     * Get value
-     *
-     * @return string 
-     */
-    public function getValue()
-    {
-        return $this->value;
-    }
-
-    /**
-     * Get id
-     *
      * @return integer 
      */
     public function getId()
@@ -71,8 +46,6 @@ class ProductAttribute
     }
 
     /**
-     * Set product
-     *
      * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $product
      * @return ProductAttribute
      */
@@ -84,8 +57,6 @@ class ProductAttribute
     }
 
     /**
-     * Get product
-     *
      * @return \Sulu\Bundle\ProductBundle\Entity\ProductInterface
      */
     public function getProduct()
@@ -94,8 +65,6 @@ class ProductAttribute
     }
 
     /**
-     * Set attribute
-     *
      * @param \Sulu\Bundle\ProductBundle\Entity\Attribute $attribute
      * @return ProductAttribute
      */
@@ -107,12 +76,29 @@ class ProductAttribute
     }
 
     /**
-     * Get attribute
-     *
      * @return \Sulu\Bundle\ProductBundle\Entity\Attribute
      */
     public function getAttribute()
     {
         return $this->attribute;
+    }
+
+    /**
+     * @param \Sulu\Bundle\ProductBundle\Entity\AttributeValue $attributeValue
+     * @return ProductAttribute
+     */
+    public function setAttributeValue(\Sulu\Bundle\ProductBundle\Entity\AttributeValue $attributeValue)
+    {
+        $this->attributeValue = $attributeValue;
+
+        return $this;
+    }
+
+    /**
+     * @return \Sulu\Bundle\ProductBundle\Entity\AttributeValue
+     */
+    public function getAttributeValue()
+    {
+        return $this->attributeValue;
     }
 }

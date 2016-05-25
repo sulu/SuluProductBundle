@@ -12,6 +12,9 @@ namespace Sulu\Bundle\ProductBundle\Product;
 
 use DateTime;
 use Doctrine\Common\Persistence\ObjectManager;
+use Sulu\Bundle\ProductBundle\Entity\Attribute;
+use Sulu\Bundle\ProductBundle\Entity\AttributeValue;
+use Sulu\Bundle\ProductBundle\Entity\AttributeValueTranslation;
 use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Sulu\Bundle\ContactBundle\Entity\Account;
@@ -1064,11 +1067,11 @@ class ProductManager implements ProductManagerInterface
 
             // Add and change attributes.
             foreach ($data['attributes'] as $attributeData) {
-                $attributeValue = trim($attributeData['value']);
+                $attributeValueName = trim($attributeData['attributeValueName']);
                 $attributeId = $attributeData['attributeId'];
 
-                // If attribute value is empty do not add.
-                if (!$attributeValue) {
+                // If attribute value name is empty do not add.
+                if (!$attributeValueName) {
                     // If already set on product, remove.
                     if (array_key_exists($attributeId, $productAttributes)) {
                         $product->getEntity()->removeProductAttribute($productAttribute->getEntity());
@@ -1081,6 +1084,9 @@ class ProductManager implements ProductManagerInterface
                 if (!array_key_exists($attributeId, $productAttributes)) {
                     // Product attribute does not exists.
                     $productAttribute = new ProductAttribute();
+
+                    // Get the attribute.
+                    /** @var Attribute $attribute */
                     $attribute = $this->attributeRepository->find($attributeData['attributeId']);
                     if (!$attribute) {
                         throw new ProductDependencyNotFoundException(
@@ -1088,15 +1094,44 @@ class ProductManager implements ProductManagerInterface
                             $attributeData['attributeId']
                         );
                     }
+
+                    // Create new AttributeValue.
+                    $attributeValue = new AttributeValue();
+                    $attributeValue->setAttribute($attribute);
+                    $this->em->persist($attributeValue);
+
+                    // Create new AttributeValueTranslation with given name.
+                    $attributeValueTranslation = new AttributeValueTranslation();
+                    $attributeValueTranslation->setAttributeValue($attributeValue);
+                    $attributeValueTranslation->setLocale($locale);
+                    $attributeValueTranslation->setName($attributeValueName);
+                    $this->em->persist($attributeValueTranslation);
+
+                    // Add the new created AttributeValueTranslation to the AttributeValue.
+                    $attributeValue->addTranslation($attributeValueTranslation);
+
+                    // Add the new created AttributeValue to the Attribute.
+                    $attribute->addValue($attributeValue);
+
+                    // Combine all information in the main object (ProductAttribute).
                     $productAttribute->setAttribute($attribute);
-                    $productAttribute->setValue($attributeValue);
+                    $productAttribute->setAttributeValue($attributeValue);
                     $productAttribute->setProduct($product->getEntity());
+
+                    // Now add the new created ProductAttribute to the product.
                     $product->addProductAttribute($productAttribute);
+
                     $this->em->persist($productAttribute);
                 } else {
-                    // Product attribute exists.
-                    $productAttribute = $productAttributes[$attributeId]->getEntity();
-                    $productAttribute->setValue($attributeValue);
+                    // Attribute was already added to this product.
+                    /** @var Attribute $attribute */
+                    $attribute = $this->attributeRepository->find($attributeData['attributeId']);
+                    if (!$attribute) {
+                        throw new ProductDependencyNotFoundException(
+                            self::$attributeEntityName,
+                            $attributeData['attributeId']
+                        );
+                    }
                 }
             }
         }

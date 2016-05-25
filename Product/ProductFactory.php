@@ -29,12 +29,24 @@ class ProductFactory implements ProductFactoryInterface
     protected $priceFormatter;
 
     /**
-     * @param AccountManager $accountManager
+     * @var ProductLocaleManager
      */
-    public function __construct(AccountManager $accountManager = null, PriceFormatter $priceFormatter)
+    protected $productLocaleManager;
+
+    /**
+     * @param AccountManager $accountManager
+     * @param PriceFormatter $priceFormatter
+     * @param ProductLocaleManager $productLocaleManager
+     */
+    public function __construct(
+        AccountManager $accountManager = null,
+        PriceFormatter $priceFormatter,
+        ProductLocaleManager $productLocaleManager
+    )
     {
         $this->accountManager = $accountManager;
         $this->priceFormatter = $priceFormatter;
+        $this->productLocaleManager = $productLocaleManager;
     }
 
     /**
@@ -50,6 +62,12 @@ class ProductFactory implements ProductFactoryInterface
      */
     public function createApiEntity(ProductInterface $product, $locale)
     {
-        return new ApiProduct($product, $locale, $this->priceFormatter, $this->accountManager);
+        return new ApiProduct(
+            $product,
+            $locale,
+            $this->priceFormatter,
+            $this->productLocaleManager,
+            $this->accountManager
+        );
     }
 }

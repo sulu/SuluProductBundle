@@ -31,20 +31,29 @@ use Sulu\Bundle\ProductBundle\Entity\AttributeValue as AttributeValueEntity;
 class AttributeValue extends ApiWrapper
 {
     /**
-     * @param Entity $attributeValue The attributeValue to wrap
-     * @param string $locale The locale of this attributeValue
+     * @var string $fallbackLocale
      */
-    public function __construct(AttributeValueEntity $entity, $locale)
+    protected $fallbackLocale;
+
+    /**
+     * @param AttributeValueEntity $entity The attributeValue to wrap
+     * @param string $locale The locale of this attributeValue
+     * @param string $fallbackLocale
+     */
+    public function __construct(AttributeValueEntity $entity, $locale, $fallbackLocale)
     {
         $this->entity = $entity;
         $this->locale = $locale;
+        $this->fallbackLocale = $fallbackLocale;
     }
 
     /**
      * Returns the id of the attributeValue
+     *
      * @return int
+     *
      * @VirtualProperty
-     * @SerializedName("id")
+     * @SerializedName("attributeValueId")
      */
     public function getId()
     {
@@ -52,8 +61,10 @@ class AttributeValue extends ApiWrapper
     }
 
     /**
-     * Returns the name of the attributeValue
+     * Returns the name of the attributeValue.
+     *
      * @return string The name of the attributeValue
+     *
      * @VirtualProperty
      * @SerializedName("name")
      */
@@ -63,7 +74,8 @@ class AttributeValue extends ApiWrapper
     }
 
     /**
-     * Sets the name of the attributeValue
+     * Sets the name of the attributeValue.
+     *
      * @param string $name The name of the attributeValue
      */
     public function setName($name)
@@ -72,7 +84,8 @@ class AttributeValue extends ApiWrapper
     }
 
     /**
-     * Sets the attribute
+     * Sets the attribute.
+     *
      * @param Attribute $attribute
      */
     public function setAttribute($attribute)
@@ -81,45 +94,46 @@ class AttributeValue extends ApiWrapper
     }
 
     /**
-     * Gets the selected state of the attributeValue
-     * @param $selected The selected state of the attributeValue
-     * @VirtualProperty
-     * @SerializedName("selected")
-     */
-    public function getSelected()
-    {
-        return $this->entity->getSelected();
-    }
-
-    /**
-     * Sets the selected state of the attributeValue
-     * @param $selected The selected state of the attributeValue
-     */
-    public function setSelected($selected)
-    {
-        if (!$selected) {
-            $selected = false;
-        }
-        $this->entity->setSelected($selected);
-    }
-
-    /**
-     * Returns the translation with the given locale
-     * @param string $locale The locale to return
+     * Returns the translation with the given locale.
+     *
      * @return AttributeValueTranslation
      */
     public function getTranslation()
     {
-        foreach ($this->entity->translations as $translation) {
-            if ($translation->getLocale() == $this->locale) {
-                return $translation;
+        $attributeValueTranslation = $this->getTranslationByLocale($this->locale);
+
+        if (!$attributeValueTranslation) {
+            $attributeValueTranslation = $this->getTranslationByLocale($this->fallbackLocale);
+        }
+
+        if (!$attributeValueTranslation) {
+            $attributeValueTranslation = new AttributeValueTranslation();
+            $attributeValueTranslation->setLocale($this->locale);
+            $attributeValueTranslation->setAttribute($this->entity);
+
+            $this->entity->addTranslation($attributeValueTranslation);
+        }
+
+        return $attributeValueTranslation;
+    }
+
+    /**
+     * Returns the translation with the given locale.
+     *
+     * @param string $locale
+     *
+     * @return AttributeTranslation
+     */
+    private function getTranslationByLocale($locale)
+    {
+        $attributeValueTranslation = null;
+
+        foreach ($this->entity->getTranslations() as $translation) {
+            if ($translation->getLocale() == $locale) {
+                $attributeValueTranslation = $translation;
             }
         }
-        $translation = new AttributeValueTranslation();
-        $translation->setLocale($this->locale);
-        $translation->setAttributeValue($this->entity);
 
-        $this->entity->addTranslation($translation);
-        return $translation;
+        return $attributeValueTranslation;
     }
 }

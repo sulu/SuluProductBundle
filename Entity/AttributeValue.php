@@ -10,11 +10,6 @@ use Doctrine\ORM\Mapping as ORM;
 class AttributeValue
 {
     /**
-     * @var boolean
-     */
-    private $selected;
-
-    /**
      * @var integer
      */
     private $id;
@@ -35,29 +30,6 @@ class AttributeValue
     public function __construct()
     {
         $this->translations = new \Doctrine\Common\Collections\ArrayCollection();
-    }
-    
-    /**
-     * Set selected
-     *
-     * @param boolean $selected
-     * @return AttributeValue
-     */
-    public function setSelected($selected)
-    {
-        $this->selected = $selected;
-    
-        return $this;
-    }
-
-    /**
-     * Get selected
-     *
-     * @return boolean 
-     */
-    public function getSelected()
-    {
-        return $this->selected;
     }
 
     /**

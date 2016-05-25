@@ -21,6 +21,8 @@ use JMS\Serializer\Annotation\Groups;
 use Sulu\Bundle\ProductBundle\Entity\Attribute as AttributeEntity;
 use Sulu\Bundle\ProductBundle\Entity\AttributeTranslation;
 use Sulu\Bundle\ProductBundle\Api\AttributeType;
+use Sulu\Bundle\ProductBundle\Entity\AttributeValue as AttributeValueEntity;
+use Sulu\Bundle\ProductBundle\Api\AttributeValue;
 use Sulu\Component\Rest\ApiWrapper;
 use Sulu\Component\Security\Authentication\UserInterface;
 
@@ -34,13 +36,20 @@ use Sulu\Component\Security\Authentication\UserInterface;
 class Attribute extends ApiWrapper
 {
     /**
+     * @var string $fallbackLocale
+     */
+    protected $fallbackLocale;
+
+    /**
      * @param AttributeEntity $entity
      * @param string $locale
+     * @param string $fallbackLocale
      */
-    public function __construct(AttributeEntity $entity, $locale)
+    public function __construct(AttributeEntity $entity, $locale, $fallbackLocale)
     {
         $this->entity = $entity;
         $this->locale = $locale;
+        $this->fallbackLocale = $fallbackLocale;
     }
 
     /**
@@ -168,10 +177,10 @@ class Attribute extends ApiWrapper
     /**
      * Add value
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\AttributeValue $value
+     * @param AttributeValueEntity $value
      * @return Attribute
      */
-    public function addValue(Sulu\Bundle\ProductBundle\Entity\AttributeValue $value)
+    public function addValue(AttributeValueEntity $value)
     {
         $this->entity->addValue($value);
         return $this;
@@ -188,11 +197,10 @@ class Attribute extends ApiWrapper
      */
     public function getTranslation()
     {
-        $attributeTranslation = null;
-        foreach ($this->entity->getTranslations() as $translation) {
-            if ($translation->getLocale() == $this->locale) {
-                $attributeTranslation = $translation;
-            }
+        $attributeTranslation = $this->getTranslationByLocale($this->locale);
+
+        if (!$attributeTranslation) {
+            $attributeTranslation = $this->getTranslationByLocale($this->fallbackLocale);
         }
 
         if (!$attributeTranslation) {
@@ -201,6 +209,26 @@ class Attribute extends ApiWrapper
             $attributeTranslation->setAttribute($this->entity);
 
             $this->entity->addTranslation($attributeTranslation);
+        }
+
+        return $attributeTranslation;
+    }
+
+    /**
+     * Returns the translation with the given locale.
+     *
+     * @param string $locale
+     *
+     * @return AttributeTranslation
+     */
+    private function getTranslationByLocale($locale)
+    {
+        $attributeTranslation = null;
+
+        foreach ($this->entity->getTranslations() as $translation) {
+            if ($translation->getLocale() == $locale) {
+                $attributeTranslation = $translation;
+            }
         }
 
         return $attributeTranslation;
