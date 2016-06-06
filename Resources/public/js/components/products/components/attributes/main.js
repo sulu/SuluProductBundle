@@ -59,21 +59,20 @@ define([
                 // Select action
                 if (data.action === actions.ADD) {
                     // ADD RECORD IN DATAGRID
-                    var result = _.findWhere(attributes, {'attributeId': data.attributeId});
+                    var result = _.findWhere(attributes, {'attributeId': data.attributeIdAdded});
                     this.sandbox.emit('husky.datagrid.' + datagridInstanceName + '.record.add', {
-                        id: result.id,
                         attributeId: result.attributeId,
-                        attributeValueName: result.attributeValueName,
-                        attributeName: result.attributeName
+                        attributeName: result.attributeName,
+                        attributeValueName: result.attributeValueName
                     });
                 } else if (data.action === actions.DELETE) {
                     // DELETE RECORDs IN DATAGRID
-                    $.each(data.deleteIds, function(key, id) {
+                    $.each(data.attributeIdsDeleted, function(key, id) {
                         this.sandbox.emit('husky.datagrid.' + datagridInstanceName + '.record.remove', id);
                     }.bind(this));
                 } else if (data.action === actions.UPDATE) {
-                    // UPDATE RECORD IN DATAGRID
-                    this.sandbox.emit('husky.datagrid.' + datagridInstanceName + '.records.change', attributes);
+                    // UPDATE DATAGRID WITH RECEIVED RECORDS
+                    this.sandbox.emit('husky.datagrid.' + datagridInstanceName + '.records.set', attributes);
                 }
 
                 setHeaderBar.call(this, true);
@@ -245,7 +244,7 @@ define([
                 this.sendData.action = actions.ADD;
             }
 
-            this.sendData.attributeId = attributeId;
+            this.sendData.attributeIdAdded = attributeId;
             this.sendData.attributes = attributes;
             this.sendData.status = this.status;
             this.sendData.id = this.options.data.attributes.id;
@@ -261,15 +260,15 @@ define([
 
                 var attributes = this.options.data.attributes.attributes;
                 this.sendData = {};
-                var deleteIds = [];
+                var attributeIdsDeleted = [];
 
                 _.each(ids, function(value, key, list) {
-                    var result = _.findWhere(attributes, {'id': value});
+                    var result = _.findWhere(attributes, {'attributeId': value});
                     attributes = _.without(attributes, result);
-                    deleteIds.push(value);
+                    attributeIdsDeleted.push(value);
                 });
 
-                this.sendData.deleteIds = deleteIds;
+                this.sendData.attributeIdsDeleted = attributeIdsDeleted;
                 this.sendData.attributes = attributes;
                 this.sendData.status = this.status;
                 this.sendData.id = this.options.data.id;
@@ -290,12 +289,12 @@ define([
                 resultKey: 'attributes',
                 matchings: [
                     {
-                        name: 'attributeValueName',
-                        content: this.sandbox.translate('product.attribute.value')
-                    },
-                    {
                         name: 'attributeName',
                         content: this.sandbox.translate('product.attribute.name')
+                    },
+                    {
+                        name: 'attributeValueName',
+                        content: this.sandbox.translate('product.attribute.value')
                     }
                 ],
                 viewOptions: {
@@ -303,29 +302,35 @@ define([
                         type: 'checkbox',
                         badges: [
                             {
-                                column: 'attributeValueName',
-                                callback: function(item, badge) {
-                                    if (
-                                        item.attributeValueLocale == item.fallbackLocale
-                                        && item.attributeValueLocale != this.locale
-                                    ) {
-                                        badge.title = item.attributeValueLocale;
-
-                                        return badge;
-                                    }
-                                }.bind(this)
-                            },
-                            {
                                 column: 'attributeName',
                                 callback: function(item, badge) {
                                     if (
-                                        item.attributeLocale == item.fallbackLocale
-                                        && item.attributeLocale != this.locale
+                                        item.attributeLocale
+                                        && item.attributeLocale == item.fallbackLocale
+                                        && item.attributeLocale != this.options.locale
                                     ) {
                                         badge.title = item.attributeLocale;
 
                                         return badge;
                                     }
+
+                                    return false;
+                                }.bind(this)
+                            },
+                            {
+                                column: 'attributeValueName',
+                                callback: function(item, badge) {
+                                    if (
+                                        item.attributeValueLocale
+                                        && item.attributeValueLocale == item.fallbackLocale
+                                        && item.attributeValueLocale != this.options.locale
+                                    ) {
+                                        badge.title = item.attributeValueLocale;
+
+                                        return badge;
+                                    }
+
+                                    return false;
                                 }.bind(this)
                             }
                         ]

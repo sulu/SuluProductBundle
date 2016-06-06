@@ -1051,90 +1051,8 @@ class ProductManager implements ProductManagerInterface
             }
         }
 
-        if (isset($data['attributes'])) {
-            $attributeIds = [];
-            foreach ($data['attributes'] as $attributeData) {
-                if (isset($attributeData['attributeId'])) {
-                    $attributeIds[] = $attributeData['attributeId'];
-                }
-            }
-            // Create local array of attributes.
-            $productAttributes = [];
-
-            foreach ($product->getAttributes() as $productAttribute) {
-                $productAttributes[$productAttribute->getAttribute()->getId()] = $productAttribute;
-            }
-
-            // Add and change attributes.
-            foreach ($data['attributes'] as $attributeData) {
-                $attributeValueName = trim($attributeData['attributeValueName']);
-                $attributeId = $attributeData['attributeId'];
-
-                // If attribute value name is empty do not add.
-                if (!$attributeValueName) {
-                    // If already set on product, remove.
-                    if (array_key_exists($attributeId, $productAttributes)) {
-                        $product->getEntity()->removeProductAttribute($productAttribute->getEntity());
-                        $this->em->remove($productAttribute->getEntity());
-                    }
-
-                    continue;
-                }
-
-                if (!array_key_exists($attributeId, $productAttributes)) {
-                    // Product attribute does not exists.
-                    $productAttribute = new ProductAttribute();
-
-                    // Get the attribute.
-                    /** @var Attribute $attribute */
-                    $attribute = $this->attributeRepository->find($attributeData['attributeId']);
-                    if (!$attribute) {
-                        throw new ProductDependencyNotFoundException(
-                            self::$attributeEntityName,
-                            $attributeData['attributeId']
-                        );
-                    }
-
-                    // Create new AttributeValue.
-                    $attributeValue = new AttributeValue();
-                    $attributeValue->setAttribute($attribute);
-                    $this->em->persist($attributeValue);
-
-                    // Create new AttributeValueTranslation with given name.
-                    $attributeValueTranslation = new AttributeValueTranslation();
-                    $attributeValueTranslation->setAttributeValue($attributeValue);
-                    $attributeValueTranslation->setLocale($locale);
-                    $attributeValueTranslation->setName($attributeValueName);
-                    $this->em->persist($attributeValueTranslation);
-
-                    // Add the new created AttributeValueTranslation to the AttributeValue.
-                    $attributeValue->addTranslation($attributeValueTranslation);
-
-                    // Add the new created AttributeValue to the Attribute.
-                    $attribute->addValue($attributeValue);
-
-                    // Combine all information in the main object (ProductAttribute).
-                    $productAttribute->setAttribute($attribute);
-                    $productAttribute->setAttributeValue($attributeValue);
-                    $productAttribute->setProduct($product->getEntity());
-
-                    // Now add the new created ProductAttribute to the product.
-                    $product->addProductAttribute($productAttribute);
-
-                    $this->em->persist($productAttribute);
-                } else {
-                    // Attribute was already added to this product.
-                    /** @var Attribute $attribute */
-                    $attribute = $this->attributeRepository->find($attributeData['attributeId']);
-                    if (!$attribute) {
-                        throw new ProductDependencyNotFoundException(
-                            self::$attributeEntityName,
-                            $attributeData['attributeId']
-                        );
-                    }
-                }
-            }
-        }
+        // Process given attributes.
+        $this->processAttributes($data, $product->getEntity(), $locale);
 
         if (array_key_exists('specialPrices', $data)) {
             $specialPricesData = $data['specialPrices'];
@@ -1949,6 +1867,223 @@ class ProductManager implements ProductManagerInterface
         $this->checkDataSet($data, 'type', $create) && $this->checkDataSet($data['type'], 'id', $create);
 
         $this->checkDataSet($data, 'status', $create) && $this->checkDataSet($data['status'], 'id', $create);
+    }
+
+    /**
+     * Processes attributes of data array.
+     *
+     * @param array $data
+     * @param ProductInterface $product
+     * @param string $locale
+     *
+     * @throws ProductDependencyNotFoundException
+     */
+    protected function processAttributes(array $data, ProductInterface $product, $locale)
+    {
+        if (isset($data['attributes'])) {
+            $attributeIds = [];
+            foreach ($data['attributes'] as $attributeData) {
+                if (isset($attributeData['attributeId'])) {
+                    $attributeIds[] = $attributeData['attributeId'];
+                }
+            }
+
+            // Create local array of all currently assigned attributes of product.
+            $productAttributes = [];
+            foreach ($product->getProductAttributes() as $productAttribute) {
+                $productAttributes[$productAttribute->getAttribute()->getId()] = $productAttribute;
+            }
+
+            // Save all product attribute ids which are given in the request.
+            $productAttributeIdsInRequest = [];
+
+            // Add and change attributes.
+            foreach ($data['attributes'] as $attributeData) {
+                $attributeDataValueName = trim($attributeData['attributeValueName']);
+                $attributeId = $attributeData['attributeId'];
+                $productAttributeIdsInRequest[$attributeId] = $attributeDataValueName;
+
+                // If attribute value is empty do not add.
+                if (!$attributeDataValueName) {
+                    // If already set on product, remove attribute value translation.
+                    if (array_key_exists($attributeId, $productAttributes)) {
+                        /** @var ProductAttribute $productAttribute */
+                        $productAttribute = $productAttributes[$attributeId];
+
+                        // Remove attribute value translation from attribute value.
+                        $this->removeAttributeValueTranslation($productAttribute->getAttributeValue(), $locale);
+
+                        // If no more attribute value translation exists,
+                        // remove the whole product attribute from the product.
+                        if ($productAttribute->getAttributeValue()->getTranslations()->isEmpty()) {
+                            $product->removeProductAttribute($productAttribute);
+                            $this->em->remove($productAttribute);
+                        }
+                    }
+                    continue;
+                }
+
+                // Product attribute does not exists.
+                if (!array_key_exists($attributeId, $productAttributes)) {
+                    $attribute = $this->retrieveAttributeById($attributeId);
+                    // Create new attribute value with translation.
+                    $attributeValue = $this->createAttributeValue($attribute, $attributeDataValueName, $locale);
+                    // Create new product attribute.
+                    $this->createProductAttribute($attribute, $product, $attributeValue);
+                } else {
+                    // Product attribute exists.
+                    /** @var ProductAttribute $productAttribute */
+                    $productAttribute = $productAttributes[$attributeId];
+                    $attributeValue = $productAttribute->getAttributeValue();
+                    // Create translation in current locale.
+                    $this->createOrSetAttributeValueTranslation($attributeValue, $attributeDataValueName, $locale);
+                }
+            }
+
+            // Delete attributes.
+            foreach ($productAttributes as $productAttribute) {
+                if (!array_key_exists($productAttribute->getAttribute()->getId(), $productAttributeIdsInRequest)) {
+                    // Remove all attribute value translations from attribute value.
+                    $this->removeAllAttributeValueTranslations($productAttribute->getAttributeValue());
+
+                    // Remove attribute from product.
+                    $product->removeProductAttribute($productAttribute);
+                    $this->em->remove($productAttribute);
+                }
+            }
+        }
+    }
+
+    /**
+     * Finds an attribute with the given id. Else throws an Exception.
+     *
+     * @param int $attributeId
+     *
+     * @throws ProductDependencyNotFoundException
+     *
+     * @return Attribute
+     */
+    private function retrieveAttributeById($attributeId)
+    {
+        $attribute = $this->attributeRepository->find($attributeId);
+        if (!$attribute) {
+            throw new ProductDependencyNotFoundException(
+                self::$attributeEntityName,
+                $attributeId
+            );
+        }
+
+        return $attribute;
+    }
+
+
+    /**
+     * Creates a new ProductAttribute relation.
+     *
+     * @param Attribute $attribute
+     * @param ProductInterface $product
+     * @param AttributeValue $attributeValue
+     *
+     * @return ProductAttribute
+     */
+    private function createProductAttribute(
+        Attribute $attribute,
+        ProductInterface $product,
+        AttributeValue $attributeValue
+    ) {
+        $productAttribute = new ProductAttribute();
+        $this->em->persist($productAttribute);
+        $productAttribute->setAttribute($attribute);
+        $productAttribute->setProduct($product);
+        $productAttribute->setAttributeValue($attributeValue);
+        $product->addProductAttribute($productAttribute);
+
+        return $productAttribute;
+    }
+
+    /**
+     * Creates a new attribute value and its translation in the specified locale.
+     *
+     * @param Attribute $attribute
+     * @param string $value
+     * @param string $locale
+     *
+     * @return AttributeValue
+     */
+    private function createAttributeValue(Attribute $attribute, $value, $locale)
+    {
+        $attributeValue = new AttributeValue();
+        $this->em->persist($attributeValue);
+        $attributeValue->setAttribute($attribute);
+        $attribute->addValue($attributeValue);
+        $this->createOrSetAttributeValueTranslation($attributeValue, $value, $locale);
+
+        return $attributeValue;
+    }
+
+    /**
+     * Checks if AttributeValue already contains translation in given locale or creates a new one.
+     *
+     * @param AttributeValue $attributeValue
+     * @param string $value
+     * @param string $locale
+     *
+     * @return AttributeValueTranslation
+     */
+    private function createOrSetAttributeValueTranslation(AttributeValue $attributeValue, $value, $locale)
+    {
+        // Check if translation already exists for given locale.
+        $attributeValueTranslation = null;
+        /** @var AttributeValueTranslation $translation */
+        foreach ($attributeValue->getTranslations() as $translation) {
+            if ($translation->getLocale() === $locale) {
+                $attributeValueTranslation = $translation;
+            }
+        }
+        if (!$attributeValueTranslation) {
+            // Create a new attribute value translation.
+            $attributeValueTranslation = new AttributeValueTranslation();
+            $this->em->persist($attributeValueTranslation);
+            $attributeValueTranslation->setLocale($locale);
+            $attributeValueTranslation->setAttributeValue($attributeValue);
+            $attributeValue->addTranslation($attributeValueTranslation);
+        }
+        $attributeValueTranslation->setName($value);
+
+        return $attributeValueTranslation;
+    }
+
+    /**
+     * Removes attribute value translation in given locale from given attribute.
+     *
+     * @param AttributeValue $attributeValue
+     * @param $locale
+     */
+    private function removeAttributeValueTranslation(AttributeValue $attributeValue, $locale)
+    {
+        // Check if translation already exists for given locale.
+        /** @var AttributeValueTranslation $attributeValueTranslation */
+        foreach ($attributeValue->getTranslations() as $attributeValueTranslation) {
+            if ($attributeValueTranslation->getLocale() === $locale) {
+                $attributeValue->removeTranslation($attributeValueTranslation);
+                $this->em->remove($attributeValueTranslation);
+            }
+        }
+    }
+
+    /**
+     * Removes all attribute value translations from given attribute.
+     *
+     * @param AttributeValue $attributeValue
+     */
+    private function removeAllAttributeValueTranslations(AttributeValue $attributeValue)
+    {
+        // Check if translation already exists for given locale.
+        /** @var AttributeValueTranslation $attributeValueTranslation */
+        foreach ($attributeValue->getTranslations() as $attributeValueTranslation) {
+            $attributeValue->removeTranslation($attributeValueTranslation);
+            $this->em->remove($attributeValueTranslation);
+        }
     }
 
     /**

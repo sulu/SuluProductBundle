@@ -21,12 +21,14 @@ class ProductWithVariantsContentNavigationProvider implements ContentNavigationP
     public function getNavigationItems(array $options = array())
     {
         $details = new ContentNavigationItem('content-navigation.product.general');
+        $details->setId('details');
         $details->setAction('details');
         $details->setPosition(10);
         $details->setComponent('products/components/detail-form@suluproduct');
         $details->setResetStore(false);
 
         $variants = new ContentNavigationItem('content-navigation.product.variants');
+        $variants->setId('variants');
         $variants->setAction('variants');
         $variants->setPosition(20);
         $variants->setComponent('products/components/variants-list@suluproduct');
@@ -34,6 +36,7 @@ class ProductWithVariantsContentNavigationProvider implements ContentNavigationP
         $variants->setResetStore(false);
 
         $attributes = new ContentNavigationItem('content-navigation.product.attributes');
+        $attributes->setId('attributes');
         $attributes->setAction('attributes');
         $attributes->setPosition(30);
         $attributes->setComponent('products/components/attributes@suluproduct');

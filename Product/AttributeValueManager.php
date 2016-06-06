@@ -95,14 +95,6 @@ class AttributeValueManager implements AttributeValueManagerInterface
             )
         );
 
-        $fieldDescriptors['selected'] = new DoctrineFieldDescriptor(
-            'selected',
-            'selected',
-            self::$attributeValueEntityName,
-            'product.attribute.value.selected',
-            array()
-        );
-
         $fieldDescriptors['attribute_id'] = new DoctrineFieldDescriptor(
             'id',
             'attribute_id',

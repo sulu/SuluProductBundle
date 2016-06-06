@@ -184,7 +184,7 @@ class AttributeManager implements AttributeManagerInterface
     public function save(array $data, $locale, $userId, $id = null)
     {
         if ($id) {
-            $attribute = $this->attributeRepository->findByIdAndLocale($id, $locale);
+            $attribute = $this->attributeRepository->findById($id);
             if (!$attribute) {
                 throw new AttributeNotFoundException($id);
             }

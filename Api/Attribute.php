@@ -83,7 +83,7 @@ class Attribute extends ApiWrapper
      */
     public function setName($name)
     {
-        $this->getTranslation()->setName($name);
+        $this->getTranslation(false)->setName($name);
         return $this;
     }
 
@@ -187,19 +187,17 @@ class Attribute extends ApiWrapper
     }
 
     /**
-     * Returns the translation with the given locale
-     * @param string $locale The locale to return
+     * Returns the translation
+     *
+     * @param bool $withFallback
+     *
      * @return AttributeTranslation
      */
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getTranslation()
+    public function getTranslation($withFallback = true)
     {
         $attributeTranslation = $this->getTranslationByLocale($this->locale);
 
-        if (!$attributeTranslation) {
+        if (!$attributeTranslation && $withFallback) {
             $attributeTranslation = $this->getTranslationByLocale($this->fallbackLocale);
         }
 

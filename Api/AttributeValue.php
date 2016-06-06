@@ -109,7 +109,7 @@ class AttributeValue extends ApiWrapper
         if (!$attributeValueTranslation) {
             $attributeValueTranslation = new AttributeValueTranslation();
             $attributeValueTranslation->setLocale($this->locale);
-            $attributeValueTranslation->setAttribute($this->entity);
+            $attributeValueTranslation->setAttributeValue($this->entity);
 
             $this->entity->addTranslation($attributeValueTranslation);
         }
@@ -122,7 +122,7 @@ class AttributeValue extends ApiWrapper
      *
      * @param string $locale
      *
-     * @return AttributeTranslation
+     * @return AttributeValueTranslation
      */
     private function getTranslationByLocale($locale)
     {

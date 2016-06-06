@@ -21,12 +21,14 @@ class ProductAddonContentNavigationProvider implements ContentNavigationProvider
     public function getNavigationItems(array $options = [])
     {
         $details = new ContentNavigationItem('content-navigation.product.general');
+        $details->setId('details');
         $details->setAction('details');
         $details->setPosition(10);
         $details->setComponent('products/components/detail-form@suluproduct');
         $details->setResetStore(false);
 
         $attributes = new ContentNavigationItem('content-navigation.product.attributes');
+        $attributes->setId('attributes');
         $attributes->setAction('attributes');
         $attributes->setPosition(20);
         $attributes->setComponent('products/components/attributes@suluproduct');
