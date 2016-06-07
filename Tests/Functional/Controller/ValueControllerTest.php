@@ -120,7 +120,7 @@ class ValueControllerTest extends SuluTestCase
 
     public function setUp()
     {
-        $this->em = $this->db('ORM')->getOm();
+        $this->em = $this->getEntityManager();
         $this->purgeDatabase();
         $this->setUpTestData();
         $this->client = $this->createAuthenticatedClient();
@@ -155,40 +155,37 @@ class ValueControllerTest extends SuluTestCase
         $this->attributeEntity1->setCreated(new DateTime());
         $this->attributeEntity1->setChanged(new DateTime());
         $this->attributeEntity1->setType($this->attributeType4);
-        $this->attribute1 = new Attribute($this->attributeEntity1, 'en');
+        $this->attribute1 = new Attribute($this->attributeEntity1, 'en', 'en');
         $this->attribute1->setName('attribute-1');
 
         $this->attributeEntity2 = new AttributeEntity();
         $this->attributeEntity2->setCreated(new DateTime());
         $this->attributeEntity2->setChanged(new DateTime());
         $this->attributeEntity2->setType($this->attributeType2);
-        $this->attribute2 = new Attribute($this->attributeEntity2, 'en');
+        $this->attribute2 = new Attribute($this->attributeEntity2, 'en', 'en');
         $this->attribute2->setName('attribute-2');
 
         $this->attributeEntity3 = new AttributeEntity();
         $this->attributeEntity3->setCreated(new DateTime());
         $this->attributeEntity3->setChanged(new DateTime());
         $this->attributeEntity3->setType($this->attributeType3);
-        $this->attribute3 = new Attribute($this->attributeEntity3, 'en');
+        $this->attribute3 = new Attribute($this->attributeEntity3, 'en', 'en');
         $this->attribute3->setName('attribute-3');
 
         // **** AttributeValues
         $this->attributeValueEntity1_1 = new AttributeValueEntity();
-        $this->attributeValueEntity1_1->setSelected(true);
         $this->attributeValueEntity1_1->setAttribute($this->attributeEntity2);
-        $this->attributeValue1_1 = new AttributeValue($this->attributeValueEntity1_1, 'en');
+        $this->attributeValue1_1 = new AttributeValue($this->attributeValueEntity1_1, 'en', 'en');
         $this->attributeValue1_1->setName('Value1_1');
 
         $this->attributeValueEntity1_2 = new AttributeValueEntity();
-        $this->attributeValueEntity1_2->setSelected(false);
         $this->attributeValueEntity1_2->setAttribute($this->attributeEntity2);
-        $this->attributeValue1_2 = new AttributeValue($this->attributeValueEntity1_2, 'en');
+        $this->attributeValue1_2 = new AttributeValue($this->attributeValueEntity1_2, 'en', 'en');
         $this->attributeValue1_2->setName('Value1_2');
 
         $this->attributeValueEntity2_1 = new AttributeValueEntity();
-        $this->attributeValueEntity2_1->setSelected(false);
         $this->attributeValueEntity2_1->setAttribute($this->attributeEntity3);
-        $this->attributeValue2_1 = new AttributeValue($this->attributeValueEntity2_1, 'en');
+        $this->attributeValue2_1 = new AttributeValue($this->attributeValueEntity2_1, 'en', 'en');
         $this->attributeValue2_1->setName('Value2_1');
 
         $this->em->persist($this->attributeType1);
@@ -219,7 +216,6 @@ class ValueControllerTest extends SuluTestCase
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
 
         $this->assertEquals('Value1_1', $response->name);
-        $this->assertTrue($response->selected);
     }
 
     /**
@@ -275,11 +271,9 @@ class ValueControllerTest extends SuluTestCase
 
         $item1 = $items[0];
         $this->assertEquals('Value1_1', $item1->name);
-        $this->assertTrue($item1->selected);
 
         $item2 = $items[1];
         $this->assertEquals('Value1_2', $item2->name);
-        $this->assertFalse($item2->selected);
     }
 
     /**
@@ -312,49 +306,15 @@ class ValueControllerTest extends SuluTestCase
 
         $item1 = $items[0];
         $this->assertEquals('Value1_1', $item1->name);
-        $this->assertTrue($item1->selected);
 
         $item2 = $items[1];
         $this->assertEquals('Value1_2', $item2->name);
-        $this->assertFalse($item2->selected);
     }
 
     /**
      * Post (create) and assign a new attribute value to an attribute
      */
     public function testPost()
-    {
-        $data = array(
-            'name' => 'New value for attribute 2',
-            'selected' => true
-        );
-
-        $url = '/api/attributes/' .
-            $this->attribute2->getId() .
-            '/values';
-
-        $this->client->request('POST', $url, $data);
-        $response = json_decode($this->client->getResponse()->getContent());
-        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
-        $this->assertEquals('New value for attribute 2', $response->name);
-        $this->assertTrue($response->selected);
-
-        // Get the new created value
-        $url = '/api/attributes/' .
-            $this->attribute2->getId() .
-            '/values/' .
-            $response->id;
-        $this->client->request('GET', $url);
-        $response = json_decode($this->client->getResponse()->getContent());
-        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
-        $this->assertEquals('New value for attribute 2', $response->name);
-        $this->assertTrue($response->selected);
-    }
-
-    /**
-     * Post with a missing attribute value selected defaults to false
-     */
-    public function testMissingSelectedData()
     {
         $data = array(
             'name' => 'New value for attribute 2'
@@ -368,18 +328,16 @@ class ValueControllerTest extends SuluTestCase
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
         $this->assertEquals('New value for attribute 2', $response->name);
-        $this->assertFalse($response->selected);
 
         // Get the new created value
         $url = '/api/attributes/' .
             $this->attribute2->getId() .
             '/values/' .
-            $response->id;
+            $response->attributeValueId;
         $this->client->request('GET', $url);
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
         $this->assertEquals('New value for attribute 2', $response->name);
-        $this->assertFalse($response->selected);
     }
 
     /**
@@ -387,9 +345,7 @@ class ValueControllerTest extends SuluTestCase
      */
     public function testPostMissingNameData()
     {
-        $data = array(
-            'selected' => true
-        );
+        $data = [];
 
         $url = '/api/attributes/' .
             $this->attribute2->getId() .
@@ -407,13 +363,12 @@ class ValueControllerTest extends SuluTestCase
     }
 
     /**
-     * Put new name and selected to change the appropriate properties on an existing attribute value
+     * Put new name to change the appropriate properties on an existing attribute value
      */
     public function testPut()
     {
         $data = array(
-            'name' => 'New changed value for attribute 2',
-            'selected' => false
+            'name' => 'New changed value for attribute 2'
         );
 
         $url = '/api/attributes/' .
@@ -425,7 +380,6 @@ class ValueControllerTest extends SuluTestCase
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
         $this->assertEquals('New changed value for attribute 2', $response->name);
-        $this->assertFalse($response->selected);
 
         // Get the new created value
         $url = '/api/attributes/' .
@@ -436,7 +390,6 @@ class ValueControllerTest extends SuluTestCase
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
         $this->assertEquals('New changed value for attribute 2', $response->name);
-        $this->assertFalse($response->selected);
     }
 
     /**
@@ -445,8 +398,7 @@ class ValueControllerTest extends SuluTestCase
     public function testPutNotExisting()
     {
         $data = array(
-            'name' => 'New changed value for attribute 2',
-            'selected' => false
+            'name' => 'New changed value for attribute 2'
         );
 
         $url = '/api/attributes/' .
@@ -482,7 +434,6 @@ class ValueControllerTest extends SuluTestCase
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
         $this->assertEquals('New changed changed value for attribute 2', $response->name);
-        $this->assertFalse($response->selected);
 
         // Get the new created value
         $url = '/api/attributes/' .
@@ -493,39 +444,6 @@ class ValueControllerTest extends SuluTestCase
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
         $this->assertEquals('New changed changed value for attribute 2', $response->name);
-        $this->assertFalse($response->selected);
-    }
-
-    /**
-     * Put a new selected does change the selected attribute of the attribute value for the given id
-     */
-    public function testPutNewSelected()
-    {
-        $data = array(
-            'selected' => true
-        );
-
-        $url = '/api/attributes/' .
-            $this->attribute2->getId() .
-            '/values/' .
-            $this->attributeValue1_2->getId();
-
-        $this->client->request('PUT', $url, $data);
-        $response = json_decode($this->client->getResponse()->getContent());
-        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
-        $this->assertEquals('Value1_2', $response->name);
-        $this->assertTrue($response->selected);
-
-        // Get the new created value
-        $url = '/api/attributes/' .
-            $this->attribute2->getId() .
-            '/values/' .
-            $this->attributeValue1_2->getId();
-        $this->client->request('GET', $url);
-        $response = json_decode($this->client->getResponse()->getContent());
-        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
-        $this->assertEquals('Value1_2', $response->name);
-        $this->assertTrue($response->selected);
     }
 
     /**

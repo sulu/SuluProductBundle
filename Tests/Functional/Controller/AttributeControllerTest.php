@@ -53,7 +53,7 @@ class AttributeControllerTest extends SuluTestCase
 
     public function setUp()
     {
-        $this->em = $this->db('ORM')->getOm();
+        $this->em = $this->getEntityManager();
         $this->purgeDatabase();
         $this->setUpTestData();
         $this->client = $this->createAuthenticatedClient();
@@ -429,7 +429,7 @@ class AttributeControllerTest extends SuluTestCase
     }
 
     /**
-     * Delete an existing attribute
+     * Delete an not existing attribute
      */
     public function testDeleteNotExistingById()
     {
