@@ -23,22 +23,22 @@ class ProductAttribute
     private $id;
 
     /**
-     * @var \Sulu\Bundle\ProductBundle\Entity\BaseProduct
+     * @var BaseProduct
      */
     private $product;
 
     /**
-     * @var \Sulu\Bundle\ProductBundle\Entity\Attribute
+     * @var Attribute
      */
     private $attribute;
 
     /**
-     * @var \Sulu\Bundle\ProductBundle\Entity\AttributeValue
+     * @var AttributeValue
      */
     private $attributeValue;
 
     /**
-     * @return integer 
+     * @return integer
      */
     public function getId()
     {
@@ -46,10 +46,11 @@ class ProductAttribute
     }
 
     /**
-     * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $product
+     * @param ProductInterface $product
+     *
      * @return ProductAttribute
      */
-    public function setProduct(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $product)
+    public function setProduct(ProductInterface $product)
     {
         $this->product = $product;
     
@@ -57,7 +58,7 @@ class ProductAttribute
     }
 
     /**
-     * @return \Sulu\Bundle\ProductBundle\Entity\ProductInterface
+     * @return ProductInterface
      */
     public function getProduct()
     {
@@ -65,10 +66,11 @@ class ProductAttribute
     }
 
     /**
-     * @param \Sulu\Bundle\ProductBundle\Entity\Attribute $attribute
+     * @param Attribute $attribute
+     *
      * @return ProductAttribute
      */
-    public function setAttribute(\Sulu\Bundle\ProductBundle\Entity\Attribute $attribute)
+    public function setAttribute(Attribute $attribute)
     {
         $this->attribute = $attribute;
     
@@ -76,7 +78,7 @@ class ProductAttribute
     }
 
     /**
-     * @return \Sulu\Bundle\ProductBundle\Entity\Attribute
+     * @return Attribute
      */
     public function getAttribute()
     {
@@ -84,10 +86,11 @@ class ProductAttribute
     }
 
     /**
-     * @param \Sulu\Bundle\ProductBundle\Entity\AttributeValue $attributeValue
+     * @param AttributeValue $attributeValue
+     *
      * @return ProductAttribute
      */
-    public function setAttributeValue(\Sulu\Bundle\ProductBundle\Entity\AttributeValue $attributeValue)
+    public function setAttributeValue(AttributeValue $attributeValue)
     {
         $this->attributeValue = $attributeValue;
 
@@ -95,7 +98,7 @@ class ProductAttribute
     }
 
     /**
-     * @return \Sulu\Bundle\ProductBundle\Entity\AttributeValue
+     * @return AttributeValue
      */
     public function getAttributeValue()
     {

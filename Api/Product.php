@@ -81,8 +81,8 @@ class Product extends ApiWrapper implements ApiProductInterface
         $this->entity = $product;
         $this->locale = $locale;
         $this->priceFormatter = $priceFormatter;
-        $this->accountManager = $accountManager;
         $this->productLocaleManager = $productLocaleManager;
+        $this->accountManager = $accountManager;
     }
 
     /**
@@ -462,7 +462,8 @@ class Product extends ApiWrapper implements ApiProductInterface
                 $parent,
                 $this->locale,
                 $this->priceFormatter,
-                $this->productLocaleManager);
+                $this->productLocaleManager,
+                $this->accountManager);
         }
 
         return null;

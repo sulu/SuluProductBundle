@@ -14,12 +14,10 @@ use Hateoas\Configuration\Annotation\Relation;
 use JMS\Serializer\Annotation\VirtualProperty;
 use JMS\Serializer\Annotation\SerializedName;
 use JMS\Serializer\Annotation\ExclusionPolicy;
-use Sulu\Bundle\ProductBundle\Entity\AttributeTranslation;
 use Sulu\Bundle\ProductBundle\Api\AttributeValue;
-use Sulu\Bundle\ProductBundle\Entity\AttributeValueTranslation;
+use Sulu\Bundle\ProductBundle\Api\Attribute;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttribute as ProductAttributeEntity;
 use Sulu\Component\Rest\ApiWrapper;
-use Sulu\Bundle\ProductBundle\Api\Attribute;
 
 /**
  * The ProductAttribute class which will be exported to the API
@@ -66,7 +64,7 @@ class ProductAttribute extends ApiWrapper
     }
 
     /**
-     * Returns the id of the Attribute
+     * Returns the id of the Attribute.
      *
      * @return string
      *
@@ -79,9 +77,10 @@ class ProductAttribute extends ApiWrapper
     }
 
     /**
-     * Returns the attribute name
+     * Returns the attribute name.
      *
      * @return Sulu\Bundle\ProductBundle\Api\Attribute
+     *
      * @VirtualProperty
      * @SerializedName("attributeName")
      */
@@ -102,9 +101,10 @@ class ProductAttribute extends ApiWrapper
     }
 
     /**
-     * Returns the attribute type name
+     * Returns the attribute type name.
      *
      * @return Sulu\Bundle\ProductBundle\Api\AttributeType
+     *
      * @VirtualProperty
      * @SerializedName("attributeTypeName")
      */
@@ -147,7 +147,7 @@ class ProductAttribute extends ApiWrapper
     }
 
     /**
-     * @return \Sulu\Bundle\ProductBundle\Api\Attribute
+     * @return Attribute
      */
     public function getAttribute()
     {
@@ -155,7 +155,7 @@ class ProductAttribute extends ApiWrapper
     }
 
     /**
-     * @return \Sulu\Bundle\ProductBundle\Api\AttributeValue
+     * @return AttributeValue
      */
     public function getAttributeValue()
     {

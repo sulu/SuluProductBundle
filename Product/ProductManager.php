@@ -12,18 +12,33 @@ namespace Sulu\Bundle\ProductBundle\Product;
 
 use DateTime;
 use Doctrine\Common\Persistence\ObjectManager;
-use Sulu\Bundle\ProductBundle\Entity\Attribute;
-use Sulu\Bundle\ProductBundle\Entity\AttributeValue;
-use Sulu\Bundle\ProductBundle\Entity\AttributeValueTranslation;
 use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\HttpFoundation\Request;
+use Sulu\Component\Persistence\RelationTrait;
+use Sulu\Component\Rest\Exception\EntityIdAlreadySetException;
+use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescriptor;
+use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineGroupConcatFieldDescriptor;
+use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineJoinDescriptor;
+use Sulu\Component\Security\Authentication\UserRepositoryInterface;
 use Sulu\Bundle\ContactBundle\Entity\Account;
+use Sulu\Bundle\ContactBundle\Entity\AccountRepository;
 use Sulu\Bundle\CategoryBundle\Api\Category;
 use Sulu\Bundle\CategoryBundle\Entity\CategoryRepository;
+use Sulu\Bundle\ProductBundle\Api\Product;
 use Sulu\Bundle\ProductBundle\Api\ProductPrice;
 use Sulu\Bundle\ProductBundle\Api\Status;
-use Sulu\Bundle\ProductBundle\Entity\Status as StatusEntity;
+use Sulu\Bundle\ProductBundle\Entity\Attribute;
+use Sulu\Bundle\ProductBundle\Entity\AttributeRepository;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSetRepository;
+use Sulu\Bundle\ProductBundle\Entity\AttributeValue;
+use Sulu\Bundle\ProductBundle\Entity\AttributeValueTranslation;
+use Sulu\Bundle\ProductBundle\Entity\ProductAttributeRepository;
+use Sulu\Bundle\ProductBundle\Entity\ProductAttribute;
+use Sulu\Bundle\ProductBundle\Entity\SpecialPriceRepository;
+use Sulu\Bundle\ProductBundle\Entity\DeliveryStatusRepository;
+use Sulu\Bundle\ProductBundle\Entity\UnitRepository;
+use Sulu\Bundle\ProductBundle\Entity\DeliveryStatus;
+use Sulu\Bundle\ProductBundle\Entity\Status as StatusEntity;
 use Sulu\Bundle\ProductBundle\Entity\CurrencyRepository;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductPrice as ProductPriceEntity;
@@ -40,22 +55,7 @@ use Sulu\Bundle\ProductBundle\Product\Exception\ProductChildrenExistException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductDependencyNotFoundException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductNotFoundException;
 use Sulu\Bundle\ProductBundle\Product\Exception\InvalidProductAttributeException;
-use Sulu\Component\Persistence\RelationTrait;
-use Sulu\Component\Rest\Exception\EntityIdAlreadySetException;
-use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescriptor;
-use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineGroupConcatFieldDescriptor;
-use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineJoinDescriptor;
-use Sulu\Component\Security\Authentication\UserRepositoryInterface;
-use Sulu\Bundle\ProductBundle\Entity\ProductAttribute;
-use Sulu\Bundle\ProductBundle\Entity\SpecialPriceRepository;
-use Sulu\Bundle\ProductBundle\Entity\DeliveryStatusRepository;
-use Sulu\Bundle\ProductBundle\Entity\AttributeRepository;
-use Sulu\Bundle\ProductBundle\Entity\ProductAttributeRepository;
-use Sulu\Bundle\ProductBundle\Entity\UnitRepository;
-use Sulu\Bundle\ProductBundle\Entity\DeliveryStatus;
-use Sulu\Bundle\ProductBundle\Api\Product;
 use Sulu\Bundle\MediaBundle\Media\Manager\MediaManager;
-use Sulu\Bundle\ContactBundle\Entity\AccountRepository;
 
 class ProductManager implements ProductManagerInterface
 {
@@ -2022,7 +2022,7 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Checks if AttributeValue already contains translation in given locale or creates a new one.
+     * Checks if AttributeValue already contains a translation in given locale or creates a new one.
      *
      * @param AttributeValue $attributeValue
      * @param string $value

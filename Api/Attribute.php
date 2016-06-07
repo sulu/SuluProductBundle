@@ -53,7 +53,7 @@ class Attribute extends ApiWrapper
     }
 
     /**
-     * Returns the id of the Attribute
+     * Returns the id of the attribute.
      *
      * @VirtualProperty
      * @SerializedName("id")
@@ -65,10 +65,11 @@ class Attribute extends ApiWrapper
     }
 
     /**
-     * Returns the name of the Attribute
+     * Returns the name of the attribute.
      *
      * @VirtualProperty
      * @SerializedName("name")
+     *
      * @return int
      */
     public function getName()
@@ -77,8 +78,10 @@ class Attribute extends ApiWrapper
     }
 
     /**
-     * Sets the name of the attribute
+     * Sets the name of the attribute.
+     *
      * @param string $name The name of the attribute
+     *
      * @return Sulu\Bundle\ProductBundle\Api\Attribute
      */
     public function setName($name)
@@ -88,10 +91,11 @@ class Attribute extends ApiWrapper
     }
 
     /**
-     * Returns the type of the Attribute
+     * Returns the type of the attribute.
      *
      * @VirtualProperty
      * @SerializedName("type")
+     *
      * @return Sulu\Bundle\ProductBundle\Api\AttributeType
      */
     public function getType()
@@ -100,8 +104,10 @@ class Attribute extends ApiWrapper
     }
 
     /**
-     * Sets the type of the attribute
+     * Sets the type of the attribute.
+     *
      * @param AtributeType $type The type of the attribute
+     *
      * @return Sulu\Bundle\ProductBundle\Api\Attribute
      */
     public function setType($type)
@@ -111,7 +117,7 @@ class Attribute extends ApiWrapper
     }
 
     /**
-     * Returns changed date of the Attribute
+     * Returns changed date of the attribute.
      *
      * @return DateTime
      */
@@ -121,8 +127,10 @@ class Attribute extends ApiWrapper
     }
 
     /**
-     * Sets the changed date of the attribute
+     * Sets the changed date of the attribute.
+     *
      * @param $changed $changed date for the attribute
+     *
      * @return Sulu\Bundle\ProductBundle\Api\Attribute
      */
     public function setChanged($changed)
@@ -132,7 +140,8 @@ class Attribute extends ApiWrapper
     }
 
     /**
-     * Sets the changer of the attribute
+     * Sets the changer of the attribute.
+     *
      * @param $changer changer for the attribute
      * @return Sulu\Bundle\ProductBundle\Api\Attribute
      */
@@ -143,7 +152,7 @@ class Attribute extends ApiWrapper
     }
 
     /**
-     * Returns created date for the Attribute
+     * Returns created date for the Attribute.
      *
      * @return \Date
      */
@@ -153,8 +162,10 @@ class Attribute extends ApiWrapper
     }
 
     /**
-     * Sets the created date for the attribute
+     * Sets the created date for the attribute.
+     *
      * @param $created created date for the attribute
+     *
      * @return Sulu\Bundle\ProductBundle\Api\Attribute
      */
     public function setCreated($created)
@@ -164,8 +175,10 @@ class Attribute extends ApiWrapper
     }
 
     /**
-     * Sets the creator of the attribute
+     * Sets the creator of the attribute.
+     *
      * @param $creator creator of the attribute
+     *
      * @return Sulu\Bundle\ProductBundle\Api\Attribute
      */
     public function setCreator(UserInterface $creator)
@@ -175,9 +188,10 @@ class Attribute extends ApiWrapper
     }
 
     /**
-     * Add value
+     * Add attribute value.
      *
      * @param AttributeValueEntity $value
+     *
      * @return Attribute
      */
     public function addValue(AttributeValueEntity $value)
@@ -187,17 +201,17 @@ class Attribute extends ApiWrapper
     }
 
     /**
-     * Returns the translation
+     * Returns the translation.
      *
-     * @param bool $withFallback
+     * @param bool $useFallback
      *
      * @return AttributeTranslation
      */
-    public function getTranslation($withFallback = true)
+    public function getTranslation($useFallback = true)
     {
         $attributeTranslation = $this->getTranslationByLocale($this->locale);
 
-        if (!$attributeTranslation && $withFallback) {
+        if (!$attributeTranslation && $useFallback) {
             $attributeTranslation = $this->getTranslationByLocale($this->fallbackLocale);
         }
 
@@ -226,6 +240,7 @@ class Attribute extends ApiWrapper
         foreach ($this->entity->getTranslations() as $translation) {
             if ($translation->getLocale() == $locale) {
                 $attributeTranslation = $translation;
+                break;
             }
         }
 

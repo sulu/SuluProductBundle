@@ -123,7 +123,6 @@ define([
             }.bind(this));
 
             this.sandbox.on('sulu.header.language-changed', function(data) {
-                console.log(data);
                 this.load(this.options.id, data.title);
             }, this);
 
@@ -303,10 +302,12 @@ define([
         },
 
         load: function(id, localization) {
-            var tabName = this.options.content;
-            if (!tabName) {
-                tabName = 'details';
+            var tabName = 'details';
+
+            if (!!this.options.content) {
+                tabName = this.options.content;
             }
+
             this.sandbox.emit('sulu.router.navigate', 'pim/products/' + localization + '/edit:' + id + '/' + tabName);
         },
 

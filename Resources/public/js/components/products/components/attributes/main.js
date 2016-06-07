@@ -279,6 +279,48 @@ define([
         },
 
         /**
+         * On badge attributeName for datagrid.
+         *
+         * @param item
+         * @param badge
+         * @param locale
+         */
+        onBadgeAttributeName = function(item, badge, locale) {
+            if (
+                item.attributeLocale
+                && item.attributeLocale == item.fallbackLocale
+                && item.attributeLocale != locale
+            ) {
+                badge.title = item.attributeLocale;
+
+                return badge;
+            }
+
+            return false;
+        },
+
+        /**
+         * On badge attributeValueName for datagrid.
+         *
+         * @param item
+         * @param badge
+         * @param locale
+         */
+        onBadgeAttributeValueName = function(item, badge, locale) {
+            if (
+                item.attributeValueLocale
+                && item.attributeValueLocale == item.fallbackLocale
+                && item.attributeValueLocale != locale
+            ) {
+                badge.title = item.attributeValueLocale;
+
+                return badge;
+            }
+
+            return false;
+        },
+
+        /**
          * calls basic form components
          */
         startFormComponents = function() {
@@ -304,33 +346,13 @@ define([
                             {
                                 column: 'attributeName',
                                 callback: function(item, badge) {
-                                    if (
-                                        item.attributeLocale
-                                        && item.attributeLocale == item.fallbackLocale
-                                        && item.attributeLocale != this.options.locale
-                                    ) {
-                                        badge.title = item.attributeLocale;
-
-                                        return badge;
-                                    }
-
-                                    return false;
+                                    return onBadgeAttributeName(item, badge, this.options.locale);
                                 }.bind(this)
                             },
                             {
                                 column: 'attributeValueName',
                                 callback: function(item, badge) {
-                                    if (
-                                        item.attributeValueLocale
-                                        && item.attributeValueLocale == item.fallbackLocale
-                                        && item.attributeValueLocale != this.options.locale
-                                    ) {
-                                        badge.title = item.attributeValueLocale;
-
-                                        return badge;
-                                    }
-
-                                    return false;
+                                    return onBadgeAttributeValueName(item, badge, this.options.locale);
                                 }.bind(this)
                             }
                         ]

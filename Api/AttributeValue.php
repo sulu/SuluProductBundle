@@ -131,6 +131,7 @@ class AttributeValue extends ApiWrapper
         foreach ($this->entity->getTranslations() as $translation) {
             if ($translation->getLocale() == $locale) {
                 $attributeValueTranslation = $translation;
+                break;
             }
         }
 
