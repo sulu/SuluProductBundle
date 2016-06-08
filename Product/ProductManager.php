@@ -1881,27 +1881,31 @@ class ProductManager implements ProductManagerInterface
     protected function processAttributes(array $data, ProductInterface $product, $locale)
     {
         if (isset($data['attributes'])) {
-            $attributeIds = [];
-            foreach ($data['attributes'] as $attributeData) {
-                if (isset($attributeData['attributeId'])) {
-                    $attributeIds[] = $attributeData['attributeId'];
-                }
-            }
-
             // Create local array of all currently assigned attributes of product.
             $productAttributes = [];
             foreach ($product->getProductAttributes() as $productAttribute) {
                 $productAttributes[$productAttribute->getAttribute()->getId()] = $productAttribute;
             }
 
-            // Save all product attribute ids which are given in the request.
-            $productAttributeIdsInRequest = [];
+            // Save all attribute ids which are given in the request.
+            $attributeIdsInRequest = [];
 
             // Add and change attributes.
             foreach ($data['attributes'] as $attributeData) {
+
+                if (!isset($attributeData['attributeId'])) {
+                    continue;
+                }
+
                 $attributeDataValueName = trim($attributeData['attributeValueName']);
                 $attributeId = $attributeData['attributeId'];
-                $productAttributeIdsInRequest[$attributeId] = $attributeDataValueName;
+
+                $attributeIdsInRequest[$attributeId] = $attributeDataValueName;
+
+                $attributeValueLocale = $locale;
+                if (isset($attributeData['attributeValueLocale'])) {
+                    $attributeValueLocale = $attributeData['attributeValueLocale'];
+                }
 
                 // If attribute value is empty do not add.
                 if (!$attributeDataValueName) {
@@ -1911,7 +1915,10 @@ class ProductManager implements ProductManagerInterface
                         $productAttribute = $productAttributes[$attributeId];
 
                         // Remove attribute value translation from attribute value.
-                        $this->removeAttributeValueTranslation($productAttribute->getAttributeValue(), $locale);
+                        $this->removeAttributeValueTranslation(
+                            $productAttribute->getAttributeValue(),
+                            $attributeValueLocale
+                        );
 
                         // If no more attribute value translation exists,
                         // remove the whole product attribute from the product.
@@ -1927,7 +1934,11 @@ class ProductManager implements ProductManagerInterface
                 if (!array_key_exists($attributeId, $productAttributes)) {
                     $attribute = $this->retrieveAttributeById($attributeId);
                     // Create new attribute value with translation.
-                    $attributeValue = $this->createAttributeValue($attribute, $attributeDataValueName, $locale);
+                    $attributeValue = $this->createAttributeValue(
+                        $attribute,
+                        $attributeDataValueName,
+                        $attributeValueLocale
+                    );
                     // Create new product attribute.
                     $this->createProductAttribute($attribute, $product, $attributeValue);
                 } else {
@@ -1936,13 +1947,17 @@ class ProductManager implements ProductManagerInterface
                     $productAttribute = $productAttributes[$attributeId];
                     $attributeValue = $productAttribute->getAttributeValue();
                     // Create translation in current locale.
-                    $this->createOrSetAttributeValueTranslation($attributeValue, $attributeDataValueName, $locale);
+                    $this->createOrSetAttributeValueTranslation(
+                        $attributeValue,
+                        $attributeDataValueName,
+                        $attributeValueLocale
+                    );
                 }
             }
 
             // Delete attributes.
             foreach ($productAttributes as $productAttribute) {
-                if (!array_key_exists($productAttribute->getAttribute()->getId(), $productAttributeIdsInRequest)) {
+                if (!array_key_exists($productAttribute->getAttribute()->getId(), $attributeIdsInRequest)) {
                     // Remove all attribute value translations from attribute value.
                     $this->removeAllAttributeValueTranslations($productAttribute->getAttributeValue());
 
