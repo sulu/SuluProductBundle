@@ -59,21 +59,20 @@ define([
                 // Select action
                 if (data.action === actions.ADD) {
                     // ADD RECORD IN DATAGRID
-                    var result = _.findWhere(attributes, {'attributeId': data.attributeId});
+                    var result = _.findWhere(attributes, {'attributeId': data.attributeIdAdded});
                     this.sandbox.emit('husky.datagrid.' + datagridInstanceName + '.record.add', {
-                        id: result.id,
                         attributeId: result.attributeId,
-                        value: result.value,
-                        attributeName: result.attributeName
+                        attributeName: result.attributeName,
+                        attributeValueName: result.attributeValueName
                     });
                 } else if (data.action === actions.DELETE) {
                     // DELETE RECORDs IN DATAGRID
-                    $.each(data.deleteIds, function(key, id) {
+                    $.each(data.attributeIdsDeleted, function(key, id) {
                         this.sandbox.emit('husky.datagrid.' + datagridInstanceName + '.record.remove', id);
                     }.bind(this));
                 } else if (data.action === actions.UPDATE) {
-                    // UPDATE RECORD IN DATAGRID
-                    this.sandbox.emit('husky.datagrid.' + datagridInstanceName + '.records.change', attributes);
+                    // UPDATE DATAGRID WITH RECEIVED RECORDS
+                    this.sandbox.emit('husky.datagrid.' + datagridInstanceName + '.records.set', attributes);
                 }
 
                 setHeaderBar.call(this, true);
@@ -91,7 +90,9 @@ define([
             }, this);
         },
 
-    // @var Bool saved - defines if saved state should be shown
+        /**
+         * @param {Boolean} saved defines if saved state should be shown
+         */
         setHeaderBar = function(saved) {
             if (saved !== this.saved) {
                 if (!!saved) {
@@ -123,7 +124,8 @@ define([
          */
         createAddOverlay = function() {
             // call JSON to get the attributes from the server then create the overlay after it's done
-            var ajaxRequest = $.getJSON('api/attributes', function(data) {
+            var attributesUrl = 'api/attributes?locale=' + this.options.locale;
+            var ajaxRequest = $.getJSON(attributesUrl, function(data) {
                 this.attributeTypes = [];
 
                 $.each(data._embedded.attributes, function(key, value) {
@@ -226,25 +228,25 @@ define([
             }
 
             this.sendData = {};
-            var attributeValue = this.sandbox.dom.val('#attribute-name');
+            var attributeValueName = this.sandbox.dom.val('#attribute-name');
 
             var attributes = this.options.data.attributes.attributes;
 
             var result = _.findWhere(attributes, {'attributeId': attributeId});
 
             if (result) {
-                result.value = attributeValue;
+                result.attributeValueName = attributeValueName;
                 this.sendData.action = actions.UPDATE;
             } else {
                 var newAttribute = {
                     'attributeId': attributeId,
-                    'value': attributeValue
+                    'attributeValueName': attributeValueName
                 };
                 attributes.push(newAttribute);
                 this.sendData.action = actions.ADD;
             }
 
-            this.sendData.attributeId = attributeId;
+            this.sendData.attributeIdAdded = attributeId;
             this.sendData.attributes = attributes;
             this.sendData.status = this.status;
             this.sendData.id = this.options.data.attributes.id;
@@ -260,15 +262,15 @@ define([
 
                 var attributes = this.options.data.attributes.attributes;
                 this.sendData = {};
-                var deleteIds = [];
+                var attributeIdsDeleted = [];
 
                 _.each(ids, function(value, key, list) {
-                    var result = _.findWhere(attributes, {'id': value});
+                    var result = _.findWhere(attributes, {'attributeId': value});
                     attributes = _.without(attributes, result);
-                    deleteIds.push(value);
+                    attributeIdsDeleted.push(value);
                 });
 
-                this.sendData.deleteIds = deleteIds;
+                this.sendData.attributeIdsDeleted = attributeIdsDeleted;
                 this.sendData.attributes = attributes;
                 this.sendData.status = this.status;
                 this.sendData.id = this.options.data.id;
@@ -279,26 +281,83 @@ define([
         },
 
         /**
+         * On badge attributeName for datagrid.
+         *
+         * @param {Object} item
+         * @param {Object} badge
+         * @param {String} locale
+         */
+        onBadgeAttributeName = function(item, badge, locale) {
+            if (
+                item.attributeLocale
+                && item.attributeLocale == item.fallbackLocale
+                && item.attributeLocale != locale
+            ) {
+                badge.title = item.attributeLocale;
+
+                return badge;
+            }
+
+            return false;
+        },
+
+        /**
+         * On badge attributeValueName for datagrid.
+         *
+         * @param {Object} item
+         * @param {Object} badge
+         * @param {String} locale
+         */
+        onBadgeAttributeValueName = function(item, badge, locale) {
+            if (
+                item.attributeValueLocale
+                && item.attributeValueLocale == item.fallbackLocale
+                && item.attributeValueLocale != locale
+            ) {
+                badge.title = item.attributeValueLocale;
+
+                return badge;
+            }
+
+            return false;
+        },
+
+        /**
          * calls basic form components
          */
         startFormComponents = function() {
             var datagridOptions = {
                 el: '#product-attribute-list',
                 instanceName: datagridInstanceName,
+                idKey: 'attributeId',
                 resultKey: 'attributes',
                 matchings: [
                     {
-                        name: 'value',
-                        content: this.sandbox.translate('product.attribute.value')
-                    },
-                    {
                         name: 'attributeName',
                         content: this.sandbox.translate('product.attribute.name')
+                    },
+                    {
+                        name: 'attributeValueName',
+                        content: this.sandbox.translate('product.attribute.value')
                     }
                 ],
                 viewOptions: {
                     table: {
-                        type: 'checkbox'
+                        type: 'checkbox',
+                        badges: [
+                            {
+                                column: 'attributeName',
+                                callback: function(item, badge) {
+                                    return onBadgeAttributeName(item, badge, this.options.locale);
+                                }.bind(this)
+                            },
+                            {
+                                column: 'attributeValueName',
+                                callback: function(item, badge) {
+                                    return onBadgeAttributeValueName(item, badge, this.options.locale);
+                                }.bind(this)
+                            }
+                        ]
                     }
                 },
                 data: this.options.data.attributes

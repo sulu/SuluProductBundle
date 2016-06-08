@@ -188,7 +188,7 @@ define([
                     name: 'attributes/components/form@suluproduct',
                     options: {
                         el: $form,
-                        locale: LocaleUtil.retrieveDefaultLocale(this.sandbox),
+                        locale: this.options.locale,
                         data: this.attribute.defaults()
                     }
                 };

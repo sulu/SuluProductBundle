@@ -89,6 +89,12 @@ define([
         },
 
         bindCustomEvents: function() {
+            // content tabs event
+            this.sandbox.on('husky.tabs.header.item.select', function(event) {
+                // Save new tab in options.
+                this.options.content = event.id;
+            }.bind(this));
+
             this.sandbox.on(PRODUCT_NEW, function(type) {
                 this.sandbox.emit(
                     'sulu.router.navigate',
@@ -296,7 +302,13 @@ define([
         },
 
         load: function(id, localization) {
-            this.sandbox.emit('sulu.router.navigate', 'pim/products/' + localization + '/edit:' + id + '/details');
+            var tabName = 'details';
+
+            if (!!this.options.content) {
+                tabName = this.options.content;
+            }
+
+            this.sandbox.emit('sulu.router.navigate', 'pim/products/' + localization + '/edit:' + id + '/' + tabName);
         },
 
         del: function(ids) {

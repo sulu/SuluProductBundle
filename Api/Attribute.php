@@ -21,6 +21,8 @@ use JMS\Serializer\Annotation\Groups;
 use Sulu\Bundle\ProductBundle\Entity\Attribute as AttributeEntity;
 use Sulu\Bundle\ProductBundle\Entity\AttributeTranslation;
 use Sulu\Bundle\ProductBundle\Api\AttributeType;
+use Sulu\Bundle\ProductBundle\Entity\AttributeValue as AttributeValueEntity;
+use Sulu\Bundle\ProductBundle\Api\AttributeValue;
 use Sulu\Component\Rest\ApiWrapper;
 use Sulu\Component\Security\Authentication\UserInterface;
 
@@ -34,17 +36,24 @@ use Sulu\Component\Security\Authentication\UserInterface;
 class Attribute extends ApiWrapper
 {
     /**
+     * @var string $fallbackLocale
+     */
+    protected $fallbackLocale;
+
+    /**
      * @param AttributeEntity $entity
      * @param string $locale
+     * @param string $fallbackLocale
      */
-    public function __construct(AttributeEntity $entity, $locale)
+    public function __construct(AttributeEntity $entity, $locale, $fallbackLocale)
     {
         $this->entity = $entity;
         $this->locale = $locale;
+        $this->fallbackLocale = $fallbackLocale;
     }
 
     /**
-     * Returns the id of the Attribute
+     * Returns the id of the attribute.
      *
      * @VirtualProperty
      * @SerializedName("id")
@@ -56,10 +65,11 @@ class Attribute extends ApiWrapper
     }
 
     /**
-     * Returns the name of the Attribute
+     * Returns the name of the attribute.
      *
      * @VirtualProperty
      * @SerializedName("name")
+     *
      * @return int
      */
     public function getName()
@@ -68,21 +78,24 @@ class Attribute extends ApiWrapper
     }
 
     /**
-     * Sets the name of the attribute
+     * Sets the name of the attribute.
+     *
      * @param string $name The name of the attribute
+     *
      * @return Sulu\Bundle\ProductBundle\Api\Attribute
      */
     public function setName($name)
     {
-        $this->getTranslation()->setName($name);
+        $this->getTranslation(false)->setName($name);
         return $this;
     }
 
     /**
-     * Returns the type of the Attribute
+     * Returns the type of the attribute.
      *
      * @VirtualProperty
      * @SerializedName("type")
+     *
      * @return Sulu\Bundle\ProductBundle\Api\AttributeType
      */
     public function getType()
@@ -91,8 +104,10 @@ class Attribute extends ApiWrapper
     }
 
     /**
-     * Sets the type of the attribute
+     * Sets the type of the attribute.
+     *
      * @param AtributeType $type The type of the attribute
+     *
      * @return Sulu\Bundle\ProductBundle\Api\Attribute
      */
     public function setType($type)
@@ -102,7 +117,7 @@ class Attribute extends ApiWrapper
     }
 
     /**
-     * Returns changed date of the Attribute
+     * Returns changed date of the attribute.
      *
      * @return DateTime
      */
@@ -112,8 +127,10 @@ class Attribute extends ApiWrapper
     }
 
     /**
-     * Sets the changed date of the attribute
+     * Sets the changed date of the attribute.
+     *
      * @param $changed $changed date for the attribute
+     *
      * @return Sulu\Bundle\ProductBundle\Api\Attribute
      */
     public function setChanged($changed)
@@ -123,7 +140,8 @@ class Attribute extends ApiWrapper
     }
 
     /**
-     * Sets the changer of the attribute
+     * Sets the changer of the attribute.
+     *
      * @param $changer changer for the attribute
      * @return Sulu\Bundle\ProductBundle\Api\Attribute
      */
@@ -134,7 +152,7 @@ class Attribute extends ApiWrapper
     }
 
     /**
-     * Returns created date for the Attribute
+     * Returns created date for the Attribute.
      *
      * @return \Date
      */
@@ -144,8 +162,10 @@ class Attribute extends ApiWrapper
     }
 
     /**
-     * Sets the created date for the attribute
+     * Sets the created date for the attribute.
+     *
      * @param $created created date for the attribute
+     *
      * @return Sulu\Bundle\ProductBundle\Api\Attribute
      */
     public function setCreated($created)
@@ -155,8 +175,10 @@ class Attribute extends ApiWrapper
     }
 
     /**
-     * Sets the creator of the attribute
+     * Sets the creator of the attribute.
+     *
      * @param $creator creator of the attribute
+     *
      * @return Sulu\Bundle\ProductBundle\Api\Attribute
      */
     public function setCreator(UserInterface $creator)
@@ -166,33 +188,31 @@ class Attribute extends ApiWrapper
     }
 
     /**
-     * Add value
+     * Add attribute value.
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\AttributeValue $value
+     * @param AttributeValueEntity $value
+     *
      * @return Attribute
      */
-    public function addValue(Sulu\Bundle\ProductBundle\Entity\AttributeValue $value)
+    public function addValue(AttributeValueEntity $value)
     {
         $this->entity->addValue($value);
         return $this;
     }
 
     /**
-     * Returns the translation with the given locale
-     * @param string $locale The locale to return
+     * Returns the translation.
+     *
+     * @param bool $useFallback
+     *
      * @return AttributeTranslation
      */
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getTranslation()
+    public function getTranslation($useFallback = true)
     {
-        $attributeTranslation = null;
-        foreach ($this->entity->getTranslations() as $translation) {
-            if ($translation->getLocale() == $this->locale) {
-                $attributeTranslation = $translation;
-            }
+        $attributeTranslation = $this->getTranslationByLocale($this->locale);
+
+        if (!$attributeTranslation && $useFallback) {
+            $attributeTranslation = $this->getTranslationByLocale($this->fallbackLocale);
         }
 
         if (!$attributeTranslation) {
@@ -201,6 +221,27 @@ class Attribute extends ApiWrapper
             $attributeTranslation->setAttribute($this->entity);
 
             $this->entity->addTranslation($attributeTranslation);
+        }
+
+        return $attributeTranslation;
+    }
+
+    /**
+     * Returns the translation with the given locale.
+     *
+     * @param string $locale
+     *
+     * @return AttributeTranslation
+     */
+    private function getTranslationByLocale($locale)
+    {
+        $attributeTranslation = null;
+
+        foreach ($this->entity->getTranslations() as $translation) {
+            if ($translation->getLocale() == $locale) {
+                $attributeTranslation = $translation;
+                break;
+            }
         }
 
         return $attributeTranslation;

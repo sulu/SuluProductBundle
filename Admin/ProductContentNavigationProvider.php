@@ -21,12 +21,14 @@ class ProductContentNavigationProvider implements ContentNavigationProviderInter
     public function getNavigationItems(array $options = [])
     {
         $details = new ContentNavigationItem('content-navigation.product.general');
+        $details->setId('details');
         $details->setAction('details');
         $details->setPosition(10);
         $details->setComponent('products/components/detail-form@suluproduct');
         $details->setResetStore(false);
 
         $pricing = new ContentNavigationItem('content-navigation.product.pricing');
+        $pricing->setId('pricing');
         $pricing->setAction('pricing');
         $pricing->setPosition(20);
         $pricing->setComponent('products/components/pricing@suluproduct');
@@ -35,6 +37,7 @@ class ProductContentNavigationProvider implements ContentNavigationProviderInter
 
         // media
         $media = new ContentNavigationItem('content-navigation.product.media');
+        $media->setId('media');
         $media->setAction('media');
         $media->setPosition(30);
         $media->setComponent('products/components/media@suluproduct');
@@ -43,6 +46,7 @@ class ProductContentNavigationProvider implements ContentNavigationProviderInter
 
         // attributes
         $attributes = new ContentNavigationItem('content-navigation.product.attributes');
+        $attributes->setId('attributes');
         $attributes->setAction('attributes');
         $attributes->setPosition(40);
         $attributes->setComponent('products/components/attributes@suluproduct');

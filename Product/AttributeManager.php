@@ -20,14 +20,9 @@ use Sulu\Component\Security\Authentication\UserRepositoryInterface;
 use Sulu\Bundle\ProductBundle\Entity\AttributeTypeRepository;
 use Sulu\Bundle\ProductBundle\Api\Attribute;
 use Sulu\Bundle\ProductBundle\Entity\Attribute as AttributeEntity;
-use Sulu\Bundle\ProductBundle\Api\AttributeValue;
-use Sulu\Bundle\ProductBundle\Entity\AttributeValue as AttributeValueEntity;
 use Sulu\Bundle\ProductBundle\Product\Exception\AttributeNotFoundException;
 use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeException;
 use Sulu\Bundle\ProductBundle\Product\Exception\AttributeDependencyNotFoundException;
-use Sulu\Bundle\ProductBundle\Product\Exception\AttributeValueNotFoundException;
-use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeValueException;
-use Sulu\Bundle\ProductBundle\Product\Exception\AttributeValueDependencyNotFoundException;
 
 /**
  * Manager responsible for attribute
@@ -59,16 +54,30 @@ class AttributeManager implements AttributeManagerInterface
      */
     private $em;
 
+    /**
+     * @var ProductLocaleManager
+     */
+    private $productLocaleManger;
+
+    /**
+     * @param AttributeRepositoryInterface $attributeRepository
+     * @param UserRepositoryInterface $userRepository
+     * @param AttributeTypeRepository $attributeTypeRepository
+     * @param ObjectManager $em
+     * @param ProductLocaleManager $productLocaleManager
+     */
     public function __construct(
         AttributeRepositoryInterface $attributeRepository,
         UserRepositoryInterface $userRepository,
         AttributeTypeRepository $attributeTypeRepository,
-        ObjectManager $em
+        ObjectManager $em,
+        ProductLocaleManager $productLocaleManager
     ) {
         $this->attributeRepository = $attributeRepository;
         $this->userRepository = $userRepository;
         $this->attributeTypeRepository = $attributeTypeRepository;
         $this->em = $em;
+        $this->productLocaleManger = $productLocaleManager;
     }
 
     /**
@@ -129,7 +138,7 @@ class AttributeManager implements AttributeManagerInterface
         $attribute = $this->attributeRepository->findByIdAndLocale($id, $locale);
 
         if ($attribute) {
-            return new Attribute($attribute, $locale);
+            return new Attribute($attribute, $locale, $this->productLocaleManger->getFallbackLocale());
         } else {
             throw new AttributeNotFoundException($id);
         }
@@ -145,7 +154,7 @@ class AttributeManager implements AttributeManagerInterface
         array_walk(
             $attributes,
             function (&$attribute) use ($locale) {
-                $attribute = new Attribute($attribute, $locale);
+                $attribute = new Attribute($attribute, $locale, $this->productLocaleManger->getFallbackLocale());
             }
         );
 
@@ -162,7 +171,7 @@ class AttributeManager implements AttributeManagerInterface
         array_walk(
             $attributes,
             function (&$attribute) use ($locale) {
-                $attribute = new Attribute($attribute, $locale);
+                $attribute = new Attribute($attribute, $locale, $this->productLocaleManger->getFallbackLocale());
             }
         );
 
@@ -175,13 +184,13 @@ class AttributeManager implements AttributeManagerInterface
     public function save(array $data, $locale, $userId, $id = null)
     {
         if ($id) {
-            $attribute = $this->attributeRepository->findByIdAndLocale($id, $locale);
+            $attribute = $this->attributeRepository->findById($id);
             if (!$attribute) {
                 throw new AttributeNotFoundException($id);
             }
-            $attribute = new Attribute($attribute, $locale);
+            $attribute = new Attribute($attribute, $locale, $this->productLocaleManger->getFallbackLocale());
         } else {
-            $attribute = new Attribute(new AttributeEntity(), $locale);
+            $attribute = new Attribute(new AttributeEntity(), $locale, $this->productLocaleManger->getFallbackLocale());
         }
 
         $this->checkData($data, $id === null);

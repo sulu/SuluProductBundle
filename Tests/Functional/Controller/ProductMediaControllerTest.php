@@ -23,6 +23,8 @@ use Sulu\Bundle\MediaBundle\Entity\FileVersion;
 use Sulu\Bundle\MediaBundle\Entity\FileVersionMeta;
 use Sulu\Bundle\MediaBundle\Entity\Media;
 use Sulu\Bundle\MediaBundle\Entity\MediaType;
+use Sulu\Bundle\ProductBundle\Entity\AttributeValue;
+use Sulu\Bundle\ProductBundle\Entity\AttributeValueTranslation;
 use Sulu\Bundle\ProductBundle\Entity\Currency;
 use Sulu\Bundle\ProductBundle\Entity\DeliveryStatus;
 use Sulu\Bundle\ProductBundle\Entity\DeliveryStatusTranslation;
@@ -134,6 +136,16 @@ class ProductMediaControllerTest extends SuluTestCase
     private $attributeTranslation1;
 
     /**
+     * @var AttributeValue
+     */
+    private $attributeValue1;
+
+    /**
+     * @var AttributeValueTranslation
+     */
+    private $attributeValueTranslation1;
+
+    /**
      * @var Product
      */
     private $product2;
@@ -182,6 +194,16 @@ class ProductMediaControllerTest extends SuluTestCase
      * @var AttributeTranslation
      */
     private $attributeTranslation2;
+
+    /**
+     * @var AttributeValue
+     */
+    private $attributeValue2;
+
+    /**
+     * @var AttributeValueTranslation
+     */
+    private $attributeValueTranslation2;
 
     /**
      * @var TaxClass
@@ -252,7 +274,7 @@ class ProductMediaControllerTest extends SuluTestCase
      */
     public function setUp()
     {
-        $this->em = $this->db('ORM')->getOm();
+        $this->em = $this->getEntityManager();
         $this->purgeDatabase();
 
         $this->setUpCollection();
@@ -327,6 +349,16 @@ class ProductMediaControllerTest extends SuluTestCase
         $this->attributeTranslation1->setLocale('en');
         $this->attributeTranslation1->setName('EnglishAttribute-1');
 
+        // Attribute Value
+        $this->attributeValue1 = new AttributeValue();
+        $this->attributeValue1->setAttribute($this->attribute1);
+
+        // Attribute Value Translation
+        $this->attributeValueTranslation1 = new AttributeValueTranslation();
+        $this->attributeValueTranslation1->setLocale('en');
+        $this->attributeValueTranslation1->setName('EnglishAttributeValue-1');
+        $this->attributeValueTranslation1->setAttributeValue($this->attributeValue1);
+
         // product
         $this->product1 = new Product();
         $this->product1->setNumber('ProductNumber-1');
@@ -355,9 +387,9 @@ class ProductMediaControllerTest extends SuluTestCase
         $productTranslation1->setLongDescription('EnglishProductLongDescription-1');
 
         $this->productAttribute1 = new ProductAttribute();
-        $this->productAttribute1->setValue('EnglishProductAttributeValue-1');
         $this->productAttribute1->setProduct($this->product1);
         $this->productAttribute1->setAttribute($this->attribute1);
+        $this->productAttribute1->setAttributeValue($this->attributeValue1);
 
         // Product 2
         // product type
@@ -398,6 +430,16 @@ class ProductMediaControllerTest extends SuluTestCase
         $this->attributeTranslation2->setLocale('en');
         $this->attributeTranslation2->setName('EnglishAttribute-2');
 
+        // Attribute Value
+        $this->attributeValue2 = new AttributeValue();
+        $this->attributeValue2->setAttribute($this->attribute2);
+
+        // Attribute Value Translation
+        $this->attributeValueTranslation2 = new AttributeValueTranslation();
+        $this->attributeValueTranslation2->setLocale('en');
+        $this->attributeValueTranslation2->setName('EnglishAttributeValue-2');
+        $this->attributeValueTranslation2->setAttributeValue($this->attributeValue2);
+
         // product
         $this->product2 = new Product();
         $this->product2->setNumber('ProductNumber-1');
@@ -415,9 +457,9 @@ class ProductMediaControllerTest extends SuluTestCase
         $productTranslation2->setLongDescription('EnglishProductLongDescription-2');
 
         $this->productAttribute2 = new ProductAttribute();
-        $this->productAttribute2->setValue('EnglishProductAttributeValue-2');
         $this->productAttribute2->setProduct($this->product2);
         $this->productAttribute2->setAttribute($this->attribute2);
+        $this->productAttribute2->setAttributeValue($this->attributeValue2);
 
         $metadata = $this->em->getClassMetaData(get_class(new TaxClass()));
         $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_NONE);
@@ -500,6 +542,8 @@ class ProductMediaControllerTest extends SuluTestCase
         $this->em->persist($this->productStatusTranslation1);
         $this->em->persist($this->attribute1);
         $this->em->persist($this->attributeTranslation1);
+        $this->em->persist($this->attributeValue1);
+        $this->em->persist($this->attributeValueTranslation1);
         $this->em->persist($this->product1);
         $this->em->persist($productTranslation1);
         $this->em->persist($this->productAttribute1);
@@ -513,6 +557,8 @@ class ProductMediaControllerTest extends SuluTestCase
         $this->em->persist($this->productStatusTranslation2);
         $this->em->persist($this->attribute2);
         $this->em->persist($this->attributeTranslation2);
+        $this->em->persist($this->attributeValue2);
+        $this->em->persist($this->attributeValueTranslation2);
         $this->em->persist($this->product2);
         $this->em->persist($productTranslation2);
         $this->em->persist($this->productAttribute2);
@@ -657,7 +703,7 @@ class ProductMediaControllerTest extends SuluTestCase
 
         $product = $this->checkProductAttributes();
 
-        $this->assertEquals(3, $product->getMedia()->count());
+        $this->assertEquals(2, $product->getMedia()->count());
     }
 
     /**
@@ -695,6 +741,6 @@ class ProductMediaControllerTest extends SuluTestCase
      */
     protected function getProductRepository()
     {
-        return $this->container->get('sulu_product.product_repository');
+        return $this->getContainer()->get('sulu_product.product_repository');
     }
 }

@@ -55,14 +55,27 @@ class AttributeValueManager implements AttributeValueManagerInterface
      */
     private $em;
 
+    /**
+     * @var ProductLocaleManager
+     */
+    private $productLocaleManger;
+
+    /**
+     * @param AttributeValueRepositoryInterface $attributeValueRepository
+     * @param UserRepositoryInterface $userRepository
+     * @param ObjectManager $em
+     * @param ProductLocaleManager $productLocaleManager
+     */
     public function __construct(
         AttributeValueRepositoryInterface $attributeValueRepository,
         UserRepositoryInterface $userRepository,
-        ObjectManager $em
+        ObjectManager $em,
+        ProductLocaleManager $productLocaleManager
     ) {
         $this->attributeValueRepository = $attributeValueRepository;
         $this->userRepository = $userRepository;
         $this->em = $em;
+        $this->productLocaleManger = $productLocaleManager;
     }
 
     /**
@@ -95,14 +108,6 @@ class AttributeValueManager implements AttributeValueManagerInterface
             )
         );
 
-        $fieldDescriptors['selected'] = new DoctrineFieldDescriptor(
-            'selected',
-            'selected',
-            self::$attributeValueEntityName,
-            'product.attribute.value.selected',
-            array()
-        );
-
         $fieldDescriptors['attribute_id'] = new DoctrineFieldDescriptor(
             'id',
             'attribute_id',
@@ -125,10 +130,10 @@ class AttributeValueManager implements AttributeValueManagerInterface
      */
     public function findByIdAndLocale($id, $locale)
     {
-        $attributeValue = $this->attributeValueRepository->findByIdAndLocale($id, $locale);
+        $attributeValue = $this->attributeValueRepository->findById($id);
 
         if ($attributeValue) {
-            return new AttributeValue($attributeValue, $locale);
+            return new AttributeValue($attributeValue, $locale, $this->productLocaleManger->getFallbackLocale());
         } else {
             throw new AttributeValueNotFoundException($id);
         }
@@ -144,7 +149,11 @@ class AttributeValueManager implements AttributeValueManagerInterface
             array_walk(
                 $attributeValues,
                 function (&$attributeValue) use ($locale) {
-                    $attributeValue = new AttributeValue($attributeValue, $locale);
+                    $attributeValue = new AttributeValue(
+                        $attributeValue,
+                        $locale,
+                        $this->productLocaleManger->getFallbackLocale()
+                    );
                 }
             );
             return $attributeValues;
@@ -158,12 +167,16 @@ class AttributeValueManager implements AttributeValueManagerInterface
      */
     public function findAllByLocale($locale)
     {
-        $attributeValues = $this->attributeValueRepository->findAllByLocale($locale);
+        $attributeValues = $this->attributeValueRepository->
 
         array_walk(
             $attributeValues,
             function (&$attributeValue) use ($locale) {
-                $attributeValue = new AttributeValue($attributeValue, $locale);
+                $attributeValue = new AttributeValue(
+                    $attributeValue,
+                    $locale,
+                    $this->productLocaleManger->getFallbackLocale()
+                );
             }
         );
 
@@ -180,15 +193,22 @@ class AttributeValueManager implements AttributeValueManagerInterface
             if (!$attributeValue) {
                 throw new AttributeValueNotFoundException($attributeValueId);
             }
-            $attributeValue = new AttributeValue($attributeValue, $locale);
+            $attributeValue = new AttributeValue(
+                $attributeValue,
+                $locale,
+                $this->productLocaleManger->getFallbackLocale()
+            );
         } else {
-            $attributeValue = new AttributeValue(new AttributeValueEntity(), $locale);
+            $attributeValue = new AttributeValue(
+                new AttributeValueEntity(),
+                $locale,
+                $this->productLocaleManger->getFallbackLocale()
+            );
         }
 
         $this->checkData($data, $attributeValueId === null);
 
         $attributeValue->setName($this->getProperty($data, 'name', $attributeValue->getName()));
-        $attributeValue->setSelected($this->getProperty($data, 'selected', $attributeValue->getSelected()));
 
         if ($attributeValue->getId() == null) {
             $this->em->persist($attributeValue->getEntity());

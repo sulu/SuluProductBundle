@@ -58,7 +58,7 @@ class VariantControllerTest extends SuluTestCase
 
     public function setUp()
     {
-        $this->em = $this->db('ORM')->getOm();
+        $this->em = $this->getEntityManager();
         $this->purgeDatabase();
         $this->createFixtures();
         $this->client = $this->createAuthenticatedClient();
@@ -214,6 +214,6 @@ class VariantControllerTest extends SuluTestCase
      */
     private function getProductFactory()
     {
-        return $this->container->get('sulu_product.product_factory');
+        return $this->getContainer()->get('sulu_product.product_factory');
     }
 }

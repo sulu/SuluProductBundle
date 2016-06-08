@@ -8,8 +8,6 @@
             <generator strategy="AUTO"/>
         </id>
 
-        <field name="value" type="text" column="value"/>
-
         <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface" field="product"
                      inversed-by="productAttributes">
             <join-column name="idProducts" referenced-column-name="id" nullable="false" on-delete="CASCADE"/>
@@ -17,6 +15,10 @@
         <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\Attribute" field="attribute"
                      inversed-by="productAttributes">
             <join-column name="idAttributes" referenced-column-name="id" nullable="false"/>
+        </many-to-one>
+        <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\AttributeValue" field="attributeValue"
+                     inversed-by="productAttributes">
+            <join-column name="idAttributeValues" referenced-column-name="id" nullable="false"/>
         </many-to-one>
     </entity>
 </doctrine-mapping>

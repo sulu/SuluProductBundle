@@ -11,14 +11,13 @@
 namespace Sulu\Bundle\ProductBundle\Api;
 
 use Hateoas\Configuration\Annotation\Relation;
-
 use JMS\Serializer\Annotation\VirtualProperty;
 use JMS\Serializer\Annotation\SerializedName;
 use JMS\Serializer\Annotation\ExclusionPolicy;
-
+use Sulu\Bundle\ProductBundle\Api\AttributeValue;
+use Sulu\Bundle\ProductBundle\Api\Attribute;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttribute as ProductAttributeEntity;
 use Sulu\Component\Rest\ApiWrapper;
-use Sulu\Bundle\ProductBundle\Api\Attribute;
 
 /**
  * The ProductAttribute class which will be exported to the API
@@ -29,20 +28,23 @@ use Sulu\Bundle\ProductBundle\Api\Attribute;
 class ProductAttribute extends ApiWrapper
 {
     /**
-     * @param AttributeEntity $entity
-     * @param string $locale
+     * @var string $fallbackLocale
      */
-    public function __construct(ProductAttributeEntity $entity, $locale)
+    protected $fallbackLocale;
+
+    /**
+     * @param ProductAttributeEntity $entity
+     * @param string $locale
+     * @param string $fallbackLocale
+     */
+    public function __construct(ProductAttributeEntity $entity, $locale, $fallbackLocale)
     {
         $this->entity = $entity;
         $this->locale = $locale;
+        $this->fallbackLocale = $fallbackLocale;
     }
 
     /**
-     * Returns the id of the Attribute
-     *
-     * @VirtualProperty
-     * @SerializedName("id")
      * @return int
      */
     public function getId()
@@ -51,70 +53,112 @@ class ProductAttribute extends ApiWrapper
     }
 
     /**
-     * Returns the value
-     *
      * @VirtualProperty
-     * @SerializedName("value")
+     * @SerializedName("fallbackLocale")
+     *
      * @return string
      */
-    public function getValue()
+    public function getFallbackLocale()
     {
-        return $this->entity->getValue();
+        return $this->fallbackLocale;
     }
 
     /**
-     * Returns the attribute object
+     * Returns the id of the Attribute.
      *
-     * @return Sulu\Bundle\ProductBundle\Api\Attribute
-     */
-    public function getAttribute()
-    {
-        return new Attribute($this->entity->getAttribute(), $this->locale);
-    }
-
-    /**
-     * Returns the attribute name
+     * @return string
      *
-     * @return Sulu\Bundle\ProductBundle\Api\Attribute
-     * @VirtualProperty
-     * @SerializedName("attributeName")
-     */
-    public function getAttributeName()
-    {
-        return $this->getAttribute()->getName();
-    }
-
-    /**
-     * Returns the attribute type
-     *
-     * @return Sulu\Bundle\ProductBundle\Api\AttributeType
-     */
-    public function getAttributeType()
-    {
-        return $this->getAttribute()->getType();
-    }
-
-    /**
-     * Returns the attribute type name
-     *
-     * @return Sulu\Bundle\ProductBundle\Api\AttributeType
-     * @VirtualProperty
-     * @SerializedName("attributeTypeName")
-     */
-    public function getAttributeTypeName()
-    {
-        return $this->getAttributeType()->getName();
-    }
-
-    /**
-     * Returns the attribute id
-     *
-     * @return Sulu\Bundle\ProductBundle\Api\Attribute
      * @VirtualProperty
      * @SerializedName("attributeId")
      */
     public function getAttributeId()
     {
         return $this->getAttribute()->getId();
+    }
+
+    /**
+     * Returns the attribute name.
+     *
+     * @return Sulu\Bundle\ProductBundle\Api\Attribute
+     *
+     * @VirtualProperty
+     * @SerializedName("attributeName")
+     */
+    public function getAttributeName()
+    {
+        return $this->getAttribute()->getTranslation()->getName();
+    }
+
+    /**
+     * @VirtualProperty
+     * @SerializedName("attributeLocale")
+     *
+     * @return string
+     */
+    public function getAttributeLocale()
+    {
+        return $this->getAttribute()->getTranslation()->getLocale();
+    }
+
+    /**
+     * Returns the attribute type name.
+     *
+     * @return Sulu\Bundle\ProductBundle\Api\AttributeType
+     *
+     * @VirtualProperty
+     * @SerializedName("attributeTypeName")
+     */
+    public function getAttributeTypeName()
+    {
+        return $this->getAttribute()->getType()->getName();
+    }
+
+    /**
+     * @VirtualProperty
+     * @SerializedName("attributeValueId")
+     *
+     * @return string
+     */
+    public function getAttributeValueId()
+    {
+        return $this->getAttributeValue()->getId();
+    }
+
+    /**
+     * @VirtualProperty
+     * @SerializedName("attributeValueName")
+     *
+     * @return string
+     */
+    public function getAttributeValueName()
+    {
+        return $this->getAttributeValue()->getTranslation()->getName();
+    }
+
+    /**
+     * @VirtualProperty
+     * @SerializedName("attributeValueLocale")
+     *
+     * @return string
+     */
+    public function getAttributeValueLocale()
+    {
+        return $this->getAttributeValue()->getTranslation()->getLocale();
+    }
+
+    /**
+     * @return Attribute
+     */
+    public function getAttribute()
+    {
+        return new Attribute($this->entity->getAttribute(), $this->locale, $this->fallbackLocale);
+    }
+
+    /**
+     * @return AttributeValue
+     */
+    public function getAttributeValue()
+    {
+        return new AttributeValue($this->entity->getAttributeValue(), $this->locale, $this->fallbackLocale);
     }
 }

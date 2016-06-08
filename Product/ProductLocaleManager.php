@@ -28,6 +28,14 @@ class ProductLocaleManager
     }
 
     /**
+     * @return string
+     */
+    public function getFallbackLocale()
+    {
+        return $this->configuration['fallback_locale'];
+    }
+
+    /**
      * Function returns the locale that should be used by default.
      * If request-locale is set, then use this one.
      * Else If users locale matches any of the given locales, that one is taken

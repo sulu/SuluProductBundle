@@ -35,8 +35,7 @@ class TaxClassManagerTest extends SuluTestCase
 
     public function setUp()
     {
-
-        $this->em = $this->db('ORM')->getOm();
+        $this->em = $this->getEntityManager();
         $this->purgeDatabase();
         $this->client = $this->createAuthenticatedClient();
         $this->taxClassManager = $this->client->getContainer()->get('sulu_product.tax_class_manager');

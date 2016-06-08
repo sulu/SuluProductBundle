@@ -21,12 +21,14 @@ class ProductSetContentNavigationProvider implements ContentNavigationProviderIn
     public function getNavigationItems(array $options = [])
     {
         $details = new ContentNavigationItem('content-navigation.product.general');
+        $details->setId('details');
         $details->setAction('details');
         $details->setPosition(10);
         $details->setComponent('products/components/detail-form@suluproduct');
         $details->setResetStore(false);
 
         $pricing = new ContentNavigationItem('content-navigation.product.pricing');
+        $pricing->setId('pricing');
         $pricing->setAction('pricing');
         $pricing->setPosition(20);
         $pricing->setComponent('products/components/pricing@suluproduct');
