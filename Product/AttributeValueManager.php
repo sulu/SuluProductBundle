@@ -61,8 +61,6 @@ class AttributeValueManager implements AttributeValueManagerInterface
     private $productLocaleManger;
 
     /**
-     * AttributeValueManager constructor.
-     *
      * @param AttributeValueRepositoryInterface $attributeValueRepository
      * @param UserRepositoryInterface $userRepository
      * @param ObjectManager $em
