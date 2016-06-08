@@ -90,7 +90,9 @@ define([
             }, this);
         },
 
-    // @var Bool saved - defines if saved state should be shown
+        /**
+         * @param {Boolean} saved defines if saved state should be shown
+         */
         setHeaderBar = function(saved) {
             if (saved !== this.saved) {
                 if (!!saved) {
@@ -281,9 +283,9 @@ define([
         /**
          * On badge attributeName for datagrid.
          *
-         * @param item
-         * @param badge
-         * @param locale
+         * @param {Object} item
+         * @param {Object} badge
+         * @param {String} locale
          */
         onBadgeAttributeName = function(item, badge, locale) {
             if (
@@ -302,9 +304,9 @@ define([
         /**
          * On badge attributeValueName for datagrid.
          *
-         * @param item
-         * @param badge
-         * @param locale
+         * @param {Object} item
+         * @param {Object} badge
+         * @param {String} locale
          */
         onBadgeAttributeValueName = function(item, badge, locale) {
             if (
