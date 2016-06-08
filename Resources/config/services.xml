@@ -150,6 +150,7 @@
             <argument type="service" id="sulu_product.attribute_value_repository"/>
             <argument type="service" id="sulu_security.user_repository" />
             <argument type="service" id="doctrine.orm.entity_manager"/>
+            <argument type="service" id="sulu_product.product_locale_manager"/>
         </service>
         <service id="sulu_product.status_manager" class="%sulu_product.status_manager.class%">
             <argument type="service" id="sulu_product.status_repository"/>

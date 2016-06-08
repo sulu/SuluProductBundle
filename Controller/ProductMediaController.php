@@ -281,7 +281,7 @@ class ProductMediaController extends RestController
         $i = 0;
         foreach ($entities as $key => $entity) {
             if (array_key_exists('thumbnails', $entity) && $entity['thumbnails']) {
-                $entities[$key]['thumbnails'] = $thumbnails[$i];
+                $entities[$key]['thumbnails'] = $thumbnails[$entities[$key]['thumbnails']];
                 $i += 1;
             }
         }
