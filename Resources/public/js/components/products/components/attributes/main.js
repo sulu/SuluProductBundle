@@ -236,11 +236,13 @@ define([
 
             if (result) {
                 result.attributeValueName = attributeValueName;
+                result.attributeValueLocale = this.options.locale;
                 this.sendData.action = actions.UPDATE;
             } else {
                 var newAttribute = {
                     'attributeId': attributeId,
-                    'attributeValueName': attributeValueName
+                    'attributeValueName': attributeValueName,
+                    'attributeValueLocale': this.options.locale
                 };
                 attributes.push(newAttribute);
                 this.sendData.action = actions.ADD;
