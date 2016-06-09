@@ -1892,7 +1892,6 @@ class ProductManager implements ProductManagerInterface
 
             // Add and change attributes.
             foreach ($data['attributes'] as $attributeData) {
-
                 if (!isset($attributeData['attributeId'])) {
                     continue;
                 }
