@@ -59,12 +59,8 @@ define([
                 // Select action
                 if (data.action === actions.ADD) {
                     // ADD RECORD IN DATAGRID
-                    var result = _.findWhere(attributes, {'attributeId': data.attributeIdAdded});
-                    this.sandbox.emit('husky.datagrid.' + datagridInstanceName + '.record.add', {
-                        attributeId: result.attributeId,
-                        attributeName: result.attributeName,
-                        attributeValueName: result.attributeValueName
-                    });
+                    var attribute = _.findWhere(attributes, {'attributeId': data.attributeIdAdded});
+                    this.sandbox.emit('husky.datagrid.' + datagridInstanceName + '.record.add', attribute);
                 } else if (data.action === actions.DELETE) {
                     // DELETE RECORDs IN DATAGRID
                     $.each(data.attributeIdsDeleted, function(key, id) {
