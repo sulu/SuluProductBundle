@@ -278,11 +278,12 @@ class ProductMediaController extends RestController
     {
         $ids = array_filter(array_column($entities, 'thumbnails'));
         $thumbnails = $this->getMediaManager()->getFormatUrls($ids, $locale);
-        $i = 0;
         foreach ($entities as $key => $entity) {
-            if (array_key_exists('thumbnails', $entity) && $entity['thumbnails']) {
-                $entities[$key]['thumbnails'] = $thumbnails[$entities[$key]['thumbnails']];
-                $i += 1;
+            if (array_key_exists('thumbnails', $entity)
+                && $entity['thumbnails']
+                && array_key_exists($entity['thumbnails'], $thumbnails)
+            ) {
+                $entities[$key]['thumbnails'] = $thumbnails[$entity['thumbnails']];
             }
         }
 
