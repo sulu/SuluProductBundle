@@ -1896,11 +1896,16 @@ class ProductManager implements ProductManagerInterface
                     continue;
                 }
 
-                $attributeDataValueName = trim($attributeData['attributeValueName']);
                 $attributeId = $attributeData['attributeId'];
+                $attributeIdsInRequest[$attributeId] = $attributeId;
 
-                $attributeIdsInRequest[$attributeId] = $attributeDataValueName;
+                // Check if a attributeValueName is provided, otherwise do nothing.
+                if (!array_key_exists('attributeValueName', $attributeData)) {
+                    continue;
+                }
+                $attributeDataValueName = trim($attributeData['attributeValueName']);
 
+                // Get attributeValueLocale from request.
                 $attributeValueLocale = $locale;
                 if (isset($attributeData['attributeValueLocale'])) {
                     $attributeValueLocale = $attributeData['attributeValueLocale'];
