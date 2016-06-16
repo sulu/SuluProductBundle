@@ -13,9 +13,14 @@ namespace Sulu\Bundle\ProductBundle\Product;
 use JMS\Serializer\Annotation\Groups;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\PricingBundle\Pricing\PriceFormatter;
+use Sulu\Bundle\ProductBundle\Entity\ProductPrice;
+use Sulu\Bundle\ProductBundle\Entity\SpecialPrice;
 
 class ProductPriceManager implements ProductPriceManagerInterface
 {
+    /**
+     * @var string
+     */
     protected $defaultCurrency;
 
     /**
@@ -36,13 +41,13 @@ class ProductPriceManager implements ProductPriceManagerInterface
     }
 
     /**
-     * Returns the bulk price for a certain quantity of the product by a given currency
+     * Returns the bulk price for a certain quantity of the product by a given currency.
      *
      * @param ProductInterface $product
-     * @param $quantity
+     * @param float $quantity
      * @param null|string $currency
      *
-     * @return null|\Sulu\Bundle\ProductBundle\Entity\ProductPrice
+     * @return null|ProductPrice
      */
     public function getBulkPriceForCurrency(ProductInterface $product, $quantity, $currency = null)
     {
@@ -66,12 +71,12 @@ class ProductPriceManager implements ProductPriceManagerInterface
     }
 
     /**
-     * Returns the base prices for the product by a given currency
+     * Returns the base prices for the product by a given currency.
      *
      * @param ProductInterface $product
      * @param null|string $currency
      *
-     * @return null|\Sulu\Bundle\ProductBundle\Entity\ProductPrice
+     * @return null|ProductPrice
      */
     public function getBasePriceForCurrency(ProductInterface $product, $currency = null)
     {
@@ -88,33 +93,32 @@ class ProductPriceManager implements ProductPriceManagerInterface
     }
 
     /**
-     * Returns the special price for the product by a given currency
+     * Returns the special price for the product by a given currency.
      *
      * @param ProductInterface $product
      * @param null|string $currency
      *
-     * @return null|\Sulu\Bundle\ProductBundle\Entity\ProductPrice
+     * @return null|ProductPrice
      */
     public function getSpecialPriceForCurrency(ProductInterface $product, $currency = null)
     {
         $currency = $currency ?: $this->defaultCurrency;
         $specialPrices = $product->getSpecialPrices();
 
-        if ($specialPrices) {
-            foreach ($specialPrices as $specialPriceEntity) {
-                if ($specialPriceEntity->getCurrency()->getCode() == $currency) {
-                    $startDate = $specialPriceEntity->getStartDate();
-                    $endDate = $specialPriceEntity->getEndDate();
-                    $now = new \DateTime();
-                    if (($now >= $startDate && $now <= $endDate) ||
-                        ($now >= $startDate && empty($endDate)) ||
-                        (empty($startDate) && empty($endDate))
-                    ) {
-                        return $specialPriceEntity;
-                    }
+        // Check if any special prices are set.
+        if (!$specialPrices) {
+            return null;
+        }
 
-                    return null;
+        foreach ($specialPrices as $specialPriceEntity) {
+            // Find special price with matching currency.
+            if ($specialPriceEntity->getCurrency()->getCode() == $currency) {
+                // Check if special price is still valid.
+                if ($this->isValidSpecialPrice($specialPriceEntity)) {
+                    return $specialPriceEntity;
                 }
+
+                break;
             }
         }
 
@@ -122,14 +126,15 @@ class ProductPriceManager implements ProductPriceManagerInterface
     }
 
     /**
-     * Helper function to get a formatted price for a given currency and locale
+     * Helper function to get a formatted price for a given currency and locale.
      *
-     * @param Integer $price
-     * @param String $symbol
-     * @param String $locale
+     * @param int $price
+     * @param string $symbol
+     * @param string $locale
      *
-     * @return String price
      * @Groups({"cart"})
+     *
+     * @return string
      */
     public function getFormattedPrice($price, $symbol = 'EUR', $locale = null)
     {
@@ -145,5 +150,29 @@ class ProductPriceManager implements ProductPriceManagerInterface
             $symbol,
             $location
         );
+    }
+
+    /**
+     * Checks if a special price is still valid by today.
+     *
+     * @param SpecialPrice $specialPrice
+     *
+     * @return bool
+     */
+    private function isValidSpecialPrice(SpecialPrice $specialPrice)
+    {
+        $startDate = $specialPrice->getStartDate();
+        $endDate = $specialPrice->getEndDate();
+        $now = new \DateTime();
+
+        // Check if special price is stil valid.
+        if (($now >= $startDate && $now <= $endDate) ||
+            ($now >= $startDate && empty($endDate)) ||
+            (empty($startDate) && empty($endDate))
+        ) {
+            return true;
+        }
+
+        return false;
     }
 }
