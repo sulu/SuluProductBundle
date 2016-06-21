@@ -59,10 +59,10 @@
         <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\Status" field="status" inversed-by="products">
             <join-column name="idStatus" referenced-column-name="id" nullable="false"/>
         </many-to-one>
-        <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\Unit" field="contentUnit" inversed-by="products">
+        <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\Unit" field="contentUnit">
             <join-column name="idContentUnit" referenced-column-name="id" nullable="true"/>
         </many-to-one>
-        <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\Unit" field="orderUnit" inversed-by="products">
+        <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\Unit" field="orderUnit">
             <join-column name="idOrderUnit" referenced-column-name="id" nullable="true"/>
         </many-to-one>
         <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\DeliveryStatus" field="deliveryStatus"
