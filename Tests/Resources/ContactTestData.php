@@ -10,7 +10,7 @@ use Sulu\Bundle\ContactBundle\Contact\ContactManagerInterface;
 use Sulu\Bundle\ContactBundle\Entity\AccountInterface;
 use Sulu\Bundle\ContactBundle\Entity\Address;
 use Sulu\Bundle\ContactBundle\Entity\AddressType;
-use Sulu\Bundle\ContactBundle\Entity\Contact;
+use Sulu\Bundle\ContactBundle\Entity\ContactInterface;
 use Sulu\Bundle\ContactBundle\Entity\Country;
 use Sulu\Bundle\ContactBundle\Entity\Email;
 use Sulu\Bundle\ContactBundle\Entity\EmailType;
@@ -24,7 +24,7 @@ class ContactTestData
     const SUPPLIER_TYPE = 3;
 
     /**
-     * @var Contact
+     * @var ContactInterface
      */
     public $contact;
 
@@ -210,7 +210,8 @@ class ContactTestData
     public function createContact()
     {
         $this->contactCount++;
-        $contact = new Contact();
+        $contactRepository = $this->container->get('sulu.repository.contact');
+        $contact = $contactRepository->createNew();
         $contact->setFirstName('Max');
         $contact->setLastName('Mustermann');
         $contact->setPosition('CEO');
