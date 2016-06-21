@@ -22,11 +22,6 @@ class Unit
     /**
      * @var Collection
      */
-    private $products;
-
-    /**
-     * @var Collection
-     */
     private $mappings;
 
     /**
@@ -35,7 +30,6 @@ class Unit
     public function __construct()
     {
         $this->translations = new \Doctrine\Common\Collections\ArrayCollection();
-        $this->products = new \Doctrine\Common\Collections\ArrayCollection();
     }
 
     /**
@@ -84,34 +78,6 @@ class Unit
     public function getTranslations()
     {
         return $this->translations;
-    }
-
-    /**
-     * @param ProductInterface $product
-     *
-     * @return self
-     */
-    public function addProduct(ProductInterface $product)
-    {
-        $this->products[] = $product;
-
-        return $this;
-    }
-
-    /**
-     * @param ProductInterface $product
-     */
-    public function removeProduct(ProductInterface $product)
-    {
-        $this->products->removeElement($product);
-    }
-
-    /**
-     * @return Collection
-     */
-    public function getProducts()
-    {
-        return $this->products;
     }
 
     /**
