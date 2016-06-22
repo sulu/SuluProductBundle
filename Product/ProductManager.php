@@ -12,6 +12,8 @@ namespace Sulu\Bundle\ProductBundle\Product;
 
 use DateTime;
 use Doctrine\Common\Persistence\ObjectManager;
+use Sulu\Bundle\TagBundle\Entity\TagRepository;
+use Sulu\Bundle\TagBundle\Tag\TagRepositoryInterface;
 use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Sulu\Component\Persistence\RelationTrait;
@@ -176,6 +178,11 @@ class ProductManager implements ProductManagerInterface
     protected $productFactory;
 
     /**
+     * @var TagRepositoryInterface
+     */
+    protected $tagRepository;
+
+    /**
      * @param ProductRepositoryInterface $productRepository
      * @param SpecialPriceRepository $specialPriceRepository
      * @param AttributeSetRepository $attributeSetRepository
@@ -193,6 +200,7 @@ class ProductManager implements ProductManagerInterface
      * @param MediaManager $mediaManager
      * @param ObjectManager $em
      * @param AccountRepository $accountRepository
+     * @param TagRepositoryInterface $tagRepository
      * @param string $defaultCurrency
      */
     public function __construct(
@@ -213,6 +221,7 @@ class ProductManager implements ProductManagerInterface
         MediaManager $mediaManager,
         ObjectManager $em,
         AccountRepository $accountRepository,
+        TagRepositoryInterface $tagRepository,
         $defaultCurrency
     ) {
         $this->productRepository = $productRepository;
@@ -232,6 +241,7 @@ class ProductManager implements ProductManagerInterface
         $this->em = $em;
         $this->productFactory = $productFactory;
         $this->accountRepository = $accountRepository;
+        $this->tagRepository = $tagRepository;
         $this->defaultCurrency = $defaultCurrency;
     }
 
@@ -1053,6 +1063,7 @@ class ProductManager implements ProductManagerInterface
 
         // Process given attributes.
         $this->processAttributes($data, $product->getEntity(), $locale);
+        $this->processTags($data, $product->getEntity());
 
         if (array_key_exists('specialPrices', $data)) {
             $specialPricesData = $data['specialPrices'];
@@ -1426,6 +1437,23 @@ class ProductManager implements ProductManagerInterface
             $this->setStatusForProduct($product, $data['status']['id']);
         } else {
             throw new ProductNotFoundException($id);
+        }
+    }
+
+    /**
+     * @param array $data
+     * @param ProductInterface $product
+     */
+    protected function processTags(array $data, ProductInterface $product)
+    {
+        if (isset($data['tags'])) {
+            $product->getTags()->clear();
+            foreach ($data['tags'] as $strTag) {
+                $tag = $this->tagRepository->findTagByName($strTag);
+                if ($tag) {
+                    $product->addTag($tag);
+                }
+            }
         }
     }
 

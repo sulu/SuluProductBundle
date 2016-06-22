@@ -14,6 +14,7 @@ use Sulu\Bundle\ContactBundle\Entity\Account;
 use Sulu\Bundle\ContactBundle\Entity\Country;
 use Sulu\Bundle\MediaBundle\Entity\Media;
 use Sulu\Bundle\SecurityBundle\Entity\User;
+use Sulu\Bundle\TagBundle\Entity\Tag;
 use Sulu\Component\Security\Authentication\UserInterface;
 
 /**
@@ -538,4 +539,26 @@ interface ProductInterface
      * @return bool
      */
     public function isValidShopProduct($defaultCurrency);
+
+    /**
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getTags();
+
+    /**
+     * @param Tag $tag
+     *
+     * @return $this
+     */
+    public function addTag(Tag $tag);
+
+    /**
+     * @param Tag $tag
+     */
+    public function removeTag(Tag $tag);
+
+    /**
+     * @return string[]
+     */
+    public function getTagNameArray();
 }
