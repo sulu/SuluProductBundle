@@ -1,6 +1,8 @@
 CHANGELOG for Sulu Product Bundle
 =================================
 * dev-develop
+    * BUGFIX Fixed issue with tags when adding a new product
+    * ENHANCEMENT Added tests for tags in products
 
 * 0.10.5 (2016-06-23)
     * FEATURE Added tags to product

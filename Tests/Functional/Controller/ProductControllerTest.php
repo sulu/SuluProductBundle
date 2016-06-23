@@ -38,6 +38,7 @@ use Sulu\Bundle\ProductBundle\Entity\AttributeSetTranslation;
 use Sulu\Bundle\ProductBundle\Entity\AttributeType;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductException;
 use Sulu\Bundle\ProductBundle\Tests\Resources\ContactTestData;
+use Sulu\Bundle\TagBundle\Entity\Tag;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Symfony\Component\HttpKernel\Client;
 
@@ -248,6 +249,15 @@ class ProductControllerTest extends SuluTestCase
      */
     private $contactTestData;
 
+    /**
+     * @var Tag
+     */
+    private $tag1;
+
+    /**
+     * @var Tag
+     */
+    private $tag2;
 
     public function setUp()
     {
@@ -492,6 +502,14 @@ class ProductControllerTest extends SuluTestCase
         $this->contactTestData = new ContactTestData($this->getContainer());
         $this->product1->setSupplier($this->contactTestData->accountSupplier);
         $this->product2->setSupplier($this->contactTestData->accountSupplier2);
+
+        $this->tag1 = new Tag();
+        $this->tag1->setName('Tag 1');
+        $this->tag2 = new Tag();
+        $this->tag2->setName('Tag 2');
+
+        $this->em->persist($this->tag1);
+        $this->em->persist($this->tag2);
 
         $this->em->persist($this->deliveryStatusAvailable);
         $this->em->persist($deliveryStatusAvailableTranslation);
@@ -931,6 +949,9 @@ class ProductControllerTest extends SuluTestCase
             ),
             'taxClass' => array(
                 'id' => $this->taxClass1->getId()
+            ),
+            'tags' => array(
+                'Tag 1', 'Tag 2'
             )
         );
 
@@ -958,6 +979,8 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals('EnglishProductStatus-Inactive', $response->status->name);
 
         $this->assertEquals('EnglishProductType-1', $response->type->name);
+
+        $this->assertCount(2, $response->tags);
 
         // $this->assertEquals($this->attributeSet1->getId(), $response->attributeSet->id);
         // $this->assertEquals('EnglishTemplate-1', $response->attributeSet->name);
@@ -1129,6 +1152,9 @@ class ProductControllerTest extends SuluTestCase
                     'end' => $this->specialPrice1->getEndDate()->format('Y-m-d h:i:s'),
                     'currency' => array("code" => $this->specialPrice1->getCurrency()->getCode())
                 )
+            ),
+            'tags' => array(
+                'Tag 1', 'Tag 2'
             )
         );
 
@@ -1138,6 +1164,7 @@ class ProductControllerTest extends SuluTestCase
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals('56', $response->specialPrices[0]->price);
         $this->assertEquals('EUR', $response->specialPrices[0]->Currency->code);
+        $this->assertCount(2, $response->tags);
     }
 
     public function testActivateInvalidProduct()

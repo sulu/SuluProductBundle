@@ -188,7 +188,7 @@
             </trans-unit>
             <trans-unit id="48" resname="product.workflow.set.inactive">
                 <source>product.workflow.set.inactive</source>
-                <target>deactive</target>
+                <target>inactive</target>
             </trans-unit>
             <trans-unit id="49" resname="product.workflow.state.changed.error">
                 <source>product.workflow.state.changed.error</source>

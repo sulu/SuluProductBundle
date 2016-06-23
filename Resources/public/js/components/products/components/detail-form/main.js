@@ -122,13 +122,18 @@ define([
             this.initSupplierAutocomplete();
             this.initForm(this.options.data);
             this.setTags();
-            this.bindTagEvents(this.options.data.toJSON());
+
+            var data = {};
+            if (this.options.data) {
+                data = this.options.data.toJSON();
+            }
+            this.bindTagEvents(data);
         },
 
         // Start tags component
         setTags: function() {
             var uid = this.sandbox.util.uniqueId();
-            if (this.options.data.id) {
+            if (this.options.data && this.options.data.id) {
                 uid += '-' + this.options.data.id;
             }
             this.autoCompleteInstanceName = uid;
@@ -169,6 +174,7 @@ define([
                 }.bind(this));
             } else {
                 this.sandbox.start(formSelector);
+                this.dfdFormIsSet.resolve();
             }
         },
 
