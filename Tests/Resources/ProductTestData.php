@@ -81,6 +81,16 @@ class ProductTestData
     private $productStatusChanged;
 
     /**
+     * @var Status
+     */
+    private $productStatusImported;
+
+    /**
+     * @var Status
+     */
+    private $productStatusSubmitted;
+
+    /**
      * @var ProductInterface
      */
     private $product;
@@ -227,6 +237,8 @@ class ProductTestData
         $statusFixtures->load($this->entityManager);
         $this->productStatus = $this->getProductStatusRepository()->find(Status::ACTIVE);
         $this->productStatusChanged = $this->getProductStatusRepository()->find(Status::CHANGED);
+        $this->productStatusImported = $this->getProductStatusRepository()->find(Status::IMPORTED);
+        $this->productStatusSubmitted = $this->getProductStatusRepository()->find(Status::SUBMITTED);
 
         $deliveryStatusFixtures = new LoadDeliveryStatuses();
         $deliveryStatusFixtures->load($this->entityManager);
@@ -450,6 +462,22 @@ class ProductTestData
     public function getProductStatusChanged()
     {
         return $this->productStatusChanged;
+    }
+
+    /**
+     * @return Status
+     */
+    public function getProductStatusSubmitted()
+    {
+        return $this->productStatusSubmitted;
+    }
+
+    /**
+     * @return Status
+     */
+    public function getProductStatusImported()
+    {
+        return $this->productStatusImported;
     }
 
     /**
