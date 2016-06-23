@@ -5,6 +5,7 @@ namespace Sulu\Bundle\ProductBundle\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Sulu\Bundle\MediaBundle\Entity\Media;
+use Sulu\Bundle\TagBundle\Entity\Tag;
 use Sulu\Component\Security\Authentication\UserInterface;
 use Sulu\Bundle\ContactBundle\Entity\AccountInterface;
 
@@ -187,6 +188,11 @@ abstract class BaseProduct implements ProductInterface
      * @var boolean
      */
     protected $areGrossPrices = false;
+
+    /**
+     * @var ArrayCollection
+     */
+    protected $tags;
 
     /**
      * Constructor
@@ -1111,5 +1117,53 @@ abstract class BaseProduct implements ProductInterface
         }
 
         return false;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getTagNameArray()
+    {
+        $tags = [];
+
+        if (!is_null($this->getTags())) {
+            foreach ($this->getTags() as $tag) {
+                $tags[] = $tag->getName();
+            }
+        }
+
+        return $tags;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getTags()
+    {
+        return $this->tags;
+    }
+
+    /**
+     * @param Tag $tag
+     *
+     * @return self
+     */
+    public function addTag(Tag $tag)
+    {
+        $this->tags[] = $tag;
+
+        return $this;
+    }
+
+    /**
+     * @param Tag $tag
+     *
+     * @return self
+     */
+    public function removeTag(Tag $tag)
+    {
+        $this->tags->removeElement($tag);
+
+        return $this;
     }
 }

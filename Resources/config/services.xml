@@ -133,6 +133,7 @@
             <argument type="service" id="sulu_media.media_manager" />
             <argument type="service" id="doctrine.orm.entity_manager"/>
             <argument type="service" id="sulu_contact.account_repository"/>
+            <argument type="service" id="sulu_tag.tag_repository"/>
             <argument>%sulu_product.default_currency%</argument>
         </service>
         <service id="sulu_product.attribute_manager" class="%sulu_product.attribute_manager.class%">

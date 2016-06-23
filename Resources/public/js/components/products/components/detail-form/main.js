@@ -22,6 +22,7 @@ define([
         formSelector = '#product-form',
 
         constants = {
+            tagsId: '#tags',
             supplierId: '#supplierField',
             autocompleteSupplierInstanceName: 'supplier'
         };
@@ -36,6 +37,7 @@ define([
 
         initialize: function() {
             this.saved = true;
+            this.dfdFormIsSet = this.sandbox.data.deferred();
             if (!!this.options.data) {
                 this.status = this.options.data.attributes.status;
             } else {
@@ -94,6 +96,7 @@ define([
                 }
 
                 data.status = this.status;
+                data.tags = this.sandbox.dom.data(this.$find(constants.tagsId), 'tags');
 
                 if (!data.type && !!this.options.productType) {
                     data.type = {
@@ -118,6 +121,34 @@ define([
             this.sandbox.dom.html(this.$el, this.renderTemplate('/admin/product/template/product/form'));
             this.initSupplierAutocomplete();
             this.initForm(this.options.data);
+            this.setTags();
+            this.bindTagEvents(this.options.data.toJSON());
+        },
+
+        // Start tags component
+        setTags: function() {
+            var uid = this.sandbox.util.uniqueId();
+            if (this.options.data.id) {
+                uid += '-' + this.options.data.id;
+            }
+            this.autoCompleteInstanceName = uid;
+
+            this.dfdFormIsSet.then(function() {
+                this.sandbox.start([
+                    {
+                        name: 'auto-complete-list@husky',
+                        options: {
+                            el: '#tags',
+                            instanceName: this.autoCompleteInstanceName,
+                            getParameter: 'search',
+                            itemsKey: 'tags',
+                            remoteUrl: '/admin/api/tags?flat=true&sortBy=name&searchFields=name',
+                            completeIcon: 'tag',
+                            noNewTags: true
+                        }
+                    }
+                ]);
+            }.bind(this));
         },
 
         initForm: function(data) {
@@ -132,11 +163,21 @@ define([
             if (data) {
                 this.sandbox.form.setData(formSelector, data.toJSON()).then(function() {
                     this.sandbox.start(formSelector);
+                    this.dfdFormIsSet.resolve();
                 }.bind(this)).fail(function(error) {
                     this.sandbox.logger.error("An error occured when setting data!", error);
                 }.bind(this));
             } else {
                 this.sandbox.start(formSelector);
+            }
+        },
+
+        bindTagEvents: function(data) {
+            if (!!data.tags && data.tags.length > 0) {
+                // set tags after auto complete list was initialized
+                this.sandbox.on('husky.auto-complete-list.' + this.autoCompleteInstanceName + '.initialized', function() {
+                    this.sandbox.emit('husky.auto-complete-list.' + this.autoCompleteInstanceName + '.set-tags', data.tags);
+                }.bind(this));
             }
         },
 
@@ -200,6 +241,18 @@ define([
             this.sandbox.on('husky.select.deliveryStatus.selected.item', function() {
                 this.setHeaderBar(false);
             }.bind(this));
+
+            // Comment by Elias Hiller: Timeout needed to avoid activation of save button too early
+            setTimeout(function () {
+                // Listen for change after items have been added.
+                this.sandbox.on('husky.auto-complete-list.' + this.autoCompleteInstanceName + '.items-added', function() {
+                    this.setHeaderBar(false);
+                }.bind(this));
+                // Listen for change after items have been deleted.
+                this.sandbox.on('husky.auto-complete-list.' + this.autoCompleteInstanceName + '.item-deleted', function() {
+                    this.setHeaderBar(false);
+                }.bind(this));
+            }.bind(this), 1000);
         }
     };
 });

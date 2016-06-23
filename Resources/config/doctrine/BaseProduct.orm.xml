@@ -147,6 +147,16 @@
                 </inverse-join-columns>
             </join-table>
         </many-to-many>
+        <many-to-many target-entity="Sulu\Bundle\TagBundle\Entity\Tag" field="tags">
+            <join-table name="pr_product_tags">
+                <join-columns>
+                    <join-column name="idProducts" referenced-column-name="id" nullable="false" on-delete="CASCADE"/>
+                </join-columns>
+                <inverse-join-columns>
+                    <join-column name="idTags" referenced-column-name="id" nullable="false" on-delete="CASCADE" />
+                </inverse-join-columns>
+            </join-table>
+        </many-to-many>
         <many-to-many target-entity="Sulu\Bundle\MediaBundle\Entity\Media" field="media">
             <join-table name="pr_product_media">
                 <join-columns>
