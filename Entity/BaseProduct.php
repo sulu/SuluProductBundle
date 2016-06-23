@@ -205,6 +205,7 @@ abstract class BaseProduct implements ProductInterface
         $this->crosssells = new ArrayCollection();
         $this->categories = new ArrayCollection();
         $this->media = new ArrayCollection();
+        $this->tags = new ArrayCollection();
     }
 
     /**
