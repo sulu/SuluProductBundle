@@ -1,6 +1,7 @@
 CHANGELOG for Sulu Product Bundle
 =================================
 * dev-develop
+    * ENHANCEMENT Improved ProductTestData by adding product statuses
     * ENHANCEMENT Improved ContactTestData by adding use of ContactRepositories create contact function
     * ENHANCEMENT Cleanups in ProductPriceManager
 
