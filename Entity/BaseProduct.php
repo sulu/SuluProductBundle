@@ -190,7 +190,7 @@ abstract class BaseProduct implements ProductInterface
     protected $areGrossPrices = false;
 
     /**
-     * @var \Doctrine\Common\Collections\Collection
+     * @var ArrayCollection
      */
     protected $tags;
 
@@ -1136,7 +1136,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * @return \Doctrine\Common\Collections\Collection
+     * @return ArrayCollection
      */
     public function getTags()
     {
@@ -1146,7 +1146,7 @@ abstract class BaseProduct implements ProductInterface
     /**
      * @param Tag $tag
      *
-     * @return $this
+     * @return self
      */
     public function addTag(Tag $tag)
     {
@@ -1157,9 +1157,13 @@ abstract class BaseProduct implements ProductInterface
 
     /**
      * @param Tag $tag
+     *
+     * @return self
      */
     public function removeTag(Tag $tag)
     {
         $this->tags->removeElement($tag);
+
+        return $this;
     }
 }

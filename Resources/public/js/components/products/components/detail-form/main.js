@@ -38,7 +38,6 @@ define([
         initialize: function() {
             this.saved = true;
             this.dfdFormIsSet = this.sandbox.data.deferred();
-            this.dfdListenForChange = this.sandbox.data.deferred();
             if (!!this.options.data) {
                 this.status = this.options.data.attributes.status;
             } else {
@@ -126,7 +125,7 @@ define([
             this.bindTagEvents(this.options.data.toJSON());
         },
 
-        // show tags and activate keylistener
+        // Start tags component
         setTags: function() {
             var uid = this.sandbox.util.uniqueId();
             if (this.options.data.id) {
@@ -179,8 +178,6 @@ define([
                 this.sandbox.on('husky.auto-complete-list.' + this.autoCompleteInstanceName + '.initialized', function() {
                     this.sandbox.emit('husky.auto-complete-list.' + this.autoCompleteInstanceName + '.set-tags', data.tags);
                 }.bind(this));
-            } else {
-                this.dfdListenForChange.resolve();
             }
         },
 
@@ -247,11 +244,11 @@ define([
 
             // Comment by Elias Hiller: Timeout needed to avoid activation of save button too early
             setTimeout(function () {
-                // listen for change after items have been added
+                // Listen for change after items have been added.
                 this.sandbox.on('husky.auto-complete-list.' + this.autoCompleteInstanceName + '.items-added', function() {
                     this.setHeaderBar(false);
                 }.bind(this));
-                // listen for change after items have been deleted
+                // Listen for change after items have been deleted.
                 this.sandbox.on('husky.auto-complete-list.' + this.autoCompleteInstanceName + '.item-deleted', function() {
                     this.setHeaderBar(false);
                 }.bind(this));

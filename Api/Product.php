@@ -11,7 +11,6 @@
 namespace Sulu\Bundle\ProductBundle\Api;
 
 use Hateoas\Configuration\Annotation\Relation;
-use JMS\Serializer\Annotation as Serializer;
 use JMS\Serializer\Annotation\ExclusionPolicy;
 use JMS\Serializer\Annotation\Groups;
 use JMS\Serializer\Annotation\SerializedName;
@@ -1256,7 +1255,7 @@ class Product extends ApiWrapper implements ApiProductInterface
      * @VirtualProperty
      * @SerializedName("tags")
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return string[]
      */
     public function getTags()
     {

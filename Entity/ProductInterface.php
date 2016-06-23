@@ -10,10 +10,10 @@
 
 namespace Sulu\Bundle\ProductBundle\Entity;
 
-use Sulu\Bundle\ContactBundle\Entity\Account;
+use Doctrine\Common\Collections\ArrayCollection;
+use Sulu\Bundle\ContactBundle\Entity\AccountInterface;
 use Sulu\Bundle\ContactBundle\Entity\Country;
 use Sulu\Bundle\MediaBundle\Entity\Media;
-use Sulu\Bundle\SecurityBundle\Entity\User;
 use Sulu\Bundle\TagBundle\Entity\Tag;
 use Sulu\Component\Security\Authentication\UserInterface;
 
@@ -541,7 +541,7 @@ interface ProductInterface
     public function isValidShopProduct($defaultCurrency);
 
     /**
-     * @return \Doctrine\Common\Collections\Collection
+     * @return ArrayCollection
      */
     public function getTags();
 
