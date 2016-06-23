@@ -122,13 +122,18 @@ define([
             this.initSupplierAutocomplete();
             this.initForm(this.options.data);
             this.setTags();
-            this.bindTagEvents(this.options.data.toJSON());
+
+            var object = {};
+            if (this.options.data) {
+                object = this.options.data.toJSON();
+            }
+            this.bindTagEvents(object);
         },
 
         // Start tags component
         setTags: function() {
             var uid = this.sandbox.util.uniqueId();
-            if (this.options.data.id) {
+            if (this.options.data && this.options.data.id) {
                 uid += '-' + this.options.data.id;
             }
             this.autoCompleteInstanceName = uid;
