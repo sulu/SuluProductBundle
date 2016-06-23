@@ -2,9 +2,11 @@ CHANGELOG for Sulu Product Bundle
 =================================
 * dev-master
 
-* 0.10.4 (2016-06-23)
+* 0.10.5 (2016-06-23)
     * FEATURE Added tags to product
     * ENHANCEMENT Improved ProductTestData by adding product statuses
+    
+* 0.10.4 (2016-06-21)
     * ENHANCEMENT Improved ContactTestData by adding use of ContactRepositories create contact function
     * ENHANCEMENT Cleanups in ProductPriceManager
 
