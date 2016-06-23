@@ -199,6 +199,14 @@
     </div>
 
     <h2 class="divider"><%= translate('product.classification') %></h2>
+    {% block tags %}
+        <div class="grid-row form-horizontal">
+            <div class="form-group">
+                <label><%= translate('tag.tags.title') %></label>
+                <div id="tags"></div>
+            </div>
+        </div>
+    {% endblock %}
 
     <div class="grid-row small">
         <div class="grid-col-12">

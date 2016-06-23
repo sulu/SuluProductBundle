@@ -1250,4 +1250,15 @@ class Product extends ApiWrapper implements ApiProductInterface
     {
         return $this->entity->isValidShopProduct($defaultCurrency);
     }
+
+    /**
+     * @VirtualProperty
+     * @SerializedName("tags")
+     *
+     * @return string[]
+     */
+    public function getTags()
+    {
+        return $this->entity->getTagNameArray();
+    }
 }
