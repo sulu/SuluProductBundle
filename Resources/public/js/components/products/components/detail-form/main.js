@@ -123,11 +123,11 @@ define([
             this.initForm(this.options.data);
             this.setTags();
 
-            var object = {};
+            var data = {};
             if (this.options.data) {
-                object = this.options.data.toJSON();
+                data = this.options.data.toJSON();
             }
-            this.bindTagEvents(object);
+            this.bindTagEvents(data);
         },
 
         // Start tags component
