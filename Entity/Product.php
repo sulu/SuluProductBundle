@@ -54,7 +54,6 @@ class Product extends BaseProduct
         $this->prices = new ArrayCollection();
         $this->setProducts = new ArrayCollection();
         $this->specialPrices = new ArrayCollection();
-        $this->tags = new ArrayCollection();
     }
 
     /**
