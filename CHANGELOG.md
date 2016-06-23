@@ -1,6 +1,6 @@
 CHANGELOG for Sulu Product Bundle
 =================================
-* dev-develop
+* dev-master
 
 * 0.10.4 (2016-06-23)
     * FEATURE Added tags to product
