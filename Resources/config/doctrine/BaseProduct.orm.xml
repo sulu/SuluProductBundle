@@ -85,8 +85,6 @@
                      field="attributes"/>
         <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductTranslation" mapped-by="product"
                      field="translations"/>
-        <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\Addon" mapped-by="product"
-                     field="addons"/>
         <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductPrice"
                      mapped-by="product"
                      field="prices"/>
@@ -94,6 +92,8 @@
         <many-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface" field="setProducts"
                      mapped-by="sets"/>
         -->
+        <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\Addon" mapped-by="product"
+                     field="addons"/>
 
         <many-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface" field="sets"
                       inversed-by="setProducts">

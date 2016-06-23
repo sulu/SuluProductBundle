@@ -174,6 +174,7 @@ define([
                 }.bind(this));
             } else {
                 this.sandbox.start(formSelector);
+                this.dfdFormIsSet.resolve();
             }
         },
 
