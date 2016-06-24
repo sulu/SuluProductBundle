@@ -1,4 +1,12 @@
 <?php
+/*
+ * This file is part of the Sulu CMS.
+ *
+ * (c) MASSIVE ART WebServices GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
 
 namespace Sulu\Bundle\ProductBundle\Api;
 
@@ -36,7 +44,7 @@ class Addon extends ApiWrapper
     }
 
     /**
-     * Returns the id of the attribute.
+     * Returns the id of the addon.
      *
      * @VirtualProperty
      * @SerializedName("id")

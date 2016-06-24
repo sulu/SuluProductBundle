@@ -1,4 +1,12 @@
 <?php
+/*
+ * This file is part of the Sulu CMS.
+ *
+ * (c) MASSIVE ART WebServices GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
 
 namespace Sulu\Bundle\ProductBundle\Tests\Functional\Controller;
 
@@ -294,14 +302,14 @@ class ProductAddonControllerTest extends SuluTestCase
         $this->currency3->setCode('GBP');
 
         // Product 1
-        // product type
+        // Product Type
         $this->type1 = new Type();
         $this->typeTranslation1 = new TypeTranslation();
         $this->typeTranslation1->setLocale('en');
         $this->typeTranslation1->setName('EnglishProductType-1');
         $this->typeTranslation1->setType($this->type1);
 
-        // product status active
+        // Product status active
         $metadata = $this->em->getClassMetadata(get_class(new Status()));
         $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_NONE);
         $this->productStatusActive = new Status();
@@ -311,7 +319,7 @@ class ProductAddonControllerTest extends SuluTestCase
         $this->productStatusTranslationActive->setName('EnglishProductStatus-Active');
         $this->productStatusTranslationActive->setStatus($this->productStatusActive);
 
-        // product status inactive
+        // Product status inactive
         $metadata = $this->em->getClassMetadata(get_class(new Status()));
         $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_NONE);
         $this->productStatusInactive = new Status();
@@ -321,7 +329,7 @@ class ProductAddonControllerTest extends SuluTestCase
         $this->productStatusTranslationInactive->setName('EnglishProductStatus-Inactive');
         $this->productStatusTranslationInactive->setStatus($this->productStatusInactive);
 
-        // product status changed
+        // Product status changed
         $metadata = $this->em->getClassMetadata(get_class(new Status()));
         $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_NONE);
         $this->productStatusChanged = new Status();
@@ -367,7 +375,7 @@ class ProductAddonControllerTest extends SuluTestCase
         $this->attributeValueTranslation1->setName('EnglishAttributeValue-1');
         $this->attributeValueTranslation1->setAttributeValue($this->attributeValue1);
 
-        // product
+        // Product
         $this->product1 = new Product();
         $this->product1->setNumber('ProductNumber-1');
         $this->product1->setManufacturer('EnglishManufacturer-1');
@@ -400,7 +408,7 @@ class ProductAddonControllerTest extends SuluTestCase
         $this->productAttribute1->setAttributeValue($this->attributeValue1);
 
         // Product 2
-        // product type
+        // Product Type
         $this->type2 = new Type();
         $this->typeTranslation2 = new TypeTranslation();
         $this->typeTranslation2->setLocale('en');
@@ -438,7 +446,7 @@ class ProductAddonControllerTest extends SuluTestCase
         $this->attributeValueTranslation2->setName('EnglishAttributeValue-2');
         $this->attributeValueTranslation2->setAttributeValue($this->attributeValue2);
 
-        // product
+        // Product
         $this->product2 = new Product();
         $this->product2->setNumber('ProductNumber-1');
         $this->product2->setManufacturer('EnglishManufacturer-2');

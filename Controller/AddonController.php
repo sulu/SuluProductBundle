@@ -1,4 +1,12 @@
 <?php
+/*
+ * This file is part of the Sulu CMS.
+ *
+ * (c) MASSIVE ART WebServices GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
 
 namespace Sulu\Bundle\ProductBundle\Controller;
 
@@ -6,7 +14,6 @@ use FOS\RestBundle\Controller\Annotations\Get;
 use Hateoas\Representation\CollectionRepresentation;
 use Sulu\Bundle\ProductBundle\Product\ProductAddonManagerInterface;
 use Sulu\Bundle\ProductBundle\Product\ProductLocaleManager;
-use Sulu\Bundle\ProductBundle\Product\ProductManagerInterface;
 use Sulu\Component\Rest\ListBuilder\Doctrine\DoctrineListBuilder;
 use Sulu\Component\Rest\ListBuilder\Doctrine\DoctrineListBuilderFactory;
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescriptor;
@@ -19,6 +26,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AddonController extends RestController
 {
+    protected static $entityName = 'SuluProductBundle:Addon';
+
     /**
      * @Get("/products/{productId}/addons")
      *
@@ -33,7 +42,7 @@ class AddonController extends RestController
 
         if ($request->get('flat') == 'true') {
             $fieldDescriptors = $this->getFieldDescriptors($locale);
-            $listBuilder = $this->getListBuilder('SuluProductBundle:Addon', $fieldDescriptors);
+            $listBuilder = $this->getListBuilder(self::$entityName, $fieldDescriptors);
             $listBuilder->where($fieldDescriptors['productId'], $productId);
 
             $list = new ListRepresentation(
@@ -113,7 +122,7 @@ class AddonController extends RestController
                 ),
             ],
             false,
-            false,
+            true,
             'string'
         );
 
@@ -148,7 +157,7 @@ class AddonController extends RestController
                 )
             ],
             false,
-            false,
+            true,
             'string'
         );
 

@@ -1,9 +1,16 @@
 <?php
+/*
+ * This file is part of the Sulu CMS.
+ *
+ * (c) MASSIVE ART WebServices GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
 
 namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Mapping as ORM;
 
 /**
  * Addon
@@ -11,7 +18,7 @@ use Doctrine\ORM\Mapping as ORM;
 class Addon
 {
     /**
-     * @var integer
+     * @var int
      */
     private $id;
 
@@ -38,7 +45,7 @@ class Addon
     /**
      * Get id
      *
-     * @return integer
+     * @return int
      */
     public function getId()
     {
@@ -50,7 +57,7 @@ class Addon
      *
      * @param ProductInterface $product
      *
-     * @return Addon
+     * @return self
      */
     public function setProduct(ProductInterface $product)
     {
@@ -74,7 +81,7 @@ class Addon
      *
      * @param ProductInterface $addon
      *
-     * @return Addon
+     * @return self
      */
     public function setAddon(ProductInterface $addon)
     {
