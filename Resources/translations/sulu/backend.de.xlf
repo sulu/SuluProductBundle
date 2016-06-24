@@ -354,6 +354,10 @@
                 <source>labels.error.product-not-valid</source>
                 <target>Produkt nicht gültig.</target>
             </trans-unit>
+            <trans-unit id="75" resname="products.product-addon">
+                <source>products.product-addon</source>
+                <target>Produkterweiterung</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>
