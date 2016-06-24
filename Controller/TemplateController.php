@@ -166,6 +166,16 @@ class TemplateController extends RestController
     }
 
     /**
+     * Returns the template for product addons
+     *
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function productAddonsAction()
+    {
+        return $this->render('SuluProductBundle:Template:product.addons.html.twig');
+    }
+
+    /**
      * Returns status for products
      *
      * @param string $language

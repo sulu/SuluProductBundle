@@ -20,6 +20,7 @@ class ProductContentNavigationProvider implements ContentNavigationProviderInter
      */
     public function getNavigationItems(array $options = [])
     {
+        // Details
         $details = new ContentNavigationItem('content-navigation.product.general');
         $details->setId('details');
         $details->setAction('details');
@@ -27,6 +28,7 @@ class ProductContentNavigationProvider implements ContentNavigationProviderInter
         $details->setComponent('products/components/detail-form@suluproduct');
         $details->setResetStore(false);
 
+        // Pricing
         $pricing = new ContentNavigationItem('content-navigation.product.pricing');
         $pricing->setId('pricing');
         $pricing->setAction('pricing');
@@ -35,7 +37,7 @@ class ProductContentNavigationProvider implements ContentNavigationProviderInter
         $pricing->setDisplay(['edit']);
         $pricing->setResetStore(false);
 
-        // media
+        // Media
         $media = new ContentNavigationItem('content-navigation.product.media');
         $media->setId('media');
         $media->setAction('media');
@@ -44,7 +46,7 @@ class ProductContentNavigationProvider implements ContentNavigationProviderInter
         $media->setDisplay(['edit']);
         $media->setResetStore(false);
 
-        // attributes
+        // Attributes
         $attributes = new ContentNavigationItem('content-navigation.product.attributes');
         $attributes->setId('attributes');
         $attributes->setAction('attributes');
@@ -53,11 +55,21 @@ class ProductContentNavigationProvider implements ContentNavigationProviderInter
         $attributes->setDisplay(['edit']);
         $attributes->setResetStore(false);
 
+        // Addons
+        $addons = new ContentNavigationItem('content-navigation.product.addons');
+        $addons->setId('addons');
+        $addons->setAction('addons');
+        $addons->setPosition(50);
+        $addons->setComponent('products/components/addons@suluproduct');
+        $addons->setDisplay(['edit']);
+        $addons->setResetStore(false);
+
         return [
             $details,
             $pricing,
             $media,
-            $attributes
+            $attributes,
+            $addons
         ];
     }
 }
