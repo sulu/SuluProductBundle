@@ -2,13 +2,13 @@
 <doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
-    <entity name="Sulu\Bundle\ProductBundle\Entity\Addon" table="pr_addons">
+    <entity name="Sulu\Bundle\ProductBundle\Entity\Addon" table="pr_product_addons">
         <id name="id" type="integer" column="id">
             <generator strategy="AUTO"/>
         </id>
-        
-        <field name="price" type="decimal" column="price" nullable="true"/>
-        
+
+        <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\AddonPrice" mapped-by="addon" field="addonPrices"/>
+
         <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface" field="product" inversed-by="addons">
             <join-column name="idProducts" referenced-column-name="id" nullable="false"/>
         </many-to-one>

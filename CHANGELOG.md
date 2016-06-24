@@ -1,6 +1,9 @@
 CHANGELOG for Sulu Product Bundle
 =================================
 
+* feature/addons
+    * ENHANCEMENT Added GET-api for product addons
+
 * 0.10.6 (2016-06-23)
     * BUGFIX Fixed issue with tags when adding a new product
     * ENHANCEMENT Added tests for tags in products
