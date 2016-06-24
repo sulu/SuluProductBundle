@@ -24,3 +24,7 @@ sulu_product.media:
 sulu_product.product_addons:
     type: rest
     resource: Sulu\Bundle\ProductBundle\Controller\AddonController
+
+sulu_product.currencies:
+    type: rest
+    resource: Sulu\Bundle\ProductBundle\Controller\CurrencyController
