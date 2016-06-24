@@ -31,6 +31,9 @@
             </options>
         </field>
 
+        <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\Addon" mapped-by="product"
+                     field="addons"/>
+
         <many-to-one field="changer" target-entity="Sulu\Component\Security\Authentication\UserInterface">
             <join-columns>
                 <join-column name="idUsersChanger" referenced-column-name="id" on-delete="SET NULL" nullable="true"/>
@@ -85,8 +88,6 @@
                      field="attributes"/>
         <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductTranslation" mapped-by="product"
                      field="translations"/>
-        <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\Addon" mapped-by="product"
-                     field="addons"/>
         <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductPrice"
                      mapped-by="product"
                      field="prices"/>

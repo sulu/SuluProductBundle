@@ -11,7 +11,6 @@
 namespace Sulu\Bundle\ProductBundle\Controller;
 
 use Doctrine\Common\Persistence\ObjectManager;
-use FOS\RestBundle\Controller\Annotations\Get;
 use FOS\RestBundle\Routing\ClassResourceInterface;
 use Hateoas\Representation\CollectionRepresentation;
 use Symfony\Component\HttpFoundation\Request;
@@ -33,6 +32,8 @@ use Sulu\Component\Rest\ListBuilder\ListRepresentation;
 use Sulu\Component\Rest\RestController;
 use Sulu\Component\Rest\RestHelperInterface;
 use Sulu\Component\Security\SecuredControllerInterface;
+use Sulu\Component\Rest\ListBuilder\Doctrine\DoctrineListBuilder;
+use Sulu\Component\Rest\ListBuilder\FieldDescriptor;
 
 class ProductController extends RestController implements ClassResourceInterface, SecuredControllerInterface
 {
@@ -142,6 +143,30 @@ class ProductController extends RestController implements ClassResourceInterface
     }
 
     /**
+     * @param string $entityName
+     * @param FieldDescriptor[] $fieldDescriptors
+     *
+     * @return DoctrineListBuilder
+     */
+    protected function getListBuilder($entityName, $fieldDescriptors)
+    {
+        /** @var RestHelperInterface $restHelper */
+        $restHelper = $this->get('sulu_core.doctrine_rest_helper');
+
+        /** @var DoctrineListBuilderFactory $factory */
+        $factory = $this->get('sulu_core.doctrine_list_builder_factory');
+
+        $listBuilder = $factory->create($entityName);
+
+        $restHelper->initializeListBuilder(
+            $listBuilder,
+            $fieldDescriptors
+        );
+
+        return $listBuilder;
+    }
+
+    /**
      * Processes the request for a flat response.
      *
      * @param Request $request
@@ -159,18 +184,7 @@ class ProductController extends RestController implements ClassResourceInterface
         $fieldDescriptors,
         $entityName
     ) {
-        /** @var RestHelperInterface $restHelper */
-        $restHelper = $this->get('sulu_core.doctrine_rest_helper');
-
-        /** @var DoctrineListBuilderFactory $factory */
-        $factory = $this->get('sulu_core.doctrine_list_builder_factory');
-
-        $listBuilder = $factory->create($entityName);
-
-        $restHelper->initializeListBuilder(
-            $listBuilder,
-            $fieldDescriptors
-        );
+        $listBuilder = $this->getListBuilder($entityName, $fieldDescriptors);
 
         foreach ($filter as $key => $value) {
             if (is_array($value)) {
