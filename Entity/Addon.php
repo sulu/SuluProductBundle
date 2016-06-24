@@ -2,6 +2,7 @@
 
 namespace Sulu\Bundle\ProductBundle\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -10,53 +11,34 @@ use Doctrine\ORM\Mapping as ORM;
 class Addon
 {
     /**
-     * @var string
-     */
-    private $price;
-
-    /**
      * @var integer
      */
     private $id;
 
     /**
-     * @var \Sulu\Bundle\ProductBundle\Entity\ProductInterface
+     * @var ProductInterface
      */
     private $product;
 
     /**
-     * @var \Sulu\Bundle\ProductBundle\Entity\ProductInterface
+     * @var ProductInterface
      */
     private $addon;
 
-
     /**
-     * Set price
-     *
-     * @param string $price
-     * @return Addon
+     * @var ArrayCollection
      */
-    public function setPrice($price)
-    {
-        $this->price = $price;
-    
-        return $this;
-    }
+    private $addonPrices;
 
-    /**
-     * Get price
-     *
-     * @return string 
-     */
-    public function getPrice()
+    public function __construct()
     {
-        return $this->price;
+        $this->addonPrices = new ArrayCollection();
     }
 
     /**
      * Get id
      *
-     * @return integer 
+     * @return integer
      */
     public function getId()
     {
@@ -66,10 +48,11 @@ class Addon
     /**
      * Set product
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $product
+     * @param ProductInterface $product
+     *
      * @return Addon
      */
-    public function setProduct(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $product)
+    public function setProduct(ProductInterface $product)
     {
         $this->product = $product;
     
@@ -79,7 +62,7 @@ class Addon
     /**
      * Get product
      *
-     * @return \Sulu\Bundle\ProductBundle\Entity\ProductInterface
+     * @return ProductInterface
      */
     public function getProduct()
     {
@@ -89,10 +72,11 @@ class Addon
     /**
      * Set addon
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $addon
+     * @param ProductInterface $addon
+     *
      * @return Addon
      */
-    public function setAddon(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $addon)
+    public function setAddon(ProductInterface $addon)
     {
         $this->addon = $addon;
     
@@ -102,10 +86,18 @@ class Addon
     /**
      * Get addon
      *
-     * @return \Sulu\Bundle\ProductBundle\Entity\ProductInterface
+     * @return ProductInterface
      */
     public function getAddon()
     {
         return $this->addon;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getAddonPrices()
+    {
+        return $this->addonPrices;
     }
 }

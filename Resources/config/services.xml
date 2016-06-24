@@ -20,8 +20,8 @@
         <parameter key="sulu_product.tax_class_repository.class">Sulu\Bundle\ProductBundle\Entity\TaxClassRepository</parameter>
         <parameter key="sulu_product.country_tax_repository.class">Sulu\Bundle\ProductBundle\Entity\CountryTaxRepository</parameter>
         <parameter key="sulu_product.currency_repository.class">Sulu\Bundle\ProductBundle\Entity\CurrencyRepository</parameter>
-        <parameter key="sulu_product.unit_repository.class">Sulu\Bundle\ProductBundle\Entity\UnitRepository</parameter>
         <parameter key="sulu_product.product_manager.class">Sulu\Bundle\ProductBundle\Product\ProductManager</parameter>
+        <parameter key="sulu_product.product_addons_manager.class">Sulu\Bundle\ProductBundle\Product\ProductAddonManager</parameter>
         <parameter key="sulu_product.product_locale_manager.class">Sulu\Bundle\ProductBundle\Product\ProductLocaleManager</parameter>
         <parameter key="sulu_product.attribute_manager.class">Sulu\Bundle\ProductBundle\Product\AttributeManager</parameter>
         <parameter key="sulu_product.status_manager.class">Sulu\Bundle\ProductBundle\Product\StatusManager</parameter>
@@ -115,6 +115,10 @@
             <argument>SuluProductBundle:Unit</argument>
         </service>
         <!-- MANAGER -->
+        <service id="sulu_product.product_addons_manager" class="%sulu_product.product_addons_manager.class%">
+            <argument type="service" id="sulu_product.product_repository"/>
+            <argument type="service" id="sulu_product.product_factory"/>
+        </service>
         <service id="sulu_product.product_manager" class="%sulu_product.product_manager.class%">
             <argument type="service" id="sulu_product.product_repository"/>
             <argument type="service" id="sulu_product.special_price_repository"/>
