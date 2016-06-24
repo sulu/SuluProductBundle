@@ -2,6 +2,8 @@
 
 namespace Sulu\Bundle\ProductBundle\Entity;
 
+use JMS\Serializer\Annotation\Exclude;
+
 class AddonPrice
 {
     /**
@@ -20,6 +22,7 @@ class AddonPrice
     protected $price;
 
     /**
+     * @Exclude()
      * @var Addon
      */
     protected $addon;

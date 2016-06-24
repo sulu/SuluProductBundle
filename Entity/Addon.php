@@ -100,4 +100,28 @@ class Addon
     {
         return $this->addonPrices;
     }
+
+    /**
+     * @param AddonPrice $addonPrice
+     *
+     * @return self
+     */
+    public function addAddonPrice(AddonPrice $addonPrice)
+    {
+        $this->addonPrices->add($addonPrice);
+
+        return $this;
+    }
+
+    /**
+     * @param AddonPrice $addonPrice
+     *
+     * @return self
+     */
+    public function removeAddonPrice(AddonPrice $addonPrice)
+    {
+        $this->addonPrices->removeElement($addonPrice);
+
+        return $this;
+    }
 }

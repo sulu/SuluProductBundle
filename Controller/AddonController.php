@@ -4,6 +4,7 @@ namespace Sulu\Bundle\ProductBundle\Controller;
 
 use FOS\RestBundle\Controller\Annotations\Get;
 use Hateoas\Representation\CollectionRepresentation;
+use Sulu\Bundle\ProductBundle\Product\ProductAddonManagerInterface;
 use Sulu\Bundle\ProductBundle\Product\ProductLocaleManager;
 use Sulu\Bundle\ProductBundle\Product\ProductManagerInterface;
 use Sulu\Component\Rest\ListBuilder\Doctrine\DoctrineListBuilder;
@@ -33,7 +34,7 @@ class AddonController extends RestController
         if ($request->get('flat') == 'true') {
             $fieldDescriptors = $this->getFieldDescriptors($locale);
             $listBuilder = $this->getListBuilder('SuluProductBundle:Addon', $fieldDescriptors);
-            $listBuilder->where($fieldDescriptors['id'], $productId);
+            $listBuilder->where($fieldDescriptors['productId'], $productId);
 
             $list = new ListRepresentation(
                 $listBuilder->execute(),
@@ -66,7 +67,7 @@ class AddonController extends RestController
     {
         return $this->handleView(
             $this->view(
-                array_values($this->getFieldDescriptors($this->getLocale($request))),
+                array_values($this->getFieldDescriptors($this->getLocale($request), true)),
                 200
             )
         );
@@ -74,10 +75,11 @@ class AddonController extends RestController
 
     /**
      * @param string $locale
+     * @param bool $isForOutput
      *
      * @return DoctrineFieldDescriptor[]
      */
-    protected function getFieldDescriptors($locale)
+    protected function getFieldDescriptors($locale, $isForOutput = false)
     {
         $defaultCurrency = $this->getParameter('sulu_product.default_currency');
 
@@ -100,13 +102,13 @@ class AddonController extends RestController
             'SuluProductBundle:ProductTranslation',
             'addon.addon',
             [
-                'SuluProductBundle:Product' => new DoctrineJoinDescriptor(
+                'SuluProductBundle:ProductAddon' => new DoctrineJoinDescriptor(
                     'SuluProductBundle:Product',
                     'SuluProductBundle:Addon.addon'
                 ),
                 'SuluProductBundle:ProductTranslation' => new DoctrineJoinDescriptor(
                     'SuluProductBundle:ProductTranslation',
-                    'SuluProductBundle:Product.translations',
+                    'SuluProductBundle:ProductAddon.translations',
                     'SuluProductBundle:ProductTranslation.locale = \'' . $locale . '\''
                 ),
             ],
@@ -114,6 +116,25 @@ class AddonController extends RestController
             false,
             'string'
         );
+
+        // We dont want to have the productId in the fields action.
+        if (!$isForOutput) {
+            $fieldDescriptors['productId'] = new DoctrineFieldDescriptor(
+                'id',
+                'productId',
+                'SuluProductBundle:Product',
+                'addon.product',
+                [
+                    'SuluProductBundle:Product' => new DoctrineJoinDescriptor(
+                        'SuluProductBundle:Product',
+                        'SuluProductBundle:Addon.product'
+                    ),
+                ],
+                false,
+                false,
+                'integer'
+            );
+        }
 
         $fieldDescriptors['prices'] = new DoctrineFieldDescriptor(
             'price',
@@ -189,7 +210,7 @@ class AddonController extends RestController
     }
 
     /**
-     * @return ProductManagerInterface
+     * @return ProductAddonManagerInterface
      */
     protected function getManager()
     {
