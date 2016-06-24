@@ -105,7 +105,7 @@ class AddonController extends RestController
             'integer'
         );
 
-        $fieldDescriptors['name'] = new DoctrineFieldDescriptor(
+        $fieldDescriptors['addonName'] = new DoctrineFieldDescriptor(
             'name',
             'addonName',
             'SuluProductBundle:ProductTranslation',
@@ -145,7 +145,7 @@ class AddonController extends RestController
             );
         }
 
-        $fieldDescriptors['prices'] = new DoctrineFieldDescriptor(
+        $fieldDescriptors['price'] = new DoctrineFieldDescriptor(
             'price',
             'price',
             'SuluProductBundle:AddonPrice',
@@ -161,7 +161,7 @@ class AddonController extends RestController
             'string'
         );
 
-        $fieldDescriptors['currency'] = new DoctrineFieldDescriptor(
+        $fieldDescriptors['currencyName'] = new DoctrineFieldDescriptor(
             'name',
             'currencyName',
             'SuluProductBundle:Currency',
