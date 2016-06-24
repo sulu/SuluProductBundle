@@ -109,7 +109,7 @@ class AddonController extends RestController
             'name',
             'addonName',
             'SuluProductBundle:ProductTranslation',
-            'addon.addon',
+            'products.product-addon',
             [
                 'SuluProductBundle:ProductAddon' => new DoctrineJoinDescriptor(
                     'SuluProductBundle:Product',
@@ -149,7 +149,7 @@ class AddonController extends RestController
             'price',
             'price',
             'SuluProductBundle:AddonPrice',
-            'addon.addonPrices',
+            'product.price',
             [
                 'SuluProductBundle:AddonPrice' => new DoctrineJoinDescriptor(
                     'SuluProductBundle:AddonPrice',
@@ -165,7 +165,7 @@ class AddonController extends RestController
             'name',
             'currencyName',
             'SuluProductBundle:Currency',
-            'addon.addonPrices',
+            'product.currency',
             [
                 'SuluProductBundle:AddonPrice' => new DoctrineJoinDescriptor(
                     'SuluProductBundle:AddonPrice',
