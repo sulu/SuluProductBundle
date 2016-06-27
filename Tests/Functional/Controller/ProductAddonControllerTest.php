@@ -629,4 +629,100 @@ class ProductAddonControllerTest extends SuluTestCase
         $this->assertEquals($this->addonPrice->getPrice(), $addon->price);
         $this->assertEquals($this->addonPrice->getCurrency()->getCode(), $addon->currencyName);
     }
+
+    public function testPostProductAddon()
+    {
+        $data = [
+            'addon' => $this->product2->getId(),
+            'prices' => [
+                [
+                    'value' => 456,
+                    'currency' => 'GBP'
+                ]
+                ,
+                [
+                    'value' => 123,
+                    'currency' => 'EUR'
+                ]
+            ]
+        ];
+
+        $this->client->request('POST', '/api/products/' .  $this->product1->getId() . '/addons', $data);
+
+        $response = json_decode($this->client->getResponse()->getContent());
+        $addon = $response->addon;
+
+        $this->assertEquals($addon->id, $this->product2->getId());
+        $this->assertCount(2, $response->prices);
+    }
+
+    public function testPutProductAddon()
+    {
+        $data = [
+            'addon' => $this->product2->getId(),
+            'prices' => [
+                [
+                    'value' => 456,
+                    'currency' => 'GBP'
+                ]
+                ,
+                [
+                    'value' => 123,
+                    'currency' => 'EUR'
+                ]
+            ]
+        ];
+
+        $this->client->request('POST', '/api/products/' .  $this->product1->getId() . '/addons', $data);
+
+        $response = json_decode($this->client->getResponse()->getContent());
+        $addon = $response->addon;
+
+        $this->assertEquals($addon->id, $this->product2->getId());
+        $this->assertCount(2, $response->prices);
+    }
+
+    public function testDeleteProductAddonAction()
+    {
+        // Create addon
+        $data = [
+            'addon' => $this->product2->getId(),
+            'prices' => [
+                [
+                    'value' => 456,
+                    'currency' => 'GBP'
+                ]
+                ,
+                [
+                    'value' => 123,
+                    'currency' => 'EUR'
+                ]
+            ]
+        ];
+
+        $this->client->request('POST', '/api/products/' .  $this->product1->getId() . '/addons', $data);
+
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+        $response = json_decode($this->client->getResponse()->getContent());
+        $addon = $response->addon;
+
+        $this->assertEquals($addon->id, $this->product2->getId());
+
+        // Delete addon
+        $this->client->request(
+            'DELETE',
+            '/api/products/' .  $this->product1->getId() . '/addons/' . $this->product2->getId(),
+            $data
+        );
+
+        $this->assertEquals(204, $this->client->getResponse()->getStatusCode());
+
+        // Check if it is deleted
+        $this->client->request('GET', '/api/products/' .  $this->product1->getId() . '/addons');
+        $response = json_decode($this->client->getResponse()->getContent());
+        $addons = $response->_embedded->addons;
+
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+        $this->assertCount(0, $addons);
+    }
 }
