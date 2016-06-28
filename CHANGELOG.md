@@ -2,7 +2,7 @@ CHANGELOG for Sulu Product Bundle
 =================================
 
 * feature/addons
-    * ENHANCEMENT Added GET-api for product addons
+    * ENHANCEMENT Added API for product addons
     * ENHANCEMENT Added GET-api for currencies
 
 * 0.10.6 (2016-06-23)

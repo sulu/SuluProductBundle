@@ -11,6 +11,7 @@
 namespace Sulu\Bundle\ProductBundle\Product;
 
 use Sulu\Bundle\ProductBundle\Api\Addon;
+use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 
 interface ProductAddonManagerInterface
 {
@@ -21,4 +22,28 @@ interface ProductAddonManagerInterface
      * @return Addon[]
      */
     public function findAddonsByProductIdAndLocale($id, $locale);
+
+    /**
+     * @param int $id
+     * @param string $locale
+     *
+     * @return Addon
+     */
+    public function findAddonById($id, $locale);
+
+    /**
+     * @param int $product
+     * @param int $addon
+     * @param string $locale
+     * @param array $prices
+     *
+     * @return Addon
+     */
+    public function saveProductAddon($product, $addon, $locale, array $prices = null);
+
+    /**
+     * @param int $productId
+     * @param int $addonId
+     */
+    public function deleteProductAddon($productId, $addonId);
 }

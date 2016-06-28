@@ -10,10 +10,10 @@
         <field name="price" type="decimal" column="price" nullable="true"/>
         
         <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\Addon" field="addon" inversed-by="addonPrices">
-            <join-column name="idAddons" referenced-column-name="id" nullable="false"/>
+            <join-column name="idAddons" referenced-column-name="id" nullable="false" on-delete="CASCADE"/>
         </many-to-one>
         <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\Currency" field="currency">
-            <join-column name="idCurrencies" referenced-column-name="id" nullable="false"/>
+            <join-column name="idCurrencies" referenced-column-name="id" nullable="false" on-delete="CASCADE"/>
         </many-to-one>
     </entity>
 </doctrine-mapping>
