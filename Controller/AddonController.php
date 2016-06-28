@@ -10,7 +10,10 @@
 
 namespace Sulu\Bundle\ProductBundle\Controller;
 
+use FOS\RestBundle\Controller\Annotations\Delete;
 use FOS\RestBundle\Controller\Annotations\Get;
+use FOS\RestBundle\Controller\Annotations\Post;
+use FOS\RestBundle\Controller\Annotations\Put;
 use Hateoas\Representation\CollectionRepresentation;
 use Sulu\Bundle\ProductBundle\Product\ProductAddonManagerInterface;
 use Sulu\Bundle\ProductBundle\Product\ProductLocaleManager;
@@ -63,6 +66,90 @@ class AddonController extends RestController
         }
 
         $view = $this->view($list, 200);
+
+        return $this->handleView($view);
+    }
+
+    /**
+     * @Get("/addons/{id}")
+     *
+     * @param Request $request
+     * @param int $id
+     *
+     * @return Response
+     */
+    public function getProductAddonAction(Request $request, $id)
+    {
+        $locale = $this->getProductLocaleManager()->retrieveLocale($this->getUser(), $request->get('locale'));
+        $addon = $this->getManager()->findAddonById($id, $locale);
+
+        $view = $this->view($addon, 200);
+
+        return $this->handleView($view);
+    }
+
+    /**
+     * @Post("/products/{productId}/addons")
+     *
+     * @param Request $request
+     * @param int $productId
+     *
+     * @return Response
+     */
+    public function postProductAddonsAction(Request $request, $productId)
+    {
+        $locale = $this->getProductLocaleManager()->retrieveLocale($this->getUser(), $request->get('locale'));
+
+        $addonId = $request->get('addon');
+        $prices = $request->get('prices');
+
+        $addon = $this->getManager()->saveProductAddon($productId, $addonId, $locale, $prices);
+
+        $this->getDoctrine()->getManager()->flush();
+
+        $view = $this->view($addon, 200);
+
+        return $this->handleView($view);
+    }
+
+    /**
+     * @Put("/products/{productId}/addons")
+     *
+     * @param Request $request
+     * @param int $productId
+     *
+     * @return Response
+     */
+    public function putProductAddonsAction(Request $request, $productId)
+    {
+        $locale = $this->getProductLocaleManager()->retrieveLocale($this->getUser(), $request->get('locale'));
+
+        $addonId = $request->get('addon');
+        $prices = $request->get('prices');
+
+        $addon = $this->getManager()->saveProductAddon($productId, $addonId, $locale, $prices);
+
+        $this->getDoctrine()->getManager()->flush();
+
+        $view = $this->view($addon, 200);
+
+        return $this->handleView($view);
+    }
+
+    /**
+     * @Delete("/products/{productId}/addons/{addonId}")
+     *
+     * @param int $productId
+     * @param int $addonId
+     *
+     * @return Response
+     */
+    public function deleteProductAddonAction($productId, $addonId)
+    {
+        $this->getManager()->deleteProductAddon($productId, $addonId);
+        $this->getDoctrine()->getManager()->flush();
+
+        $view = $this->view();
 
         return $this->handleView($view);
     }
