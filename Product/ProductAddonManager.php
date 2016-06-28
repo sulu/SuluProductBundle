@@ -89,6 +89,9 @@ class ProductAddonManager implements ProductAddonManagerInterface
     {
         /** @var Addon $addon */
         $addon = $this->addonRepository->find($id);
+        if (!$addon) {
+            throw new EntityNotFoundException('SuluProductBundle:Addon', $id);
+        }
 
         return new ApiAddon($addon, $this->productFactory, $locale);
     }
