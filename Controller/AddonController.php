@@ -105,6 +105,8 @@ class AddonController extends RestController
 
         $addon = $this->getManager()->saveProductAddon($productId, $addonId, $locale, $prices);
 
+        $this->getDoctrine()->getManager()->flush();
+
         $view = $this->view($addon, 200);
 
         return $this->handleView($view);
@@ -127,6 +129,8 @@ class AddonController extends RestController
 
         $addon = $this->getManager()->saveProductAddon($productId, $addonId, $locale, $prices);
 
+        $this->getDoctrine()->getManager()->flush();
+
         $view = $this->view($addon, 200);
 
         return $this->handleView($view);
@@ -143,6 +147,8 @@ class AddonController extends RestController
     public function deleteProductAddonAction($productId, $addonId)
     {
         $this->getManager()->deleteProductAddon($productId, $addonId);
+        $this->getDoctrine()->getManager()->flush();
+
         $view = $this->view();
 
         return $this->handleView($view);

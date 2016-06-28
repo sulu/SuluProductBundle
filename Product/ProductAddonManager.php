@@ -167,8 +167,6 @@ class ProductAddonManager implements ProductAddonManagerInterface
             }
         }
 
-        $this->entityManager->flush();
-
         return new ApiAddon($productAddon, $this->productFactory, $locale);
     }
 
@@ -180,7 +178,6 @@ class ProductAddonManager implements ProductAddonManagerInterface
         $productAddon = $this->addonRepository->findOneBy(['product' => $productId, 'addon' => $addonId]);
         if ($productAddon) {
             $this->entityManager->remove($productAddon);
-            $this->entityManager->flush();
         }
     }
 }
