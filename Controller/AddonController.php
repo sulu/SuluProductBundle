@@ -117,8 +117,8 @@ class AddonController extends RestController
     /**
      * @Delete("/products/{productId}/addons/{addonId}")
      *
-     * @param $productId
-     * @param $addonId
+     * @param int $productId
+     * @param int $addonId
      *
      * @return Response
      */

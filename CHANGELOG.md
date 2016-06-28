@@ -2,9 +2,8 @@ CHANGELOG for Sulu Product Bundle
 =================================
 
 * feature/addons
-    * ENHANCEMENT Added GET-api for product addons
+    * ENHANCEMENT Added API for product addons
     * ENHANCEMENT Added GET-api for currencies
-    * ENHANCEMENT Added POST, PUT, DELETE api for product addons
 
 * 0.10.6 (2016-06-23)
     * BUGFIX Fixed issue with tags when adding a new product

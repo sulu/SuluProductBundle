@@ -87,7 +87,12 @@ class ProductAddonManager implements ProductAddonManagerInterface
      */
     public function saveProductAddon($productId, $addonId, $locale, array $prices = null)
     {
-        $productAddon = $this->addonRepository->findOneBy(['product' => $productId, 'addon' => $addonId]);
+        $productAddon = $this->addonRepository->findOneBy(
+            [
+                'product' => $productId,
+                'addon' => $addonId
+            ]
+        );
         if (!$productAddon) {
             $product = $this->productRepository->findById($productId);
             $addon = $this->productRepository->findById($addonId);
@@ -124,28 +129,26 @@ class ProductAddonManager implements ProductAddonManagerInterface
         /** @var AddonPrice $savedPrice */
         // Delete old entries
         foreach ($productAddon->getAddonPrices()->toArray() as $savedPrice) {
-            $found = false;
             foreach ($addonPrices as $addonPrice) {
                 if ($addonPrice->getCurrency() === $savedPrice->getCurrency()) {
-                    $found = true;
+                    $this->entityManager->remove($savedPrice);
+                    break;
                 }
-            }
-            if (!$found) {
-                $this->entityManager->remove($savedPrice);
             }
         }
 
         /** @var AddonPrice $addonPrice */
         // Save/Update entries
         foreach ($addonPrices as $addonPrice) {
-            $new = true;
+            $isNew = true;
             foreach ($productAddon->getAddonPrices()->toArray() as $savedPrice) {
                 if ($addonPrice->getCurrency() === $savedPrice->getCurrency()) {
                     $savedPrice->setPrice($addonPrice->getPrice());
-                    $new = false;
+                    $isNew = false;
+                    break;
                 }
             }
-            if ($new) {
+            if ($isNew) {
                 $this->entityManager->persist($addonPrice);
                 $productAddon->addAddonPrice($addonPrice);
             }
