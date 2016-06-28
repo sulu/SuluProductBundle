@@ -9,19 +9,21 @@
 
 define([
     'config',
-    'text!suluproduct/components/products/components/addons/overlay-content.html'
+    'text!suluproduct/components/products/components/addons/overlay.html'
 ], function(Config, OverlayTpl) {
     'use strict';
 
-    var constants = {
-        datagridInstanceName: 'product-addon-datagrid',
-        toolbarInstanceName: 'product-addon-oolbar',
-        overlayInstanceName: 'product-addon-overlay',
-        selectInstanceName: 'product-addon-select'
-    };
+    var currencies = null,
 
-    // TODO check if needed, maybe move to constants
-    var addonId = null,
+        constants = {
+            datagridInstanceName: 'product-addon-datagrid',
+            toolbarInstanceName: 'product-addon-oolbar',
+            overlayInstanceName: 'product-addon-overlay',
+            selectInstanceName: 'product-addon-select'
+        },
+
+        // TODO check if needed, maybe move to constants
+        addonId = null,
         actions = {
             ADD: 1,
             DELETE: 2,
@@ -87,6 +89,11 @@ define([
                     'delete',
                     false)
             }, this);
+
+            // auto-complete search: item selected
+            this.sandbox.on('husky.auto-complete.addons-search.select', function() {
+                startOverlayPricesComponent.call(this, null);
+            }.bind(this));
         },
 
         /**
@@ -105,10 +112,9 @@ define([
         },
 
         /**
-         * TODO check
-         * Create overlay content for add addon overlay
+         * Create overlay content for addon overlay.
          */
-        createAddOverlayContent = function() {
+        createOverlayContent = function() {
             addonId = null;
 
             // create container for overlay
@@ -121,77 +127,17 @@ define([
         },
 
         /**
-         * TODO check
-         * Create the overlay
+         * Retrieve currencies.
          */
-        showEditOverlay = function() {
-            // call JSON to get the addons from the server then create the overlay after it's done
-            var availableAddonsUrl = 'api/products?flat=true&type=3&locale=' + this.options.locale;
-            var ajaxRequest = $.getJSON(availableAddonsUrl, function(data) {
-                this.availableAddons = [];
-
-                $.each(data._embedded.products, function(key, value) {
-                    this.availableAddons.push({
-                        id: value.id,
-                        name: value.name
-                    });
+        retrieveCurrencies = function() {
+            if (!this.currenciesRequest) {
+                var currenciesUrl = 'api/currencies?flat=true&locale=' + this.options.locale;
+                this.currenciesRequest = $.getJSON(currenciesUrl, function(data) {
+                    currencies = data._embedded.currencies;
                 }.bind(this));
-            }.bind(this));
+            }
 
-            ajaxRequest.done(function() {
-                // create container for overlay
-                var $overlay = this.sandbox.dom.createElement('<div>');
-                this.sandbox.dom.append(this.$el, $overlay);
-
-                // create content
-                this.sandbox.start([
-                    {
-                        name: 'overlay@husky',
-                        options: {
-                            el: $overlay,
-                            supportKeyInput: false,
-                            title: this.sandbox.translate('product.addon.overlay.title'),
-                            skin: 'normal',
-                            openOnStart: true,
-                            removeOnClose: true,
-                            instanceName: constants.overlayInstanceName,
-                            data: createAddOverlayContent.call(this),
-                            okCallback: overlayOkClicked.bind(this)
-                        }
-                    }
-                ]);
-
-            }.bind(this));
-
-            ajaxRequest.fail(function() {
-                console.log('Error retrieving addons from server');
-            }.bind(this));
-
-            ajaxRequest.complete(function() {
-                // create dropbox in overlay
-                var selectOptions = {
-                    el: '#selectBox',
-                    instanceName: constants.selectInstanceName,
-                    multipleSelect: false,
-                    defaultLabel: this.sandbox.translate('product.addon.overlay.defaultlabel'),
-                    valueName: 'name',
-                    isNative: true,
-                    data: this.availableAddons
-                };
-
-                this.sandbox.start([
-                    // start select
-                    {
-                        name: 'select@husky',
-                        options: selectOptions
-                    }
-                ]);
-
-                // define select event for dropbox
-                this.sandbox.on('husky.select.' + constants.selectInstanceName + '.selected.item', function(item) {
-                    addonId = parseInt(item);
-                });
-            }.bind(this));
+            return this.currenciesRequest;
         },
 
         /**
@@ -270,22 +216,189 @@ define([
         },
 
         /**
-         * TODO get currencies from DB:
-         * - Implement a currencies API
-         * - Add to JsConfig
+         * Starts the component for addon prices.
+         *
+         * @param {object} selectedAddon
          */
-         getCurrencies = function() {
-            return [
-                {
-                    id: 1,
-                    code: 'EUR'
+        startOverlayPricesComponent = function(selectedAddon) {
+            var datagridOptions;
+            var data = [];
+            var id = 1;
+            this.sandbox.util.foreach(currencies, function(currency) {
+                data.push(
+                    {
+                        id: id,
+                        price: 0,
+                        currency: currency.code,
+                        overwritten: false
+                    }
+                );
+                id++;
+            }.bind(this));
+
+            datagridOptions = {
+                el: '#addon-price-list',
+                instanceName: 'product-addon-prices-datagrid',
+                idKey: 'id',
+                matchings: [
+                    {
+                        name: 'price',
+                        content: 'product.addon.overlay.price',
+                        type: 'number',
+                        editable: true,
+                    },
+                    {
+                        name: 'currency',
+                        content: 'product.addon.overlay.currency',
+                        type: 'currency'
+                    },
+                    {
+                        name: 'overwritten',
+                        content: 'product.addon.overlay.overwritten',
+                        type: 'checkbox'
+                    }
+                ],
+                viewOptions: {
+                    table: {
+                        editable: true,
+                        selectItem: {
+                            type: null
+                        }
+                    }
                 },
+                data: data
+            };
+
+            this.sandbox.start([
                 {
-                    id: 2,
-                    code: 'CHF'
+                    name: 'datagrid@husky',
+                    options: datagridOptions
                 }
-            ];
-         },
+            ]);
+        },
+
+        /**
+         * Starts the auto-complete component which is shown in the add/edit overlay.
+         *
+         * @param {object} selectedAddon
+         */
+        startOverlayAutoCompleteComponent = function(selectedAddon) {
+            var autoCompleteOptions;
+
+            autoCompleteOptions = Config.get('suluproduct.components.autocomplete.default');
+            autoCompleteOptions.instanceName = 'addons-search';
+            autoCompleteOptions.el = '#addons-search-field';
+            autoCompleteOptions.remoteUrl = '/admin/api/products?flat=true&searchFields=number,name&fields=id,name,number&type=3';
+            autoCompleteOptions.noNewValues = true;
+
+            if (null !== selectedAddon) {
+                autoCompleteOptions.value = selectedAddon.addon;
+            }
+
+            this.sandbox.start([
+                {
+                    name: 'auto-complete@husky',
+                    options: autoCompleteOptions
+                }
+            ]);
+        },
+
+        /**
+         * Show edit/new overlay.
+         *
+         * @param {object} selectedAddon
+         */
+        showOverlay = function(selectedAddon) {
+            var $overlayContent = createOverlayContent.call(this);
+
+            // Start auto-complete component.
+            startOverlayAutoCompleteComponent.call(this, selectedAddon);
+
+            // Load currencies.
+            retrieveCurrencies.call(this).done(function() {
+                // Start overlay.
+                var $overlay = this.sandbox.dom.createElement('<div>');
+                this.sandbox.dom.append(this.$el, $overlay);
+
+                this.sandbox.start([
+                    {
+                        name: 'overlay@husky',
+                        options: {
+                            el: $overlay,
+                            supportKeyInput: false,
+                            title: this.sandbox.translate('product.addon.overlay.title'),
+                            skin: 'wide',
+                            openOnStart: true,
+                            removeOnClose: true,
+                            instanceName: constants.overlayInstanceName,
+                            data: $overlayContent,
+                            okCallback: overlayOkClicked.bind(this)
+                        }
+                    }
+                ]);
+
+                // Edit: disable addon search, show prices immediately.
+                if (selectedAddon !== null) {
+                    // Wait until search is initialized to disable input.
+                    this.sandbox.once('husky.auto-complete.addons-search.initialized', function() {
+                        this.sandbox.dom.attr(this.$find('#addons-search'), 'disabled', 'disabled');
+                    }.bind(this));
+
+                    startOverlayPricesComponent.call(this, selectedAddon);
+                }
+            }.bind(this));
+        },
+
+        /**
+         * Show add overlay.
+         */
+        showAddOverlay = function() {
+            showOverlay.call(this, null);
+        },
+
+        /**
+         * Show edit overlay.
+         *
+         * @param {number} id
+         */
+        showEditOverlay = function(id) {
+            // TODO load selected product addon with prices
+            var addon = {
+                id: 1,
+                addon: {
+                    id: 4,
+                    name: 'Addon 1',
+                    type: {
+                        id: 3,
+                        name: 'Product Erweiterung'
+                    }
+                },
+                prices: [
+                    {
+                        id: 1,
+                        currency: {
+                            name: 'Euro',
+                            id: 2,
+                            code: 'EUR',
+                            number: 978
+                        },
+                        price: 20
+                    },
+                    {
+                        id: 1,
+                        currency: {
+                            name: 'Schweizer Franken',
+                            id: 1,
+                            code: 'CHF',
+                            number: 978
+                        },
+                        price: 30
+                    }
+                ]
+            };
+
+            showOverlay.call(this, addon);
+        },
 
         /**
          * Calls toolbar and list components.
@@ -302,7 +415,7 @@ define([
                     template: this.sandbox.sulu.buttons.get({
                         add: {
                             options: {
-                                callback: showEditOverlay.bind(this)
+                                callback: showAddOverlay.bind(this)
                             }
                         },
                         deleteSelected: {
