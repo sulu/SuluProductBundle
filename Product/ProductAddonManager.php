@@ -85,6 +85,17 @@ class ProductAddonManager implements ProductAddonManagerInterface
     /**
      * {@inheritdoc}
      */
+    public function findAddonById($id, $locale)
+    {
+        /** @var Addon $addon */
+        $addon = $this->addonRepository->find($id);
+
+        return new ApiAddon($addon, $this->productFactory, $locale);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function saveProductAddon($productId, $addonId, $locale, array $prices = null)
     {
         $productAddon = $this->addonRepository->findOneBy(

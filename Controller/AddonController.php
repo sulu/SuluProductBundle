@@ -39,7 +39,7 @@ class AddonController extends RestController
      *
      * @return Response
      */
-    public function getProductAddonsAction(Request $request, $productId)
+    public function cgetProductAddonsAction(Request $request, $productId)
     {
         $locale = $this->getProductLocaleManager()->retrieveLocale($this->getUser(), $request->get('locale'));
 
@@ -66,6 +66,24 @@ class AddonController extends RestController
         }
 
         $view = $this->view($list, 200);
+
+        return $this->handleView($view);
+    }
+
+    /**
+     * @Get("/addons/{id}")
+     *
+     * @param Request $request
+     * @param int $id
+     *
+     * @return Response
+     */
+    public function getProductAddonsAction(Request $request, $id)
+    {
+        $locale = $this->getProductLocaleManager()->retrieveLocale($this->getUser(), $request->get('locale'));
+        $addon = $this->getManager()->findAddonById($id, $locale);
+
+        $view = $this->view($addon, 200);
 
         return $this->handleView($view);
     }

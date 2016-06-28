@@ -24,6 +24,14 @@ interface ProductAddonManagerInterface
     public function findAddonsByProductIdAndLocale($id, $locale);
 
     /**
+     * @param int $id
+     * @param string $locale
+     *
+     * @return Addon
+     */
+    public function findAddonById($id, $locale);
+
+    /**
      * @param int $product
      * @param int $addon
      * @param string $locale
