@@ -638,8 +638,7 @@ class ProductAddonControllerTest extends SuluTestCase
                 [
                     'value' => 456,
                     'currency' => 'GBP'
-                ]
-                ,
+                ],
                 [
                     'value' => 123,
                     'currency' => 'EUR'

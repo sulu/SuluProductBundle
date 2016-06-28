@@ -140,11 +140,14 @@ class ProductAddonManager implements ProductAddonManagerInterface
         /** @var AddonPrice $savedPrice */
         // Delete old entries
         foreach ($productAddon->getAddonPrices()->toArray() as $savedPrice) {
+            $isFound = false;
             foreach ($addonPrices as $addonPrice) {
                 if ($addonPrice->getCurrency() === $savedPrice->getCurrency()) {
-                    $this->entityManager->remove($savedPrice);
-                    break;
+                    $isFound = true;
                 }
+            }
+            if (!$isFound) {
+                $this->entityManager->remove($savedPrice);
             }
         }
 
@@ -156,7 +159,6 @@ class ProductAddonManager implements ProductAddonManagerInterface
                 if ($addonPrice->getCurrency() === $savedPrice->getCurrency()) {
                     $savedPrice->setPrice($addonPrice->getPrice());
                     $isNew = false;
-                    break;
                 }
             }
             if ($isNew) {
