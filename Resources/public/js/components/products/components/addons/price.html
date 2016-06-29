@@ -1,0 +1,34 @@
+<div class="grid-row" style="margin-bottom: 0px">
+    <div class="grid-col-3">
+        <input id="price-<%= currencyCode %>"
+               class="form-element husky-validate salesprice align-right"
+               type="text"
+               value="<%= price %>"
+               <%= !overwritten ? ' disabled="disabled"' : '' %>/>
+    </div>
+    <div class="grid-col-1">
+        <span class="grey-font"><%= currencyCode %></span>
+    </div>
+    <div class="grid-col-8">
+        <div class="custom-checkbox">
+            <input id="change-price-<%= currencyCode %>"
+                   class="form-element husky-validate"
+                   type="checkbox"
+                   <%= overwritten ? 'checked="checked"' : '' %>
+                   onchange="toggleOverwritten('price-<%= currencyCode %>', this.checked)"/>
+            <span class="icon"></span>
+        </div>
+        <%= translate('product.addon.change-price') %>
+    </div>
+</div>
+<div class="grid-row">
+    <div class="grid-col-12">
+        Default price: <%= defaultPrice %>
+    </div>
+</div>
+
+<script type="text/javascript">
+    function toggleOverwritten(elementId, isChecked) {
+        document.getElementById(elementId).disabled = !isChecked;
+    }
+</script>
