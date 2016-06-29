@@ -318,7 +318,7 @@ class Product extends BaseProduct
     /**
      * @return boolean
      */
-    public function getIsRecurringPrice()
+    public function isRecurringPrice()
     {
         return $this->isRecurringPrice;
     }
