@@ -353,6 +353,29 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
+     * @VirtualProperty
+     * @SerializedName("isRecurringPrice")
+     *
+     * @return bool
+     */
+    public function getIsRecurringPrice()
+    {
+        return $this->entity->getIsRecurringPrice();
+    }
+
+    /**
+     * @param bool $isRecurringPrice
+     *
+     * @return self
+     */
+    public function setIsRecurringPrice($isRecurringPrice)
+    {
+        $this->entity->setIsRecurringPrice($isRecurringPrice);
+
+        return $this;
+    }
+
+    /**
      * Returns the supplier of the product.
      *
      * @VirtualProperty
