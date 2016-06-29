@@ -316,7 +316,7 @@ class Product extends BaseProduct
     }
 
     /**
-     * @return boolean
+     * @return bool
      */
     public function isRecurringPrice()
     {
@@ -324,7 +324,7 @@ class Product extends BaseProduct
     }
 
     /**
-     * @param boolean $isRecurringPrice
+     * @param bool $isRecurringPrice
      *
      * @return self
      */
