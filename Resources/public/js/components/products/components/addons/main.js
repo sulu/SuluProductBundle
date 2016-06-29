@@ -9,9 +9,10 @@
 
 define([
     'config',
+    'suluproduct/models/product-addon',
     'text!suluproduct/components/products/components/addons/overlay.html',
     'text!suluproduct/components/products/components/addons/price.html'
-], function(Config, OverlayTemplate, PriceTemplate) {
+], function(Config, ProductAddon, OverlayTemplate, PriceTemplate) {
     'use strict';
 
     var currencies = null,
@@ -158,43 +159,52 @@ define([
         },
 
         /**
-         * TODO check
-         * called when OK on overlay was clicked
+         * Called when OK on overlay was clicked, saves the product addon.
          */
         overlayOkClicked = function() {
-            console.error('overlayOkClicked');
-            // // exit if no addon is selected in overlay
-            // if (!addonId) {
-            //     return;
-            // }
-            //
-            // this.sendData = {};
-            // var addonValueName = this.sandbox.dom.val('#addon-name');
-            //
-            // var addons = this.options.data.attributes.addons;
-            //
-            // var result = _.findWhere(addons, {'addonId': addonId});
-            //
-            // if (result) {
-            //     result.addonValueName = addonValueName;
-            //     result.addonValueLocale = this.options.locale;
-            //     this.sendData.action = actions.UPDATE;
-            // } else {
-            //     var newAddon = {
-            //         'addonId': addonId,
-            //         'addonValueName': addonValueName,
-            //         'addonValueLocale': this.options.locale
-            //     };
-            //     addons.push(newAddon);
-            //     this.sendData.action = actions.ADD;
-            // }
-            //
-            // this.sendData.addonIdAdded = addonId;
-            // this.sendData.addons = addons;
-            // this.sendData.status = this.status;
-            // this.sendData.id = this.options.data.addons.id;
-            //
-            // save.call(this);
+            var productAddon = new ProductAddon();
+            var httpType = 'post';
+
+            // exit if no addon is selected in overlay
+            if (currentSelectedAddon === null) {
+                return;
+            }
+
+            if (currentProductAddon !== null) {
+                productAddon.set({id: currentProductAddon.id});
+                httpType = 'put';
+            }
+
+            productAddon.set({addon: currentSelectedAddon.id});
+
+            var prices = [];
+            retrieveCurrencies.call(this).done(function() {
+                this.sandbox.util.foreach(currencies, function(currency) {
+                    var $overwrittenCheckbox = this.sandbox.dom.find('#change-price-' + currency.code, this.$el);
+
+                    if (!!$overwrittenCheckbox[0] && $overwrittenCheckbox[0].checked) {
+                        var price = {};
+                        price.currency = currency.code;
+                        price.value = this.sandbox.dom.val('#addon-price-' + currency.code);
+
+                        prices.push(price);
+                    }
+                }.bind(this));
+            }.bind(this));
+
+            productAddon.set({prices: prices});
+
+            productAddon.saveToProduct(this.options.data.id, {
+                type: httpType,
+                success: function(response) {
+                    //TODO update list
+                }.bind(this),
+                error: function() {
+                    //TODO show error
+                }.bind(this)
+            });
+
+            productAddon.destroy();
         },
 
         /**
