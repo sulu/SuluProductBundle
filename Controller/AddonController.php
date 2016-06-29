@@ -232,44 +232,6 @@ class AddonController extends RestController
             );
         }
 
-        $fieldDescriptors['price'] = new DoctrineFieldDescriptor(
-            'price',
-            'price',
-            'SuluProductBundle:AddonPrice',
-            'product.price',
-            [
-                'SuluProductBundle:AddonPrice' => new DoctrineJoinDescriptor(
-                    'SuluProductBundle:AddonPrice',
-                    'SuluProductBundle:Addon.addonPrices'
-                )
-            ],
-            false,
-            true,
-            'string'
-        );
-
-        $fieldDescriptors['currencyName'] = new DoctrineFieldDescriptor(
-            'name',
-            'currencyName',
-            'SuluProductBundle:Currency',
-            'product.currency',
-            [
-                'SuluProductBundle:AddonPrice' => new DoctrineJoinDescriptor(
-                    'SuluProductBundle:AddonPrice',
-                    'SuluProductBundle:Addon.addonPrices'
-                ),
-                'SuluProductBundle:Currency' => new DoctrineJoinDescriptor(
-                    'SuluProductBundle:Currency',
-                    'SuluProductBundle:AddonPrice.currency',
-                    'SuluProductBundle:Currency.code = \'' . $defaultCurrency . '\'',
-                    DoctrineJoinDescriptor::JOIN_METHOD_INNER
-                ),
-            ],
-            false,
-            false,
-            'string'
-        );
-
         return $fieldDescriptors;
     }
 
