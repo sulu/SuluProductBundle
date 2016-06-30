@@ -30,9 +30,6 @@ define(
                     }
                 );
 
-                console.error(getUrl(this.urlRoot, productId));
-                console.error(options);
-
                 return this.save.call(this, null, options);
             },
 

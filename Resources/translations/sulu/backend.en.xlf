@@ -362,6 +362,26 @@
                 <source>products.isRecurringPrice</source>
                 <target>Recurring price</target>
             </trans-unit>
+            <trans-unit id="77" resname="content-navigation.product.addons">
+                <source>content-navigation.product.addons</source>
+                <target>Product addons</target>
+            </trans-unit>
+            <trans-unit id="78" resname="product.product-addons.add">
+                <source>product.product-addons.add</source>
+                <target>Add product addon</target>
+            </trans-unit>
+            <trans-unit id="79" resname="product.product-addons.edit">
+                <source>product.product-addons.edit</source>
+                <target>Edit product addon</target>
+            </trans-unit>
+            <trans-unit id="80" resname="product.product-addons.change-price">
+                <source>product.product-addons.change-price</source>
+                <target>Change price</target>
+            </trans-unit>
+            <trans-unit id="81" resname="product.product-addons.base-price">
+                <source>product.product-addons.base-price</source>
+                <target>Base price</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>

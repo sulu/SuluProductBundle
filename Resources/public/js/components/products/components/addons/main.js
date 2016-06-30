@@ -16,34 +16,28 @@ define([
     'use strict';
 
     var currencies = null,
-
-        constants = {
-            datagridInstanceName: 'product-addon-datagrid',
-            toolbarInstanceName: 'product-addon-oolbar',
-            overlayInstanceName: 'product-addon-overlay',
-            selectInstanceName: 'product-addon-select'
-        },
-
         currentSelectedAddon = null,
         currentProductAddon = null,
 
-        // TODO check if needed, maybe move to constants
-        addonId = null,
-        actions = {
-            ADD: 1,
-            DELETE: 2,
-            UPDATE: 3
+        constants = {
+            datagridInstanceName: 'product-addon-datagrid',
+            toolbarInstanceName: 'product-addon-toolbar',
+            overlayInstanceName: 'product-addon-overlay',
+            selectInstanceName: 'product-addon-select',
+            priceListElementId: '#addon-price-list',
+            loaderElementClass: '.loader'
         },
 
         /**
-         * TODO check
-         * bind custom events
+         * Bind custom events.
          */
         bindCustomEvents = function() {
+            // Delete product.
             this.sandbox.on('sulu.toolbar.delete', function() {
                 this.sandbox.emit('sulu.product.delete', this.options.data.id);
             }.bind(this));
 
+            // Listen for status changes, enable the save button.
             this.sandbox.on('product.state.change', function(status) {
                 if (!this.options.data ||
                     !this.options.data.attributes.status ||
@@ -55,77 +49,87 @@ define([
                 }
             }, this);
 
+            // Save status if the save button in the toolbar is clicked.
             this.sandbox.on('sulu.toolbar.save', function() {
-                this.sendData = {};
-                this.sendData.status = this.status;
-                this.sendData.id = this.options.data.id;
-                save.call(this);
+                saveProduct.call(this);
             }, this);
 
-            this.sandbox.on('sulu.products.saved', function(data) {
-
-                var addons = data.addons;
-
-                // Select action
-                if (data.action === actions.ADD) {
-                    // ADD RECORD IN DATAGRID
-                    var addon = _.findWhere(addons, {'addonId': data.addonIdAdded});
-                    this.sandbox.emit('husky.datagrid.' + constants.datagridInstanceName + '.record.add', addon);
-                } else if (data.action === actions.DELETE) {
-                    // DELETE RECORDs IN DATAGRID
-                    $.each(data.addonIdsDeleted, function(key, id) {
-                        this.sandbox.emit('husky.datagrid.' + constants.datagridInstanceName + '.record.remove', id);
-                    }.bind(this));
-                } else if (data.action === actions.UPDATE) {
-                    // UPDATE DATAGRID WITH RECEIVED RECORDS
-                    this.sandbox.emit('husky.datagrid.' + constants.datagridInstanceName + '.records.set', addons);
-                }
-
+            // Listen on the saved event for changes in the status of the product.
+            this.sandbox.on('sulu.products.saved', function() {
                 setHeaderBar.call(this, true);
-                //this.options.data = data;
                 this.options.data.attributes.status = this.status;
             }, this);
 
-            // enable toolbar items
+            // Enable toolbar items if elements are selected.
             this.sandbox.on('husky.datagrid.' + constants.datagridInstanceName + '.number.selections', function(number) {
-                var postfix = number > 0 ? 'enable' : 'disable';
+                var action = number > 0 ? 'enable' : 'disable';
                 this.sandbox.emit(
-                    'husky.toolbar.' + constants.toolbarInstanceName + '.item.' + postfix,
-                    'delete',
+                    'husky.toolbar.' + constants.toolbarInstanceName + '.item.' + action,
+                    'deleteSelected',
                     false)
             }, this);
 
-            // auto-complete search: item selected
+            // Start prices component if a product is selected in the addon auto-complete search.
             this.sandbox.on('husky.auto-complete.addons-search.select', function(selectedAddon) {
-                var selectedAddon = $.getJSON('api/products/' + selectedAddon.id + '?locale=' + this.options.locale);
+                // Remove prices (only important if another product was already selected before).
+                this.sandbox.dom.empty(this.$find(constants.priceListElementId));
 
+                // Start the price list loader.
+                startLoader.call(this, constants.priceListElementId);
+
+                var selectedAddon = $.getJSON('api/products/' + selectedAddon.id + '?locale=' + this.options.locale);
                 selectedAddon.done(function(data) {
                     startOverlayPricesComponent.call(this, data, null);
                 }.bind(this));
-            }.bind(this));
+            }, this);
         },
 
         /**
-         * TODO check
+         * Starts a loader and adds it to the dom.
+         *
+         * @param string elementId
+         */
+        startLoader = function(elementId) {
+            var $container = this.sandbox.dom.createElement('<div class="' + constants.loaderClass + '"/>');
+            var $element = this.sandbox.dom.find(elementId);
+            this.sandbox.dom.append($element, $container);
+            this.sandbox.start([
+                {
+                    name: 'loader@husky',
+                    options: {
+                        el: $container,
+                        size: '60px',
+                        color: '#ccc'
+                    }
+                }
+            ]);
+        },
+
+        /**
+         * Removes the loader.
+         */
+        removeLoader = function() {
+            this.sandbox.dom.remove('.' + constants.loaderClass);
+        },
+
+        /**
          * @param {Boolean} saved defines if saved state should be shown
          */
         setHeaderBar = function(saved) {
-            if (saved !== this.saved) {
+            if (saved !== this.productSaved) {
                 if (!!saved) {
                     this.sandbox.emit('sulu.header.toolbar.item.disable', 'save', true);
                 } else {
                     this.sandbox.emit('sulu.header.toolbar.item.enable', 'save', false);
                 }
             }
-            this.saved = saved;
+            this.productSaved = saved;
         },
 
         /**
          * Create overlay content for addon overlay.
          */
         createOverlayContent = function() {
-            addonId = null;
-
             // create container for overlay
             var $overlayContent = this.sandbox.dom.createElement(this.sandbox.util.template(OverlayTemplate, {
                 translate: this.sandbox.translate
@@ -150,19 +154,19 @@ define([
         },
 
         /**
-         * TODO check
-         * save product addons
+         * Saves the product, only needed for a status change.
          */
-        save = function() {
+        saveProduct = function() {
+            this.options.data.attributes.status = this.status;
+            this.sandbox.emit('sulu.products.save', this.options.data.attributes, true);
             this.saved = false;
-            this.sandbox.emit('sulu.products.save', this.sendData);
         },
 
         /**
          * Called when OK on overlay was clicked, saves the product addon.
          */
         overlayOkClicked = function() {
-            var productAddon = new ProductAddon();
+            var productAddon;
             var httpType = 'post';
 
             // exit if no addon is selected in overlay
@@ -171,8 +175,10 @@ define([
             }
 
             if (currentProductAddon !== null) {
-                productAddon.set({id: currentProductAddon.id});
+                productAddon = ProductAddon.findOrCreate({id: currentProductAddon.id});
                 httpType = 'put';
+            } else {
+                productAddon = new ProductAddon();
             }
 
             productAddon.set({addon: currentSelectedAddon.id});
@@ -185,9 +191,14 @@ define([
                     if (!!$overwrittenCheckbox[0] && $overwrittenCheckbox[0].checked) {
                         var price = {};
                         price.currency = currency.code;
-                        price.value = this.sandbox.dom.val('#addon-price-' + currency.code);
 
-                        prices.push(price);
+
+                        var priceValue = this.sandbox.parseFloat(this.sandbox.dom.val('#addon-price-' + currency.code));
+
+                        if (!isNaN(priceValue)) {
+                            price.value = priceValue;
+                            prices.push(price);
+                        }
                     }
                 }.bind(this));
             }.bind(this));
@@ -197,14 +208,13 @@ define([
             productAddon.saveToProduct(this.options.data.id, {
                 type: httpType,
                 success: function(response) {
-                    //TODO update list
+                    this.sandbox.emit('husky.datagrid.' + constants.datagridInstanceName + '.update');
+                    this.sandbox.emit('sulu.header.toolbar.item.disable', 'save', true);
                 }.bind(this),
                 error: function() {
                     //TODO show error
                 }.bind(this)
             });
-
-            productAddon.destroy();
         },
 
         /**
@@ -213,24 +223,33 @@ define([
          */
         removeSelected = function() {
             this.sandbox.emit('husky.datagrid.' + constants.datagridInstanceName + '.items.get-selected', function(ids) {
+                console.error(ids);
 
-                var addons = this.options.data.attributes.addons;
-                this.sendData = {};
-                var addonIdsDeleted = [];
+                this.sandbox.util.foreach(ids, function(defaultPrice) {
+                    var ajaxRequest = $.getJSON('api/addons/' + id + '?locale=' + this.options.locale);
 
-                _.each(ids, function(value, key, list) {
-                    var result = _.findWhere(addons, {'addonId': value});
-                    addons = _.without(addons, result);
-                    addonIdsDeleted.push(value);
-                });
+                    ajaxRequest.fail(function() {
+                        console.log('Error during deletion of product addon.');
+                    }.bind(this));
+                }.bind(this));
 
-                this.sendData.addonIdsDeleted = addonIdsDeleted;
-                this.sendData.addons = addons;
-                this.sendData.status = this.status;
-                this.sendData.id = this.options.data.id;
-                this.sendData.action = actions.DELETE;
-
-                save.call(this);
+                // var addons = this.options.data.attributes.addons;
+                // this.sendData = {};
+                // var addonIdsDeleted = [];
+                //
+                // _.each(ids, function(value, key, list) {
+                //     var result = _.findWhere(addons, {'addonId': value});
+                //     addons = _.without(addons, result);
+                //     addonIdsDeleted.push(value);
+                // });
+                //
+                // this.sendData.addonIdsDeleted = addonIdsDeleted;
+                // this.sendData.addons = addons;
+                // this.sendData.status = this.status;
+                // this.sendData.id = this.options.data.id;
+                // this.sendData.action = actions.DELETE;
+                //
+                // save.call(this);
             }.bind(this));
         },
 
@@ -264,8 +283,17 @@ define([
                 this.sandbox.util.foreach(currencies, function(currency) {
                     priceRow = {};
                     priceRow.id = currency.id;
-                    priceRow.defaultPrice = (!!defaultPrices[currency.code] ? defaultPrices[currency.code] : 0);
-                    priceRow.price = (!!productAddonPrices[currency.code] ? productAddonPrices[currency.code] : priceRow.defaultPrice);
+
+                    priceRow.defaultPrice = this.sandbox.numberFormat(0, 'n');
+                    if (!!defaultPrices[currency.code]) {
+                        priceRow.defaultPrice = this.sandbox.numberFormat(defaultPrices[currency.code], 'n');
+                    }
+
+                    priceRow.price = priceRow.defaultPrice;
+                    if (!!productAddonPrices[currency.code]) {
+                        priceRow.price = this.sandbox.numberFormat(productAddonPrices[currency.code], 'n');
+                    }
+
                     priceRow.currencyCode = currency.code;
                     priceRow.overwritten = (priceRow.defaultPrice == priceRow.price ? false : true);
 
@@ -273,7 +301,10 @@ define([
                     priceRow = null;
                 }.bind(this));
 
-                $pricesEl = this.$find('#addon-price-list');
+                $pricesEl = this.$find(constants.priceListElementId);
+
+                // Remove loader before adding the prices to the dom.
+                removeLoader.call(this);
 
                 // Add price rows.
                 this.sandbox.util.foreach(priceRows, function(priceRow) {
@@ -290,9 +321,7 @@ define([
          * @param {object} productAddon
          */
         startOverlayAutoCompleteComponent = function(productAddon) {
-            var autoCompleteOptions;
-
-            autoCompleteOptions = Config.get('suluproduct.components.autocomplete.default');
+            var autoCompleteOptions = Config.get('suluproduct.components.autocomplete.default');
             autoCompleteOptions.instanceName = 'addons-search';
             autoCompleteOptions.el = '#addons-search-field';
             autoCompleteOptions.remoteUrl = '/admin/api/products?flat=true&searchFields=number,name&fields=id,name,number&type=3';
@@ -316,11 +345,12 @@ define([
          * @param {object} productAddon
          */
         showOverlay = function(productAddon) {
+            var overlayTitle = productAddon === null ? 'product.product-addons.add' : 'product.product-addons.edit';
+
             // Create overlay.
             var $overlayContent = createOverlayContent.call(this);
 
-            // Start auto-complete component.
-            startOverlayAutoCompleteComponent.call(this, productAddon);
+
 
             // Start overlay component.
             var $overlay = this.sandbox.dom.createElement('<div>');
@@ -332,7 +362,7 @@ define([
                     options: {
                         el: $overlay,
                         supportKeyInput: false,
-                        title: this.sandbox.translate('product.addon.overlay.title'),
+                        title: this.sandbox.translate(overlayTitle),
                         skin: 'wide',
                         openOnStart: true,
                         removeOnClose: true,
@@ -343,6 +373,10 @@ define([
                 }
             ]);
 
+            // Start auto-complete component.
+            startOverlayAutoCompleteComponent.call(this, productAddon);
+
+
             // Edit: disable addon search, show prices immediately.
             if (productAddon !== null) {
                 // Wait until search is initialized to disable input.
@@ -350,6 +384,7 @@ define([
                     this.sandbox.dom.attr(this.$find('#addons-search'), 'disabled', 'disabled');
                 }.bind(this));
 
+                startLoader.call(this, constants.priceListElementId);
                 startOverlayPricesComponent.call(this, productAddon.addon, productAddon);
             }
         },
@@ -370,7 +405,6 @@ define([
             var ajaxRequest = $.getJSON('api/addons/' + id + '?locale=' + this.options.locale);
 
             ajaxRequest.done(function(data) {
-                console.error(data);
                 showOverlay.call(this, data);
             }.bind(this));
 
@@ -451,7 +485,7 @@ define([
             // reset status if it has been changed before and has not been saved
             this.sandbox.emit('product.state.change', this.status);
             this.render();
-            setHeaderBar.call(this, true);
+            this.sandbox.emit('sulu.header.toolbar.item.disable', 'save', false);
         }
     };
 });

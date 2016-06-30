@@ -1,4 +1,4 @@
-<div class="grid-row" style="margin-bottom: 0px">
+<div class="grid-row m-bottom-5">
     <div class="grid-col-3">
         <input id="addon-price-<%= currencyCode %>"
                class="form-element husky-validate salesprice align-right"
@@ -18,12 +18,12 @@
                    onchange="toggleOverwritten('addon-price-<%= currencyCode %>', this.checked)"/>
             <span class="icon"></span>
         </div>
-        <%= translate('product.addon.change-price') %>
+        <%= translate('product.product-addons.change-price') %>
     </div>
 </div>
 <div class="grid-row">
-    <div class="grid-col-12">
-        Default price: <%= defaultPrice %>
+    <div class="grid-col-12 grey-font small-font">
+        <%= translate('product.product-addons.base-price') %>: <%= defaultPrice %> <%= currencyCode %>
     </div>
 </div>
 
