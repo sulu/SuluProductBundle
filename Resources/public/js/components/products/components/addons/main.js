@@ -194,7 +194,7 @@ define([
 
             productAddon.saveToProduct(this.options.data.id, {
                 type: httpType,
-                success: function(response) {
+                success: function() {
                     this.sandbox.emit('husky.datagrid.' + constants.datagridInstanceName + '.update');
                     this.sandbox.emit('sulu.header.toolbar.item.disable', 'save', true);
                 }.bind(this),
@@ -205,38 +205,25 @@ define([
         },
 
         /**
-         * TODO check
-         * delete action function from toolbar
+         * Delete selected product addons.
          */
         removeSelected = function() {
             this.sandbox.emit('husky.datagrid.' + constants.datagridInstanceName + '.items.get-selected', function(ids) {
                 console.error(ids);
 
-                this.sandbox.util.foreach(ids, function(defaultPrice) {
-                    var ajaxRequest = $.getJSON('api/addons/' + id + '?locale=' + this.options.locale);
+                this.sandbox.util.foreach(ids, function(id) {
+                    var ajaxRequest = $.ajax('api/products/' + this.options.data.id + '/addons/' + id, {
+                        method: 'delete'
+                    });
+
+                    ajaxRequest.done(function() {
+                        this.sandbox.emit('husky.datagrid.' + constants.datagridInstanceName + '.record.remove', id);
+                    }.bind(this));
 
                     ajaxRequest.fail(function() {
-                        console.log('Error during deletion of product addon.');
+                        // TODO
                     }.bind(this));
                 }.bind(this));
-
-                // var addons = this.options.data.attributes.addons;
-                // this.sendData = {};
-                // var addonIdsDeleted = [];
-                //
-                // _.each(ids, function(value, key, list) {
-                //     var result = _.findWhere(addons, {'addonId': value});
-                //     addons = _.without(addons, result);
-                //     addonIdsDeleted.push(value);
-                // });
-                //
-                // this.sendData.addonIdsDeleted = addonIdsDeleted;
-                // this.sendData.addons = addons;
-                // this.sendData.status = this.status;
-                // this.sendData.id = this.options.data.id;
-                // this.sendData.action = actions.DELETE;
-                //
-                // save.call(this);
             }.bind(this));
         },
 
