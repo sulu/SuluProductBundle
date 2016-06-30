@@ -127,19 +127,6 @@ define([
         },
 
         /**
-         * Create overlay content for addon overlay.
-         */
-        createOverlayContent = function() {
-            // create container for overlay
-            var $overlayContent = this.sandbox.dom.createElement(this.sandbox.util.template(OverlayTemplate, {
-                translate: this.sandbox.translate
-            }));
-            this.sandbox.dom.append(this.$el, $overlayContent);
-
-            return $overlayContent;
-        },
-
-        /**
          * Retrieve currencies.
          */
         retrieveCurrencies = function() {
@@ -344,25 +331,23 @@ define([
          *
          * @param {object} productAddon
          */
-        showOverlay = function(productAddon) {
-            var overlayTitle = productAddon === null ? 'product.product-addons.add' : 'product.product-addons.edit';
+        showOverlay = function(title) {
+            // Create a container for the overlay.
+            var $overlayContent = this.sandbox.dom.createElement(this.sandbox.util.template(OverlayTemplate, {
+                translate: this.sandbox.translate
+            }));
 
-            // Create overlay.
-            var $overlayContent = createOverlayContent.call(this);
-
-
-
-            // Start overlay component.
             var $overlay = this.sandbox.dom.createElement('<div>');
             this.sandbox.dom.append(this.$el, $overlay);
 
+            // Start overlay component.
             this.sandbox.start([
                 {
                     name: 'overlay@husky',
                     options: {
                         el: $overlay,
                         supportKeyInput: false,
-                        title: this.sandbox.translate(overlayTitle),
+                        title: this.sandbox.translate(title),
                         skin: 'wide',
                         openOnStart: true,
                         removeOnClose: true,
@@ -372,28 +357,16 @@ define([
                     }
                 }
             ]);
-
-            // Start auto-complete component.
-            startOverlayAutoCompleteComponent.call(this, productAddon);
-
-
-            // Edit: disable addon search, show prices immediately.
-            if (productAddon !== null) {
-                // Wait until search is initialized to disable input.
-                this.sandbox.once('husky.auto-complete.addons-search.initialized', function() {
-                    this.sandbox.dom.attr(this.$find('#addons-search'), 'disabled', 'disabled');
-                }.bind(this));
-
-                startLoader.call(this, constants.priceListElementId);
-                startOverlayPricesComponent.call(this, productAddon.addon, productAddon);
-            }
         },
 
         /**
          * Show add overlay.
          */
         showAddOverlay = function() {
-            showOverlay.call(this, null);
+            showOverlay.call(this, 'product.product-addons.add');
+
+            // Start auto-complete component.
+            startOverlayAutoCompleteComponent.call(this, null);
         },
 
         /**
@@ -402,14 +375,25 @@ define([
          * @param {number} id
          */
         showEditOverlay = function(id) {
-            var ajaxRequest = $.getJSON('api/addons/' + id + '?locale=' + this.options.locale);
+            showOverlay.call(this, 'product.product-addons.edit');
 
-            ajaxRequest.done(function(data) {
-                showOverlay.call(this, data);
+            // Show a loader until the prices are loaded.
+            this.sandbox.once('husky.overlay.product-addon-overlay.opened', function() {
+                startLoader.call(this, constants.priceListElementId);
             }.bind(this));
 
-            ajaxRequest.fail(function() {
-                console.log('Error retrieving addon from server');
+            var ajaxRequest = $.getJSON('api/addons/' + id + '?locale=' + this.options.locale);
+            ajaxRequest.done(function(productAddon) {
+                // Start auto-complete component.
+                startOverlayAutoCompleteComponent.call(this, productAddon);
+
+                // Wait until search is initialized to disable input.
+                this.sandbox.once('husky.auto-complete.addons-search.initialized', function() {
+                    this.sandbox.dom.attr(this.$find('#addons-search'), 'disabled', 'disabled');
+                }.bind(this));
+
+                // Show prices.
+                startOverlayPricesComponent.call(this, productAddon.addon, productAddon);
             }.bind(this));
         },
 
