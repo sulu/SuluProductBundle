@@ -358,6 +358,10 @@
                 <source>products.product-addon</source>
                 <target>Produkterweiterung</target>
             </trans-unit>
+            <trans-unit id="76" resname="products.isRecurringPrice">
+                <source>products.isRecurringPrice</source>
+                <target>Wiederkehrender Preis</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>

@@ -1040,6 +1040,7 @@ class ProductManager implements ProductManagerInterface
         );
         $product->setManufacturer($this->getProperty($data, 'manufacturer', $product->getManufacturer()));
         $product->setAreGrossPrices($this->getProperty($data, 'areGrossPrices', $product->getAreGrossPrices()));
+        $product->setIsRecurringPrice($this->getProperty($data, 'isRecurringPrice', $product->isRecurringPrice()));
         $product->setPriceInfo($this->getProperty($data, 'priceInfo', $product->getPriceInfo()));
         if (!$product->getInternalItemNumber()) {
             if ($supplierId) {

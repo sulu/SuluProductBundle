@@ -9,6 +9,8 @@
             <index name="IX_INTERNALITEMNUMBER" columns="internalItemNumber"/>
         </indexes>
 
+        <field name="isRecurringPrice" column="isRecurringPrice" type="boolean"/>
+        
         <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductAttribute" mapped-by="product"
                      field="productAttributes"/>
         <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductTranslation" mapped-by="product"

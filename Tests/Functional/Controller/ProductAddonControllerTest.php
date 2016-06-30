@@ -626,8 +626,6 @@ class ProductAddonControllerTest extends SuluTestCase
         $addon = $addons[0];
         $this->assertEquals($this->addon->getId(), $addon->id);
         $this->assertEquals($this->product2->getTranslation('en')->getName(), $addon->addonName);
-        $this->assertEquals($this->addonPrice->getPrice(), $addon->price);
-        $this->assertEquals($this->addonPrice->getCurrency()->getCode(), $addon->currencyName);
     }
 
     public function testPostProductAddon()

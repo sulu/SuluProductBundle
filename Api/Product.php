@@ -18,6 +18,7 @@ use JMS\Serializer\Annotation\VirtualProperty;
 use Sulu\Bundle\CategoryBundle\Api\Category;
 use Sulu\Bundle\CategoryBundle\Entity\Category as CategoryEntity;
 use Sulu\Bundle\ContactBundle\Contact\AccountManager;
+use Sulu\Bundle\ContactBundle\Entity\AccountInterface;
 use Sulu\Bundle\MediaBundle\Api\Media;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSet as AttributeSetEntity;
 use Sulu\Bundle\ProductBundle\Entity\DeliveryStatus as DeliveryStatusEntity;
@@ -129,7 +130,7 @@ class Product extends ApiWrapper implements ApiProductInterface
      * @VirtualProperty
      * @SerializedName("isDeprecated")
      *
-     * @return boolean
+     * @return bool
      */
     public function isDeprecated()
     {
@@ -139,7 +140,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     /**
      * Sets the deprecated state of the product.
      *
-     * @param boolean $isDeprecated
+     * @param bool $isDeprecated
      */
     public function setIsDeprecated($isDeprecated)
     {
@@ -345,11 +346,34 @@ class Product extends ApiWrapper implements ApiProductInterface
     /**
      * Sets the supplier of the product.
      *
-     * @param Sulu\Bundle\ContactBundle\Entity\Account $supplier
+     * @param AccountInterface $supplier
      */
     public function setSupplier($supplier)
     {
         $this->entity->setSupplier($supplier);
+    }
+
+    /**
+     * @VirtualProperty
+     * @SerializedName("isRecurringPrice")
+     *
+     * @return bool
+     */
+    public function isRecurringPrice()
+    {
+        return $this->entity->isRecurringPrice();
+    }
+
+    /**
+     * @param bool $isRecurringPrice
+     *
+     * @return self
+     */
+    public function setIsRecurringPrice($isRecurringPrice)
+    {
+        $this->entity->setIsRecurringPrice($isRecurringPrice);
+
+        return $this;
     }
 
     /**
@@ -1117,12 +1141,12 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * Returns a boolean indicating if all prices of the product are gross prices.
+     * Returns a bool indicating if all prices of the product are gross prices.
      *
      * @VirtualProperty
      * @SerializedName("areGrossPrices")
      *
-     * @return boolean
+     * @return bool
      */
     public function getAreGrossPrices()
     {
@@ -1132,7 +1156,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     /**
      * Sets the are gross prices flag on a product.
      *
-     * @param boolean $areGrossPrices
+     * @param bool $areGrossPrices
      */
     public function setAreGrossPrices($areGrossPrices = false)
     {
