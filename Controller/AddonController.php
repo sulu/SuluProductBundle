@@ -155,6 +155,22 @@ class AddonController extends RestController
     }
 
     /**
+     * @Delete("/addons/{id}")
+     *
+     * @param int $id
+     *
+     * @return Response
+     */
+    public function deleteAddonAction($id)
+    {
+        $this->getManager()->deleteById($id, true);
+
+        $view = $this->view();
+
+        return $this->handleView($view);
+    }
+
+    /**
      * @param Request $request
      *
      * @return Response

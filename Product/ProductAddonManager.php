@@ -183,4 +183,22 @@ class ProductAddonManager implements ProductAddonManagerInterface
             $this->entityManager->remove($productAddon);
         }
     }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function deleteById($id, $flush = false)
+    {
+        $addon = $this->addonRepository->find($id);
+
+        if (!$addon) {
+            throw new EntityNotFoundException('SuluProductBundle:Addon', $id);
+        }
+
+        $this->entityManager->remove($addon);
+
+        if ($flush) {
+            $this->entityManager->flush();
+        }
+    }
 }
