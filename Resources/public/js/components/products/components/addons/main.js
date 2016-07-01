@@ -85,6 +85,24 @@ define([
         },
 
         /**
+         * Bind dom events.
+         */
+        bindDomEvents = function() {
+            this.sandbox.dom.on(this.$el, 'change', function(event) {
+                var $target = $(event.currentTarget);
+                if (!!$target[0]) {
+                    var currency = $target[0].dataset.currency;
+                    var checked = $target[0].checked;
+                    var $priceField = this.sandbox.dom.find('#addon-price-' + currency);
+
+                    if (!!$priceField[0]) {
+                        $priceField[0].disabled = !checked;
+                    }
+                }
+            }.bind(this), '.change-price');
+        },
+
+        /**
          * Starts a loader and adds it to the dom.
          *
          * @param string elementId
@@ -199,7 +217,7 @@ define([
                     this.sandbox.emit('sulu.header.toolbar.item.disable', 'save', true);
                 }.bind(this),
                 error: function() {
-                    //TODO show error
+                    this.sandbox.emit('sulu.labels.error.show', 'product.product-addons.save-error');
                 }.bind(this)
             });
         },
@@ -209,19 +227,18 @@ define([
          */
         removeSelected = function() {
             this.sandbox.emit('husky.datagrid.' + constants.datagridInstanceName + '.items.get-selected', function(ids) {
-                console.error(ids);
-
                 this.sandbox.util.foreach(ids, function(id) {
-                    var ajaxRequest = $.ajax('api/products/' + this.options.data.id + '/addons/' + id, {
+                    var ajaxRequest = $.ajax('api/addons/' + id, {
                         method: 'delete'
                     });
 
                     ajaxRequest.done(function() {
                         this.sandbox.emit('husky.datagrid.' + constants.datagridInstanceName + '.record.remove', id);
+                        this.sandbox.emit('sulu.header.toolbar.item.disable', 'save', true);
                     }.bind(this));
 
                     ajaxRequest.fail(function() {
-                        // TODO
+                        this.sandbox.emit('sulu.labels.error.show', 'product.product-addons.remove-error');
                     }.bind(this));
                 }.bind(this));
             }.bind(this));
@@ -446,6 +463,7 @@ define([
 
         initialize: function() {
             bindCustomEvents.call(this);
+            bindDomEvents.call(this);
 
             if (!!this.options.data) {
                 this.status = this.options.data.attributes.status;

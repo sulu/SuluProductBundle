@@ -12,10 +12,10 @@
     <div class="grid-col-8">
         <div class="custom-checkbox">
             <input id="change-price-<%= currencyCode %>"
-                   class="form-element husky-validate"
+                   class="form-element husky-validate change-price"
                    type="checkbox"
                    <%= overwritten ? 'checked="checked"' : '' %>
-                   onchange="toggleOverwritten('addon-price-<%= currencyCode %>', this.checked)"/>
+                   data-currency="<%= currencyCode %>"/>
             <span class="icon"></span>
         </div>
         <%= translate('product.product-addons.change-price') %>
@@ -26,9 +26,3 @@
         <%= translate('product.product-addons.base-price') %>: <%= defaultPrice %> <%= currencyCode %>
     </div>
 </div>
-
-<script type="text/javascript">
-    function toggleOverwritten(elementId, isChecked) {
-        document.getElementById(elementId).disabled = !isChecked;
-    }
-</script>
