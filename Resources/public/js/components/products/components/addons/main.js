@@ -88,17 +88,13 @@ define([
          * Bind dom events.
          */
         bindDomEvents = function() {
+            // Disable price field if checkbox is not checked.
             this.sandbox.dom.on(this.$el, 'change', function(event) {
                 var $target = $(event.currentTarget);
-                if (!!$target[0]) {
-                    var currency = $target[0].dataset.currency;
-                    var checked = $target[0].checked;
-                    var $priceField = this.sandbox.dom.find('#addon-price-' + currency);
+                var checked = $target.is(':checked');
+                var $priceField = this.sandbox.dom.find('#addon-price-' + $target.data('currency'));
 
-                    if (!!$priceField[0]) {
-                        $priceField[0].disabled = !checked;
-                    }
-                }
+                $priceField.prop('disabled', !checked);
             }.bind(this), '.change-price');
         },
 
