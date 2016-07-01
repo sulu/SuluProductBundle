@@ -722,4 +722,49 @@ class ProductAddonControllerTest extends SuluTestCase
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
         $this->assertCount(0, $addons);
     }
+
+    public function testDeleteAddonAction()
+    {
+        // Create addon
+        $data = [
+            'addon' => $this->product2->getId(),
+            'prices' => [
+                [
+                    'value' => 456,
+                    'currency' => 'GBP'
+                ]
+                ,
+                [
+                    'value' => 123,
+                    'currency' => 'EUR'
+                ]
+            ]
+        ];
+
+        $this->client->request('POST', '/api/products/' .  $this->product1->getId() . '/addons', $data);
+
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+        $response = json_decode($this->client->getResponse()->getContent());
+        $addon = $response->addon;
+
+        $this->assertEquals($addon->id, $this->product2->getId());
+
+        // Delete addon
+        $this->client->request(
+            'DELETE',
+            '/api/addons/' .  $response->id,
+            $data
+        );
+
+        $this->assertEquals(204, $this->client->getResponse()->getStatusCode());
+
+        // Check if it is deleted
+        $this->client->request('GET', '/api/products/' .  $this->product1->getId() . '/addons');
+        $response = json_decode($this->client->getResponse()->getContent());
+        $addons = $response->_embedded->addons;
+
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+        $this->assertCount(0, $addons);
+
+    }
 }
