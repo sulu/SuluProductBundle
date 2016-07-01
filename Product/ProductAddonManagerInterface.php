@@ -46,4 +46,10 @@ interface ProductAddonManagerInterface
      * @param int $addonId
      */
     public function deleteProductAddon($productId, $addonId);
+
+    /**
+     * @param int $id
+     * @param bool $flush
+     */
+    public function deleteById($id, $flush = false);
 }
