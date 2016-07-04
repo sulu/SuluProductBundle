@@ -90,7 +90,7 @@ class SpecialPrice extends ApiWrapper
      * Get currency
      *
      * @VirtualProperty
-     * @SerializedName("Currency")
+     * @SerializedName("currency")
      *
      * @return \Sulu\Bundle\ProductBundle\Entity\Currency
      */
