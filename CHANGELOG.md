@@ -1,7 +1,7 @@
 CHANGELOG for Sulu Product Bundle
 =================================
 
-* dev-master
+* 0.10.7 (2016-07-04)
     *  BUGFIX Rendering prices tab with special prices in admin
 
 * 0.10.6 (2016-06-23)
