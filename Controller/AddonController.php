@@ -193,8 +193,6 @@ class AddonController extends RestController
      */
     protected function getFieldDescriptors($locale, $isForOutput = false)
     {
-        $defaultCurrency = $this->getParameter('sulu_product.default_currency');
-
         $fieldDescriptors = [];
 
         $fieldDescriptors['id'] = new DoctrineFieldDescriptor(
@@ -224,6 +222,17 @@ class AddonController extends RestController
                     'SuluProductBundle:ProductTranslation.locale = \'' . $locale . '\''
                 ),
             ],
+            false,
+            true,
+            'string'
+        );
+
+        $fieldDescriptors['number'] = new DoctrineFieldDescriptor(
+            'number',
+            'number',
+            'SuluProductBundle:ProductAddon',
+            'product.number',
+            [],
             false,
             true,
             'string'
