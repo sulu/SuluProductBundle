@@ -93,17 +93,40 @@ class ProductPriceManager implements ProductPriceManagerInterface
     }
 
     /**
-     * Returns the special price for the product by a given currency.
-     *
-     * @param ProductInterface $product
-     * @param null|string $currency
-     *
-     * @return null|ProductPrice
+     * {@inheritdoc}
      */
     public function getSpecialPriceForCurrency(ProductInterface $product, $currency = null)
     {
         $currency = $currency ?: $this->defaultCurrency;
         $specialPrices = $product->getSpecialPrices();
+
+        // Check if any special prices are set.
+        if (!$specialPrices) {
+            return null;
+        }
+
+        foreach ($specialPrices as $specialPriceEntity) {
+            // Find special price with matching currency.
+            if ($specialPriceEntity->getCurrency()->getCode() == $currency) {
+                // Check if special price is still valid.
+                if ($this->isValidSpecialPrice($specialPriceEntity)) {
+                    return $specialPriceEntity;
+                }
+
+                break;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getAddonPriceForCurrency(ProductInterface $product, $currency = null)
+    {
+        $currency = $currency ?: $this->defaultCurrency;
+        $specialPrices = $product->getAddons();
 
         // Check if any special prices are set.
         if (!$specialPrices) {

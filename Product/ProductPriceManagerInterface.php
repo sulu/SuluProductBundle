@@ -11,38 +11,50 @@
 namespace Sulu\Bundle\ProductBundle\Product;
 
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
+use Sulu\Bundle\ProductBundle\Entity\ProductPrice;
 
 interface ProductPriceManagerInterface
 {
     /**
-     * Returns the bulk price for a certain quantity of the product by a given currency
+     * Returns the bulk price for a certain quantity of the product by a given currency.
      *
      * @param ProductInterface $product
-     * @param $quantity
+     * @param float $quantity
      * @param null|string $currency
      *
-     * @return null|\Sulu\Bundle\ProductBundle\Entity\ProductPrice
+     * @return null|ProductPrice
      */
     public function getBulkPriceForCurrency(ProductInterface $product, $quantity, $currency = null);
 
     /**
-     * Returns the base prices for the product by a given currency
+     * Returns the base prices for the product by a given currency.
      *
      * @param ProductInterface $product
      * @param null|string $currency
      *
-     * @return null|\Sulu\Bundle\ProductBundle\Entity\ProductPrice
+     * @return null|ProductPrice
      */
     public function getBasePriceForCurrency(ProductInterface $product, $currency = null);
 
     /**
-     * Helper function to get a formatted price for a given currency and locale
+     * Helper function to get a formatted price for a given currency and locale.
      *
-     * @param Integer $price
-     * @param String $symbol
-     * @param String $locale
+     * @param int $price
+     * @param string $symbol
+     * @param string $locale
      *
-     * @return String price
+     * @return string price
      */
     public function getFormattedPrice($price, $symbol = 'EUR', $locale = null);
+
+    /**
+     * Returns the special price for the product by a given currency.
+     *
+     * @param ProductInterface $product
+     * @param null|string $currency
+     *
+     * @return null|ProductPrice
+     */
+    public function getSpecialPriceForCurrency(ProductInterface $product, $currency = null);
+
 }

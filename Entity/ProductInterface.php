@@ -561,4 +561,9 @@ interface ProductInterface
      * @return string[]
      */
     public function getTagNameArray();
+
+    /**
+     * @return SpecialPrice[]
+     */
+    public function getSpecialPrices();
 }
