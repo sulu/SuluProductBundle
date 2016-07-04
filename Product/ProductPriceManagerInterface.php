@@ -10,6 +10,8 @@
 
 namespace Sulu\Bundle\ProductBundle\Product;
 
+use Sulu\Bundle\ProductBundle\Entity\Addon;
+use Sulu\Bundle\ProductBundle\Entity\AddonPrice;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductPrice;
 
@@ -57,4 +59,11 @@ interface ProductPriceManagerInterface
      */
     public function getSpecialPriceForCurrency(ProductInterface $product, $currency = null);
 
+    /**
+     * @param Addon $addon
+     * @param string $currency
+     *
+     * @return AddonPrice
+     */
+    public function getAddonPriceForCurrency(Addon $addon, $currency = null);
 }
