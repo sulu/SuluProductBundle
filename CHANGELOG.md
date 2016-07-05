@@ -2,6 +2,7 @@ CHANGELOG for Sulu Product Bundle
 =================================
 
 * feature/addons
+    * ENHANCEMENT Added methods for price calculations for addons
     * ENHANCEMENT Added flag for recurring price
     * ENHANCEMENT Added API for product addons
     * ENHANCEMENT Added GET-api for currencies
