@@ -11,6 +11,8 @@
 namespace Sulu\Bundle\ProductBundle\Product;
 
 use JMS\Serializer\Annotation\Groups;
+use Sulu\Bundle\ProductBundle\Entity\Addon;
+use Sulu\Bundle\ProductBundle\Entity\AddonPrice;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\PricingBundle\Pricing\PriceFormatter;
 use Sulu\Bundle\ProductBundle\Entity\ProductPrice;
@@ -93,12 +95,7 @@ class ProductPriceManager implements ProductPriceManagerInterface
     }
 
     /**
-     * Returns the special price for the product by a given currency.
-     *
-     * @param ProductInterface $product
-     * @param null|string $currency
-     *
-     * @return null|ProductPrice
+     * {@inheritdoc}
      */
     public function getSpecialPriceForCurrency(ProductInterface $product, $currency = null)
     {
@@ -119,6 +116,30 @@ class ProductPriceManager implements ProductPriceManagerInterface
                 }
 
                 break;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getAddonPriceForCurrency(Addon $addon, $currency = null)
+    {
+        $currency = $currency ?: $this->defaultCurrency;
+
+        $addonPrices = $addon->getAddonPrices();
+
+        // Check if any addon prices are set.
+        if (!$addonPrices) {
+            return null;
+        }
+
+        /** @var AddonPrice $addonPrice */
+        foreach ($addonPrices as $addonPrice) {
+            if ($addonPrice->getCurrency()->getCode() === $currency) {
+                return $addonPrice;
             }
         }
 
