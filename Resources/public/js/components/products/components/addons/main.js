@@ -127,7 +127,7 @@ define([
         },
 
         /**
-         * @param {Boolean} saved defines if saved state should be shown
+         * @param {Boolean} saved Defines if saved state should be shown.
          */
         setHeaderBar = function(saved) {
             if (saved !== this.productSaved) {
@@ -170,7 +170,7 @@ define([
             var productAddon;
             var httpType = 'post';
 
-            // exit if no addon is selected in overlay
+            // Exit if no addon is selected in overlay.
             if (currentSelectedAddon === null) {
                 return;
             }
@@ -192,7 +192,6 @@ define([
                     if (!!$overwrittenCheckbox[0] && $overwrittenCheckbox[0].checked) {
                         var price = {};
                         price.currency = currency.code;
-
 
                         var priceValue = this.sandbox.parseFloat(this.sandbox.dom.val('#addon-price-' + currency.code));
 
@@ -223,19 +222,28 @@ define([
          */
         removeSelected = function() {
             this.sandbox.emit('husky.datagrid.' + constants.datagridInstanceName + '.items.get-selected', function(ids) {
-                this.sandbox.util.foreach(ids, function(id) {
-                    var ajaxRequest = $.ajax('api/addons/' + id, {
-                        method: 'delete'
-                    });
+                removeAddons.call(this, ids);
+            }.bind(this));
+        },
 
-                    ajaxRequest.done(function() {
-                        this.sandbox.emit('husky.datagrid.' + constants.datagridInstanceName + '.record.remove', id);
-                        this.sandbox.emit('sulu.header.toolbar.item.disable', 'save', true);
-                    }.bind(this));
+        /**
+         * Delete product addons.
+         *
+         * @param {array} ids
+         */
+        removeAddons = function(ids) {
+            this.sandbox.util.foreach(ids, function(id) {
+                var ajaxRequest = $.ajax('api/addons/' + id, {
+                    method: 'delete'
+                });
 
-                    ajaxRequest.fail(function() {
-                        this.sandbox.emit('sulu.labels.error.show', 'product.product-addons.remove-error');
-                    }.bind(this));
+                ajaxRequest.done(function() {
+                    this.sandbox.emit('husky.datagrid.' + constants.datagridInstanceName + '.record.remove', id);
+                    this.sandbox.emit('sulu.header.toolbar.item.disable', 'save', true);
+                }.bind(this));
+
+                ajaxRequest.fail(function() {
+                    this.sandbox.emit('sulu.labels.error.show', 'product.product-addons.remove-error');
                 }.bind(this));
             }.bind(this));
         },
@@ -313,6 +321,15 @@ define([
             autoCompleteOptions.el = '#addons-search-field';
             autoCompleteOptions.remoteUrl = '/admin/api/products?flat=true&searchFields=number,name&fields=id,name,number&type=3';
             autoCompleteOptions.noNewValues = true;
+            autoCompleteOptions.fields = [
+                {
+                    id: 'number',
+                    width: '60px'
+                },
+                {
+                    id: 'name'
+                }
+            ];
 
             if (null !== productAddon) {
                 autoCompleteOptions.value = productAddon.addon;
@@ -461,13 +478,12 @@ define([
             bindCustomEvents.call(this);
             bindDomEvents.call(this);
 
+            this.status = Config.get('product.status.inactive');
             if (!!this.options.data) {
                 this.status = this.options.data.attributes.status;
-            } else {
-                this.status = Config.get('product.status.inactive');
             }
 
-            // reset status if it has been changed before and has not been saved
+            // Reset status if it has been changed before and has not been saved.
             this.sandbox.emit('product.state.change', this.status);
             this.render();
             this.sandbox.emit('sulu.header.toolbar.item.disable', 'save', false);
