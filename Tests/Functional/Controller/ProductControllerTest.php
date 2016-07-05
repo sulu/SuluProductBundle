@@ -612,7 +612,7 @@ class ProductControllerTest extends SuluTestCase
 
     public function testGetAll()
     {
-        $this->client->request('GET', '/api/products', array('ids' => ''));
+        $this->client->request('GET', '/api/products', ['ids' => '']);
         $response = json_decode($this->client->getResponse()->getContent());
         $items = $response->_embedded->products;
 
@@ -665,7 +665,7 @@ class ProductControllerTest extends SuluTestCase
         $this->client->request(
             'GET',
             '/api/products?status=' . $this->productStatusInactive->getId(),
-            array('ids' => '')
+            ['ids' => '']
         );
         $response = json_decode($this->client->getResponse()->getContent());
 
@@ -680,7 +680,7 @@ class ProductControllerTest extends SuluTestCase
 
     public function testGetByType()
     {
-        $this->client->request('GET', '/api/products?type=' . $this->type1->getId(), array('ids' => ''));
+        $this->client->request('GET', '/api/products?type=' . $this->type1->getId(), ['ids' => '']);
         $response = json_decode($this->client->getResponse()->getContent());
 
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
