@@ -1,7 +1,7 @@
 CHANGELOG for Sulu Product Bundle
 =================================
 
-* feature/addons
+* dev-develop
     * ENHANCEMENT Added methods for price calculations of addons
     * ENHANCEMENT Added flag for recurring price
     * ENHANCEMENT Added API for product addons
