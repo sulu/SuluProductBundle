@@ -259,6 +259,11 @@ class ProductControllerTest extends SuluTestCase
      */
     private $tag2;
 
+    /**
+     * @var Client
+     */
+    private $client;
+
     public function setUp()
     {
         $this->em = $this->getEntityManager();
@@ -294,7 +299,7 @@ class ProductControllerTest extends SuluTestCase
         $this->typeTranslation1->setType($this->type1);
 
         // product status active
-        $metadata = $this->em->getClassMetaData(get_class(new Status()));
+        $metadata = $this->em->getClassMetadata(Status::class);
         $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_NONE);
         $this->productStatusActive = new Status();
         $this->productStatusActive->setId(Status::ACTIVE);
@@ -304,7 +309,7 @@ class ProductControllerTest extends SuluTestCase
         $this->productStatusTranslationActive->setStatus($this->productStatusActive);
 
         // product status inactive
-        $metadata = $this->em->getClassMetaData(get_class(new Status()));
+        $metadata = $this->em->getClassMetadata(Status::class);
         $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_NONE);
         $this->productStatusInactive = new Status();
         $this->productStatusInactive->setId(Status::INACTIVE);
@@ -314,7 +319,7 @@ class ProductControllerTest extends SuluTestCase
         $this->productStatusTranslationInactive->setStatus($this->productStatusInactive);
 
         // product status changed
-        $metadata = $this->em->getClassMetaData(get_class(new Status()));
+        $metadata = $this->em->getClassMetadata(Status::class);
         $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_NONE);
         $this->productStatusChanged = new Status();
         $this->productStatusChanged->setId(Status::CHANGED);
@@ -334,7 +339,7 @@ class ProductControllerTest extends SuluTestCase
         $this->attributeType1 = new AttributeType();
         $this->attributeType1->setName('EnglishAttributeType-1');
 
-        $metadata = $this->em->getClassMetaData(get_class(new Attribute()));
+        $metadata = $this->em->getClassMetadata(Attribute::class);
         $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_NONE);
 
         $this->attribute1 = new Attribute();
@@ -437,6 +442,7 @@ class ProductControllerTest extends SuluTestCase
         $this->product2->setType($this->type2);
         $this->product2->setStatus($this->productStatusActive);
         $this->product2->setAttributeSet($this->attributeSet2);
+        $this->product2->setIsRecurringPrice(true);
         $this->product1->setParent($this->product2);
 
         $productTranslation2 = new ProductTranslation();
@@ -451,7 +457,7 @@ class ProductControllerTest extends SuluTestCase
         $this->productAttribute2->setAttribute($this->attribute2);
         $this->productAttribute2->setAttributeValue($this->attributeValue2);
 
-        $metadata = $this->em->getClassMetaData(get_class(new TaxClass()));
+        $metadata = $this->em->getClassMetadata(TaxClass::class);
         $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_NONE);
         $this->taxClass1 = new TaxClass();
         $this->taxClass1->setId(TaxClass::STANDARD_TAX_RATE);
@@ -482,7 +488,7 @@ class ProductControllerTest extends SuluTestCase
         $categoryTranslation2->setCategory($this->category2);
         $this->category2->addTranslation($categoryTranslation2);
 
-        $metadata = $this->em->getClassMetaData(get_class(new DeliveryStatus()));
+        $metadata = $this->em->getClassMetadata(DeliveryStatus::class);
         $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_NONE);
 
         $this->deliveryStatusAvailable = new DeliveryStatus();
@@ -606,7 +612,7 @@ class ProductControllerTest extends SuluTestCase
 
     public function testGetAll()
     {
-        $this->client->request('GET', '/api/products', array('ids' => ''));
+        $this->client->request('GET', '/api/products', ['ids' => '']);
         $response = json_decode($this->client->getResponse()->getContent());
         $items = $response->_embedded->products;
 
@@ -619,6 +625,7 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals('EnglishProductType-1', $item->type->name);
         $this->assertEquals($this->productStatusInactive->getId(), $item->status->id);
         $this->assertEquals($this->type1->getId(), $item->type->id);
+        $this->assertFalse($item->isRecurringPrice);
 
         $item = $items[1];
         $this->assertEquals('ProductNumber-1', $item->number);
@@ -626,6 +633,7 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals('EnglishProductType-2', $item->type->name);
         $this->assertEquals($this->productStatusActive->getId(), $item->status->id);
         $this->assertEquals($this->type2->getId(), $item->type->id);
+        $this->assertTrue($item->isRecurringPrice);
     }
 
     public function testGetAllFlat()
@@ -655,7 +663,9 @@ class ProductControllerTest extends SuluTestCase
     public function testGetByStatus()
     {
         $this->client->request(
-            'GET', '/api/products?status=' . $this->productStatusInactive->getId(), array('ids'=> '')
+            'GET',
+            '/api/products?status=' . $this->productStatusInactive->getId(),
+            ['ids' => '']
         );
         $response = json_decode($this->client->getResponse()->getContent());
 
@@ -670,7 +680,7 @@ class ProductControllerTest extends SuluTestCase
 
     public function testGetByType()
     {
-        $this->client->request('GET', '/api/products?type=' . $this->type1->getId(), array('ids'=> ''));
+        $this->client->request('GET', '/api/products?type=' . $this->type1->getId(), ['ids' => '']);
         $response = json_decode($this->client->getResponse()->getContent());
 
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
@@ -690,6 +700,7 @@ class ProductControllerTest extends SuluTestCase
                 'name' => 'EnglishProductTranslationNameNew-1',
                 'number' => 'EvilNumber',
                 'manufacturer' => 'EvilKnievel',
+                'isRecurringPrice' => true,
                 'status' => array(
                     'id' => $this->productStatusActive->getId()
                 ),
@@ -727,6 +738,7 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals('EvilNumber', $response['number']);
         $this->assertEquals('EvilKnievel', $response['manufacturer']);
         $this->assertEquals('20%', $response['taxClass']['name']);
+        $this->assertTrue($response['isRecurringPrice']);
 
         $this->assertContains(
             array(
@@ -931,6 +943,7 @@ class ProductControllerTest extends SuluTestCase
             'name' => 'English Product',
             'shortDescription' => 'This is an english product.',
             'longDescription' => 'Indeed, it\'s a real english product.',
+            'isRecurringPrice' => true,
             'number' => 'NUMBER:0815',
             'manufacturer' => $this->product1->getManufacturer(),
             'manufacturerCountry' => array(
@@ -981,6 +994,7 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals('EnglishProductType-1', $response->type->name);
 
         $this->assertCount(2, $response->tags);
+        $this->assertTrue($response->isRecurringPrice);
 
         // $this->assertEquals($this->attributeSet1->getId(), $response->attributeSet->id);
         // $this->assertEquals('EnglishTemplate-1', $response->attributeSet->name);
@@ -1180,7 +1194,7 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
 
         $response = json_decode($this->client->getResponse()->getContent());
-        $this->assertEquals(ProductException::PRODUCT_NOT_VALID, $response->code ? $response->code : NULL);
+        $this->assertEquals(ProductException::PRODUCT_NOT_VALID, $response->code ? $response->code : null);
 
         // Trying to delete prices from product and at the same time trying to activate it
         $data = array(
@@ -1193,7 +1207,7 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
 
         $response = json_decode($this->client->getResponse()->getContent());
-        $this->assertEquals(ProductException::PRODUCT_NOT_VALID, $response->code ? $response->code : NULL);
+        $this->assertEquals(ProductException::PRODUCT_NOT_VALID, $response->code ? $response->code : null);
     }
 
     public function testPutSearchterms()

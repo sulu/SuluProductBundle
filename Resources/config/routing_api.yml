@@ -20,3 +20,11 @@ sulu_product.media:
     type: rest
     parent: sulu_product.products
     resource: Sulu\Bundle\ProductBundle\Controller\ProductMediaController
+
+sulu_product.product_addons:
+    type: rest
+    resource: Sulu\Bundle\ProductBundle\Controller\AddonController
+
+sulu_product.currencies:
+    type: rest
+    resource: Sulu\Bundle\ProductBundle\Controller\CurrencyController

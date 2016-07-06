@@ -354,6 +354,42 @@
                 <source>labels.error.product-not-valid</source>
                 <target>Product not valid.</target>
             </trans-unit>
+            <trans-unit id="75" resname="products.product-addon">
+                <source>products.product-addon</source>
+                <target>Product addon</target>
+            </trans-unit>
+            <trans-unit id="76" resname="products.isRecurringPrice">
+                <source>products.isRecurringPrice</source>
+                <target>Recurring price</target>
+            </trans-unit>
+            <trans-unit id="77" resname="content-navigation.product.addons">
+                <source>content-navigation.product.addons</source>
+                <target>Product addons</target>
+            </trans-unit>
+            <trans-unit id="78" resname="product.product-addons.add">
+                <source>product.product-addons.add</source>
+                <target>Add product addon</target>
+            </trans-unit>
+            <trans-unit id="79" resname="product.product-addons.edit">
+                <source>product.product-addons.edit</source>
+                <target>Edit product addon</target>
+            </trans-unit>
+            <trans-unit id="80" resname="product.product-addons.change-price">
+                <source>product.product-addons.change-price</source>
+                <target>Change price</target>
+            </trans-unit>
+            <trans-unit id="81" resname="product.product-addons.base-price">
+                <source>product.product-addons.base-price</source>
+                <target>Base price</target>
+            </trans-unit>
+            <trans-unit id="82" resname="product.product-addons.save-error">
+                <source>product.product-addons.save-error</source>
+                <target>Error on saving the product addon.</target>
+            </trans-unit>
+            <trans-unit id="83" resname="product.product-addons.remove-error">
+                <source>product.product-addons.remove-error</source>
+                <target>Error on deleting the product addon.</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>

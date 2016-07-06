@@ -42,6 +42,11 @@ class Product extends BaseProduct
     protected $specialPrices;
 
     /**
+     * @var bool
+     */
+    protected $isRecurringPrice = false;
+
+    /**
      * Constructor
      */
     public function __construct()
@@ -308,5 +313,25 @@ class Product extends BaseProduct
     public function removeSpecialPrice(SpecialPrice $specialPrices)
     {
         $this->specialPrices->removeElement($specialPrices);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRecurringPrice()
+    {
+        return $this->isRecurringPrice;
+    }
+
+    /**
+     * @param bool $isRecurringPrice
+     *
+     * @return self
+     */
+    public function setIsRecurringPrice($isRecurringPrice)
+    {
+        $this->isRecurringPrice = $isRecurringPrice;
+
+        return $this;
     }
 }

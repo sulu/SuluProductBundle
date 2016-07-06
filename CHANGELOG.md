@@ -1,6 +1,13 @@
 CHANGELOG for Sulu Product Bundle
 =================================
 
+* dev-develop
+    * ENHANCEMENT Added methods for price calculations of addons
+    * ENHANCEMENT Added flag for recurring price
+    * ENHANCEMENT Added API for product addons
+    * ENHANCEMENT Added GET-api for currencies
+    * ENHANCEMENT Added UI for addons.
+
 * 0.10.7 (2016-07-04)
     * BUGFIX Rendering prices tab with special prices in admin
 

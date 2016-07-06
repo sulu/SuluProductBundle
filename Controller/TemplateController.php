@@ -10,19 +10,20 @@
 
 namespace Sulu\Bundle\ProductBundle\Controller;
 
-use Symfony\Component\HttpFoundation\Request;
 use Sulu\Bundle\ProductBundle\Api\Status;
 use Sulu\Bundle\ProductBundle\Api\TaxClass;
 use Sulu\Bundle\ProductBundle\Entity\Currency;
 use Sulu\Bundle\ProductBundle\Product\ProductManager;
 use Sulu\Component\Rest\RestController;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class TemplateController extends RestController
 {
     /**
-     * Returns Template for product list
+     * Returns Template for product list.
      *
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      */
     public function productListAction()
     {
@@ -30,11 +31,11 @@ class TemplateController extends RestController
     }
 
     /**
-     * Returns Template for product list
+     * Returns Template for product list.
      *
-     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @param Request $request
      *
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      */
     public function productFormAction(Request $request)
     {
@@ -61,9 +62,9 @@ class TemplateController extends RestController
     }
 
     /**
-     * Returns Template for product import
+     * Returns Template for product import.
      *
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      */
     public function productImportAction()
     {
@@ -73,9 +74,9 @@ class TemplateController extends RestController
     }
 
     /**
-     * Returns Template for attribute list
+     * Returns Template for attribute list.
      *
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      */
     public function attributeListAction()
     {
@@ -85,9 +86,9 @@ class TemplateController extends RestController
     }
 
     /**
-     * Returns Template for attribute list
+     * Returns Template for attribute list.
      *
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      */
     public function attributeFormAction()
     {
@@ -112,9 +113,9 @@ class TemplateController extends RestController
     }
 
     /**
-     * Returns Template for product pricing
+     * Returns Template for product pricing.
      *
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      */
     public function productPricingAction(Request $request)
     {
@@ -146,9 +147,9 @@ class TemplateController extends RestController
     }
 
     /**
-     * Returns the template for product documents
+     * Returns the template for product documents.
      *
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      */
     public function productDocumentsAction()
     {
@@ -156,9 +157,9 @@ class TemplateController extends RestController
     }
 
     /**
-     * Returns the template for product attributes
+     * Returns the template for product attributes.
      *
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      */
     public function productAttributesAction()
     {
@@ -166,7 +167,17 @@ class TemplateController extends RestController
     }
 
     /**
-     * Returns status for products
+     * Returns the template for product addons.
+     *
+     * @return Response
+     */
+    public function productAddonsAction()
+    {
+        return $this->render('SuluProductBundle:Template:product.addons.html.twig');
+    }
+
+    /**
+     * Returns status for products.
      *
      * @param string $language
      *
@@ -189,7 +200,7 @@ class TemplateController extends RestController
     }
 
     /**
-     * Returns units
+     * Returns units.
      *
      * @param string $language
      *
@@ -212,7 +223,7 @@ class TemplateController extends RestController
     }
 
     /**
-     * Returns currencies
+     * Returns currencies.
      *
      * @param string $language
      *
@@ -237,7 +248,7 @@ class TemplateController extends RestController
     }
 
     /**
-     * Returns delivery states
+     * Returns delivery states.
      *
      * @param string $language
      *
@@ -259,7 +270,7 @@ class TemplateController extends RestController
     }
 
     /**
-     * Returns the delivery status manager
+     * Returns the delivery status manager.
      *
      * @return DeliveryStatusManager
      */

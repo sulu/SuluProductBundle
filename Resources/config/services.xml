@@ -16,12 +16,13 @@
         <parameter key="sulu_product.status_repository.class">Sulu\Bundle\ProductBundle\Entity\StatusRepository</parameter>
         <parameter key="sulu_product.delivery_status_repository.class">Sulu\Bundle\ProductBundle\Entity\DeliveryStatusRepository</parameter>
         <parameter key="sulu_product.unit_repository.class">Sulu\Bundle\ProductBundle\Entity\UnitRepository</parameter>
+        <parameter key="sulu_product.product_addon_repository.class">Sulu\Bundle\ProductBundle\Entity\ProductAddonRepository</parameter>
         <parameter key="sulu_product.type_repository.class">Sulu\Bundle\ProductBundle\Entity\TypeRepository</parameter>
         <parameter key="sulu_product.tax_class_repository.class">Sulu\Bundle\ProductBundle\Entity\TaxClassRepository</parameter>
         <parameter key="sulu_product.country_tax_repository.class">Sulu\Bundle\ProductBundle\Entity\CountryTaxRepository</parameter>
         <parameter key="sulu_product.currency_repository.class">Sulu\Bundle\ProductBundle\Entity\CurrencyRepository</parameter>
-        <parameter key="sulu_product.unit_repository.class">Sulu\Bundle\ProductBundle\Entity\UnitRepository</parameter>
         <parameter key="sulu_product.product_manager.class">Sulu\Bundle\ProductBundle\Product\ProductManager</parameter>
+        <parameter key="sulu_product.product_addons_manager.class">Sulu\Bundle\ProductBundle\Product\ProductAddonManager</parameter>
         <parameter key="sulu_product.product_locale_manager.class">Sulu\Bundle\ProductBundle\Product\ProductLocaleManager</parameter>
         <parameter key="sulu_product.attribute_manager.class">Sulu\Bundle\ProductBundle\Product\AttributeManager</parameter>
         <parameter key="sulu_product.status_manager.class">Sulu\Bundle\ProductBundle\Product\StatusManager</parameter>
@@ -54,67 +55,74 @@
             <argument type="service" id="sulu_product.product_locale_manager"/>
         </service>
         <!-- REPOSITORIES -->
-        <service id="sulu_product.product_repository" class="%sulu_product.product_repository.class%"
-                 factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
+        <service id="sulu_product.product_repository" class="%sulu_product.product_repository.class%">
+            <factory service="doctrine.orm.entity_manager" method="getRepository"/>
             <argument>%sulu_product.product_entity%</argument>
         </service>
-        <service id="sulu_product.attribute_repository" class="%sulu_product.attribute_repository.class%"
-                 factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
+        <service id="sulu_product.attribute_repository" class="%sulu_product.attribute_repository.class%">
+            <factory service="doctrine.orm.entity_manager" method="getRepository"/>
             <argument>SuluProductBundle:Attribute</argument>
         </service>
-        <service id="sulu_product.product_attribute_repository" class="%sulu_product.product_attribute_repository.class%"
-                 factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
+        <service id="sulu_product.product_attribute_repository" class="%sulu_product.product_attribute_repository.class%">
+            <factory service="doctrine.orm.entity_manager" method="getRepository"/>
             <argument>SuluProductBundle:ProductAttribute</argument>
         </service>
-        <service id="sulu_product.attribute_value_repository" class="%sulu_product.attribute_value_repository.class%"
-                 factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
+        <service id="sulu_product.attribute_value_repository" class="%sulu_product.attribute_value_repository.class%">
+            <factory service="doctrine.orm.entity_manager" method="getRepository"/>
             <argument>SuluProductBundle:AttributeValue</argument>
         </service>
-        <service id="sulu_product.attribute_set_repository" class="%sulu_product.attribute_set_repository.class%"
-                 factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
+        <service id="sulu_product.attribute_set_repository" class="%sulu_product.attribute_set_repository.class%">
+            <factory service="doctrine.orm.entity_manager" method="getRepository"/>
             <argument>SuluProductBundle:AttributeSet</argument>
         </service>
-        <service id="sulu_product.special_price_repository" class="%sulu_product.special_price_repository.class%"
-                 factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
+        <service id="sulu_product.special_price_repository" class="%sulu_product.special_price_repository.class%">
+            <factory service="doctrine.orm.entity_manager" method="getRepository"/>
             <argument>SuluProductBundle:SpecialPrice</argument>
         </service>
-        <service id="sulu_product.attribute_type_repository" class="%sulu_product.attribute_type_repository.class%"
-                 factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
+        <service id="sulu_product.attribute_type_repository" class="%sulu_product.attribute_type_repository.class%">
+            <factory service="doctrine.orm.entity_manager" method="getRepository"/>
             <argument>SuluProductBundle:AttributeType</argument>
         </service>
-        <service id="sulu_product.status_repository" class="%sulu_product.status_repository.class%"
-                 factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
+        <service id="sulu_product.status_repository" class="%sulu_product.status_repository.class%">
+            <factory service="doctrine.orm.entity_manager" method="getRepository"/>
             <argument>SuluProductBundle:Status</argument>
         </service>
-        <service id="sulu_product.delivery_status_repository" class="%sulu_product.delivery_status_repository.class%"
-                 factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
+        <service id="sulu_product.delivery_status_repository" class="%sulu_product.delivery_status_repository.class%">
+            <factory service="doctrine.orm.entity_manager" method="getRepository"/>
             <argument>SuluProductBundle:DeliveryStatus</argument>
         </service>
-        <service id="sulu_product.type_repository" class="%sulu_product.type_repository.class%"
-                 factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
+        <service id="sulu_product.type_repository" class="%sulu_product.type_repository.class%">
+            <factory service="doctrine.orm.entity_manager" method="getRepository"/>
             <argument>SuluProductBundle:Type</argument>
         </service>
-        <service id="sulu_product.tax_class_repository" class="%sulu_product.tax_class_repository.class%"
-                 factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
+        <service id="sulu_product.tax_class_repository" class="%sulu_product.tax_class_repository.class%">
+            <factory service="doctrine.orm.entity_manager" method="getRepository"/>
             <argument>SuluProductBundle:TaxClass</argument>
         </service>
-        <service id="sulu_product.country_tax_repository" class="%sulu_product.country_tax_repository.class%"
-                 factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
+        <service id="sulu_product.country_tax_repository" class="%sulu_product.country_tax_repository.class%">
+            <factory service="doctrine.orm.entity_manager" method="getRepository"/>
             <argument>SuluProductBundle:CountryTax</argument>
         </service>
-        <service id="sulu_product.currency_repository" class="%sulu_product.currency_repository.class%"
-                 factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
+        <service id="sulu_product.currency_repository" class="%sulu_product.currency_repository.class%">
+            <factory service="doctrine.orm.entity_manager" method="getRepository"/>
             <argument>SuluProductBundle:Currency</argument>
         </service>
-        <service id="sulu_product.unit_repository" class="%sulu_product.unit_repository.class%"
-                 factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
+        <service id="sulu_product.unit_repository" class="%sulu_product.unit_repository.class%">
+            <factory service="doctrine.orm.entity_manager" method="getRepository"/>
             <argument>SuluProductBundle:Unit</argument>
         </service>
-        <service id="sulu_product.unit_repository" class="%sulu_product.unit_repository.class%"
-                 factory-method="getRepository" factory-service="doctrine.orm.entity_manager">
-            <argument>SuluProductBundle:Unit</argument>
+        <service id="sulu_product.product_addon_repository" class="%sulu_product.product_addon_repository.class%">
+            <factory service="doctrine.orm.entity_manager" method="getRepository"/>
+            <argument>SuluProductBundle:Addon</argument>
         </service>
         <!-- MANAGER -->
+        <service id="sulu_product.product_addons_manager" class="%sulu_product.product_addons_manager.class%">
+            <argument type="service" id="sulu_product.product_repository"/>
+            <argument type="service" id="sulu_product.product_factory"/>
+            <argument type="service" id="sulu_product.product_addon_repository"/>
+            <argument type="service" id="doctrine.orm.entity_manager"/>
+            <argument type="service" id="sulu_product.currency_repository"/>
+        </service>
         <service id="sulu_product.product_manager" class="%sulu_product.product_manager.class%">
             <argument type="service" id="sulu_product.product_repository"/>
             <argument type="service" id="sulu_product.special_price_repository"/>
