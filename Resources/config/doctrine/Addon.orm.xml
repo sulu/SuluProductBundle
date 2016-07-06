@@ -11,10 +11,10 @@
         <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\AddonPrice" mapped-by="addon" field="addonPrices"/>
 
         <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface" field="product" inversed-by="addons">
-            <join-column name="idProducts" referenced-column-name="id" nullable="false"/>
+            <join-column name="idProducts" referenced-column-name="id" nullable="false" on-delete="CASCADE"/>
         </many-to-one>
         <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface" field="addon">
-            <join-column name="idProductsAddon" referenced-column-name="id" nullable="false"/>
+            <join-column name="idProductsAddon" referenced-column-name="id" nullable="false" on-delete="CASCADE"/>
         </many-to-one>
     </entity>
 </doctrine-mapping>
