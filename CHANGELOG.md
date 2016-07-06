@@ -1,6 +1,9 @@
 CHANGELOG for Sulu Product Bundle
 =================================
 
+* dev-develop
+    * BUGFIX Fixed tests of special prices
+
 * 0.11.0 (2016-07-06)
     * ENHANCEMENT Added methods for price calculations of addons
     * ENHANCEMENT Added flag for recurring price

@@ -1177,7 +1177,7 @@ class ProductControllerTest extends SuluTestCase
 
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals('56', $response->specialPrices[0]->price);
-        $this->assertEquals('EUR', $response->specialPrices[0]->Currency->code);
+        $this->assertEquals('EUR', $response->specialPrices[0]->currency->code);
         $this->assertCount(2, $response->tags);
     }
 
