@@ -34,19 +34,12 @@ define([
         bindCustomEvents = function() {
             // Delete product.
             this.sandbox.on('sulu.toolbar.delete', function() {
-                this.sandbox.emit('sulu.product.delete', this.options.data.id);
+                deleteProduct.call(this);
             }.bind(this));
 
             // Listen for status changes, enable the save button.
             this.sandbox.on('product.state.change', function(status) {
-                if (!this.options.data ||
-                    !this.options.data.attributes.status ||
-                    this.options.data.attributes.status.id !== status.id
-                ) {
-                    this.status = status;
-                    this.options.data.attributes.status = this.status;
-                    setHeaderBar.call(this, false);
-                }
+                handleStatusChanges.call(this, status);
             }, this);
 
             // Save status if the save button in the toolbar is clicked.
@@ -56,31 +49,17 @@ define([
 
             // Listen on the saved event for changes in the status of the product.
             this.sandbox.on('sulu.products.saved', function() {
-                setHeaderBar.call(this, true);
-                this.options.data.attributes.status = this.status;
+                handleProductSaved.call(this);
             }, this);
 
             // Enable toolbar items if elements are selected.
             this.sandbox.on('husky.datagrid.' + constants.datagridInstanceName + '.number.selections', function(number) {
-                var action = number > 0 ? 'enable' : 'disable';
-                this.sandbox.emit(
-                    'husky.toolbar.' + constants.toolbarInstanceName + '.item.' + action,
-                    'deleteSelected',
-                    false)
+                enableToolbarItems.call(this, number);
             }, this);
 
             // Start prices component if a product is selected in the addon auto-complete search.
             this.sandbox.on('husky.auto-complete.addons-search.select', function(selectedAddon) {
-                // Remove prices (only important if another product was already selected before).
-                this.sandbox.dom.empty(this.$find(constants.priceListElementId));
-
-                // Start the price list loader.
-                startLoader.call(this, constants.priceListElementId);
-
-                var selectedAddon = $.getJSON('api/products/' + selectedAddon.id + '?locale=' + this.options.locale);
-                selectedAddon.done(function(data) {
-                    startOverlayPricesComponent.call(this, data, null);
-                }.bind(this));
+                handleAutoCompleteSelection.call(this, selectedAddon);
             }, this);
         },
 
@@ -90,12 +69,83 @@ define([
         bindDomEvents = function() {
             // Disable price field if checkbox is not checked.
             this.sandbox.dom.on(this.$el, 'change', function(event) {
-                var $target = $(event.currentTarget);
-                var checked = $target.is(':checked');
-                var $priceField = this.sandbox.dom.find('#addon-price-' + $target.data('currency'));
-
-                $priceField.prop('disabled', !checked);
+                handlePriceCheckboxSelection.call(this, event);
             }.bind(this), '.change-price');
+        },
+
+        /**
+         * Delete product.
+         */
+        deleteProduct = function() {
+            this.sandbox.emit('sulu.product.delete', this.options.data.id);
+        },
+
+        /**
+         * Handle status change.
+         *
+         * @param {object} status
+         */
+        handleStatusChanges = function(status) {
+            if (!this.options.data ||
+                !this.options.data.attributes.status ||
+                this.options.data.attributes.status.id !== status.id
+            ) {
+                this.status = status;
+                this.options.data.attributes.status = this.status;
+                setHeaderBar.call(this, false);
+            }
+        },
+
+        /**
+         * Handle product saved.
+         */
+        handleProductSaved = function() {
+            setHeaderBar.call(this, true);
+            this.options.data.attributes.status = this.status;
+        },
+
+        /**
+         * Enable toolbar items.
+         *
+         * @param {number} number
+         */
+        enableToolbarItems = function(number) {
+            var action = number > 0 ? 'enable' : 'disable';
+            this.sandbox.emit(
+                'husky.toolbar.' + constants.toolbarInstanceName + '.item.' + action,
+                'deleteSelected',
+                false)
+        },
+
+        /**
+         * Handle auto complete selection.
+         *
+         * @param {object} selectedAddon
+         */
+        handleAutoCompleteSelection = function(selectedAddon) {
+             // Remove prices (only important if another product was already selected before).
+            this.sandbox.dom.empty(this.$find(constants.priceListElementId));
+
+            // Start the price list loader.
+            startLoader.call(this, constants.priceListElementId);
+
+            var selectedAddon = $.getJSON('api/products/' + selectedAddon.id + '?locale=' + this.options.locale);
+            selectedAddon.done(function(data) {
+                startOverlayPricesComponent.call(this, data, null);
+            }.bind(this));
+        },
+
+        /**
+         * Handle price checkbox selection.
+         *
+         * @param {object} event
+         */
+        handlePriceCheckboxSelection = function(event) {
+            var $target = $(event.currentTarget);
+            var checked = $target.is(':checked');
+            var $priceField = this.sandbox.dom.find('#addon-price-' + $target.data('currency'));
+
+            $priceField.prop('disabled', !checked);
         },
 
         /**
