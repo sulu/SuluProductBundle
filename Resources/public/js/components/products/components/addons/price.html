@@ -1,0 +1,28 @@
+<div class="grid-row m-bottom-5">
+    <div class="grid-col-3">
+        <input id="addon-price-<%= currencyCode %>"
+               class="form-element husky-validate salesprice align-right"
+               type="text"
+               value="<%= price %>"
+               <%= !overwritten ? ' disabled="disabled"' : '' %>/>
+    </div>
+    <div class="grid-col-1">
+        <span class="grey-font"><%= currencyCode %></span>
+    </div>
+    <div class="grid-col-8">
+        <div class="custom-checkbox">
+            <input id="change-price-<%= currencyCode %>"
+                   class="form-element husky-validate change-price"
+                   type="checkbox"
+                   <%= overwritten ? 'checked="checked"' : '' %>
+                   data-currency="<%= currencyCode %>"/>
+            <span class="icon"></span>
+        </div>
+        <%= translate('product.product-addons.change-price') %>
+    </div>
+</div>
+<div class="grid-row">
+    <div class="grid-col-12 grey-font small-font">
+        <%= translate('product.product-addons.base-price') %>: <%= defaultPrice %> <%= currencyCode %>
+    </div>
+</div>

@@ -6,6 +6,7 @@ CHANGELOG for Sulu Product Bundle
     * ENHANCEMENT Added flag for recurring price
     * ENHANCEMENT Added API for product addons
     * ENHANCEMENT Added GET-api for currencies
+    * ENHANCEMENT Added UI for addons.
 
 * 0.10.6 (2016-06-23)
     * BUGFIX Fixed issue with tags when adding a new product

@@ -33,3 +33,7 @@ sulu_product.product_documents:
 sulu_product.product_attributes:
     pattern: /template/product/attributes.html
     defaults: { _controller: SuluProductBundle:Template:productAttributes }
+
+sulu_product.product_addons:
+    pattern: /template/product/addons.html
+    defaults: { _controller: SuluProductBundle:Template:productAddons }
