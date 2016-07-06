@@ -1,4 +1,4 @@
-SuluProductBundle
+SuluProductBundle [![Build Status](https://travis-ci.org/sulu/SuluProductBundle.svg?branch=develop)](https://travis-ci.org/sulu/SuluProductBundle)
 =================
 
 # Configuration
