@@ -5,7 +5,8 @@ namespace Sulu\Bundle\ProductBundle\Tests\Resources;
 use DateTime;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityRepository;
-use Symfony\Component\DependencyInjection\Container;
+use Sulu\Bundle\ProductBundle\Entity\Addon;
+use Sulu\Bundle\ProductBundle\Entity\AddonPrice;
 use Sulu\Bundle\MediaBundle\DataFixtures\ORM\LoadCollectionTypes;
 use Sulu\Bundle\MediaBundle\DataFixtures\ORM\LoadMediaTypes;
 use Sulu\Bundle\MediaBundle\Entity\Collection;
@@ -40,6 +41,7 @@ use Sulu\Bundle\ProductBundle\Entity\TypeRepository;
 use Sulu\Bundle\ProductBundle\Entity\Unit;
 use Sulu\Bundle\ProductBundle\Entity\UnitRepository;
 use Sulu\Bundle\ProductBundle\Product\ProductFactoryInterface;
+use Symfony\Component\DependencyInjection\Container;
 
 class ProductTestData
 {
@@ -53,6 +55,7 @@ class ProductTestData
     const CONTENT_UNIT_ID = 2;
     const ORDER_UNIT_ID = 1;
     const PRODUCT_TYPE_ID = 1;
+    const PRODUCT_TYPE_ADDON_ID = 3;
     const TAX_CLASS_ID = 1;
 
     /**
@@ -69,6 +72,11 @@ class ProductTestData
      * @var Type
      */
     private $productType;
+
+    /**
+     * @var Type
+     */
+    private $addonProductType;
 
     /**
      * @var Status
@@ -228,6 +236,7 @@ class ProductTestData
         $typeFixtures = new LoadProductTypes();
         $typeFixtures->load($this->entityManager);
         $this->productType = $this->getProductTypeRepository()->find(self::PRODUCT_TYPE_ID);
+        $this->addonProductType = $this->getProductTypeRepository()->find(self::PRODUCT_TYPE_ADDON_ID);
 
         $attributeTypes = new LoadAttributeTypes();
         $attributeTypes->load($this->entityManager);
@@ -276,6 +285,79 @@ class ProductTestData
         $this->addProductTranslation($product);
 
         return $product;
+    }
+
+    /**
+     * Creates a product with type addon.
+     *
+     * @return ProductInterface
+     */
+    public function createAddonProduct()
+    {
+        $this->productCount++;
+
+        // Create basic product.
+        $product = $this->productFactory->createEntity();
+        $this->entityManager->persist($product);
+        $product->setNumber('AddonProductNumber-' . $this->productCount);
+        $product->setManufacturer('EnglishManufacturer-' . $this->productCount);
+        $product->setType($this->addonProductType);
+        $product->setStatus($this->productStatus);
+        $product->setCreated(new DateTime());
+        $product->setChanged(new DateTime());
+        $product->setSupplier($this->contactTestData->accountSupplier);
+        $product->setOrderUnit($this->orderUnit);
+        $product->setContentUnit($this->contentUnit);
+        $product->setOrderContentRatio(2.0);
+        $product->setTaxClass($this->taxClass);
+
+        // Add prices
+        $this->addPrice($product, 5.99);
+        $this->addPrice($product, 3.85, 4.0);
+
+        // Product translation
+        $this->addProductTranslation($product);
+
+        return $product;
+    }
+
+    /**
+     * @param ProductInterface $product
+     * @param ProductInterface $addonProduct
+     *
+     * @return Addon
+     */
+    public function createAddon(ProductInterface $product, ProductInterface $addonProduct)
+    {
+        /** @var Addon $addon */
+        $addon = $this->entityManager->getRepository('SuluProductBundle:Addon')->createNew();
+        $addon->setAddon($addonProduct);
+        $addon->setProduct($product);
+
+        $this->entityManager->persist($addon);
+
+        return $addon;
+    }
+
+    /**
+     * @param Addon $addon
+     * @param float $price
+     * @param Currency $currency
+     *
+     * @return AddonPrice
+     */
+    public function createAddonPrice(Addon $addon, $price, Currency $currency)
+    {
+        $addonPrice = new AddonPrice();
+        $addonPrice->setAddon($addon);
+        $addonPrice->setCurrency($currency);
+        $addonPrice->setPrice($price);
+
+        $this->entityManager->persist($addonPrice);
+
+        $addon->addAddonPrice($addonPrice);
+
+        return $addonPrice;
     }
 
     /**
@@ -510,6 +592,14 @@ class ProductTestData
     public function getContentUnit()
     {
         return $this->contentUnit;
+    }
+
+    /**
+     * @return Currency
+     */
+    public function getCurrency()
+    {
+        return $this->currency;
     }
 
     /**
