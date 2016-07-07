@@ -11,6 +11,15 @@
         </div>
     </div>
     <div class="grid-row small">
+        <div class="grid-col-12">
+            <div class="form-group">
+                <label for="title" class="required"><%= translate('product.attribute.key') %></label>
+                <input class="form-element" type="text" id="title" data-validation-required="true"
+                       data-validation-max-length="255" data-mapper-property="key"/>
+            </div>
+        </div>
+    </div>
+    <div class="grid-row small">
         <div class="grid-col-6">
             <div class="form-group">
                 <label for="attribute-types" class="required"><%=translate('product.attributes.type')%></label>

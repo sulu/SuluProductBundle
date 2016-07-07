@@ -314,7 +314,7 @@ class ProductMediaControllerTest extends SuluTestCase
         $this->typeTranslation1->setType($this->type1);
 
         // product status
-        $metadata = $this->em->getClassMetaData(get_class(new Status()));
+        $metadata = $this->em->getClassMetadata(Status::class);
         $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_NONE);
         $this->productStatus1 = new Status();
         $this->productStatus1->setId(Status::ACTIVE);
@@ -334,7 +334,7 @@ class ProductMediaControllerTest extends SuluTestCase
         $this->attributeType1 = new AttributeType();
         $this->attributeType1->setName('EnglishAttributeType-1');
 
-        $metadata = $this->em->getClassMetaData(get_class(new Attribute()));
+        $metadata = $this->em->getClassMetadata(Attribute::class);
         $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_NONE);
 
         $this->attribute1 = new Attribute();
@@ -342,6 +342,7 @@ class ProductMediaControllerTest extends SuluTestCase
         $this->attribute1->setCreated(new DateTime());
         $this->attribute1->setChanged(new DateTime());
         $this->attribute1->setType($this->attributeType1);
+        $this->attribute1->setKey('key-1');
 
         // Attribute Translations
         $this->attributeTranslation1 = new AttributeTranslation();
@@ -400,7 +401,7 @@ class ProductMediaControllerTest extends SuluTestCase
         $this->typeTranslation2->setType($this->type2);
 
         // product status
-        $metadata = $this->em->getClassMetaData(get_class(new Status()));
+        $metadata = $this->em->getClassMetadata(Status::class);
         $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_NONE);
         $this->productStatus2 = new Status();
         $this->productStatus2->setId(Status::CHANGED);
@@ -423,6 +424,7 @@ class ProductMediaControllerTest extends SuluTestCase
         $this->attribute2->setCreated(new DateTime());
         $this->attribute2->setChanged(new DateTime());
         $this->attribute2->setType($this->attributeType2);
+        $this->attribute2->setKey('key-2');
 
         // Attribute Translations
         $this->attributeTranslation2 = new AttributeTranslation();
@@ -461,7 +463,7 @@ class ProductMediaControllerTest extends SuluTestCase
         $this->productAttribute2->setAttribute($this->attribute2);
         $this->productAttribute2->setAttributeValue($this->attributeValue2);
 
-        $metadata = $this->em->getClassMetaData(get_class(new TaxClass()));
+        $metadata = $this->em->getClassMetadata(TaxClass::class);
         $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_NONE);
         $this->taxClass1 = new TaxClass();
         $this->taxClass1->setId(TaxClass::STANDARD_TAX_RATE);
@@ -492,7 +494,7 @@ class ProductMediaControllerTest extends SuluTestCase
         $categoryTranslation2->setCategory($this->category2);
         $this->category2->addTranslation($categoryTranslation2);
 
-        $metadata = $this->em->getClassMetaData(get_class(new DeliveryStatus()));
+        $metadata = $this->em->getClassMetadata(DeliveryStatus::class);
         $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_NONE);
 
         $this->deliveryStatusAvailable = new DeliveryStatus();
@@ -695,8 +697,10 @@ class ProductMediaControllerTest extends SuluTestCase
         $media = $this->createMedia('test-post-media');
         $this->em->flush();
 
-        $this->client->request('POST', '/api/products/' . $this->product1->getId() . '/media',
-            array('mediaId' => $media->getId())
+        $this->client->request(
+            'POST',
+            '/api/products/' . $this->product1->getId() . '/media',
+            ['mediaId' => $media->getId()]
         );
 
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());

@@ -390,6 +390,10 @@
                 <source>product.product-addons.remove-error</source>
                 <target>Error on deleting the product addon.</target>
             </trans-unit>
+            <trans-unit id="84" resname="product.attribute.key">
+                <source>product.attribute.key</source>
+                <target>Key</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>

@@ -390,6 +390,10 @@
                 <source>product.product-addons.remove-error</source>
                 <target>Fehler beim Löschen der Produkterweiterung.</target>
             </trans-unit>
+            <trans-unit id="84" resname="product.attribute.key">
+                <source>product.attribute.key</source>
+                <target>Schlüssel</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>

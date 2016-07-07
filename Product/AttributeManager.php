@@ -127,6 +127,16 @@ class AttributeManager implements AttributeManagerInterface
 
         );
 
+        $fieldDescriptors['key'] = new DoctrineFieldDescriptor(
+            'key',
+            'key',
+            self::$attributeEntityName,
+            'product.attribute.key',
+            [],
+            false,
+            true
+        );
+
         return $fieldDescriptors;
     }
 
@@ -200,6 +210,7 @@ class AttributeManager implements AttributeManagerInterface
         $attribute->setChanged(new DateTime());
         $attribute->setChanger($user);
         $attribute->setName($this->getProperty($data, 'name', $attribute->getName()));
+        $attribute->setKey($this->getProperty($data, 'key', $attribute->getKey()));
 
         if (array_key_exists('type', $data) && array_key_exists('id', $data['type'])) {
             $typeId = $data['type']['id'];

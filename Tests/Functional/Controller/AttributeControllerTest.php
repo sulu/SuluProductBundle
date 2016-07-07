@@ -76,6 +76,7 @@ class AttributeControllerTest extends SuluTestCase
         $this->attribute1->setCreated(new DateTime());
         $this->attribute1->setChanged(new DateTime());
         $this->attribute1->setType($this->attributeType1);
+        $this->attribute1->setKey('key.one');
         $attributeTextTranslation = new AttributeTranslation();
         $attributeTextTranslation->setName('Gas');
         $attributeTextTranslation->setLocale('en');
@@ -86,6 +87,7 @@ class AttributeControllerTest extends SuluTestCase
         $this->attribute2->setCreated(new DateTime());
         $this->attribute2->setChanged(new DateTime());
         $this->attribute2->setType($this->attributeType2);
+        $this->attribute2->setKey('key.two');
         $attributeTextTranslation2 = new AttributeTranslation();
         $attributeTextTranslation2->setName('Power');
         $attributeTextTranslation2->setLocale('en');
@@ -178,6 +180,7 @@ class AttributeControllerTest extends SuluTestCase
     {
         $data = array(
             'name' => 'Material',
+            'key' => 'key.one',
             'type' => array(
                 'id' => $this->attributeType1->getId()
             )
@@ -192,6 +195,7 @@ class AttributeControllerTest extends SuluTestCase
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
         $this->assertEquals('Material', $response->name);
+        $this->assertEquals('key.one', $response->key);
         $this->assertEquals($this->attributeType1->getId(), $response->type->id);
     }
 

@@ -157,6 +157,7 @@ class ValueControllerTest extends SuluTestCase
         $this->attributeEntity1->setType($this->attributeType4);
         $this->attribute1 = new Attribute($this->attributeEntity1, 'en', 'en');
         $this->attribute1->setName('attribute-1');
+        $this->attribute1->setKey('key-1');
 
         $this->attributeEntity2 = new AttributeEntity();
         $this->attributeEntity2->setCreated(new DateTime());
@@ -164,6 +165,7 @@ class ValueControllerTest extends SuluTestCase
         $this->attributeEntity2->setType($this->attributeType2);
         $this->attribute2 = new Attribute($this->attributeEntity2, 'en', 'en');
         $this->attribute2->setName('attribute-2');
+        $this->attribute2->setKey('key-2');
 
         $this->attributeEntity3 = new AttributeEntity();
         $this->attributeEntity3->setCreated(new DateTime());
@@ -171,6 +173,7 @@ class ValueControllerTest extends SuluTestCase
         $this->attributeEntity3->setType($this->attributeType3);
         $this->attribute3 = new Attribute($this->attributeEntity3, 'en', 'en');
         $this->attribute3->setName('attribute-3');
+        $this->attribute3->setKey('key-3');
 
         // **** AttributeValues
         $this->attributeValueEntity1_1 = new AttributeValueEntity();
