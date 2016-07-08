@@ -347,6 +347,7 @@ class ProductControllerTest extends SuluTestCase
         $this->attribute1->setCreated(new DateTime());
         $this->attribute1->setChanged(new DateTime());
         $this->attribute1->setType($this->attributeType1);
+        $this->attribute1->setKey('key-1');
 
         // Attribute Translations
         $this->attributeTranslation1 = new AttributeTranslation();
@@ -418,6 +419,7 @@ class ProductControllerTest extends SuluTestCase
         $this->attribute2->setCreated(new DateTime());
         $this->attribute2->setChanged(new DateTime());
         $this->attribute2->setType($this->attributeType2);
+        $this->attribute2->setKey('key-2');
 
         // Attribute Translations
         $this->attributeTranslation2 = new AttributeTranslation();

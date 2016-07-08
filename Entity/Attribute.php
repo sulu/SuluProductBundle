@@ -10,6 +10,7 @@
 
 namespace Sulu\Bundle\ProductBundle\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Sulu\Component\Security\Authentication\UserInterface;
 
@@ -36,62 +37,68 @@ class Attribute
     private $id;
 
     /**
-     * @var \Doctrine\Common\Collections\Collection
+     * @var ArrayCollection
      */
     public $translations;
 
     /**
-     * @var \Doctrine\Common\Collections\Collection
+     * @var ArrayCollection
      */
     private $values;
 
     /**
-     * @var \Doctrine\Common\Collections\Collection
+     * @var ArrayCollection
      */
     private $productAttributes;
 
     /**
-     * @var \Sulu\Bundle\ProductBundle\Entity\AttributeType
+     * @var AttributeType
      */
     private $type;
 
     /**
-     * @var \Sulu\Bundle\SecurityBundle\Entity\User
+     * @var UserInterface
      */
     private $changer;
 
     /**
-     * @var \Sulu\Bundle\SecurityBundle\Entity\User
+     * @var UserInterface
      */
     private $creator;
+
+    /**
+     * @var string
+     */
+    private $key;
 
     /**
      * Constructor
      */
     public function __construct()
     {
-        $this->translations = new \Doctrine\Common\Collections\ArrayCollection();
-        $this->values = new \Doctrine\Common\Collections\ArrayCollection();
-        $this->productAttributes = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->translations = new ArrayCollection();
+        $this->values = new ArrayCollection();
+        $this->productAttributes = new ArrayCollection();
     }
-    
+
     /**
      * Set created
      *
      * @param \DateTime $created
+     *
      * @return Attribute
      */
     public function setCreated($created)
     {
         $this->created = $created;
-    
+
         return $this;
     }
 
     /**
      * Get created
      *
-     * @return \DateTime 
+     * @return \DateTime
      */
     public function getCreated()
     {
@@ -102,19 +109,20 @@ class Attribute
      * Set changed
      *
      * @param \DateTime $changed
+     *
      * @return Attribute
      */
     public function setChanged($changed)
     {
         $this->changed = $changed;
-    
+
         return $this;
     }
 
     /**
      * Get changed
      *
-     * @return \DateTime 
+     * @return \DateTime
      */
     public function getChanged()
     {
@@ -124,7 +132,7 @@ class Attribute
     /**
      * Get id
      *
-     * @return integer 
+     * @return int
      */
     public function getId()
     {
@@ -133,7 +141,9 @@ class Attribute
 
     /**
      * Set id
-     * @param $id
+     *
+     * @param int $id
+     *
      * @return Attribute
      */
     public function setId($id)
@@ -146,22 +156,23 @@ class Attribute
     /**
      * Add translations
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\AttributeTranslation $translations
+     * @param AttributeTranslation $translations
+     *
      * @return Attribute
      */
-    public function addTranslation(\Sulu\Bundle\ProductBundle\Entity\AttributeTranslation $translations)
+    public function addTranslation(AttributeTranslation $translations)
     {
         $this->translations[] = $translations;
-    
+
         return $this;
     }
 
     /**
      * Remove translations
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\AttributeTranslation $translations
+     * @param AttributeTranslation $translations
      */
-    public function removeTranslation(\Sulu\Bundle\ProductBundle\Entity\AttributeTranslation $translations)
+    public function removeTranslation(AttributeTranslation $translations)
     {
         $this->translations->removeElement($translations);
     }
@@ -169,7 +180,7 @@ class Attribute
     /**
      * Get translations
      *
-     * @return \Doctrine\Common\Collections\Collection 
+     * @return ArrayCollection
      */
     public function getTranslations()
     {
@@ -179,22 +190,23 @@ class Attribute
     /**
      * Add values
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\AttributeValue $values
+     * @param AttributeValue $values
+     *
      * @return Attribute
      */
-    public function addValue(\Sulu\Bundle\ProductBundle\Entity\AttributeValue $values)
+    public function addValue(AttributeValue $values)
     {
         $this->values[] = $values;
-    
+
         return $this;
     }
 
     /**
      * Remove values
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\AttributeValue $values
+     * @param AttributeValue $values
      */
-    public function removeValue(\Sulu\Bundle\ProductBundle\Entity\AttributeValue $values)
+    public function removeValue(AttributeValue $values)
     {
         $this->values->removeElement($values);
     }
@@ -202,7 +214,7 @@ class Attribute
     /**
      * Get values
      *
-     * @return \Doctrine\Common\Collections\Collection 
+     * @return ArrayCollection
      */
     public function getValues()
     {
@@ -212,22 +224,23 @@ class Attribute
     /**
      * Add productAttributes
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\ProductAttribute $productAttributes
+     * @param ProductAttribute $productAttributes
+     *
      * @return Attribute
      */
-    public function addProductAttribute(\Sulu\Bundle\ProductBundle\Entity\ProductAttribute $productAttributes)
+    public function addProductAttribute(ProductAttribute $productAttributes)
     {
         $this->productAttributes[] = $productAttributes;
-    
+
         return $this;
     }
 
     /**
      * Remove productAttributes
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\ProductAttribute $productAttributes
+     * @param ProductAttribute $productAttributes
      */
-    public function removeProductAttribute(\Sulu\Bundle\ProductBundle\Entity\ProductAttribute $productAttributes)
+    public function removeProductAttribute(ProductAttribute $productAttributes)
     {
         $this->productAttributes->removeElement($productAttributes);
     }
@@ -235,7 +248,7 @@ class Attribute
     /**
      * Get productAttributes
      *
-     * @return \Doctrine\Common\Collections\Collection 
+     * @return ArrayCollection
      */
     public function getProductAttributes()
     {
@@ -245,20 +258,21 @@ class Attribute
     /**
      * Set type
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\AttributeType $type
+     * @param AttributeType $type
+     *
      * @return Attribute
      */
-    public function setType(\Sulu\Bundle\ProductBundle\Entity\AttributeType $type)
+    public function setType(AttributeType $type)
     {
         $this->type = $type;
-    
+
         return $this;
     }
 
     /**
      * Get type
      *
-     * @return \Sulu\Bundle\ProductBundle\Entity\AttributeType 
+     * @return AttributeType
      */
     public function getType()
     {
@@ -268,20 +282,21 @@ class Attribute
     /**
      * Set changer
      *
-     * @param \Sulu\Component\Security\Authentication\UserInterface $changer
+     * @param UserInterface $changer
+     *
      * @return Attribute
      */
     public function setChanger(UserInterface $changer = null)
     {
         $this->changer = $changer;
-    
+
         return $this;
     }
 
     /**
      * Get changer
      *
-     * @return \Sulu\Bundle\SecurityBundle\Entity\User 
+     * @return UserInterface
      */
     public function getChanger()
     {
@@ -291,23 +306,44 @@ class Attribute
     /**
      * Set creator
      *
-     * @param \Sulu\Component\Security\Authentication\UserInterface $creator
+     * @param UserInterface $creator
+     *
      * @return Attribute
      */
     public function setCreator(UserInterface $creator = null)
     {
         $this->creator = $creator;
-    
+
         return $this;
     }
 
     /**
      * Get creator
      *
-     * @return \Sulu\Bundle\SecurityBundle\Entity\User 
+     * @return UserInterface
      */
     public function getCreator()
     {
         return $this->creator;
+    }
+
+    /**
+     * @return string
+     */
+    public function getKey()
+    {
+        return $this->key;
+    }
+
+    /**
+     * @param string $key
+     *
+     * @return self
+     */
+    public function setKey($key)
+    {
+        $this->key = $key;
+
+        return $this;
     }
 }

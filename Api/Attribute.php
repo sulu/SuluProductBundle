@@ -246,4 +246,26 @@ class Attribute extends ApiWrapper
 
         return $attributeTranslation;
     }
+    /**
+    * @VirtualProperty
+    * @SerializedName("key")
+    *
+    * @return string
+    */
+    public function getKey()
+    {
+        return $this->getEntity()->getKey();
+    }
+
+    /**
+     * @param string $key
+     *
+     * @return self
+     */
+    public function setKey($key)
+    {
+        $this->getEntity()->setKey($key);
+
+        return $this;
+    }
 }
