@@ -12,12 +12,13 @@ namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
+use Sulu\Component\Persistence\Model\TimestampableInterface;
 use Sulu\Component\Security\Authentication\UserInterface;
 
 /**
  * Attribute
  */
-class Attribute
+class Attribute implements TimestampableInterface
 {
 
     const ATTRIBUTE_TYPE_TEXT = 1;

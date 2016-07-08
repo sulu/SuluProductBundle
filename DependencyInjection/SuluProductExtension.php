@@ -33,6 +33,7 @@ class SuluProductExtension extends Extension
         $container->setParameter('sulu_product.locales', $config['locales']);
 
         $container->setParameter('sulu_product', $config);
+        $container->setParameter('sulu_product.fixtures.attributes', $config['fixtures']['attributes']);
 
         $loader = new Loader\XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.xml');

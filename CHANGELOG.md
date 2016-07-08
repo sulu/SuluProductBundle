@@ -2,8 +2,9 @@ CHANGELOG for Sulu Product Bundle
 =================================
 
 * dev-develop
-    * FEATURE Added key to attributes
-    * BUGFIX Fixed tests of special prices
+    * FEATURE   Added possibility to add Attribute fixtures by adding the file name to config.yml
+    * FEATURE   Added key to attributes
+    * BUGFIX    Fixed tests of special prices
 
 * 0.11.0 (2016-07-06)
     * ENHANCEMENT Added methods for price calculations of addons
