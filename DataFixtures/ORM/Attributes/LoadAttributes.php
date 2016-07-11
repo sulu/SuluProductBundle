@@ -107,7 +107,7 @@ class LoadAttributes implements FixtureInterface, ContainerAwareInterface
 
                             break;
                         case 'value':
-                            $value = $this->createAttributeValue($attribute, $childNode, $manager);
+                            $this->createAttributeValue($attribute, $childNode, $manager);
 
                             break;
                     }
