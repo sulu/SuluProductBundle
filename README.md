@@ -17,6 +17,9 @@ sulu_product:
         product:
             model: Acme\Bundle\ProductBundle\Entity\Product
             repository: Acme\Bundle\ProductBundle\Entity\ProductRepository
+    fixtures:
+        attributes:
+            - src/Acme/Bundle/ProductBundle/DataFixtures/attributes.xml
 ```
 
 ## Localization

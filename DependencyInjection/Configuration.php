@@ -35,6 +35,15 @@ class Configuration implements ConfigurationInterface
                 ->end()
                 ->scalarNode('template')->defaultValue('ClientWebsiteBundle:views:product.html.twig')->end()
                 ->scalarNode('default_currency')->defaultValue('EUR')->end()
+                ->arrayNode('fixtures')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->arrayNode('attributes')
+                            ->prototype('scalar')->end()
+                            ->defaultValue([])
+                        ->end()
+                    ->end()
+                ->end()
             ->end();
 
         $this->addObjectsSection($rootNode);
