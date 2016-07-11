@@ -39,3 +39,34 @@ If you'd like to overwrite the sulu product entity you simply need to set the
 
 For shop purposes `template` can be used to define the template for displaying
 product details.
+
+## Attribute Fixtures
+
+You can write multiple attribute fixture files and define the path of your xmls in your config (as seen in the example above)
+
+### Example XML
+
+```xml
+<attributes>
+    <attribute>
+        <key>example.key</key>
+        <type>1</type>
+        <names>
+            <name locale="en">English Attribute</name>
+            <name locale="de">German Attribute</name>
+        </names>
+        <values>
+            <value>
+                <name locale="de">German Value 1</name>
+                <name locale="en">English Value 1</name>
+            </value>
+            <value>
+                <name locale="de">German Value 2</name>
+                <name locale="en">English Value 2</name>
+            </value>
+        </values>
+    </attribute>
+</attributes>
+
+```
+
