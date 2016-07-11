@@ -92,7 +92,6 @@ class LoadAttributes implements FixtureInterface, ContainerAwareInterface
                     continue;
                 }
 
-                $value = null;
                 /** @var \DOMNode $childNode */
                 foreach ($child->childNodes as $childNode) {
                     switch ($childNode->nodeName) {
