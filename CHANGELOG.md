@@ -3,6 +3,7 @@ CHANGELOG for Sulu Product Bundle
 
 * 0.11.1 (2016-07-11)
 
+    * FEATURE   Added method to get products by categories
     * FEATURE   Added possibility to add Attribute fixtures by adding the file name to config.yml
     * FEATURE   Added key to attributes
     * BUGFIX    Fixed tests of special prices
