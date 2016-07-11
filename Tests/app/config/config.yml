@@ -11,3 +11,8 @@ doctrine:
 parameters:
     mailer_from: test@test.com
     website_locale: en
+
+sulu_product:
+    fixtures:
+        attributes:
+            - Resources/attributes.xml

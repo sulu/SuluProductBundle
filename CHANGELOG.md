@@ -7,6 +7,7 @@ CHANGELOG for Sulu Product Bundle
     * FEATURE   Added possibility to add Attribute fixtures by adding the file name to config.yml
     * FEATURE   Added key to attributes
     * BUGFIX    Fixed tests of special prices
+    * BUGFIX    Fixed wrong translation key
 
 * 0.11.0 (2016-07-06)
 
