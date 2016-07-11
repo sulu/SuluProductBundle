@@ -13,6 +13,7 @@ namespace Sulu\Bundle\ProductBundle\Tests\Functional\Controller;
 use DateTime;
 use Doctrine\ODM\PHPCR\Mapping\ClassMetadata;
 use Doctrine\ORM\EntityManager;
+use Sulu\Bundle\ProductBundle\DataFixtures\ORM\Attributes\LoadAttributes;
 use Sulu\Bundle\ProductBundle\Entity\Attribute;
 use Sulu\Bundle\ProductBundle\Entity\AttributeTranslation;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
@@ -47,6 +48,11 @@ class AttributeControllerTest extends SuluTestCase
     private $attribute1;
 
     /**
+     * @var Client
+     */
+    private $client;
+
+    /**
      * @var Attribute
      */
     private $attribute2;
@@ -62,13 +68,18 @@ class AttributeControllerTest extends SuluTestCase
 
     private function setUpTestData()
     {
+        $metadata = $this->em->getClassMetadata(AttributeType::class);
+        $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_NONE);
+
         $this->attributeType1 = new AttributeType();
+        $this->attributeType1->setId(1);
         $this->attributeType1->setName('some-translation-type-1-string');
         $this->attributeType2 = new AttributeType();
         $this->attributeType2->setName('some-translation-type-2-string');
+        $this->attributeType2->setId(2);
 
         // shipping
-        $metadata = $this->em->getClassMetaData(get_class(new Attribute()));
+        $metadata = $this->em->getClassMetadata(Attribute::class);
         $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_NONE);
 
         $this->attribute1 = new Attribute();
@@ -439,5 +450,32 @@ class AttributeControllerTest extends SuluTestCase
     {
         $this->client->request('DELETE', '/api/attributes/666');
         $this->assertEquals('404', $this->client->getResponse()->getStatusCode());
+    }
+
+    public function testAttributeFixtures()
+    {
+        $fixtureLoader = new LoadAttributes();
+        $fixtureLoader->setContainer($this->getContainer());
+        
+        $fixtureLoader->load($this->em);
+
+        $this->client->request('GET', '/api/attributes');
+        $response = json_decode($this->client->getResponse()->getContent());
+        $items = $response->_embedded->attributes;
+
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+        $this->assertEquals(3, count($items));
+
+        $item1 = $items[0];
+        $this->assertEquals('some-translation-type-1-string', $item1->type->name);
+        $this->assertEquals('Gas', $item1->name);
+
+        $item2 = $items[1];
+        $this->assertEquals('some-translation-type-2-string', $item2->type->name);
+        $this->assertEquals('Power', $item2->name);
+
+        $item3 = $items[2];
+        $this->assertEquals('some-translation-type-1-string', $item3->type->name);
+        $this->assertEquals('English Attribute', $item3->name);
     }
 }
