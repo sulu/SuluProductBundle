@@ -95,9 +95,9 @@ class LoadAttributes implements FixtureInterface, ContainerAwareInterface
                 $value = null;
                 /** @var \DOMNode $childNode */
                 foreach ($child->childNodes as $childNode) {
-                    $locale = $childNode->attributes->getNamedItem('locale')->nodeValue;
                     switch ($childNode->nodeName) {
                         case 'name':
+                            $locale = $childNode->attributes->getNamedItem('locale')->nodeValue;
                             $translation = $this->createAttributeTranslation(
                                 $childNode->nodeValue,
                                 $locale,
@@ -107,18 +107,7 @@ class LoadAttributes implements FixtureInterface, ContainerAwareInterface
 
                             break;
                         case 'value':
-                            if (!$value) {
-                                $value = $this->createAttributeValue($attribute);
-                                $manager->persist($value);
-                            }
-                            $translation = $this->createAttributeValueTranslation(
-                                $childNode->nodeValue,
-                                $locale
-                            );
-
-                            $translation->setAttributeValue($value);
-                            $manager->persist($translation);
-                            $value->addTranslation($translation);
+                            $value = $this->createAttributeValue($attribute, $childNode, $manager);
 
                             break;
                     }
@@ -132,15 +121,32 @@ class LoadAttributes implements FixtureInterface, ContainerAwareInterface
 
     /**
      * @param Attribute $attribute
+     * @param \DOMNode $node
+     * @param ObjectManager $manager
      *
      * @return AttributeValue
      */
-    protected function createAttributeValue(Attribute $attribute)
+    protected function createAttributeValue(Attribute $attribute, \DOMNode $node, ObjectManager $manager)
     {
+
         $value = new AttributeValue();
         $value->setAttribute($attribute);
 
+        $manager->persist($value);
+
         $attribute->addValue($value);
+
+        foreach ($node->childNodes as $childNode) {
+            $locale = $childNode->attributes->getNamedItem('locale')->nodeValue;
+            $translation = $this->createAttributeValueTranslation(
+                $childNode->nodeValue,
+                $locale
+            );
+            $translation->setAttributeValue($value);
+            $value->addTranslation($translation);
+
+            $manager->persist($translation);
+        }
 
         return $value;
     }
