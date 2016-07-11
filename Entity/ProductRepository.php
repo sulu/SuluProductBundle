@@ -184,4 +184,19 @@ class ProductRepository extends EntityRepository implements ProductRepositoryInt
             return null;
         }
     }
+
+    /**
+     * @param int $categoryId
+     * @param string $locale
+     *
+     * @return ProductInterface[]
+     */
+    public function findByCategoryId($categoryId, $locale)
+    {
+        $qb = $this->getProductQuery($locale);
+        $qb->join('product.categories', 'categories')
+            ->where($qb->expr()->eq('categories.id', $categoryId));
+
+        return $qb->getQuery()->getResult();
+    }
 }
