@@ -882,7 +882,6 @@ class ProductManager implements ProductManagerInterface
 
     /**
      * @param int $categoryId
-     *
      * @param string $locale
      *
      * @return ProductInterface[]
