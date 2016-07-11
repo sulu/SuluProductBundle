@@ -104,6 +104,7 @@ class LoadAttributes implements FixtureInterface, ContainerAwareInterface
                                 $attribute
                             );
                             $manager->persist($translation);
+
                             break;
                         case 'value':
                             if (!$value) {
@@ -156,8 +157,8 @@ class LoadAttributes implements FixtureInterface, ContainerAwareInterface
         $translation = new AttributeTranslation();
         $translation->setName($name);
         $translation->setLocale($locale);
-
         $translation->setAttribute($attribute);
+
         $attribute->addTranslation($translation);
 
         return $translation;
