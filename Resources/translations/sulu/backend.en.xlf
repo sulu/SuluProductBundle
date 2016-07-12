@@ -394,6 +394,14 @@
                 <source>product.attribute.key</source>
                 <target>Key</target>
             </trans-unit>
+            <trans-unit id="85" resname="product.content-type.headline">
+                <source>product.content-type.headline</source>
+                <target>Choose products</target>
+            </trans-unit>
+            <trans-unit id="86" resname="product-selection.no-product-selected">
+                <source>product-selection.no-product-selected</source>
+                <target>No products chosen</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>

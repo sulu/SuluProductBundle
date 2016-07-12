@@ -38,6 +38,8 @@ class SuluProductExtension extends Extension
         $loader = new Loader\XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.xml');
 
+        $container->setParameter('sulu_product.content-type.product.template', $config['types']['product']['template']);
+
         $this->configurePersistence($config['objects'], $container);
     }
 }

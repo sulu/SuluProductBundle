@@ -1,6 +1,10 @@
 CHANGELOG for Sulu Product Bundle
 =================================
 
+* dev-develop
+
+    * ENHANCEMENT Added new content type for products
+
 * 0.12.0 (2016-07-11)
 
     * FEATURE   Added method to get products by categories

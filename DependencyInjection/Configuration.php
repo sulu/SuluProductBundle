@@ -47,6 +47,7 @@ class Configuration implements ConfigurationInterface
             ->end();
 
         $this->addObjectsSection($rootNode);
+        $this->addContentTypes($rootNode);
 
         return $treeBuilder;
     }
@@ -67,7 +68,32 @@ class Configuration implements ConfigurationInterface
                             ->addDefaultsIfNotSet()
                             ->children()
                                 ->scalarNode('model')->defaultValue('Sulu\Bundle\ProductBundle\Entity\Product')->end()
-                                ->scalarNode('repository')->defaultValue('Sulu\Bundle\ProductBundle\Entity\ProductRepository')->end()
+                                ->scalarNode('repository')
+                                    ->defaultValue('Sulu\Bundle\ProductBundle\Entity\ProductRepository')
+                                ->end()
+                            ->end()
+                        ->end()
+                    ->end()
+                ->end()
+            ->end();
+    }
+
+    /**
+     * @param ArrayNodeDefinition $node
+     */
+    private function addContentTypes(ArrayNodeDefinition $node)
+    {
+        $node
+            ->children()
+                ->arrayNode('types')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->arrayNode('product')
+                        ->addDefaultsIfNotSet()
+                        ->children()
+                            ->scalarNode('template')
+                                ->defaultValue('SuluProductBundle:Template:content-types/product-selection.html.twig')
+                                ->end()
                             ->end()
                         ->end()
                     ->end()

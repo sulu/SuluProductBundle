@@ -80,10 +80,14 @@ class Product extends ApiWrapper implements ApiProductInterface
         AccountManager $accountManager = null
     ) {
         $this->entity = $product;
-        $this->locale = $locale;
         $this->priceFormatter = $priceFormatter;
         $this->productLocaleManager = $productLocaleManager;
         $this->accountManager = $accountManager;
+
+        $this->locale = $locale;
+        if (!$productLocaleManager->isLocaleConfigured($locale)) {
+            $this->locale = $productLocaleManager->getFallbackLocale();
+        }
     }
 
     /**
