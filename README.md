@@ -70,3 +70,13 @@ You can write multiple attribute fixture files and define the path of your xmls 
 
 ```
 
+## Content type 'product'
+
+```xml
+<property name="product" type="product" mandatory="true">
+    <meta>
+        <title lang="de">Produkt</title>
+        <title lang="en">Product</title>
+    </meta>
+</property>
+```
