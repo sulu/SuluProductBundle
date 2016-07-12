@@ -68,7 +68,9 @@ class Configuration implements ConfigurationInterface
                             ->addDefaultsIfNotSet()
                             ->children()
                                 ->scalarNode('model')->defaultValue('Sulu\Bundle\ProductBundle\Entity\Product')->end()
-                                ->scalarNode('repository')->defaultValue('Sulu\Bundle\ProductBundle\Entity\ProductRepository')->end()
+                                ->scalarNode('repository')
+                                    ->defaultValue('Sulu\Bundle\ProductBundle\Entity\ProductRepository')
+                                ->end()
                             ->end()
                         ->end()
                     ->end()
@@ -76,6 +78,9 @@ class Configuration implements ConfigurationInterface
             ->end();
     }
 
+    /**
+     * @param ArrayNodeDefinition $node
+     */
     private function addContentTypes(ArrayNodeDefinition $node)
     {
         $node
