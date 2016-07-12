@@ -2265,16 +2265,14 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * @param int[] $ids
-     *
-     * @return ProductInterface[]
+     * {@inheritdoc}
      */
-    public function readList($ids)
+    public function createApiEntitiesByIds($ids, $locale)
     {
         $products =  $this->productRepository->findBy(['id' => $ids]);
         $apiProducts = [];
         foreach ($products as $product) {
-            $apiProducts[] = $this->productFactory->createApiEntity($product, 'de');
+            $apiProducts[] = $this->productFactory->createApiEntity($product, $locale);
         }
         
         return $apiProducts;

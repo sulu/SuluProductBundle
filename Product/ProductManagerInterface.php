@@ -111,8 +111,9 @@ interface ProductManagerInterface
 
     /**
      * @param int[] $ids
+     * @param string $locale
      *
      * @return ProductInterface[]
      */
-    public function readList($ids);
+    public function createApiEntitiesByIds($ids, $locale);
 }

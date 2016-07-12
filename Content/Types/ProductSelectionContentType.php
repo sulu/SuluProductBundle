@@ -11,10 +11,10 @@
 namespace Sulu\Bundle\ProductBundle\Content\Types;
 
 use JMS\Serializer\SerializationContext;
+use JMS\Serializer\SerializerInterface;
 use Sulu\Bundle\ProductBundle\Product\ProductManagerInterface;
 use Sulu\Component\Content\Compat\PropertyInterface;
 use Sulu\Component\Content\SimpleContentType;
-use JMS\Serializer\SerializerInterface;
 
 class ProductSelectionContentType extends SimpleContentType
 {
@@ -52,11 +52,12 @@ class ProductSelectionContentType extends SimpleContentType
      */
     public function getContentData(PropertyInterface $property)
     {
+        $locale = $property->getStructure()->getLanguageCode();
         $value = $property->getValue();
         if ($value === null || !is_array($value) || count($value) === 0) {
             return [];
         }
-        $entities = $this->productManager->readList($value);
+        $entities = $this->productManager->createApiEntitiesByIds($value, $locale);
         $result = [];
         foreach ($entities as $entity) {
             $result[array_search($entity->getId(), $value, false)] = $this->serializer->serialize(
