@@ -36,6 +36,18 @@ class ProductLocaleManager
     }
 
     /**
+     * Returns true if the given locale was configured.
+     *
+     * @param string $locale
+     *
+     * @return bool
+     */
+    public function isLocaleConfigured($locale)
+    {
+        return in_array($locale, $this->configuration['locales']);
+    }
+
+    /**
      * Function returns the locale that should be used by default.
      * If request-locale is set, then use this one.
      * Else If users locale matches any of the given locales, that one is taken
