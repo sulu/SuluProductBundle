@@ -11,6 +11,7 @@
 namespace Sulu\Bundle\ProductBundle\Product;
 
 use Sulu\Bundle\ProductBundle\Api\Product;
+use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescriptor;
 
 interface ProductManagerInterface
@@ -107,4 +108,11 @@ interface ProductManagerInterface
      * @param bool $flush Defines if a flush should be performed
      */
     public function delete($id, $userId = null, $flush = true);
+
+    /**
+     * @param int[] $ids
+     *
+     * @return ProductInterface[]
+     */
+    public function readList($ids);
 }

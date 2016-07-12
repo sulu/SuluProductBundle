@@ -194,6 +194,13 @@ class ProductController extends RestController implements ClassResourceInterface
             }
         }
 
+        $ids = null;
+        if (null !== $request->get('ids')) {
+            $ids = array_filter(explode(',', $request->get('ids', '')));
+            $listBuilder->in($fieldDescriptors['id'], $ids);
+            $listBuilder->limit(count($ids));
+        }
+
         // Only add group by id if categories are processed.
         $fieldsParam = $request->get('fields');
         $fields = explode(',', $fieldsParam);

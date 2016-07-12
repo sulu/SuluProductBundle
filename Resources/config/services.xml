@@ -223,5 +223,13 @@
                 <argument key="locales">%sulu_product.locales%</argument>
             </argument>
         </service>
+        <!-- CONTENT TYPES -->
+        <service id="sulu_product.content.product" class="Sulu\Bundle\ProductBundle\Content\Types\ProductSelectionContentType">
+            <argument>%sulu_product.content-type.product.template%</argument>
+            <argument type="service" id="sulu_product.product_manager"/>
+            <argument type="service" id="serializer"/>
+
+            <tag name="sulu.content.type" alias="product"/>
+        </service>
     </services>
 </container>
