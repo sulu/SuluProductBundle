@@ -3,6 +3,7 @@ CHANGELOG for Sulu Product Bundle
 
 * dev-develop
 
+    * BUGFIX      Fixed FieldDescriptor for categories
     * ENHANCEMENT Added method to get products by tags
     * ENHANCEMENT Added new content type for products
 
