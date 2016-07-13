@@ -62,10 +62,7 @@ class ProductRepository extends EntityRepository implements ProductRepositoryInt
     }
 
     /**
-     * Returns all simple products in the given locale for the given number
-     * @param string $locale The locale of the product to load
-     * @param string $number The number of the product to load
-     * @return ProductInterface[]
+     * {@inheritdoc}
      */
     public function findByLocaleAndInternalItemNumber($locale, $internalItemNumber)
     {
@@ -83,9 +80,7 @@ class ProductRepository extends EntityRepository implements ProductRepositoryInt
     }
 
     /**
-     * Returns all products for the given internal number
-     * @param string $internalItemNumber The internal number of the product to load
-     * @return ProductInterface[]
+     * {@inheritdoc}
      */
     public function findByInternalItemNumber($internalItemNumber)
     {
@@ -186,16 +181,29 @@ class ProductRepository extends EntityRepository implements ProductRepositoryInt
     }
 
     /**
-     * @param int $categoryId
-     * @param string $locale
-     *
-     * @return ProductInterface[]
+     * {@inheritdoc}
      */
     public function findByCategoryId($categoryId, $locale)
     {
         $qb = $this->getProductQuery($locale);
         $qb->join('product.categories', 'categories')
             ->where($qb->expr()->eq('categories.id', $categoryId));
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function findByTags(array $tags, $locale)
+    {
+        $qb = $this->getProductQuery($locale);
+
+        foreach ($tags as $tag) {
+            $qb->join('product.tags', 'tag'.$tag)
+                ->andWhere('tag'.$tag.'.name IN (:tagName'.$tag.')')
+                ->setParameter('tagName'.$tag, [$tag]);
+        }
 
         return $qb->getQuery()->getResult();
     }

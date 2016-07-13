@@ -3,6 +3,7 @@ CHANGELOG for Sulu Product Bundle
 
 * dev-develop
 
+    * ENHANCEMENT Added method to get products by tags
     * ENHANCEMENT Added new content type for products
 
 * 0.12.0 (2016-07-11)
@@ -45,4 +46,3 @@ CHANGELOG for Sulu Product Bundle
     * ENHANCEMENT Removed not used attribute types from fixtures
     * BUGFIX Display fallback locale when adding a new attribute value to a product
     * BUGFIX Generating thumbnails
-        
