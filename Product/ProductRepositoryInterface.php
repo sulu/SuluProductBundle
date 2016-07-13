@@ -56,4 +56,38 @@ interface ProductRepositoryInterface
      */
     public function findByLocaleAndIds($locale, array $ids);
 
-} 
+    /**
+     * @param array $tags
+     * @param string $locale
+     *
+     * @return ProductInterface[]
+     */
+    public function findByTags(array $tags, $locale);
+
+    /**
+     * @param int $categoryId
+     * @param string $locale
+     *
+     * @return ProductInterface[]
+     */
+    public function findByCategoryId($categoryId, $locale);
+
+    /**
+     * Returns all products for the given internal number.
+     *
+     * @param string $internalItemNumber The internal number of the product to load
+     *
+     * @return ProductInterface[]
+     */
+    public function findByInternalItemNumber($internalItemNumber);
+
+    /**
+     * Returns all simple products in the given locale for the given number.
+     *
+     * @param string $locale The locale of the product to load
+     * @param string $internalItemNumber The number of the product to load
+     *
+     * @return ProductInterface[]
+     */
+    public function findByLocaleAndInternalItemNumber($locale, $internalItemNumber);
+}

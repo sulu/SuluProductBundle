@@ -12,7 +12,7 @@ namespace Sulu\Bundle\ProductBundle\Product;
 
 use DateTime;
 use Doctrine\Common\Persistence\ObjectManager;
-use Sulu\Bundle\TagBundle\Entity\TagRepository;
+use Sulu\Bundle\ProductBundle\Api\ApiProductInterface;
 use Sulu\Bundle\TagBundle\Tag\TagRepositoryInterface;
 use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\HttpFoundation\Request;
@@ -728,10 +728,10 @@ class ProductManager implements ProductManagerInterface
      * Sets product media for api-product
      * Otherwise api-media will not contain additional info like url,..
      *
-     * @param Product $product
+     * @param ApiProductInterface $product
      * @param string $locale
      */
-    public function createProductMedia(Product $product, $locale)
+    public function createProductMedia(ApiProductInterface $product, $locale)
     {
         $media = [];
         // We have to replace the media with a media obtained from the mediaManager since the urls and the
@@ -894,6 +894,19 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
+     * @param array $tags
+     * @param string $locale
+     *
+     * @return ProductInterface[]
+     */
+    public function findEntitiesByTags(array $tags, $locale)
+    {
+        $products = $this->productRepository->findByTags($tags, $locale);
+
+        return $products;
+    }
+
+    /**
      * Fetches a product.
      *
      * @param int $id
@@ -901,7 +914,7 @@ class ProductManager implements ProductManagerInterface
      *
      * @throws ProductNotFoundException
      *
-     * @return \Sulu\Bundle\ProductBundle\Api\Product
+     * @return ApiProductInterface
      */
     protected function fetchProduct($id, $locale)
     {
