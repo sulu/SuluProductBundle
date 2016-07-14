@@ -147,6 +147,17 @@ class ProductAttribute extends ApiWrapper
     }
 
     /**
+     * @VirtualProperty
+     * @SerializedName("attributeKey")
+     *
+     * @return string
+     */
+    public function getAttributeKey()
+    {
+        return $this->entity->getAttribute()->getKey();
+    }
+
+    /**
      * @return Attribute
      */
     public function getAttribute()
