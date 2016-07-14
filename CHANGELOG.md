@@ -1,6 +1,8 @@
 CHANGELOG for Sulu Product Bundle
 =================================
 
+    * ENHANCEMENT Added attributeKey to attributes
+
 * 0.12.1 (2016-07-13)
 
     * BUGFIX      Fixed FieldDescriptor for categories

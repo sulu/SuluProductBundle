@@ -154,7 +154,7 @@ class ProductAttribute extends ApiWrapper
      */
     public function getAttributeKey()
     {
-        return $this->entity->getAttribute()->getKey();
+        return $this->getAttribute()->getKey();
     }
 
     /**
