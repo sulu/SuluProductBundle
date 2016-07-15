@@ -1303,7 +1303,7 @@ class Product extends ApiWrapper implements ApiProductInterface
         $addons = $this->entity->getAddons();
         /** @var AddonEntity $addon */
         foreach ($addons as $addon) {
-            $apiAddons[] = new Product(
+            $apiAddons[] = new static(
                 $addon->getAddon(),
                 $this->locale,
                 $this->priceFormatter,
