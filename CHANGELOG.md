@@ -1,7 +1,10 @@
 CHANGELOG for Sulu Product Bundle
 =================================
 
-    * ENHANCEMENT Added attributeKey to attributes
+* dev-develop
+
+    * ENHANCEMENT Added attributeKey to attributes api
+    * ENHANCEMENT Added addons to api output of products
 
 * 0.12.1 (2016-07-13)
 

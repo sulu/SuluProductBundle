@@ -3,17 +3,17 @@
 namespace Sulu\Bundle\ProductBundle\Tests\Resources;
 
 use Doctrine\Common\Persistence\ObjectManager;
-use Symfony\Component\DependencyInjection\Container;
-use Sulu\Bundle\ContactBundle\Contact\AccountManager;
 use Sulu\Bundle\ContactBundle\Contact\AccountFactoryInterface;
+use Sulu\Bundle\ContactBundle\Contact\AccountManager;
 use Sulu\Bundle\ContactBundle\Contact\ContactManagerInterface;
 use Sulu\Bundle\ContactBundle\Entity\AccountInterface;
 use Sulu\Bundle\ContactBundle\Entity\Address;
 use Sulu\Bundle\ContactBundle\Entity\AddressType;
-use Sulu\Bundle\ContactBundle\Entity\ContactInterface;
 use Sulu\Bundle\ContactBundle\Entity\Country;
 use Sulu\Bundle\ContactBundle\Entity\Email;
 use Sulu\Bundle\ContactBundle\Entity\EmailType;
+use Sulu\Component\Contact\Model\ContactInterface;
+use Symfony\Component\DependencyInjection\Container;
 
 class ContactTestData
 {
