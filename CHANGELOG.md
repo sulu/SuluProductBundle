@@ -1,6 +1,10 @@
 CHANGELOG for Sulu Product Bundle
 =================================
 
+* dev-develop
+
+    * ENHANCEMENT Added addons to api output of products
+
 * 0.12.1 (2016-07-13)
 
     * BUGFIX      Fixed FieldDescriptor for categories
