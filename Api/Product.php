@@ -20,6 +20,7 @@ use Sulu\Bundle\CategoryBundle\Entity\Category as CategoryEntity;
 use Sulu\Bundle\ContactBundle\Contact\AccountManager;
 use Sulu\Bundle\ContactBundle\Entity\AccountInterface;
 use Sulu\Bundle\MediaBundle\Api\Media;
+use Sulu\Bundle\ProductBundle\Entity\Addon as AddonEntity;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSet as AttributeSetEntity;
 use Sulu\Bundle\ProductBundle\Entity\DeliveryStatus as DeliveryStatusEntity;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttribute as ProductAttributeEntity;
@@ -1288,5 +1289,28 @@ class Product extends ApiWrapper implements ApiProductInterface
     public function getTags()
     {
         return $this->entity->getTagNameArray();
+    }
+
+    /**
+     * @VirtualProperty
+     * @SerializedName("addons")
+     *
+     * @return ApiProductInterface[]
+     */
+    public function getAddons()
+    {
+        $apiAddons = [];
+        $addons = $this->entity->getAddons();
+        /** @var AddonEntity $addon */
+        foreach ($addons as $addon) {
+            $apiAddons[] = new static(
+                $addon->getAddon(),
+                $this->locale,
+                $this->priceFormatter,
+                $this->productLocaleManager
+            );
+        }
+
+        return $apiAddons;
     }
 }
