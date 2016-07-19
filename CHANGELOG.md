@@ -1,6 +1,10 @@
 CHANGELOG for Sulu Product Bundle
 =================================
 
+* 0.12.3 (2016-07-19)
+
+    * BUGFIX  Added workaround for ProductTestData to fix a dubious bug in doctrine.
+    
 * 0.12.2 (2016-07-15)
 
     * ENHANCEMENT Added attributeKey to attributes api

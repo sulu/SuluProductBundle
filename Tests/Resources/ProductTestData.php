@@ -204,6 +204,12 @@ class ProductTestData
      */
     protected function createFixtures()
     {
+        // Due to a dubious bug(?) in doctrine - product types need to be loaded first.
+        $typeFixtures = new LoadProductTypes();
+        $typeFixtures->load($this->entityManager);
+        $this->productType = $this->getProductTypeRepository()->find(self::PRODUCT_TYPE_ID);
+        $this->addonProductType = $this->getProductTypeRepository()->find(self::PRODUCT_TYPE_ADDON_ID);
+
         $countries = new LoadCountries();
         $countries->load($this->entityManager);
 
@@ -232,11 +238,6 @@ class ProductTestData
 
         $mediaTypes = new LoadMediaTypes();
         $mediaTypes->load($this->entityManager);
-
-        $typeFixtures = new LoadProductTypes();
-        $typeFixtures->load($this->entityManager);
-        $this->productType = $this->getProductTypeRepository()->find(self::PRODUCT_TYPE_ID);
-        $this->addonProductType = $this->getProductTypeRepository()->find(self::PRODUCT_TYPE_ADDON_ID);
 
         $attributeTypes = new LoadAttributeTypes();
         $attributeTypes->load($this->entityManager);
