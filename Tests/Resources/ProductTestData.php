@@ -5,37 +5,39 @@ namespace Sulu\Bundle\ProductBundle\Tests\Resources;
 use DateTime;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityRepository;
-use Sulu\Bundle\ProductBundle\Entity\Addon;
-use Sulu\Bundle\ProductBundle\Entity\AddonPrice;
+use Sulu\Bundle\CategoryBundle\Entity\Category;
+use Sulu\Bundle\CategoryBundle\Entity\CategoryTranslation;
+use Sulu\Bundle\ContactBundle\DataFixtures\ORM\LoadCountries;
 use Sulu\Bundle\MediaBundle\DataFixtures\ORM\LoadCollectionTypes;
 use Sulu\Bundle\MediaBundle\DataFixtures\ORM\LoadMediaTypes;
 use Sulu\Bundle\MediaBundle\Entity\Collection;
 use Sulu\Bundle\MediaBundle\Entity\Media;
-use Sulu\Bundle\CategoryBundle\Entity\Category;
-use Sulu\Bundle\CategoryBundle\Entity\CategoryTranslation;
-use Sulu\Bundle\ContactBundle\DataFixtures\ORM\LoadCountries;
-use Sulu\Bundle\ProductBundle\Entity\AttributeType;
-use Sulu\Bundle\ProductBundle\Entity\ProductAttribute;
-use Sulu\Bundle\ProductBundle\Entity\SpecialPrice;
 use Sulu\Bundle\ProductBundle\DataFixtures\ORM\AttributeTypes\LoadAttributeTypes;
-use Sulu\Bundle\ProductBundle\Entity\Attribute;
-use Sulu\Bundle\ProductBundle\Entity\AttributeTypeRepository;
-use Sulu\Bundle\ProductBundle\DataFixtures\ORM\DeliveryStatuses\LoadDeliveryStatuses;
-use Sulu\Bundle\ProductBundle\DataFixtures\ORM\TaxClasses\LoadTaxClasses;
+use Sulu\Bundle\ProductBundle\DataFixtures\ORM\CountryTaxes\LoadCountryTaxes;
 use Sulu\Bundle\ProductBundle\DataFixtures\ORM\Currencies\LoadCurrencies;
+use Sulu\Bundle\ProductBundle\DataFixtures\ORM\DeliveryStatuses\LoadDeliveryStatuses;
 use Sulu\Bundle\ProductBundle\DataFixtures\ORM\ProductStatuses\LoadProductStatuses;
 use Sulu\Bundle\ProductBundle\DataFixtures\ORM\ProductTypes\LoadProductTypes;
+use Sulu\Bundle\ProductBundle\DataFixtures\ORM\TaxClasses\LoadTaxClasses;
 use Sulu\Bundle\ProductBundle\DataFixtures\ORM\Units\LoadUnits;
-use Sulu\Bundle\ProductBundle\DataFixtures\ORM\CountryTaxes\LoadCountryTaxes;
+use Sulu\Bundle\ProductBundle\Entity\Addon;
+use Sulu\Bundle\ProductBundle\Entity\AddonPrice;
+use Sulu\Bundle\ProductBundle\Entity\Attribute;
+use Sulu\Bundle\ProductBundle\Entity\AttributeType;
+use Sulu\Bundle\ProductBundle\Entity\AttributeTypeRepository;
+use Sulu\Bundle\ProductBundle\Entity\AttributeValue;
+use Sulu\Bundle\ProductBundle\Entity\AttributeValueTranslation;
 use Sulu\Bundle\ProductBundle\Entity\Currency;
 use Sulu\Bundle\ProductBundle\Entity\CurrencyRepository;
+use Sulu\Bundle\ProductBundle\Entity\ProductAttribute;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductPrice;
-use Sulu\Bundle\ProductBundle\Entity\TaxClass;
-use Sulu\Bundle\ProductBundle\Entity\TaxClassRepository;
 use Sulu\Bundle\ProductBundle\Entity\ProductTranslation;
+use Sulu\Bundle\ProductBundle\Entity\SpecialPrice;
 use Sulu\Bundle\ProductBundle\Entity\Status;
 use Sulu\Bundle\ProductBundle\Entity\StatusRepository;
+use Sulu\Bundle\ProductBundle\Entity\TaxClass;
+use Sulu\Bundle\ProductBundle\Entity\TaxClassRepository;
 use Sulu\Bundle\ProductBundle\Entity\Type;
 use Sulu\Bundle\ProductBundle\Entity\TypeRepository;
 use Sulu\Bundle\ProductBundle\Entity\Unit;
@@ -458,10 +460,11 @@ class ProductTestData
      *
      * @param ProductInterface $product
      * @param string $value
+     * @param string $locale
      *
      * @return ProductAttribute
      */
-    public function createProductAttribute(ProductInterface $product, $value)
+    public function createProductAttribute(ProductInterface $product, $value, $locale = 'en')
     {
         $attribute = $this->createAttribute();
 
@@ -469,9 +472,48 @@ class ProductTestData
         $this->entityManager->persist($productAttribute);
         $productAttribute->setAttribute($attribute);
         $productAttribute->setProduct($product);
-        $productAttribute->setValue($value);
+        $productAttribute->setAttributeValue($this->createAttributeValue($attribute, $value, $locale));
 
         return $productAttribute;
+    }
+
+    /**
+     * Create a product attribute value.
+     *
+     * @param Attribute $attribute
+     * @param string $value
+     * @param string $locale
+     *
+     * @return AttributeValue
+     */
+    public function createAttributeValue(Attribute $attribute, $value, $locale = 'en')
+    {
+        $attributeValue = new AttributeValue();
+        $this->entityManager->persist($attributeValue);
+        $attributeValue->setAttribute($attribute);
+        $attributeValue->addTranslation($this->createAttributeValueTranslation($attributeValue, $value, $locale));
+
+        return $attributeValue;
+    }
+
+    /**
+     * Create a product attribute value translation.
+     *
+     * @param AttributeValue $attributeValue
+     * @param string $value
+     * @param string $locale
+     *
+     * @return AttributeValueTranslation
+     */
+    public function createAttributeValueTranslation(AttributeValue $attributeValue, $value, $locale = 'en')
+    {
+        $attributeValueTranslation = new AttributeValueTranslation();
+        $this->entityManager->persist($attributeValueTranslation);
+        $attributeValueTranslation->setLocale($locale);
+        $attributeValueTranslation->setName($value);
+        $attributeValueTranslation->setAttributeValue($attributeValue);
+
+        return $attributeValueTranslation;
     }
 
     /**
