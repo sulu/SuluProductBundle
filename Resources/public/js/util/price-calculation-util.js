@@ -202,20 +202,28 @@ define([], function() {
 
                 // Calculate taxes for delivery costs in relation to the item prices.
                 for (var i in items) {
+                    item = items[i];
+
+                    if (item.isRecurringPrice) {
+                        continue;
+                    }
+
                     if (areValidCalculationParams(
                             sandbox,
-                            items[i].price,
-                            items[i].tax,
-                            items[i].discount,
-                            items[i].quantity)
+                            item.price,
+                            item.tax,
+                            item.discount,
+                            item.quantity)
                     ) {
-                        item = items[i];
                         itemNetPrice = calculateNetPrice(sandbox, item);
                         itemTax = item.tax.toString();
 
                         ratio = 0;
                         if (result.netPrice != 0) {
                             ratio = itemNetPrice / result.netPrice;
+                        } else {
+                            // Handle total net price of 0. Each item has the same ratio.
+                            ratio = 1 / items.length;
                         }
 
                         tax = ratio * deliveryCost * item.tax / 100;
@@ -238,8 +246,9 @@ define([], function() {
          * @param {Object} sandbox
          * @param {Array} items
          * @param {Number} deliveryCost
+         * @param {Bool} shouldCalculateRecurringPrices
          */
-        processPriceCalculationItem = function(sandbox, items, deliveryCost) {
+        processPriceCalculationItem = function(sandbox, items, deliveryCost, shouldCalculateRecurringPrices) {
             var tax = 0, i, item, itemNetPrice,
                 result = {
                     taxes: {},
@@ -247,20 +256,28 @@ define([], function() {
                     grossPrice: 0
                 };
 
+            shouldCalculateRecurringPrices = !!shouldCalculateRecurringPrices;
+
             if (typeof deliveryCost === 'undefined') {
                 deliveryCost = 0;
             }
 
             try {
                 for (i in items) {
+                    item = items[i];
+
+                    // Check if price is recurring or not.
+                    if (item.isRecurringPrice !== shouldCalculateRecurringPrices) {
+                        continue;
+                    }
+
                     if (areValidCalculationParams(
                             sandbox,
-                            items[i].price,
-                            items[i].tax,
-                            items[i].discount,
-                            items[i].quantity)
+                            item.price,
+                            item.tax,
+                            item.discount,
+                            item.quantity)
                     ) {
-                        item = items[i];
                         itemNetPrice = calculateNetPrice(sandbox, item);
 
                         tax = itemNetPrice * getTaxRate(sandbox, item.tax);
@@ -440,6 +457,7 @@ define([], function() {
          * @param {Object} sandbox
          * @param {Object} items
          * @param {Float} deliveryCost
+         * @param {Bool} shouldCalculateRecurringPrices
          * [
          *  {
          *   price: 100,
@@ -450,9 +468,9 @@ define([], function() {
          *
          * @return {Object}
          */
-        getTotalPricesAndTaxes: function(sandbox, items, deliveryCost) {
+        getTotalPricesAndTaxes: function(sandbox, items, deliveryCost, shouldCalculateRecurringPrices) {
             if (!!items) {
-                return processPriceCalculationItem.call(this, sandbox, items, deliveryCost);
+                return processPriceCalculationItem.call(this, sandbox, items, deliveryCost, shouldCalculateRecurringPrices);
             }
             return null;
         },
