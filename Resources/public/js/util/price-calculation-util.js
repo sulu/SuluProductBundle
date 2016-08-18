@@ -199,6 +199,7 @@ define([], function() {
                 var itemTax = 0;
                 var ratio = 0;
                 var tax;
+                var numberItems = retrieveNumberOfNonRecurringItems(items);
 
                 // Calculate taxes for delivery costs in relation to the item prices.
                 for (var i in items) {
@@ -221,9 +222,9 @@ define([], function() {
                         ratio = 0;
                         if (result.netPrice != 0) {
                             ratio = itemNetPrice / result.netPrice;
-                        } else {
+                        } else if (numberItems > 0) {
                             // Handle total net price of 0. Each item has the same ratio.
-                            ratio = 1 / items.length;
+                            ratio = 1 / numberItems;
                         }
 
                         tax = ratio * deliveryCost * item.tax / 100;
@@ -237,6 +238,23 @@ define([], function() {
                 result.netPrice += deliveryCost;
                 result.grossPrice += deliveryCost;
             }
+        },
+
+        /**
+         * Returns number of items that do not have recurring prices.
+         */
+        retrieveNumberOfNonRecurringItems = function(items) {
+            var numberItems = 0;
+
+            for (var i in items) {
+                var item = items[i];
+                if (item.isRecurringPrice) {
+                    continue;
+                }
+                numberItems++;
+            }
+
+            return numberItems;
         },
 
         /**
