@@ -1,6 +1,10 @@
 CHANGELOG for Sulu Product Bundle
 =================================
 
+* dev-develop
+
+    * FEATURE Added calculation of recurring prices to price-calculation util in javascript utils.
+
 * 0.12.4 (2016-07-22)
 
     * BUGFIX  Added attribute values to attribute test data.
