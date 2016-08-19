@@ -208,7 +208,7 @@ class ProductRepository extends EntityRepository implements ProductRepositoryInt
                 ->setParameter('categoryId' . $categoryId, [$categoryId]);
         }
 
-        foreach($tags as $tag) {
+        foreach ($tags as $tag) {
             $qb->join('product.tags', 'tag' . $tag)
                 ->andWhere('tag' . $tag . '.name IN (:tagName' . $tag . ')')
                 ->setParameter('tagName' . $tag, [$tag]);

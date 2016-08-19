@@ -73,9 +73,9 @@ interface ProductRepositoryInterface
     public function findByCategoryId($categoryId, $locale);
 
     /**
+     * @param string $locale
      * @param array $categoryIds
      * @param array $tags
-     * @param string $locale
      *
      * @return ProductInterface[]
      */
