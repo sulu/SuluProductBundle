@@ -1,6 +1,10 @@
 CHANGELOG for Sulu Product Bundle
 =================================
+* 0.12.5 (2016-08-19)
 
+    * ENHANCEMENT  Added method to get products by one or more categoryIds and tags
+    * ENHANCEMENT  Added method to get products by global trade item number (gtin)
+    
 * 0.12.4 (2016-07-22)
 
     * BUGFIX  Added attribute values to attribute test data.
