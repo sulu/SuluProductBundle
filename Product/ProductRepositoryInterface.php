@@ -79,7 +79,7 @@ interface ProductRepositoryInterface
      *
      * @return ProductInterface[]
      */
-    public function findByCategoryIdsAndTags(array $categoryIds = null, array $tags = null, $locale);
+    public function findByCategoryIdsAndTags($locale, array $categoryIds = [], array $tags = []);
 
     /**
      * Returns all products for the given internal number.
@@ -89,16 +89,6 @@ interface ProductRepositoryInterface
      * @return ProductInterface[]
      */
     public function findByInternalItemNumber($internalItemNumber);
-
-    /**
-     * Returns all products for the given global trade item number.
-     *
-     * @param string $globalTradeItemNumber The global trade item number of the product to load
-     *
-     * @return ProductInterface[]
-     */
-    public function findByGlobalTradeItemNumber($globalTradeItemNumber);
-
 
     /**
      * Returns all simple products in the given locale for the given number.

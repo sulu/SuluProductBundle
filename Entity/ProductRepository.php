@@ -6,6 +6,7 @@ use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\NoResultException;
 use Sulu\Bundle\ProductBundle\Product\ProductRepositoryInterface;
 use Sulu\Bundle\ProductBundle\Entity\Product;
+use Symfony\Component\Config\Definition\Exception\Exception;
 
 /**
  * ProductRepository
@@ -88,23 +89,6 @@ class ProductRepository extends EntityRepository implements ProductRepositoryInt
             $qb = $this->createQueryBuilder('product')
                 ->where('product.internalItemNumber = :internalItemNumber')
                 ->setParameter('internalItemNumber', $internalItemNumber);
-            $query = $qb->getQuery();
-
-            return $query->getResult();
-        } catch (NoResultException $exc) {
-            return null;
-        }
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function findByGlobalTradeItemNumber($globalTradeItemNumber)
-    {
-        try {
-            $qb = $this->createQueryBuilder('product')
-                ->where('product.globalTradeItemNumber = :globalTradeItemNumber')
-                ->setParameter('globalTradeItemNumber', $globalTradeItemNumber);
             $query = $qb->getQuery();
 
             return $query->getResult();
@@ -202,7 +186,7 @@ class ProductRepository extends EntityRepository implements ProductRepositoryInt
      */
     public function findByCategoryId($categoryId, $locale)
     {
-        return $this->findByCategoryIdsAndTags([$categoryId], null, $locale);
+        return $this->findByCategoryIdsAndTags($locale, [$categoryId], []);
     }
 
     /**
@@ -210,13 +194,13 @@ class ProductRepository extends EntityRepository implements ProductRepositoryInt
      */
     public function findByTags(array $tags, $locale)
     {
-        return $this->findByCategoryIdsAndTags(null, $tags, $locale);
+        return $this->findByCategoryIdsAndTags($locale, [], $tags);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function findByCategoryIdsAndTags(array $categoryIds = null, array $tags = null, $locale)
+    public function findByCategoryIdsAndTags($locale, array $categoryIds = [], array $tags = [])
     {
         $qb = $this->getProductQuery($locale);
 

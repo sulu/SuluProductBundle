@@ -920,9 +920,9 @@ class ProductManager implements ProductManagerInterface
      *
      * @return ProductInterface[]
      */
-    public function findEntitiesByCategoryIdsAndTags(array $categoryIds = null, array $tags = null, $locale)
+    public function findEntitiesByCategoryIdsAndTags($locale, array $categoryIds = [], array $tags = [])
     {
-        $products = $this->productRepository->findByCategoryIdsAndTags($categoryIds, $tags, $locale);
+        $products = $this->productRepository->findByCategoryIdsAndTags($locale, $categoryIds, $tags);
 
         return $products;
     }
