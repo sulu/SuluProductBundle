@@ -5,8 +5,6 @@ namespace Sulu\Bundle\ProductBundle\Entity;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\NoResultException;
 use Sulu\Bundle\ProductBundle\Product\ProductRepositoryInterface;
-use Sulu\Bundle\ProductBundle\Entity\Product;
-use Symfony\Component\Config\Definition\Exception\Exception;
 
 /**
  * ProductRepository
