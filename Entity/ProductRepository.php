@@ -97,6 +97,23 @@ class ProductRepository extends EntityRepository implements ProductRepositoryInt
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function findByGlobalTradeItemNumber($globalTradeItemNumber)
+    {
+        try {
+            $qb = $this->createQueryBuilder('product')
+                ->where('product.globalTradeItemNumber = :globalTradeItemNumber')
+                ->setParameter('globalTradeItemNumber', $globalTradeItemNumber);
+            $query = $qb->getQuery();
+
+            return $query->getResult();
+        } catch (NoResultException $exc) {
+            return null;
+        }
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function findByLocaleAndFilter($locale, array $filter)
@@ -185,11 +202,7 @@ class ProductRepository extends EntityRepository implements ProductRepositoryInt
      */
     public function findByCategoryId($categoryId, $locale)
     {
-        $qb = $this->getProductQuery($locale);
-        $qb->join('product.categories', 'categories')
-            ->where($qb->expr()->eq('categories.id', $categoryId));
-
-        return $qb->getQuery()->getResult();
+        return $this->findByCategoryIdsAndTags([$categoryId], null, $locale);
     }
 
     /**
@@ -197,12 +210,26 @@ class ProductRepository extends EntityRepository implements ProductRepositoryInt
      */
     public function findByTags(array $tags, $locale)
     {
+        return $this->findByCategoryIdsAndTags(null, $tags, $locale);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function findByCategoryIdsAndTags(array $categoryIds = null, array $tags = null, $locale)
+    {
         $qb = $this->getProductQuery($locale);
 
-        foreach ($tags as $tag) {
-            $qb->join('product.tags', 'tag'.$tag)
-                ->andWhere('tag'.$tag.'.name IN (:tagName'.$tag.')')
-                ->setParameter('tagName'.$tag, [$tag]);
+        foreach ($categoryIds as $categoryId) {
+            $qb->join('product.categories', 'categories' . $categoryId)
+                ->andWhere('categories' . $categoryId . '.id IN (:categoryId' . $categoryId . ')')
+                ->setParameter('categoryId' . $categoryId, [$categoryId]);
+        }
+
+        foreach($tags as $tag) {
+            $qb->join('product.tags', 'tag' . $tag)
+                ->andWhere('tag' . $tag . '.name IN (:tagName' . $tag . ')')
+                ->setParameter('tagName' . $tag, [$tag]);
         }
 
         return $qb->getQuery()->getResult();
