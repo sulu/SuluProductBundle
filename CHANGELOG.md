@@ -1,6 +1,10 @@
 CHANGELOG for Sulu Product Bundle
 =================================
 
+* dev-develop
+
+    * FEATURE Prepared for Sulu 1.3 support.
+
 * 0.12.5 (2016-08-22)
 
     * FEATURE Added calculation of recurring prices to price-calculation util in javascript utils.
