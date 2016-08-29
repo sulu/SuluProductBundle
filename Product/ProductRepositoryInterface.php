@@ -73,6 +73,15 @@ interface ProductRepositoryInterface
     public function findByCategoryId($categoryId, $locale);
 
     /**
+     * @param string $locale
+     * @param array $categoryIds
+     * @param array $tags
+     *
+     * @return ProductInterface[]
+     */
+    public function findByCategoryIdsAndTags($locale, array $categoryIds = [], array $tags = []);
+
+    /**
      * Returns all products for the given internal number.
      *
      * @param string $internalItemNumber The internal number of the product to load

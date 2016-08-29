@@ -5,7 +5,6 @@ namespace Sulu\Bundle\ProductBundle\Entity;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\NoResultException;
 use Sulu\Bundle\ProductBundle\Product\ProductRepositoryInterface;
-use Sulu\Bundle\ProductBundle\Entity\Product;
 
 /**
  * ProductRepository
@@ -185,11 +184,7 @@ class ProductRepository extends EntityRepository implements ProductRepositoryInt
      */
     public function findByCategoryId($categoryId, $locale)
     {
-        $qb = $this->getProductQuery($locale);
-        $qb->join('product.categories', 'categories')
-            ->where($qb->expr()->eq('categories.id', $categoryId));
-
-        return $qb->getQuery()->getResult();
+        return $this->findByCategoryIdsAndTags($locale, [$categoryId], []);
     }
 
     /**
@@ -197,12 +192,26 @@ class ProductRepository extends EntityRepository implements ProductRepositoryInt
      */
     public function findByTags(array $tags, $locale)
     {
+        return $this->findByCategoryIdsAndTags($locale, [], $tags);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function findByCategoryIdsAndTags($locale, array $categoryIds = [], array $tags = [])
+    {
         $qb = $this->getProductQuery($locale);
 
+        foreach ($categoryIds as $categoryId) {
+            $qb->join('product.categories', 'categories' . $categoryId)
+                ->andWhere('categories' . $categoryId . '.id IN (:categoryId' . $categoryId . ')')
+                ->setParameter('categoryId' . $categoryId, [$categoryId]);
+        }
+
         foreach ($tags as $tag) {
-            $qb->join('product.tags', 'tag'.$tag)
-                ->andWhere('tag'.$tag.'.name IN (:tagName'.$tag.')')
-                ->setParameter('tagName'.$tag, [$tag]);
+            $qb->join('product.tags', 'tag' . $tag)
+                ->andWhere('tag' . $tag . '.name IN (:tagName' . $tag . ')')
+                ->setParameter('tagName' . $tag, [$tag]);
         }
 
         return $qb->getQuery()->getResult();

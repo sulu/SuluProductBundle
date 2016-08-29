@@ -885,6 +885,22 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
+     * Returns all products for the given global trade item number (gtin).
+     *
+     * @param string $globalTradeItemNumber
+     *
+     * @return ProductInterface[]
+     */
+    public function findEntitiesByGlobalTradeItemNumber($globalTradeItemNumber)
+    {
+        $products = $this->productRepository->findByGlobalTradeItemNumber(
+            $globalTradeItemNumber
+        );
+
+        return $products;
+    }
+
+    /**
      * @param int $categoryId
      * @param string $locale
      *
@@ -893,6 +909,20 @@ class ProductManager implements ProductManagerInterface
     public function findEntitiesByCategoryId($categoryId, $locale)
     {
         $products = $this->productRepository->findByCategoryId($categoryId, $locale);
+
+        return $products;
+    }
+
+    /**
+     * @param string $locale
+     * @param array $categoryIds
+     * @param array $tags
+     *
+     * @return ProductInterface[]
+     */
+    public function findEntitiesByCategoryIdsAndTags($locale, array $categoryIds = [], array $tags = [])
+    {
+        $products = $this->productRepository->findByCategoryIdsAndTags($locale, $categoryIds, $tags);
 
         return $products;
     }
