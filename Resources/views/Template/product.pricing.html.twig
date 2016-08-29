@@ -60,6 +60,7 @@
                 </div>
             </div>
         </div>
+        {% if displayRecurringPrices == true %}
         <div class="grid-col-6">
             <div class="form-group">
                 <label for="isRecurringPrice" ><%=translate('products.isRecurringPrice')%></label>
@@ -74,6 +75,7 @@
                 </div>
             </div>
         </div>
+        {% endif %}
     </div>
 
     <div id="prices" data-form="true" data-type="price-list" data-mapper-property="prices"></div>

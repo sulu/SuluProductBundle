@@ -1,6 +1,10 @@
 CHANGELOG for Sulu Product Bundle
 =================================
 
+* dev-develop
+
+    * ENHANCEMENT Added config param 'display_recurring_prices'
+
 * 0.12.5 (2016-08-22)
 
     * FEATURE Added calculation of recurring prices to price-calculation util in javascript utils.

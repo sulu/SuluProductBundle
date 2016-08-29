@@ -13,6 +13,7 @@ sulu_product:
         - en
     template: AcmeShopBundle:views:templates/productdetail.html.twig
     default_currency: '%default_currency%'
+    display_recurring_prices: true
     objects:
         product:
             model: Acme\Bundle\ProductBundle\Entity\Product

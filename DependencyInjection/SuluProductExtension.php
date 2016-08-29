@@ -29,6 +29,7 @@ class SuluProductExtension extends Extension
         $config = $this->processConfiguration($configuration, $configs);
         $container->setParameter('sulu_product.template', $config['template']);
         $container->setParameter('sulu_product.default_currency', $config['default_currency']);
+        $container->setParameter('sulu_product.display_recurring_prices', $config['display_recurring_prices']);
         $container->setParameter('sulu_product.fallback_locale', $config['fallback_locale']);
         $container->setParameter('sulu_product.locales', $config['locales']);
 
