@@ -1,7 +1,7 @@
 CHANGELOG for Sulu Product Bundle
 =================================
 
-* dev-develop
+* 0.12.6 (2016-08-29)
 
     * ENHANCEMENT Added config param 'display_recurring_prices'
     * ENHANCEMENT Added method to get products by one or more categoryIds and tags
