@@ -15,12 +15,12 @@
         </div>
         <div class="grid-col-6">
             <div class="form-group">
-                <label for="status" class="required"><%=translate('product.tax-class')%></label>
+                <label for="status" class="required"><%= translate('product.tax-class') %></label>
 
                 <div id="tax-class"
                      data-aura-component="select@husky"
-                     data-aura-data="{{ taxClasses|json_encode() }}"
-                     data-aura-default-label="<%=translate('public.please-choose')%>"
+                     data-aura-data="{{ taxClasses | json_encode() }}"
+                     data-aura-default-label="<%= translate('public.please-choose') %>"
                      data-aura-multiple-select="false"
                      data-aura-instance-name="tax-class"
                      data-type-label="tax-class"
@@ -36,19 +36,9 @@
     </div>
 
     <div class="grid-row">
-        {#<div class="grid-col-6">#}
-            {#<div class="form-group">#}
-                {#<label for="cost"><%= translate('product.cost') %></label>#}
-                {#<input class="form-element" type="text"#}
-                       {#id="cost-info"#}
-                       {#data-mapper-property="cost"#}
-                       {#data-validation-required="false"#}
-                       {#data-type="decimal" />#}
-            {#</div>#}
-        {#</div>#}
         <div class="grid-col-6">
             <div class="form-group">
-                <label for="areGrossPrices" ><%=translate('product.areGrossPrices')%></label>
+                <label for="areGrossPrices" ><%= translate('product.areGrossPrices') %></label>
                 <div>
                     <div class="custom-checkbox">
                         <input class="form-element husky-validate"
@@ -80,15 +70,13 @@
 
     <div id="prices" data-form="true" data-type="price-list" data-mapper-property="prices"></div>
     <div id="specialPrices" data-form="true" data-type="price-list" data-mapper-property="specialPrices"></div>
-
-
 </form>
 
 {% block data %}
     <script type="text/javascript">
         (function() {
-            var currencies = {{ currencies|json_encode()|raw }},
-                defaultCurrency = {{ defaultCurrency|json_encode()|raw }};
+            var currencies = {{ currencies | json_encode() | raw }};
+            var defaultCurrency = {{ defaultCurrency | json_encode() | raw }};
 
             App.emit('sulu.product.set-currencies', currencies);
             App.emit('sulu.product.set-default-currency', defaultCurrency);
