@@ -4,8 +4,8 @@ CHANGELOG for Sulu Product Bundle
 * dev-develop
 
     * ENHANCEMENT Added config param 'display_recurring_prices'
-    * ENHANCEMENT  Added method to get products by one or more categoryIds and tags
-    * ENHANCEMENT  Added method to get products by global trade item number (gtin)
+    * ENHANCEMENT Added method to get products by one or more categoryIds and tags
+    * ENHANCEMENT Added method to get products by global trade item number (gtin)
     
 * 0.12.5 (2016-08-22)
 
