@@ -31,6 +31,11 @@ If non defined, 'en' is taken as default.
 If the users language matches any of the given locales, that one is displayed in the admin area.
 Else the `fallback_locale` parameter is used.
 
+## Recurring prices
+
+The property recurring prices can be disabled via parameter `display_recurring_prices`.
+This option hides the UI elements for recurring prices.
+
 ## Custom Entity and Repository
 
 If you'd like to overwrite the sulu product entity you simply need to set the
