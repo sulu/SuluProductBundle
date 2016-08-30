@@ -34,7 +34,7 @@ Else the `fallback_locale` parameter is used.
 ## Recurring prices
 
 The property recurring prices can be disabled via parameter `display_recurring_prices`.
-This option just only hide the UI elements for the user.
+This option hides the UI elements for recurring prices.
 
 ## Custom Entity and Repository
 
