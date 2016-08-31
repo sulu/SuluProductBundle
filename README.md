@@ -1,6 +1,36 @@
 SuluProductBundle [![Build Status](https://travis-ci.org/sulu/SuluProductBundle.svg?branch=develop)](https://travis-ci.org/sulu/SuluProductBundle)
 =================
 
+# Installation
+
+Add the following to composer.json
+
+```
+"sulu/product-bundle": "~0.12"
+```
+
+Add the following to your application kernel:
+
+```
+// Product bundle
+new Sulu\Bundle\ProductBundle\SuluProductBundle(),
+new Sulu\Bundle\PricingBundle\SuluPricingBundle(),
+```
+
+Add the following to your `admin/routing.yml`:
+
+```
+# Sulu Product Bundle
+sulu_product:
+    resource: "@SuluProductBundle/Resources/config/routing.yml"
+    prefix: /admin/product
+
+sulu_product_api:
+    type: rest
+    resource: "@SuluProductBundle/Resources/config/routing_api.yml"
+    prefix: /admin/api
+```
+
 # Configuration
 
 Sample configuration:
