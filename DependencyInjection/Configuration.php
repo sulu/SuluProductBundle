@@ -35,6 +35,7 @@ class Configuration implements ConfigurationInterface
                 ->end()
                 ->scalarNode('template')->defaultValue('ClientWebsiteBundle:views:product.html.twig')->end()
                 ->scalarNode('default_currency')->defaultValue('EUR')->end()
+                ->scalarNode('display_recurring_prices')->defaultValue(true)->end()
                 ->arrayNode('fixtures')
                     ->addDefaultsIfNotSet()
                     ->children()

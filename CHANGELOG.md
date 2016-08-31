@@ -5,6 +5,12 @@ CHANGELOG for Sulu Product Bundle
 
     * FEATURE Prepared for Sulu 1.3 support.
 
+* 0.12.6 (2016-08-29)
+
+    * ENHANCEMENT Added config param 'display_recurring_prices'
+    * ENHANCEMENT Added method to get products by one or more categoryIds and tags
+    * ENHANCEMENT Added method to get products by global trade item number (gtin)
+    
 * 0.12.5 (2016-08-22)
 
     * FEATURE Added calculation of recurring prices to price-calculation util in javascript utils.
