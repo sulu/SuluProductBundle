@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -12,21 +13,29 @@ namespace Sulu\Bundle\ProductBundle\Tests\Functional\Controller;
 
 use DateTime;
 use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\Tools\SchemaTool;
 use Sulu\Bundle\ProductBundle\Api\Attribute;
-use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
-use Symfony\Component\HttpKernel\Client;
+use Sulu\Bundle\ProductBundle\Api\AttributeValue;
 use Sulu\Bundle\ProductBundle\Entity\Attribute as AttributeEntity;
 use Sulu\Bundle\ProductBundle\Entity\AttributeType;
-use Sulu\Bundle\ProductBundle\Api\AttributeValue;
 use Sulu\Bundle\ProductBundle\Entity\AttributeValue as AttributeValueEntity;
+use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 
 class ValueControllerTest extends SuluTestCase
 {
     /**
+     * @var string
+     */
+    const REQUEST_LOCALE = 'en';
+
+    /**
      * @var array
      */
     protected static $entities;
+
+    /**
+     * @var string
+     */
+    protected static $baseUrl = '/api/attributes/%s/values%s';
 
     /**
      * @var EntityManager
@@ -118,6 +127,9 @@ class ValueControllerTest extends SuluTestCase
      */
     private $attributeValue2_1;
 
+    /**
+     * {@inheritdoc}
+     */
     public function setUp()
     {
         $this->em = $this->getEntityManager();
@@ -127,9 +139,12 @@ class ValueControllerTest extends SuluTestCase
         $this->em->flush();
     }
 
+    /**
+     * Create fixtures for test.
+     */
     private function setUpTestData()
     {
-        // **** Attribute types
+        // Attribute types
         $this->attributeType1 = new AttributeType();
         $this->attributeType1->setName('product.attribute.type.text');
         $this->attributeType1->setId(1);
@@ -150,12 +165,12 @@ class ValueControllerTest extends SuluTestCase
         $this->attributeType5->setName('product.attribute.type.radiobutton');
         $this->attributeType5->setId(5);
 
-        // **** Attributes
+        // Attributes
         $this->attributeEntity1 = new AttributeEntity();
         $this->attributeEntity1->setCreated(new DateTime());
         $this->attributeEntity1->setChanged(new DateTime());
         $this->attributeEntity1->setType($this->attributeType4);
-        $this->attribute1 = new Attribute($this->attributeEntity1, 'en', 'en');
+        $this->attribute1 = new Attribute($this->attributeEntity1, self::REQUEST_LOCALE, self::REQUEST_LOCALE);
         $this->attribute1->setName('attribute-1');
         $this->attribute1->setKey('key-1');
 
@@ -163,7 +178,7 @@ class ValueControllerTest extends SuluTestCase
         $this->attributeEntity2->setCreated(new DateTime());
         $this->attributeEntity2->setChanged(new DateTime());
         $this->attributeEntity2->setType($this->attributeType2);
-        $this->attribute2 = new Attribute($this->attributeEntity2, 'en', 'en');
+        $this->attribute2 = new Attribute($this->attributeEntity2, self::REQUEST_LOCALE, self::REQUEST_LOCALE);
         $this->attribute2->setName('attribute-2');
         $this->attribute2->setKey('key-2');
 
@@ -171,24 +186,36 @@ class ValueControllerTest extends SuluTestCase
         $this->attributeEntity3->setCreated(new DateTime());
         $this->attributeEntity3->setChanged(new DateTime());
         $this->attributeEntity3->setType($this->attributeType3);
-        $this->attribute3 = new Attribute($this->attributeEntity3, 'en', 'en');
+        $this->attribute3 = new Attribute($this->attributeEntity3, self::REQUEST_LOCALE, self::REQUEST_LOCALE);
         $this->attribute3->setName('attribute-3');
         $this->attribute3->setKey('key-3');
 
-        // **** AttributeValues
+        // AttributeValues
         $this->attributeValueEntity1_1 = new AttributeValueEntity();
         $this->attributeValueEntity1_1->setAttribute($this->attributeEntity2);
-        $this->attributeValue1_1 = new AttributeValue($this->attributeValueEntity1_1, 'en', 'en');
+        $this->attributeValue1_1 = new AttributeValue(
+            $this->attributeValueEntity1_1,
+            self::REQUEST_LOCALE,
+            self::REQUEST_LOCALE
+        );
         $this->attributeValue1_1->setName('Value1_1');
 
         $this->attributeValueEntity1_2 = new AttributeValueEntity();
         $this->attributeValueEntity1_2->setAttribute($this->attributeEntity2);
-        $this->attributeValue1_2 = new AttributeValue($this->attributeValueEntity1_2, 'en', 'en');
+        $this->attributeValue1_2 = new AttributeValue(
+            $this->attributeValueEntity1_2,
+            self::REQUEST_LOCALE,
+            self::REQUEST_LOCALE
+        );
         $this->attributeValue1_2->setName('Value1_2');
 
         $this->attributeValueEntity2_1 = new AttributeValueEntity();
         $this->attributeValueEntity2_1->setAttribute($this->attributeEntity3);
-        $this->attributeValue2_1 = new AttributeValue($this->attributeValueEntity2_1, 'en', 'en');
+        $this->attributeValue2_1 = new AttributeValue(
+            $this->attributeValueEntity2_1,
+            self::REQUEST_LOCALE,
+            self::REQUEST_LOCALE
+        );
         $this->attributeValue2_1->setName('Value2_1');
 
         $this->em->persist($this->attributeType1);
@@ -210,10 +237,8 @@ class ValueControllerTest extends SuluTestCase
      */
     public function testGetById()
     {
-        $url = '/api/attributes/' .
-            $this->attribute1->getId() .
-            '/values/' .
-            $this->attributeValue1_1->getId();
+        $url = sprintf(static::$baseUrl, $this->attribute1->getId(), '/' . $this->attributeValue1_1->getId());
+
         $this->client->request('GET', $url);
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
@@ -222,14 +247,12 @@ class ValueControllerTest extends SuluTestCase
     }
 
     /**
-     * Get not existing values for an attribute by it's id
+     * Get not existing values for an attribute by it's id.
      */
     public function testGetNotExistingValueById()
     {
-        $url = '/api/attributes/' .
-            $this->attribute1->getId() .
-            '/values/' .
-            666;
+        $url = sprintf(static::$baseUrl, $this->attribute1->getId(), '/666');
+
         $this->client->request('GET', $url);
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals(404, $this->client->getResponse()->getStatusCode());
@@ -240,14 +263,12 @@ class ValueControllerTest extends SuluTestCase
     }
 
     /**
-     * Get values from not existing attribute by it's id
+     * Get values from not existing attribute by it's id.
      */
     public function testGetNotExistingValueById2()
     {
-        $url = '/api/attributes/' .
-            666 .
-            '/values/' .
-            $this->attributeValue1_1->getId();
+        $url = sprintf(static::$baseUrl, '666', '/' . $this->attributeValue1_1->getId());
+
         $this->client->request('GET', $url);
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals(404, $this->client->getResponse()->getStatusCode());
@@ -258,13 +279,12 @@ class ValueControllerTest extends SuluTestCase
     }
 
     /**
-     * Get all available attributes
+     * Get all available attributes.
      */
     public function testGetAll()
     {
-        $url = '/api/attributes/' .
-            $this->attribute2->getId() .
-            '/values';
+        $url = sprintf(static::$baseUrl, $this->attribute2->getId(), '');
+
         $this->client->request('GET', $url);
         $response = json_decode($this->client->getResponse()->getContent());
         $items = $response->_embedded->attributeValues;
@@ -280,31 +300,27 @@ class ValueControllerTest extends SuluTestCase
     }
 
     /**
-     * Get not existing all available attributes
+     * Get not existing all available attributes.
      */
     public function testNotExistingGetAll()
     {
-        $url = '/api/attributes/' .
-            666 .
-            '/values';
+        $url = sprintf(static::$baseUrl, '666', '');
         $this->client->request('GET', $url);
-        $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals(404, $this->client->getResponse()->getStatusCode());
     }
 
     /**
-     * Get all available attribute values flat
+     * Get all available attribute values flat.
      */
     public function testGetAllFlat()
     {
-        $url = '/api/attributes/' .
-            $this->attribute2->getId() .
-            '/values?flat=true';
+        $url = sprintf(static::$baseUrl, $this->attribute2->getId(), '?flat=true&locale=' . self::REQUEST_LOCALE);
+
         $this->client->request('GET', $url);
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
         $response = json_decode($this->client->getResponse()->getContent());
         $items = $response->_embedded->attributeValues;
 
-        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
         $this->assertEquals(2, count($items));
 
         $item1 = $items[0];
@@ -315,17 +331,16 @@ class ValueControllerTest extends SuluTestCase
     }
 
     /**
-     * Post (create) and assign a new attribute value to an attribute
+     * Post (create) and assign a new attribute value to an attribute.
      */
     public function testPost()
     {
-        $data = array(
-            'name' => 'New value for attribute 2'
-        );
+        $data = [
+            'name' => 'New value for attribute 2',
+            'locale' => self::REQUEST_LOCALE,
+        ];
 
-        $url = '/api/attributes/' .
-            $this->attribute2->getId() .
-            '/values';
+        $url = sprintf(static::$baseUrl, $this->attribute2->getId(), '');
 
         $this->client->request('POST', $url, $data);
         $response = json_decode($this->client->getResponse()->getContent());
@@ -333,10 +348,8 @@ class ValueControllerTest extends SuluTestCase
         $this->assertEquals('New value for attribute 2', $response->name);
 
         // Get the new created value
-        $url = '/api/attributes/' .
-            $this->attribute2->getId() .
-            '/values/' .
-            $response->attributeValueId;
+        $url = sprintf(static::$baseUrl, $this->attribute2->getId(), '/' . $response->attributeValueId);
+
         $this->client->request('GET', $url);
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
@@ -344,15 +357,13 @@ class ValueControllerTest extends SuluTestCase
     }
 
     /**
-     * Post with a missing attribute value name does return an error
+     * Post with a missing attribute value name does return an error.
      */
     public function testPostMissingNameData()
     {
         $data = [];
 
-        $url = '/api/attributes/' .
-            $this->attribute2->getId() .
-            '/values';
+        $url = sprintf(static::$baseUrl, $this->attribute2->getId(), '');
 
         $this->client->request('POST', $url, $data);
 
@@ -366,18 +377,15 @@ class ValueControllerTest extends SuluTestCase
     }
 
     /**
-     * Put new name to change the appropriate properties on an existing attribute value
+     * Put new name to change the appropriate properties on an existing attribute value.
      */
     public function testPut()
     {
-        $data = array(
-            'name' => 'New changed value for attribute 2'
-        );
+        $data = [
+            'name' => 'New changed value for attribute 2',
+        ];
 
-        $url = '/api/attributes/' .
-            $this->attribute2->getId() .
-            '/values/' .
-            $this->attributeValue1_2->getId();
+        $url = sprintf(static::$baseUrl, $this->attribute2->getId(), '/' . $this->attributeValue1_2->getId());
 
         $this->client->request('PUT', $url, $data);
         $response = json_decode($this->client->getResponse()->getContent());
@@ -396,18 +404,15 @@ class ValueControllerTest extends SuluTestCase
     }
 
     /**
-     * Put to a not existing attribute value id does return an error
+     * Put to a not existing attribute value id does return an error.
      */
     public function testPutNotExisting()
     {
-        $data = array(
-            'name' => 'New changed value for attribute 2'
-        );
+        $data = [
+            'name' => 'New changed value for attribute 2',
+        ];
 
-        $url = '/api/attributes/' .
-            $this->attribute2->getId() .
-            '/values/' .
-            666;
+        $url = sprintf(static::$baseUrl, $this->attribute2->getId(), '/666');
 
         $this->client->request('PUT', $url, $data);
         $response = json_decode($this->client->getResponse()->getContent());
@@ -420,18 +425,15 @@ class ValueControllerTest extends SuluTestCase
     }
 
     /**
-     * Put a new attribute value name does change the name of the attribute value for the given id
+     * Put a new attribute value name does change the name of the attribute value for the given id.
      */
     public function testPutNewName()
     {
-        $data = array(
-            'name' => 'New changed changed value for attribute 2'
-        );
+        $data = [
+            'name' => 'New changed changed value for attribute 2',
+        ];
 
-        $url = '/api/attributes/' .
-            $this->attribute2->getId() .
-            '/values/' .
-            $this->attributeValue1_2->getId();
+        $url = sprintf(static::$baseUrl, $this->attribute2->getId(), '/' . $this->attributeValue1_2->getId());
 
         $this->client->request('PUT', $url, $data);
         $response = json_decode($this->client->getResponse()->getContent());
@@ -439,10 +441,8 @@ class ValueControllerTest extends SuluTestCase
         $this->assertEquals('New changed changed value for attribute 2', $response->name);
 
         // Get the new created value
-        $url = '/api/attributes/' .
-            $this->attribute2->getId() .
-            '/values/' .
-            $this->attributeValue1_2->getId();
+        $url = sprintf(static::$baseUrl, $this->attribute2->getId(), '/' . $this->attributeValue1_2->getId());
+
         $this->client->request('GET', $url);
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
@@ -450,14 +450,11 @@ class ValueControllerTest extends SuluTestCase
     }
 
     /**
-     * Delete an existing attribute value
+     * Delete an existing attribute value.
      */
     public function testDeleteById()
     {
-        $url = '/api/attributes/' .
-            $this->attribute2->getId() .
-            '/values/' .
-            $this->attributeValue1_2->getId();
+        $url = sprintf(static::$baseUrl, $this->attribute2->getId(), '/' . $this->attributeValue1_2->getId());
 
         $this->client->request('DELETE', $url);
         $this->assertEquals('204', $this->client->getResponse()->getStatusCode());
@@ -467,7 +464,7 @@ class ValueControllerTest extends SuluTestCase
     }
 
     /**
-     * Delete a not existing attribute value
+     * Delete a not existing attribute value.
      */
     public function testDeleteNotExistingById()
     {

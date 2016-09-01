@@ -37,20 +37,21 @@ Sample configuration:
 
 ```
 sulu_product:
+    category_root_key: ~
+    default_currency: '%default_currency%'
+    display_recurring_prices: true
     fallback_locale: de
+    fixtures:
+        attributes:
+            - src/Acme/Bundle/ProductBundle/DataFixtures/attributes.xml
     locales:
         - de
         - en
-    template: AcmeShopBundle:views:templates/productdetail.html.twig
-    default_currency: '%default_currency%'
-    display_recurring_prices: true
     objects:
         product:
             model: Acme\Bundle\ProductBundle\Entity\Product
             repository: Acme\Bundle\ProductBundle\Entity\ProductRepository
-    fixtures:
-        attributes:
-            - src/Acme/Bundle/ProductBundle/DataFixtures/attributes.xml
+    template: AcmeShopBundle:views:templates/productdetail.html.twig
 ```
 
 ## Localization

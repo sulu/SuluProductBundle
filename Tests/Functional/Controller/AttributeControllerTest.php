@@ -16,12 +16,17 @@ use Doctrine\ORM\EntityManager;
 use Sulu\Bundle\ProductBundle\DataFixtures\ORM\Attributes\LoadAttributes;
 use Sulu\Bundle\ProductBundle\Entity\Attribute;
 use Sulu\Bundle\ProductBundle\Entity\AttributeTranslation;
+use Sulu\Bundle\ProductBundle\Entity\AttributeType;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Symfony\Component\HttpKernel\Client;
-use Sulu\Bundle\ProductBundle\Entity\AttributeType;
 
 class AttributeControllerTest extends SuluTestCase
 {
+    /**
+     * @var string
+     */
+    const REQUEST_LOCALE = 'en';
+
     /**
      * @var array
      */
@@ -57,6 +62,9 @@ class AttributeControllerTest extends SuluTestCase
      */
     private $attribute2;
 
+    /**
+     * {@inheritdoc}
+     */
     public function setUp()
     {
         $this->em = $this->getEntityManager();
@@ -66,6 +74,9 @@ class AttributeControllerTest extends SuluTestCase
         $this->em->flush();
     }
 
+    /**
+     * Create initial data for tests.
+     */
     private function setUpTestData()
     {
         $metadata = $this->em->getClassMetadata(AttributeType::class);
@@ -114,7 +125,7 @@ class AttributeControllerTest extends SuluTestCase
     }
 
     /**
-     * Get a existing attribute by it's id
+     * Get a existing attribute by it's id.
      */
     public function testGetById()
     {
@@ -127,7 +138,7 @@ class AttributeControllerTest extends SuluTestCase
     }
 
     /**
-     * Get a not existing attribute by it's id
+     * Get a not existing attribute by it's id.
      */
     public function testGetNotExistingById()
     {
@@ -142,7 +153,7 @@ class AttributeControllerTest extends SuluTestCase
     }
 
     /**
-     * Get all available attributes
+     * Get all available attributes.
      */
     public function testGetAll()
     {
@@ -164,7 +175,7 @@ class AttributeControllerTest extends SuluTestCase
     }
 
     /**
-     * Get all available attributes flat
+     * Get all available attributes flat.
      */
     public function testGetAllFlat()
     {
@@ -189,15 +200,17 @@ class AttributeControllerTest extends SuluTestCase
      */
     public function testPost()
     {
-        $data = array(
+        $data = [
             'name' => 'Material',
             'key' => 'key.one',
-            'type' => array(
-                'id' => $this->attributeType1->getId()
-            )
-        );
+            'type' => [
+                'id' => $this->attributeType1->getId(),
+            ],
+            'locale' => self::REQUEST_LOCALE,
+        ];
 
         $this->client->request('POST', '/api/attributes', $data);
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals('Material', $response->name);
         $this->assertEquals($this->attributeType1->getId(), $response->type->id);
@@ -211,16 +224,17 @@ class AttributeControllerTest extends SuluTestCase
     }
 
     /**
-     * Post with an invalid attribute type does not create a new attribute
+     * Post with an invalid attribute type does not create a new attribute.
      */
     public function testPostInvalidType()
     {
-        $data = array(
+        $data = [
             'name' => 'InvalidType',
-            'type' => array(
-                'id' => 666
-            )
-        );
+            'type' => [
+                'id' => 666,
+            ],
+            'locale' => self::REQUEST_LOCALE,
+        ];
 
         $this->client->request('POST', '/api/attributes', $data);
 
@@ -234,15 +248,16 @@ class AttributeControllerTest extends SuluTestCase
     }
 
     /**
-     * Post with a missing attribute name does not create a new attribute
+     * Post with a missing attribute name does not create a new attribute.
      */
     public function testPostMissingNameData()
     {
-        $data = array(
-            'type' => array(
-                'id' => 1
-            )
-        );
+        $data = [
+            'type' => [
+                'id' => 1,
+            ],
+            'locale' => self::REQUEST_LOCALE,
+        ];
 
         $this->client->request('POST', '/api/attributes', $data);
 
@@ -256,13 +271,14 @@ class AttributeControllerTest extends SuluTestCase
     }
 
     /**
-     * Post with a missing type object does not create a new attribute
+     * Post with a missing type object does not create a new attribute.
      */
     public function testPostMissingTypeData()
     {
-        $data = array(
-            'name' => 'Some name'
-        );
+        $data = [
+            'name' => 'Some name',
+            'locale' => self::REQUEST_LOCALE,
+        ];
 
         $this->client->request('POST', '/api/attributes', $data);
 
@@ -276,14 +292,15 @@ class AttributeControllerTest extends SuluTestCase
     }
 
     /**
-     * Post with a missing type id does not create a new attribute
+     * Post with a missing type id does not create a new attribute.
      */
     public function testPostMissingTypeIdData()
     {
-        $data = array(
+        $data = [
             'name' => 'InvalidTypeId',
-            'type' => array()
-        );
+            'type' => [],
+            'locale' => self::REQUEST_LOCALE,
+        ];
 
         $this->client->request('POST', '/api/attributes', $data);
 
@@ -297,16 +314,17 @@ class AttributeControllerTest extends SuluTestCase
     }
 
     /**
-     * Put new name and type to change the appropriate properties on an existing attribute
+     * Put new name and type to change the appropriate properties on an existing attribute.
      */
     public function testPut()
     {
-        $data = array(
+        $data = [
             'name' => 'Petrol',
-            'type' => array(
-                'id' => $this->attributeType2->getId()
-            )
-        );
+            'type' => [
+                'id' => $this->attributeType2->getId(),
+            ],
+            'locale' => self::REQUEST_LOCALE,
+        ];
 
         $this->client->request('PUT', '/api/attributes/1', $data);
         $response = json_decode($this->client->getResponse()->getContent());
@@ -322,7 +340,7 @@ class AttributeControllerTest extends SuluTestCase
     }
 
     /**
-     * Put to a not existing attribute id does return an error
+     * Put to a not existing attribute id does return an error.
      */
     public function testPutNotExisting()
     {
@@ -342,16 +360,17 @@ class AttributeControllerTest extends SuluTestCase
     }
 
     /**
-     * Put with a not existing type id does return an error
+     * Put with a not existing type id does return an error.
      */
     public function testPutInvalidType()
     {
-        $data = array(
+        $data = [
             'name' => 'InvalidType',
-            'type' => array(
-                'id' => 666
-            )
-        );
+            'type' => [
+                'id' => 666,
+            ],
+            'locale' => self::REQUEST_LOCALE,
+        ];
 
         $this->client->request('PUT', '/api/attributes/1', $data);
 
@@ -365,13 +384,14 @@ class AttributeControllerTest extends SuluTestCase
     }
 
     /**
-     * Put a new attribute name does change the name of the attribute for the given id
+     * Put a new attribute name does change the name of the attribute for the given id.
      */
     public function testPutNewName()
     {
-        $data = array(
+        $data = [
             'name' => 'Some new name',
-        );
+            'locale' => self::REQUEST_LOCALE,
+        ];
 
         $this->client->request('PUT', '/api/attributes/1', $data);
 
@@ -388,15 +408,16 @@ class AttributeControllerTest extends SuluTestCase
     }
 
     /**
-     * Put a new type does change the type of the attribute for the given id
+     * Put a new type does change the type of the attribute for the given id.
      */
     public function testPutNewType()
     {
-        $data = array(
-            'type' => array(
-                'id' => $this->attributeType2->getId()
-            )
-        );
+        $data = [
+            'type' => [
+                'id' => $this->attributeType2->getId(),
+            ],
+            'locale' => self::REQUEST_LOCALE,
+        ];
 
         $this->client->request('PUT', '/api/attributes/1', $data);
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
@@ -409,13 +430,14 @@ class AttributeControllerTest extends SuluTestCase
     }
 
     /**
-     * Put with an empty type does not change anything
+     * Put with an empty type does not change anything.
      */
     public function testPutNewTypeWithoutId()
     {
-        $data = array(
-            'type' => array()
-        );
+        $data = [
+            'type' => [],
+            'locale' => self::REQUEST_LOCALE,
+        ];
 
         $this->client->request('PUT', '/api/attributes/1', $data);
 
@@ -432,7 +454,7 @@ class AttributeControllerTest extends SuluTestCase
     }
 
     /**
-     * Delete an existing attribute
+     * Delete an existing attribute.
      */
     public function testDeleteById()
     {
@@ -444,7 +466,7 @@ class AttributeControllerTest extends SuluTestCase
     }
 
     /**
-     * Delete an not existing attribute
+     * Delete an not existing attribute.
      */
     public function testDeleteNotExistingById()
     {
@@ -452,6 +474,9 @@ class AttributeControllerTest extends SuluTestCase
         $this->assertEquals('404', $this->client->getResponse()->getStatusCode());
     }
 
+    /**
+     * Test if fixtures were correctly created.
+     */
     public function testAttributeFixtures()
     {
         $fixtureLoader = new LoadAttributes();

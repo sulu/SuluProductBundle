@@ -215,7 +215,7 @@
 
                 <div id="categories">
                     <div data-aura-component="datagrid@husky"
-                         data-aura-url="/admin/api/categories?flat=true&sortBy=depth&sortOrder=asc"
+                         data-aura-url="{{ categoryUrl }}&locale=<%= contentLocale %>"
                          data-aura-result-key="categories"
                          data-aura-pagination="false"
                          data-aura-instance-name="categories"
