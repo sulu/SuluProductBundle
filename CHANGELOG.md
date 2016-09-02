@@ -1,6 +1,10 @@
 CHANGELOG for Sulu Product Bundle
 =================================
 
+* dev-develop
+
+    * FEATURE Moved price formatter service from pricing-bundle to product bundle to remove dependency
+
 * 0.12.6 (2016-08-29)
 
     * ENHANCEMENT Added config param 'display_recurring_prices'

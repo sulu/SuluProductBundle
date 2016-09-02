@@ -14,9 +14,9 @@ use JMS\Serializer\Annotation\Groups;
 use Sulu\Bundle\ProductBundle\Entity\Addon;
 use Sulu\Bundle\ProductBundle\Entity\AddonPrice;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
-use Sulu\Bundle\PricingBundle\Pricing\PriceFormatter;
 use Sulu\Bundle\ProductBundle\Entity\ProductPrice;
 use Sulu\Bundle\ProductBundle\Entity\SpecialPrice;
+use Sulu\Bundle\ProductBundle\Util\PriceFormatter;
 
 class ProductPriceManager implements ProductPriceManagerInterface
 {
