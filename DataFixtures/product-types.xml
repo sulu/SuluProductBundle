@@ -19,4 +19,9 @@
         <de_ch>Produkt Gruppe</de_ch>
         <en>Product Set</en>
     </product-type>
+    <product-type>
+        <de>Variante</de>
+        <de_ch>Variante</de_ch>
+        <en>Variant</en>
+    </product-type>
 </product-types>
