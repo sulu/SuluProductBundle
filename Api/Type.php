@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -10,35 +11,32 @@
 
 namespace Sulu\Bundle\ProductBundle\Api;
 
-use Sulu\Bundle\ProductBundle\Entity\Type as Entity;
-use JMS\Serializer\Annotation\VirtualProperty;
-use JMS\Serializer\Annotation\SerializedName;
 use JMS\Serializer\Annotation\ExclusionPolicy;
+use JMS\Serializer\Annotation\SerializedName;
+use JMS\Serializer\Annotation\VirtualProperty;
+use Sulu\Bundle\ProductBundle\Entity\Type as TypeEntity;
 use Sulu\Component\Rest\ApiWrapper;
 
 /**
- * The Type class which will be exported to the API
- *
- * @package Sulu\Bundle\ProductBundle\Api
  * @ExclusionPolicy("all")
  */
 class Type extends ApiWrapper
 {
     /**
-     * @param Entity $type
+     * @param TypeEntity $type
      * @param string $locale
      */
-    public function __construct(Entity $type, $locale)
+    public function __construct(TypeEntity $type, $locale)
     {
         $this->entity = $type;
         $this->locale = $locale;
     }
 
     /**
-     * The id of the type
-     * @return int The id of the type
      * @VirtualProperty
      * @SerializedName("id")
+     *
+     * @return int
      */
     public function getId()
     {
@@ -46,13 +44,13 @@ class Type extends ApiWrapper
     }
 
     /**
-     * The name of the type
-     * @return int The name of the type
      * @VirtualProperty
-     * @SerializedName("name")
+     * @SerializedName("translationKey")
+     *
+     * @return string
      */
-    public function getName()
+    public function getTranslationKey()
     {
-        return $this->entity->getTranslation($this->locale)->getName();
+        return $this->entity->getTranslationKey();
     }
 } 

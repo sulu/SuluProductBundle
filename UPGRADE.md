@@ -2,15 +2,36 @@
 
 ## dev-develop
 
-### New Product type variant
+### Product type cleanups
 
-A new product type `Variant` has been added. You either need to reimport
-the type fixtures, or simply execute the following sql:
+### New product type `variant`
+
+A new product type `Variant` has been added. We also changed structure
+of type translations, that's why it's recommended to reimport fixtures:
+
+SQL:
 
 ```
-INSERT INTO pr_types VALUES();
-SET @id = last_insert_id();
-INSERT INTO pr_type_translations (name, locale, idTypes) VALUES ('Variante', 'de', @id);
-INSERT INTO pr_type_translations (name, locale, idTypes) VALUES ('Variante', 'de_ch', @id);
-INSERT INTO pr_type_translations (name, locale, idTypes) VALUES ('Variant', 'en', @id);
+SET FOREIGN_KEY_CHECKS=0;
+TRUNCATE TABLE pr_types;
+DROP TABLE IF EXISTS pr_type_translations;
+SET FOREIGN_KEY_CHECKS=1;
 ```
+
+Now re-import fixtures with the following command: 
+
+```
+bin/console doctrine:schema:update
+bin/console doctrine:fixtures:load --fixtures=vendor/sulu/product-bundle/Sulu/Bundle/ProductBundle/DataFixtures/ORM/ProductTypes --append
+```
+
+### Type translations
+
+Type translations have been moved from the database to translations
+file. You probably will have to adapt tests fixtures or custom sql
+statements.
+
+### Product type cleanups
+
+Removed the inversed side of relation `type.products`, since only the 
+relation `product.types` should be used.

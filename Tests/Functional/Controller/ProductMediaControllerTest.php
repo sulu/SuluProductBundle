@@ -41,7 +41,6 @@ use Sulu\Bundle\ProductBundle\Entity\StatusTranslation;
 use Sulu\Bundle\ProductBundle\Entity\TaxClass;
 use Sulu\Bundle\ProductBundle\Entity\TaxClassTranslation;
 use Sulu\Bundle\ProductBundle\Entity\Type;
-use Sulu\Bundle\ProductBundle\Entity\TypeTranslation;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSet;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSetTranslation;
 use Sulu\Bundle\ProductBundle\Product\ProductRepositoryInterface;
@@ -121,11 +120,6 @@ class ProductMediaControllerTest extends SuluTestCase
     private $productStatusTranslation1;
 
     /**
-     * @var TypeTranslation
-     */
-    private $typeTranslation1;
-
-    /**
      * @var AttributeSetTranslation
      */
     private $attributeSetTranslation1;
@@ -179,11 +173,6 @@ class ProductMediaControllerTest extends SuluTestCase
      * @var StatusTranslation
      */
     private $productStatusTranslation2;
-
-    /**
-     * @var TypeTranslation
-     */
-    private $typeTranslation2;
 
     /**
      * @var AttributeSetTranslation
@@ -308,10 +297,7 @@ class ProductMediaControllerTest extends SuluTestCase
         // Product 1
         // product type
         $this->type1 = new Type();
-        $this->typeTranslation1 = new TypeTranslation();
-        $this->typeTranslation1->setLocale('en');
-        $this->typeTranslation1->setName('EnglishProductType-1');
-        $this->typeTranslation1->setType($this->type1);
+        $this->type1->setTranslationKey('Type1');
 
         // product status
         $metadata = $this->em->getClassMetadata(Status::class);
@@ -395,10 +381,7 @@ class ProductMediaControllerTest extends SuluTestCase
         // Product 2
         // product type
         $this->type2 = new Type();
-        $this->typeTranslation2 = new TypeTranslation();
-        $this->typeTranslation2->setLocale('en');
-        $this->typeTranslation2->setName('EnglishProductType-2');
-        $this->typeTranslation2->setType($this->type2);
+        $this->type2->setTranslationKey('Type2');
 
         // product status
         $metadata = $this->em->getClassMetadata(Status::class);
@@ -537,7 +520,6 @@ class ProductMediaControllerTest extends SuluTestCase
         $this->em->persist($this->productPrice2);
         $this->em->persist($this->type1);
         $this->em->persist($this->attributeType1);
-        $this->em->persist($this->typeTranslation1);
         $this->em->persist($this->attributeSet1);
         $this->em->persist($this->attributeSetTranslation1);
         $this->em->persist($this->productStatus1);
@@ -552,7 +534,6 @@ class ProductMediaControllerTest extends SuluTestCase
 
         $this->em->persist($this->type2);
         $this->em->persist($this->attributeType2);
-        $this->em->persist($this->typeTranslation2);
         $this->em->persist($this->attributeSet2);
         $this->em->persist($this->attributeSetTranslation2);
         $this->em->persist($this->productStatus2);

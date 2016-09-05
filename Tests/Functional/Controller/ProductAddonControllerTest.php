@@ -34,7 +34,6 @@ use Sulu\Bundle\ProductBundle\Entity\StatusTranslation;
 use Sulu\Bundle\ProductBundle\Entity\TaxClass;
 use Sulu\Bundle\ProductBundle\Entity\TaxClassTranslation;
 use Sulu\Bundle\ProductBundle\Entity\Type;
-use Sulu\Bundle\ProductBundle\Entity\TypeTranslation;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSet;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSetTranslation;
 use Sulu\Bundle\ProductBundle\Entity\AttributeType;
@@ -136,11 +135,6 @@ class ProductAddonControllerTest extends SuluTestCase
     private $attribute1;
 
     /**
-     * @var TypeTranslation
-     */
-    private $typeTranslation1;
-
-    /**
      * @var AttributeSetTranslation
      */
     private $attributeSetTranslation1;
@@ -184,11 +178,6 @@ class ProductAddonControllerTest extends SuluTestCase
      * @var Attribute
      */
     private $attribute2;
-
-    /**
-     * @var TypeTranslation
-     */
-    private $typeTranslation2;
 
     /**
      * @var AttributeSetTranslation
@@ -304,10 +293,7 @@ class ProductAddonControllerTest extends SuluTestCase
         // Product 1
         // Product Type
         $this->type1 = new Type();
-        $this->typeTranslation1 = new TypeTranslation();
-        $this->typeTranslation1->setLocale('en');
-        $this->typeTranslation1->setName('EnglishProductType-1');
-        $this->typeTranslation1->setType($this->type1);
+        $this->type1->setTranslationKey('Type1');
 
         // Product status active
         $metadata = $this->em->getClassMetadata(get_class(new Status()));
@@ -411,10 +397,7 @@ class ProductAddonControllerTest extends SuluTestCase
         // Product 2
         // Product Type
         $this->type2 = new Type();
-        $this->typeTranslation2 = new TypeTranslation();
-        $this->typeTranslation2->setLocale('en');
-        $this->typeTranslation2->setName('EnglishProductType-2');
-        $this->typeTranslation2->setType($this->type2);
+        $this->type2->setTranslationKey('Type2');
 
         // AttributeSet
         $this->attributeSet2 = new AttributeSet();
@@ -572,7 +555,6 @@ class ProductAddonControllerTest extends SuluTestCase
         $this->em->persist($this->productPrice2);
         $this->em->persist($this->type1);
         $this->em->persist($this->attributeType1);
-        $this->em->persist($this->typeTranslation1);
         $this->em->persist($this->attributeSet1);
         $this->em->persist($this->attributeSetTranslation1);
         $this->em->persist($this->attribute1);
@@ -585,7 +567,6 @@ class ProductAddonControllerTest extends SuluTestCase
 
         $this->em->persist($this->type2);
         $this->em->persist($this->attributeType2);
-        $this->em->persist($this->typeTranslation2);
         $this->em->persist($this->attributeSet2);
         $this->em->persist($this->attributeSetTranslation2);
         $this->em->persist($this->attribute2);

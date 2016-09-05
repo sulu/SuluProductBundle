@@ -16,7 +16,6 @@ use Sulu\Bundle\ProductBundle\Api\Product;
 use Sulu\Bundle\ProductBundle\Entity\Status;
 use Sulu\Bundle\ProductBundle\Entity\StatusTranslation;
 use Sulu\Bundle\ProductBundle\Entity\Type;
-use Sulu\Bundle\ProductBundle\Entity\TypeTranslation;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Symfony\Bundle\FrameworkBundle\Client;
 
@@ -84,21 +83,12 @@ class VariantControllerTest extends SuluTestCase
     public function createFixtures()
     {
         $this->productType = new Type();
-        $productTypeTranslation = new TypeTranslation();
-        $productTypeTranslation->setLocale(self::REQUEST_LOCALE);
-        $productTypeTranslation->setName('Product');
-        $productTypeTranslation->setType($this->productType);
+        $this->productType->setTranslationKey('Type1');
         $this->em->persist($this->productType);
-        $this->em->persist($productTypeTranslation);
 
         $this->productWithVariantsType = new Type();
-        $productWithVariantsTypeTranslation = new TypeTranslation();
-        $productWithVariantsTypeTranslation->setLocale(self::REQUEST_LOCALE);
-        $productWithVariantsTypeTranslation->setName('Product with Variants');
-        $productWithVariantsTypeTranslation->setType($this->productWithVariantsType);
-
+        $this->productWithVariantsType->setTranslationKey('Type2');
         $this->em->persist($this->productWithVariantsType);
-        $this->em->persist($productWithVariantsTypeTranslation);
 
         $this->activeStatus = new Status();
         $activeStatusTranslation = new StatusTranslation();

@@ -3,10 +3,11 @@ CHANGELOG for Sulu Product Bundle
 
 * dev-develop
 
-    * FEATURE Implemented new product type 'Variant'
-    * FEATURE Prepared for Sulu 1.3 support.
-    * FEATURE Added possibility to add a root key for product categories.
-    * FEATURE Moved price formatter service from pricing-bundle to product bundle to remove dependency
+    * FEATURE     Implemented new product type 'Variant'
+    * ENHANCEMENT Removed product type translations from database
+    * FEATURE     Moved price formatter service from pricing-bundle to product bundle to remove dependency
+    * FEATURE     Prepared for Sulu 1.3 support.
+    * FEATURE     Added possibility to add a root key for product categories.
 
 * 0.12.6 (2016-08-29)
 

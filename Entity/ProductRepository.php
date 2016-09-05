@@ -43,6 +43,8 @@ class ProductRepository extends EntityRepository implements ProductRepositoryInt
             return $qb->getQuery()->getSingleResult();
         } catch (NoResultException $exc) {
             return null;
+        } catch (\Exception $exception) {
+            $x = 0;
         }
     }
 
@@ -149,7 +151,6 @@ class ProductRepository extends EntityRepository implements ProductRepositoryInt
             ->leftJoin('product.status', 'status')
             ->leftJoin('status.translations', 'statusTranslations', 'WITH', 'statusTranslations.locale = :locale')
             ->leftJoin('product.type', 'type')
-            ->leftJoin('type.translations', 'typeTranslations', 'WITH', 'typeTranslations.locale = :locale')
             ->leftJoin('product.prices', 'prices')
             ->leftJoin('prices.currency', 'currency')
             ->leftJoin('product.media', 'media')
