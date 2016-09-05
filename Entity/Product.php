@@ -12,41 +12,47 @@
 namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 
 class Product extends BaseProduct
 {
     /**
-     * @var \Doctrine\Common\Collections\Collection
+     * @var Collection
+     */
+    protected $variantAttributes;
+
+    /**
+     * @var Collection
      */
     protected $productAttributes;
 
     /**
-     * @var \Doctrine\Common\Collections\Collection
+     * @var Collection
      */
     protected $translations;
 
     /**
-     * @var \Doctrine\Common\Collections\Collection
+     * @var Collection
      */
     protected $addons;
 
     /**
-     * @var \Doctrine\Common\Collections\Collection
+     * @var Collection
      */
     protected $children;
 
     /**
-     * @var \Doctrine\Common\Collections\Collection
+     * @var Collection
      */
     protected $prices;
 
     /**
-     * @var \Doctrine\Common\Collections\Collection
+     * @var Collection
      */
     protected $setProducts;
 
     /**
-     * @var \Doctrine\Common\Collections\Collection
+     * @var Collection
      */
     protected $specialPrices;
 
@@ -55,9 +61,6 @@ class Product extends BaseProduct
      */
     protected $isRecurringPrice = false;
 
-    /**
-     * Constructor.
-     */
     public function __construct()
     {
         parent::__construct();
@@ -71,11 +74,9 @@ class Product extends BaseProduct
     }
 
     /**
-     * Add productAttributes.
-     *
      * @param ProductAttribute $productAttributes
      *
-     * @return Product
+     * @return self
      */
     public function addProductAttribute(ProductAttribute $productAttributes)
     {
@@ -85,19 +86,19 @@ class Product extends BaseProduct
     }
 
     /**
-     * Remove productAttributes.
-     *
      * @param ProductAttribute $productAttributes
+     *
+     * @return self
      */
     public function removeProductAttribute(ProductAttribute $productAttributes)
     {
         $this->productAttributes->removeElement($productAttributes);
+
+        return $this;
     }
 
     /**
-     * Get productAttributes.
-     *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return Collection
      */
     public function getProductAttributes()
     {
@@ -105,8 +106,6 @@ class Product extends BaseProduct
     }
 
     /**
-     * Add translations.
-     *
      * @param ProductTranslation $translations
      *
      * @return Product
@@ -119,19 +118,19 @@ class Product extends BaseProduct
     }
 
     /**
-     * Remove translations.
-     *
      * @param ProductTranslation $translations
+     *
+     * @return self
      */
     public function removeTranslation(ProductTranslation $translations)
     {
         $this->translations->removeElement($translations);
+
+        return $this;
     }
 
     /**
-     * Get translations.
-     *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return Collection
      */
     public function getTranslations()
     {
@@ -155,11 +154,9 @@ class Product extends BaseProduct
     }
 
     /**
-     * Add addons.
-     *
      * @param Addon $addons
      *
-     * @return Product
+     * @return self
      */
     public function addAddon(Addon $addons)
     {
@@ -169,19 +166,19 @@ class Product extends BaseProduct
     }
 
     /**
-     * Remove addons.
-     *
      * @param Addon $addons
+     *
+     * @return self
      */
     public function removeAddon(Addon $addons)
     {
         $this->addons->removeElement($addons);
+
+        return $this;
     }
 
     /**
-     * Get addons.
-     *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return Collection
      */
     public function getAddons()
     {
@@ -189,11 +186,9 @@ class Product extends BaseProduct
     }
 
     /**
-     * Add children.
-     *
      * @param ProductInterface $children
      *
-     * @return Product
+     * @return self
      */
     public function addChildren(ProductInterface $children)
     {
@@ -203,19 +198,19 @@ class Product extends BaseProduct
     }
 
     /**
-     * Remove children.
-     *
      * @param ProductInterface $children
+     *
+     * @return self
      */
     public function removeChildren(ProductInterface $children)
     {
         $this->children->removeElement($children);
+
+        return $this;
     }
 
     /**
-     * Get children.
-     *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return Collection
      */
     public function getChildren()
     {
@@ -223,11 +218,9 @@ class Product extends BaseProduct
     }
 
     /**
-     * Add prices.
-     *
      * @param ProductPrice $prices
      *
-     * @return Product
+     * @return self
      */
     public function addPrice(ProductPrice $prices)
     {
@@ -237,19 +230,19 @@ class Product extends BaseProduct
     }
 
     /**
-     * Remove prices.
-     *
      * @param ProductPrice $prices
+     *
+     * @return self
      */
     public function removePrice(ProductPrice $prices)
     {
         $this->prices->removeElement($prices);
+
+        return $this;
     }
 
     /**
-     * Get prices.
-     *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return Collection
      */
     public function getPrices()
     {
@@ -257,11 +250,9 @@ class Product extends BaseProduct
     }
 
     /**
-     * Add setProducts.
-     *
      * @param ProductInterface $setProducts
      *
-     * @return Product
+     * @return self
      */
     public function addSetProduct(ProductInterface $setProducts)
     {
@@ -271,19 +262,19 @@ class Product extends BaseProduct
     }
 
     /**
-     * Remove setProducts.
-     *
      * @param ProductInterface $setProducts
+     *
+     * @return self
      */
     public function removeSetProduct(ProductInterface $setProducts)
     {
         $this->setProducts->removeElement($setProducts);
+
+        return $this;
     }
 
     /**
-     * Get setProducts.
-     *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return Collection
      */
     public function getSetProducts()
     {
@@ -291,9 +282,7 @@ class Product extends BaseProduct
     }
 
     /**
-     * Get special prices.
-     *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return Collection
      */
     public function getSpecialPrices()
     {
@@ -301,11 +290,9 @@ class Product extends BaseProduct
     }
 
     /**
-     * Add special price.
-     *
      * @param SpecialPrice $specialPrice
      *
-     * @return Product
+     * @return self
      */
     public function addSpecialPrice(SpecialPrice $specialPrice)
     {
@@ -315,13 +302,61 @@ class Product extends BaseProduct
     }
 
     /**
-     * Remove special prices.
-     *
      * @param SpecialPrice $specialPrices
+     *
+     * @return self
      */
     public function removeSpecialPrice(SpecialPrice $specialPrices)
     {
         $this->specialPrices->removeElement($specialPrices);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection
+     */
+    public function getVariantAttributes()
+    {
+        return $this->variantAttributes;
+    }
+
+    /**
+     * @param Attribute $attribute
+     *
+     * @return self
+     */
+    public function addVariantAttribute(Attribute $attribute)
+    {
+        $this->variantAttributes[] = $attribute;
+
+        return $this;
+    }
+
+    /**
+     * @param Attribute[] $attributes
+     *
+     * @return self
+     */
+    public function addVariantAttributes(array $attributes)
+    {
+        foreach ($attributes as $attribute) {
+            $this->addVariantAttribute($attribute);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param Attribute $attribute
+     *
+     * @return self
+     */
+    public function removeVariantAttribute(Attribute $attribute)
+    {
+        $this->variantAttributes->removeElement($attribute);
+
+        return $this;
     }
 
     /**

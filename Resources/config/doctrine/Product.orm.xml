@@ -10,22 +10,20 @@
         </indexes>
 
         <field name="isRecurringPrice" column="isRecurringPrice" type="boolean"/>
-        
-        <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductAttribute" mapped-by="product"
-                     field="productAttributes"/>
-        <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductTranslation" mapped-by="product"
-                     field="translations">
+
+        <one-to-many field="productAttributes" target-entity="Sulu\Bundle\ProductBundle\Entity\ProductAttribute"
+                     mapped-by="product"/>
+        <one-to-many field="translations" target-entity="Sulu\Bundle\ProductBundle\Entity\ProductTranslation"
+                     mapped-by="product">
             <cascade>
                 <cascade-persist/>
             </cascade>
         </one-to-many>
-        <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\Addon" mapped-by="product"
-                     field="addons"/>
-        <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface" mapped-by="parent"
-                     field="children"/>
-        <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductPrice"
-                     mapped-by="product"
-                     field="prices">
+        <one-to-many field="addons" target-entity="Sulu\Bundle\ProductBundle\Entity\Addon" mapped-by="product"/>
+        <one-to-many field="children" target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface"
+                     mapped-by="parent"/>
+        <one-to-many field="prices" target-entity="Sulu\Bundle\ProductBundle\Entity\ProductPrice"
+                     mapped-by="product">
             <cascade>
                 <cascade-persist/>
             </cascade>
@@ -33,7 +31,17 @@
         <one-to-many field="specialPrices" target-entity="Sulu\Bundle\ProductBundle\Entity\SpecialPrice"
                      mapped-by="product">
         </one-to-many>
-        <many-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface" field="setProducts"
+        <many-to-many field="setProducts" target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface"
                       mapped-by="sets"/>
+        <many-to-many field="variantAttributes" target-entity="Sulu\Bundle\ProductBundle\Entity\Attribute">
+            <join-table name="pr_product_variant_attributes">
+                <join-columns>
+                    <join-column name="idProducts" referenced-column-name="id" nullable="false" on-delete="CASCADE"/>
+                </join-columns>
+                <inverse-join-columns>
+                    <join-column name="idAttributes" referenced-column-name="id" nullable="false" on-delete="CASCADE"/>
+                </inverse-join-columns>
+            </join-table>
+        </many-to-many>
     </mapped-superclass>
 </doctrine-mapping>
