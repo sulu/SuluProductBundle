@@ -184,16 +184,16 @@ define([], function() {
         },
 
         /**
-         * Calculates delivery cost and taxes and adds to result.
+         * Calculates shipping costs and taxes and adds to result.
          *
          * @param {Object} sandbox
          * @param {Object} items
-         * @param {Number} deliveryCost
+         * @param {Number} netShippingCosts
          * @param {Object} result
          */
-        calculateDeliveryCost = function(sandbox, items, deliveryCost, result) {
-            // Calculate delivery cost.
-            if (sandbox.dom.isNumeric(deliveryCost) && deliveryCost != 0) {
+        calculateShippingCosts = function(sandbox, items, netShippingCosts, result) {
+            // Calculate shipping cost.
+            if (sandbox.dom.isNumeric(netShippingCosts) && netShippingCosts != 0) {
                 var item;
                 var itemNetPrice;
                 var itemTax = 0;
@@ -201,7 +201,7 @@ define([], function() {
                 var tax;
                 var numberItems = retrieveNumberOfNonRecurringItems(items);
 
-                // Calculate taxes for delivery costs in relation to the item prices.
+                // Calculate taxes for net shipping costs in relation to the item prices.
                 for (var i in items) {
                     item = items[i];
 
@@ -227,7 +227,7 @@ define([], function() {
                             ratio = 1 / numberItems;
                         }
 
-                        tax = ratio * deliveryCost * item.tax / 100;
+                        tax = ratio * netShippingCosts * item.tax / 100;
                         result.taxes[itemTax] += tax;
                         result.grossPrice += tax;
                     } else {
@@ -235,8 +235,8 @@ define([], function() {
                     }
                 }
 
-                result.netPrice += deliveryCost;
-                result.grossPrice += deliveryCost;
+                result.netPrice += netShippingCosts;
+                result.grossPrice += netShippingCosts;
             }
         },
 
@@ -263,10 +263,10 @@ define([], function() {
          *
          * @param {Object} sandbox
          * @param {Array} items
-         * @param {Number} deliveryCost
+         * @param {Number} netShippingCosts
          * @param {Bool} shouldCalculateRecurringPrices
          */
-        processPriceCalculationItem = function(sandbox, items, deliveryCost, shouldCalculateRecurringPrices) {
+        processPriceCalculationItem = function(sandbox, items, netShippingCosts, shouldCalculateRecurringPrices) {
             var tax = 0, i, item, itemNetPrice,
                 result = {
                     taxes: {},
@@ -276,8 +276,8 @@ define([], function() {
 
             shouldCalculateRecurringPrices = !!shouldCalculateRecurringPrices;
 
-            if (typeof deliveryCost === 'undefined') {
-                deliveryCost = 0;
+            if (typeof netShippingCosts === 'undefined') {
+                netShippingCosts = 0;
             }
 
             try {
@@ -313,8 +313,8 @@ define([], function() {
                     }
                 }
 
-                // Calculate delivery costs.
-                calculateDeliveryCost(sandbox, items, deliveryCost, result);
+                // Calculate net shipping costs.
+                calculateShippingCosts(sandbox, items, netShippingCosts, result);
 
                 return result;
             } catch (ex) {
@@ -474,8 +474,8 @@ define([], function() {
          *
          * @param {Object} sandbox
          * @param {Object} items
-         * @param {Float} deliveryCost
-         * @param {Bool} shouldCalculateRecurringPrices
+         * @param {Number} netShippingCosts
+         * @param {Boolean} shouldCalculateRecurringPrices
          * [
          *  {
          *   price: 100,
@@ -486,9 +486,15 @@ define([], function() {
          *
          * @return {Object}
          */
-        getTotalPricesAndTaxes: function(sandbox, items, deliveryCost, shouldCalculateRecurringPrices) {
+        getTotalPricesAndTaxes: function(sandbox, items, netShippingCosts, shouldCalculateRecurringPrices) {
             if (!!items) {
-                return processPriceCalculationItem.call(this, sandbox, items, deliveryCost, shouldCalculateRecurringPrices);
+                return processPriceCalculationItem.call(
+                    this,
+                    sandbox,
+                    items,
+                    netShippingCosts,
+                    shouldCalculateRecurringPrices
+                );
             }
             return null;
         },

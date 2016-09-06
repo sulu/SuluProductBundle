@@ -1,6 +1,10 @@
 CHANGELOG for Sulu Product Bundle
 =================================
 
+* dev-develop
+
+    * ENHANCEMENT Renamed js variables 
+
 * 0.12.6 (2016-08-29)
 
     * ENHANCEMENT Added config param 'display_recurring_prices'
