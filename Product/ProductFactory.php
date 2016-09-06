@@ -11,10 +11,10 @@
 namespace Sulu\Bundle\ProductBundle\Product;
 
 use Sulu\Bundle\ContactBundle\Contact\AccountManager;
+use Sulu\Bundle\ProductBundle\Api\Product as ApiProduct;
 use Sulu\Bundle\ProductBundle\Entity\Product;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
-use Sulu\Bundle\ProductBundle\Api\Product as ApiProduct;
-use Sulu\Bundle\PricingBundle\Pricing\PriceFormatter;
+use Sulu\Bundle\ProductBundle\Util\PriceFormatter;
 
 class ProductFactory implements ProductFactoryInterface
 {
