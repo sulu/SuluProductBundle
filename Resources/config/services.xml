@@ -38,16 +38,16 @@
         <parameter key="sulu_product.product_api_entity">Sulu\Bundle\ProductBundle\Api\Product</parameter>
         <parameter key="sulu_product.product_media_manager.class">Sulu\Bundle\ProductBundle\Product\ProductMediaManager</parameter>
         <parameter key="sulu_product.js_config.class">Sulu\Bundle\AdminBundle\Admin\JsConfig</parameter>
-        <parameter key="sulu_product.localization_provider.class">Sulu\Component\Localization\Provider\LocalizationProvider</parameter>
         <parameter key="sulu_product.price_formatter.class">Sulu\Bundle\ProductBundle\Util\PriceFormatter</parameter>
     </parameters>
     <services>
         <!-- ADMIN -->
         <service id="sulu_product.admin" class="%sulu_product.admin.class%">
-            <tag name="sulu.admin"/>
-            <tag name="sulu.context" context="admin"/>
             <argument type="service" id="sulu_security.security_checker"/>
             <argument>%sulu_admin.name%</argument>
+
+            <tag name="sulu.admin"/>
+            <tag name="sulu.context" context="admin"/>
         </service>
         <!--FACTORIES-->
         <service id="sulu_product.product_factory" class="%sulu_product.product_factory.class%">
@@ -215,18 +215,21 @@
             <tag name="sulu.context" context="admin"/>
         </service>
         <!--PROVIDER-->
-        <service id="sulu.core.localization_manager.core_provider" class="%sulu.core.localization_manager.core_provider.class%">
+        <service id="sulu_product.localization_provider" class="Sulu\Component\Localization\Provider\LocalizationProvider">
             <argument>%sulu_product.locales%</argument>
+
             <tag name="sulu.localization_provider"/>
         </service>
+
         <!--JS CONFIG-->
         <service id="sulu_product.js_config" class="%sulu_product.js_config.class%">
-            <tag name="sulu.js_config"/>
             <argument>sulu-product</argument>
             <argument type="collection">
                 <argument key="fallback_locale">%sulu_product.fallback_locale%</argument>
                 <argument key="locales">%sulu_product.locales%</argument>
             </argument>
+
+            <tag name="sulu.js_config"/>
         </service>
         <!-- CONTENT TYPES -->
         <service id="sulu_product.content.product" class="Sulu\Bundle\ProductBundle\Content\Types\ProductSelectionContentType">

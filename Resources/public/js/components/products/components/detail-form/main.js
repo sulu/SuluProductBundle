@@ -19,7 +19,12 @@ define([
             'product-addon': 3,
             'product-set': 4
         },
+
         formSelector = '#product-form',
+
+        templatePaths = {
+            form: '/admin/product/template/product/form'
+        },
 
         constants = {
             tagsId: '#tags',
@@ -33,7 +38,7 @@ define([
 
         view: true,
 
-        templates: ['/admin/product/template/product/form'],
+        templates: [templatePaths.form],
 
         initialize: function() {
             this.saved = true;
@@ -118,7 +123,9 @@ define([
         },
 
         render: function() {
-            this.sandbox.dom.html(this.$el, this.renderTemplate('/admin/product/template/product/form'));
+            this.sandbox.dom.html(this.$el, this.renderTemplate(templatePaths.form, {
+                'contentLocale': this.options.locale
+            }));
             this.initSupplierAutocomplete();
             this.initForm(this.options.data);
             this.setTags();
