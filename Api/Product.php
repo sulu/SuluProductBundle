@@ -39,7 +39,7 @@ use Sulu\Component\Rest\ApiWrapper;
 use Sulu\Component\Security\Authentication\UserInterface;
 
 /**
- * The product class which will be exported to the API
+ * The product class which will be exported to the API.
  *
  * @Relation("self", href="expr('/api/admin/products/' ~ object.getId())")
  * @ExclusionPolicy("all")
