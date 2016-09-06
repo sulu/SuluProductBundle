@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -15,13 +16,12 @@ use Sulu\Bundle\ProductBundle\Api\TaxClass;
 use Sulu\Bundle\ProductBundle\Entity\Currency;
 use Sulu\Bundle\ProductBundle\Product\ProductManager;
 use Sulu\Component\Rest\RestController;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class TemplateController extends RestController
 {
     /**
-     * Returns Template for product list.
+     * Returns template for product list.
      *
      * @return Response
      */
@@ -31,38 +31,42 @@ class TemplateController extends RestController
     }
 
     /**
-     * Returns Template for product list.
-     *
-     * @param Request $request
+     * Returns template for product list.
      *
      * @return Response
      */
-    public function productFormAction(Request $request)
+    public function productFormAction()
     {
-        $language = $this->getLocale($request);
+        $userLocale = $this->getUser()->getLocale();
 
-        $status = $this->getStatus($language);
-        $units = $this->getUnits($language);
-        $deliveryStates = $this->getDeliveryStates($language);
+        $status = $this->getStatus($userLocale);
+        $units = $this->getUnits($userLocale);
+        $deliveryStates = $this->getDeliveryStates($userLocale);
 
         return $this->render(
             'SuluProductBundle:Template:product.form.html.twig',
-            array(
+            [
                 'MAX_SEARCH_TERMS_LENGTH' => ProductManager::MAX_SEARCH_TERMS_LENGTH,
                 'status' => $status,
                 'units' => $units,
                 'deliveryStates' => $deliveryStates,
-            )
+                'categoryUrl' => $this->getCategoryUrl(),
+            ]
         );
     }
 
+    /**
+     * Returns template for product variants.
+     *
+     * @return Response
+     */
     public function productVariantsAction()
     {
         return $this->render('SuluProductBundle:Template:product.variants.html.twig');
     }
 
     /**
-     * Returns Template for product import.
+     * Returns template for product import.
      *
      * @return Response
      */
@@ -74,7 +78,7 @@ class TemplateController extends RestController
     }
 
     /**
-     * Returns Template for attribute list.
+     * Returns template for attribute list.
      *
      * @return Response
      */
@@ -86,7 +90,7 @@ class TemplateController extends RestController
     }
 
     /**
-     * Returns Template for attribute list.
+     * Returns template for attribute list.
      *
      * @return Response
      */
@@ -96,55 +100,54 @@ class TemplateController extends RestController
             ->getRepository('SuluProductBundle:AttributeType');
         $types = $repository->findAll();
 
-        $attributeTypes = array();
+        $attributeTypes = [];
         foreach ($types as $type) {
-            $attributeTypes[] = array(
+            $attributeTypes[] = [
                 'id' => $type->getId(),
-                'name' => $type->getName()
-            );
+                'name' => $type->getName(),
+            ];
         }
 
         return $this->render(
             'SuluProductBundle:Template:attribute.form.html.twig',
-            array(
-                'attribute_types' => $attributeTypes
-            )
+            [
+                'attribute_types' => $attributeTypes,
+            ]
         );
     }
 
     /**
-     * Returns Template for product pricing.
+     * Returns template for product pricing.
      *
      * @return Response
      */
-    public function productPricingAction(Request $request)
+    public function productPricingAction()
     {
-        // TODO use correct language
-        $language = $this->getLocale($request);
+        $userLocale = $this->getUser()->getLocale();
 
         /** @var TaxClass[] $taxClasses */
-        $taxClasses = $this->get('sulu_product.tax_class_manager')->findAll($language);
+        $taxClasses = $this->get('sulu_product.tax_class_manager')->findAll($userLocale);
 
-        $taxClassTitles = array();
+        $taxClassTitles = [];
         foreach ($taxClasses as $taxClass) {
-            $taxClassTitles[] = array(
+            $taxClassTitles[] = [
                 'id' => $taxClass->getId(),
-                'name' => $taxClass->getName()
-            );
+                'name' => $taxClass->getName(),
+            ];
         }
 
-        $currencies = $this->getCurrencies($language);
+        $currencies = $this->getCurrencies($userLocale);
         $defaultCurrency = $this->container->getParameter('sulu_product.default_currency');
         $displayRecurringPrices = $this->container->getParameter('sulu_product.display_recurring_prices');
 
         return $this->render(
             'SuluProductBundle:Template:product.pricing.html.twig',
-            array(
+            [
                 'taxClasses' => $taxClassTitles,
                 'currencies' => $currencies,
                 'defaultCurrency' => $defaultCurrency,
-                'displayRecurringPrices' => $displayRecurringPrices
-            )
+                'displayRecurringPrices' => $displayRecurringPrices,
+            ]
         );
     }
 
@@ -181,21 +184,21 @@ class TemplateController extends RestController
     /**
      * Returns status for products.
      *
-     * @param string $language
+     * @param string $locale
      *
      * @return array
      */
-    protected function getStatus($language)
+    protected function getStatus($locale)
     {
         /** @var Status[] $statuses */
-        $statuses = $this->get('sulu_product.status_manager')->findAll($language);
+        $statuses = $this->get('sulu_product.status_manager')->findAll($locale);
 
-        $statusTitles = array();
+        $statusTitles = [];
         foreach ($statuses as $status) {
-            $statusTitles[] = array(
+            $statusTitles[] = [
                 'id' => $status->getId(),
-                'name' => $status->getName()
-            );
+                'name' => $status->getName(),
+            ];
         }
 
         return $statusTitles;
@@ -204,21 +207,21 @@ class TemplateController extends RestController
     /**
      * Returns units.
      *
-     * @param string $language
+     * @param string $locale
      *
      * @return array
      */
-    protected function getUnits($language)
+    protected function getUnits($locale)
     {
         /** @var Status[] $units */
-        $units = $this->get('sulu_product.unit_manager')->findAll($language);
+        $units = $this->get('sulu_product.unit_manager')->findAll($locale);
 
-        $unitTitles = array();
+        $unitTitles = [];
         foreach ($units as $unit) {
-            $unitTitles[] = array(
+            $unitTitles[] = [
                 'id' => $unit->getId(),
-                'name' => $unit->getName()
-            );
+                'name' => $unit->getName(),
+            ];
         }
 
         return $unitTitles;
@@ -227,45 +230,70 @@ class TemplateController extends RestController
     /**
      * Returns currencies.
      *
-     * @param string $language
+     * @param string $locale
      *
      * @return array
      */
-    protected function getCurrencies($language)
+    protected function getCurrencies($locale)
     {
         /** @var Currency[] $currencies */
-        $currencies = $this->get('sulu_product.currency_manager')->findAll($language);
+        $currencies = $this->get('sulu_product.currency_manager')->findAll($locale);
 
-        $currencyTitles = array();
+        $currencyTitles = [];
         foreach ($currencies as $currency) {
-            $currencyTitles[] = array(
+            $currencyTitles[] = [
                 'id' => $currency->getId(),
                 'name' => $currency->getName(),
                 'code' => $currency->getCode(),
-                'number' => $currency->getNumber()
-            );
+                'number' => $currency->getNumber(),
+            ];
         }
 
         return $currencyTitles;
     }
 
     /**
+     * Returns url for fetching categories.
+     *
+     * If sulu_product.category_root_key is specified only categories of this specific root key
+     * are going to be fetched. Otherwise the whole category tree is returned.
+     *
+     * @return string
+     */
+    protected function getCategoryUrl()
+    {
+        $rootKey = $this->container->getParameter('sulu_product.category_root_key');
+
+        if (null !== $rootKey) {
+            return $this->generateUrl(
+                'get_category_children',
+                ['key' => $rootKey, 'flat' => 'true', 'sortBy' => 'depth', 'sortOrder' => 'asc']
+            );
+        }
+
+        return $this->generateUrl(
+            'get_categories',
+            ['flat' => 'true', 'sortBy' => 'depth', 'sortOrder' => 'asc']
+        );
+    }
+
+    /**
      * Returns delivery states.
      *
-     * @param string $language
+     * @param string $locale
      *
      * @return array
      */
-    protected function getDeliveryStates($language)
+    protected function getDeliveryStates($locale)
     {
-        $states = $this->getDeliveryStatusManager()->findAll($language);
+        $states = $this->getDeliveryStatusManager()->findAll($locale);
 
-        $deliveryStates = array();
+        $deliveryStates = [];
         foreach ($states as $state) {
-            $deliveryStates[] = array(
+            $deliveryStates[] = [
                 'id' => $state->getId(),
-                'name' => $state->getName()
-            );
+                'name' => $state->getName(),
+            ];
         }
 
         return $deliveryStates;

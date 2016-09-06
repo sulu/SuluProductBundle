@@ -33,14 +33,14 @@ use Sulu\Bundle\ProductBundle\Entity\Status as StatusEntity;
 use Sulu\Bundle\ProductBundle\Entity\TaxClass as TaxClassEntity;
 use Sulu\Bundle\ProductBundle\Entity\Type as TypeEntity;
 use Sulu\Bundle\ProductBundle\Entity\Unit as UnitEntity;
-use Sulu\Bundle\PricingBundle\Pricing\PriceFormatter;
+use Sulu\Bundle\ProductBundle\Util\PriceFormatter;
 use Sulu\Bundle\ProductBundle\Product\ProductLocaleManager;
 use Sulu\Component\Rest\ApiWrapper;
 use Sulu\Component\Security\Authentication\UserInterface;
 
 /**
- * The product class which will be exported to the API
- * @package Sulu\Bundle\ProductBundle\Api
+ * The product class which will be exported to the API.
+ *
  * @Relation("self", href="expr('/api/admin/products/' ~ object.getId())")
  * @ExclusionPolicy("all")
  */

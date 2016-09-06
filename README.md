@@ -1,26 +1,56 @@
 SuluProductBundle [![Build Status](https://travis-ci.org/sulu/SuluProductBundle.svg?branch=develop)](https://travis-ci.org/sulu/SuluProductBundle)
 =================
 
+# Installation
+
+Add the following to composer.json
+
+```
+"sulu/product-bundle": "~0.12"
+```
+
+Add the following to your application kernel:
+
+```
+// Product bundle
+new Sulu\Bundle\ProductBundle\SuluProductBundle(),
+```
+
+Add the following to your `admin/routing.yml`:
+
+```
+# Sulu Product Bundle
+sulu_product:
+    resource: "@SuluProductBundle/Resources/config/routing.yml"
+    prefix: /admin/product
+
+sulu_product_api:
+    type: rest
+    resource: "@SuluProductBundle/Resources/config/routing_api.yml"
+    prefix: /admin/api
+```
+
 # Configuration
 
 Sample configuration:
 
 ```
 sulu_product:
+    category_root_key: ~
+    default_currency: '%default_currency%'
+    display_recurring_prices: true
     fallback_locale: de
+    fixtures:
+        attributes:
+            - src/Acme/Bundle/ProductBundle/DataFixtures/attributes.xml
     locales:
         - de
         - en
-    template: AcmeShopBundle:views:templates/productdetail.html.twig
-    default_currency: '%default_currency%'
-    display_recurring_prices: true
     objects:
         product:
             model: Acme\Bundle\ProductBundle\Entity\Product
             repository: Acme\Bundle\ProductBundle\Entity\ProductRepository
-    fixtures:
-        attributes:
-            - src/Acme/Bundle/ProductBundle/DataFixtures/attributes.xml
+    template: AcmeShopBundle:views:templates/productdetail.html.twig
 ```
 
 ## Localization
@@ -30,6 +60,11 @@ If non defined, 'en' is taken as default.
 
 If the users language matches any of the given locales, that one is displayed in the admin area.
 Else the `fallback_locale` parameter is used.
+
+## Recurring prices
+
+The property recurring prices can be disabled via parameter `display_recurring_prices`.
+This option hides the UI elements for recurring prices.
 
 ## Custom Entity and Repository
 

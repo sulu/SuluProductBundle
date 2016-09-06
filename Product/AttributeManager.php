@@ -25,8 +25,7 @@ use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeException;
 use Sulu\Bundle\ProductBundle\Product\Exception\AttributeDependencyNotFoundException;
 
 /**
- * Manager responsible for attribute
- * @package Sulu\Bundle\ProductBundle\Product
+ * Manager responsible for attributes.
  */
 class AttributeManager implements AttributeManagerInterface
 {
