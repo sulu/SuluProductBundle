@@ -14,7 +14,6 @@ Add the following to your application kernel:
 ```
 // Product bundle
 new Sulu\Bundle\ProductBundle\SuluProductBundle(),
-new Sulu\Bundle\PricingBundle\SuluPricingBundle(),
 ```
 
 Add the following to your `admin/routing.yml`:
