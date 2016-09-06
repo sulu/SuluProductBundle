@@ -43,8 +43,6 @@ class ProductRepository extends EntityRepository implements ProductRepositoryInt
             return $qb->getQuery()->getSingleResult();
         } catch (NoResultException $exc) {
             return null;
-        } catch (\Exception $exception) {
-            $x = 0;
         }
     }
 
