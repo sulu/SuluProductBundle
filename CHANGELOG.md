@@ -3,6 +3,7 @@ CHANGELOG for Sulu Product Bundle
 
 * dev-develop
 
+    * ENHANCEMENT Renamed js variables 
     * FEATURE Prepared for Sulu 1.3 support.
     * FEATURE Added possibility to add a root key for product categories.
     * FEATURE Moved price formatter service from pricing-bundle to product bundle to remove dependency
