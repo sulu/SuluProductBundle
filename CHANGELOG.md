@@ -3,8 +3,9 @@ CHANGELOG for Sulu Product Bundle
 
 * dev-develop
 
+    * FEATURE     Added many-to-many releation `variantAttributes` between product and attributes
     * FEATURE     Added github templates for issues and pull-requests.
-    * FEATURE     Added style-ci configurationi.
+    * FEATURE     Added style-ci configuration.
     * FEATURE     Implemented new product type 'Variant'.
     * ENHANCEMENT Removed product type translations from database.
     
