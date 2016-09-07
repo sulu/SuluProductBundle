@@ -1,6 +1,10 @@
 CHANGELOG for Sulu Product Bundle
 =================================
 
+* dev-develop
+
+    * FEATURE     Added github templates for issues and pull-requests.
+
 * 0.13.0 (2016-09-07)
 
     * ENHANCEMENT Renamed js variables.
