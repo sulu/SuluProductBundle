@@ -5,9 +5,13 @@ CHANGELOG for Sulu Product Bundle
 
     * FEATURE     Implemented new product type 'Variant'.
     * ENHANCEMENT Removed product type translations from database.
+    
+* 0.13.0 (2016-09-07)
+
+    * ENHANCEMENT Renamed js variables.
     * FEATURE     Prepared for Sulu 1.3 support.
     * FEATURE     Added possibility to add a root key for product categories.
-    * FEATURE     Moved price formatter service from pricing-bundle to product bundle to remove dependency.
+    * FEATURE     Moved price formatter service from pricing-bundle to product bundle to remove dependency
 
 * 0.12.6 (2016-08-29)
 
