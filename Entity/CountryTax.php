@@ -1,10 +1,17 @@
 <?php
 
+/*
+ * This file is part of Sulu.
+ *
+ * (c) MASSIVE ART WebServices GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace Sulu\Bundle\ProductBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
 use Sulu\Bundle\ContactBundle\Entity\Country;
-use Sulu\Bundle\ProductBundle\Entity\TaxClass;
 
 class CountryTax
 {

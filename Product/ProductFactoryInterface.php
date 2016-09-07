@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -16,14 +17,14 @@ use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 interface ProductFactoryInterface
 {
     /**
-     * Creates a new entity
+     * Creates a new entity.
      *
      * @return ProductInterface
      */
     public function createEntity();
 
     /**
-     * Creates a new api entity
+     * Creates a new api entity.
      *
      * @param ProductInterface $product
      * @param string $locale

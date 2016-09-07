@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -12,13 +13,13 @@ namespace Sulu\Bundle\ProductBundle\DataFixtures\ORM\Attributes;
 
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
+use Sulu\Bundle\ProductBundle\Entity\Attribute;
 use Sulu\Bundle\ProductBundle\Entity\AttributeTranslation;
 use Sulu\Bundle\ProductBundle\Entity\AttributeType;
 use Sulu\Bundle\ProductBundle\Entity\AttributeTypeRepository;
 use Sulu\Bundle\ProductBundle\Entity\AttributeValue;
 use Sulu\Bundle\ProductBundle\Entity\AttributeValueTranslation;
 use Sulu\Bundle\ProductBundle\Traits\XMLFixtureLoaderTrait;
-use Sulu\Bundle\ProductBundle\Entity\Attribute;
 use Sulu\Component\Rest\Exception\EntityNotFoundException;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -127,7 +128,6 @@ class LoadAttributes implements FixtureInterface, ContainerAwareInterface
      */
     protected function createAttributeValue(Attribute $attribute, \DOMNode $node, ObjectManager $manager)
     {
-
         $value = new AttributeValue();
         $value->setAttribute($attribute);
 

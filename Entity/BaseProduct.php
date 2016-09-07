@@ -1,16 +1,24 @@
 <?php
 
+/*
+ * This file is part of Sulu.
+ *
+ * (c) MASSIVE ART WebServices GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Mapping as ORM;
+use Sulu\Bundle\ContactBundle\Entity\AccountInterface;
 use Sulu\Bundle\MediaBundle\Entity\Media;
 use Sulu\Bundle\TagBundle\Entity\Tag;
 use Sulu\Component\Security\Authentication\UserInterface;
-use Sulu\Bundle\ContactBundle\Entity\AccountInterface;
 
 /**
- * BaseProduct
+ * BaseProduct.
  */
 abstract class BaseProduct implements ProductInterface
 {
@@ -25,7 +33,7 @@ abstract class BaseProduct implements ProductInterface
     protected $number;
 
     /**
-     * @var integer
+     * @var int
      */
     protected $deliveryTime;
 
@@ -70,7 +78,7 @@ abstract class BaseProduct implements ProductInterface
     protected $changed;
 
     /**
-     * @var integer
+     * @var int
      */
     protected $id;
 
@@ -185,7 +193,7 @@ abstract class BaseProduct implements ProductInterface
     protected $orderUnit;
 
     /**
-     * @var boolean
+     * @var bool
      */
     protected $areGrossPrices = false;
 
@@ -195,7 +203,7 @@ abstract class BaseProduct implements ProductInterface
     protected $tags;
 
     /**
-     * Constructor
+     * Constructor.
      */
     public function __construct()
     {
@@ -209,7 +217,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * setId
+     * setId.
      *
      * @param int $id
      *
@@ -223,7 +231,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Set number
+     * Set number.
      *
      * @param string $number
      *
@@ -237,7 +245,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Get number
+     * Get number.
      *
      * @return string
      */
@@ -247,7 +255,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Set globalTradeItemNumber
+     * Set globalTradeItemNumber.
      *
      * @param string $globalTradeItemNumber
      *
@@ -261,7 +269,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Get globalTradeItemNumber
+     * Get globalTradeItemNumber.
      *
      * @return string
      */
@@ -271,7 +279,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Set internalItemNumber
+     * Set internalItemNumber.
      *
      * @param string $internalItemNumber
      *
@@ -285,7 +293,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Get internalItemNumber
+     * Get internalItemNumber.
      *
      * @return string
      */
@@ -295,9 +303,9 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Set isDeprecated
+     * Set isDeprecated.
      *
-     * @param boolean $isDeprecated
+     * @param bool $isDeprecated
      *
      * @return BaseProduct
      */
@@ -309,9 +317,9 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Get isDeprecated
+     * Get isDeprecated.
      *
-     * @return boolean
+     * @return bool
      */
     public function isDeprecated()
     {
@@ -319,7 +327,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Set manufacturer
+     * Set manufacturer.
      *
      * @param string $manufacturer
      *
@@ -333,7 +341,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Get manufacturer
+     * Get manufacturer.
      *
      * @return string
      */
@@ -343,9 +351,9 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Set cost
+     * Set cost.
      *
-     * @param double $cost
+     * @param float $cost
      *
      * @return BaseProduct
      */
@@ -357,9 +365,9 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Get cost
+     * Get cost.
      *
-     * @return double
+     * @return float
      */
     public function getCost()
     {
@@ -367,7 +375,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Set priceInfo
+     * Set priceInfo.
      *
      * @param string $priceInfo
      *
@@ -381,7 +389,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Get priceInfo
+     * Get priceInfo.
      *
      * @return string
      */
@@ -391,7 +399,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Set created
+     * Set created.
      *
      * @param \DateTime $created
      *
@@ -405,7 +413,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Get created
+     * Get created.
      *
      * @return \DateTime
      */
@@ -415,7 +423,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Set changed
+     * Set changed.
      *
      * @param \DateTime $changed
      *
@@ -429,7 +437,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Get changed
+     * Get changed.
      *
      * @return \DateTime
      */
@@ -439,9 +447,9 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Get id
+     * Get id.
      *
-     * @return integer
+     * @return int
      */
     public function getId()
     {
@@ -449,7 +457,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Set manufacturerCountry
+     * Set manufacturerCountry.
      *
      * @param \Sulu\Bundle\ContactBundle\Entity\Country $manufacturerCountry
      *
@@ -463,7 +471,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Get manufacturerCountry
+     * Get manufacturerCountry.
      *
      * @return \Sulu\Bundle\ContactBundle\Entity\Country
      */
@@ -473,7 +481,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Set type
+     * Set type.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\Type $type
      *
@@ -487,7 +495,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Get type
+     * Get type.
      *
      * @return \Sulu\Bundle\ProductBundle\Entity\Type
      */
@@ -497,7 +505,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Set attributeSet
+     * Set attributeSet.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\AttributeSet $attributeSet
      *
@@ -511,7 +519,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Get attributeSet
+     * Get attributeSet.
      *
      * @return \Sulu\Bundle\ProductBundle\Entity\AttributeSet
      */
@@ -521,7 +529,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Set status
+     * Set status.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\Status $status
      *
@@ -535,7 +543,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Get status
+     * Get status.
      *
      * @return \Sulu\Bundle\ProductBundle\Entity\Status
      */
@@ -545,7 +553,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Set deliveryStatus
+     * Set deliveryStatus.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\DeliveryStatus $deliveryStatus
      *
@@ -559,7 +567,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Get deliveryStatus
+     * Get deliveryStatus.
      *
      * @return \Sulu\Bundle\ProductBundle\Entity\DeliveryStatus
      */
@@ -569,7 +577,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Set supplier
+     * Set supplier.
      *
      * @param AccountInterface $supplier
      *
@@ -583,7 +591,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Get supplier
+     * Get supplier.
      *
      * @return AccountInterface
      */
@@ -593,7 +601,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Set parent
+     * Set parent.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $parent
      *
@@ -607,7 +615,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Get parent
+     * Get parent.
      *
      * @return \Sulu\Bundle\ProductBundle\Entity\ProductInterface
      */
@@ -617,7 +625,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Add sets
+     * Add sets.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $sets
      *
@@ -631,7 +639,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Remove sets
+     * Remove sets.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $sets
      */
@@ -641,7 +649,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Get sets
+     * Get sets.
      *
      * @return \Doctrine\Common\Collections\Collection
      */
@@ -651,7 +659,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Add relations
+     * Add relations.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $relations
      *
@@ -665,7 +673,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Remove relations
+     * Remove relations.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $relations
      */
@@ -675,7 +683,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Get relations
+     * Get relations.
      *
      * @return \Doctrine\Common\Collections\Collection
      */
@@ -685,7 +693,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Add upsells
+     * Add upsells.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $upsells
      *
@@ -699,7 +707,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Remove upsells
+     * Remove upsells.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $upsells
      */
@@ -709,7 +717,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Get upsells
+     * Get upsells.
      *
      * @return \Doctrine\Common\Collections\Collection
      */
@@ -719,7 +727,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Add crosssells
+     * Add crosssells.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $crosssells
      *
@@ -733,7 +741,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Remove crosssells
+     * Remove crosssells.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $crosssells
      */
@@ -743,7 +751,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Get crosssells
+     * Get crosssells.
      *
      * @return \Doctrine\Common\Collections\Collection
      */
@@ -753,7 +761,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Set changer
+     * Set changer.
      *
      * @param \Sulu\Component\Security\Authentication\UserInterface $changer
      *
@@ -767,7 +775,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Get changer
+     * Get changer.
      *
      * @return \Sulu\Component\Security\Authentication\UserInterface
      */
@@ -777,7 +785,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Set creator
+     * Set creator.
      *
      * @param \Sulu\Component\Security\Authentication\UserInterface $creator
      *
@@ -791,7 +799,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Get creator
+     * Get creator.
      *
      * @return \Sulu\Component\Security\Authentication\UserInterface
      */
@@ -801,7 +809,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Set taxClass
+     * Set taxClass.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\TaxClass $taxClass
      *
@@ -815,7 +823,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Get taxClass
+     * Get taxClass.
      *
      * @return \Sulu\Bundle\ProductBundle\Entity\TaxClass
      */
@@ -825,7 +833,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Add categories
+     * Add categories.
      *
      * @param \Sulu\Bundle\CategoryBundle\Entity\Category $categories
      *
@@ -839,7 +847,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Remove categories
+     * Remove categories.
      *
      * @param \Sulu\Bundle\CategoryBundle\Entity\Category $categories
      */
@@ -849,7 +857,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Get categories
+     * Get categories.
      *
      * @return \Doctrine\Common\Collections\Collection
      */
@@ -859,7 +867,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Add media
+     * Add media.
      *
      * @param Media $media
      *
@@ -873,7 +881,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Remove media
+     * Remove media.
      *
      * @param Media $media
      */
@@ -883,7 +891,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Get media
+     * Get media.
      *
      * @return \Doctrine\Common\Collections\Collection
      */
@@ -893,7 +901,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Set contentUnit
+     * Set contentUnit.
      *
      * @param Unit $contentUnit
      *
@@ -907,7 +915,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Get contentUnit
+     * Get contentUnit.
      *
      * @return Unit
      */
@@ -917,7 +925,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Set orderUnit
+     * Set orderUnit.
      *
      * @param Unit $orderUnit
      *
@@ -931,7 +939,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Get orderUnit
+     * Get orderUnit.
      *
      * @return Unit
      */
@@ -961,7 +969,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Set minimumOrderQuantity
+     * Set minimumOrderQuantity.
      *
      * @param float $minimumOrderQuantity
      *
@@ -975,7 +983,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Get minimumOrderQuantity
+     * Get minimumOrderQuantity.
      *
      * @return float
      */
@@ -985,7 +993,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Set recommendedOrderQuantity
+     * Set recommendedOrderQuantity.
      *
      * @param float $recommendedOrderQuantity
      *
@@ -999,7 +1007,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Get recommendedOrderQuantity
+     * Get recommendedOrderQuantity.
      *
      * @return float
      */
@@ -1033,9 +1041,9 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Set areGrossPrices
+     * Set areGrossPrices.
      *
-     * @param boolean $areGrossPrices
+     * @param bool $areGrossPrices
      *
      * @return BaseProduct
      */
@@ -1047,9 +1055,9 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Get areGrossPrices
+     * Get areGrossPrices.
      *
-     * @return boolean
+     * @return bool
      */
     public function getAreGrossPrices()
     {
@@ -1102,7 +1110,7 @@ abstract class BaseProduct implements ProductInterface
     }
 
     /**
-     * Checks if price in default currency exists
+     * Checks if price in default currency exists.
      *
      * @param ProductPrice[] $prices
      * @param string $defaultCurrency

@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -10,10 +11,8 @@
 
 namespace Sulu\Bundle\ProductBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
-
 /**
- * Currency
+ * Currency.
  */
 class Currency
 {
@@ -23,7 +22,7 @@ class Currency
     private $name;
 
     /**
-     * @var integer
+     * @var int
      */
     private $id;
 
@@ -38,22 +37,23 @@ class Currency
     private $number;
 
     /**
-     * Set currency
+     * Set currency.
      *
      * @param string $currency
+     *
      * @return Currency
      */
     public function setName($currency)
     {
         $this->name = $currency;
-    
+
         return $this;
     }
 
     /**
-     * Get currency
+     * Get currency.
      *
-     * @return string 
+     * @return string
      */
     public function getName()
     {
@@ -61,9 +61,9 @@ class Currency
     }
 
     /**
-     * Get id
+     * Get id.
      *
-     * @return integer 
+     * @return int
      */
     public function getId()
     {
@@ -71,9 +71,10 @@ class Currency
     }
 
     /**
-     * Set id
+     * Set id.
      *
      * @param $id
+     *
      * @return TaxClass
      */
     public function setId($id)
@@ -84,9 +85,10 @@ class Currency
     }
 
     /**
-     * Set code
+     * Set code.
      *
      * @param string $code
+     *
      * @return Currency
      */
     public function setCode($code)
@@ -97,9 +99,9 @@ class Currency
     }
 
     /**
-     * Get code
+     * Get code.
      *
-     * @return string 
+     * @return string
      */
     public function getCode()
     {
@@ -107,9 +109,10 @@ class Currency
     }
 
     /**
-     * Set number
+     * Set number.
      *
      * @param string $number
+     *
      * @return Currency
      */
     public function setNumber($number)
@@ -120,9 +123,9 @@ class Currency
     }
 
     /**
-     * Get number
+     * Get number.
      *
-     * @return string 
+     * @return string
      */
     public function getNumber()
     {

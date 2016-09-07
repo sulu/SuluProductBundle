@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -10,10 +11,8 @@
 
 namespace Sulu\Bundle\ProductBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
-
 /**
- * TaxClassTranslation
+ * TaxClassTranslation.
  */
 class TaxClassTranslation
 {
@@ -28,7 +27,7 @@ class TaxClassTranslation
     private $name;
 
     /**
-     * @var integer
+     * @var int
      */
     private $id;
 
@@ -37,24 +36,24 @@ class TaxClassTranslation
      */
     private $taxClass;
 
-
     /**
-     * Set locale
+     * Set locale.
      *
      * @param string $locale
+     *
      * @return TaxClassTranslation
      */
     public function setLocale($locale)
     {
         $this->locale = $locale;
-    
+
         return $this;
     }
 
     /**
-     * Get locale
+     * Get locale.
      *
-     * @return string 
+     * @return string
      */
     public function getLocale()
     {
@@ -62,22 +61,23 @@ class TaxClassTranslation
     }
 
     /**
-     * Set name
+     * Set name.
      *
      * @param string $name
+     *
      * @return TaxClassTranslation
      */
     public function setName($name)
     {
         $this->name = $name;
-    
+
         return $this;
     }
 
     /**
-     * Get name
+     * Get name.
      *
-     * @return string 
+     * @return string
      */
     public function getName()
     {
@@ -85,9 +85,9 @@ class TaxClassTranslation
     }
 
     /**
-     * Get id
+     * Get id.
      *
-     * @return integer 
+     * @return int
      */
     public function getId()
     {
@@ -95,22 +95,23 @@ class TaxClassTranslation
     }
 
     /**
-     * Set taxClass
+     * Set taxClass.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\TaxClass $taxClass
+     *
      * @return TaxClassTranslation
      */
     public function setTaxClass(\Sulu\Bundle\ProductBundle\Entity\TaxClass $taxClass = null)
     {
         $this->taxClass = $taxClass;
-    
+
         return $this;
     }
 
     /**
-     * Get taxClass
+     * Get taxClass.
      *
-     * @return \Sulu\Bundle\ProductBundle\Entity\TaxClass 
+     * @return \Sulu\Bundle\ProductBundle\Entity\TaxClass
      */
     public function getTaxClass()
     {

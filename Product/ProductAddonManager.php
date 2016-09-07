@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -11,8 +12,8 @@
 namespace Sulu\Bundle\ProductBundle\Product;
 
 use Doctrine\Common\Persistence\ObjectManager;
-use Sulu\Bundle\ProductBundle\Entity\Addon;
 use Sulu\Bundle\ProductBundle\Api\Addon as ApiAddon;
+use Sulu\Bundle\ProductBundle\Entity\Addon;
 use Sulu\Bundle\ProductBundle\Entity\AddonPrice;
 use Sulu\Bundle\ProductBundle\Entity\Currency;
 use Sulu\Bundle\ProductBundle\Entity\CurrencyRepository;
@@ -104,7 +105,7 @@ class ProductAddonManager implements ProductAddonManagerInterface
         $productAddon = $this->addonRepository->findOneBy(
             [
                 'product' => $productId,
-                'addon' => $addonId
+                'addon' => $addonId,
             ]
         );
         if (!$productAddon) {

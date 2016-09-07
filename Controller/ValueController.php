@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -10,26 +11,21 @@
 
 namespace Sulu\Bundle\ProductBundle\Controller;
 
-use FOS\RestBundle\Routing\ClassResourceInterface;
 use FOS\RestBundle\Controller\Annotations\Get;
-
+use FOS\RestBundle\Routing\ClassResourceInterface;
 use Hateoas\Representation\CollectionRepresentation;
-
-use Symfony\Component\HttpFoundation\Request;
-
-use Sulu\Component\Rest\RestController;
+use Sulu\Bundle\ProductBundle\Product\Exception\AttributeDependencyNotFoundException;
+use Sulu\Bundle\ProductBundle\Product\Exception\AttributeNotFoundException;
+use Sulu\Bundle\ProductBundle\Product\Exception\AttributeValueNotFoundException;
+use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeValueException;
 use Sulu\Component\Rest\Exception\EntityNotFoundException;
 use Sulu\Component\Rest\Exception\MissingArgumentException;
 use Sulu\Component\Rest\ListBuilder\ListRepresentation;
-use Sulu\Bundle\ProductBundle\Product\Exception\AttributeDependencyNotFoundException;
-use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeException;
-use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeValueException;
-use Sulu\Bundle\ProductBundle\Product\Exception\AttributeValueNotFoundException;
-use Sulu\Bundle\ProductBundle\Product\Exception\AttributeNotFoundException;
+use Sulu\Component\Rest\RestController;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
- * Makes product attribute values available through a REST API
- * @package Sulu\Bundle\ProductBundle\Controller
+ * Makes product attribute values available through a REST API.
  */
 class ValueController extends RestController implements ClassResourceInterface
 {
@@ -38,7 +34,7 @@ class ValueController extends RestController implements ClassResourceInterface
     protected static $entityKey = 'attributeValues';
 
     /**
-     * Returns the manager for AttributeValues
+     * Returns the manager for AttributeValues.
      *
      * @return AttributeValueManager
      */
@@ -48,7 +44,7 @@ class ValueController extends RestController implements ClassResourceInterface
     }
 
     /**
-     * Returns the manager for Attributes
+     * Returns the manager for Attributes.
      *
      * @return AttributeManager
      */
@@ -58,9 +54,12 @@ class ValueController extends RestController implements ClassResourceInterface
     }
 
     /**
-     * returns all fields that can be used by list
+     * returns all fields that can be used by list.
+     *
      * @Get("attributes/values/fields")
+     *
      * @param \Symfony\Component\HttpFoundation\Request $request
+     *
      * @return mixed
      */
     public function getFieldsAction(Request $request)
@@ -71,10 +70,11 @@ class ValueController extends RestController implements ClassResourceInterface
     }
 
     /**
-     * Retrieves and shows a attribute with the given ID
+     * Retrieves and shows a attribute with the given ID.
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
-     * @param integer $id attribute value ID
+     * @param int $id attribute value ID
+     *
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function getAction(Request $request, $attributeId, $attributeValueId)
@@ -85,6 +85,7 @@ class ValueController extends RestController implements ClassResourceInterface
         } catch (AttributeNotFoundException $exc) {
             $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
             $view = $this->view($exception->toArray(), 404);
+
             return $this->handleView($view);
         }
 
@@ -95,14 +96,16 @@ class ValueController extends RestController implements ClassResourceInterface
             $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
             $view = $this->view($exception->toArray(), 404);
         }
+
         return $this->handleView($view);
     }
 
     /**
-     * Retrieves and shows a attributeValue with the given ID
+     * Retrieves and shows a attributeValue with the given ID.
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
-     * @param integer $id attribute ID
+     * @param int $id attribute ID
+     *
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function cgetAction(Request $request, $id)
@@ -117,7 +120,6 @@ class ValueController extends RestController implements ClassResourceInterface
                 );
             }
             $view = $this->view($list, 200);
-
         } catch (AttributeNotFoundException $exc) {
             $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
             $view = $this->view($exception->toArray(), 404);
@@ -127,9 +129,10 @@ class ValueController extends RestController implements ClassResourceInterface
     }
 
     /**
-     * Returns a list representation
+     * Returns a list representation.
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
+     *
      * @return Sulu\Component\Rest\ListBuilder\ListRepresentation
      */
     private function getListRepresentation($request, $id)
@@ -153,7 +156,7 @@ class ValueController extends RestController implements ClassResourceInterface
             $listBuilder->execute(),
             self::$entityKey,
             'get_attribute_values',
-            array_merge($request->query->all(), array('id'=>$id)),
+            array_merge($request->query->all(), ['id' => $id]),
             $listBuilder->getCurrentPage(),
             $listBuilder->getLimit(),
             $listBuilder->count()
@@ -166,7 +169,8 @@ class ValueController extends RestController implements ClassResourceInterface
      * Change a attribute by the given id.
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
-     * @param integer $id the attribute value id
+     * @param int $id the attribute value id
+     *
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function putAction(Request $request, $attributeId, $attributeValueId)
@@ -197,6 +201,7 @@ class ValueController extends RestController implements ClassResourceInterface
      * Creates and stores a new attribute value.
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
+     *
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function postAction(Request $request, $attributeId)
@@ -223,7 +228,8 @@ class ValueController extends RestController implements ClassResourceInterface
      * Delete an product attribute value for the given id.
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
-     * @param integer $id the attribute id
+     * @param int $id the attribute id
+     *
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function deleteAction(Request $request, $attributeId, $attributeValueId)

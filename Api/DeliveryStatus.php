@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -10,15 +11,15 @@
 
 namespace Sulu\Bundle\ProductBundle\Api;
 
-use Sulu\Bundle\ProductBundle\Entity\DeliveryStatus as Entity;
-use JMS\Serializer\Annotation\VirtualProperty;
-use JMS\Serializer\Annotation\SerializedName;
 use JMS\Serializer\Annotation\ExclusionPolicy;
-use Sulu\Component\Rest\ApiWrapper;
+use JMS\Serializer\Annotation\SerializedName;
+use JMS\Serializer\Annotation\VirtualProperty;
+use Sulu\Bundle\ProductBundle\Entity\DeliveryStatus as Entity;
 use Sulu\Bundle\ProductBundle\Entity\DeliveryStatusTranslation;
+use Sulu\Component\Rest\ApiWrapper;
 
 /**
- * The DeliveryStatus class which will be exported to the API
+ * The DeliveryStatus class which will be exported to the API.
  *
  * @ExclusionPolicy("all")
  */
@@ -35,7 +36,7 @@ class DeliveryStatus extends ApiWrapper
     }
 
     /**
-     * The id of the type
+     * The id of the type.
      *
      * @return int The id of the type
      * @VirtualProperty
@@ -47,9 +48,9 @@ class DeliveryStatus extends ApiWrapper
     }
 
     /**
-     * The name of the type
+     * The name of the type.
      *
-     * @return integer The name of the type
+     * @return int The name of the type
      * @VirtualProperty
      * @SerializedName("name")
      */
@@ -59,7 +60,8 @@ class DeliveryStatus extends ApiWrapper
     }
 
     /**
-     * Sets the name of the deliveryStatus
+     * Sets the name of the deliveryStatus.
+     *
      * @param string $name The name of the delivery status
      */
     public function setName($name)
@@ -68,7 +70,7 @@ class DeliveryStatus extends ApiWrapper
     }
 
     /**
-     * Returns the translation for the current locale
+     * Returns the translation for the current locale.
      *
      * @return DeliveryStatusTranslation
      */

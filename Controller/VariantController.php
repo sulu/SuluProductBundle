@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMF.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -23,8 +24,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * This controller is responsible for managing variants to a specific product
- * @package Sulu\Bundle\ProductBundle\Controller
+ * This controller is responsible for managing variants to a specific product.
  */
 class VariantController extends RestController implements ClassResourceInterface
 {
@@ -33,7 +33,7 @@ class VariantController extends RestController implements ClassResourceInterface
     protected static $entityKey = 'products';
 
     /**
-     * Returns the manager for products
+     * Returns the manager for products.
      *
      * @return ProductManagerInterface
      */
@@ -43,11 +43,12 @@ class VariantController extends RestController implements ClassResourceInterface
     }
 
     /**
-     * Retrieves and shows the variant entIdwith the given ID for the parent product
+     * Retrieves and shows the variant entIdwith the given ID for the parent product.
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
-     * @param integer $parentId
-     * @param integer $id product ID
+     * @param int $parentId
+     * @param int $id product ID
+     *
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function getAction(Request $request, $parentId, $id)
@@ -70,9 +71,11 @@ class VariantController extends RestController implements ClassResourceInterface
     }
 
     /**
-     * Returns a list of products
+     * Returns a list of products.
+     *
      * @param Request $request
      * @param $parentId
+     *
      * @return Response
      */
     public function cgetAction(Request $request, $parentId)
@@ -120,9 +123,11 @@ class VariantController extends RestController implements ClassResourceInterface
     }
 
     /**
-     * Adds a new variant to this product
+     * Adds a new variant to this product.
+     *
      * @param Request $request
      * @param $parentId
+     *
      * @return Response
      */
     public function postAction(Request $request, $parentId)
@@ -140,10 +145,12 @@ class VariantController extends RestController implements ClassResourceInterface
     }
 
     /**
-     * Removes a variant from a product
+     * Removes a variant from a product.
+     *
      * @param Request $request
      * @param $parentId
      * @param $id
+     *
      * @return Response
      */
     public function deleteAction(Request $request, $parentId, $id)
@@ -159,4 +166,4 @@ class VariantController extends RestController implements ClassResourceInterface
 
         return $this->handleView($view);
     }
-} 
+}

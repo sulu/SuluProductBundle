@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -10,10 +11,8 @@
 
 namespace Sulu\Bundle\ProductBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
-
 /**
- * ProductTranslation
+ * ProductTranslation.
  */
 class ProductTranslation
 {
@@ -38,7 +37,7 @@ class ProductTranslation
     private $longDescription;
 
     /**
-     * @var integer
+     * @var int
      */
     private $id;
 
@@ -48,22 +47,23 @@ class ProductTranslation
     private $product;
 
     /**
-     * Set languageCode
+     * Set languageCode.
      *
      * @param string $languageCode
+     *
      * @return ProductTranslation
      */
     public function setLocale($languageCode)
     {
         $this->locale = $languageCode;
-    
+
         return $this;
     }
 
     /**
-     * Get languageCode
+     * Get languageCode.
      *
-     * @return string 
+     * @return string
      */
     public function getLocale()
     {
@@ -71,22 +71,23 @@ class ProductTranslation
     }
 
     /**
-     * Set name
+     * Set name.
      *
      * @param string $name
+     *
      * @return ProductTranslation
      */
     public function setName($name)
     {
         $this->name = $name;
-    
+
         return $this;
     }
 
     /**
-     * Get name
+     * Get name.
      *
-     * @return string 
+     * @return string
      */
     public function getName()
     {
@@ -94,22 +95,23 @@ class ProductTranslation
     }
 
     /**
-     * Set shortDescription
+     * Set shortDescription.
      *
      * @param string $shortDescription
+     *
      * @return ProductTranslation
      */
     public function setShortDescription($shortDescription)
     {
         $this->shortDescription = $shortDescription;
-    
+
         return $this;
     }
 
     /**
-     * Get shortDescription
+     * Get shortDescription.
      *
-     * @return string 
+     * @return string
      */
     public function getShortDescription()
     {
@@ -117,22 +119,23 @@ class ProductTranslation
     }
 
     /**
-     * Set longDescription
+     * Set longDescription.
      *
      * @param string $longDescription
+     *
      * @return ProductTranslation
      */
     public function setLongDescription($longDescription)
     {
         $this->longDescription = $longDescription;
-    
+
         return $this;
     }
 
     /**
-     * Get longDescription
+     * Get longDescription.
      *
-     * @return string 
+     * @return string
      */
     public function getLongDescription()
     {
@@ -140,9 +143,9 @@ class ProductTranslation
     }
 
     /**
-     * Get id
+     * Get id.
      *
-     * @return integer 
+     * @return int
      */
     public function getId()
     {
@@ -150,20 +153,21 @@ class ProductTranslation
     }
 
     /**
-     * Set product
+     * Set product.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $product
+     *
      * @return ProductTranslation
      */
     public function setProduct(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $product)
     {
         $this->product = $product;
-    
+
         return $this;
     }
 
     /**
-     * Get product
+     * Get product.
      *
      * @return \Sulu\Bundle\ProductBundle\Entity\ProductInterface
      */

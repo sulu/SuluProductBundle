@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -17,27 +18,26 @@ use Sulu\Bundle\CategoryBundle\Entity\Category;
 use Sulu\Bundle\CategoryBundle\Entity\CategoryTranslation;
 use Sulu\Bundle\ProductBundle\Entity\Addon;
 use Sulu\Bundle\ProductBundle\Entity\AddonPrice;
+use Sulu\Bundle\ProductBundle\Entity\Attribute;
+use Sulu\Bundle\ProductBundle\Entity\AttributeSet;
+use Sulu\Bundle\ProductBundle\Entity\AttributeSetTranslation;
+use Sulu\Bundle\ProductBundle\Entity\AttributeTranslation;
+use Sulu\Bundle\ProductBundle\Entity\AttributeType;
 use Sulu\Bundle\ProductBundle\Entity\AttributeValue;
 use Sulu\Bundle\ProductBundle\Entity\AttributeValueTranslation;
 use Sulu\Bundle\ProductBundle\Entity\Currency;
 use Sulu\Bundle\ProductBundle\Entity\DeliveryStatus;
 use Sulu\Bundle\ProductBundle\Entity\DeliveryStatusTranslation;
 use Sulu\Bundle\ProductBundle\Entity\Product;
-use Sulu\Bundle\ProductBundle\Entity\Attribute;
-use Sulu\Bundle\ProductBundle\Entity\AttributeTranslation;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttribute;
-use Sulu\Bundle\ProductBundle\Entity\SpecialPrice;
 use Sulu\Bundle\ProductBundle\Entity\ProductPrice;
 use Sulu\Bundle\ProductBundle\Entity\ProductTranslation;
+use Sulu\Bundle\ProductBundle\Entity\SpecialPrice;
 use Sulu\Bundle\ProductBundle\Entity\Status;
 use Sulu\Bundle\ProductBundle\Entity\StatusTranslation;
 use Sulu\Bundle\ProductBundle\Entity\TaxClass;
 use Sulu\Bundle\ProductBundle\Entity\TaxClassTranslation;
 use Sulu\Bundle\ProductBundle\Entity\Type;
-use Sulu\Bundle\ProductBundle\Entity\TypeTranslation;
-use Sulu\Bundle\ProductBundle\Entity\AttributeSet;
-use Sulu\Bundle\ProductBundle\Entity\AttributeSetTranslation;
-use Sulu\Bundle\ProductBundle\Entity\AttributeType;
 use Sulu\Bundle\ProductBundle\Tests\Resources\ContactTestData;
 use Sulu\Bundle\TagBundle\Entity\Tag;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
@@ -136,11 +136,6 @@ class ProductAddonControllerTest extends SuluTestCase
     private $attribute1;
 
     /**
-     * @var TypeTranslation
-     */
-    private $typeTranslation1;
-
-    /**
      * @var AttributeSetTranslation
      */
     private $attributeSetTranslation1;
@@ -184,11 +179,6 @@ class ProductAddonControllerTest extends SuluTestCase
      * @var Attribute
      */
     private $attribute2;
-
-    /**
-     * @var TypeTranslation
-     */
-    private $typeTranslation2;
 
     /**
      * @var AttributeSetTranslation
@@ -304,10 +294,7 @@ class ProductAddonControllerTest extends SuluTestCase
         // Product 1
         // Product Type
         $this->type1 = new Type();
-        $this->typeTranslation1 = new TypeTranslation();
-        $this->typeTranslation1->setLocale('en');
-        $this->typeTranslation1->setName('EnglishProductType-1');
-        $this->typeTranslation1->setType($this->type1);
+        $this->type1->setTranslationKey('Type1');
 
         // Product status active
         $metadata = $this->em->getClassMetadata(get_class(new Status()));
@@ -411,10 +398,7 @@ class ProductAddonControllerTest extends SuluTestCase
         // Product 2
         // Product Type
         $this->type2 = new Type();
-        $this->typeTranslation2 = new TypeTranslation();
-        $this->typeTranslation2->setLocale('en');
-        $this->typeTranslation2->setName('EnglishProductType-2');
-        $this->typeTranslation2->setType($this->type2);
+        $this->type2->setTranslationKey('Type2');
 
         // AttributeSet
         $this->attributeSet2 = new AttributeSet();
@@ -513,7 +497,7 @@ class ProductAddonControllerTest extends SuluTestCase
         $this->deliveryStatusAvailable->addTranslation($deliveryStatusAvailableTranslation);
 
         $this->specialPrice1 = new SpecialPrice();
-        $this->specialPrice1->setPrice("56");
+        $this->specialPrice1->setPrice('56');
         $this->specialPrice1->setCurrency($this->currency1);
         $this->specialPrice1->setStartDate(new \DateTime());
         $this->specialPrice1->setEndDate(new \DateTime());
@@ -530,7 +514,7 @@ class ProductAddonControllerTest extends SuluTestCase
         $this->em->persist($this->tag1);
         $this->em->persist($this->tag2);
 
-        
+
         $this->addon = new Addon();
         $this->addon->setAddon($this->product2);
         $this->addon->setProduct($this->product1);
@@ -572,7 +556,6 @@ class ProductAddonControllerTest extends SuluTestCase
         $this->em->persist($this->productPrice2);
         $this->em->persist($this->type1);
         $this->em->persist($this->attributeType1);
-        $this->em->persist($this->typeTranslation1);
         $this->em->persist($this->attributeSet1);
         $this->em->persist($this->attributeSetTranslation1);
         $this->em->persist($this->attribute1);
@@ -585,7 +568,6 @@ class ProductAddonControllerTest extends SuluTestCase
 
         $this->em->persist($this->type2);
         $this->em->persist($this->attributeType2);
-        $this->em->persist($this->typeTranslation2);
         $this->em->persist($this->attributeSet2);
         $this->em->persist($this->attributeSetTranslation2);
         $this->em->persist($this->attribute2);
@@ -601,7 +583,7 @@ class ProductAddonControllerTest extends SuluTestCase
 
     public function testGetProductAddon()
     {
-        $this->client->request('GET', '/api/products/' .  $this->product1->getId() . '/addons');
+        $this->client->request('GET', '/api/products/' . $this->product1->getId() . '/addons');
         $response = json_decode($this->client->getResponse()->getContent());
         $addons = $response->_embedded->addons;
 
@@ -618,7 +600,7 @@ class ProductAddonControllerTest extends SuluTestCase
 
     public function testGetProductAddonFlat()
     {
-        $this->client->request('GET', '/api/products/' .  $this->product1->getId() . '/addons?flat=true');
+        $this->client->request('GET', '/api/products/' . $this->product1->getId() . '/addons?flat=true');
         $response = json_decode($this->client->getResponse()->getContent());
         $addons = $response->_embedded->addons;
 
@@ -637,16 +619,16 @@ class ProductAddonControllerTest extends SuluTestCase
             'prices' => [
                 [
                     'value' => 456,
-                    'currency' => 'GBP'
+                    'currency' => 'GBP',
                 ],
                 [
                     'value' => 123,
-                    'currency' => 'EUR'
-                ]
-            ]
+                    'currency' => 'EUR',
+                ],
+            ],
         ];
 
-        $this->client->request('POST', '/api/products/' .  $this->product1->getId() . '/addons', $data);
+        $this->client->request('POST', '/api/products/' . $this->product1->getId() . '/addons', $data);
 
         $response = json_decode($this->client->getResponse()->getContent());
         $addon = $response->addon;
@@ -662,17 +644,16 @@ class ProductAddonControllerTest extends SuluTestCase
             'prices' => [
                 [
                     'value' => 456,
-                    'currency' => 'GBP'
-                ]
-                ,
+                    'currency' => 'GBP',
+                ],
                 [
                     'value' => 123,
-                    'currency' => 'EUR'
-                ]
-            ]
+                    'currency' => 'EUR',
+                ],
+            ],
         ];
 
-        $this->client->request('POST', '/api/products/' .  $this->product1->getId() . '/addons', $data);
+        $this->client->request('POST', '/api/products/' . $this->product1->getId() . '/addons', $data);
 
         $response = json_decode($this->client->getResponse()->getContent());
         $addon = $response->addon;
@@ -689,17 +670,16 @@ class ProductAddonControllerTest extends SuluTestCase
             'prices' => [
                 [
                     'value' => 456,
-                    'currency' => 'GBP'
-                ]
-                ,
+                    'currency' => 'GBP',
+                ],
                 [
                     'value' => 123,
-                    'currency' => 'EUR'
-                ]
-            ]
+                    'currency' => 'EUR',
+                ],
+            ],
         ];
 
-        $this->client->request('POST', '/api/products/' .  $this->product1->getId() . '/addons', $data);
+        $this->client->request('POST', '/api/products/' . $this->product1->getId() . '/addons', $data);
 
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
         $response = json_decode($this->client->getResponse()->getContent());
@@ -710,14 +690,14 @@ class ProductAddonControllerTest extends SuluTestCase
         // Delete addon
         $this->client->request(
             'DELETE',
-            '/api/products/' .  $this->product1->getId() . '/addons/' . $this->product2->getId(),
+            '/api/products/' . $this->product1->getId() . '/addons/' . $this->product2->getId(),
             $data
         );
 
         $this->assertEquals(204, $this->client->getResponse()->getStatusCode());
 
         // Check if it is deleted
-        $this->client->request('GET', '/api/products/' .  $this->product1->getId() . '/addons');
+        $this->client->request('GET', '/api/products/' . $this->product1->getId() . '/addons');
         $response = json_decode($this->client->getResponse()->getContent());
         $addons = $response->_embedded->addons;
 
@@ -733,17 +713,16 @@ class ProductAddonControllerTest extends SuluTestCase
             'prices' => [
                 [
                     'value' => 456,
-                    'currency' => 'GBP'
-                ]
-                ,
+                    'currency' => 'GBP',
+                ],
                 [
                     'value' => 123,
-                    'currency' => 'EUR'
-                ]
-            ]
+                    'currency' => 'EUR',
+                ],
+            ],
         ];
 
-        $this->client->request('POST', '/api/products/' .  $this->product1->getId() . '/addons', $data);
+        $this->client->request('POST', '/api/products/' . $this->product1->getId() . '/addons', $data);
 
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
         $response = json_decode($this->client->getResponse()->getContent());
@@ -754,19 +733,18 @@ class ProductAddonControllerTest extends SuluTestCase
         // Delete addon
         $this->client->request(
             'DELETE',
-            '/api/addons/' .  $response->id,
+            '/api/addons/' . $response->id,
             $data
         );
 
         $this->assertEquals(204, $this->client->getResponse()->getStatusCode());
 
         // Check if it is deleted
-        $this->client->request('GET', '/api/products/' .  $this->product1->getId() . '/addons');
+        $this->client->request('GET', '/api/products/' . $this->product1->getId() . '/addons');
         $response = json_decode($this->client->getResponse()->getContent());
         $addons = $response->_embedded->addons;
 
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
         $this->assertCount(0, $addons);
-
     }
 }

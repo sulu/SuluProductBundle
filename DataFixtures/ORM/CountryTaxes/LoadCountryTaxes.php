@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -14,8 +15,8 @@ use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityNotFoundException;
-use Sulu\Bundle\ProductBundle\Entity\CountryTax;
 use Sulu\Bundle\ContactBundle\Entity\Country;
+use Sulu\Bundle\ProductBundle\Entity\CountryTax;
 
 class LoadCountryTaxes implements FixtureInterface, OrderedFixtureInterface
 {
@@ -47,7 +48,7 @@ class LoadCountryTaxes implements FixtureInterface, OrderedFixtureInterface
     ];
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function load(ObjectManager $manager)
     {
@@ -71,7 +72,7 @@ class LoadCountryTaxes implements FixtureInterface, OrderedFixtureInterface
             foreach ($elements as $child) {
                 try {
                     // check if all necessary parameters are given
-                    if (!isset($child->{"tax-class"}) ||
+                    if (!isset($child->{'tax-class'}) ||
                         !isset($child->country) ||
                         !isset($child->tax)
                     ) {
@@ -82,7 +83,7 @@ class LoadCountryTaxes implements FixtureInterface, OrderedFixtureInterface
                     $countryTax->setId($i);
 
                     // Check if mapping for tax-class exists
-                    $taxClassKey = (string)$child->{"tax-class"};
+                    $taxClassKey = (string) $child->{'tax-class'};
                     if (array_key_exists($taxClassKey, static::$taxClassMappings)) {
                         // Set taxclass as defined in mappings array above
                         $taxClass = $taxClasses[static::$taxClassMappings[$taxClassKey]];
@@ -91,12 +92,12 @@ class LoadCountryTaxes implements FixtureInterface, OrderedFixtureInterface
                         throw new Exception('tax-class not defined for element country-tax number ' . $i);
                     }
 
-                    $country = $this->getCountryByCode((string)$child->country);
+                    $country = $this->getCountryByCode((string) $child->country);
                     $countryTax->setCountry($country);
-                    $countryTax->setTax((float)$child->tax);
+                    $countryTax->setTax((float) $child->tax);
 
                     $manager->persist($countryTax);
-                    $i++;
+                    ++$i;
                 } catch (Exception $e) {
                     throw $e;
                 }
@@ -121,7 +122,7 @@ class LoadCountryTaxes implements FixtureInterface, OrderedFixtureInterface
             return $this->countries[$code];
         }
         // Fetch country.
-        $country = $this->manager->getRepository(static::$countryEntityName)->findOneBy(array('code' => $code));
+        $country = $this->manager->getRepository(static::$countryEntityName)->findOneBy(['code' => $code]);
         if (!$country) {
             throw new \Doctrine\ORM\EntityNotFoundException('code = ' . $code);
         }
@@ -132,7 +133,7 @@ class LoadCountryTaxes implements FixtureInterface, OrderedFixtureInterface
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function getOrder()
     {

@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -171,7 +172,6 @@ class AttributeControllerTest extends SuluTestCase
         $item2 = $items[1];
         $this->assertEquals('some-translation-type-2-string', $item2->type->name);
         $this->assertEquals('Power', $item2->name);
-
     }
 
     /**
@@ -196,7 +196,7 @@ class AttributeControllerTest extends SuluTestCase
     }
 
     /**
-     * Post (create) a new attribute
+     * Post (create) a new attribute.
      */
     public function testPost()
     {
@@ -344,9 +344,9 @@ class AttributeControllerTest extends SuluTestCase
      */
     public function testPutNotExisting()
     {
-        $data = array(
+        $data = [
             'name' => 'MissingProduct',
-        );
+        ];
 
         $this->client->request('PUT', '/api/attributes/666', $data);
 
@@ -481,7 +481,7 @@ class AttributeControllerTest extends SuluTestCase
     {
         $fixtureLoader = new LoadAttributes();
         $fixtureLoader->setContainer($this->getContainer());
-        
+
         $fixtureLoader->load($this->em);
 
         $this->client->request('GET', '/api/attributes');

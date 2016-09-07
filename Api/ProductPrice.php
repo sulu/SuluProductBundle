@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMF.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -10,16 +11,15 @@
 
 namespace Sulu\Bundle\ProductBundle\Api;
 
-use Sulu\Component\Rest\ApiWrapper;
-use Sulu\Bundle\ProductBundle\Entity\ProductPrice as Entity;
-use JMS\Serializer\Annotation\VirtualProperty;
-use JMS\Serializer\Annotation\SerializedName;
 use JMS\Serializer\Annotation\ExclusionPolicy;
+use JMS\Serializer\Annotation\SerializedName;
+use JMS\Serializer\Annotation\VirtualProperty;
+use Sulu\Bundle\ProductBundle\Entity\ProductPrice as Entity;
+use Sulu\Component\Rest\ApiWrapper;
 
 /**
- * The Status class which will be exported to the API
+ * The Status class which will be exported to the API.
  *
- * @package Sulu\Bundle\ProductBundle\Api
  * @ExclusionPolicy("all")
  */
 class ProductPrice extends ApiWrapper
@@ -35,7 +35,8 @@ class ProductPrice extends ApiWrapper
     }
 
     /**
-     * Returns the ID of the ProductPrice
+     * Returns the ID of the ProductPrice.
+     *
      * @return int
      * @VirtualProperty
      * @SerializedName("id")
@@ -46,7 +47,8 @@ class ProductPrice extends ApiWrapper
     }
 
     /**
-     * Returns the price
+     * Returns the price.
+     *
      * @return float
      * @VirtualProperty
      * @SerializedName("price")
@@ -57,7 +59,8 @@ class ProductPrice extends ApiWrapper
     }
 
     /**
-     * Sets the price
+     * Sets the price.
+     *
      * @param float $price
      */
     public function setPrice($price)
@@ -66,7 +69,8 @@ class ProductPrice extends ApiWrapper
     }
 
     /**
-     * Returns the currency
+     * Returns the currency.
+     *
      * @return Currency
      * @VirtualProperty
      * @SerializedName("currency")
@@ -77,7 +81,8 @@ class ProductPrice extends ApiWrapper
     }
 
     /**
-     * Returns the minimumQuantity
+     * Returns the minimumQuantity.
+     *
      * @return float
      * @VirtualProperty
      * @SerializedName("minimumQuantity")

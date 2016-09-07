@@ -1,11 +1,18 @@
 <?php
 
+/*
+ * This file is part of Sulu.
+ *
+ * (c) MASSIVE ART WebServices GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace Sulu\Bundle\ProductBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
-
 /**
- * AttributeValueTranslation
+ * AttributeValueTranslation.
  */
 class AttributeValueTranslation
 {
@@ -20,7 +27,7 @@ class AttributeValueTranslation
     private $name;
 
     /**
-     * @var integer
+     * @var int
      */
     private $id;
 
@@ -29,24 +36,24 @@ class AttributeValueTranslation
      */
     private $attributeValue;
 
-
     /**
-     * Set locale
+     * Set locale.
      *
      * @param string $locale
+     *
      * @return AttributeValueTranslation
      */
     public function setLocale($locale)
     {
         $this->locale = $locale;
-    
+
         return $this;
     }
 
     /**
-     * Get locale
+     * Get locale.
      *
-     * @return string 
+     * @return string
      */
     public function getLocale()
     {
@@ -54,22 +61,23 @@ class AttributeValueTranslation
     }
 
     /**
-     * Set name
+     * Set name.
      *
      * @param string $name
+     *
      * @return AttributeValueTranslation
      */
     public function setName($name)
     {
         $this->name = $name;
-    
+
         return $this;
     }
 
     /**
-     * Get name
+     * Get name.
      *
-     * @return string 
+     * @return string
      */
     public function getName()
     {
@@ -77,9 +85,9 @@ class AttributeValueTranslation
     }
 
     /**
-     * Get id
+     * Get id.
      *
-     * @return integer 
+     * @return int
      */
     public function getId()
     {
@@ -87,22 +95,23 @@ class AttributeValueTranslation
     }
 
     /**
-     * Set attributeValue
+     * Set attributeValue.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\AttributeValue $attributeValue
+     *
      * @return AttributeValueTranslation
      */
     public function setAttributeValue(\Sulu\Bundle\ProductBundle\Entity\AttributeValue $attributeValue)
     {
         $this->attributeValue = $attributeValue;
-    
+
         return $this;
     }
 
     /**
-     * Get attributeValue
+     * Get attributeValue.
      *
-     * @return \Sulu\Bundle\ProductBundle\Entity\AttributeValue 
+     * @return \Sulu\Bundle\ProductBundle\Entity\AttributeValue
      */
     public function getAttributeValue()
     {

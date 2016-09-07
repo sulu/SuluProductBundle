@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -18,504 +19,534 @@ use Sulu\Bundle\TagBundle\Entity\Tag;
 use Sulu\Component\Security\Authentication\UserInterface;
 
 /**
- * Defines the interface for a product
- * @package Sulu\Bundle\ProductBundle\Entity
+ * Defines the interface for a product.
  */
 interface ProductInterface
 {
     /**
-     * Get id
+     * Get id.
      *
-     * @return integer
+     * @return int
      */
     public function getId();
 
     /**
-     * Set number
+     * Set number.
      *
      * @param string $number
+     *
      * @return BaseProduct
      */
     public function setNumber($number);
 
     /**
-     * Get number
+     * Get number.
      *
      * @return string
      */
     public function getNumber();
 
     /**
-     * Set globalTradeItemNumber
+     * Set globalTradeItemNumber.
      *
      * @param string $globalTradeItemNumber
+     *
      * @return BaseProduct
      */
     public function setGlobalTradeItemNumber($globalTradeItemNumber);
 
     /**
-     * Get globalTradeItemNumber
+     * Get globalTradeItemNumber.
      *
      * @return string
      */
     public function getGlobalTradeItemNumber();
 
     /**
-     * Set manufacturer
+     * Set manufacturer.
      *
      * @param string $manufacturer
+     *
      * @return BaseProduct
      */
     public function setManufacturer($manufacturer);
 
     /**
-     * Get manufacturer
+     * Get manufacturer.
      *
      * @return string
      */
     public function getManufacturer();
 
     /**
-     * Set cost
+     * Set cost.
      *
-     * @param double $cost
+     * @param float $cost
+     *
      * @return ProductInterface
      */
     public function setCost($cost);
 
     /**
-     * Get cost
+     * Get cost.
      *
-     * @return double
+     * @return float
      */
     public function getCost();
 
     /**
-     * Set priceInfo
+     * Set priceInfo.
      *
      * @param string $priceInfo
+     *
      * @return BaseProduct
      */
     public function setPriceInfo($priceInfo);
 
     /**
-     * Get priceInfo
+     * Get priceInfo.
      *
      * @return string
      */
     public function getPriceInfo();
 
     /**
-     * Set created
+     * Set created.
      *
      * @param \DateTime $created
+     *
      * @return BaseProduct
      */
     public function setCreated($created);
 
     /**
-     * Get created
+     * Get created.
      *
      * @return \DateTime
      */
     public function getCreated();
 
     /**
-     * Set changed
+     * Set changed.
      *
      * @param \DateTime $changed
+     *
      * @return BaseProduct
      */
     public function setChanged($changed);
 
     /**
-     * Get changed
+     * Get changed.
      *
      * @return \DateTime
      */
     public function getChanged();
 
     /**
-     * Set manufacturerCountry
+     * Set manufacturerCountry.
      *
      * @param Country $manufacturerCountry
+     *
      * @return BaseProduct
      */
     public function setManufacturerCountry(Country $manufacturerCountry = null);
 
     /**
-     * Get manufacturerCountry
+     * Get manufacturerCountry.
      *
      * @return Country
      */
     public function getManufacturerCountry();
 
     /**
-     * Set type
+     * Set type.
      *
      * @param Type $type
+     *
      * @return BaseProduct
      */
     public function setType(Type $type);
 
     /**
-     * Get type
+     * Get type.
      *
      * @return Type
      */
     public function getType();
 
     /**
-     * Set template
+     * Set template.
      *
      * @param AttributeSet $template
+     *
      * @return BaseProduct
      */
     public function setAttributeSet(AttributeSet $template);
 
     /**
-     * Get template
+     * Get template.
      *
      * @return AttributeSet
      */
     public function getAttributeSet();
 
     /**
-     * Set status
+     * Set status.
      *
      * @param Status $status
+     *
      * @return BaseProduct
      */
     public function setStatus(Status $status = null);
 
     /**
-     * Get status
+     * Get status.
      *
      * @return Status
      */
     public function getStatus();
 
     /**
-     * Get supplier
+     * Get supplier.
      *
      * @return AccountInterface Supplier
      */
     public function getSupplier();
 
     /**
-     * Set taxClass
+     * Set taxClass.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\TaxClass $taxClass
+     *
      * @return BaseProduct
      */
     public function setTaxClass(\Sulu\Bundle\ProductBundle\Entity\TaxClass $taxClass = null);
 
     /**
-     * Get taxClass
+     * Get taxClass.
      *
      * @return \Sulu\Bundle\ProductBundle\Entity\TaxClass
      */
     public function getTaxClass();
 
     /**
-     * Add relations
+     * Add relations.
      *
      * @param ProductInterface $relations
+     *
      * @return BaseProduct
      */
     public function addRelation(ProductInterface $relations);
 
     /**
-     * Remove relations
+     * Remove relations.
      *
      * @param ProductInterface $relations
      */
     public function removeRelation(ProductInterface $relations);
 
     /**
-     * Get relations
+     * Get relations.
      *
      * @return \Doctrine\Common\Collections\Collection
      */
     public function getRelations();
 
     /**
-     * Add upsells
+     * Add upsells.
      *
      * @param ProductInterface $upsells
+     *
      * @return BaseProduct
      */
     public function addUpsell(ProductInterface $upsells);
 
     /**
-     * Remove upsells
+     * Remove upsells.
      *
      * @param ProductInterface $upsells
      */
     public function removeUpsell(ProductInterface $upsells);
 
     /**
-     * Get upsells
+     * Get upsells.
      *
      * @return \Doctrine\Common\Collections\Collection
      */
     public function getUpsells();
 
     /**
-     * Add crosssells
+     * Add crosssells.
      *
      * @param ProductInterface $crosssells
+     *
      * @return ProductInterface
      */
     public function addCrosssell(ProductInterface $crosssells);
 
     /**
-     * Remove crosssells
+     * Remove crosssells.
      *
      * @param ProductInterface $crosssells
      */
     public function removeCrosssell(ProductInterface $crosssells);
 
     /**
-     * Get crosssells
+     * Get crosssells.
      *
      * @return \Doctrine\Common\Collections\Collection
      */
     public function getCrosssells();
 
     /**
-     * Set changer
+     * Set changer.
      *
      * @param \Sulu\Component\Security\Authentication\UserInterface $changer
+     *
      * @return ProductInterface
      */
     public function setChanger(UserInterface $changer = null);
 
     /**
-     * Get changer
+     * Get changer.
      *
      * @return UserInterface
      */
     public function getChanger();
 
     /**
-     * Set creator
+     * Set creator.
      *
      * @param \Sulu\Component\Security\Authentication\UserInterface $creator
+     *
      * @return ProductInterface
      */
     public function setCreator(UserInterface $creator = null);
 
     /**
-     * Get creator
+     * Get creator.
      *
      * @return UserInterface
      */
     public function getCreator();
 
     /**
-     * Set parent
+     * Set parent.
      *
      * @param ProductInterface $parent
+     *
      * @return ProductInterface
      */
     public function setParent(ProductInterface $parent = null);
 
     /**
-     * Get parent
+     * Get parent.
      *
      * @return ProductInterface
      */
     public function getParent();
 
     /**
-     * Add children
+     * Add children.
      *
      * @param ProductInterface $children
+     *
      * @return ProductInterface
      */
     public function addChildren(ProductInterface $children);
 
     /**
-     * Remove children
+     * Remove children.
      *
      * @param ProductInterface $children
      */
     public function removeChildren(ProductInterface $children);
 
     /**
-     * Get children
+     * Get children.
      *
      * @return \Doctrine\Common\Collections\Collection
      */
     public function getChildren();
 
     /**
-     * Add prices
+     * Add prices.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\ProductPrice $prices
+     *
      * @return Product
      */
     public function addPrice(\Sulu\Bundle\ProductBundle\Entity\ProductPrice $prices);
 
     /**
-     * Remove prices
+     * Remove prices.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\ProductPrice $prices
      */
     public function removePrice(\Sulu\Bundle\ProductBundle\Entity\ProductPrice $prices);
 
     /**
-     * Get prices
+     * Get prices.
      *
      * @return ProductPrice[]
      */
     public function getPrices();
 
     /**
-     * Add attributes
+     * Add attributes.
      *
      * @param ProductAttribute $productAttributes
+     *
      * @return ProductInterface
      */
     public function addProductAttribute(ProductAttribute $productAttributes);
 
     /**
-     * Remove attributes
+     * Remove attributes.
      *
      * @param ProductAttribute $productAttributes
      */
     public function removeProductAttribute(ProductAttribute $productAttributes);
 
     /**
-     * Get attributes
+     * Get attributes.
      *
      * @return \Doctrine\Common\Collections\Collection
      */
     public function getProductAttributes();
 
     /**
-     * Add translations
+     * Add translations.
      *
      * @param ProductTranslation $translations
+     *
      * @return ProductInterface
      */
     public function addTranslation(ProductTranslation $translations);
 
     /**
-     * Remove translations
+     * Remove translations.
      *
      * @param ProductTranslation $translations
      */
     public function removeTranslation(ProductTranslation $translations);
 
     /**
-     * Get translations
+     * Get translations.
      *
      * @return \Doctrine\Common\Collections\Collection
      */
     public function getTranslations();
 
     /**
-     * Get one specific translation
+     * Get one specific translation.
+     *
      * @param string $locale The locale of the translation to get
+     *
      * @return ProductTranslation
      */
     public function getTranslation($locale);
 
     /**
-     * Add extras
+     * Add extras.
      *
      * @param Addon $addon
+     *
      * @return ProductInterface
      */
     public function addAddon(Addon $addon);
 
     /**
-     * Remove extras
+     * Remove extras.
      *
      * @param Addon $addon
      */
     public function removeAddon(Addon $addon);
 
     /**
-     * Get extras
+     * Get extras.
      *
      * @return \Doctrine\Common\Collections\Collection
      */
     public function getAddons();
 
     /**
-     * Add setProducts
+     * Add setProducts.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $setProducts
+     *
      * @return BaseProduct
      */
     public function addSetProduct(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $setProducts);
 
     /**
-     * Remove setProducts
+     * Remove setProducts.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $setProducts
      */
     public function removeSetProduct(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $setProducts);
 
     /**
-     * Get setProducts
+     * Get setProducts.
      *
      * @return \Doctrine\Common\Collections\Collection
      */
     public function getSetProducts();
 
     /**
-     * Add categories
+     * Add categories.
      *
      * @param \Sulu\Bundle\CategoryBundle\Entity\Category $categories
+     *
      * @return BaseProduct
      */
     public function addCategory(\Sulu\Bundle\CategoryBundle\Entity\Category $categories);
 
     /**
-     * Remove categories
+     * Remove categories.
      *
      * @param \Sulu\Bundle\CategoryBundle\Entity\Category $categories
      */
     public function removeCategory(\Sulu\Bundle\CategoryBundle\Entity\Category $categories);
 
     /**
-     * Get categories
+     * Get categories.
      *
      * @return \Doctrine\Common\Collections\Collection
      */
     public function getCategories();
 
     /**
-     * Get media
+     * Get media.
      *
      * @return \Doctrine\Common\Collections\Collection
      */
     public function getMedia();
 
     /**
-     * Get media
+     * Get media.
+     *
      * @param Media $media
      */
     public function addMedia(Media $media);
 
     /**
-     * Remove media
+     * Remove media.
+     *
      * @param Media $media
      */
     public function removeMedia(Media $media);
 
     /**
-     * Are all prices of this products gross prices
-     * @return boolean
+     * Are all prices of this products gross prices.
+     *
+     * @return bool
      */
     public function getAreGrossPrices();
 
     /**
-     * Sets prices of this products gross prices
+     * Sets prices of this products gross prices.
+     *
      * @param $areGrossPrices
      */
     public function setAreGrossPrices($areGrossPrices);

@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -57,7 +58,7 @@ class SuluProductAdmin extends Admin
      */
     public function getCommands()
     {
-        return array();
+        return [];
     }
 
     /**
@@ -70,13 +71,13 @@ class SuluProductAdmin extends Admin
 
     public function getSecurityContexts()
     {
-        return array(
-            'Sulu' => array(
-                'Product' => array(
+        return [
+            'Sulu' => [
+                'Product' => [
                     'sulu.product.attributes',
                     'sulu.product.products',
-                )
-            )
-        );
+                ],
+            ],
+        ];
     }
 }

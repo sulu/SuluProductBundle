@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMF.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -14,9 +15,7 @@ use Sulu\Bundle\ProductBundle\Api\Currency;
 use Sulu\Bundle\ProductBundle\Entity\CurrencyRepository;
 
 /**
- * Manager responsible for currencies
- *
- * @package Sulu\Bundle\ProductBundle\Product
+ * Manager responsible for currencies.
  */
 class CurrencyManager
 {
@@ -31,9 +30,10 @@ class CurrencyManager
     }
 
     /**
-     * Find all currencies
+     * Find all currencies.
      *
      * @param $locale
+     *
      * @return Currency[]
      */
     public function findAll($locale)
@@ -53,6 +53,7 @@ class CurrencyManager
     /**
      * @param $locale
      * @param $code
+     *
      * @return Currency
      */
     public function findByCode($locale, $code)
@@ -61,19 +62,22 @@ class CurrencyManager
         if (!$currency) {
             return null;
         }
+
         return new Currency($currency, $locale);
     }
 
     /**
-     * Finds a currency by id and locale
+     * Finds a currency by id and locale.
      *
      * @param $id
      * @param $locale
+     *
      * @return \Sulu\Bundle\ProductBundle\Api\Currency
      */
     public function findById($id, $locale)
     {
         $currency = $this->currencyRepository->findById($id);
+
         return new Currency($currency, $locale);
     }
-} 
+}

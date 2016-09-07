@@ -1,11 +1,18 @@
 <?php
 
+/*
+ * This file is part of Sulu.
+ *
+ * (c) MASSIVE ART WebServices GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace Sulu\Bundle\ProductBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
-
 /**
- * SpecialPrice
+ * SpecialPrice.
  */
 class SpecialPrice
 {
@@ -25,7 +32,7 @@ class SpecialPrice
     private $endDate;
 
     /**
-     * @var integer
+     * @var int
      */
     private $id;
 
@@ -39,9 +46,8 @@ class SpecialPrice
      */
     private $product;
 
-
     /**
-     * Set price
+     * Set price.
      *
      * @param float $price
      *
@@ -55,7 +61,7 @@ class SpecialPrice
     }
 
     /**
-     * Get price
+     * Get price.
      *
      * @return float
      */
@@ -65,7 +71,7 @@ class SpecialPrice
     }
 
     /**
-     * Set start date
+     * Set start date.
      *
      * @param \DateTime $startDate
      *
@@ -79,7 +85,7 @@ class SpecialPrice
     }
 
     /**
-     * Get start date
+     * Get start date.
      *
      * @return \DateTime
      */
@@ -89,7 +95,7 @@ class SpecialPrice
     }
 
     /**
-     * Set end date
+     * Set end date.
      *
      * @param \DateTime $endDate
      *
@@ -103,7 +109,7 @@ class SpecialPrice
     }
 
     /**
-     * Get end date
+     * Get end date.
      *
      * @return \DateTime
      */
@@ -113,9 +119,9 @@ class SpecialPrice
     }
 
     /**
-     * Get id
+     * Get id.
      *
-     * @return integer
+     * @return int
      */
     public function getId()
     {
@@ -123,7 +129,7 @@ class SpecialPrice
     }
 
     /**
-     * Set currency
+     * Set currency.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\Currency $currency
      *
@@ -137,7 +143,7 @@ class SpecialPrice
     }
 
     /**
-     * Get currency
+     * Get currency.
      *
      * @return \Sulu\Bundle\ProductBundle\Entity\Currency
      */
@@ -147,7 +153,7 @@ class SpecialPrice
     }
 
     /**
-     * Set product
+     * Set product.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $product
      *
@@ -161,7 +167,7 @@ class SpecialPrice
     }
 
     /**
-     * Get product
+     * Get product.
      *
      * @return \Sulu\Bundle\ProductBundle\Entity\ProductInterface
      */

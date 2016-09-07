@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -17,7 +18,7 @@ use Sulu\Bundle\ProductBundle\Entity\Currency;
 class LoadCurrencies implements FixtureInterface
 {
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function load(ObjectManager $manager)
     {
@@ -42,19 +43,19 @@ class LoadCurrencies implements FixtureInterface
                 /** @var $child DOMNode */
                 foreach ($children as $child) {
                     switch ($child->nodeName) {
-                        case "name":
+                        case 'name':
                             $currency->setName($child->nodeValue);
                             break;
-                        case "code":
+                        case 'code':
                             $currency->setCode($child->nodeValue);
                             break;
-                        case "number":
+                        case 'number':
                             $currency->setNumber($child->nodeValue);
                             break;
                     }
                 }
                 $manager->persist($currency);
-                $i++;
+                ++$i;
             }
         }
         $manager->flush();

@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -12,20 +13,12 @@ namespace Sulu\Bundle\ProductBundle\Product;
 
 use DateTime;
 use Doctrine\Common\Persistence\ObjectManager;
-use Sulu\Bundle\ProductBundle\Api\ApiProductInterface;
-use Sulu\Bundle\TagBundle\Tag\TagRepositoryInterface;
-use Symfony\Component\Config\Definition\Exception\Exception;
-use Symfony\Component\HttpFoundation\Request;
-use Sulu\Component\Persistence\RelationTrait;
-use Sulu\Component\Rest\Exception\EntityIdAlreadySetException;
-use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescriptor;
-use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineGroupConcatFieldDescriptor;
-use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineJoinDescriptor;
-use Sulu\Component\Security\Authentication\UserRepositoryInterface;
-use Sulu\Bundle\ContactBundle\Entity\Account;
-use Sulu\Bundle\ContactBundle\Entity\AccountRepository;
 use Sulu\Bundle\CategoryBundle\Api\Category;
 use Sulu\Bundle\CategoryBundle\Entity\CategoryRepository;
+use Sulu\Bundle\ContactBundle\Entity\Account;
+use Sulu\Bundle\ContactBundle\Entity\AccountRepository;
+use Sulu\Bundle\MediaBundle\Media\Manager\MediaManager;
+use Sulu\Bundle\ProductBundle\Api\ApiProductInterface;
 use Sulu\Bundle\ProductBundle\Api\Product;
 use Sulu\Bundle\ProductBundle\Api\ProductPrice;
 use Sulu\Bundle\ProductBundle\Api\Status;
@@ -34,30 +27,38 @@ use Sulu\Bundle\ProductBundle\Entity\AttributeRepository;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSetRepository;
 use Sulu\Bundle\ProductBundle\Entity\AttributeValue;
 use Sulu\Bundle\ProductBundle\Entity\AttributeValueTranslation;
-use Sulu\Bundle\ProductBundle\Entity\ProductAttributeRepository;
-use Sulu\Bundle\ProductBundle\Entity\ProductAttribute;
-use Sulu\Bundle\ProductBundle\Entity\SpecialPriceRepository;
-use Sulu\Bundle\ProductBundle\Entity\DeliveryStatusRepository;
-use Sulu\Bundle\ProductBundle\Entity\UnitRepository;
-use Sulu\Bundle\ProductBundle\Entity\DeliveryStatus;
-use Sulu\Bundle\ProductBundle\Entity\Status as StatusEntity;
 use Sulu\Bundle\ProductBundle\Entity\CurrencyRepository;
+use Sulu\Bundle\ProductBundle\Entity\DeliveryStatus;
+use Sulu\Bundle\ProductBundle\Entity\DeliveryStatusRepository;
+use Sulu\Bundle\ProductBundle\Entity\ProductAttribute;
+use Sulu\Bundle\ProductBundle\Entity\ProductAttributeRepository;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductPrice as ProductPriceEntity;
 use Sulu\Bundle\ProductBundle\Entity\SpecialPrice;
+use Sulu\Bundle\ProductBundle\Entity\SpecialPriceRepository;
+use Sulu\Bundle\ProductBundle\Entity\Status as StatusEntity;
 use Sulu\Bundle\ProductBundle\Entity\StatusRepository;
 use Sulu\Bundle\ProductBundle\Entity\TaxClass;
 use Sulu\Bundle\ProductBundle\Entity\TaxClassRepository;
 use Sulu\Bundle\ProductBundle\Entity\Type;
 use Sulu\Bundle\ProductBundle\Entity\TypeRepository;
 use Sulu\Bundle\ProductBundle\Entity\Unit;
-use Sulu\Bundle\ProductBundle\Product\Exception\ProductException;
+use Sulu\Bundle\ProductBundle\Entity\UnitRepository;
+use Sulu\Bundle\ProductBundle\Product\Exception\InvalidProductAttributeException;
 use Sulu\Bundle\ProductBundle\Product\Exception\MissingProductAttributeException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductChildrenExistException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductDependencyNotFoundException;
+use Sulu\Bundle\ProductBundle\Product\Exception\ProductException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductNotFoundException;
-use Sulu\Bundle\ProductBundle\Product\Exception\InvalidProductAttributeException;
-use Sulu\Bundle\MediaBundle\Media\Manager\MediaManager;
+use Sulu\Bundle\TagBundle\Tag\TagRepositoryInterface;
+use Sulu\Component\Persistence\RelationTrait;
+use Sulu\Component\Rest\Exception\EntityIdAlreadySetException;
+use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescriptor;
+use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineGroupConcatFieldDescriptor;
+use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineJoinDescriptor;
+use Sulu\Component\Security\Authentication\UserRepositoryInterface;
+use Symfony\Component\Config\Definition\Exception\Exception;
+use Symfony\Component\HttpFoundation\Request;
 
 class ProductManager implements ProductManagerInterface
 {
@@ -71,7 +72,6 @@ class ProductManager implements ProductManagerInterface
 
     protected static $productEntityName = 'SuluProductBundle:Product';
     protected static $productTypeEntityName = 'SuluProductBundle:Type';
-    protected static $productTypeTranslationEntityName = 'SuluProductBundle:TypeTranslation';
     protected static $unitEntityName = 'SuluProductBundle:Unit';
     protected static $unitTranslationEntityName = 'SuluProductBundle:UnitTranslation';
     protected static $productStatusEntityName = 'SuluProductBundle:Status';
@@ -246,25 +246,25 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Returns a list of fieldDescriptors just used for filtering
+     * Returns a list of fieldDescriptors just used for filtering.
      *
      * @return DoctrineFieldDescriptor[]
      */
     public function getFilterFieldDescriptors()
     {
-        $fieldDescriptors = array();
+        $fieldDescriptors = [];
 
         $fieldDescriptors['type_id'] = new DoctrineFieldDescriptor(
             'id',
             'type_id',
             self::$productTypeEntityName,
             null,
-            array(
+            [
                 self::$productTypeEntityName => new DoctrineJoinDescriptor(
                     self::$productTypeEntityName,
                     static::$productEntityName . '.type'
-                )
-            )
+                ),
+            ]
         );
 
         $fieldDescriptors['status_id'] = new DoctrineFieldDescriptor(
@@ -272,12 +272,12 @@ class ProductManager implements ProductManagerInterface
             'status_id',
             self::$productStatusEntityName,
             null,
-            array(
+            [
                 self::$productStatusEntityName => new DoctrineJoinDescriptor(
                     self::$productStatusEntityName,
                     static::$productEntityName . '.status'
-                )
-            )
+                ),
+            ]
         );
 
         $fieldDescriptors['accounts_supplier_id'] = new DoctrineFieldDescriptor(
@@ -285,12 +285,12 @@ class ProductManager implements ProductManagerInterface
             'supplier_id',
             self::$accountsSupplierEntityName,
             null,
-            array(
+            [
                 self::$accountsSupplierEntityName => new DoctrineJoinDescriptor(
                     self::$accountsSupplierEntityName,
                     static::$productEntityName . '.supplier'
-                )
-            )
+                ),
+            ]
         );
 
         $fieldDescriptors['is_deprecated'] = new DoctrineFieldDescriptor(
@@ -298,7 +298,7 @@ class ProductManager implements ProductManagerInterface
             'is_deprecated',
             static::$productEntityName,
             null,
-            array()
+            []
         );
 
         $fieldDescriptors['parent'] = new DoctrineFieldDescriptor(
@@ -306,12 +306,12 @@ class ProductManager implements ProductManagerInterface
             'parent',
             static::$productEntityName . 'Parent',
             'product.parent',
-            array(
+            [
                 static::$productEntityName . 'Parent' => new DoctrineJoinDescriptor(
                     static::$productEntityName,
                     static::$productEntityName . '.parent'
-                )
-            ),
+                ),
+            ],
             true
         );
 
@@ -320,12 +320,12 @@ class ProductManager implements ProductManagerInterface
             'categories',
             static::$productEntityName . 'Categories',
             'products.categories',
-            array(
+            [
                 static::$productEntityName . 'Categories' => new DoctrineJoinDescriptor(
                     static::$productEntityName,
                     static::$productEntityName . '.categories'
-                )
-            ),
+                ),
+            ],
             true
         );
 
@@ -334,12 +334,12 @@ class ProductManager implements ProductManagerInterface
             'attributes',
             static::$productEntityName . 'ProductAttributes',
             'products.product-attributes',
-            array(
+            [
                 static::$productEntityName . 'ProductAttributes' => new DoctrineJoinDescriptor(
                     static::$productEntityName,
                     static::$productEntityName . '.productAttributes'
-                )
-            ),
+                ),
+            ],
             true
         );
 
@@ -347,18 +347,18 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function getFieldDescriptors($locale)
     {
-        $fieldDescriptors = array();
+        $fieldDescriptors = [];
 
         $fieldDescriptors['id'] = new DoctrineFieldDescriptor(
             'id',
             'id',
             static::$productEntityName,
             'public.id',
-            array(),
+            [],
             true,
             false,
             'integer'
@@ -369,13 +369,13 @@ class ProductManager implements ProductManagerInterface
             'name',
             self::$productTranslationEntityName,
             'product.name',
-            array(
+            [
                 self::$productTranslationEntityName => new DoctrineJoinDescriptor(
                     self::$productTranslationEntityName,
                     static::$productEntityName . '.translations',
                     self::$productTranslationEntityName . '.locale = \'' . $locale . '\''
-                )
-            ),
+                ),
+            ],
             false,
             false,
             'string'
@@ -387,7 +387,7 @@ class ProductManager implements ProductManagerInterface
             'price',
             self::$productPriceEntityName,
             'product.price.' . $currency,
-            array(
+            [
                 self::$productPriceEntityName => new DoctrineJoinDescriptor(
                     self::$productPriceEntityName,
                     static::$productEntityName . '.prices',
@@ -398,8 +398,8 @@ class ProductManager implements ProductManagerInterface
                     self::$currencyEntityName,
                     static::$productPriceEntityName . '.currency',
                     self::$currencyEntityName . '.code = \'' . $currency . '\''
-                )
-            ),
+                ),
+            ],
             false,
             false,
             'number',
@@ -415,7 +415,7 @@ class ProductManager implements ProductManagerInterface
             'number',
             static::$productEntityName,
             'product.number',
-            array(),
+            [],
             true,
             false,
             'string'
@@ -426,7 +426,7 @@ class ProductManager implements ProductManagerInterface
             'internalItemNumber',
             static::$productEntityName,
             'product.internal-item-number',
-            array(),
+            [],
             true,
             false,
             'string'
@@ -437,7 +437,7 @@ class ProductManager implements ProductManagerInterface
             'globalTradeItemNumber',
             static::$productEntityName,
             'product.global-trade-item-number',
-            array(),
+            [],
             false,
             false,
             'string'
@@ -448,12 +448,12 @@ class ProductManager implements ProductManagerInterface
             'parent',
             static::$productEntityName . 'Parent',
             'product.parent',
-            array(
+            [
                 static::$productEntityName . 'Parent' => new DoctrineJoinDescriptor(
                     static::$productEntityName,
                     static::$productEntityName . '.parent'
-                )
-            ),
+                ),
+            ],
             true,
             false,
             'string'
@@ -465,7 +465,7 @@ class ProductManager implements ProductManagerInterface
                 'categoryTranslation',
                 self::$categoryEntityName . 'Translation',
                 'products.categories',
-                array(
+                [
                     static::$productEntityName . 'Categories' => new DoctrineJoinDescriptor(
                         static::$productEntityName,
                         static::$productEntityName . '.categories'
@@ -475,7 +475,7 @@ class ProductManager implements ProductManagerInterface
                         static::$productEntityName . 'Categories.translations',
                         self::$categoryEntityName . 'Translation.locale = \'' . $locale . '\''
                     ),
-                )
+                ]
             ),
             'categories',
             'products.categories',
@@ -495,12 +495,12 @@ class ProductManager implements ProductManagerInterface
                 'categoryIds',
                 self::$categoryEntityName . 'Translation',
                 'products.categories',
-                array(
+                [
                     static::$productEntityName . 'Categories' => new DoctrineJoinDescriptor(
                         static::$productEntityName,
                         static::$productEntityName . '.categories'
-                    )
-                )
+                    ),
+                ]
             ),
             'categoryIds',
             'products.categories',
@@ -515,7 +515,7 @@ class ProductManager implements ProductManagerInterface
             'manufacturer',
             static::$productEntityName,
             'product.manufacturer',
-            array(),
+            [],
             true,
             false,
             'string'
@@ -526,12 +526,12 @@ class ProductManager implements ProductManagerInterface
             'supplier',
             self::$accountsSupplierEntityName,
             'product.supplier',
-            array(
+            [
                 self::$accountsSupplierEntityName => new DoctrineJoinDescriptor(
                     self::$accountsSupplierEntityName,
                     static::$productEntityName . '.supplier'
-                )
-            ),
+                ),
+            ],
             false,
             false,
             'string'
@@ -542,7 +542,7 @@ class ProductManager implements ProductManagerInterface
             'cost',
             static::$productEntityName,
             'product.cost',
-            array(),
+            [],
             true,
             false,
             'float'
@@ -553,31 +553,26 @@ class ProductManager implements ProductManagerInterface
             'priceInfo',
             static::$productEntityName,
             'product.price-info',
-            array(),
+            [],
             true,
             false,
             'string'
         );
 
         $fieldDescriptors['type'] = new DoctrineFieldDescriptor(
-            'name',
+            'translationKey',
             'type',
-            self::$productTypeTranslationEntityName,
+            self::$productTypeEntityName,
             'product.type',
-            array(
+            [
                 self::$productTypeEntityName => new DoctrineJoinDescriptor(
                     self::$productTypeEntityName,
                     static::$productEntityName . '.type'
                 ),
-                self::$productTypeTranslationEntityName => new DoctrineJoinDescriptor(
-                    self::$productTypeTranslationEntityName,
-                    self::$productTypeEntityName . '.translations',
-                    self::$productTypeTranslationEntityName . '.locale = \'' . $locale . '\''
-                ),
-            ),
+            ],
             true,
             false,
-            'string'
+            'translation'
         );
 
         $fieldDescriptors['orderUnit'] = new DoctrineFieldDescriptor(
@@ -585,7 +580,7 @@ class ProductManager implements ProductManagerInterface
             'orderUnit',
             self::$unitTranslationEntityName,
             'product.order-unit',
-            array(
+            [
                 self::$unitEntityName => new DoctrineJoinDescriptor(
                     self::$unitEntityName,
                     static::$productEntityName . '.orderUnit'
@@ -595,7 +590,7 @@ class ProductManager implements ProductManagerInterface
                     self::$unitEntityName . '.translations',
                     self::$unitTranslationEntityName . '.locale = \'' . $locale . '\''
                 ),
-            ),
+            ],
             true,
             false,
             'string'
@@ -606,7 +601,7 @@ class ProductManager implements ProductManagerInterface
             'status',
             self::$productStatusTranslationEntityName,
             'product.status',
-            array(
+            [
                 self::$productStatusEntityName => new DoctrineJoinDescriptor(
                     self::$productStatusEntityName,
                     static::$productEntityName . '.status'
@@ -616,7 +611,7 @@ class ProductManager implements ProductManagerInterface
                     self::$productStatusEntityName . '.translations',
                     self::$productStatusTranslationEntityName . '.locale = \'' . $locale . '\''
                 ),
-            ),
+            ],
             true,
             false,
             'string'
@@ -627,12 +622,12 @@ class ProductManager implements ProductManagerInterface
             'statusId',
             self::$productStatusEntityName,
             null,
-            array(
+            [
                 self::$productStatusEntityName => new DoctrineJoinDescriptor(
                     self::$productStatusEntityName,
                     static::$productEntityName . '.status'
-                )
-            ),
+                ),
+            ],
             false,
             false,
             ''
@@ -643,7 +638,7 @@ class ProductManager implements ProductManagerInterface
             'deliveryStatus',
             self::$productDeliveryStatusTranslationEntityName,
             'product.deliveryStatus',
-            array(
+            [
                 self::$productDeliveryStatusEntityName => new DoctrineJoinDescriptor(
                     self::$productDeliveryStatusEntityName,
                     static::$productEntityName . '.deliveryStatus'
@@ -653,7 +648,7 @@ class ProductManager implements ProductManagerInterface
                     self::$productDeliveryStatusEntityName . '.translations',
                     self::$productDeliveryStatusTranslationEntityName . '.locale = \'' . $locale . '\''
                 ),
-            ),
+            ],
             true,
             false,
             'string'
@@ -664,7 +659,7 @@ class ProductManager implements ProductManagerInterface
             'created',
             static::$productEntityName,
             'public.created',
-            array(),
+            [],
             false,
             false,
             'date'
@@ -675,7 +670,7 @@ class ProductManager implements ProductManagerInterface
             'changed',
             static::$productEntityName,
             'public.changed',
-            array(),
+            [],
             false,
             false,
             'date'
@@ -685,7 +680,7 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function findByIdAndLocale($id, $locale, $loadCurrencies = true)
     {
@@ -699,6 +694,7 @@ class ProductManager implements ProductManagerInterface
 
             $product = $this->productFactory->createApiEntity($product, $locale);
             $this->createProductMedia($product, $locale);
+
             return $product;
         } else {
             return null;
@@ -706,9 +702,9 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
-    public function findAllByLocale($locale, $filter = array())
+    public function findAllByLocale($locale, $filter = [])
     {
         if (empty($filter)) {
             $products = $this->productRepository->findAllByLocale($locale);
@@ -1017,7 +1013,7 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function save(
         array $data,
@@ -1035,7 +1031,6 @@ class ProductManager implements ProductManagerInterface
             // Update an extisting product
             $product = $this->fetchProduct($id, $locale);
             $publishedProduct = $this->getExistingActiveOrInactiveProduct($product, $data['status']['id'], $locale);
-
         } else {
             $this->checkData($data, $id === null);
             $product = $this->productFactory->createApiEntity($this->productFactory->createEntity(), $locale);
@@ -1130,10 +1125,10 @@ class ProductManager implements ProductManagerInterface
             $specialPricesData = $data['specialPrices'];
 
             // Array for local special prices storage.
-            $specialPrices = array();
+            $specialPrices = [];
 
             // Array of currency codes to be used as keys for special prices.
-            $currencyCodes = array();
+            $currencyCodes = [];
 
             // Create array of special price currency codes in json request.
             foreach ($specialPricesData as $key => $specialPrice) {
@@ -1481,7 +1476,7 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function partialUpdate(
         array $data,
@@ -1675,10 +1670,12 @@ class ProductManager implements ProductManagerInterface
             foreach ($products as $product) {
                 if ($product->isDeprecated() && $existingProduct->getId() != $product->getId()) {
                     $product->setIsDeprecated(false);
+
                     return $this->productFactory->createApiEntity($product, $locale);
                 }
             }
         }
+
         return null;
     }
 
@@ -1840,7 +1837,7 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function addVariant($parentId, $variantId, $locale)
     {
@@ -1864,7 +1861,7 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function removeVariant($parentId, $variantId)
     {
@@ -1881,7 +1878,7 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     protected function singleDelete($id)
     {
@@ -1905,7 +1902,7 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function delete($ids, $userId = null, $flush = true)
     {
@@ -1913,7 +1910,7 @@ class ProductManager implements ProductManagerInterface
             // if ids is array -> multiple delete
             $counter = 0;
             foreach ($ids as $id) {
-                $counter++;
+                ++$counter;
                 $this->singleDelete($id, null, false);
 
                 if ($flush && ($counter % self::MAX_BATCH_DELETE) === 0) {
@@ -1949,7 +1946,7 @@ class ProductManager implements ProductManagerInterface
      * Checks if the given data is correct.
      *
      * @param array $data The data to check
-     * @param boolean $create Defines if check is for new or already existing data
+     * @param bool $create Defines if check is for new or already existing data
      */
     protected function checkData($data, $create)
     {
@@ -2083,7 +2080,6 @@ class ProductManager implements ProductManagerInterface
 
         return $attribute;
     }
-
 
     /**
      * Creates a new ProductAttribute relation.
@@ -2235,7 +2231,7 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Adds an ProductPrice for every currency to the Product, if it is no existing already
+     * Adds an ProductPrice for every currency to the Product, if it is no existing already.
      *
      * @param ProductInterface $product The product to fill with currencies
      */
@@ -2259,7 +2255,7 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Get filters provided by the request
+     * Get filters provided by the request.
      *
      * @param Request $request
      *
@@ -2267,7 +2263,7 @@ class ProductManager implements ProductManagerInterface
      */
     public function getFilters(Request $request)
     {
-        $filter = array();
+        $filter = [];
 
         $statuses = $request->get('status');
         if ($statuses) {
@@ -2308,6 +2304,7 @@ class ProductManager implements ProductManagerInterface
         if ($categories) {
             $filter['categories'] = ($categories == 'null') ? null : $categories;
         }
+
         return $filter;
     }
 
@@ -2316,12 +2313,12 @@ class ProductManager implements ProductManagerInterface
      */
     public function createApiEntitiesByIds($ids, $locale)
     {
-        $products =  $this->productRepository->findBy(['id' => $ids]);
+        $products = $this->productRepository->findBy(['id' => $ids]);
         $apiProducts = [];
         foreach ($products as $product) {
             $apiProducts[] = $this->productFactory->createApiEntity($product, $locale);
         }
-        
+
         return $apiProducts;
     }
 }

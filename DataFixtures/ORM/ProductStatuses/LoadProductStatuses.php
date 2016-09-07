@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -18,10 +19,10 @@ use Sulu\Bundle\ProductBundle\Entity\StatusTranslation;
 
 class LoadProductStatuses implements FixtureInterface, OrderedFixtureInterface
 {
-    private static $translations = ["de", "de_ch", "en"];
+    private static $translations = ['de', 'de_ch', 'en'];
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function load(ObjectManager $manager)
     {
@@ -54,14 +55,14 @@ class LoadProductStatuses implements FixtureInterface, OrderedFixtureInterface
                     }
                 }
                 $manager->persist($status);
-                $i++;
+                ++$i;
             }
         }
         $manager->flush();
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function getOrder()
     {

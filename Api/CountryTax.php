@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -10,13 +11,11 @@
 
 namespace Sulu\Bundle\ProductBundle\Api;
 
-use JMS\Serializer\Annotation\VirtualProperty;
-use JMS\Serializer\Annotation\SerializedName;
 use JMS\Serializer\Annotation\ExclusionPolicy;
-use Sulu\Bundle\ProductBundle\Entity\CountryTax as CountryTaxEntity;
-use Sulu\Bundle\ProductBundle\Api\TaxClass;
-use Sulu\Bundle\ProductBundle\Entity\TaxClassTranslation;
+use JMS\Serializer\Annotation\SerializedName;
+use JMS\Serializer\Annotation\VirtualProperty;
 use Sulu\Bundle\ContactBundle\Entity\Country;
+use Sulu\Bundle\ProductBundle\Entity\CountryTax as CountryTaxEntity;
 use Sulu\Component\Rest\ApiWrapper;
 
 /**

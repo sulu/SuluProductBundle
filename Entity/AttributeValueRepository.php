@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -17,7 +18,7 @@ use Sulu\Bundle\ProductBundle\Product\AttributeValueRepositoryInterface;
 class AttributeValueRepository extends EntityRepository implements AttributeValueRepositoryInterface
 {
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function findById($id)
     {
@@ -33,7 +34,7 @@ class AttributeValueRepository extends EntityRepository implements AttributeValu
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function findByIdAndLocale($id, $locale)
     {
@@ -49,7 +50,7 @@ class AttributeValueRepository extends EntityRepository implements AttributeValu
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function findByAttributeIdAndLocale($id, $locale)
     {
@@ -66,7 +67,7 @@ class AttributeValueRepository extends EntityRepository implements AttributeValu
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function findAllByLocale($locale)
     {
@@ -78,8 +79,10 @@ class AttributeValueRepository extends EntityRepository implements AttributeValu
     }
 
     /**
-     * Returns the query for attributes
+     * Returns the query for attributes.
+     *
      * @param string $locale The locale to load
+     *
      * @return \Doctrine\ORM\QueryBuilder
      */
     private function getAttributeValueQuery($locale)

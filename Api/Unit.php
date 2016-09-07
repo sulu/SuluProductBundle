@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -10,15 +11,15 @@
 
 namespace Sulu\Bundle\ProductBundle\Api;
 
-use JMS\Serializer\Annotation\VirtualProperty;
-use JMS\Serializer\Annotation\SerializedName;
 use JMS\Serializer\Annotation\ExclusionPolicy;
 use JMS\Serializer\Annotation\Groups;
+use JMS\Serializer\Annotation\SerializedName;
+use JMS\Serializer\Annotation\VirtualProperty;
 use Sulu\Bundle\ProductBundle\Entity\Unit as Entity;
 use Sulu\Component\Rest\ApiWrapper;
 
 /**
- * The unit class which will be exported to the api
+ * The unit class which will be exported to the api.
  *
  * @ExclusionPolicy("all")
  */

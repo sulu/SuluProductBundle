@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -10,16 +11,15 @@
 
 namespace Sulu\Bundle\ProductBundle\Api;
 
-use Sulu\Bundle\ProductBundle\Entity\Currency as Entity;
-use JMS\Serializer\Annotation\VirtualProperty;
-use JMS\Serializer\Annotation\SerializedName;
 use JMS\Serializer\Annotation\ExclusionPolicy;
+use JMS\Serializer\Annotation\SerializedName;
+use JMS\Serializer\Annotation\VirtualProperty;
+use Sulu\Bundle\ProductBundle\Entity\Currency as Entity;
 use Sulu\Component\Rest\ApiWrapper;
 
 /**
- * The currency class which will be exported to the API
+ * The currency class which will be exported to the API.
  *
- * @package Sulu\Bundle\ProductBundle\Api
  * @ExclusionPolicy("all")
  */
 class Currency extends ApiWrapper
@@ -35,7 +35,8 @@ class Currency extends ApiWrapper
     }
 
     /**
-     * The id of the currency
+     * The id of the currency.
+     *
      * @return int The id of the currency
      * @VirtualProperty
      * @SerializedName("id")
@@ -46,7 +47,8 @@ class Currency extends ApiWrapper
     }
 
     /**
-     * The name of the currency
+     * The name of the currency.
+     *
      * @return int The name of the currency
      * @VirtualProperty
      * @SerializedName("name")
@@ -57,7 +59,8 @@ class Currency extends ApiWrapper
     }
 
     /**
-     * The number of the currency
+     * The number of the currency.
+     *
      * @return int The number of the currency
      * @VirtualProperty
      * @SerializedName("number")
@@ -68,7 +71,8 @@ class Currency extends ApiWrapper
     }
 
     /**
-     * The iso code of the currency
+     * The iso code of the currency.
+     *
      * @return int The iso code of the currency
      * @VirtualProperty
      * @SerializedName("code")

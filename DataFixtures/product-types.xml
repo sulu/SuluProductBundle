@@ -1,22 +1,7 @@
 <product-types>
-    <product-type>
-        <de>Produkt</de>
-        <de_ch>Produkt</de_ch>
-        <en>Product</en>
-    </product-type>
-    <product-type>
-        <de>Produkt mit Varianten</de>
-        <de_ch>Produkt mit Varianten</de_ch>
-        <en>Product with Variants</en>
-    </product-type>
-    <product-type>
-        <de>Produkt Erweiterung</de>
-        <de_ch>Produkt Erweiterung</de_ch>
-        <en>Product Add-on</en>
-    </product-type>
-    <product-type>
-        <de>Produkt Gruppe</de>
-        <de_ch>Produkt Gruppe</de_ch>
-        <en>Product Set</en>
-    </product-type>
+    <product-type key="PRODUCT" id="1" translation-key="sulu_product.types.product"/>
+    <product-type key="PRODUCT_WITH_VARIANTS" id="2" translation-key="sulu_product.types.product-with-variants"/>
+    <product-type key="PRODUCT_ADDON" id="3" translation-key="sulu_product.types.product-addon"/>
+    <product-type key="PRODUCT_SET" id="4" translation-key="sulu_product.types.product-set"/>
+    <product-type key="PRODUCT_VARIANT" id="5" translation-key="sulu_product.types.product-variant"/>
 </product-types>

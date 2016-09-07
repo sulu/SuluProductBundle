@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of Sulu.
+ *
+ * (c) MASSIVE ART WebServices GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace Sulu\Bundle\ProductBundle\Tests\Resources;
 
 use Doctrine\Common\Persistence\ObjectManager;
@@ -179,7 +188,7 @@ class ContactTestData
      */
     public function createAccount($accountType = self::BASIC_TYPE)
     {
-        $this->accountCount++;
+        ++$this->accountCount;
 
         $account = $this->accountFactory->createEntity();
         $account->setName('Account ' . $this->accountCount);
@@ -209,14 +218,14 @@ class ContactTestData
      */
     public function createContact()
     {
-        $this->contactCount++;
+        ++$this->contactCount;
         $contactRepository = $this->container->get('sulu.repository.contact');
         $contact = $contactRepository->createNew();
         $contact->setFirstName('Max');
         $contact->setLastName('Mustermann');
         $contact->setPosition('CEO');
         $contact->setFormOfAddress(1);
-        $contact->setSalutation("Sehr geehrter Herr Dr Mustermann");
+        $contact->setSalutation('Sehr geehrter Herr Dr Mustermann');
 
         $address = $this->createAddress();
         $this->getContactManager()->addAddress($contact, $address, true);

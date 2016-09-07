@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMF.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -10,15 +11,15 @@
 
 namespace Sulu\Bundle\ProductBundle\Admin;
 
-use Sulu\Bundle\AdminBundle\Navigation\ContentNavigationProviderInterface;
 use Sulu\Bundle\AdminBundle\Navigation\ContentNavigationItem;
+use Sulu\Bundle\AdminBundle\Navigation\ContentNavigationProviderInterface;
 
 class ProductWithVariantsContentNavigationProvider implements ContentNavigationProviderInterface
 {
     /**
      * {@inheritdoc}
      */
-    public function getNavigationItems(array $options = array())
+    public function getNavigationItems(array $options = [])
     {
         $details = new ContentNavigationItem('content-navigation.product.general');
         $details->setId('details');
@@ -46,7 +47,7 @@ class ProductWithVariantsContentNavigationProvider implements ContentNavigationP
         return [
             $details,
             $variants,
-            $attributes
+            $attributes,
         ];
     }
 }

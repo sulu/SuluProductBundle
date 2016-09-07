@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -10,17 +11,15 @@
 
 namespace Sulu\Bundle\ProductBundle\Api;
 
-use JMS\Serializer\Annotation\VirtualProperty;
-use JMS\Serializer\Annotation\SerializedName;
 use JMS\Serializer\Annotation\ExclusionPolicy;
-
+use JMS\Serializer\Annotation\SerializedName;
+use JMS\Serializer\Annotation\VirtualProperty;
 use Sulu\Bundle\ProductBundle\Entity\AttributeType as AttribureTypeEntity;
 use Sulu\Component\Rest\ApiWrapper;
 
 /**
- * The AttributeType class which will be exported to the API
+ * The AttributeType class which will be exported to the API.
  *
- * @package Sulu\Bundle\ProductBundle\Api
  * @ExclusionPolicy("all")
  */
 class AttributeType extends ApiWrapper
@@ -36,7 +35,8 @@ class AttributeType extends ApiWrapper
     }
 
     /**
-     * The id of the type
+     * The id of the type.
+     *
      * @return int
      * @VirtualProperty
      * @SerializedName("id")
@@ -47,7 +47,8 @@ class AttributeType extends ApiWrapper
     }
 
     /**
-     * The name of the type
+     * The name of the type.
+     *
      * @return string
      * @VirtualProperty
      * @SerializedName("name")

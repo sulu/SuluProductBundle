@@ -1,16 +1,23 @@
 <?php
 
+/*
+ * This file is part of Sulu.
+ *
+ * (c) MASSIVE ART WebServices GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace Sulu\Bundle\ProductBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
-
 /**
- * AttributeValue
+ * AttributeValue.
  */
 class AttributeValue
 {
     /**
-     * @var integer
+     * @var int
      */
     private $id;
 
@@ -25,7 +32,7 @@ class AttributeValue
     private $attribute;
 
     /**
-     * Constructor
+     * Constructor.
      */
     public function __construct()
     {
@@ -33,9 +40,9 @@ class AttributeValue
     }
 
     /**
-     * Get id
+     * Get id.
      *
-     * @return integer 
+     * @return int
      */
     public function getId()
     {
@@ -43,20 +50,21 @@ class AttributeValue
     }
 
     /**
-     * Add translations
+     * Add translations.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\AttributeValueTranslation $translations
+     *
      * @return AttributeValue
      */
     public function addTranslation(\Sulu\Bundle\ProductBundle\Entity\AttributeValueTranslation $translations)
     {
         $this->translations[] = $translations;
-    
+
         return $this;
     }
 
     /**
-     * Remove translations
+     * Remove translations.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\AttributeValueTranslation $translations
      */
@@ -66,9 +74,9 @@ class AttributeValue
     }
 
     /**
-     * Get translations
+     * Get translations.
      *
-     * @return \Doctrine\Common\Collections\Collection 
+     * @return \Doctrine\Common\Collections\Collection
      */
     public function getTranslations()
     {
@@ -76,22 +84,23 @@ class AttributeValue
     }
 
     /**
-     * Set attribute
+     * Set attribute.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\Attribute $attribute
+     *
      * @return AttributeValue
      */
     public function setAttribute(\Sulu\Bundle\ProductBundle\Entity\Attribute $attribute)
     {
         $this->attribute = $attribute;
-    
+
         return $this;
     }
 
     /**
-     * Get attribute
+     * Get attribute.
      *
-     * @return \Sulu\Bundle\ProductBundle\Entity\Attribute 
+     * @return \Sulu\Bundle\ProductBundle\Entity\Attribute
      */
     public function getAttribute()
     {

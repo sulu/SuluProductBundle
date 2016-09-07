@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -10,25 +11,21 @@
 
 namespace Sulu\Bundle\ProductBundle\Api;
 
-use Hateoas\Configuration\Annotation\Relation;
-use JMS\Serializer\Annotation\VirtualProperty;
-use JMS\Serializer\Annotation\SerializedName;
 use JMS\Serializer\Annotation\ExclusionPolicy;
-use Sulu\Bundle\ProductBundle\Api\AttributeValue;
-use Sulu\Bundle\ProductBundle\Api\Attribute;
+use JMS\Serializer\Annotation\SerializedName;
+use JMS\Serializer\Annotation\VirtualProperty;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttribute as ProductAttributeEntity;
 use Sulu\Component\Rest\ApiWrapper;
 
 /**
- * The ProductAttribute class which will be exported to the API
+ * The ProductAttribute class which will be exported to the API.
  *
- * @package Sulu\Bundle\ProductBundle\Api
  * @ExclusionPolicy("all")
  */
 class ProductAttribute extends ApiWrapper
 {
     /**
-     * @var string $fallbackLocale
+     * @var string
      */
     protected $fallbackLocale;
 

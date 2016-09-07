@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -16,9 +17,10 @@ use Doctrine\ORM\NoResultException;
 class CurrencyRepository extends EntityRepository
 {
     /**
-     * Find a currency by it's id
+     * Find a currency by it's id.
      *
      * @param mixed $id
+     *
     * @return mixed|null
     */
     public function findById($id)
@@ -35,9 +37,10 @@ class CurrencyRepository extends EntityRepository
     }
 
     /**
-     * Find a currency by it's code
+     * Find a currency by it's code.
      *
      * @param string $code
+     *
      * @return mixed|null
      */
     public function findByCode($code)

@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -10,10 +11,8 @@
 
 namespace Sulu\Bundle\ProductBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
-
 /**
- * TemplateTranslation
+ * TemplateTranslation.
  */
 class AttributeSetTranslation
 {
@@ -28,7 +27,7 @@ class AttributeSetTranslation
     private $name;
 
     /**
-     * @var integer
+     * @var int
      */
     private $id;
 
@@ -38,22 +37,23 @@ class AttributeSetTranslation
     private $attributeSet;
 
     /**
-     * Set languageCode
+     * Set languageCode.
      *
      * @param string $languageCode
+     *
      * @return AttributeSetTranslation
      */
     public function setLocale($languageCode)
     {
         $this->locale = $languageCode;
-    
+
         return $this;
     }
 
     /**
-     * Get languageCode
+     * Get languageCode.
      *
-     * @return string 
+     * @return string
      */
     public function getLocale()
     {
@@ -61,22 +61,23 @@ class AttributeSetTranslation
     }
 
     /**
-     * Set name
+     * Set name.
      *
      * @param string $name
+     *
      * @return AttributeSetTranslation
      */
     public function setName($name)
     {
         $this->name = $name;
-    
+
         return $this;
     }
 
     /**
-     * Get name
+     * Get name.
      *
-     * @return string 
+     * @return string
      */
     public function getName()
     {
@@ -84,9 +85,9 @@ class AttributeSetTranslation
     }
 
     /**
-     * Get id
+     * Get id.
      *
-     * @return integer 
+     * @return int
      */
     public function getId()
     {
@@ -94,20 +95,21 @@ class AttributeSetTranslation
     }
 
     /**
-     * Set template
+     * Set template.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\AttributeSet $template
+     *
      * @return AttributeSetTranslation
      */
     public function setAttributeSet(\Sulu\Bundle\ProductBundle\Entity\AttributeSet $template)
     {
         $this->attributeSet = $template;
-    
+
         return $this;
     }
 
     /**
-     * Get template
+     * Get template.
      *
      * @return \Sulu\Bundle\ProductBundle\Entity\AttributeSet
      */

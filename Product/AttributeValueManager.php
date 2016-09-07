@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -10,28 +11,19 @@
 
 namespace Sulu\Bundle\ProductBundle\Product;
 
-use \DateTime;
-
 use Doctrine\Common\Persistence\ObjectManager;
-
-use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescriptor;
-use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineJoinDescriptor;
-use Sulu\Component\Security\Authentication\UserRepositoryInterface;
-use Sulu\Bundle\ProductBundle\Entity\AttributeTypeRepository;
 use Sulu\Bundle\ProductBundle\Api\Attribute;
-use Sulu\Bundle\ProductBundle\Entity\Attribute as AttributeEntity;
 use Sulu\Bundle\ProductBundle\Api\AttributeValue;
 use Sulu\Bundle\ProductBundle\Entity\AttributeValue as AttributeValueEntity;
 use Sulu\Bundle\ProductBundle\Product\Exception\AttributeNotFoundException;
-use Sulu\Bundle\ProductBundle\Product\Exception\AttributeDependencyNotFoundException;
 use Sulu\Bundle\ProductBundle\Product\Exception\AttributeValueNotFoundException;
 use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeValueException;
-use Sulu\Bundle\ProductBundle\Product\Exception\AttributeValueDependencyNotFoundException;
-use Sulu\Bundle\ProductBundle\Product\AttributeValueManagerInterface;
+use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescriptor;
+use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineJoinDescriptor;
+use Sulu\Component\Security\Authentication\UserRepositoryInterface;
 
 /**
- * Manager responsible for attributeValues
- * @package Sulu\Bundle\ProductBundle\Product
+ * Manager responsible for attributeValues.
  */
 class AttributeValueManager implements AttributeValueManagerInterface
 {
@@ -79,18 +71,18 @@ class AttributeValueManager implements AttributeValueManagerInterface
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function getFieldDescriptors($locale)
     {
-        $fieldDescriptors = array();
+        $fieldDescriptors = [];
 
         $fieldDescriptors['id'] = new DoctrineFieldDescriptor(
             'id',
             'id',
             self::$attributeValueEntityName,
             'public.id',
-            array(),
+            [],
             true
         );
 
@@ -99,13 +91,13 @@ class AttributeValueManager implements AttributeValueManagerInterface
             'name',
             self::$attributeValueTranslationEntityName,
             'product.attribute.value.name',
-            array(
+            [
                 self::$attributeValueTranslationEntityName => new DoctrineJoinDescriptor(
                     self::$attributeValueTranslationEntityName,
                     self::$attributeValueEntityName . '.translations',
                     self::$attributeValueTranslationEntityName . '.locale = \'' . $locale . '\''
-                )
-            )
+                ),
+            ]
         );
 
         $fieldDescriptors['attribute_id'] = new DoctrineFieldDescriptor(
@@ -113,12 +105,12 @@ class AttributeValueManager implements AttributeValueManagerInterface
             'attribute_id',
             self::$attributeEntityName,
             null,
-            array(
+            [
                 self::$attributeEntityName => new DoctrineJoinDescriptor(
                     self::$attributeEntityName,
                     self::$attributeValueEntityName . '.attribute'
-                )
-            ),
+                ),
+            ],
             true
         );
 
@@ -126,7 +118,7 @@ class AttributeValueManager implements AttributeValueManagerInterface
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function findByIdAndLocale($id, $locale)
     {
@@ -140,7 +132,7 @@ class AttributeValueManager implements AttributeValueManagerInterface
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function findAllByAttributeIdAndLocale($locale, $id)
     {
@@ -156,6 +148,7 @@ class AttributeValueManager implements AttributeValueManagerInterface
                     );
                 }
             );
+
             return $attributeValues;
         } else {
             throw new AttributeNotFoundException($id);
@@ -163,7 +156,7 @@ class AttributeValueManager implements AttributeValueManagerInterface
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function findAllByLocale($locale)
     {
@@ -184,7 +177,7 @@ class AttributeValueManager implements AttributeValueManagerInterface
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function save(array $data, $locale, $attributeId = null, $attributeValueId = null)
     {
@@ -220,6 +213,7 @@ class AttributeValueManager implements AttributeValueManagerInterface
         }
 
         $this->em->flush();
+
         return $attributeValue;
     }
 
@@ -241,10 +235,12 @@ class AttributeValueManager implements AttributeValueManagerInterface
 
     /**
      * Returns the entry from the data with the given key, or the given default value,
-     * if the key does not exist
+     * if the key does not exist.
+     *
      * @param array $data
      * @param string $key
      * @param string $default
+     *
      * @return mixed
      */
     private function getProperty(array $data, $key, $default = null)
@@ -253,7 +249,7 @@ class AttributeValueManager implements AttributeValueManagerInterface
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function delete($attributeValueId, $userId)
     {

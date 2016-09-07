@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -12,14 +13,15 @@ namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\NoResultException;
-use Sulu\Bundle\ProductBundle\Product\AttributeRepositoryInterface;
 
 class ProductAttributeRepository extends EntityRepository
 {
     /**
-     * Returns the productAttribute for the given attribute and product id
+     * Returns the productAttribute for the given attribute and product id.
+     *
      * @param attributeId
      * @param productId
+     *
      * @return \Doctrine\ORM\QueryBuilder
      */
     public function findByAttributeIdAndProductId($attributeId, $productId)
@@ -34,7 +36,6 @@ class ProductAttributeRepository extends EntityRepository
                 ->setParameter('productId', $productId);
 
             return $queryBuilder->getQuery()->getSingleResult();
-
         } catch (NoResultException $exc) {
             return null;
         }

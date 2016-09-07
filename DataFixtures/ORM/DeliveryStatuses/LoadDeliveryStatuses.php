@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -13,16 +14,15 @@ namespace Sulu\Bundle\ProductBundle\DataFixtures\ORM\DeliveryStatuses;
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
-use Sulu\Bundle\ProductBundle\Entity\DeliveryStatusTranslation;
 use Sulu\Bundle\ProductBundle\Entity\DeliveryStatus;
-use Sulu\Bundle\ProductBundle\Entity\StatusTranslation;
+use Sulu\Bundle\ProductBundle\Entity\DeliveryStatusTranslation;
 
 class LoadDeliveryStatuses implements FixtureInterface, OrderedFixtureInterface
 {
-    private static $translations = ["de", "de_ch", "en"];
+    private static $translations = ['de', 'de_ch', 'en'];
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function load(ObjectManager $manager)
     {
@@ -55,14 +55,14 @@ class LoadDeliveryStatuses implements FixtureInterface, OrderedFixtureInterface
                     }
                 }
                 $manager->persist($status);
-                $i++;
+                ++$i;
             }
         }
         $manager->flush();
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function getOrder()
     {

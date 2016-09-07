@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -10,15 +11,13 @@
 
 namespace Sulu\Bundle\ProductBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
-
 /**
- * Template
+ * Template.
  */
 class AttributeSet
 {
     /**
-     * @var integer
+     * @var int
      */
     private $id;
 
@@ -38,7 +37,7 @@ class AttributeSet
     private $attributes;
 
     /**
-     * Constructor
+     * Constructor.
      */
     public function __construct()
     {
@@ -46,11 +45,11 @@ class AttributeSet
         $this->products = new \Doctrine\Common\Collections\ArrayCollection();
         $this->attributes = new \Doctrine\Common\Collections\ArrayCollection();
     }
-    
+
     /**
-     * Get id
+     * Get id.
      *
-     * @return integer 
+     * @return int
      */
     public function getId()
     {
@@ -58,20 +57,21 @@ class AttributeSet
     }
 
     /**
-     * Add translations
+     * Add translations.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\AttributeSetTranslation $translations
+     *
      * @return AttributeSet
      */
     public function addTranslation(\Sulu\Bundle\ProductBundle\Entity\AttributeSetTranslation $translations)
     {
         $this->translations[] = $translations;
-    
+
         return $this;
     }
 
     /**
-     * Remove translations
+     * Remove translations.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\AttributeSetTranslation $translations
      */
@@ -81,9 +81,9 @@ class AttributeSet
     }
 
     /**
-     * Get translations
+     * Get translations.
      *
-     * @return \Doctrine\Common\Collections\Collection 
+     * @return \Doctrine\Common\Collections\Collection
      */
     public function getTranslations()
     {
@@ -91,8 +91,10 @@ class AttributeSet
     }
 
     /**
-     * Returns the translation with the given locale
+     * Returns the translation with the given locale.
+     *
      * @param string $locale The locale to return
+     *
      * @return AttributeSetTranslation
      */
     public function getTranslation($locale)
@@ -109,20 +111,21 @@ class AttributeSet
     }
 
     /**
-     * Add products
+     * Add products.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $products
+     *
      * @return AttributeSet
      */
     public function addProduct(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $products)
     {
         $this->products[] = $products;
-    
+
         return $this;
     }
 
     /**
-     * Remove products
+     * Remove products.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $products
      */
@@ -132,9 +135,9 @@ class AttributeSet
     }
 
     /**
-     * Get products
+     * Get products.
      *
-     * @return \Doctrine\Common\Collections\Collection 
+     * @return \Doctrine\Common\Collections\Collection
      */
     public function getProducts()
     {
@@ -142,20 +145,21 @@ class AttributeSet
     }
 
     /**
-     * Add attributes
+     * Add attributes.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\Attribute $attributes
+     *
      * @return AttributeSet
      */
     public function addAttribute(\Sulu\Bundle\ProductBundle\Entity\Attribute $attributes)
     {
         $this->attributes[] = $attributes;
-    
+
         return $this;
     }
 
     /**
-     * Remove attributes
+     * Remove attributes.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\Attribute $attributes
      */
@@ -165,9 +169,9 @@ class AttributeSet
     }
 
     /**
-     * Get attributes
+     * Get attributes.
      *
-     * @return \Doctrine\Common\Collections\Collection 
+     * @return \Doctrine\Common\Collections\Collection
      */
     public function getAttributes()
     {

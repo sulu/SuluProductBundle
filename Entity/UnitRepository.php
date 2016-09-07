@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -16,10 +17,11 @@ use Doctrine\ORM\NoResultException;
 class UnitRepository extends EntityRepository
 {
     /**
-     * Find a unit by it's abbrevation
+     * Find a unit by it's abbrevation.
      *
      * @param $abbrevation
      * @param bool $returnAsEntity
+     *
      * @return mixed|null
      */
     public function findByAbbrevation($abbrevation, $returnAsEntity = false)
@@ -33,6 +35,7 @@ class UnitRepository extends EntityRepository
             if ($returnAsEntity) {
                 return $qb->getQuery()->getSingleResult();
             }
+
             return $qb->getQuery()->getSingleScalarResult();
         } catch (NoResultException $exc) {
             return null;
@@ -40,9 +43,10 @@ class UnitRepository extends EntityRepository
     }
 
     /**
-     * Returns the units with the given locale
+     * Returns the units with the given locale.
      *
      * @param string $locale The locale to load
+     *
      * @return Unit[]|null
      */
     public function findAllByLocale($locale)
@@ -58,9 +62,10 @@ class UnitRepository extends EntityRepository
     }
 
     /**
-     * Returns the query for units
+     * Returns the query for units.
      *
      * @param string $locale The locale to load
+     *
      * @return \Doctrine\ORM\QueryBuilder
      */
     private function getUnitQuery($locale)
@@ -76,5 +81,4 @@ class UnitRepository extends EntityRepository
 
         return $qb;
     }
-
 }

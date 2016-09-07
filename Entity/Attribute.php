@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -11,12 +12,11 @@
 namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Mapping as ORM;
 use Sulu\Component\Persistence\Model\TimestampableInterface;
 use Sulu\Component\Security\Authentication\UserInterface;
 
 /**
- * Attribute
+ * Attribute.
  */
 class Attribute implements TimestampableInterface
 {
@@ -32,7 +32,7 @@ class Attribute implements TimestampableInterface
     private $changed;
 
     /**
-     * @var integer
+     * @var int
      */
     private $id;
 
@@ -72,7 +72,7 @@ class Attribute implements TimestampableInterface
     private $key;
 
     /**
-     * Constructor
+     * Constructor.
      */
     public function __construct()
     {
@@ -82,7 +82,7 @@ class Attribute implements TimestampableInterface
     }
 
     /**
-     * Set created
+     * Set created.
      *
      * @param \DateTime $created
      *
@@ -96,7 +96,7 @@ class Attribute implements TimestampableInterface
     }
 
     /**
-     * Get created
+     * Get created.
      *
      * @return \DateTime
      */
@@ -106,7 +106,7 @@ class Attribute implements TimestampableInterface
     }
 
     /**
-     * Set changed
+     * Set changed.
      *
      * @param \DateTime $changed
      *
@@ -120,7 +120,7 @@ class Attribute implements TimestampableInterface
     }
 
     /**
-     * Get changed
+     * Get changed.
      *
      * @return \DateTime
      */
@@ -130,7 +130,7 @@ class Attribute implements TimestampableInterface
     }
 
     /**
-     * Get id
+     * Get id.
      *
      * @return int
      */
@@ -140,7 +140,7 @@ class Attribute implements TimestampableInterface
     }
 
     /**
-     * Set id
+     * Set id.
      *
      * @param int $id
      *
@@ -154,7 +154,7 @@ class Attribute implements TimestampableInterface
     }
 
     /**
-     * Add translations
+     * Add translations.
      *
      * @param AttributeTranslation $translations
      *
@@ -168,7 +168,7 @@ class Attribute implements TimestampableInterface
     }
 
     /**
-     * Remove translations
+     * Remove translations.
      *
      * @param AttributeTranslation $translations
      */
@@ -178,7 +178,7 @@ class Attribute implements TimestampableInterface
     }
 
     /**
-     * Get translations
+     * Get translations.
      *
      * @return ArrayCollection
      */
@@ -188,7 +188,7 @@ class Attribute implements TimestampableInterface
     }
 
     /**
-     * Add values
+     * Add values.
      *
      * @param AttributeValue $values
      *
@@ -202,7 +202,7 @@ class Attribute implements TimestampableInterface
     }
 
     /**
-     * Remove values
+     * Remove values.
      *
      * @param AttributeValue $values
      */
@@ -212,7 +212,7 @@ class Attribute implements TimestampableInterface
     }
 
     /**
-     * Get values
+     * Get values.
      *
      * @return ArrayCollection
      */
@@ -222,7 +222,7 @@ class Attribute implements TimestampableInterface
     }
 
     /**
-     * Add productAttributes
+     * Add productAttributes.
      *
      * @param ProductAttribute $productAttributes
      *
@@ -236,7 +236,7 @@ class Attribute implements TimestampableInterface
     }
 
     /**
-     * Remove productAttributes
+     * Remove productAttributes.
      *
      * @param ProductAttribute $productAttributes
      */
@@ -246,7 +246,7 @@ class Attribute implements TimestampableInterface
     }
 
     /**
-     * Get productAttributes
+     * Get productAttributes.
      *
      * @return ArrayCollection
      */
@@ -256,7 +256,7 @@ class Attribute implements TimestampableInterface
     }
 
     /**
-     * Set type
+     * Set type.
      *
      * @param AttributeType $type
      *
@@ -270,7 +270,7 @@ class Attribute implements TimestampableInterface
     }
 
     /**
-     * Get type
+     * Get type.
      *
      * @return AttributeType
      */
@@ -280,7 +280,7 @@ class Attribute implements TimestampableInterface
     }
 
     /**
-     * Set changer
+     * Set changer.
      *
      * @param UserInterface $changer
      *
@@ -294,7 +294,7 @@ class Attribute implements TimestampableInterface
     }
 
     /**
-     * Get changer
+     * Get changer.
      *
      * @return UserInterface
      */
@@ -304,7 +304,7 @@ class Attribute implements TimestampableInterface
     }
 
     /**
-     * Set creator
+     * Set creator.
      *
      * @param UserInterface $creator
      *
@@ -318,7 +318,7 @@ class Attribute implements TimestampableInterface
     }
 
     /**
-     * Get creator
+     * Get creator.
      *
      * @return UserInterface
      */

@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -17,7 +18,8 @@ namespace Sulu\Bundle\ProductBundle\Product\Exception;
 class MissingAttributeException extends AttributeException
 {
     /**
-     * The name of the attribute which is missing
+     * The name of the attribute which is missing.
+     *
      * @var string
      */
     private $attribute;
@@ -29,7 +31,8 @@ class MissingAttributeException extends AttributeException
     }
 
     /**
-     * Returns the name of the missing attribute
+     * Returns the name of the missing attribute.
+     *
      * @return string
      */
     public function getAttribute()

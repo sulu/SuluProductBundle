@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -16,9 +17,10 @@ use Doctrine\ORM\NoResultException;
 class TaxClassRepository extends EntityRepository
 {
     /**
-     * Returns the taxClasses with the given locale
+     * Returns the taxClasses with the given locale.
      *
      * @param string $locale The locale to load
+     *
      * @return Status[]|null
      */
     public function findAllByLocale($locale)
@@ -33,8 +35,10 @@ class TaxClassRepository extends EntityRepository
     }
 
     /**
-     * Returns the query for tax classes
+     * Returns the query for tax classes.
+     *
      * @param string $locale The locale to load
+     *
      * @return \Doctrine\ORM\QueryBuilder
      */
     private function getTaxClassQuery($locale)
@@ -50,4 +54,4 @@ class TaxClassRepository extends EntityRepository
 
         return $qb;
     }
-} 
+}

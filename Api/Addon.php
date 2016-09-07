@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -10,13 +11,13 @@
 
 namespace Sulu\Bundle\ProductBundle\Api;
 
-use JMS\Serializer\Annotation\VirtualProperty;
-use JMS\Serializer\Annotation\SerializedName;
 use JMS\Serializer\Annotation\ExclusionPolicy;
+use JMS\Serializer\Annotation\SerializedName;
+use JMS\Serializer\Annotation\VirtualProperty;
+use Sulu\Bundle\ProductBundle\Entity\Addon as AddonEntity;
 use Sulu\Bundle\ProductBundle\Entity\AddonPrice;
 use Sulu\Bundle\ProductBundle\Product\ProductFactoryInterface;
 use Sulu\Component\Rest\ApiWrapper;
-use Sulu\Bundle\ProductBundle\Entity\Addon as AddonEntity;
 
 /**
  * @ExclusionPolicy("all")

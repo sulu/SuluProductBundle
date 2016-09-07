@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMF.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -14,9 +15,7 @@ use Sulu\Bundle\ProductBundle\Api\Unit;
 use Sulu\Bundle\ProductBundle\Entity\UnitRepository;
 
 /**
- * Manager responsible for units
- *
- * @package Sulu\Bundle\ProductBundle\Product
+ * Manager responsible for units.
  */
 class UnitManager
 {
@@ -31,9 +30,10 @@ class UnitManager
     }
 
     /**
-     * Find all units
+     * Find all units.
      *
      * @param $locale
+     *
      * @return Unit[]
      */
     public function findAll($locale)
@@ -53,6 +53,7 @@ class UnitManager
     /**
      * @param $locale
      * @param $abbrevation
+     *
      * @return Unit
      */
     public function findByAbbrevation($locale, $abbrevation)
@@ -61,6 +62,7 @@ class UnitManager
         if (!$unit) {
             return null;
         }
+
         return new Unit($unit, $locale);
     }
 }
