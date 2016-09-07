@@ -3,7 +3,8 @@ CHANGELOG for Sulu Product Bundle
 
 * dev-develop
 
-    * FEATURE     Added style-ci configuration
+    * FEATURE     Added github templates for issues and pull-requests.
+    * FEATURE     Added style-ci configurationi.
     * FEATURE     Implemented new product type 'Variant'.
     * ENHANCEMENT Removed product type translations from database.
     
