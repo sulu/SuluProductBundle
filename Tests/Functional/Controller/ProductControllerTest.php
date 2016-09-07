@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -15,26 +16,26 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Sulu\Bundle\CategoryBundle\Entity\Category;
 use Sulu\Bundle\CategoryBundle\Entity\CategoryTranslation;
+use Sulu\Bundle\ProductBundle\Entity\Attribute;
+use Sulu\Bundle\ProductBundle\Entity\AttributeSet;
+use Sulu\Bundle\ProductBundle\Entity\AttributeSetTranslation;
+use Sulu\Bundle\ProductBundle\Entity\AttributeTranslation;
+use Sulu\Bundle\ProductBundle\Entity\AttributeType;
 use Sulu\Bundle\ProductBundle\Entity\AttributeValue;
 use Sulu\Bundle\ProductBundle\Entity\AttributeValueTranslation;
 use Sulu\Bundle\ProductBundle\Entity\Currency;
 use Sulu\Bundle\ProductBundle\Entity\DeliveryStatus;
 use Sulu\Bundle\ProductBundle\Entity\DeliveryStatusTranslation;
 use Sulu\Bundle\ProductBundle\Entity\Product;
-use Sulu\Bundle\ProductBundle\Entity\Attribute;
-use Sulu\Bundle\ProductBundle\Entity\AttributeTranslation;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttribute;
-use Sulu\Bundle\ProductBundle\Entity\SpecialPrice;
 use Sulu\Bundle\ProductBundle\Entity\ProductPrice;
 use Sulu\Bundle\ProductBundle\Entity\ProductTranslation;
+use Sulu\Bundle\ProductBundle\Entity\SpecialPrice;
 use Sulu\Bundle\ProductBundle\Entity\Status;
 use Sulu\Bundle\ProductBundle\Entity\StatusTranslation;
 use Sulu\Bundle\ProductBundle\Entity\TaxClass;
 use Sulu\Bundle\ProductBundle\Entity\TaxClassTranslation;
 use Sulu\Bundle\ProductBundle\Entity\Type;
-use Sulu\Bundle\ProductBundle\Entity\AttributeSet;
-use Sulu\Bundle\ProductBundle\Entity\AttributeSetTranslation;
-use Sulu\Bundle\ProductBundle\Entity\AttributeType;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductException;
 use Sulu\Bundle\ProductBundle\Tests\Resources\ContactTestData;
 use Sulu\Bundle\TagBundle\Entity\Tag;
@@ -485,7 +486,7 @@ class ProductControllerTest extends SuluTestCase
         $this->deliveryStatusAvailable->addTranslation($deliveryStatusAvailableTranslation);
 
         $this->specialPrice1 = new SpecialPrice();
-        $this->specialPrice1->setPrice("56");
+        $this->specialPrice1->setPrice('56');
         $this->specialPrice1->setCurrency($this->currency1);
         $this->specialPrice1->setStartDate(new \DateTime());
         $this->specialPrice1->setEndDate(new \DateTime());
@@ -553,7 +554,7 @@ class ProductControllerTest extends SuluTestCase
 
     public function testGetById()
     {
-        $this->client->request('GET', '/api/products/'.$this->product1->getId());
+        $this->client->request('GET', '/api/products/' . $this->product1->getId());
         $response = json_decode($this->client->getResponse()->getContent(), true);
 
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
@@ -563,31 +564,31 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals($this->productStatusInactive->getId(), $response['status']['id']);
         $this->assertEquals('EnglishProductStatus-Inactive', $response['status']['name']);
         $this->assertContains(
-            array(
+            [
                 'id' => $this->productPrice1->getId(),
                 'price' => 14.99,
-                'currency' => array(
+                'currency' => [
                     'id' => $this->currency1->getId(),
                     'name' => 'EUR',
                     'number' => '1',
-                    'code' => 'EUR'
-                ),
-                'minimumQuantity' => 0
-            ),
+                    'code' => 'EUR',
+                ],
+                'minimumQuantity' => 0,
+            ],
             $response['prices']
         );
         $this->assertContains(
-            array(
+            [
                 'id' => $this->productPrice2->getId(),
                 'price' => 9.99,
-                'currency' => array(
+                'currency' => [
                     'id' => $this->currency2->getId(),
                     'name' => 'USD',
                     'number' => '2',
-                    'code' => 'USD'
-                ),
-                'minimumQuantity' => 0
-            ),
+                    'code' => 'USD',
+                ],
+                'minimumQuantity' => 0,
+            ],
             $response['prices']
         );
     }
@@ -673,43 +674,43 @@ class ProductControllerTest extends SuluTestCase
         $this->markTestSkipped();
         $this->client->request(
             'PUT',
-            '/api/products/'.$this->product1->getId(),
-            array(
+            '/api/products/' . $this->product1->getId(),
+            [
                 'name' => 'EnglishProductTranslationNameNew-1',
                 'number' => 'EvilNumber',
                 'manufacturer' => 'EvilKnievel',
                 'isRecurringPrice' => true,
-                'status' => array(
-                    'id' => $this->productStatusActive->getId()
-                ),
-                'type' => array(
-                    'id' => $this->type1->getId()
-                ),
-                'taxClass' => array(
-                    'id' => $this->taxClass1->getId()
-                ),
-                'prices' => array(
-                    array(
+                'status' => [
+                    'id' => $this->productStatusActive->getId(),
+                ],
+                'type' => [
+                    'id' => $this->type1->getId(),
+                ],
+                'taxClass' => [
+                    'id' => $this->taxClass1->getId(),
+                ],
+                'prices' => [
+                    [
                         'id' => $this->productPrice1->getId(),
                         'price' => 17.99,
-                        'currency' => array(
+                        'currency' => [
                             'id' => $this->currency1->getId(),
-                            'name' => 'EUR'
-                        )
-                    ),
-                    array(
+                            'name' => 'EUR',
+                        ],
+                    ],
+                    [
                         'price' => 12.99,
-                        'currency' => array(
+                        'currency' => [
                             'id' => $this->currency3->getId(),
-                            'name' => 'GBP'
-                        )
-                    )
-                )
-            )
+                            'name' => 'GBP',
+                        ],
+                    ],
+                ],
+            ]
         );
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
 
-        $this->client->request('GET', '/api/products/'.$this->product1->getId());
+        $this->client->request('GET', '/api/products/' . $this->product1->getId());
         $response = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
         $this->assertEquals('EnglishProductTranslationNameNew-1', $response['name']);
@@ -719,46 +720,46 @@ class ProductControllerTest extends SuluTestCase
         $this->assertTrue($response['isRecurringPrice']);
 
         $this->assertContains(
-            array(
+            [
                 'id' => $this->productPrice1->getId(),
                 'price' => 17.99,
-                'currency' => array(
+                'currency' => [
                     'id' => $this->currency1->getId(),
                     'name' => 'EUR',
                     'number' => '1',
-                    'code' => 'eur'
-                )
-            ),
+                    'code' => 'eur',
+                ],
+            ],
             $response['prices']
         );
         $this->assertContains(
-            array(
-                'currency' => array(
+            [
+                'currency' => [
                     'id' => $this->currency2->getId(),
                     'name' => 'USD',
                     'number' => '2',
-                    'code' => 'usd'
+                    'code' => 'usd',
 
-                )
-            ),
+                ],
+            ],
             $response['prices']
         );
         $this->assertContains(
-            array(
-                'id' => $this->productPrice2->getId()+1,
+            [
+                'id' => $this->productPrice2->getId() + 1,
                 'price' => 12.99,
-                'currency' => array(
+                'currency' => [
                     'id' => $this->currency3->getId(),
-                    'name' => 'GBP'
-                )
-            ),
+                    'name' => 'GBP',
+                ],
+            ],
             $response['prices']
         );
     }
 
     public function testPutNotExisting()
     {
-        $this->client->request('PUT', '/api/products/666', array('code' => 'MissingProduct'));
+        $this->client->request('PUT', '/api/products/666', ['code' => 'MissingProduct']);
         $response = json_decode($this->client->getResponse()->getContent());
 
         $this->assertEquals(404, $this->client->getResponse()->getStatusCode());
@@ -773,14 +774,14 @@ class ProductControllerTest extends SuluTestCase
     {
         $this->client->request(
             'PUT',
-            '/api/products/'.$this->product1->getId(),
-            array(
+            '/api/products/' . $this->product1->getId(),
+            [
                 'number' => 1,
-                'status' => array('id' => $this->productStatusActive->getId()),
-                'type' => array('id' => 1),
-                'attributeSet' => array('id' => $this->attributeSet1->getId()),
-                'parent' => array('id' => 666)
-            )
+                'status' => ['id' => $this->productStatusActive->getId()],
+                'type' => ['id' => 1],
+                'attributeSet' => ['id' => $this->attributeSet1->getId()],
+                'parent' => ['id' => 666],
+            ]
         );
 
         $response = json_decode($this->client->getResponse()->getContent());
@@ -797,13 +798,13 @@ class ProductControllerTest extends SuluTestCase
         $this->markTestSkipped();
         $this->client->request(
             'PUT',
-            '/api/products/'.$this->product1->getId(),
-            array(
+            '/api/products/' . $this->product1->getId(),
+            [
                 'number' => 1,
-                'status' => array('id' => $this->productStatusActive->getId()),
-                'type' => array('id' => 1),
-                'attributeSet' => array('id' => 666)
-            )
+                'status' => ['id' => $this->productStatusActive->getId()],
+                'type' => ['id' => 1],
+                'attributeSet' => ['id' => 666],
+            ]
         );
 
         $response = json_decode($this->client->getResponse()->getContent());
@@ -819,15 +820,15 @@ class ProductControllerTest extends SuluTestCase
     {
         $this->client->request(
             'PUT',
-            '/api/products/'.$this->product1->getId(),
-            array(
+            '/api/products/' . $this->product1->getId(),
+            [
                 'number' => 1,
-                'status' => array(
-                    'id' => $this->productStatusActive->getId()
-                ),
-                'type' => array(
-                    'id' => 666)
-                )
+                'status' => [
+                    'id' => $this->productStatusActive->getId(),
+                ],
+                'type' => [
+                    'id' => 666, ],
+                ]
         );
 
         $response = json_decode($this->client->getResponse()->getContent());
@@ -843,8 +844,8 @@ class ProductControllerTest extends SuluTestCase
     {
         $this->client->request(
             'PUT',
-            '/api/products/'.$this->product1->getId(),
-            array('number' => 1, 'type' => array('id' => 1), 'status' => array('id' => 666))
+            '/api/products/' . $this->product1->getId(),
+            ['number' => 1, 'type' => ['id' => 1], 'status' => ['id' => 666]]
         );
 
         $response = json_decode($this->client->getResponse()->getContent());
@@ -860,26 +861,26 @@ class ProductControllerTest extends SuluTestCase
     {
         $this->client->request(
             'PUT',
-            '/api/products/'.$this->product1->getId(),
-            array(
+            '/api/products/' . $this->product1->getId(),
+            [
                 'number' => 1,
-                'type' => array('id' => $this->type1->getId()),
-                'status' => array('id' => $this->productStatusActive->getId()),
-                'categories' => array(
-                    array(
-                        'id' => $this->category1->getId()
-                    ),
-                    array(
-                        'id' => $this->category2->getId()
-                    )
-                ),
-                'cost' => 99.9
-            )
+                'type' => ['id' => $this->type1->getId()],
+                'status' => ['id' => $this->productStatusActive->getId()],
+                'categories' => [
+                    [
+                        'id' => $this->category1->getId(),
+                    ],
+                    [
+                        'id' => $this->category2->getId(),
+                    ],
+                ],
+                'cost' => 99.9,
+            ]
         );
 
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
 
-        $this->client->request('GET', '/api/products/'.$this->product1->getId());
+        $this->client->request('GET', '/api/products/' . $this->product1->getId());
 
         $response = json_decode($this->client->getResponse()->getContent());
 
@@ -892,22 +893,22 @@ class ProductControllerTest extends SuluTestCase
 
     public function testPutProductAttribute()
     {
-        $data = array(
-            'id' => array('id' => $this->product1->getId()),
-            'status' => array('id' => $this->productStatusActive->getId()),
-            'attributes' => array(
-                0 => array(
+        $data = [
+            'id' => ['id' => $this->product1->getId()],
+            'status' => ['id' => $this->productStatusActive->getId()],
+            'attributes' => [
+                0 => [
                     'attributeId' => $this->productAttribute1->getAttribute()->getId(),
-                    'attributeValueName' => $this->attributeValueTranslation1->getName()
-                ),
-                1 => array(
+                    'attributeValueName' => $this->attributeValueTranslation1->getName(),
+                ],
+                1 => [
                     'attributeId' => $this->productAttribute2->getAttribute()->getId(),
-                    'attributeValueName' => $this->attributeValueTranslation2->getName()
-                )
-            )
-        );
+                    'attributeValueName' => $this->attributeValueTranslation2->getName(),
+                ],
+            ],
+        ];
 
-        $this->client->request('PUT', '/api/products/'.$this->product1->getId(), $data);
+        $this->client->request('PUT', '/api/products/' . $this->product1->getId(), $data);
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
 
         $response = json_decode($this->client->getResponse()->getContent());
@@ -917,34 +918,34 @@ class ProductControllerTest extends SuluTestCase
 
     public function testPost($testParent = false)
     {
-        $data = array(
+        $data = [
             'name' => 'English Product',
             'shortDescription' => 'This is an english product.',
             'longDescription' => 'Indeed, it\'s a real english product.',
             'isRecurringPrice' => true,
             'number' => 'NUMBER:0815',
             'manufacturer' => $this->product1->getManufacturer(),
-            'manufacturerCountry' => array(
-                'id' => $this->product1->getManufacturerCountry()
-            ),
+            'manufacturerCountry' => [
+                'id' => $this->product1->getManufacturerCountry(),
+            ],
             'cost' => 666.66,
             'priceInfo' => 'Preis Info',
-            'status' => array(
-                'id' => Status::INACTIVE
-            ),
-            'type' => array(
-                'id' => $this->type1->getId()
-            ),
-            'attributeSet' => array(
-                'id' => $this->attributeSet1->getId()
-            ),
-            'taxClass' => array(
-                'id' => $this->taxClass1->getId()
-            ),
-            'tags' => array(
-                'Tag 1', 'Tag 2'
-            )
-        );
+            'status' => [
+                'id' => Status::INACTIVE,
+            ],
+            'type' => [
+                'id' => $this->type1->getId(),
+            ],
+            'attributeSet' => [
+                'id' => $this->attributeSet1->getId(),
+            ],
+            'taxClass' => [
+                'id' => $this->taxClass1->getId(),
+            ],
+            'tags' => [
+                'Tag 1', 'Tag 2',
+            ],
+        ];
 
         if ($testParent) {
             $data['parent']['id'] = $this->product2->getId();
@@ -988,10 +989,10 @@ class ProductControllerTest extends SuluTestCase
 
     public function testPostNoType()
     {
-        $data = array(
+        $data = [
             'number' => 'NUMBER:0815',
-            'status' => $this->productStatusActive->getId()
-        );
+            'status' => $this->productStatusActive->getId(),
+        ];
 
         $this->client->request('POST', '/api/products', $data);
         $response = json_decode($this->client->getResponse()->getContent());
@@ -1002,11 +1003,11 @@ class ProductControllerTest extends SuluTestCase
 
     public function testPostNotExistingType()
     {
-        $data = array(
+        $data = [
             'number' => 'NUMBER:0815',
-            'status' => array('id' => $this->productStatusActive->getId()),
-            'type' => array('id' => 666),
-        );
+            'status' => ['id' => $this->productStatusActive->getId()],
+            'type' => ['id' => 666],
+        ];
 
         $this->client->request('POST', '/api/products', $data);
         $response = json_decode($this->client->getResponse()->getContent());
@@ -1020,10 +1021,10 @@ class ProductControllerTest extends SuluTestCase
 
     public function testPostNoStatus()
     {
-        $data = array(
+        $data = [
             'number' => 'NUMBER:0815',
-            'type' => array('id' => $this->type1->getId())
-        );
+            'type' => ['id' => $this->type1->getId()],
+        ];
 
         $this->client->request('POST', '/api/products', $data);
         $response = json_decode($this->client->getResponse()->getContent());
@@ -1034,11 +1035,11 @@ class ProductControllerTest extends SuluTestCase
 
     public function testPostNotExistingStatus()
     {
-        $data = array(
+        $data = [
             'number' => 'NUMBER:0815',
-            'status' => array('id' => 666),
-            'type' => array('id' => $this->productStatusActive->getId()),
-        );
+            'status' => ['id' => 666],
+            'type' => ['id' => $this->productStatusActive->getId()],
+        ];
 
         $this->client->request('POST', '/api/products', $data);
         $response = json_decode($this->client->getResponse()->getContent());
@@ -1052,12 +1053,12 @@ class ProductControllerTest extends SuluTestCase
 
     public function testPostNotExistingParentProduct()
     {
-        $data = array(
+        $data = [
             'number' => 'NUMBER:0815',
-            'status' => array('id' => $this->productStatusActive->getId()),
-            'type' => array('id' => $this->productStatusActive->getId()),
-            'parent' => array('id' => 666)
-        );
+            'status' => ['id' => $this->productStatusActive->getId()],
+            'type' => ['id' => $this->productStatusActive->getId()],
+            'parent' => ['id' => 666],
+        ];
 
         $this->client->request('POST', '/api/products', $data);
         $response = json_decode($this->client->getResponse()->getContent());
@@ -1072,12 +1073,12 @@ class ProductControllerTest extends SuluTestCase
     public function testPostNotExistingAttributeSet()
     {
         $this->markTestSkipped();
-        $data = array(
+        $data = [
             'number' => 'NUMBER:0815',
-            'status' => array('id' => $this->productStatusActive->getId()),
-            'type' => array('id' => $this->productStatusActive->getId()),
-            'attributeSet' => array('id' => 666)
-        );
+            'status' => ['id' => $this->productStatusActive->getId()],
+            'type' => ['id' => $this->productStatusActive->getId()],
+            'attributeSet' => ['id' => 666],
+        ];
 
         $this->client->request('POST', '/api/products', $data);
         $response = json_decode($this->client->getResponse()->getContent());
@@ -1091,10 +1092,10 @@ class ProductControllerTest extends SuluTestCase
 
     public function testDeleteById()
     {
-        $this->client->request('DELETE', '/api/products/'.$this->product1->getId());
+        $this->client->request('DELETE', '/api/products/' . $this->product1->getId());
         $this->assertEquals('204', $this->client->getResponse()->getStatusCode());
 
-        $this->client->request('GET', '/api/products/'.$this->product1->getId());
+        $this->client->request('GET', '/api/products/' . $this->product1->getId());
         $this->assertEquals('404', $this->client->getResponse()->getStatusCode());
     }
 
@@ -1110,7 +1111,7 @@ class ProductControllerTest extends SuluTestCase
 
     public function testTypeFilter()
     {
-        $this->client->request('GET', '/api/products?flat=true&type='.$this->type1->getId());
+        $this->client->request('GET', '/api/products?flat=true&type=' . $this->type1->getId());
 
         $response = json_decode($this->client->getResponse()->getContent());
 
@@ -1120,7 +1121,7 @@ class ProductControllerTest extends SuluTestCase
 
     public function testAllTypeFilter()
     {
-        $this->client->request('GET', '/api/products?flat=true&type='.$this->type1->getId().','.$this->type2->getId());
+        $this->client->request('GET', '/api/products?flat=true&type=' . $this->type1->getId() . ',' . $this->type2->getId());
 
         $response = json_decode($this->client->getResponse()->getContent());
 
@@ -1131,23 +1132,23 @@ class ProductControllerTest extends SuluTestCase
 
     public function testPutSpecialPrice()
     {
-        $data = array(
-            'id' => array('id' => $this->product1->getId()),
-            'status' => array('id' => $this->productStatusActive->getId()),
-            'specialPrices' => array(
-                array(
+        $data = [
+            'id' => ['id' => $this->product1->getId()],
+            'status' => ['id' => $this->productStatusActive->getId()],
+            'specialPrices' => [
+                [
                     'price' => $this->specialPrice1->getPrice(),
                     'start' => $this->specialPrice1->getStartDate()->format('Y-m-d h:i:s'),
                     'end' => $this->specialPrice1->getEndDate()->format('Y-m-d h:i:s'),
-                    'currency' => array("code" => $this->specialPrice1->getCurrency()->getCode())
-                )
-            ),
-            'tags' => array(
-                'Tag 1', 'Tag 2'
-            )
-        );
+                    'currency' => ['code' => $this->specialPrice1->getCurrency()->getCode()],
+                ],
+            ],
+            'tags' => [
+                'Tag 1', 'Tag 2',
+            ],
+        ];
 
-        $this->client->request('PUT', '/api/products/'.$this->product1->getId(), $data);
+        $this->client->request('PUT', '/api/products/' . $this->product1->getId(), $data);
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
 
         $response = json_decode($this->client->getResponse()->getContent());
@@ -1159,26 +1160,26 @@ class ProductControllerTest extends SuluTestCase
     public function testActivateInvalidProduct()
     {
         // Trying to delete supplier from product and at the same time trying to activate it
-        $data = array(
-            'id' => array('id' => $this->product1->getId()),
-            'status' => array('id' => Status::ACTIVE),
-            'supplier' => array()
-        );
+        $data = [
+            'id' => ['id' => $this->product1->getId()],
+            'status' => ['id' => Status::ACTIVE],
+            'supplier' => [],
+        ];
 
-        $this->client->request('PUT', '/api/products/'.$this->product1->getId(), $data);
+        $this->client->request('PUT', '/api/products/' . $this->product1->getId(), $data);
         $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
 
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals(ProductException::PRODUCT_NOT_VALID, $response->code ? $response->code : null);
 
         // Trying to delete prices from product and at the same time trying to activate it
-        $data = array(
-            'id' => array('id' => $this->product1->getId()),
-            'status' => array('id' => Status::ACTIVE),
-            'prices' => array()
-        );
+        $data = [
+            'id' => ['id' => $this->product1->getId()],
+            'status' => ['id' => Status::ACTIVE],
+            'prices' => [],
+        ];
 
-        $this->client->request('PUT', '/api/products/'.$this->product1->getId(), $data);
+        $this->client->request('PUT', '/api/products/' . $this->product1->getId(), $data);
         $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
 
         $response = json_decode($this->client->getResponse()->getContent());

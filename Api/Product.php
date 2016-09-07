@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -33,8 +34,8 @@ use Sulu\Bundle\ProductBundle\Entity\Status as StatusEntity;
 use Sulu\Bundle\ProductBundle\Entity\TaxClass as TaxClassEntity;
 use Sulu\Bundle\ProductBundle\Entity\Type as TypeEntity;
 use Sulu\Bundle\ProductBundle\Entity\Unit as UnitEntity;
-use Sulu\Bundle\ProductBundle\Util\PriceFormatter;
 use Sulu\Bundle\ProductBundle\Product\ProductLocaleManager;
+use Sulu\Bundle\ProductBundle\Util\PriceFormatter;
 use Sulu\Component\Rest\ApiWrapper;
 use Sulu\Component\Security\Authentication\UserInterface;
 
@@ -98,7 +99,7 @@ class Product extends ApiWrapper implements ApiProductInterface
      * @SerializedName("id")
      * @Groups({"Default","cart"})
      *
-     * @return integer
+     * @return int
      */
     public function getId()
     {
@@ -173,7 +174,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     }
 
     /**
-     * @param integer $deliveryTime
+     * @param int $deliveryTime
      */
     public function setDeliveryTime($deliveryTime)
     {
@@ -185,7 +186,7 @@ class Product extends ApiWrapper implements ApiProductInterface
      * @SerializedName("deliveryTime")
      * @Groups({"cart"})
      *
-     * @return integer
+     * @return int
      */
     public function getDeliveryTime()
     {
@@ -395,10 +396,10 @@ class Product extends ApiWrapper implements ApiProductInterface
         $supplier = $this->entity->getSupplier();
         if ($supplier !== null) {
             // Returns no api entity because it will cause a nesting level exception
-            $values = array(
+            $values = [
                 'id' => $supplier->getId(),
-                'name' => $supplier->getName()
-            );
+                'name' => $supplier->getName(),
+            ];
         }
 
         return $values;
@@ -411,7 +412,7 @@ class Product extends ApiWrapper implements ApiProductInterface
      * @SerializedName("cost")
      * @Groups({"cart"})
      *
-     * @return double The cost of the product
+     * @return float The cost of the product
      */
     public function getCost()
     {
@@ -421,7 +422,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     /**
      * Sets the cost of the product.
      *
-     * @param double $cost The cost of the product
+     * @param float $cost The cost of the product
      */
     public function setCost($cost)
     {
@@ -444,7 +445,7 @@ class Product extends ApiWrapper implements ApiProductInterface
      * @VirtualProperty
      * @SerializedName("priceInfo")
      *
-     * @return double The cost of the product
+     * @return float The cost of the product
      */
     public function getPriceInfo()
     {
@@ -742,7 +743,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     {
         $priceEntities = $this->entity->getPrices();
 
-        $prices = array();
+        $prices = [];
         foreach ($priceEntities as $priceEntity) {
             $prices[] = new ProductPrice($priceEntity, $this->locale);
         }
@@ -888,7 +889,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     /**
      * Helper function to get a formatted price for a given currency and locale.
      *
-     * @param Integer $price
+     * @param int $price
      * @param string $symbol
      * @param string $locale
      * @Groups({"cart"})
@@ -898,7 +899,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     public function getFormattedPrice($price, $symbol = 'EUR', $locale = 'de')
     {
         return $this->priceFormatter->format(
-            (float)$price,
+            (float) $price,
             null,
             $locale,
             $symbol,
@@ -918,7 +919,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     {
         $attributeEntities = $this->entity->getProductAttributes();
 
-        $attributes = array();
+        $attributes = [];
         foreach ($attributeEntities as $attributesEntity) {
             $attributes[] = new ProductAttribute(
                 $attributesEntity,
@@ -962,7 +963,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     {
         $categoryEntities = $this->entity->getCategories();
 
-        $categories = array();
+        $categories = [];
         if ($categoryEntities) {
             foreach ($categoryEntities as $categoryEntity) {
                 $categories[] = new Category($categoryEntity, $this->locale);
@@ -1220,7 +1221,7 @@ class Product extends ApiWrapper implements ApiProductInterface
     {
         $specialPrices = $this->entity->getSpecialPrices();
 
-        $specialPricesList = array();
+        $specialPricesList = [];
         foreach ($specialPrices as $specialPrice) {
             $specialPricesList[] = new SpecialPrice($specialPrice, $this->locale);
         }

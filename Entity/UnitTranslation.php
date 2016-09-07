@@ -1,11 +1,18 @@
 <?php
 
+/*
+ * This file is part of Sulu.
+ *
+ * (c) MASSIVE ART WebServices GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace Sulu\Bundle\ProductBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
-
 /**
- * UnitTranslation
+ * UnitTranslation.
  */
 class UnitTranslation
 {
@@ -20,7 +27,7 @@ class UnitTranslation
     private $locale;
 
     /**
-     * @var integer
+     * @var int
      */
     private $id;
 
@@ -29,11 +36,11 @@ class UnitTranslation
      */
     private $unit;
 
-
     /**
-     * Set name
+     * Set name.
      *
      * @param string $name
+     *
      * @return UnitTranslation
      */
     public function setName($name)
@@ -44,9 +51,9 @@ class UnitTranslation
     }
 
     /**
-     * Get name
+     * Get name.
      *
-     * @return string 
+     * @return string
      */
     public function getName()
     {
@@ -54,9 +61,10 @@ class UnitTranslation
     }
 
     /**
-     * Set locale
+     * Set locale.
      *
      * @param string $locale
+     *
      * @return UnitTranslation
      */
     public function setLocale($locale)
@@ -67,9 +75,9 @@ class UnitTranslation
     }
 
     /**
-     * Get locale
+     * Get locale.
      *
-     * @return string 
+     * @return string
      */
     public function getLocale()
     {
@@ -77,9 +85,9 @@ class UnitTranslation
     }
 
     /**
-     * Get id
+     * Get id.
      *
-     * @return integer 
+     * @return int
      */
     public function getId()
     {
@@ -87,9 +95,10 @@ class UnitTranslation
     }
 
     /**
-     * Set unit
+     * Set unit.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\Unit $unit
+     *
      * @return UnitTranslation
      */
     public function setUnit(\Sulu\Bundle\ProductBundle\Entity\Unit $unit)
@@ -100,9 +109,9 @@ class UnitTranslation
     }
 
     /**
-     * Get unit
+     * Get unit.
      *
-     * @return \Sulu\Bundle\ProductBundle\Entity\Unit 
+     * @return \Sulu\Bundle\ProductBundle\Entity\Unit
      */
     public function getUnit()
     {

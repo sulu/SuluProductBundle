@@ -1,16 +1,23 @@
 <?php
 
+/*
+ * This file is part of Sulu.
+ *
+ * (c) MASSIVE ART WebServices GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace Sulu\Bundle\ProductBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
-
 /**
- * AttributeType
+ * AttributeType.
  */
 class AttributeType
 {
     /**
-     * @var integer
+     * @var int
      */
     private $id;
 
@@ -20,17 +27,17 @@ class AttributeType
     private $attributes;
 
     /**
-     * Constructor
+     * Constructor.
      */
     public function __construct()
     {
         $this->attributes = new \Doctrine\Common\Collections\ArrayCollection();
     }
-    
+
     /**
-     * Get id
+     * Get id.
      *
-     * @return integer 
+     * @return int
      */
     public function getId()
     {
@@ -38,20 +45,21 @@ class AttributeType
     }
 
     /**
-     * Add attributes
+     * Add attributes.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\Attribute $attributes
+     *
      * @return AttributeType
      */
     public function addAttribute(\Sulu\Bundle\ProductBundle\Entity\Attribute $attributes)
     {
         $this->attributes[] = $attributes;
-    
+
         return $this;
     }
 
     /**
-     * Remove attributes
+     * Remove attributes.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\Attribute $attributes
      */
@@ -61,23 +69,25 @@ class AttributeType
     }
 
     /**
-     * Get attributes
+     * Get attributes.
      *
-     * @return \Doctrine\Common\Collections\Collection 
+     * @return \Doctrine\Common\Collections\Collection
      */
     public function getAttributes()
     {
         return $this->attributes;
     }
+
     /**
      * @var string
      */
     private $name;
 
     /**
-     * Set id
+     * Set id.
      *
-     * @param integer $id
+     * @param int $id
+     *
      * @return AttributeType
      */
     public function setId($id)
@@ -88,22 +98,23 @@ class AttributeType
     }
 
     /**
-     * Set name
+     * Set name.
      *
      * @param string $name
+     *
      * @return AttributeType
      */
     public function setName($name)
     {
         $this->name = $name;
-    
+
         return $this;
     }
 
     /**
-     * Get name
+     * Get name.
      *
-     * @return string 
+     * @return string
      */
     public function getName()
     {

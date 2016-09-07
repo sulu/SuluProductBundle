@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMF.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -14,8 +15,7 @@ use Sulu\Bundle\ProductBundle\Api\Status;
 use Sulu\Bundle\ProductBundle\Entity\StatusRepository;
 
 /**
- * Manager responsible for product statuses
- * @package Sulu\Bundle\ProductBundle\Product
+ * Manager responsible for product statuses.
  */
 class StatusManager
 {
@@ -31,6 +31,7 @@ class StatusManager
 
     /**
      * @param $locale
+     *
      * @return null|Status[]
      */
     public function findAll($locale)
@@ -46,4 +47,4 @@ class StatusManager
 
         return $statuses;
     }
-} 
+}

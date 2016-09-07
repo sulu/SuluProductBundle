@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -13,7 +14,7 @@ namespace Sulu\Bundle\ProductBundle\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 
 /**
- * Addon
+ * Addon.
  */
 class Addon
 {
@@ -43,7 +44,7 @@ class Addon
     }
 
     /**
-     * Get id
+     * Get id.
      *
      * @return int
      */
@@ -53,7 +54,7 @@ class Addon
     }
 
     /**
-     * Set product
+     * Set product.
      *
      * @param ProductInterface $product
      *
@@ -62,12 +63,12 @@ class Addon
     public function setProduct(ProductInterface $product)
     {
         $this->product = $product;
-    
+
         return $this;
     }
 
     /**
-     * Get product
+     * Get product.
      *
      * @return ProductInterface
      */
@@ -77,7 +78,7 @@ class Addon
     }
 
     /**
-     * Set addon
+     * Set addon.
      *
      * @param ProductInterface $addon
      *
@@ -86,12 +87,12 @@ class Addon
     public function setAddon(ProductInterface $addon)
     {
         $this->addon = $addon;
-    
+
         return $this;
     }
 
     /**
-     * Get addon
+     * Get addon.
      *
      * @return ProductInterface
      */

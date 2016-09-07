@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMF.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -11,15 +12,13 @@
 namespace Sulu\Bundle\ProductBundle\Controller;
 
 use Sulu\Bundle\ProductBundle\Product\ProductManagerInterface;
-use Sulu\Bundle\WebsiteBundle\Navigation\NavigationMapperInterface;
 use Sulu\Bundle\WebsiteBundle\Resolver\RequestAnalyzerResolverInterface;
 use Sulu\Component\Webspace\Analyzer\RequestAnalyzerInterface;
 use Symfony\Bundle\FrameworkBundle\Templating\EngineInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
- * This Controller is responsible for the rendering of the product
- * @package Sulu\Bundle\ProductBundle\Controller
+ * This Controller is responsible for the rendering of the product.
  */
 class ProductWebsiteController
 {
@@ -73,7 +72,7 @@ class ProductWebsiteController
             return $this->templating->renderResponse(
                 $this->productTemplate,
                 array_merge(
-                    array('product' => $product),
+                    ['product' => $product],
                     $this->requestAnalyzerResolver->resolve($this->requestAnalyzer)
                 )
             );
@@ -81,4 +80,4 @@ class ProductWebsiteController
 
         throw new NotFoundHttpException(sprintf('The product ID "%s" has not been found', $id));
     }
-} 
+}

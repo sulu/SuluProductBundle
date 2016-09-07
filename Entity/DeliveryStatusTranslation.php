@@ -1,11 +1,18 @@
 <?php
 
+/*
+ * This file is part of Sulu.
+ *
+ * (c) MASSIVE ART WebServices GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace Sulu\Bundle\ProductBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
-
 /**
- * DeliveryStatusTranslation
+ * DeliveryStatusTranslation.
  */
 class DeliveryStatusTranslation
 {
@@ -20,7 +27,7 @@ class DeliveryStatusTranslation
     private $name;
 
     /**
-     * @var integer
+     * @var int
      */
     private $id;
 
@@ -29,24 +36,24 @@ class DeliveryStatusTranslation
      */
     private $deliveryStatus;
 
-
     /**
-     * Set languageCode
+     * Set languageCode.
      *
      * @param string $languageCode
+     *
      * @return DeliveryStatusTranslation
      */
     public function setLocale($languageCode)
     {
         $this->locale = $languageCode;
-    
+
         return $this;
     }
 
     /**
-     * Get languageCode
+     * Get languageCode.
      *
-     * @return string 
+     * @return string
      */
     public function getLocale()
     {
@@ -54,22 +61,23 @@ class DeliveryStatusTranslation
     }
 
     /**
-     * Set name
+     * Set name.
      *
      * @param string $name
+     *
      * @return DeliveryStatusTranslation
      */
     public function setName($name)
     {
         $this->name = $name;
-    
+
         return $this;
     }
 
     /**
-     * Get name
+     * Get name.
      *
-     * @return string 
+     * @return string
      */
     public function getName()
     {
@@ -77,9 +85,9 @@ class DeliveryStatusTranslation
     }
 
     /**
-     * Get id
+     * Get id.
      *
-     * @return integer 
+     * @return int
      */
     public function getId()
     {
@@ -87,20 +95,21 @@ class DeliveryStatusTranslation
     }
 
     /**
-     * Set deliveryStatus
+     * Set deliveryStatus.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\DeliveryStatus $deliveryStatus
+     *
      * @return DeliveryStatusTranslation
      */
     public function setDeliveryStatus(\Sulu\Bundle\ProductBundle\Entity\DeliveryStatus $deliveryStatus)
     {
         $this->deliveryStatus = $deliveryStatus;
-    
+
         return $this;
     }
 
     /**
-     * Get deliveryStatus
+     * Get deliveryStatus.
      *
      * @return \Sulu\Bundle\ProductBundle\Entity\DeliveryStatus
      */

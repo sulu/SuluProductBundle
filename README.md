@@ -1,5 +1,5 @@
-SuluProductBundle [![Build Status](https://travis-ci.org/sulu/SuluProductBundle.svg?branch=develop)](https://travis-ci.org/sulu/SuluProductBundle)
-=================
+SuluProductBundle [![Build Status](https://travis-ci.org/sulu/SuluProductBundle.svg?branch=develop)](https://travis-ci.org/sulu/SuluProductBundle) [![StyleCI](https://styleci.io/repos/17173120/shield)](https://styleci.io/repos/17173120)
+============================================================================================================================================================================================================================================
 
 # Installation
 

@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -10,10 +11,8 @@
 
 namespace Sulu\Bundle\ProductBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
-
 /**
- * AttributeTranslation
+ * AttributeTranslation.
  */
 class AttributeTranslation
 {
@@ -28,7 +27,7 @@ class AttributeTranslation
     private $name;
 
     /**
-     * @var integer
+     * @var int
      */
     private $id;
 
@@ -38,22 +37,23 @@ class AttributeTranslation
     private $attribute;
 
     /**
-     * Set languageCode
+     * Set languageCode.
      *
      * @param string $languageCode
+     *
      * @return AttributeTranslation
      */
     public function setLocale($languageCode)
     {
         $this->locale = $languageCode;
-    
+
         return $this;
     }
 
     /**
-     * Get languageCode
+     * Get languageCode.
      *
-     * @return string 
+     * @return string
      */
     public function getLocale()
     {
@@ -61,22 +61,23 @@ class AttributeTranslation
     }
 
     /**
-     * Set name
+     * Set name.
      *
      * @param string $name
+     *
      * @return AttributeTranslation
      */
     public function setName($name)
     {
         $this->name = $name;
-    
+
         return $this;
     }
 
     /**
-     * Get name
+     * Get name.
      *
-     * @return string 
+     * @return string
      */
     public function getName()
     {
@@ -84,9 +85,9 @@ class AttributeTranslation
     }
 
     /**
-     * Get id
+     * Get id.
      *
-     * @return integer 
+     * @return int
      */
     public function getId()
     {
@@ -94,20 +95,21 @@ class AttributeTranslation
     }
 
     /**
-     * Set attribute
+     * Set attribute.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\Attribute $attribute
+     *
      * @return AttributeTranslation
      */
     public function setAttribute(\Sulu\Bundle\ProductBundle\Entity\Attribute $attribute)
     {
         $this->attribute = $attribute;
-    
+
         return $this;
     }
 
     /**
-     * Get attribute
+     * Get attribute.
      *
      * @return \Sulu\Bundle\ProductBundle\Entity\Attribute
      */

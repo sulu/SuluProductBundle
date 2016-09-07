@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -17,14 +18,16 @@ namespace Sulu\Bundle\ProductBundle\Product\Exception;
 class AttributeDependencyNotFoundException extends AttributeException
 {
     /**
-     * The name of the object not found
+     * The name of the object not found.
+     *
      * @var string
      */
     private $entityName;
 
     /**
-     * The id of the object not found
-     * @var integer
+     * The id of the object not found.
+     *
+     * @var int
      */
     private $id;
 
@@ -41,7 +44,8 @@ class AttributeDependencyNotFoundException extends AttributeException
     }
 
     /**
-     * Returns the name of the entityname of the dependency not found
+     * Returns the name of the entityname of the dependency not found.
+     *
      * @return string
      */
     public function getEntityName()
@@ -50,7 +54,8 @@ class AttributeDependencyNotFoundException extends AttributeException
     }
 
     /**
-     * Returns the id of the object not found
+     * Returns the id of the object not found.
+     *
      * @return int
      */
     public function getId()

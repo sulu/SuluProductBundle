@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -14,15 +15,15 @@ use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
 use Sulu\Bundle\ProductBundle\Entity\Unit;
-use Sulu\Bundle\ProductBundle\Entity\UnitTranslation;
 use Sulu\Bundle\ProductBundle\Entity\UnitMapping;
+use Sulu\Bundle\ProductBundle\Entity\UnitTranslation;
 
 class LoadUnits implements FixtureInterface, OrderedFixtureInterface
 {
-    private static $translations = ["de", "de_ch", "en"];
+    private static $translations = ['de', 'de_ch', 'en'];
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function load(ObjectManager $manager)
     {
@@ -69,14 +70,14 @@ class LoadUnits implements FixtureInterface, OrderedFixtureInterface
                     }
                 }
                 $manager->persist($unit);
-                $i++;
+                ++$i;
             }
         }
         $manager->flush();
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function getOrder()
     {

@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -16,9 +17,10 @@ use Doctrine\ORM\NoResultException;
 class DeliveryStatusRepository extends EntityRepository
 {
     /**
-     * Returns the statuses with the given locale
+     * Returns the statuses with the given locale.
      *
      * @param string $locale The locale to load
+     *
      * @return Status[]|null
      */
     public function findAllByLocale($locale)
@@ -33,8 +35,10 @@ class DeliveryStatusRepository extends EntityRepository
     }
 
     /**
-     * Returns the query for products
+     * Returns the query for products.
+     *
      * @param string $locale The locale to load
+     *
      * @return \Doctrine\ORM\QueryBuilder
      */
     private function getStatusQuery($locale)

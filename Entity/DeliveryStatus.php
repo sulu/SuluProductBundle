@@ -1,11 +1,18 @@
 <?php
 
+/*
+ * This file is part of Sulu.
+ *
+ * (c) MASSIVE ART WebServices GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace Sulu\Bundle\ProductBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
-
 /**
- * DeliveryStatus
+ * DeliveryStatus.
  */
 class DeliveryStatus
 {
@@ -13,7 +20,7 @@ class DeliveryStatus
     const NOT_AVAILABLE = 2;
 
     /**
-     * @var integer
+     * @var int
      */
     private $id;
 
@@ -28,18 +35,18 @@ class DeliveryStatus
     private $products;
 
     /**
-     * Constructor
+     * Constructor.
      */
     public function __construct()
     {
         $this->translations = new \Doctrine\Common\Collections\ArrayCollection();
         $this->products = new \Doctrine\Common\Collections\ArrayCollection();
     }
-    
+
     /**
-     * Get id
+     * Get id.
      *
-     * @return integer 
+     * @return int
      */
     public function getId()
     {
@@ -55,20 +62,21 @@ class DeliveryStatus
     }
 
     /**
-     * Add translations
+     * Add translations.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\DeliveryStatusTranslation $translations
+     *
      * @return DeliveryStatus
      */
     public function addTranslation(\Sulu\Bundle\ProductBundle\Entity\DeliveryStatusTranslation $translations)
     {
         $this->translations[] = $translations;
-    
+
         return $this;
     }
 
     /**
-     * Remove translations
+     * Remove translations.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\DeliveryStatusTranslation $translations
      */
@@ -78,9 +86,9 @@ class DeliveryStatus
     }
 
     /**
-     * Get translations
+     * Get translations.
      *
-     * @return \Doctrine\Common\Collections\Collection 
+     * @return \Doctrine\Common\Collections\Collection
      */
     public function getTranslations()
     {
@@ -88,20 +96,21 @@ class DeliveryStatus
     }
 
     /**
-     * Add products
+     * Add products.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\Product $products
+     *
      * @return DeliveryStatus
      */
     public function addProduct(\Sulu\Bundle\ProductBundle\Entity\Product $products)
     {
         $this->products[] = $products;
-    
+
         return $this;
     }
 
     /**
-     * Remove products
+     * Remove products.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\Product $products
      */
@@ -111,9 +120,9 @@ class DeliveryStatus
     }
 
     /**
-     * Get products
+     * Get products.
      *
-     * @return \Doctrine\Common\Collections\Collection 
+     * @return \Doctrine\Common\Collections\Collection
      */
     public function getProducts()
     {

@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of Sulu.
+ *
+ * (c) MASSIVE ART WebServices GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace Sulu\Bundle\ProductBundle\Tests\Resources;
 
 use DateTime;
@@ -263,7 +272,7 @@ class ProductTestData
      */
     public function createProduct()
     {
-        $this->productCount++;
+        ++$this->productCount;
 
         // Create basic product.
         $product = $this->productFactory->createEntity();
@@ -297,7 +306,7 @@ class ProductTestData
      */
     public function createAddonProduct()
     {
-        $this->productCount++;
+        ++$this->productCount;
 
         // Create basic product.
         $product = $this->productFactory->createEntity();
@@ -420,7 +429,7 @@ class ProductTestData
      */
     public function createCategory()
     {
-        $this->categoryCount++;
+        ++$this->categoryCount;
         $category = new Category();
         $category->setKey('test-category ' . $this->categoryCount);
         $category->setDefaultLocale(self::LOCALE);

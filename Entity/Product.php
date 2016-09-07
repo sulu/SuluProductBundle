@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of Sulu.
+ *
+ * (c) MASSIVE ART WebServices GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
@@ -47,7 +56,7 @@ class Product extends BaseProduct
     protected $isRecurringPrice = false;
 
     /**
-     * Constructor
+     * Constructor.
      */
     public function __construct()
     {
@@ -62,7 +71,7 @@ class Product extends BaseProduct
     }
 
     /**
-     * Add productAttributes
+     * Add productAttributes.
      *
      * @param ProductAttribute $productAttributes
      *
@@ -76,7 +85,7 @@ class Product extends BaseProduct
     }
 
     /**
-     * Remove productAttributes
+     * Remove productAttributes.
      *
      * @param ProductAttribute $productAttributes
      */
@@ -86,7 +95,7 @@ class Product extends BaseProduct
     }
 
     /**
-     * Get productAttributes
+     * Get productAttributes.
      *
      * @return \Doctrine\Common\Collections\Collection
      */
@@ -96,7 +105,7 @@ class Product extends BaseProduct
     }
 
     /**
-     * Add translations
+     * Add translations.
      *
      * @param ProductTranslation $translations
      *
@@ -110,7 +119,7 @@ class Product extends BaseProduct
     }
 
     /**
-     * Remove translations
+     * Remove translations.
      *
      * @param ProductTranslation $translations
      */
@@ -120,7 +129,7 @@ class Product extends BaseProduct
     }
 
     /**
-     * Get translations
+     * Get translations.
      *
      * @return \Doctrine\Common\Collections\Collection
      */
@@ -130,7 +139,7 @@ class Product extends BaseProduct
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function getTranslation($locale)
     {
@@ -146,7 +155,7 @@ class Product extends BaseProduct
     }
 
     /**
-     * Add addons
+     * Add addons.
      *
      * @param Addon $addons
      *
@@ -160,7 +169,7 @@ class Product extends BaseProduct
     }
 
     /**
-     * Remove addons
+     * Remove addons.
      *
      * @param Addon $addons
      */
@@ -170,7 +179,7 @@ class Product extends BaseProduct
     }
 
     /**
-     * Get addons
+     * Get addons.
      *
      * @return \Doctrine\Common\Collections\Collection
      */
@@ -180,7 +189,7 @@ class Product extends BaseProduct
     }
 
     /**
-     * Add children
+     * Add children.
      *
      * @param ProductInterface $children
      *
@@ -194,7 +203,7 @@ class Product extends BaseProduct
     }
 
     /**
-     * Remove children
+     * Remove children.
      *
      * @param ProductInterface $children
      */
@@ -204,7 +213,7 @@ class Product extends BaseProduct
     }
 
     /**
-     * Get children
+     * Get children.
      *
      * @return \Doctrine\Common\Collections\Collection
      */
@@ -214,7 +223,7 @@ class Product extends BaseProduct
     }
 
     /**
-     * Add prices
+     * Add prices.
      *
      * @param ProductPrice $prices
      *
@@ -228,7 +237,7 @@ class Product extends BaseProduct
     }
 
     /**
-     * Remove prices
+     * Remove prices.
      *
      * @param ProductPrice $prices
      */
@@ -238,7 +247,7 @@ class Product extends BaseProduct
     }
 
     /**
-     * Get prices
+     * Get prices.
      *
      * @return \Doctrine\Common\Collections\Collection
      */
@@ -248,7 +257,7 @@ class Product extends BaseProduct
     }
 
     /**
-     * Add setProducts
+     * Add setProducts.
      *
      * @param ProductInterface $setProducts
      *
@@ -262,7 +271,7 @@ class Product extends BaseProduct
     }
 
     /**
-     * Remove setProducts
+     * Remove setProducts.
      *
      * @param ProductInterface $setProducts
      */
@@ -272,7 +281,7 @@ class Product extends BaseProduct
     }
 
     /**
-     * Get setProducts
+     * Get setProducts.
      *
      * @return \Doctrine\Common\Collections\Collection
      */
@@ -282,7 +291,7 @@ class Product extends BaseProduct
     }
 
     /**
-     * Get special prices
+     * Get special prices.
      *
      * @return \Doctrine\Common\Collections\Collection
      */
@@ -292,7 +301,7 @@ class Product extends BaseProduct
     }
 
     /**
-     * Add special price
+     * Add special price.
      *
      * @param SpecialPrice $specialPrice
      *
@@ -306,7 +315,7 @@ class Product extends BaseProduct
     }
 
     /**
-     * Remove special prices
+     * Remove special prices.
      *
      * @param SpecialPrice $specialPrices
      */

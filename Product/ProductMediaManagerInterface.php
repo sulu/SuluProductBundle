@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -15,7 +16,7 @@ use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescri
 interface ProductMediaManagerInterface
 {
     /**
-     * Returns the field descriptors for product media
+     * Returns the field descriptors for product media.
      *
      * @return DoctrineFieldDescriptor[]
      */

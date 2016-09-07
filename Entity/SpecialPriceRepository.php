@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -10,15 +11,15 @@
 
 namespace Sulu\Bundle\ProductBundle\Entity;
 
-use Pagerfanta\Adapter\DoctrineORMAdapter;
-use Pagerfanta\Pagerfanta;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\NoResultException;
+use Pagerfanta\Adapter\DoctrineORMAdapter;
+use Pagerfanta\Pagerfanta;
 
 class SpecialPriceRepository extends EntityRepository
 {
     /**
-     * Returns the current special prices
+     * Returns the current special prices.
      *
      * @param int $limit
      * @param int $page
@@ -42,7 +43,7 @@ class SpecialPriceRepository extends EntityRepository
     }
 
     /**
-     * Returns the ids of a specific amount of special prices
+     * Returns the ids of a specific amount of special prices.
      *
      * @param int $limit
      *
@@ -66,7 +67,7 @@ class SpecialPriceRepository extends EntityRepository
     }
 
     /**
-     * Returns special price querybuilder
+     * Returns special price querybuilder.
      *
      * @return \Doctrine\ORM\QueryBuilder
      */

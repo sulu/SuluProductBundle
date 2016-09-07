@@ -3,6 +3,7 @@ CHANGELOG for Sulu Product Bundle
 
 * dev-develop
 
+    * FEATURE     Added style-ci configuration
     * FEATURE     Implemented new product type 'Variant'.
     * ENHANCEMENT Removed product type translations from database.
     

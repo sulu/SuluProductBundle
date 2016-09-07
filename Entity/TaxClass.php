@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -10,15 +11,10 @@
 
 namespace Sulu\Bundle\ProductBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\Collection;
-use Sulu\Bundle\ProductBundle\Entity\TaxClassTranslation;
-use Sulu\Bundle\ProductBundle\Entity\Product;
-use Sulu\Bundle\ProductBundle\Entity\CountryTax;
 
 class TaxClass
 {
-
     const STANDARD_TAX_RATE = 1;
     const REDUCED_TAX_RATE = 2;
 

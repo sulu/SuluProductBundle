@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -45,7 +46,7 @@ class ProductMediaManager implements ProductMediaManagerInterface
     }
 
     /**
-     * Returns the field descriptors for product media
+     * Returns the field descriptors for product media.
      *
      * @return DoctrineFieldDescriptor[]
      */
@@ -59,7 +60,7 @@ class ProductMediaManager implements ProductMediaManagerInterface
     }
 
     /**
-     * Initializes field descriptors for product media
+     * Initializes field descriptors for product media.
      */
     protected function initFieldDescriptors()
     {

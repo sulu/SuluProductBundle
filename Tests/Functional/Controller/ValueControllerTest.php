@@ -233,7 +233,7 @@ class ValueControllerTest extends SuluTestCase
     }
 
     /**
-     * Get a existing values for an attribute by it's id
+     * Get a existing values for an attribute by it's id.
      */
     public function testGetById()
     {

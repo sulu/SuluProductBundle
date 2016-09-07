@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -10,20 +11,20 @@
 
 namespace Sulu\Bundle\ProductBundle\Controller;
 
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use FOS\RestBundle\Controller\Annotations\RouteResource;
-use Sulu\Exception\FeatureNotImplementedException;
-use Sulu\Component\Rest\ListBuilder\ListRepresentation;
-use Sulu\Component\Rest\Exception\EntityNotFoundException;
-use Sulu\Component\Rest\Exception\RestException;
-use Sulu\Component\Rest\ListBuilder\Doctrine\DoctrineListBuilderFactory;
-use Sulu\Component\Rest\RestController;
-use Sulu\Component\Rest\RestHelperInterface;
 use Sulu\Bundle\MediaBundle\Media\Manager\MediaManagerInterface;
 use Sulu\Bundle\ProductBundle\Api\Product;
 use Sulu\Bundle\ProductBundle\Product\ProductManagerInterface;
 use Sulu\Bundle\ProductBundle\Product\ProductMediaManagerInterface;
+use Sulu\Component\Rest\Exception\EntityNotFoundException;
+use Sulu\Component\Rest\Exception\RestException;
+use Sulu\Component\Rest\ListBuilder\Doctrine\DoctrineListBuilderFactory;
+use Sulu\Component\Rest\ListBuilder\ListRepresentation;
+use Sulu\Component\Rest\RestController;
+use Sulu\Component\Rest\RestHelperInterface;
+use Sulu\Exception\FeatureNotImplementedException;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 // TODO Refactor: use manager for product-media
 
@@ -152,7 +153,6 @@ class ProductMediaController extends RestController
         $locale = $this->getLocale($request);
 
         try {
-
             $delete = function () use ($id, $mediaId, $locale) {
                 $em = $this->getDoctrine()->getManager();
 
@@ -183,7 +183,6 @@ class ProductMediaController extends RestController
             };
 
             $view = $this->responseDelete($id, $delete);
-
         } catch (EntityNotFoundException $enfe) {
             $view = $this->view($enfe->toArray(), 404);
         } catch (RestException $exc) {
@@ -270,7 +269,7 @@ class ProductMediaController extends RestController
      * the actual urls to the thumbnails.
      *
      * @param array $entities
-     * @param String $locale
+     * @param string $locale
      *
      * @return array
      */

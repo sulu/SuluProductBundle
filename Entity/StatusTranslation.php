@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -10,10 +11,8 @@
 
 namespace Sulu\Bundle\ProductBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
-
 /**
- * StatusTranslation
+ * StatusTranslation.
  */
 class StatusTranslation
 {
@@ -28,7 +27,7 @@ class StatusTranslation
     private $locale;
 
     /**
-     * @var integer
+     * @var int
      */
     private $id;
 
@@ -38,22 +37,23 @@ class StatusTranslation
     private $status;
 
     /**
-     * Set name
+     * Set name.
      *
      * @param string $name
+     *
      * @return StatusTranslation
      */
     public function setName($name)
     {
         $this->name = $name;
-    
+
         return $this;
     }
 
     /**
-     * Get name
+     * Get name.
      *
-     * @return string 
+     * @return string
      */
     public function getName()
     {
@@ -61,22 +61,23 @@ class StatusTranslation
     }
 
     /**
-     * Set languageCode
+     * Set languageCode.
      *
      * @param string $languageCode
+     *
      * @return StatusTranslation
      */
     public function setLocale($languageCode)
     {
         $this->locale = $languageCode;
-    
+
         return $this;
     }
 
     /**
-     * Get languageCode
+     * Get languageCode.
      *
-     * @return string 
+     * @return string
      */
     public function getLocale()
     {
@@ -84,9 +85,9 @@ class StatusTranslation
     }
 
     /**
-     * Get id
+     * Get id.
      *
-     * @return integer 
+     * @return int
      */
     public function getId()
     {
@@ -94,20 +95,21 @@ class StatusTranslation
     }
 
     /**
-     * Set status
+     * Set status.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\Status $status
+     *
      * @return StatusTranslation
      */
     public function setStatus(\Sulu\Bundle\ProductBundle\Entity\Status $status)
     {
         $this->status = $status;
-    
+
         return $this;
     }
 
     /**
-     * Get status
+     * Get status.
      *
      * @return \Sulu\Bundle\ProductBundle\Entity\Status
      */

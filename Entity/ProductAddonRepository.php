@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -14,5 +15,4 @@ use Sulu\Component\Persistence\Repository\ORM\EntityRepository;
 
 class ProductAddonRepository extends EntityRepository
 {
-
 }

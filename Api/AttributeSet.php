@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -10,17 +11,16 @@
 
 namespace Sulu\Bundle\ProductBundle\Api;
 
-use Sulu\Bundle\ProductBundle\Entity\AttributeSet as Entity;
-use JMS\Serializer\Annotation\VirtualProperty;
-use JMS\Serializer\Annotation\SerializedName;
-use JMS\Serializer\Annotation\ExclusionPolicy;
 use Hateoas\Configuration\Annotation\Relation;
+use JMS\Serializer\Annotation\ExclusionPolicy;
+use JMS\Serializer\Annotation\SerializedName;
+use JMS\Serializer\Annotation\VirtualProperty;
+use Sulu\Bundle\ProductBundle\Entity\AttributeSet as Entity;
 use Sulu\Component\Rest\ApiWrapper;
 
 /**
- * The Attribute set class which will be exported to the API
+ * The Attribute set class which will be exported to the API.
  *
- * @package Sulu\Bundle\ProductBundle\Api
  * @Relation("self", href="expr('/api/admin/attribute-sets/' ~ object.getId())")
  * @ExclusionPolicy("all")
  */
@@ -37,7 +37,8 @@ class AttributeSet extends ApiWrapper
     }
 
     /**
-     * The id of the type
+     * The id of the type.
+     *
      * @return int The id of the type
      * @VirtualProperty
      * @SerializedName("id")
@@ -48,7 +49,8 @@ class AttributeSet extends ApiWrapper
     }
 
     /**
-     * The name of the type
+     * The name of the type.
+     *
      * @return int The name of the type
      * @VirtualProperty
      * @SerializedName("name")
@@ -57,4 +59,4 @@ class AttributeSet extends ApiWrapper
     {
         return $this->entity->getTranslation($this->locale)->getName();
     }
-} 
+}

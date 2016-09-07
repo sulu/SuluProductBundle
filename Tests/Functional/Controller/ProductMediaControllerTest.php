@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -23,29 +24,29 @@ use Sulu\Bundle\MediaBundle\Entity\FileVersion;
 use Sulu\Bundle\MediaBundle\Entity\FileVersionMeta;
 use Sulu\Bundle\MediaBundle\Entity\Media;
 use Sulu\Bundle\MediaBundle\Entity\MediaType;
+use Sulu\Bundle\ProductBundle\Entity\Attribute;
+use Sulu\Bundle\ProductBundle\Entity\AttributeSet;
+use Sulu\Bundle\ProductBundle\Entity\AttributeSetTranslation;
+use Sulu\Bundle\ProductBundle\Entity\AttributeTranslation;
+use Sulu\Bundle\ProductBundle\Entity\AttributeType;
 use Sulu\Bundle\ProductBundle\Entity\AttributeValue;
 use Sulu\Bundle\ProductBundle\Entity\AttributeValueTranslation;
 use Sulu\Bundle\ProductBundle\Entity\Currency;
 use Sulu\Bundle\ProductBundle\Entity\DeliveryStatus;
 use Sulu\Bundle\ProductBundle\Entity\DeliveryStatusTranslation;
 use Sulu\Bundle\ProductBundle\Entity\Product;
-use Sulu\Bundle\ProductBundle\Entity\Attribute;
-use Sulu\Bundle\ProductBundle\Entity\AttributeTranslation;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttribute;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
-use Sulu\Bundle\ProductBundle\Entity\SpecialPrice;
 use Sulu\Bundle\ProductBundle\Entity\ProductPrice;
 use Sulu\Bundle\ProductBundle\Entity\ProductTranslation;
+use Sulu\Bundle\ProductBundle\Entity\SpecialPrice;
 use Sulu\Bundle\ProductBundle\Entity\Status;
 use Sulu\Bundle\ProductBundle\Entity\StatusTranslation;
 use Sulu\Bundle\ProductBundle\Entity\TaxClass;
 use Sulu\Bundle\ProductBundle\Entity\TaxClassTranslation;
 use Sulu\Bundle\ProductBundle\Entity\Type;
-use Sulu\Bundle\ProductBundle\Entity\AttributeSet;
-use Sulu\Bundle\ProductBundle\Entity\AttributeSetTranslation;
 use Sulu\Bundle\ProductBundle\Product\ProductRepositoryInterface;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
-use Sulu\Bundle\ProductBundle\Entity\AttributeType;
 
 class ProductMediaControllerTest extends SuluTestCase
 {
@@ -489,7 +490,7 @@ class ProductMediaControllerTest extends SuluTestCase
         $this->deliveryStatusAvailable->addTranslation($deliveryStatusAvailableTranslation);
 
         $this->specialPrice1 = new SpecialPrice();
-        $this->specialPrice1->setPrice("56");
+        $this->specialPrice1->setPrice('56');
         $this->specialPrice1->setCurrency($this->currency1);
         $this->specialPrice1->setStartDate(new \DateTime());
         $this->specialPrice1->setEndDate(new \DateTime());

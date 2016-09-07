@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -10,19 +11,17 @@
 
 namespace Sulu\Bundle\ProductBundle\Product;
 
-use \DateTime;
-
+use DateTime;
 use Doctrine\Common\Persistence\ObjectManager;
-
+use Sulu\Bundle\ProductBundle\Api\Attribute;
+use Sulu\Bundle\ProductBundle\Entity\Attribute as AttributeEntity;
+use Sulu\Bundle\ProductBundle\Entity\AttributeTypeRepository;
+use Sulu\Bundle\ProductBundle\Product\Exception\AttributeDependencyNotFoundException;
+use Sulu\Bundle\ProductBundle\Product\Exception\AttributeNotFoundException;
+use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeException;
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescriptor;
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineJoinDescriptor;
 use Sulu\Component\Security\Authentication\UserRepositoryInterface;
-use Sulu\Bundle\ProductBundle\Entity\AttributeTypeRepository;
-use Sulu\Bundle\ProductBundle\Api\Attribute;
-use Sulu\Bundle\ProductBundle\Entity\Attribute as AttributeEntity;
-use Sulu\Bundle\ProductBundle\Product\Exception\AttributeNotFoundException;
-use Sulu\Bundle\ProductBundle\Product\Exception\MissingAttributeException;
-use Sulu\Bundle\ProductBundle\Product\Exception\AttributeDependencyNotFoundException;
 
 /**
  * Manager responsible for attributes.
@@ -80,18 +79,18 @@ class AttributeManager implements AttributeManagerInterface
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function getFieldDescriptors($locale)
     {
-        $fieldDescriptors = array();
+        $fieldDescriptors = [];
 
         $fieldDescriptors['id'] = new DoctrineFieldDescriptor(
             'id',
             'id',
             self::$attributeEntityName,
             'public.id',
-            array(),
+            [],
             true
         );
 
@@ -100,13 +99,13 @@ class AttributeManager implements AttributeManagerInterface
             'name',
             self::$attributeTranslationEntityName,
             'product.attribute.name',
-            array(
+            [
                 self::$attributeTranslationEntityName => new DoctrineJoinDescriptor(
                     self::$attributeTranslationEntityName,
                     self::$attributeEntityName . '.translations',
                     self::$attributeTranslationEntityName . '.locale = \'' . $locale . '\''
-                )
-            )
+                ),
+            ]
         );
 
         $fieldDescriptors['type'] = new DoctrineFieldDescriptor(
@@ -114,12 +113,12 @@ class AttributeManager implements AttributeManagerInterface
             'type',
             self::$attributeTypeEntityName,
             'product.attribute.type',
-            array(
+            [
                 self::$attributeTypeEntityName => new DoctrineJoinDescriptor(
                     self::$attributeTypeEntityName,
                     self::$attributeEntityName . '.type'
-                )
-            ),
+                ),
+            ],
             false,
             true,
             'translation'
@@ -140,7 +139,7 @@ class AttributeManager implements AttributeManagerInterface
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function findByIdAndLocale($id, $locale)
     {
@@ -154,7 +153,7 @@ class AttributeManager implements AttributeManagerInterface
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function findAllByLocale($locale)
     {
@@ -171,7 +170,7 @@ class AttributeManager implements AttributeManagerInterface
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function findAllByLocaleAndType($locale, $type)
     {
@@ -188,7 +187,7 @@ class AttributeManager implements AttributeManagerInterface
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function save(array $data, $locale, $userId, $id = null)
     {
@@ -244,10 +243,12 @@ class AttributeManager implements AttributeManagerInterface
 
     /**
      * Returns the entry from the data with the given key, or the given default value,
-     * if the key does not exist
+     * if the key does not exist.
+     *
      * @param array $data
      * @param string $key
      * @param string $default
+     *
      * @return mixed
      */
     private function getProperty(array $data, $key, $default = null)
@@ -273,7 +274,7 @@ class AttributeManager implements AttributeManagerInterface
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function delete($id, $userId)
     {

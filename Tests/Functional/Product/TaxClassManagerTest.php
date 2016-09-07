@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMF.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -11,10 +12,10 @@
 namespace Sulu\Bundle\ProductBundle\Product;
 
 use Doctrine\ORM\EntityManager;
-use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
-use Symfony\Bundle\FrameworkBundle\Client;
 use Sulu\Bundle\ProductBundle\Entity\TaxClass as TaxClassEntity;
 use Sulu\Bundle\ProductBundle\Entity\TaxClassTranslation as TaxClassTranslationEntity;
+use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
+use Symfony\Bundle\FrameworkBundle\Client;
 
 class TaxClassManagerTest extends SuluTestCase
 {

@@ -1,11 +1,18 @@
 <?php
 
+/*
+ * This file is part of Sulu.
+ *
+ * (c) MASSIVE ART WebServices GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace Sulu\Bundle\ProductBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
-
 /**
- * UnitMapping
+ * UnitMapping.
  */
 class UnitMapping
 {
@@ -15,7 +22,7 @@ class UnitMapping
     private $name;
 
     /**
-     * @var integer
+     * @var int
      */
     private $id;
 
@@ -24,11 +31,11 @@ class UnitMapping
      */
     private $unit;
 
-
     /**
-     * Set name
+     * Set name.
      *
      * @param string $name
+     *
      * @return UnitMapping
      */
     public function setName($name)
@@ -39,9 +46,9 @@ class UnitMapping
     }
 
     /**
-     * Get name
+     * Get name.
      *
-     * @return string 
+     * @return string
      */
     public function getName()
     {
@@ -49,9 +56,9 @@ class UnitMapping
     }
 
     /**
-     * Get id
+     * Get id.
      *
-     * @return integer 
+     * @return int
      */
     public function getId()
     {
@@ -59,9 +66,10 @@ class UnitMapping
     }
 
     /**
-     * Set unit
+     * Set unit.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\Unit $unit
+     *
      * @return UnitMapping
      */
     public function setUnit(\Sulu\Bundle\ProductBundle\Entity\Unit $unit)
@@ -72,9 +80,9 @@ class UnitMapping
     }
 
     /**
-     * Get unit
+     * Get unit.
      *
-     * @return \Sulu\Bundle\ProductBundle\Entity\Unit 
+     * @return \Sulu\Bundle\ProductBundle\Entity\Unit
      */
     public function getUnit()
     {

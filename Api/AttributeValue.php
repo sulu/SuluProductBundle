@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -11,27 +12,23 @@
 namespace Sulu\Bundle\ProductBundle\Api;
 
 use Hateoas\Configuration\Annotation\Relation;
-
-use JMS\Serializer\Annotation\VirtualProperty;
-use JMS\Serializer\Annotation\SerializedName;
 use JMS\Serializer\Annotation\ExclusionPolicy;
-
-use Sulu\Component\Rest\ApiWrapper;
-use Sulu\Component\Security\Authentication\UserInterface;
-use Sulu\Bundle\ProductBundle\Entity\AttributeValueTranslation;
+use JMS\Serializer\Annotation\SerializedName;
+use JMS\Serializer\Annotation\VirtualProperty;
 use Sulu\Bundle\ProductBundle\Entity\AttributeValue as AttributeValueEntity;
+use Sulu\Bundle\ProductBundle\Entity\AttributeValueTranslation;
+use Sulu\Component\Rest\ApiWrapper;
 
 /**
- * The product class which will be exported to the API
+ * The product class which will be exported to the API.
  *
- * @package Sulu\Bundle\ProductBundle\Api
  * @Relation("self", href="expr('/api/admin/attributes/' ~ object.getId() ~ '/values')")
  * @ExclusionPolicy("all")
  */
 class AttributeValue extends ApiWrapper
 {
     /**
-     * @var string $fallbackLocale
+     * @var string
      */
     protected $fallbackLocale;
 
@@ -48,7 +45,7 @@ class AttributeValue extends ApiWrapper
     }
 
     /**
-     * Returns the id of the attributeValue
+     * Returns the id of the attributeValue.
      *
      * @return int
      *

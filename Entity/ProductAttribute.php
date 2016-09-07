@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -10,15 +11,13 @@
 
 namespace Sulu\Bundle\ProductBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
-
 /**
- * ProductAttribute
+ * ProductAttribute.
  */
 class ProductAttribute
 {
     /**
-     * @var integer
+     * @var int
      */
     private $id;
 
@@ -38,7 +37,7 @@ class ProductAttribute
     private $attributeValue;
 
     /**
-     * @return integer
+     * @return int
      */
     public function getId()
     {
@@ -53,7 +52,7 @@ class ProductAttribute
     public function setProduct(ProductInterface $product)
     {
         $this->product = $product;
-    
+
         return $this;
     }
 
@@ -73,7 +72,7 @@ class ProductAttribute
     public function setAttribute(Attribute $attribute)
     {
         $this->attribute = $attribute;
-    
+
         return $this;
     }
 

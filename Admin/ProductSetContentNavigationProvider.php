@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMF.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -10,8 +11,8 @@
 
 namespace Sulu\Bundle\ProductBundle\Admin;
 
-use Sulu\Bundle\AdminBundle\Navigation\ContentNavigationProviderInterface;
 use Sulu\Bundle\AdminBundle\Navigation\ContentNavigationItem;
+use Sulu\Bundle\AdminBundle\Navigation\ContentNavigationProviderInterface;
 
 class ProductSetContentNavigationProvider implements ContentNavigationProviderInterface
 {
@@ -45,7 +46,7 @@ class ProductSetContentNavigationProvider implements ContentNavigationProviderIn
         return [
             $details,
             $pricing,
-            $attributes
+            $attributes,
         ];
     }
 }

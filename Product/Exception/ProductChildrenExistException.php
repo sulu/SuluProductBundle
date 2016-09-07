@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -13,8 +14,9 @@ namespace Sulu\Bundle\ProductBundle\Product\Exception;
 class ProductChildrenExistException extends ProductException
 {
     /**
-     * The id of the object not found
-     * @var integer
+     * The id of the object not found.
+     *
+     * @var int
      */
     private $id;
 
@@ -25,7 +27,8 @@ class ProductChildrenExistException extends ProductException
     }
 
     /**
-     * Returns the id of the object not found
+     * Returns the id of the object not found.
+     *
      * @return int
      */
     public function getId()

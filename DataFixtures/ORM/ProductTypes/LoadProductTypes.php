@@ -20,7 +20,7 @@ use Sulu\Bundle\ProductBundle\Entity\Type;
 class LoadProductTypes implements FixtureInterface, OrderedFixtureInterface
 {
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function load(ObjectManager $manager)
     {
@@ -48,7 +48,7 @@ class LoadProductTypes implements FixtureInterface, OrderedFixtureInterface
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function getOrder()
     {

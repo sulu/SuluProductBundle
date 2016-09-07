@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -11,32 +12,25 @@
 namespace Sulu\Bundle\ProductBundle\Api;
 
 use Hateoas\Configuration\Annotation\Relation;
-
-use JMS\Serializer\Annotation\VirtualProperty;
-use JMS\Serializer\Annotation\SerializedName;
 use JMS\Serializer\Annotation\ExclusionPolicy;
-use JMS\Serializer\Annotation\Expose;
-use JMS\Serializer\Annotation\Groups;
-
+use JMS\Serializer\Annotation\SerializedName;
+use JMS\Serializer\Annotation\VirtualProperty;
 use Sulu\Bundle\ProductBundle\Entity\Attribute as AttributeEntity;
 use Sulu\Bundle\ProductBundle\Entity\AttributeTranslation;
-use Sulu\Bundle\ProductBundle\Api\AttributeType;
 use Sulu\Bundle\ProductBundle\Entity\AttributeValue as AttributeValueEntity;
-use Sulu\Bundle\ProductBundle\Api\AttributeValue;
 use Sulu\Component\Rest\ApiWrapper;
 use Sulu\Component\Security\Authentication\UserInterface;
 
 /**
- * The Attribute class which will be exported to the API
+ * The Attribute class which will be exported to the API.
  *
- * @package Sulu\Bundle\ProductBundle\Api
  * @Relation("self", href="expr('/admin/api/attributes/' ~ object.getId())")
  * @ExclusionPolicy("all")
  */
 class Attribute extends ApiWrapper
 {
     /**
-     * @var string $fallbackLocale
+     * @var string
      */
     protected $fallbackLocale;
 
@@ -57,6 +51,7 @@ class Attribute extends ApiWrapper
      *
      * @VirtualProperty
      * @SerializedName("id")
+     *
      * @return int
      */
     public function getId()
@@ -87,6 +82,7 @@ class Attribute extends ApiWrapper
     public function setName($name)
     {
         $this->getTranslation(false)->setName($name);
+
         return $this;
     }
 
@@ -113,6 +109,7 @@ class Attribute extends ApiWrapper
     public function setType($type)
     {
         $this->entity->setType($type);
+
         return $this;
     }
 
@@ -136,6 +133,7 @@ class Attribute extends ApiWrapper
     public function setChanged($changed)
     {
         $this->entity->setChanged($changed);
+
         return $this;
     }
 
@@ -143,11 +141,13 @@ class Attribute extends ApiWrapper
      * Sets the changer of the attribute.
      *
      * @param $changer changer for the attribute
+     *
      * @return Sulu\Bundle\ProductBundle\Api\Attribute
      */
     public function setChanger(UserInterface $changer)
     {
         $this->entity->setChanger($changer);
+
         return $this;
     }
 
@@ -171,6 +171,7 @@ class Attribute extends ApiWrapper
     public function setCreated($created)
     {
         $this->entity->setCreated($created);
+
         return $this;
     }
 
@@ -184,6 +185,7 @@ class Attribute extends ApiWrapper
     public function setCreator(UserInterface $creator)
     {
         $this->entity->setCreator($creator);
+
         return $this;
     }
 
@@ -197,6 +199,7 @@ class Attribute extends ApiWrapper
     public function addValue(AttributeValueEntity $value)
     {
         $this->entity->addValue($value);
+
         return $this;
     }
 
@@ -246,6 +249,7 @@ class Attribute extends ApiWrapper
 
         return $attributeTranslation;
     }
+
     /**
     * @VirtualProperty
     * @SerializedName("key")

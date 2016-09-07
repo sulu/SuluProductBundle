@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -18,7 +19,7 @@ use Sulu\Bundle\ProductBundle\Entity\AttributeType;
 class LoadAttributeTypes implements FixtureInterface, OrderedFixtureInterface
 {
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function load(ObjectManager $manager)
     {
@@ -43,20 +44,20 @@ class LoadAttributeTypes implements FixtureInterface, OrderedFixtureInterface
                 /** @var $child DOMNode */
                 foreach ($children as $child) {
                     if (isset($child->nodeName)) {
-                        if ($child->nodeName == "name") {
+                        if ($child->nodeName == 'name') {
                             $attributeType->setName($child->nodeValue);
                         }
                     }
                 }
                 $manager->persist($attributeType);
-                $i++;
+                ++$i;
             }
         }
         $manager->flush();
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function getOrder()
     {

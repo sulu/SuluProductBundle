@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -13,13 +14,15 @@ namespace Sulu\Bundle\ProductBundle\Product\Exception;
 class InvalidProductAttributeException extends ProductException
 {
     /**
-     * The name of the attribute not found
+     * The name of the attribute not found.
+     *
      * @var string
      */
     private $attributeName;
-    
+
     /**
-     * The name of the attribute not found
+     * The name of the attribute not found.
+     *
      * @var mixed
      */
     private $attributeValue;
@@ -28,12 +31,13 @@ class InvalidProductAttributeException extends ProductException
     {
         $this->attributeName = $attributeName;
         $this->attributeValue = $attributeValue;
-        parent::__construct('The value "' . $this->attributeValue . '" is not valid for product attribute "' . 
+        parent::__construct('The value "' . $this->attributeValue . '" is not valid for product attribute "' .
             $this->attributeName . '".', 0);
     }
 
     /**
-     * Returns the name of the attribute not found
+     * Returns the name of the attribute not found.
+     *
      * @return int
      */
     public function getAttributeName()
@@ -42,7 +46,8 @@ class InvalidProductAttributeException extends ProductException
     }
 
     /**
-     * Returns the name of the attribute not found
+     * Returns the name of the attribute not found.
+     *
      * @return int
      */
     public function getAttributeValue()

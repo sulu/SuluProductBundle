@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -10,10 +11,8 @@
 
 namespace Sulu\Bundle\ProductBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
-
 /**
- * Status
+ * Status.
  */
 class Status
 {
@@ -25,7 +24,7 @@ class Status
     const CHANGED = 6;
 
     /**
-     * @var integer
+     * @var int
      */
     private $id;
 
@@ -40,29 +39,30 @@ class Status
     private $translations;
 
     /**
-     * Constructor
+     * Constructor.
      */
     public function __construct()
     {
         $this->products = new \Doctrine\Common\Collections\ArrayCollection();
         $this->translations = new \Doctrine\Common\Collections\ArrayCollection();
     }
-    
+
     /**
-     * Set id
+     * Set id.
      *
-     * @return integer 
+     * @return int
      */
     public function setId($id)
     {
         $this->id = $id;
+
         return $this;
     }
 
     /**
-     * Get id
+     * Get id.
      *
-     * @return integer 
+     * @return int
      */
     public function getId()
     {
@@ -70,20 +70,21 @@ class Status
     }
 
     /**
-     * Add products
+     * Add products.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $products
+     *
      * @return Status
      */
     public function addProduct(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $products)
     {
         $this->products[] = $products;
-    
+
         return $this;
     }
 
     /**
-     * Remove products
+     * Remove products.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $products
      */
@@ -93,9 +94,9 @@ class Status
     }
 
     /**
-     * Get products
+     * Get products.
      *
-     * @return \Doctrine\Common\Collections\Collection 
+     * @return \Doctrine\Common\Collections\Collection
      */
     public function getProducts()
     {
@@ -103,20 +104,21 @@ class Status
     }
 
     /**
-     * Add translations
+     * Add translations.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\StatusTranslation $translations
+     *
      * @return Status
      */
     public function addTranslation(\Sulu\Bundle\ProductBundle\Entity\StatusTranslation $translations)
     {
         $this->translations[] = $translations;
-    
+
         return $this;
     }
 
     /**
-     * Remove translations
+     * Remove translations.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\StatusTranslation $translations
      */
@@ -126,9 +128,9 @@ class Status
     }
 
     /**
-     * Get translations
+     * Get translations.
      *
-     * @return \Doctrine\Common\Collections\Collection 
+     * @return \Doctrine\Common\Collections\Collection
      */
     public function getTranslations()
     {

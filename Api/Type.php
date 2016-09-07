@@ -53,4 +53,4 @@ class Type extends ApiWrapper
     {
         return $this->entity->getTranslationKey();
     }
-} 
+}

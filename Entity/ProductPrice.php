@@ -1,24 +1,33 @@
 <?php
 
+/*
+ * This file is part of Sulu.
+ *
+ * (c) MASSIVE ART WebServices GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace Sulu\Bundle\ProductBundle\Entity;
 
 /**
- * ProductPrice
+ * ProductPrice.
  */
 class ProductPrice
 {
     /**
-     * @var double
+     * @var float
      */
     private $minimumQuantity = 0;
 
     /**
-     * @var double
+     * @var float
      */
     private $price;
 
     /**
-     * @var integer
+     * @var int
      */
     private $id;
 
@@ -33,9 +42,9 @@ class ProductPrice
     private $currency;
 
     /**
-     * Set minimumQuantity
+     * Set minimumQuantity.
      *
-     * @param double $minimumQuantity
+     * @param float $minimumQuantity
      *
      * @return ProductPrice
      */
@@ -47,9 +56,9 @@ class ProductPrice
     }
 
     /**
-     * Get minimumQuantity
+     * Get minimumQuantity.
      *
-     * @return double
+     * @return float
      */
     public function getMinimumQuantity()
     {
@@ -57,9 +66,9 @@ class ProductPrice
     }
 
     /**
-     * Set price
+     * Set price.
      *
-     * @param double $price
+     * @param float $price
      *
      * @return ProductPrice
      */
@@ -71,9 +80,9 @@ class ProductPrice
     }
 
     /**
-     * Get price
+     * Get price.
      *
-     * @return double
+     * @return float
      */
     public function getPrice()
     {
@@ -81,9 +90,9 @@ class ProductPrice
     }
 
     /**
-     * Get id
+     * Get id.
      *
-     * @return integer
+     * @return int
      */
     public function getId()
     {
@@ -91,7 +100,7 @@ class ProductPrice
     }
 
     /**
-     * Set product
+     * Set product.
      *
      * @param ProductInterface $product
      *
@@ -105,7 +114,7 @@ class ProductPrice
     }
 
     /**
-     * Get product
+     * Get product.
      *
      * @return ProductInterface
      */
@@ -115,7 +124,7 @@ class ProductPrice
     }
 
     /**
-     * Set currency
+     * Set currency.
      *
      * @param Currency $currency
      *
@@ -129,7 +138,7 @@ class ProductPrice
     }
 
     /**
-     * Get currency
+     * Get currency.
      *
      * @return \Sulu\Bundle\ProductBundle\Entity\Currency
      */

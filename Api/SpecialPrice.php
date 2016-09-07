@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -10,16 +11,15 @@
 
 namespace Sulu\Bundle\ProductBundle\Api;
 
-use Sulu\Component\Rest\ApiWrapper;
-use Sulu\Bundle\ProductBundle\Entity\SpecialPrice as SpecialPriceEntity;
-use JMS\Serializer\Annotation\VirtualProperty;
-use JMS\Serializer\Annotation\SerializedName;
 use JMS\Serializer\Annotation\ExclusionPolicy;
+use JMS\Serializer\Annotation\SerializedName;
+use JMS\Serializer\Annotation\VirtualProperty;
+use Sulu\Bundle\ProductBundle\Entity\SpecialPrice as SpecialPriceEntity;
+use Sulu\Component\Rest\ApiWrapper;
 
 /**
- * The Special price class which will be exported to the API
+ * The Special price class which will be exported to the API.
  *
- * @package Sulu\Bundle\ProductBundle\Api
  * @ExclusionPolicy("all")
  */
 class SpecialPrice extends ApiWrapper
@@ -35,12 +35,12 @@ class SpecialPrice extends ApiWrapper
     }
 
     /**
-     * Returns the id of the Special price
+     * Returns the id of the Special price.
      *
      * @VirtualProperty
      * @SerializedName("id")
      *
-     * @return integer
+     * @return int
      */
     public function getId()
     {
@@ -48,7 +48,7 @@ class SpecialPrice extends ApiWrapper
     }
 
     /**
-     * Get price
+     * Get price.
      *
      * @VirtualProperty
      * @SerializedName("price")
@@ -61,7 +61,7 @@ class SpecialPrice extends ApiWrapper
     }
 
     /**
-     * Get start date
+     * Get start date.
      *
      * @VirtualProperty
      * @SerializedName("startDate")
@@ -74,7 +74,7 @@ class SpecialPrice extends ApiWrapper
     }
 
     /**
-     * Get end date
+     * Get end date.
      *
      * @VirtualProperty
      * @SerializedName("endDate")
@@ -87,7 +87,7 @@ class SpecialPrice extends ApiWrapper
     }
 
     /**
-     * Get currency
+     * Get currency.
      *
      * @VirtualProperty
      * @SerializedName("currency")
@@ -100,7 +100,7 @@ class SpecialPrice extends ApiWrapper
     }
 
     /**
-     * Get product
+     * Get product.
      *
      * @return \Sulu\Bundle\ProductBundle\Entity\ProductInterface
      */
