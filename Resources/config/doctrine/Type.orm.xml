@@ -6,10 +6,7 @@
         <id name="id" type="integer" column="id">
             <generator strategy="AUTO"/>
         </id>
-        <one-to-many field="products" target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface"
-                     mapped-by="type"/>
-        <one-to-many field="translations"
-                     target-entity="Sulu\Bundle\ProductBundle\Entity\TypeTranslation"
-                     mapped-by="type"/>
+
+        <field name="translationKey" type="string" column="translationKey" length="255"/>
     </entity>
 </doctrine-mapping>

@@ -136,9 +136,11 @@ class Status
     }
 
     /**
-     * Returns the translation for the given locale
+     * Returns the translation for the given locale.
+     *
      * @param string $locale
-     * @return TypeTranslation
+     *
+     * @return StatusTranslation
      */
     public function getTranslation($locale)
     {

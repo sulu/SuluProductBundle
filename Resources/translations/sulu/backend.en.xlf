@@ -402,6 +402,27 @@
                 <source>product-selection.no-product-selected</source>
                 <target>No products chosen</target>
             </trans-unit>
+            <!-- Product Types -->
+            <trans-unit id="87" resname="sulu_product.types.product">
+                <source>sulu_product.types.product</source>
+                <target>Product</target>
+            </trans-unit>
+            <trans-unit id="88" resname="sulu_product.types.product-with-variants">
+                <source>sulu_product.types.product-with-variants</source>
+                <target>Product with Variants</target>
+            </trans-unit>
+            <trans-unit id="89" resname="sulu_product.types.product-addon">
+                <source>sulu_product.types.product-addon</source>
+                <target>Product Add-on</target>
+            </trans-unit>
+            <trans-unit id="90" resname="sulu_product.types.product-set">
+                <source>sulu_product.types.product-set</source>
+                <target>Product Set</target>
+            </trans-unit>
+            <trans-unit id="91" resname="sulu_product.types.product-variant">
+                <source>sulu_product.types.product-variant</source>
+                <target>Variant</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>

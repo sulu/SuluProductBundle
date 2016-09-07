@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -13,23 +14,20 @@ namespace Sulu\Bundle\ProductBundle\DataFixtures\ORM\ProductTypes;
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\ORM\Mapping\ClassMetadata;
 use Sulu\Bundle\ProductBundle\Entity\Type;
-use Sulu\Bundle\ProductBundle\Entity\TypeTranslation;
 
 class LoadProductTypes implements FixtureInterface, OrderedFixtureInterface
 {
-    private static $translations = ["de", "de_ch", "en"];
-
     /**
      * {@inheritDoc}
      */
     public function load(ObjectManager $manager)
     {
-        // force id = 1
-        $metadata = $manager->getClassMetaData(get_class(new Type()));
-        $metadata->setIdGeneratorType(\Doctrine\ORM\Mapping\ClassMetadata::GENERATOR_TYPE_NONE);
+        // Force id.
+        $metadata = $manager->getClassMetaData(Type::class);
+        $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_NONE);
 
-        $i = 1;
         $file = dirname(__FILE__) . '/../../product-types.xml';
         $doc = new \DOMDocument();
         $doc->load($file);
@@ -38,23 +36,12 @@ class LoadProductTypes implements FixtureInterface, OrderedFixtureInterface
         $elements = $xpath->query('/product-types/product-type');
 
         if (!is_null($elements)) {
-            /** @var $element DOMNode */
+            /** @var \DOMNode $element */
             foreach ($elements as $element) {
                 $type = new Type();
-                $type->setId($i);
-                $children = $element->childNodes;
-                /** @var $child DOMNode */
-                foreach ($children as $child) {
-                    if (isset($child->nodeName) && (in_array($child->nodeName, self::$translations))) {
-                        $translation = new TypeTranslation();
-                        $translation->setLocale($child->nodeName);
-                        $translation->setName($child->nodeValue);
-                        $translation->setType($type);
-                        $manager->persist($translation);
-                    }
-                }
+                $type->setId($element->getAttribute('id'));
+                $type->setTranslationKey($element->getAttribute('translation-key'));
                 $manager->persist($type);
-                $i++;
             }
         }
         $manager->flush();

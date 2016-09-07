@@ -32,7 +32,6 @@ use Sulu\Bundle\ProductBundle\Entity\StatusTranslation;
 use Sulu\Bundle\ProductBundle\Entity\TaxClass;
 use Sulu\Bundle\ProductBundle\Entity\TaxClassTranslation;
 use Sulu\Bundle\ProductBundle\Entity\Type;
-use Sulu\Bundle\ProductBundle\Entity\TypeTranslation;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSet;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSetTranslation;
 use Sulu\Bundle\ProductBundle\Entity\AttributeType;
@@ -135,11 +134,6 @@ class ProductControllerTest extends SuluTestCase
     private $attribute1;
 
     /**
-     * @var TypeTranslation
-     */
-    private $typeTranslation1;
-
-    /**
      * @var AttributeSetTranslation
      */
     private $attributeSetTranslation1;
@@ -183,11 +177,6 @@ class ProductControllerTest extends SuluTestCase
      * @var Attribute
      */
     private $attribute2;
-
-    /**
-     * @var TypeTranslation
-     */
-    private $typeTranslation2;
 
     /**
      * @var AttributeSetTranslation
@@ -293,10 +282,7 @@ class ProductControllerTest extends SuluTestCase
         // Product 1
         // product type
         $this->type1 = new Type();
-        $this->typeTranslation1 = new TypeTranslation();
-        $this->typeTranslation1->setLocale('en');
-        $this->typeTranslation1->setName('EnglishProductType-1');
-        $this->typeTranslation1->setType($this->type1);
+        $this->type1->setTranslationKey('Type1');
 
         // product status active
         $metadata = $this->em->getClassMetadata(Status::class);
@@ -400,10 +386,7 @@ class ProductControllerTest extends SuluTestCase
         // Product 2
         // product type
         $this->type2 = new Type();
-        $this->typeTranslation2 = new TypeTranslation();
-        $this->typeTranslation2->setLocale('en');
-        $this->typeTranslation2->setName('EnglishProductType-2');
-        $this->typeTranslation2->setType($this->type2);
+        $this->type2->setTranslationKey('Type2');
 
         // AttributeSet
         $this->attributeSet2 = new AttributeSet();
@@ -543,7 +526,6 @@ class ProductControllerTest extends SuluTestCase
         $this->em->persist($this->productPrice2);
         $this->em->persist($this->type1);
         $this->em->persist($this->attributeType1);
-        $this->em->persist($this->typeTranslation1);
         $this->em->persist($this->attributeSet1);
         $this->em->persist($this->attributeSetTranslation1);
         $this->em->persist($this->attribute1);
@@ -556,7 +538,6 @@ class ProductControllerTest extends SuluTestCase
 
         $this->em->persist($this->type2);
         $this->em->persist($this->attributeType2);
-        $this->em->persist($this->typeTranslation2);
         $this->em->persist($this->attributeSet2);
         $this->em->persist($this->attributeSetTranslation2);
         $this->em->persist($this->attribute2);
@@ -579,7 +560,6 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals('ProductNumber-1', $response['number']);
         $this->assertEquals('EnglishManufacturer-1', $response['manufacturer']);
         $this->assertEquals($this->type1->getId(), $response['type']['id']);
-        $this->assertEquals('EnglishProductType-1', $response['type']['name']);
         $this->assertEquals($this->productStatusInactive->getId(), $response['status']['id']);
         $this->assertEquals('EnglishProductStatus-Inactive', $response['status']['name']);
         $this->assertContains(
@@ -624,7 +604,6 @@ class ProductControllerTest extends SuluTestCase
         $item = $items[0];
         $this->assertEquals('ProductNumber-1', $item->number);
         $this->assertEquals('EnglishManufacturer-1', $item->manufacturer);
-        $this->assertEquals('EnglishProductType-1', $item->type->name);
         $this->assertEquals($this->productStatusInactive->getId(), $item->status->id);
         $this->assertEquals($this->type1->getId(), $item->type->id);
         $this->assertFalse($item->isRecurringPrice);
@@ -632,7 +611,6 @@ class ProductControllerTest extends SuluTestCase
         $item = $items[1];
         $this->assertEquals('ProductNumber-1', $item->number);
         $this->assertEquals('EnglishManufacturer-2', $item->manufacturer);
-        $this->assertEquals('EnglishProductType-2', $item->type->name);
         $this->assertEquals($this->productStatusActive->getId(), $item->status->id);
         $this->assertEquals($this->type2->getId(), $item->type->id);
         $this->assertTrue($item->isRecurringPrice);
@@ -650,16 +628,14 @@ class ProductControllerTest extends SuluTestCase
         $item = $items[0];
         $this->assertEquals('ProductNumber-1', $item->number);
         $this->assertEquals('EnglishManufacturer-1', $item->manufacturer);
-        $this->assertEquals('EnglishProductType-1', $item->type);
+        $this->assertEquals($this->type1->getTranslationKey(), $item->type);
         $this->assertEquals('EnglishProductStatus-Inactive', $item->status);
-        $this->assertEquals('EnglishProductType-1', $item->type);
 
         $item = $items[1];
         $this->assertEquals('ProductNumber-1', $item->number);
         $this->assertEquals('EnglishManufacturer-2', $item->manufacturer);
-        $this->assertEquals('EnglishProductType-2', $item->type);
+        $this->assertEquals($this->type2->getTranslationKey(), $item->type);
         $this->assertEquals('EnglishProductStatus-Active', $item->status);
-        $this->assertEquals('EnglishProductType-2', $item->type);
     }
 
     public function testGetByStatus()
@@ -688,7 +664,7 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
         $this->assertEquals(1, count($response->_embedded->products));
         $this->assertEquals($this->product1->getManufacturer(), $response->_embedded->products[0]->manufacturer);
-        $this->assertEquals($this->typeTranslation1->getName(), $response->_embedded->products[0]->type->name);
+        $this->assertEquals($this->type1->getId(), $response->_embedded->products[0]->type->id);
     }
 
     // FIXME existing prices get processed in the add callback
@@ -993,13 +969,10 @@ class ProductControllerTest extends SuluTestCase
 
         $this->assertEquals('EnglishProductStatus-Inactive', $response->status->name);
 
-        $this->assertEquals('EnglishProductType-1', $response->type->name);
+        $this->assertEquals($this->type1->getId(), $response->type->id);
 
         $this->assertCount(2, $response->tags);
         $this->assertTrue($response->isRecurringPrice);
-
-        // $this->assertEquals($this->attributeSet1->getId(), $response->attributeSet->id);
-        // $this->assertEquals('EnglishTemplate-1', $response->attributeSet->name);
 
         $this->assertEquals('20%', $response->taxClass->name);
 

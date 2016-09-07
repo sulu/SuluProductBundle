@@ -1,6 +1,11 @@
 CHANGELOG for Sulu Product Bundle
 =================================
 
+* dev-develop
+
+    * FEATURE     Implemented new product type 'Variant'.
+    * ENHANCEMENT Removed product type translations from database.
+    
 * 0.13.0 (2016-09-07)
 
     * ENHANCEMENT Renamed js variables.
