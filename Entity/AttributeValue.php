@@ -80,7 +80,7 @@ class AttributeValue
      *
      * @param string $locale
      *
-     * @return \Doctrine\Common\Collections\Collection|null
+     * @return AttributeValueTranslation|null
      */
     public function getTranslationByLocale($locale)
     {
