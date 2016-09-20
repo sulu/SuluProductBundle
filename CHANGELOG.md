@@ -3,6 +3,7 @@ CHANGELOG for Sulu Product Bundle
 
 * dev-develop
 
+    * FEATURE     Added function that ProductValueAttribute translation can be retrieved by a gitven locale.
     * FEATURE     Added many-to-many releation `variantAttributes` between product and attributes
     * FEATURE     Added github templates for issues and pull-requests.
     * FEATURE     Added style-ci configuration.
