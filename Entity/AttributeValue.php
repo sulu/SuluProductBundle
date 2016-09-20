@@ -76,7 +76,25 @@ class AttributeValue
     }
 
     /**
-     * Set attribute
+     * Get translation by locale.
+     *
+     * @param string $locale
+     *
+     * @return \Doctrine\Common\Collections\Collection|null
+     */
+    public function getTranslationByLocale($locale)
+    {
+        foreach ($this->getTranslations() as $valueTranslation) {
+            if ($valueTranslation->getLocale() === $locale) {
+                return $valueTranslation;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Set attribute.
      *
      * @param \Sulu\Bundle\ProductBundle\Entity\Attribute $attribute
      * @return AttributeValue
@@ -84,7 +102,7 @@ class AttributeValue
     public function setAttribute(\Sulu\Bundle\ProductBundle\Entity\Attribute $attribute)
     {
         $this->attribute = $attribute;
-    
+
         return $this;
     }
 
