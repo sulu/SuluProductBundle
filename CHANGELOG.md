@@ -1,7 +1,7 @@
 CHANGELOG for Sulu Product Bundle
 =================================
 
-* dev-develop
+* 0.13.1 (2016-09-21)
 
     * FEATURE     Added function that ProductValueAttribute translation can be retrieved by a given locale.
 
