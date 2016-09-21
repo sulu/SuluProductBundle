@@ -3,13 +3,16 @@ CHANGELOG for Sulu Product Bundle
 
 * 0.14.0 (2016-09-20)
 
-    * FEATURE     Added function that ProductValueAttribute translation can be retrieved by a given locale.
     * FEATURE     Added many-to-many releation `variantAttributes` between product and attributes.
     * FEATURE     Added github templates for issues and pull-requests.
     * FEATURE     Added style-ci configuration.
     * FEATURE     Implemented new product type 'Variant'.
     * ENHANCEMENT Removed product type translations from database.
     
+* 0.13.1 (2016-09-21)
+
+    * FEATURE     Added function that ProductValueAttribute translation can be retrieved by a given locale.
+
 * 0.13.0 (2016-09-07)
 
     * ENHANCEMENT Renamed js variables.
@@ -22,7 +25,7 @@ CHANGELOG for Sulu Product Bundle
     * ENHANCEMENT Added config param 'display_recurring_prices'
     * ENHANCEMENT Added method to get products by one or more categoryIds and tags
     * ENHANCEMENT Added method to get products by global trade item number (gtin)
-    
+
 * 0.12.5 (2016-08-22)
 
     * FEATURE Added calculation of recurring prices to price-calculation util in javascript utils.
@@ -34,7 +37,7 @@ CHANGELOG for Sulu Product Bundle
 * 0.12.3 (2016-07-19)
 
     * BUGFIX  Added workaround for ProductTestData to fix a dubious bug in doctrine.
-    
+
 * 0.12.2 (2016-07-15)
 
     * ENHANCEMENT Added attributeKey to attributes api
