@@ -1,6 +1,10 @@
 CHANGELOG for Sulu Product Bundle
 =================================
 
+* 0.15.0 (2016-09-26)
+
+    * FEATURE     Added config parameter for default formatter locale.
+
 * 0.14.0 (2016-09-20)
 
     * FEATURE     Added many-to-many releation `variantAttributes` between product and attributes.

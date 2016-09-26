@@ -37,7 +37,8 @@ Sample configuration:
 ```
 sulu_product:
     category_root_key: ~
-    default_currency: '%default_currency%'
+    default_currency: 'EUR'
+    default_formatter_locale 'en'
     display_recurring_prices: true
     fallback_locale: de
     fixtures:

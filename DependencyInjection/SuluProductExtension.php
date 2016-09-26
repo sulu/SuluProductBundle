@@ -32,6 +32,7 @@ class SuluProductExtension extends Extension
         $container->setParameter('sulu_product.content-type.product.template', $config['types']['product']['template']);
         $container->setParameter('sulu_product.category_root_key', $config['category_root_key']);
         $container->setParameter('sulu_product.default_currency', $config['default_currency']);
+        $container->setParameter('sulu_product.default_formatter_locale', $config['default_formatter_locale']);
         $container->setParameter('sulu_product.display_recurring_prices', $config['display_recurring_prices']);
         $container->setParameter('sulu_product.fallback_locale', $config['fallback_locale']);
         $container->setParameter('sulu_product.fixtures.attributes', $config['fixtures']['attributes']);
