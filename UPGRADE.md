@@ -1,6 +1,18 @@
 # Upgrade
 
-## dev-develop
+## 0.15.0
+
+### Formatter locale
+
+Since the formatter has been moved from pricing to product bundle an
+extra config variable needs to be defined.
+
+```
+sulu_product:
+    default_formatter_locale: 'en'
+```
+
+## 0.14.0
 
 ### Product type cleanups
 

@@ -118,7 +118,7 @@
         </service>
         <!--UTILS-->
         <service id="sulu_product.price_formatter" class="%sulu_product.price_formatter.class%">
-            <argument>%sulu_product.fallback_locale%</argument>
+            <argument>%sulu_product.default_formatter_locale%</argument>
         </service>
         <!-- MANAGER -->
         <service id="sulu_product.product_addons_manager" class="%sulu_product.product_addons_manager.class%">
