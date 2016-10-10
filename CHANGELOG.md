@@ -1,6 +1,10 @@
 CHANGELOG for Sulu Product Bundle
 =================================
 
+* dev-develop
+
+    * FEATURE     Added validation schema for get products api.
+
 * 0.15.0 (2016-09-26)
 
     * FEATURE     Added config parameter for default formatter locale.
@@ -12,7 +16,7 @@ CHANGELOG for Sulu Product Bundle
     * FEATURE     Added style-ci configuration.
     * FEATURE     Implemented new product type 'Variant'.
     * ENHANCEMENT Removed product type translations from database.
-    
+
 * 0.13.1 (2016-09-21)
 
     * FEATURE     Added function that ProductValueAttribute translation can be retrieved by a given locale.

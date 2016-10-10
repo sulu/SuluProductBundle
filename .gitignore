@@ -1,6 +1,7 @@
 /node_modules/
 /Tests/app/cache/*
 /Tests/app/logs/*
+/Tests/app/data/*
 /Tests/Resources/app/cache/*
 /Tests/Resources/app/logs/*
 /vendor/

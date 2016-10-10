@@ -14,10 +14,11 @@ namespace Sulu\Bundle\ProductBundle\DependencyInjection;
 use Sulu\Bundle\PersistenceBundle\DependencyInjection\PersistenceExtensionTrait;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 
-class SuluProductExtension extends Extension
+class SuluProductExtension extends Extension implements PrependExtensionInterface
 {
     use PersistenceExtensionTrait;
 
@@ -43,5 +44,22 @@ class SuluProductExtension extends Extension
         $loader->load('services.xml');
 
         $this->configurePersistence($config['objects'], $container);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function prepend(ContainerBuilder $container)
+    {
+        if ($container->hasExtension('sulu_validation')) {
+            $container->prependExtensionConfig(
+                'sulu_validation',
+                [
+                    'schemas' => [
+                        'get_product' => '@SuluProductBundle/Validation/Product/getActionSchema.json',
+                    ],
+                ]
+            );
+        }
     }
 }

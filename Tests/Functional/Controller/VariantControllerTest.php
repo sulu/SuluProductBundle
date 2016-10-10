@@ -162,7 +162,7 @@ class VariantControllerTest extends SuluTestCase
         $this->assertEquals('2', $response->number);
         $this->assertEquals('1', $response->parent->number);
 
-        $this->client->request('GET', '/api/products/' . $this->productVariants[0]->getId());
+        $this->client->request('GET', ProductControllerTest::getGetUrlForProduct($this->productVariants[0]->getId()));
 
         $response = json_decode($this->client->getResponse()->getContent());
 

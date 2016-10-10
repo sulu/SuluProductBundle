@@ -254,6 +254,19 @@ class ProductControllerTest extends SuluTestCase
      */
     private $client;
 
+    /**
+     * @param int $productId
+     *
+     * @return string
+     */
+    public static function getGetUrlForProduct($productId)
+    {
+        return '/api/products/' . $productId . '?locale=en';
+    }
+
+    /**
+     * Test setup.
+     */
     public function setUp()
     {
         $this->em = $this->getEntityManager();
@@ -263,6 +276,9 @@ class ProductControllerTest extends SuluTestCase
         $this->em->flush();
     }
 
+    /**
+     * Setup all test data.
+     */
     private function setUpTestData()
     {
         $this->currency1 = new Currency();
@@ -552,9 +568,26 @@ class ProductControllerTest extends SuluTestCase
         $this->em->flush();
     }
 
+    /**
+     * Tests if sulu validation is working for get products.
+     */
+    public function testValidation()
+    {
+        // Check erroneous validation.
+        $this->client->request('GET', '/api/products/' . $this->product1->getId());
+        $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
+
+        // Check successful validation.
+        $this->client->request('GET', static::getGetUrlForProduct($this->product1->getId()));
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+    }
+
+    /**
+     * Tests get product by id.
+     */
     public function testGetById()
     {
-        $this->client->request('GET', '/api/products/' . $this->product1->getId());
+        $this->client->request('GET', static::getGetUrlForProduct($this->product1->getId()));
         $response = json_decode($this->client->getResponse()->getContent(), true);
 
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
@@ -593,6 +626,9 @@ class ProductControllerTest extends SuluTestCase
         );
     }
 
+    /**
+     * Tests get all products.
+     */
     public function testGetAll()
     {
         $this->client->request('GET', '/api/products', ['ids' => '']);
@@ -617,6 +653,9 @@ class ProductControllerTest extends SuluTestCase
         $this->assertTrue($item->isRecurringPrice);
     }
 
+    /**
+     * Tests products flat api.
+     */
     public function testGetAllFlat()
     {
         $this->client->request('GET', '/api/products?flat=true');
@@ -639,6 +678,9 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals('EnglishProductStatus-Active', $item->status);
     }
 
+    /**
+     * Tests getting products by a status id.
+     */
     public function testGetByStatus()
     {
         $this->client->request(
@@ -657,6 +699,9 @@ class ProductControllerTest extends SuluTestCase
         );
     }
 
+    /**
+     * Tests getting products by a type id.
+     */
     public function testGetByType()
     {
         $this->client->request('GET', '/api/products?type=' . $this->type1->getId(), ['ids' => '']);
@@ -668,7 +713,9 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals($this->type1->getId(), $response->_embedded->products[0]->type->id);
     }
 
-    // FIXME existing prices get processed in the add callback
+    /**
+     * Tests put of a product.
+     */
     public function testPut()
     {
         $this->markTestSkipped();
@@ -757,6 +804,9 @@ class ProductControllerTest extends SuluTestCase
         );
     }
 
+    /**
+     * Tests put when product does not exist.
+     */
     public function testPutNotExisting()
     {
         $this->client->request('PUT', '/api/products/666', ['code' => 'MissingProduct']);
@@ -770,6 +820,9 @@ class ProductControllerTest extends SuluTestCase
         );
     }
 
+    /**
+     * Test put when parent product does not exist.
+     */
     public function testPutNotExistingParentProduct()
     {
         $this->client->request(
@@ -793,6 +846,9 @@ class ProductControllerTest extends SuluTestCase
         );
     }
 
+    /**
+     * Tests put when attribute set does not exist.
+     */
     public function testPutNotExistingAttributeSet()
     {
         $this->markTestSkipped();
@@ -816,6 +872,9 @@ class ProductControllerTest extends SuluTestCase
         );
     }
 
+    /**
+     * Tests put when type id does not exist.
+     */
     public function testPutNotExistingType()
     {
         $this->client->request(
@@ -827,8 +886,9 @@ class ProductControllerTest extends SuluTestCase
                     'id' => $this->productStatusActive->getId(),
                 ],
                 'type' => [
-                    'id' => 666, ],
-                ]
+                    'id' => 666,
+                ],
+            ]
         );
 
         $response = json_decode($this->client->getResponse()->getContent());
@@ -840,6 +900,9 @@ class ProductControllerTest extends SuluTestCase
         );
     }
 
+    /**
+     * Tests put when status id does not exist.
+     */
     public function testPutNotExistingStatus()
     {
         $this->client->request(
@@ -857,6 +920,9 @@ class ProductControllerTest extends SuluTestCase
         );
     }
 
+    /**
+     * Tests put with adding new categories.
+     */
     public function testPutWithCategories()
     {
         $this->client->request(
@@ -880,7 +946,7 @@ class ProductControllerTest extends SuluTestCase
 
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
 
-        $this->client->request('GET', '/api/products/' . $this->product1->getId());
+        $this->client->request('GET', static::getGetUrlForProduct($this->product1->getId()));
 
         $response = json_decode($this->client->getResponse()->getContent());
 
@@ -891,6 +957,9 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals('Category 2', $response->categories[1]->name);
     }
 
+    /**
+     * Tests put with adding attributes.
+     */
     public function testPutProductAttribute()
     {
         $data = [
@@ -916,6 +985,11 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals('EnglishAttributeValue-2', $response->attributes[1]->attributeValueName);
     }
 
+    /**
+     * Tests post of a new product.
+     *
+     * @param bool $testParent
+     */
     public function testPost($testParent = false)
     {
         $data = [
@@ -955,7 +1029,7 @@ class ProductControllerTest extends SuluTestCase
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
 
-        $this->client->request('GET', '/api/products/' . $response->id);
+        $this->client->request('GET', static::getGetUrlForProduct($response->id));
         $response = json_decode($this->client->getResponse()->getContent());
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
 
@@ -982,11 +1056,17 @@ class ProductControllerTest extends SuluTestCase
         }
     }
 
+    /**
+     * Tests post with a parent.
+     */
     public function testPostWithParent()
     {
         $this->testPost(true);
     }
 
+    /**
+     * Tests post without type.
+     */
     public function testPostNoType()
     {
         $data = [
@@ -1001,6 +1081,9 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals('The "SuluProductBundle:Product"-entity requires a "type"-argument', $response->message);
     }
 
+    /**
+     * Tests post when type does not exist.
+     */
     public function testPostNotExistingType()
     {
         $data = [
@@ -1019,6 +1102,9 @@ class ProductControllerTest extends SuluTestCase
         );
     }
 
+    /**
+     * Tests post with no status.
+     */
     public function testPostNoStatus()
     {
         $data = [
@@ -1033,6 +1119,9 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals('The "SuluProductBundle:Product"-entity requires a "status"-argument', $response->message);
     }
 
+    /**
+     * Tests post when status id does not exist.
+     */
     public function testPostNotExistingStatus()
     {
         $data = [
@@ -1051,6 +1140,9 @@ class ProductControllerTest extends SuluTestCase
         );
     }
 
+    /**
+     * Test post with a non existing parent product.
+     */
     public function testPostNotExistingParentProduct()
     {
         $data = [
@@ -1070,6 +1162,9 @@ class ProductControllerTest extends SuluTestCase
         );
     }
 
+    /**
+     * Test post when attribute set does not exist.
+     */
     public function testPostNotExistingAttributeSet()
     {
         $this->markTestSkipped();
@@ -1090,15 +1185,21 @@ class ProductControllerTest extends SuluTestCase
         );
     }
 
+    /**
+     * Test deleting a specific product.
+     */
     public function testDeleteById()
     {
         $this->client->request('DELETE', '/api/products/' . $this->product1->getId());
         $this->assertEquals('204', $this->client->getResponse()->getStatusCode());
 
-        $this->client->request('GET', '/api/products/' . $this->product1->getId());
+        $this->client->request('GET', static::getGetUrlForProduct($this->product1->getId()));
         $this->assertEquals('404', $this->client->getResponse()->getStatusCode());
     }
 
+    /**
+     * Testing getting flat products by parent id.
+     */
     public function testParentFilter()
     {
         $this->client->request('GET', '/api/products?flat=true&parent=null');
@@ -1109,6 +1210,9 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals('ProductNumber-1', $response->_embedded->products[0]->number);
     }
 
+    /**
+     * Test getting flat products by type.
+     */
     public function testTypeFilter()
     {
         $this->client->request('GET', '/api/products?flat=true&type=' . $this->type1->getId());
@@ -1119,9 +1223,15 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals('ProductNumber-1', $response->_embedded->products[0]->number);
     }
 
+    /**
+     * Test getting flat products by multiple types.
+     */
     public function testAllTypeFilter()
     {
-        $this->client->request('GET', '/api/products?flat=true&type=' . $this->type1->getId() . ',' . $this->type2->getId());
+        $this->client->request(
+            'GET',
+            '/api/products?flat=true&type=' . $this->type1->getId() . ',' . $this->type2->getId()
+        );
 
         $response = json_decode($this->client->getResponse()->getContent());
 
@@ -1130,6 +1240,9 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals('ProductNumber-1', $response->_embedded->products[1]->number);
     }
 
+    /**
+     * Test put wit special prices.
+     */
     public function testPutSpecialPrice()
     {
         $data = [
@@ -1157,6 +1270,9 @@ class ProductControllerTest extends SuluTestCase
         $this->assertCount(2, $response->tags);
     }
 
+    /**
+     * Test activating an invalid product.
+     */
     public function testActivateInvalidProduct()
     {
         // Trying to delete supplier from product and at the same time trying to activate it
@@ -1186,12 +1302,15 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals(ProductException::PRODUCT_NOT_VALID, $response->code ? $response->code : null);
     }
 
+    /**
+     * Test put product with search terms.
+     */
     public function testPutSearchterms()
     {
         $productId = $this->product1->getId();
 
         // Get product data.
-        $this->client->request('GET', '/api/products/' . $productId);
+        $this->client->request('GET', static::getGetUrlForProduct($productId));
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
 
         // Manipulate search Terms.

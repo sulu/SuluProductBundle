@@ -1,0 +1,13 @@
+{
+    "title": "Get product by id schema",
+    "type": "object",
+    "properties": {
+        "locale": {
+            "type": "string",
+            "minLength": 2
+        }
+    },
+    "required": [
+        "locale"
+    ]
+}

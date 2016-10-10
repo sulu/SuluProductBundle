@@ -14,6 +14,7 @@ Add the following to your application kernel:
 ```
 // Product bundle
 new Sulu\Bundle\ProductBundle\SuluProductBundle(),
+new Sulu\Bundle\ValidationBundle\SuluValidationBundle(),
 ```
 
 Add the following to your `admin/routing.yml`:

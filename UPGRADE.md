@@ -14,6 +14,19 @@ sulu_product:
 
 ## 0.14.0
 
+### Added schema for products api.
+
+SuluValidationBundle has been included and as first step a schema for
+`GET products by id` has been created. The schema now includes a locale for
+products:
+
+If you have requested a product without providing the locale, you now 
+need to add a locale to your call e.g.
+
+```
+    GET /admin/api/products/1?locale=en
+```
+
 ### Product type cleanups
 
 ### New product type `variant`
