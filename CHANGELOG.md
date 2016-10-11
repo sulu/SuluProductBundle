@@ -3,6 +3,7 @@ CHANGELOG for Sulu Product Bundle
 
 * dev-develop
 
+    * BUGFIX      Fixed wrong path to get action schema.
     * FEATURE     Added validation schema for get products api.
 
 * 0.15.0 (2016-09-26)
