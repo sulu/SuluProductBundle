@@ -11,9 +11,12 @@
 
 namespace Sulu\Bundle\ProductBundle\Entity;
 
-use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\NoResultException;
+use Sulu\Component\Persistence\Repository\ORM\EntityRepository;
 
+/**
+ * Entity repository for product-attributes.
+ */
 class ProductAttributeRepository extends EntityRepository
 {
     /**

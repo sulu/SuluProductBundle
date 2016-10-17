@@ -256,12 +256,13 @@ class ProductControllerTest extends SuluTestCase
 
     /**
      * @param int $productId
+     * @param string $locale
      *
      * @return string
      */
-    public static function getGetUrlForProduct($productId)
+    public static function getGetUrlForProduct($productId, $locale = 'en')
     {
-        return '/api/products/' . $productId . '?locale=en';
+        return '/api/products/' . $productId . '?locale=' . $locale;
     }
 
     /**

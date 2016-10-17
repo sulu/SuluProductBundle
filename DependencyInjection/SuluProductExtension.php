@@ -12,6 +12,7 @@
 namespace Sulu\Bundle\ProductBundle\DependencyInjection;
 
 use Sulu\Bundle\PersistenceBundle\DependencyInjection\PersistenceExtensionTrait;
+use Sulu\Bundle\ProductBundle\DataFixtures\ORM\ProductTypes\LoadProductTypes;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
@@ -40,6 +41,8 @@ class SuluProductExtension extends Extension implements PrependExtensionInterfac
         $container->setParameter('sulu_product.locales', $config['locales']);
         $container->setParameter('sulu_product.template', $config['template']);
 
+        $container->setParameter('sulu_product.product_types_map', $this->retrieveProductTypesMap($container));
+
         $loader = new Loader\XmlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
         $loader->load('services.xml');
 
@@ -56,10 +59,46 @@ class SuluProductExtension extends Extension implements PrependExtensionInterfac
                 'sulu_validation',
                 [
                     'schemas' => [
+                        //Products
                         'get_product' => '@SuluProductBundle/Validation/Products/getActionSchema.json',
+                        // Variants
+                        'get_product_variants' => '@SuluProductBundle/Validation/Variants/cGetActionSchema.json',
+                        'post_product_variant' => '@SuluProductBundle/Validation/Variants/postPutActionSchema.json',
+                        'put_product_variant' => '@SuluProductBundle/Validation/Variants/postPutActionSchema.json',
                     ],
                 ]
             );
         }
+        if ($container->hasExtension('fos_rest')) {
+            $container->prependExtensionConfig(
+                'fos_rest',
+                [
+                    'exception' => [
+                        'codes' => [
+                            'Sulu\Bundle\ProductBundle\Product\Exception\ProductNotFoundException' => 400,
+                            'Sulu\Bundle\ProductBundle\Product\Exception\ProductException' => 400,
+                        ],
+                    ],
+                ]
+            );
+        }
+    }
+
+    /**
+     * Returns key to id mapping for product-types.
+     * Processes product-types fixtures xml.
+     *
+     * @return array
+     */
+    private function retrieveProductTypesMap()
+    {
+        $productTypeMap = [];
+        LoadProductTypes::processProductTypesFixtures(
+            function (\DOMElement $element) use (&$productTypeMap) {
+                $productTypeMap[$element->getAttribute('key')] = $element->getAttribute('id');
+            }
+        );
+
+        return $productTypeMap;
     }
 }

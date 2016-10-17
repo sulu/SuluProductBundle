@@ -16,6 +16,9 @@ use Sulu\Bundle\ProductBundle\Entity\AddonPrice;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductPrice;
 
+/**
+ * This interface contains all methods a ProductPriceManager needs to implement.
+ */
 interface ProductPriceManagerInterface
 {
     /**

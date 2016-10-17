@@ -11,11 +11,13 @@
 
 namespace Sulu\Bundle\ProductBundle\Controller;
 
+use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Routing\ClassResourceInterface;
 use Hateoas\Representation\CollectionRepresentation;
-use Sulu\Bundle\ProductBundle\Product\Exception\ProductNotFoundException;
+use Sulu\Bundle\ProductBundle\Product\Exception\ProductException;
+use Sulu\Bundle\ProductBundle\Product\ProductFactoryInterface;
 use Sulu\Bundle\ProductBundle\Product\ProductManagerInterface;
-use Sulu\Component\Rest\Exception\EntityNotFoundException;
+use Sulu\Bundle\ProductBundle\Product\ProductVariantManagerInterface;
 use Sulu\Component\Rest\ListBuilder\Doctrine\DoctrineListBuilderFactory;
 use Sulu\Component\Rest\ListBuilder\ListRepresentation;
 use Sulu\Component\Rest\RestController;
@@ -33,31 +35,21 @@ class VariantController extends RestController implements ClassResourceInterface
     protected static $entityKey = 'products';
 
     /**
-     * Returns the manager for products.
+     * Retrieves and shows the variant with the given ID for the parent product.
      *
-     * @return ProductManagerInterface
-     */
-    private function getManager()
-    {
-        return $this->get('sulu_product.product_manager');
-    }
-
-    /**
-     * Retrieves and shows the variant entIdwith the given ID for the parent product.
-     *
-     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @param Request $request
      * @param int $parentId
-     * @param int $id product ID
+     * @param int $variantId
      *
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      */
-    public function getAction(Request $request, $parentId, $id)
+    public function getAction(Request $request, $parentId, $variantId)
     {
         $locale = $this->getLocale($request);
         $view = $this->responseGetById(
-            $id,
+            $variantId,
             function ($id) use ($locale, $parentId) {
-                $product = $this->getManager()->findByIdAndLocale($id, $locale);
+                $product = $this->getProductManager()->findByIdAndLocale($id, $locale);
 
                 if ($product !== null && $product->getParent() && $product->getParent()->getId() == $parentId) {
                     return $product;
@@ -71,10 +63,10 @@ class VariantController extends RestController implements ClassResourceInterface
     }
 
     /**
-     * Returns a list of products.
+     * Returns a list of product variants for the requested product.
      *
      * @param Request $request
-     * @param $parentId
+     * @param int $parentId
      *
      * @return Response
      */
@@ -89,7 +81,7 @@ class VariantController extends RestController implements ClassResourceInterface
 
             $listBuilder = $factory->create(self::$entityName);
 
-            $fieldDescriptors = $this->getManager()->getFieldDescriptors($this->getLocale($request));
+            $fieldDescriptors = $this->getProductManager()->getFieldDescriptors($this->getLocale($request));
 
             $restHelper->initializeListBuilder(
                 $listBuilder,
@@ -98,8 +90,15 @@ class VariantController extends RestController implements ClassResourceInterface
 
             $listBuilder->where($fieldDescriptors['parent'], $parentId);
 
-            // TODO, should only be added if "categories" are requested
-            $listBuilder->addGroupBy($fieldDescriptors['id']);
+            // Only add group by id if categories are processed.
+            $fieldsParam = $request->get('fields');
+            $fields = explode(',', $fieldsParam);
+            if (isset($filter['categories'])
+                || !$fieldsParam
+                || array_search('categories', $fields) !== false
+            ) {
+                $listBuilder->addGroupBy($fieldDescriptors['id']);
+            }
 
             $list = new ListRepresentation(
                 $listBuilder->execute(),
@@ -112,7 +111,7 @@ class VariantController extends RestController implements ClassResourceInterface
             );
         } else {
             $list = new CollectionRepresentation(
-                $this->getManager()->findAllByLocale($this->getLocale($request)),
+                $this->getProductManager()->findAllByLocale($this->getLocale($request)),
                 self::$entityKey
             );
         }
@@ -123,47 +122,125 @@ class VariantController extends RestController implements ClassResourceInterface
     }
 
     /**
-     * Adds a new variant to this product.
+     * Adds a new variant to given product.
      *
      * @param Request $request
-     * @param $parentId
+     * @param int $parentId
      *
      * @return Response
      */
     public function postAction(Request $request, $parentId)
     {
-        try {
-            $variant = $this->getManager()->addVariant($parentId, $request->get('id'), $this->getLocale($request));
+        $requestData = $request->request->all();
+        $userId = $this->getUser()->getId();
+        $locale = $this->getLocale($request);
 
-            $view = $this->view($variant, 200);
-        } catch (ProductNotFoundException $exc) {
-            $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
-            $view = $this->view($exception->toArray(), 400);
-        }
+        $variant = $this->getProductVariantManager()->createVariant(
+            $parentId,
+            $requestData,
+            $locale,
+            $userId
+        );
+
+        $this->getEntityManager()->flush();
+
+        $apiVariant = $this->getProductFactory()->createApiEntity($variant, $locale);
+
+        $view = $this->view($apiVariant, 200);
 
         return $this->handleView($view);
     }
 
     /**
-     * Removes a variant from a product.
+     * Updates an existing variant to given product.
      *
      * @param Request $request
-     * @param $parentId
-     * @param $id
+     * @param int $parentId
+     * @param int $variantId
+     *
+     * @throws ProductException
      *
      * @return Response
      */
-    public function deleteAction(Request $request, $parentId, $id)
+    public function putAction(Request $request, $parentId, $variantId)
     {
-        try {
-            $this->getManager()->removeVariant($parentId, $id);
+        $requestData = $request->request->all();
+        $userId = $this->getUser()->getId();
+        $locale = $this->getLocale($request);
 
-            $view = $this->view(null, 204);
-        } catch (ProductNotFoundException $exc) {
-            $exception = new EntityNotFoundException($exc->getEntityName(), $exc->getId());
-            $view = $this->view($exception->toArray(), 404);
+        $variant = $this->getProductVariantManager()->updateVariant(
+            $variantId,
+            $requestData,
+            $locale,
+            $userId
+        );
+
+        if ($variant->getParent()->getId() !== (int) $parentId) {
+            throw new ProductException('Variant does not exists for given product.');
         }
 
+        $this->getEntityManager()->flush();
+
+        $apiVariant = $this->getProductFactory()->createApiEntity($variant, $locale);
+
+        $view = $this->view($apiVariant, 200);
+
         return $this->handleView($view);
+    }
+
+    /**
+     * Removes a variant of product.
+     *
+     * @param int $parentId
+     * @param int $variantId
+     *
+     * @throws ProductException
+     *
+     * @return Response
+     */
+    public function deleteAction($parentId, $variantId)
+    {
+        $variant = $this->getProductVariantManager()->deleteVariant($variantId);
+
+        if ($variant->getParent()->getId() !== (int) $parentId) {
+            throw new ProductException('Variant does not exists for given product.');
+        }
+        $this->getEntityManager()->flush();
+
+        $view = $this->view(null, 204);
+
+        return $this->handleView($view);
+    }
+
+    /**
+     * @return ProductFactoryInterface
+     */
+    private function getProductFactory()
+    {
+        return $this->get('sulu_product.product_factory');
+    }
+
+    /**
+     * @return ProductManagerInterface
+     */
+    private function getProductManager()
+    {
+        return $this->get('sulu_product.product_manager');
+    }
+
+    /**
+     * @return EntityManagerInterface
+     */
+    private function getEntityManager()
+    {
+        return $this->get('doctrine.orm.entity_manager');
+    }
+
+    /**
+     * @return ProductVariantManagerInterface
+     */
+    private function getProductVariantManager()
+    {
+        return $this->get('sulu_product.product_variant_manager');
     }
 }

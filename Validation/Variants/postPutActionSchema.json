@@ -1,0 +1,61 @@
+{
+    "title": "Schema for post a new variant and put an existing one",
+    "type": "object",
+    "properties": {
+        "locale": {
+            "type": "string",
+            "minLength": 2
+        },
+        "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+        },
+        "number": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+        },
+        "attributes": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+                "type": "object",
+                "properties": {
+                    "attributeId": {
+                        "type": "integer"
+                    },
+                    "attributeValueName": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                    }
+                },
+                "required": ["attributeId", "attributeValueName"]
+            }
+        },
+        "prices": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+                "type": "object",
+                "properties": {
+                    "price": {
+                        "type": "number"
+                    },
+                    "currency": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            }
+                        },
+                        "required": ["id"]
+                    }
+                },
+                "required": ["price", "currency"]
+            }
+        }
+    },
+    "required": ["locale", "name", "number", "attributes", "prices"]
+}

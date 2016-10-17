@@ -20,14 +20,15 @@ use Sulu\Bundle\ProductBundle\Entity\Type;
 class LoadProductTypes implements FixtureInterface, OrderedFixtureInterface
 {
     /**
-     * {@inheritdoc}
+     * Function reads the product-types fixtures file and executes the given
+     * element callback function for each node.
+     * This function is static in order to be able to load product types xml
+     * from another function as well.
+     *
+     * @param callable $elementCallback
      */
-    public function load(ObjectManager $manager)
+    public static function processProductTypesFixtures(callable $elementCallback)
     {
-        // Force id.
-        $metadata = $manager->getClassMetaData(Type::class);
-        $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_NONE);
-
         $file = dirname(__FILE__) . '/../../product-types.xml';
         $doc = new \DOMDocument();
         $doc->load($file);
@@ -38,12 +39,27 @@ class LoadProductTypes implements FixtureInterface, OrderedFixtureInterface
         if (!is_null($elements)) {
             /** @var \DOMNode $element */
             foreach ($elements as $element) {
-                $type = new Type();
-                $type->setId($element->getAttribute('id'));
-                $type->setTranslationKey($element->getAttribute('translation-key'));
-                $manager->persist($type);
+                $elementCallback($element);
             }
         }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function load(ObjectManager $manager)
+    {
+        // Force id.
+        $metadata = $manager->getClassMetaData(Type::class);
+        $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_NONE);
+
+        static::processProductTypesFixtures(function(\DOMElement $element) use ($manager) {
+            $type = new Type();
+            $type->setId($element->getAttribute('id'));
+            $type->setTranslationKey($element->getAttribute('translation-key'));
+            $manager->persist($type);
+        });
+
         $manager->flush();
     }
 

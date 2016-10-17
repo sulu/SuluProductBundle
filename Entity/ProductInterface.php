@@ -11,7 +11,8 @@
 
 namespace Sulu\Bundle\ProductBundle\Entity;
 
-use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use Sulu\Bundle\CategoryBundle\Entity\Category;
 use Sulu\Bundle\ContactBundle\Entity\AccountInterface;
 use Sulu\Bundle\ContactBundle\Entity\Country;
 use Sulu\Bundle\MediaBundle\Entity\Media;
@@ -216,16 +217,16 @@ interface ProductInterface
     /**
      * Set taxClass.
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\TaxClass $taxClass
+     * @param TaxClass $taxClass
      *
      * @return BaseProduct
      */
-    public function setTaxClass(\Sulu\Bundle\ProductBundle\Entity\TaxClass $taxClass = null);
+    public function setTaxClass(TaxClass $taxClass = null);
 
     /**
      * Get taxClass.
      *
-     * @return \Sulu\Bundle\ProductBundle\Entity\TaxClass
+     * @return TaxClass
      */
     public function getTaxClass();
 
@@ -248,7 +249,7 @@ interface ProductInterface
     /**
      * Get relations.
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return Collection
      */
     public function getRelations();
 
@@ -271,7 +272,7 @@ interface ProductInterface
     /**
      * Get upsells.
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return Collection
      */
     public function getUpsells();
 
@@ -294,14 +295,14 @@ interface ProductInterface
     /**
      * Get crosssells.
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return Collection
      */
     public function getCrosssells();
 
     /**
      * Set changer.
      *
-     * @param \Sulu\Component\Security\Authentication\UserInterface $changer
+     * @param UserInterface $changer
      *
      * @return ProductInterface
      */
@@ -317,7 +318,7 @@ interface ProductInterface
     /**
      * Set creator.
      *
-     * @param \Sulu\Component\Security\Authentication\UserInterface $creator
+     * @param UserInterface $creator
      *
      * @return ProductInterface
      */
@@ -365,25 +366,25 @@ interface ProductInterface
     /**
      * Get children.
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return Collection
      */
     public function getChildren();
 
     /**
      * Add prices.
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\ProductPrice $prices
+     * @param ProductPrice $prices
      *
      * @return Product
      */
-    public function addPrice(\Sulu\Bundle\ProductBundle\Entity\ProductPrice $prices);
+    public function addPrice(ProductPrice $prices);
 
     /**
      * Remove prices.
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\ProductPrice $prices
+     * @param ProductPrice $prices
      */
-    public function removePrice(\Sulu\Bundle\ProductBundle\Entity\ProductPrice $prices);
+    public function removePrice(ProductPrice $prices);
 
     /**
      * Get prices.
@@ -411,9 +412,35 @@ interface ProductInterface
     /**
      * Get attributes.
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return Collection
      */
     public function getProductAttributes();
+
+    /**
+     * @return Collection
+     */
+    public function getVariantAttributes();
+
+    /**
+     * @param Attribute $attribute
+     *
+     * @return $this
+     */
+    public function addVariantAttribute(Attribute $attribute);
+
+    /**
+     * @param Attribute[] $attributes
+     *
+     * @return $this
+     */
+    public function addVariantAttributes(array $attributes);
+
+    /**
+     * @param Attribute $attribute
+     *
+     * @return $this
+     */
+    public function removeVariantAttribute(Attribute $attribute);
 
     /**
      * Add translations.
@@ -434,7 +461,7 @@ interface ProductInterface
     /**
      * Get translations.
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return Collection
      */
     public function getTranslations();
 
@@ -466,60 +493,60 @@ interface ProductInterface
     /**
      * Get extras.
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return Collection
      */
     public function getAddons();
 
     /**
      * Add setProducts.
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $setProducts
+     * @param ProductInterface $setProducts
      *
      * @return BaseProduct
      */
-    public function addSetProduct(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $setProducts);
+    public function addSetProduct(ProductInterface $setProducts);
 
     /**
      * Remove setProducts.
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $setProducts
+     * @param ProductInterface $setProducts
      */
-    public function removeSetProduct(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $setProducts);
+    public function removeSetProduct(ProductInterface $setProducts);
 
     /**
      * Get setProducts.
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return Collection
      */
     public function getSetProducts();
 
     /**
      * Add categories.
      *
-     * @param \Sulu\Bundle\CategoryBundle\Entity\Category $categories
+     * @param Category $categories
      *
      * @return BaseProduct
      */
-    public function addCategory(\Sulu\Bundle\CategoryBundle\Entity\Category $categories);
+    public function addCategory(Category $categories);
 
     /**
      * Remove categories.
      *
-     * @param \Sulu\Bundle\CategoryBundle\Entity\Category $categories
+     * @param Category $categories
      */
-    public function removeCategory(\Sulu\Bundle\CategoryBundle\Entity\Category $categories);
+    public function removeCategory(Category $categories);
 
     /**
      * Get categories.
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return Collection
      */
     public function getCategories();
 
     /**
      * Get media.
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return Collection
      */
     public function getMedia();
 
@@ -572,7 +599,7 @@ interface ProductInterface
     public function isValidShopProduct($defaultCurrency);
 
     /**
-     * @return ArrayCollection
+     * @return Collection
      */
     public function getTags();
 

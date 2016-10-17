@@ -11,8 +11,11 @@
 
 namespace Sulu\Bundle\ProductBundle\Entity;
 
-use Doctrine\ORM\EntityRepository;
+use Sulu\Component\Persistence\Repository\ORM\EntityRepository;
 
+/**
+ * Entity repository for attribute types.
+ */
 class AttributeTypeRepository extends EntityRepository
 {
 }

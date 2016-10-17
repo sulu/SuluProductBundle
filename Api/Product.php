@@ -539,11 +539,15 @@ class Product extends ApiWrapper implements ApiProductInterface
      * @VirtualProperty
      * @SerializedName("type")
      *
-     * @return Type The type of the product
+     * @return Type|null The type of the product
      */
     public function getType()
     {
-        return new Type($this->entity->getType(), $this->locale);
+        if ($this->entity->getType()) {
+            return new Type($this->entity->getType(), $this->locale);
+        }
+
+        return null;
     }
 
     /**

@@ -118,3 +118,14 @@ You can write multiple attribute fixture files and define the path of your xmls 
     </meta>
 </property>
 ```
+
+# API Documentation
+
+The following api's have been documented:
+[Product Addon Api](Resources/doc/api/product-addon.md)
+[Product Variant Api](Resources/doc/api/product-variant.md)
+
+# Developer Documentation
+
+The sulu product developer documentation can be found here:
+[Developer Documentation](Resources/doc/development.md)

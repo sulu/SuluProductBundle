@@ -11,11 +11,14 @@
 
 namespace Sulu\Bundle\ProductBundle\Entity;
 
-use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\NoResultException;
 use Pagerfanta\Adapter\DoctrineORMAdapter;
 use Pagerfanta\Pagerfanta;
+use Sulu\Component\Persistence\Repository\ORM\EntityRepository;
 
+/**
+ * Entity repository for special prices.
+ */
 class SpecialPriceRepository extends EntityRepository
 {
     /**

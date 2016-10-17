@@ -14,11 +14,16 @@ namespace Sulu\Bundle\ProductBundle\Product;
 use JMS\Serializer\Annotation\Groups;
 use Sulu\Bundle\ProductBundle\Entity\Addon;
 use Sulu\Bundle\ProductBundle\Entity\AddonPrice;
+use Sulu\Bundle\ProductBundle\Entity\CurrencyRepository;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductPrice;
 use Sulu\Bundle\ProductBundle\Entity\SpecialPrice;
+use Sulu\Bundle\ProductBundle\Product\Exception\ProductDependencyNotFoundException;
 use Sulu\Bundle\ProductBundle\Util\PriceFormatter;
 
+/**
+ * Product price manager is responsible for creating and returning the correct product prices.
+ */
 class ProductPriceManager implements ProductPriceManagerInterface
 {
     /**
@@ -32,15 +37,60 @@ class ProductPriceManager implements ProductPriceManagerInterface
     protected $priceFormatter;
 
     /**
+     * @var CurrencyRepository
+     */
+    private $currencyRepository;
+
+    /**
      * @param string $defaultCurrency
      * @param PriceFormatter $priceFormatter
+     * @param CurrencyRepository $currencyRepository
      */
     public function __construct(
         $defaultCurrency,
-        PriceFormatter $priceFormatter
+        PriceFormatter $priceFormatter,
+        CurrencyRepository $currencyRepository
     ) {
         $this->defaultCurrency = $defaultCurrency;
         $this->priceFormatter = $priceFormatter;
+        $this->currencyRepository = $currencyRepository;
+    }
+
+    /**
+     * @param ProductInterface $product
+     * @param float $priceValue
+     * @param float $minimumQuantity
+     * @param null|int $currencyId
+     *
+     * @throws ProductDependencyNotFoundException
+     *
+     * @return ProductPrice
+     */
+    public function createNewProductPriceForCurrency(
+        ProductInterface $product,
+        $priceValue,
+        $minimumQuantity = 0.0,
+        $currencyId = null
+    ) {
+        // Fetch currency.
+        if (!$currencyId) {
+            $currency = $this->currencyRepository->findByCode($this->defaultCurrency);
+        } else {
+            $currency = $this->currencyRepository->find($currencyId);
+        }
+
+        if (!$currency) {
+            throw new ProductDependencyNotFoundException($this->currencyRepository->getClassName(), $currencyId);
+        }
+
+        $productPrice = new ProductPrice();
+        $productPrice->setMinimumQuantity($minimumQuantity);
+        $productPrice->setPrice($priceValue);
+        $productPrice->setProduct($product);
+        $productPrice->setCurrency($currency);
+        $product->addPrice($productPrice);
+
+        return $productPrice;
     }
 
     /**

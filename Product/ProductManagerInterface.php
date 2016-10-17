@@ -13,6 +13,7 @@ namespace Sulu\Bundle\ProductBundle\Product;
 
 use Sulu\Bundle\ProductBundle\Api\Product;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
+use Sulu\Bundle\ProductBundle\Entity\ProductTranslation;
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescriptor;
 
 interface ProductManagerInterface
@@ -20,7 +21,7 @@ interface ProductManagerInterface
     /**
      * Returns the FieldDescriptors for the products.
      *
-     * @param $locale
+     * @param int $locale
      *
      * @return DoctrineFieldDescriptor[]
      */
@@ -46,14 +47,14 @@ interface ProductManagerInterface
      */
     public function findAllByLocale($locale, $filter = []);
 
-   /**
-    * Returns all products in the given locale and one of the ids.
-    *
-    * @param string $locale
-    * @param array $ids
-    *
-    * @return Product[]
-    */
+    /**
+     * Returns all products in the given locale and one of the ids.
+     *
+     * @param string $locale
+     * @param array $ids
+     *
+     * @return Product[]
+     */
     public function findAllByIdsAndLocale($locale, $ids);
 
     /**
@@ -62,7 +63,7 @@ interface ProductManagerInterface
      * @param array $data The data for the product to save
      * @param string $locale The locale in which the product should be saved
      * @param int $userId The id of the user who called this action
-     * @param int $id The id of the product, if the product is already saved in the database
+     * @param int|null $id The id of the product, if the product is already saved in the database
      *
      * @return Product
      */
@@ -83,25 +84,6 @@ interface ProductManagerInterface
     public function partialUpdate(array $data, $locale, $userId, $id);
 
     /**
-     * Adds a variant to a specific product.
-     *
-     * @param int $parentId The id of the product, to which the variant is added
-     * @param int $variantId The id of the product, which is added to the other as a variant
-     * @param string $locale The locale to load
-     *
-     * @return Product The new variant
-     */
-    public function addVariant($parentId, $variantId, $locale);
-
-    /**
-     * Removes a variant from a specific product.
-     *
-     * @param int $parentId The id of the product, from which the variant is removed
-     * @param int $variantId The id of the product, which is removed from the other
-     */
-    public function removeVariant($parentId, $variantId);
-
-    /**
      * Deletes the given product.
      *
      * @param int $id The id of the product to delete
@@ -117,4 +99,15 @@ interface ProductManagerInterface
      * @return ProductInterface[]
      */
     public function createApiEntitiesByIds($ids, $locale);
+
+    /**
+     * Function tries to find a translation for product by locale. If translation for given locale
+     * does not exist, a new one is created an added to the product.
+     *
+     * @param ProductInterface $product
+     * @param string $locale
+     *
+     * @return ProductTranslation
+     */
+    public function retrieveOrCreateProductTranslationByLocale(ProductInterface $product, $locale);
 }

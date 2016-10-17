@@ -27,11 +27,17 @@ class ProductNotFoundException extends ProductException
      */
     private $id;
 
+    /**
+     * @param int $id
+     */
     public function __construct($id)
     {
         $this->entityName = 'SuluProductBundle:Product';
         $this->id = $id;
-        parent::__construct('The product with the id "' . $this->id . '" was not found.', 0);
+        parent::__construct(
+            sprintf('Entity with the type "%s" and the id "%s" not found.', $this->entityName, $id),
+            0
+        );
     }
 
     /**

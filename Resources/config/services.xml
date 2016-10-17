@@ -22,6 +22,7 @@
         <parameter key="sulu_product.country_tax_repository.class">Sulu\Bundle\ProductBundle\Entity\CountryTaxRepository</parameter>
         <parameter key="sulu_product.currency_repository.class">Sulu\Bundle\ProductBundle\Entity\CurrencyRepository</parameter>
         <parameter key="sulu_product.product_manager.class">Sulu\Bundle\ProductBundle\Product\ProductManager</parameter>
+        <parameter key="sulu_product.product_variant_manager.class">Sulu\Bundle\ProductBundle\Product\ProductVariantManager</parameter>
         <parameter key="sulu_product.product_addons_manager.class">Sulu\Bundle\ProductBundle\Product\ProductAddonManager</parameter>
         <parameter key="sulu_product.product_locale_manager.class">Sulu\Bundle\ProductBundle\Product\ProductLocaleManager</parameter>
         <parameter key="sulu_product.attribute_manager.class">Sulu\Bundle\ProductBundle\Product\AttributeManager</parameter>
@@ -39,6 +40,7 @@
         <parameter key="sulu_product.product_media_manager.class">Sulu\Bundle\ProductBundle\Product\ProductMediaManager</parameter>
         <parameter key="sulu_product.js_config.class">Sulu\Bundle\AdminBundle\Admin\JsConfig</parameter>
         <parameter key="sulu_product.price_formatter.class">Sulu\Bundle\ProductBundle\Util\PriceFormatter</parameter>
+        <parameter key="sulu_product.product_attribute_manager.class">Sulu\Bundle\ProductBundle\Product\ProductAttributeManager</parameter>
     </parameters>
     <services>
         <!-- ADMIN -->
@@ -71,6 +73,10 @@
         <service id="sulu_product.attribute_value_repository" class="%sulu_product.attribute_value_repository.class%">
             <factory service="doctrine.orm.entity_manager" method="getRepository"/>
             <argument>SuluProductBundle:AttributeValue</argument>
+        </service>
+        <service id="sulu_product.attribute_value_translation_repository" class="Sulu\Bundle\ProductBundle\Entity\AttributeValueTranslationRepository">
+            <factory service="doctrine.orm.entity_manager" method="getRepository"/>
+            <argument>SuluProductBundle:AttributeValueTranslation</argument>
         </service>
         <service id="sulu_product.attribute_set_repository" class="%sulu_product.attribute_set_repository.class%">
             <factory service="doctrine.orm.entity_manager" method="getRepository"/>
@@ -148,6 +154,25 @@
             <argument type="service" id="sulu_contact.account_repository"/>
             <argument type="service" id="sulu_tag.tag_repository"/>
             <argument>%sulu_product.default_currency%</argument>
+            <argument type="service" id="sulu_product.product_attribute_manager"/>
+            <argument>%sulu_product.product_types_map%</argument>
+        </service>
+        <service id="sulu_product.product_attribute_manager" class="%sulu_product.product_attribute_manager.class%">
+            <argument type="service" id="doctrine.orm.entity_manager"/>
+            <argument type="service" id="sulu_product.product_attribute_repository"/>
+            <argument type="service" id="sulu_product.attribute_value_repository"/>
+            <argument type="service" id="sulu_product.attribute_value_translation_repository"/>
+        </service>
+        <service id="sulu_product.product_variant_manager" class="%sulu_product.product_variant_manager.class%">
+            <argument type="service" id="doctrine.orm.entity_manager"/>
+            <argument type="service" id="sulu_product.product_manager"/>
+            <argument type="service" id="sulu_product.product_repository"/>
+            <argument type="service" id="sulu_product.product_factory"/>
+            <argument type="service" id="sulu_product.product_attribute_manager"/>
+            <argument type="service" id="sulu_product.type_repository"/>
+            <argument type="service" id="sulu_product.price_manager"/>
+            <argument type="service" id="sulu_security.user_repository"/>
+            <argument>%sulu_product.product_types_map%</argument>
         </service>
         <service id="sulu_product.attribute_manager" class="%sulu_product.attribute_manager.class%">
             <argument type="service" id="sulu_product.attribute_repository"/>
@@ -159,6 +184,7 @@
         <service id="sulu_product.price_manager" class="%sulu_product.price_manager.class%">
             <argument>%sulu_product.default_currency%</argument>
             <argument type="service" id="sulu_product.price_formatter"/>
+            <argument type="service" id="sulu_product.currency_repository"/>
         </service>
         <service id="sulu_product.attribute_value_manager" class="%sulu_product.attribute_value_manager.class%">
             <argument type="service" id="sulu_product.attribute_value_repository"/>

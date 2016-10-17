@@ -25,8 +25,6 @@ use Sulu\Bundle\ProductBundle\Api\Status;
 use Sulu\Bundle\ProductBundle\Entity\Attribute;
 use Sulu\Bundle\ProductBundle\Entity\AttributeRepository;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSetRepository;
-use Sulu\Bundle\ProductBundle\Entity\AttributeValue;
-use Sulu\Bundle\ProductBundle\Entity\AttributeValueTranslation;
 use Sulu\Bundle\ProductBundle\Entity\CurrencyRepository;
 use Sulu\Bundle\ProductBundle\Entity\DeliveryStatus;
 use Sulu\Bundle\ProductBundle\Entity\DeliveryStatusRepository;
@@ -34,6 +32,7 @@ use Sulu\Bundle\ProductBundle\Entity\ProductAttribute;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttributeRepository;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductPrice as ProductPriceEntity;
+use Sulu\Bundle\ProductBundle\Entity\ProductTranslation;
 use Sulu\Bundle\ProductBundle\Entity\SpecialPrice;
 use Sulu\Bundle\ProductBundle\Entity\SpecialPriceRepository;
 use Sulu\Bundle\ProductBundle\Entity\Status as StatusEntity;
@@ -183,6 +182,16 @@ class ProductManager implements ProductManagerInterface
     protected $tagRepository;
 
     /**
+     * @var ProductAttributeManager
+     */
+    private $productAttributeManager;
+
+    /**
+     * @var array
+     */
+    private $productTypesMap;
+
+    /**
      * @param ProductRepositoryInterface $productRepository
      * @param SpecialPriceRepository $specialPriceRepository
      * @param AttributeSetRepository $attributeSetRepository
@@ -202,6 +211,8 @@ class ProductManager implements ProductManagerInterface
      * @param AccountRepository $accountRepository
      * @param TagRepositoryInterface $tagRepository
      * @param string $defaultCurrency
+     * @param ProductAttributeManager $productAttributeManager
+     * @param array $productTypesMap
      */
     public function __construct(
         ProductRepositoryInterface $productRepository,
@@ -222,7 +233,9 @@ class ProductManager implements ProductManagerInterface
         ObjectManager $em,
         AccountRepository $accountRepository,
         TagRepositoryInterface $tagRepository,
-        $defaultCurrency
+        $defaultCurrency,
+        ProductAttributeManager $productAttributeManager,
+        array $productTypesMap
     ) {
         $this->productRepository = $productRepository;
         $this->specialPriceRepository = $specialPriceRepository;
@@ -243,6 +256,8 @@ class ProductManager implements ProductManagerInterface
         $this->accountRepository = $accountRepository;
         $this->tagRepository = $tagRepository;
         $this->defaultCurrency = $defaultCurrency;
+        $this->productAttributeManager = $productAttributeManager;
+        $this->productTypesMap = $productTypesMap;
     }
 
     /**
@@ -1164,8 +1179,8 @@ class ProductManager implements ProductManagerInterface
 
                     $product->addSpecialPrice($specialPrice);
                     $this->em->persist($specialPrice);
-                // Else update the already existing special price.
                 } else {
+                    // Else update the already existing special price.
                     $specialPrice = $specialPrices[$specialPriceData['currency']['code']]->getEntity();
                 }
 
@@ -1395,6 +1410,28 @@ class ProductManager implements ProductManagerInterface
         }
 
         return $product;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function retrieveOrCreateProductTranslationByLocale(ProductInterface $product, $locale)
+    {
+        // First try to find existing translation by comparing locales.
+        /** @var ProductTranslation $translation */
+        foreach ($product->getTranslations() as $translation) {
+            if ($translation->getLocale() === $locale) {
+                return $translation;
+            }
+        }
+
+        // Otherwise create a new translation for locale.
+        $translation = new ProductTranslation();
+        $translation->setLocale($locale);
+        $translation->setProduct($product);
+        $product->addTranslation($translation);
+
+        return $translation;
     }
 
     /**
@@ -1660,8 +1697,9 @@ class ProductManager implements ProductManagerInterface
      */
     protected function getExistingActiveOrInactiveProduct($existingProduct, $statusId, $locale)
     {
-        if (($statusId == StatusEntity::ACTIVE || $statusId == StatusEntity::INACTIVE) &&
-            $existingProduct->getStatus()->getId() != $statusId) {
+        if (($statusId == StatusEntity::ACTIVE || $statusId == StatusEntity::INACTIVE)
+            && $existingProduct->getStatus()->getId() != $statusId
+        ) {
             // Check if the same product already exists in IMPORTED state
             $products = $this->productRepository->findByLocaleAndInternalItemNumber(
                 $locale,
@@ -1693,7 +1731,19 @@ class ProductManager implements ProductManagerInterface
         if (!$status) {
             throw new ProductDependencyNotFoundException(self::$productStatusEntityName, $statusId);
         }
+
+        // Set new status to product.
         $product->setStatus($status);
+
+        // If product has variants, set status for all variants as well.
+        if ($product->getType()
+            && $product->getType()->getId() === (int) $this->productTypesMap['PRODUCT_WITH_VARIANTS']
+        ) {
+            $variants = $this->productRepository->findByParent($product);
+            foreach ($variants as $variant) {
+                $variant->setStatus($status);
+            }
+        }
     }
 
     /**
@@ -1839,47 +1889,6 @@ class ProductManager implements ProductManagerInterface
     /**
      * {@inheritdoc}
      */
-    public function addVariant($parentId, $variantId, $locale)
-    {
-        $variant = $this->productRepository->findById($variantId);
-
-        if (!$variant) {
-            throw new ProductNotFoundException($variantId);
-        }
-
-        $parent = $this->productRepository->findById($parentId);
-
-        if (!$parent) {
-            throw new ProductNotFoundException($parentId);
-        }
-
-        $variant->setParent($parent);
-
-        $this->em->flush();
-
-        return $this->productFactory->createApiEntity($variant, $locale);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function removeVariant($parentId, $variantId)
-    {
-        $variant = $this->productRepository->findById($variantId);
-
-        if (!$variant || $variant->getParent()->getId() != $parentId) {
-            // TODO think about better exception
-            throw new ProductNotFoundException($variantId);
-        }
-
-        $variant->setParent(null);
-
-        $this->em->flush();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     protected function singleDelete($id)
     {
         // id must be an integer
@@ -2005,7 +2014,7 @@ class ProductManager implements ProductManagerInterface
                         $productAttribute = $productAttributes[$attributeId];
 
                         // Remove attribute value translation from attribute value.
-                        $this->removeAttributeValueTranslation(
+                        $this->productAttributeManager->removeAttributeValueTranslation(
                             $productAttribute->getAttributeValue(),
                             $attributeValueLocale
                         );
@@ -2024,20 +2033,20 @@ class ProductManager implements ProductManagerInterface
                 if (!array_key_exists($attributeId, $productAttributes)) {
                     $attribute = $this->retrieveAttributeById($attributeId);
                     // Create new attribute value with translation.
-                    $attributeValue = $this->createAttributeValue(
+                    $attributeValue = $this->productAttributeManager->createAttributeValue(
                         $attribute,
                         $attributeDataValueName,
                         $attributeValueLocale
                     );
                     // Create new product attribute.
-                    $this->createProductAttribute($attribute, $product, $attributeValue);
+                    $this->productAttributeManager->createProductAttribute($attribute, $product, $attributeValue);
                 } else {
                     // Product attribute exists.
                     /** @var ProductAttribute $productAttribute */
                     $productAttribute = $productAttributes[$attributeId];
                     $attributeValue = $productAttribute->getAttributeValue();
                     // Create translation in current locale.
-                    $this->createOrSetAttributeValueTranslation(
+                    $this->productAttributeManager->setOrCreateAttributeValueTranslation(
                         $attributeValue,
                         $attributeDataValueName,
                         $attributeValueLocale
@@ -2049,7 +2058,9 @@ class ProductManager implements ProductManagerInterface
             foreach ($productAttributes as $productAttribute) {
                 if (!array_key_exists($productAttribute->getAttribute()->getId(), $attributeIdsInRequest)) {
                     // Remove all attribute value translations from attribute value.
-                    $this->removeAllAttributeValueTranslations($productAttribute->getAttributeValue());
+                    $this->productAttributeManager->removeAllAttributeValueTranslations(
+                        $productAttribute->getAttributeValue()
+                    );
 
                     // Remove attribute from product.
                     $product->removeProductAttribute($productAttribute);
@@ -2079,115 +2090,6 @@ class ProductManager implements ProductManagerInterface
         }
 
         return $attribute;
-    }
-
-    /**
-     * Creates a new ProductAttribute relation.
-     *
-     * @param Attribute $attribute
-     * @param ProductInterface $product
-     * @param AttributeValue $attributeValue
-     *
-     * @return ProductAttribute
-     */
-    private function createProductAttribute(
-        Attribute $attribute,
-        ProductInterface $product,
-        AttributeValue $attributeValue
-    ) {
-        $productAttribute = new ProductAttribute();
-        $this->em->persist($productAttribute);
-        $productAttribute->setAttribute($attribute);
-        $productAttribute->setProduct($product);
-        $productAttribute->setAttributeValue($attributeValue);
-        $product->addProductAttribute($productAttribute);
-
-        return $productAttribute;
-    }
-
-    /**
-     * Creates a new attribute value and its translation in the specified locale.
-     *
-     * @param Attribute $attribute
-     * @param string $value
-     * @param string $locale
-     *
-     * @return AttributeValue
-     */
-    private function createAttributeValue(Attribute $attribute, $value, $locale)
-    {
-        $attributeValue = new AttributeValue();
-        $this->em->persist($attributeValue);
-        $attributeValue->setAttribute($attribute);
-        $attribute->addValue($attributeValue);
-        $this->createOrSetAttributeValueTranslation($attributeValue, $value, $locale);
-
-        return $attributeValue;
-    }
-
-    /**
-     * Checks if AttributeValue already contains a translation in given locale or creates a new one.
-     *
-     * @param AttributeValue $attributeValue
-     * @param string $value
-     * @param string $locale
-     *
-     * @return AttributeValueTranslation
-     */
-    private function createOrSetAttributeValueTranslation(AttributeValue $attributeValue, $value, $locale)
-    {
-        // Check if translation already exists for given locale.
-        $attributeValueTranslation = null;
-        /** @var AttributeValueTranslation $translation */
-        foreach ($attributeValue->getTranslations() as $translation) {
-            if ($translation->getLocale() === $locale) {
-                $attributeValueTranslation = $translation;
-            }
-        }
-        if (!$attributeValueTranslation) {
-            // Create a new attribute value translation.
-            $attributeValueTranslation = new AttributeValueTranslation();
-            $this->em->persist($attributeValueTranslation);
-            $attributeValueTranslation->setLocale($locale);
-            $attributeValueTranslation->setAttributeValue($attributeValue);
-            $attributeValue->addTranslation($attributeValueTranslation);
-        }
-        $attributeValueTranslation->setName($value);
-
-        return $attributeValueTranslation;
-    }
-
-    /**
-     * Removes attribute value translation in given locale from given attribute.
-     *
-     * @param AttributeValue $attributeValue
-     * @param $locale
-     */
-    private function removeAttributeValueTranslation(AttributeValue $attributeValue, $locale)
-    {
-        // Check if translation already exists for given locale.
-        /** @var AttributeValueTranslation $attributeValueTranslation */
-        foreach ($attributeValue->getTranslations() as $attributeValueTranslation) {
-            if ($attributeValueTranslation->getLocale() === $locale) {
-                $attributeValue->removeTranslation($attributeValueTranslation);
-                $this->em->remove($attributeValueTranslation);
-            }
-        }
-    }
-
-    /**
-     * Removes all attribute value translations from given attribute.
-     *
-     * @param AttributeValue $attributeValue
-     */
-    private function removeAllAttributeValueTranslations(AttributeValue $attributeValue)
-    {
-        // Check if translation already exists for given locale.
-        /** @var AttributeValueTranslation $attributeValueTranslation */
-        foreach ($attributeValue->getTranslations() as $attributeValueTranslation) {
-            $attributeValue->removeTranslation($attributeValueTranslation);
-            $this->em->remove($attributeValueTranslation);
-        }
     }
 
     /**
