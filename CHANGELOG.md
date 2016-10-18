@@ -8,6 +8,10 @@ CHANGELOG for Sulu Product Bundle
     * BUGFIX      Fixed wrong path to get action schema.
     * FEATURE     Added validation schema for get products api.
 
+* 0.15.1 (2016-10-18)
+
+    * BUGFIX      Added own user settings key for product media list
+
 * 0.15.0 (2016-09-26)
 
     * FEATURE     Added config parameter for default formatter locale.

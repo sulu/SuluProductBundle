@@ -15,7 +15,7 @@ define(['config', 'suluproduct/util/product-delete-dialog'], function(Config, De
         instanceName: 'documents',
         formSelector: '#documents-form',
 
-        fieldsKey: 'media',
+        fieldsKey: 'productMedia',
         fieldsUrl: 'api/products/media/fields'
     };
 
