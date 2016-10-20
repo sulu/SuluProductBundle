@@ -65,6 +65,8 @@ class SuluProductExtension extends Extension implements PrependExtensionInterfac
                         'get_product_variants' => '@SuluProductBundle/Validation/Variants/cGetActionSchema.json',
                         'post_product_variant' => '@SuluProductBundle/Validation/Variants/postPutActionSchema.json',
                         'put_product_variant' => '@SuluProductBundle/Validation/Variants/postPutActionSchema.json',
+                        'get_product_productvariant_attribute_fields' => '@SuluProductBundle/Validation/VariantAttributes/cGetActionSchema.json',
+                        'get_product_productvariant_attributes' => '@SuluProductBundle/Validation/VariantAttributes/cGetActionSchema.json',
                     ],
                 ]
             );
@@ -75,6 +77,7 @@ class SuluProductExtension extends Extension implements PrependExtensionInterfac
                 [
                     'exception' => [
                         'codes' => [
+                            'Sulu\Bundle\ProductBundle\Product\Exception\AttributeNotFoundException' => 400,
                             'Sulu\Bundle\ProductBundle\Product\Exception\ProductNotFoundException' => 400,
                             'Sulu\Bundle\ProductBundle\Product\Exception\ProductException' => 400,
                         ],

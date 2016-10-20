@@ -7,6 +7,11 @@ sulu_product.variants:
     parent: sulu_product.products
     resource: Sulu\Bundle\ProductBundle\Controller\VariantController
 
+sulu_product.product_variant_attributes:
+    type: rest
+    parent: sulu_product.products
+    resource: Sulu\Bundle\ProductBundle\Controller\ProductVariantAttributeController
+
 sulu_product_base.attributes:
     type: rest
     resource: Sulu\Bundle\ProductBundle\Controller\AttributeController

@@ -22,17 +22,26 @@ use Sulu\Component\Rest\ListBuilder\Doctrine\DoctrineListBuilderFactory;
 use Sulu\Component\Rest\ListBuilder\ListRepresentation;
 use Sulu\Component\Rest\RestController;
 use Sulu\Component\Rest\RestHelperInterface;
+use Sulu\Component\Security\SecuredControllerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
  * This controller is responsible for managing variants to a specific product.
  */
-class VariantController extends RestController implements ClassResourceInterface
+class VariantController extends RestController implements ClassResourceInterface, SecuredControllerInterface
 {
     protected static $entityName = 'SuluProductBundle:Product';
 
     protected static $entityKey = 'products';
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getSecurityContext()
+    {
+        return 'sulu.product.products';
+    }
 
     /**
      * Retrieves and shows the variant with the given ID for the parent product.

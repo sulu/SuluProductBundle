@@ -175,6 +175,11 @@ class ProductTestData
     private $attributeType;
 
     /**
+     * @var int
+     */
+    private $attributeCount = 0;
+
+    /**
      * @param Container $container
      * @param bool $doCreateProducts
      */
@@ -475,7 +480,7 @@ class ProductTestData
      */
     public function createProductAttribute(ProductInterface $product, $value, $locale = 'en')
     {
-        $attribute = $this->createAttribute();
+        $attribute = $this->createAttribute($locale);
 
         $productAttribute = new ProductAttribute();
         $this->entityManager->persist($productAttribute);
@@ -528,13 +533,22 @@ class ProductTestData
     /**
      * Creates a new Attribute.
      *
+     * @param string $locale
+     *
      * @return Attribute
      */
-    public function createAttribute()
+    public function createAttribute($locale = self::LOCALE)
     {
-        $attribute = new Attribute();
+        $attribute = $this->getAttributeRepository()->createNew();
         $this->entityManager->persist($attribute);
         $attributeType = $this->getAttributeTypeRepository()->find(self::ATTRIBUTE_TYPE_ID);
+
+        $attributeTranslation = $this->getAttributeTranslationRepository()->createNew();
+        $this->entityManager->persist($attributeTranslation);
+        $attributeTranslation->setLocale($locale);
+        $attributeTranslation->setAttribute($attribute);
+        $attributeTranslation->setName(sprintf('attribute-translation-%s-%s', self::LOCALE, ++$this->attributeCount));
+
         $attribute->setType($attributeType);
         $attribute->setCreated(new DateTime());
         $attribute->setChanged(new DateTime());
@@ -705,9 +719,25 @@ class ProductTestData
     /**
      * @return AttributeTypeRepository
      */
+    protected function getAttributeRepository()
+    {
+        return $this->container->get('sulu_product.attribute_repository');
+    }
+
+    /**
+     * @return AttributeTypeRepository
+     */
     protected function getAttributeTypeRepository()
     {
         return $this->container->get('sulu_product.attribute_type_repository');
+    }
+
+    /**
+     * @return AttributeTypeRepository
+     */
+    protected function getAttributeTranslationRepository()
+    {
+        return $this->container->get('sulu_product.attribute_translation_repository');
     }
 
     /**
