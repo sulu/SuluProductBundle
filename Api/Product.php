@@ -493,7 +493,8 @@ class Product extends ApiWrapper implements ApiProductInterface
                 $this->locale,
                 $this->priceFormatter,
                 $this->productLocaleManager,
-                $this->accountManager);
+                $this->accountManager
+            );
         }
 
         return null;
@@ -1294,6 +1295,22 @@ class Product extends ApiWrapper implements ApiProductInterface
     public function getTags()
     {
         return $this->entity->getTagNameArray();
+    }
+
+    /**
+     * @VirtualProperty
+     * @SerializedName("variantAttributes")
+     *
+     * @return Attribute[]
+     */
+    public function getVariantAttributes()
+    {
+        $variantAttributes = [];
+        foreach ($this->entity->getVariantAttributes() as $attribute) {
+            $variantAttributes[] = new Attribute($attribute, $this->locale, $this->locale);
+        }
+
+        return $variantAttributes;
     }
 
     /**

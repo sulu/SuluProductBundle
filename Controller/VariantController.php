@@ -12,6 +12,7 @@
 namespace Sulu\Bundle\ProductBundle\Controller;
 
 use Doctrine\ORM\EntityManagerInterface;
+use FOS\RestBundle\Controller\Annotations\Get;
 use FOS\RestBundle\Routing\ClassResourceInterface;
 use Hateoas\Representation\CollectionRepresentation;
 use Sulu\Bundle\ProductBundle\Admin\SuluProductAdmin;
@@ -35,12 +36,36 @@ class VariantController extends RestController implements ClassResourceInterface
     protected static $entityName = 'SuluProductBundle:Product';
     protected static $entityKey = 'products';
 
-    /**
-     * {@inheritdoc}
-     */
     public function getSecurityContext()
     {
         return SuluProductAdmin::CONTEXT_PRODUCTS;
+    }
+
+    /**
+     * Returns all fields that can be used by list.
+     *
+     * @Get("/product-variants/fields")
+     *
+     * @param Request $request
+     *
+     * @return Response
+     */
+    public function fieldsAction(Request $request)
+    {
+        return $this->handleView(
+            $this->view(
+                array_values(
+                    array_diff_key(
+                        $this->getProductVariantManager()->retrieveFieldDescriptors($this->getLocale($request)),
+                        [
+                            'statusId' => false,
+                            'categoryIds' => false,
+                        ]
+                    )
+                ),
+                200
+            )
+        );
     }
 
     /**
@@ -90,7 +115,7 @@ class VariantController extends RestController implements ClassResourceInterface
 
             $listBuilder = $factory->create(self::$entityName);
 
-            $fieldDescriptors = $this->getProductManager()->getFieldDescriptors($this->getLocale($request));
+            $fieldDescriptors = $this->getProductVariantManager()->retrieveFieldDescriptors($this->getLocale($request));
 
             $restHelper->initializeListBuilder(
                 $listBuilder,
@@ -98,6 +123,7 @@ class VariantController extends RestController implements ClassResourceInterface
             );
 
             $listBuilder->where($fieldDescriptors['parent'], $parentId);
+            $listBuilder->addGroupBy($fieldDescriptors['id']);
 
             // Only add group by id if categories are processed.
             $fieldsParam = $request->get('fields');
@@ -112,8 +138,13 @@ class VariantController extends RestController implements ClassResourceInterface
             $list = new ListRepresentation(
                 $listBuilder->execute(),
                 self::$entityKey,
-                'get_products',
-                $request->query->all(),
+                'get_product_variants',
+                array_merge(
+                    $request->query->all(),
+                    [
+                        'parentId' => $parentId
+                    ]
+                ),
                 $listBuilder->getCurrentPage(),
                 $listBuilder->getLimit(),
                 $listBuilder->count()
