@@ -1,0 +1,1 @@
+define(["mvc/collection","suluproduct/models/attribute"],function(a,b){"use strict";return new a({model:b,locale:"en",initialize:function(a){this.setLocale(a.locale)},setLocale:function(a){this.locale=a},parse:function(a){return a._embedded?a._embedded.attributes:a},url:function(){return"/admin/api/attributes?limit=500&locale="+this.locale}})});

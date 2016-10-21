@@ -118,6 +118,8 @@ class ProductVariantManager implements ProductVariantManagerInterface
             throw new ProductNotFoundException($parentId);
         }
 
+        $parent->setNumberOfVariants($parent->getNumberOfVariants() + 1);
+
         // Create variant product by setting variant data.
         /** @var ProductInterface $variant */
         $variant = $this->productFactory->createEntity();
@@ -171,6 +173,9 @@ class ProductVariantManager implements ProductVariantManagerInterface
         if ($variant->getType()->getId() !== (int) $this->productTypesMap['PRODUCT_VARIANT']) {
             throw new ProductException('Product is no variant and therefore cannot be deleted');
         }
+
+        $parent = $variant->getParent();
+        $parent->setNumberOfVariants($parent->getNumberOfVariants() - 1);
 
         $this->entityManager->remove($variant);
 

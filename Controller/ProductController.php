@@ -14,6 +14,7 @@ namespace Sulu\Bundle\ProductBundle\Controller;
 use Doctrine\Common\Persistence\ObjectManager;
 use FOS\RestBundle\Routing\ClassResourceInterface;
 use Hateoas\Representation\CollectionRepresentation;
+use Sulu\Bundle\ProductBundle\Admin\SuluProductAdmin;
 use Sulu\Bundle\ProductBundle\Api\Product;
 use Sulu\Bundle\ProductBundle\Product\Exception\MissingProductAttributeException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductChildrenExistException;
@@ -335,7 +336,7 @@ class ProductController extends RestController implements ClassResourceInterface
      */
     public function getSecurityContext()
     {
-        return 'sulu.product.products';
+        return SuluProductAdmin::CONTEXT_PRODUCTS;
     }
 
     /**

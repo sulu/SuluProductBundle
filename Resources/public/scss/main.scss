@@ -1,2 +1,6 @@
 @import 'variables.scss';
 @import "modules/import.scss";
+
+.is-hidden {
+  display: none;
+}

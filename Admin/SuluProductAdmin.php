@@ -18,6 +18,9 @@ use Sulu\Component\Security\Authorization\SecurityCheckerInterface;
 
 class SuluProductAdmin extends Admin
 {
+    const CONTEXT_PRODUCTS = 'sulu.product.products';
+    const CONTEXT_ATTRIBUTES = 'sulu.product.attributes';
+
     /**
      * @var SecurityCheckerInterface
      */
@@ -74,8 +77,8 @@ class SuluProductAdmin extends Admin
         return [
             'Sulu' => [
                 'Product' => [
-                    'sulu.product.attributes',
-                    'sulu.product.products',
+                    static::CONTEXT_ATTRIBUTES,
+                    static::CONTEXT_PRODUCTS,
                 ],
             ],
         ];

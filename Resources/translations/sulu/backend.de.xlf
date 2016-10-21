@@ -423,6 +423,23 @@
                 <source>sulu_product.types.product-variant</source>
                 <target>Variante</target>
             </trans-unit>
+            <trans-unit id="92" resname="sulu_product.labels.save-error">
+                <source>sulu_product.labels.save-error</source>
+                <target>Speichern nicht möglich.</target>
+            </trans-unit>
+            <trans-unit id="93" resname="sulu_product.labels.delete-error">
+                <source>sulu_product.labels.delete-error</source>
+                <target>Löschen nicht möglich.</target>
+            </trans-unit>
+            <!-- Attributes page -->
+            <trans-unit id="attributes-01" resname="sulu_product.variant-attributes">
+                <source>sulu_product.variant-attributes</source>
+                <target>Attribute für Produkt mit Varianten</target>
+            </trans-unit>
+            <trans-unit id="attributes-02" resname="sulu_product.attribute.overlay.no-attributes">
+                <source>sulu_product.attribute.overlay.no-attributes</source>
+                <target>Keine Attribute vorhanden</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>

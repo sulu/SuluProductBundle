@@ -624,4 +624,18 @@ interface ProductInterface
      * @return SpecialPrice[]
      */
     public function getSpecialPrices();
+
+    /**
+     * @return int
+     */
+    public function getNumberOfVariants();
+
+    /**
+     * Returns the number of variants that this product has.
+     *
+     * @param int $numberOfVariants
+     *
+     * @return $this
+     */
+    public function setNumberOfVariants($numberOfVariants);
 }

@@ -14,6 +14,7 @@ namespace Sulu\Bundle\ProductBundle\Controller;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Routing\ClassResourceInterface;
 use Hateoas\Representation\CollectionRepresentation;
+use Sulu\Bundle\ProductBundle\Admin\SuluProductAdmin;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductException;
 use Sulu\Bundle\ProductBundle\Product\ProductFactoryInterface;
 use Sulu\Bundle\ProductBundle\Product\ProductManagerInterface;
@@ -32,7 +33,6 @@ use Symfony\Component\HttpFoundation\Response;
 class VariantController extends RestController implements ClassResourceInterface, SecuredControllerInterface
 {
     protected static $entityName = 'SuluProductBundle:Product';
-
     protected static $entityKey = 'products';
 
     /**
@@ -40,7 +40,7 @@ class VariantController extends RestController implements ClassResourceInterface
      */
     public function getSecurityContext()
     {
-        return 'sulu.product.products';
+        return SuluProductAdmin::CONTEXT_PRODUCTS;
     }
 
     /**

@@ -1,5 +1,12 @@
 <form class="form-horizontal" id="product-attributes-form">
-    <div id="product-attribute-selection-toolbar" class="m-bottom-30"></div>
+    <div id="product-attribute-toolbar" class="m-bottom-30"></div>
     <div id="product-attribute-list"></div>
 </form>
+<div id="js-variant-attributes-container" class="is-hidden">
+    <h2 class="divider m-top-40"><%= translate('sulu_product.variant-attributes') %></h2>
+    <form class="form-horizontal" id="variant-attributes-form">
+        <div id="js-variant-attribute-toolbar" class="m-bottom-30"></div>
+        <div id="js-variant-attribute-list"></div>
+    </form>
+</div>
 <link rel="stylesheet" type="text/css" href="{{ asset('bundles/suluproduct/css/main.css') }}">

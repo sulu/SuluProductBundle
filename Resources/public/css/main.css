@@ -16,3 +16,8 @@
 .import-info p {
   margin: 15px 0;
 }
+
+/* line 4, ../scss/main.scss */
+.is-hidden {
+  display: none;
+}

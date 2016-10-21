@@ -203,6 +203,11 @@ abstract class BaseProduct implements ProductInterface
     protected $tags;
 
     /**
+     * @var int
+     */
+    protected $numberOfVariants = 0;
+
+    /**
      * Constructor.
      */
     public function __construct()
@@ -1155,7 +1160,7 @@ abstract class BaseProduct implements ProductInterface
     /**
      * @param Tag $tag
      *
-     * @return self
+     * @return $this
      */
     public function addTag(Tag $tag)
     {
@@ -1167,11 +1172,31 @@ abstract class BaseProduct implements ProductInterface
     /**
      * @param Tag $tag
      *
-     * @return self
+     * @return $this
      */
     public function removeTag(Tag $tag)
     {
         $this->tags->removeElement($tag);
+
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getNumberOfVariants()
+    {
+        return $this->numberOfVariants;
+    }
+
+    /**
+     * @param int $numberOfVariants
+     *
+     * @return $this
+     */
+    public function setNumberOfVariants($numberOfVariants)
+    {
+        $this->numberOfVariants = $numberOfVariants;
 
         return $this;
     }

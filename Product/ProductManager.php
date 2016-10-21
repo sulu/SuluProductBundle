@@ -1725,8 +1725,15 @@ class ProductManager implements ProductManagerInterface
      *
      * @throws ProductDependencyNotFoundException
      */
-    public function setStatusForProduct($product, $statusId)
+    public function setStatusForProduct(Product $product, $statusId)
     {
+        $productEntity = $product->getEntity();
+
+        // Check if status has changed.
+        if ($productEntity->getStatus() && $productEntity->getStatus()->getId() === $statusId) {
+            return;
+        }
+
         $status = $this->statusRepository->find($statusId);
         if (!$status) {
             throw new ProductDependencyNotFoundException(self::$productStatusEntityName, $statusId);
@@ -1736,10 +1743,10 @@ class ProductManager implements ProductManagerInterface
         $product->setStatus($status);
 
         // If product has variants, set status for all variants as well.
-        if ($product->getType()
-            && $product->getType()->getId() === (int) $this->productTypesMap['PRODUCT_WITH_VARIANTS']
+        if ($productEntity->getType()
+            && $productEntity->getType()->getId() === (int) $this->productTypesMap['PRODUCT_WITH_VARIANTS']
         ) {
-            $variants = $this->productRepository->findByParent($product);
+            $variants = $this->productRepository->findByParent($productEntity);
             foreach ($variants as $variant) {
                 $variant->setStatus($status);
             }

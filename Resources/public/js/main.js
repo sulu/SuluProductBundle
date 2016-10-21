@@ -16,7 +16,8 @@ require.config({
         'suluproduct/util/product-delete-dialog': '../../suluproduct/js/components/products/util/product-delete-dialog',
         'type/price-list': '../../suluproduct/js/components/price-list/price-list-type',
         'extensions/sulu-buttons-productbundle': '../../suluproduct/js/extensions/sulu-buttons',
-        'type/product-selection': '../../suluproduct/js/validation/types/product-selection'
+        'type/product-selection': '../../suluproduct/js/validation/types/product-selection',
+        'services/product-type-manager': '../../suluproduct/js/services/products/product-type-manager'
     }
 });
 

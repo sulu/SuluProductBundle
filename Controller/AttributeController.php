@@ -14,6 +14,7 @@ namespace Sulu\Bundle\ProductBundle\Controller;
 use FOS\RestBundle\Controller\Annotations\Get;
 use FOS\RestBundle\Routing\ClassResourceInterface;
 use Hateoas\Representation\CollectionRepresentation;
+use Sulu\Bundle\ProductBundle\Admin\SuluProductAdmin;
 use Sulu\Bundle\ProductBundle\Product\AttributeManagerInterface;
 use Sulu\Bundle\ProductBundle\Product\Exception\AttributeDependencyNotFoundException;
 use Sulu\Bundle\ProductBundle\Product\Exception\AttributeNotFoundException;
@@ -230,7 +231,7 @@ class AttributeController extends RestController implements ClassResourceInterfa
      */
     public function getSecurityContext()
     {
-        return 'sulu.product.attributes';
+        return SuluProductAdmin::CONTEXT_ATTRIBUTES;
     }
 
     /**

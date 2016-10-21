@@ -30,6 +30,11 @@
                 <option name="default">0</option>
             </options>
         </field>
+        <field name="numberOfVariants" type="integer" nullable="false" column="numberOfVariants">
+            <options>
+                <option name="default">0</option>
+            </options>
+        </field>
 
         <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\Addon" mapped-by="product"
                      field="addons"/>
@@ -79,10 +84,10 @@
             <join-column name="idParent" referenced-column-name="id"/>
         </many-to-one>
 
-        <!-- Missing inverse associations -->
-        <!--
         <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface" mapped-by="parent"
                      field="children"/>
+        <!-- Missing inverse associations -->
+        <!--
         <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductAttribute" mapped-by="product"
                      field="attributes"/>
         <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductTranslation" mapped-by="product"

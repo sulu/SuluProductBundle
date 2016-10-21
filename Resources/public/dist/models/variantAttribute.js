@@ -1,0 +1,1 @@
+define(["mvc/relationalmodel"],function(a){"use strict";return new a({urlRoot:function(){return"/admin/api/products/"+this.productId+"/variant-attributes"},initialize:function(a){this.productId=a.productId},defaults:function(){return{id:null,productId:null,attributeId:null}}})});

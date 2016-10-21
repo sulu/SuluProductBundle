@@ -13,6 +13,7 @@ namespace Sulu\Bundle\ProductBundle\Controller;
 
 use FOS\RestBundle\Routing\ClassResourceInterface;
 use Hateoas\Representation\CollectionRepresentation;
+use Sulu\Bundle\ProductBundle\Admin\SuluProductAdmin;
 use Sulu\Bundle\ProductBundle\Product\CurrencyManager;
 use Sulu\Component\Rest\RestController;
 use Sulu\Component\Security\SecuredControllerInterface;
@@ -54,6 +55,6 @@ class CurrencyController extends RestController implements ClassResourceInterfac
      */
     public function getSecurityContext()
     {
-        return 'sulu.product.products';
+        return SuluProductAdmin::CONTEXT_PRODUCTS;
     }
 }

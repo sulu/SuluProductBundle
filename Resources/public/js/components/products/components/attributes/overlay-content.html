@@ -1,13 +1,15 @@
-<div class="grid-row small">
+<div class="grid-row form-group small">
     <div>
         <label for="title" class="required"><%= translate('product.attribute.name') %></label>
     </div>
     <div id="selectBox"></div>
 </div>
-<div class="grid-row">
+<% if (!shouldHideValueField) { %>
+<div class="grid-row form-group">
     <div>
-        <label for="title" class="required"><%= translate('product.attribute.value') %></label>
+        <label for="attribute-name" class="required"><%= translate('product.attribute.value') %></label>
     </div>
     <input class="form-element" type="text" id="attribute-name"
            data-validation-max-length="255" data-mapper-property="attributeName"/>
 </div>
+<% } %>

@@ -1318,4 +1318,15 @@ class Product extends ApiWrapper implements ApiProductInterface
 
         return $apiAddons;
     }
+
+    /**
+     * @VirtualProperty
+     * @SerializedName("numberOfVariants")
+     *
+     * @return int
+     */
+    public function getNumberOfVariants()
+    {
+        return $this->entity->getNumberOfVariants();
+    }
 }

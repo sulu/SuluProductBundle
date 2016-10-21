@@ -15,6 +15,7 @@ use FOS\RestBundle\Controller\Annotations\Delete;
 use FOS\RestBundle\Controller\Annotations\Get;
 use FOS\RestBundle\Controller\Annotations\Post;
 use FOS\RestBundle\Routing\ClassResourceInterface;
+use Sulu\Bundle\ProductBundle\Admin\SuluProductAdmin;
 use Sulu\Bundle\ProductBundle\Product\ProductLocaleManager;
 use Sulu\Bundle\ProductBundle\Product\ProductManagerInterface;
 use Sulu\Bundle\ProductBundle\Product\ProductVariantAttributeManager;
@@ -32,7 +33,6 @@ use Symfony\Component\HttpFoundation\Response;
 class ProductVariantAttributeController extends RestController implements ClassResourceInterface, SecuredControllerInterface
 {
     protected static $productEntityName = 'SuluProductBundle:Product';
-
     protected static $entityKey = 'variantAttributes';
 
     /**
@@ -40,7 +40,7 @@ class ProductVariantAttributeController extends RestController implements ClassR
      */
     public function getSecurityContext()
     {
-        return 'sulu.product.products';
+        return SuluProductAdmin::CONTEXT_PRODUCTS;
     }
 
     /**

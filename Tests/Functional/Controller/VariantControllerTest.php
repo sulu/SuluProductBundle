@@ -192,6 +192,7 @@ class VariantControllerTest extends SuluTestCase
         $this->product->setNumber('1');
         $this->product->setStatus($this->activeStatus);
         $this->product->setType($this->productWithVariantsType);
+        $productEntity->setNumberOfVariants(2);
 
         $productEntity->addVariantAttribute($this->attribute1);
         $productEntity->addVariantAttribute($this->attribute2);
@@ -318,6 +319,8 @@ class VariantControllerTest extends SuluTestCase
         $this->client->request('GET', ProductControllerTest::getGetUrlForProduct($response['id']));
         $response = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertEquals('The new kid in town', $response['name']);
+
+        $this->assertEquals(3, $response['parent']['numberOfVariants']);
     }
 
     /**
@@ -426,6 +429,14 @@ class VariantControllerTest extends SuluTestCase
             '/api/products/' . $this->product->getId() . '/variants/' . $this->productVariants[1]->getId()
         );
         $this->assertEquals(404, $this->client->getResponse()->getStatusCode());
+
+        // Check number of variants.
+        $this->client->request(
+            'GET',
+            '/api/products/' . $this->product->getId() . '?locale=' . self::REQUEST_LOCALE
+        );
+        $response = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertEquals(1, $response['numberOfVariants']);
     }
 
     /**
