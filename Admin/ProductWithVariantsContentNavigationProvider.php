@@ -27,7 +27,7 @@ class ProductWithVariantsContentNavigationProvider extends ProductContentNavigat
         $variants = new ContentNavigationItem('content-navigation.product.variants');
         $variants->setId('variants');
         $variants->setAction('variants');
-        $variants->setPosition(19);
+        $variants->setPosition(40);
         $variants->setComponent('products/components/variants-list@suluproduct');
         $variants->setDisplay(['edit']);
         $variants->setResetStore(false);

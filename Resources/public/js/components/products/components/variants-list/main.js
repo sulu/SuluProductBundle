@@ -9,8 +9,9 @@
 
 define([
     'suluproduct/collections/currencies',
-    'suluproduct/models/variant'
-], function(Currencies, Variant) {
+    'suluproduct/models/variant',
+    'suluproduct/util/header',
+], function(Currencies, Variant, HeaderUtil) {
 
     'use strict';
 
@@ -64,22 +65,19 @@ define([
         },
 
         /**
+         * Called when save button of toolbar is clicked.
+         */
+        onSaveClicked = function() {
+            this.options.data.attributes.status = HeaderUtil.getSelectedStatus();
+            this.sandbox.emit('sulu.products.save', this.options.data.attributes, true);
+        },
+
+        /**
          * Bind custom events.
          */
         bindCustomEvents = function() {
-            // TODO: Header for saving product status.
-            //this.sandbox.on('sulu.toolbar.save', save.bind(this));
-            //this.sandbox.on('sulu.products.saved', function(model) {
-            //        this.options.data = model;
-            //        this.status = model.status;
-            //        this.saved = true;
-            //        this.sandbox.emit(
-            //            'husky.toolbar.' + constants.toolbarInstanceName + '.item.disable',
-            //            'save-button',
-            //            false
-            //        );
-            //    }, this
-            //);
+            this.sandbox.on('sulu.toolbar.save', onSaveClicked.bind(this));
+            this.sandbox.on('sulu.products.saved', HeaderUtil.setSaveButton.bind(this, false));
 
             this.sandbox.on(
                 'husky.datagrid.' + constants.datagridInstanceName + '.number.selections',

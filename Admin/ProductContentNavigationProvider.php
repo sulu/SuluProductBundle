@@ -42,7 +42,7 @@ class ProductContentNavigationProvider implements ContentNavigationProviderInter
         $media = new ContentNavigationItem('content-navigation.product.media');
         $media->setId('media');
         $media->setAction('media');
-        $media->setPosition(30);
+        $media->setPosition(60);
         $media->setComponent('products/components/media@suluproduct');
         $media->setDisplay(['edit']);
         $media->setResetStore(false);
@@ -51,7 +51,7 @@ class ProductContentNavigationProvider implements ContentNavigationProviderInter
         $attributes = new ContentNavigationItem('content-navigation.product.attributes');
         $attributes->setId('attributes');
         $attributes->setAction('attributes');
-        $attributes->setPosition(40);
+        $attributes->setPosition(30);
         $attributes->setComponent('products/components/attributes@suluproduct');
         $attributes->setDisplay(['edit']);
         $attributes->setResetStore(false);

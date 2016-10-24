@@ -11,30 +11,47 @@ define(['config'], function(Config) {
 
     'use strict';
 
-    return {
+    /**
+     * @param {Boolean} isActive Defines if saved state should be shown.
+     */
+    var setSaveButton = function(isActive) {
+            if (!isActive) {
+                this.sandbox.emit('sulu.header.toolbar.item.disable', 'save', true);
+            } else {
+                this.sandbox.emit('sulu.header.toolbar.item.enable', 'save', false);
+            }
+        },
 
         /**
-         * initializes the header toolbar
-         * @param sandbox
-         * @param status
+         * Bind all custom events.
          */
-        initToolbar: function(sandbox, status) {
-            this.sandbox = sandbox;
-            this.bindCustomEvents(status);
-        },
-
-        bindCustomEvents: function(status) {
-            this.sandbox.once('husky.toolbar.header.initialized', function() {
-                this.setStatus(status);
-            }.bind(this));
+        bindCustomEvents = function() {
+            this.sandbox.once('husky.toolbar.header.initialized', setStatus.bind(this, this.status));
 
             this.sandbox.off('product.state.change');
-            this.sandbox.on('product.state.change', function(status) {
-                this.setStatus(status);
-            }.bind(this))
+            this.sandbox.on('product.state.change', onStatusChanged.bind(this));
         },
 
-        setStatus: function(status) {
+        /**
+         * Called when status in toolbar has been changed.
+         *
+         * @param {Object} status
+         */
+        onStatusChanged = function(status) {
+            // Change status if it differs to previous status.
+            if (this.status.id !== status.id) {
+                this.status = status;
+                setSaveButton.call(this, true);
+                setStatus.call(this, status);
+            }
+        },
+
+        /**
+         * Function that sets initial status of toolbar status dropdown.
+         *
+         * @param {Object} status
+         */
+        setStatus = function(status) {
             var statusTitle = this.sandbox.translate(Config.get('product.status.inactive').key),
                 statusIcon = 'husky-test',
                 buttonDefaults;
@@ -51,6 +68,39 @@ define(['config'], function(Config) {
             };
 
             this.sandbox.emit('sulu.header.toolbar.button.set', 'productWorkflow', buttonDefaults);
+        };
+
+    return {
+        /**
+         * Initializes the header toolbar.
+         *
+         * @param {Object} sandbox
+         * @param {Object} status
+         */
+        initToolbar: function(sandbox, status) {
+            this.sandbox = sandbox;
+            this.status = status;
+
+            bindCustomEvents.call(this, status);
+            setStatus.call(this, status);
+        },
+
+        /**
+         * Returns the currently selected status.
+         *
+         * @returns {Object}
+         */
+        getSelectedStatus: function() {
+            return this.status;
+        },
+
+        /**
+         * Sets save button to active or inactive.
+         *
+         * @param {Bool} isActive
+         */
+        setSaveButton: function(isActive) {
+            setSaveButton.call(this, isActive);
         }
     };
 });

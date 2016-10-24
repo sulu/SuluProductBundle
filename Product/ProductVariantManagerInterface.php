@@ -53,6 +53,8 @@ interface ProductVariantManagerInterface
     public function deleteVariant($variantId);
 
     /**
+     * Deletes a given set of variants.
+     *
      * @param int $parentId
      * @param array $variantIds
      */
@@ -66,5 +68,4 @@ interface ProductVariantManagerInterface
      * @return DoctrineFieldDescriptorInterface[]
      */
     public function retrieveFieldDescriptors($locale);
-
 }

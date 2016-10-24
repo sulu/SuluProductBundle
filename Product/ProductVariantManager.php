@@ -264,7 +264,7 @@ class ProductVariantManager implements ProductVariantManagerInterface
             $variant = $this->deleteVariant($variantId);
 
             // Check variant parent.
-            if ($variant->getParent()->getId() !== (int)$parentId) {
+            if ($variant->getParent()->getId() !== (int) $parentId) {
                 throw new ProductException(
                     sprintf('Product with id \'%s\' has no variant with id \'%s\'', $parentId, $variantId)
                 );

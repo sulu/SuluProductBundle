@@ -3,6 +3,7 @@ CHANGELOG for Sulu Product Bundle
 
 * dev-develop
 
+    * FEATURE     Added UI for handling variants.
     * FEATURE     Added field numberOfVariants to products.
     * FEATURE     Added UI for handling variant attributes.
     * FEATURE     Implemented api for get, adding and delete variant-attribute relations.

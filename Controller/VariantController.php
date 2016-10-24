@@ -143,7 +143,7 @@ class VariantController extends RestController implements ClassResourceInterface
                 array_merge(
                     $request->query->all(),
                     [
-                        'parentId' => $parentId
+                        'parentId' => $parentId,
                     ]
                 ),
                 $listBuilder->getCurrentPage(),

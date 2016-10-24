@@ -51,7 +51,7 @@ define([
         namespace = 'sulu.product-variant-overlay.',
 
         /**
-         * Raised when the overlay get closed
+         * Raised when the overlay get closed.
          *
          * @event sulu.product-variant-overlay.closed
          */
