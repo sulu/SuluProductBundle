@@ -43,7 +43,9 @@ define([
 
         selectors = {
             form: '#js-variant-form',
-            overlayContent: '.variant-overlay-content'
+            overlayContent: '.variant-overlay-content',
+            priceCheckbox: '.change-price',
+            priceInput: '.salesprice'
         },
 
         namespace = 'sulu.product-variant-overlay.',
@@ -109,7 +111,8 @@ define([
          * Bind DOM events.
          */
         bindDomEvents = function() {
-            this.sandbox.dom.on(this.$el, 'click', onChangePriceClicked.bind(this), '.change-price');
+            this.sandbox.dom.on(this.$el, 'click', onChangePriceClicked.bind(this), selectors.priceCheckbox);
+            this.sandbox.dom.on(this.$el, 'focusout', validatePrices.bind(this), selectors.priceInput);
         },
 
         /**
@@ -150,7 +153,7 @@ define([
         },
 
         /**
-         * Function triggeres language change.
+         * Function triggers language change.
          *
          * @param {String} locale
          */
@@ -175,12 +178,9 @@ define([
                 return isDisabled;
             });
 
-            // TODO: Add validation to empty field.
             if (isDisabled) {
-                this.sandbox.form.updateConstraint(selectors.form, $input, 'required');
                 $input.val('');
             } else {
-                this.sandbox.form.addConstraint(selectors.form, $input, 'required', true);
                 $input.focus();
             }
         },
@@ -241,7 +241,7 @@ define([
                                     preSelected: this.options.locale
                                 },
                                 propagateEvents: false,
-                                okCallback: onOverlayOkClicked.bind(this)
+                                okCallback: onSubmitClicked.bind(this)
                             },
                             {
                                 title: this.sandbox.translate('sulu_product.variant-overlay.warning-title'),
@@ -257,8 +257,10 @@ define([
                 }
             ]);
 
+            // When overlay is initialized.
             this.sandbox.once(retrieveOverlayEventName.call(this, 'opened'), function() {
                 loadDataAndSetForm.call(this);
+
                 // Emit initialized event, once data is set.
                 this.sandbox.emit(INITIALIZED.call(this));
             }.bind(this));
@@ -474,9 +476,12 @@ define([
         /**
          * Parses data received from data mapper to be valid for api.
          *
-         * @param {Array} data
+         * @param {Object} data
          */
-        parseDataForApi = function(data) {
+        parseDataForSubmit = function(data) {
+            if (data.id === '') {
+                delete data.id;
+            }
             // Parse attributes.
             this.sandbox.util.foreach(data.attributes, function(attribute) {
                 attribute.attributeId = parseInt(attribute.attributeId);
@@ -496,17 +501,63 @@ define([
         },
 
         /**
+         * Validates price fields and returns result as bool.
+         *
+         * @returns {Bool}
+         */
+        validatePrices = function() {
+            var areValid = true;
+            var $priceInputs = $(selectors.priceInput);
+            this.sandbox.util.foreach($priceInputs, function(input) {
+                var $input = $(input);
+                var isValid = $input.prop('disabled')
+                    || (this.sandbox.form.element.validate($input) && $input.val().length > 0);
+                if (!isValid) {
+                    $input.parent().addClass('husky-validate-error');
+                    areValid = false;
+                } else {
+                    $input.parent().removeClass('husky-validate-error');
+                }
+            }.bind(this));
+
+            return areValid;
+        },
+
+        /**
+         * Returns id's of all overlay tabs.
+         *
+         * @returns {Array}
+         */
+        openTab = function(number) {
+            var tabs = $('.overlay-tabs li');
+
+            if (tabs.hasOwnProperty(number)) {
+                tabs[number].click();
+            }
+        },
+
+        /**
          * Callback when overlays OK button was clicked.
          * Triggers creation of a new variant.
          */
-        onOverlayOkClicked = function() {
+        onSubmitClicked = function() {
+            // Validate form.
             if (!this.sandbox.form.validate(selectors.form)) {
+                // Open details tab.
+                this.sandbox.emit('husky.tabs.item.select', openTab(0));
+
+                return false;
+            }
+            if (!validatePrices.call(this)) {
+                // Open prices tab.
+                this.sandbox.emit('husky.tabs.item.select', openTab(1));
+
                 return false;
             }
             // Get data from form.
             var data = this.sandbox.form.getData(selectors.form);
 
-            parseDataForApi.call(this, data);
+            parseDataForSubmit.call(this, data);
 
             // Return as callback.
             if (typeof this.options.okCallback === 'function') {
@@ -524,6 +575,7 @@ define([
 
             // Render overlay.
             render.call(this);
+
 
             bindCustomEvents.call(this);
             bindDomEvents.call(this);

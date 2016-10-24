@@ -14,7 +14,10 @@ define([
 
     'use strict';
 
-    var constants = {},
+    var constants = {
+            datagridInstanceName: 'variants',
+            toolbarInstanceName: 'variants'
+        },
 
         /**
          * Starts toolbar and datagrid components.
@@ -51,6 +54,7 @@ define([
                 {
                     el: '#product-variants',
                     actionCallback: onVariantClicked.bind(this),
+                    instanceName: constants.datagridInstanceName,
                     resultKey: 'products',
                     searchFields: ['name'],
                     url: '/admin/api/products/' + this.options.data.id + '/variants?flat=true&locale=' +
@@ -64,8 +68,6 @@ define([
          */
         bindCustomEvents = function() {
             // TODO: Header for saving product status.
-            // TODO: Delete Variants.
-
             //this.sandbox.on('sulu.toolbar.save', save.bind(this));
             //this.sandbox.on('sulu.products.saved', function(model) {
             //        this.options.data = model;
@@ -79,7 +81,26 @@ define([
             //    }, this
             //);
 
+            this.sandbox.on(
+                'husky.datagrid.' + constants.datagridInstanceName + '.number.selections',
+                onProductAttributeSelection.bind(this, constants.toolbarInstanceName)
+            );
+
             this.sandbox.on('sulu.product-variant-overlay.closed', onCloseVariantOverlay.bind(this));
+        },
+
+        /**
+         * Enables or disables toolbar based on number of items that were selected.
+         *
+         * @param {Number} number
+         * @param {String} toolBarInstanceName
+         */
+        onProductAttributeSelection = function(toolBarInstanceName, number) {
+            var postfix = number > 0 ? 'enable' : 'disable';
+            this.sandbox.emit(
+                'husky.toolbar.' + toolBarInstanceName + '.item.' + postfix,
+                'delete',
+                false)
         },
 
         /**
@@ -101,7 +122,44 @@ define([
          * Callback when delete in toolbar is clicked.
          */
         onDeleteClicked = function() {
-            alert('Please delete an attribute');
+            var selectedIds = [];
+            this.sandbox.emit(
+                'husky.datagrid.' + constants.datagridInstanceName + '.items.get-selected',
+                function(ids) {
+                    selectedIds = ids;
+                }
+            );
+
+            var numberOfDeletions = selectedIds.length;
+            if (numberOfDeletions < 1) {
+                return;
+            }
+
+            var variant = new Variant({
+                productId: this.options.data.id,
+                ids: selectedIds
+            });
+
+            variant.destroy({
+                success: onDeleteSuccess.bind(this),
+                error: onDeleteError.bind(this)
+            });
+        },
+
+        /**
+         * Called when delete call was successful.
+         */
+        onDeleteSuccess = function() {
+            updateDatagrid.call(this);
+            this.sandbox.emit('sulu.labels.success.show', 'labels.success.delete-desc', 'labels.success');
+            this.sandbox.emit('husky.datagrid.' + constants.datagridInstanceName + '.selected.update');
+        },
+
+        /**
+         * Called when delete call returned an error.
+         */
+        onDeleteError = function() {
+            this.sandbox.emit('sulu.labels.error.show', 'sulu_product.labels.delete-error', 'labels.error');
         },
 
         /**
@@ -151,16 +209,27 @@ define([
             });
             variant.save(data, {
                 success: function() {
-                    // TODO: Update datagrid.
-                }
+                    updateDatagrid.call(this);
+                    this.sandbox.emit('sulu.labels.success.show', 'labels.success.save-desc', 'labels.success');
+                }.bind(this),
+                error: function() {
+                    this.sandbox.emit('sulu.labels.error.show', 'sulu_product.labels.save-error', 'labels.error');
+                }.bind(this)
             });
+        },
+
+        /**
+         * Triggeres event to update datagrid.
+         */
+        updateDatagrid = function() {
+            this.sandbox.emit('husky.datagrid.' + constants.datagridInstanceName + '.update');
         },
 
         /**
          * Starts the overlay component for adding new variants.
          */
         openAddOverlay = function(data) {
-            // Only open overlay, once currencies are loaded.
+            // Only open overlay, onconce currencies are loaded.
             this.currenciesLoaded.then(function() {
                 // Create container for overlay.
                 this.$overlay = this.sandbox.dom.createElement('<div>');
@@ -187,11 +256,17 @@ define([
 
         templates: ['/admin/product/template/product/variants'],
 
+        /**
+         * Initialization function of variants-list.
+         */
         initialize: function() {
             this.$overlay = null;
             this.currencies = [];
-
             this.currenciesLoaded = loadCurrencies.call(this);
+
+            // Set correct status in header bar.
+            this.status = this.options.data.attributes.status;
+            this.sandbox.emit('product.state.change', this.status);
 
             render.call(this);
 

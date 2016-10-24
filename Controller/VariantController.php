@@ -12,6 +12,7 @@
 namespace Sulu\Bundle\ProductBundle\Controller;
 
 use Doctrine\ORM\EntityManagerInterface;
+use FOS\RestBundle\Controller\Annotations\Delete;
 use FOS\RestBundle\Controller\Annotations\Get;
 use FOS\RestBundle\Routing\ClassResourceInterface;
 use Hateoas\Representation\CollectionRepresentation;
@@ -224,6 +225,30 @@ class VariantController extends RestController implements ClassResourceInterface
         $apiVariant = $this->getProductFactory()->createApiEntity($variant, $locale);
 
         $view = $this->view($apiVariant, 200);
+
+        return $this->handleView($view);
+    }
+
+    /**
+     * Removes a variant of product.
+     *
+     * @Delete("/products/{parentId}/variants")
+     *
+     * @param Request $request
+     * @param int $parentId
+     *
+     * @return Response
+     */
+    public function multipleDeleteAction(Request $request, $parentId)
+    {
+        $requestIds = $request->get('ids');
+        $variantIds = explode(',', $requestIds);
+
+        $this->getProductVariantManager()->deleteVariants($parentId, $variantIds);
+
+        $this->getEntityManager()->flush();
+
+        $view = $this->view(null, 204);
 
         return $this->handleView($view);
     }

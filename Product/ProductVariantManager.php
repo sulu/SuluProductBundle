@@ -33,7 +33,6 @@ class ProductVariantManager implements ProductVariantManagerInterface
     use ArrayDataTrait;
 
     private static $productEntityName = 'SuluProductBundle:Product';
-    private static $attributeEntityName = 'SuluProductBundle:Attribute';
     private static $productAttributeEntityName = 'SuluProductBundle:ProductAttribute';
     private static $attributeValueEntityName = 'SuluProductBundle:AttributeValue';
     private static $attributeValueTranslationEntityName = 'SuluProductBundle:AttributeValueTranslation';
@@ -254,6 +253,23 @@ class ProductVariantManager implements ProductVariantManagerInterface
         $this->entityManager->remove($variant);
 
         return $variant;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function deleteVariants($parentId, array $variantIds)
+    {
+        foreach ($variantIds as $variantId) {
+            $variant = $this->deleteVariant($variantId);
+
+            // Check variant parent.
+            if ($variant->getParent()->getId() !== (int)$parentId) {
+                throw new ProductException(
+                    sprintf('Product with id \'%s\' has no variant with id \'%s\'', $parentId, $variantId)
+                );
+            }
+        }
     }
 
     /**

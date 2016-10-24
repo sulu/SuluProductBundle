@@ -397,6 +397,8 @@ class ProductManager implements ProductManagerInterface
         );
         // TODO: currency should be dynamically set
         $currency = $this->defaultCurrency;
+        $currencyEntity = $this->currencyRepository->findByCode($currency);
+        $currencyId = $currencyEntity->getId();
         $fieldDescriptors['price'] = new DoctrineFieldDescriptor(
             'price',
             'price',
@@ -406,13 +408,8 @@ class ProductManager implements ProductManagerInterface
                 self::$productPriceEntityName => new DoctrineJoinDescriptor(
                     self::$productPriceEntityName,
                     static::$productEntityName . '.prices',
-                    self::$productPriceEntityName . '.minimumQuantity = 0'
-                ),
-                // TODO: sort by minimum quantity
-                self::$currencyEntityName => new DoctrineJoinDescriptor(
-                    self::$currencyEntityName,
-                    static::$productPriceEntityName . '.currency',
-                    self::$currencyEntityName . '.code = \'' . $currency . '\''
+                    self::$productPriceEntityName . '.minimumQuantity = 0 AND ' .
+                    self::$productPriceEntityName . '.currency = '. $currencyId
                 ),
             ],
             false,

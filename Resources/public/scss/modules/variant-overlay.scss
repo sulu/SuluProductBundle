@@ -1,6 +1,7 @@
 .form-text {
     display: table-cell;
     vertical-align: middle;
+    height: 30px;
 }
 
 .vertical-centered-checkbox-group {
@@ -10,16 +11,6 @@
         top: 5px;
     }
 }
-
-.variant-overlay-loader .spinner{
-    min-height: 100px;
-    min-width: 100px;
-
-    .double-bounce1, .double-bounce2 {
-        background-color: #ccc;
-    }
-}
-
 
 .warning-message {
     padding: 10px 105px 40px;

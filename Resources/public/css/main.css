@@ -26,26 +26,17 @@
 .form-text {
   display: table-cell;
   vertical-align: middle;
+  height: 30px;
 }
 
-/* line 7, ../scss/modules/variant-overlay.scss */
+/* line 8, ../scss/modules/variant-overlay.scss */
 .vertical-centered-checkbox-group label {
   display: inline-block;
   position: relative;
   top: 5px;
 }
 
-/* line 14, ../scss/modules/variant-overlay.scss */
-.variant-overlay-loader .spinner {
-  min-height: 100px;
-  min-width: 100px;
-}
-/* line 18, ../scss/modules/variant-overlay.scss */
-.variant-overlay-loader .spinner .double-bounce1, .variant-overlay-loader .spinner .double-bounce2 {
-  background-color: #ccc;
-}
-
-/* line 24, ../scss/modules/variant-overlay.scss */
+/* line 15, ../scss/modules/variant-overlay.scss */
 .warning-message {
   padding: 10px 105px 40px;
   font-size: 16px;
