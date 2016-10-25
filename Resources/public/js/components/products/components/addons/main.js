@@ -524,14 +524,14 @@ define([
             initList.call(this);
         },
 
+        /**
+         * Components constructor function.
+         */
         initialize: function() {
             bindCustomEvents.call(this);
             bindDomEvents.call(this);
 
-            this.status = Config.get('product.status.inactive');
-            if (!!this.options.data) {
-                this.status = this.options.data.attributes.status;
-            }
+            this.status = this.options.data.attributes.status;
 
             // Reset status if it has been changed before and has not been saved.
             this.sandbox.emit('product.state.change', this.status);

@@ -51,11 +51,15 @@ define([
             attributes.fetch({
                 success: function(data) {
                     var selectAttributes = [];
+                    this.attributes = [];
+
                     $.each(data.toJSON(), function(key, value) {
                         var attribute = {
                             'id': value.id,
                             'name': value.name
                         };
+
+                        this.attributes[value.id] = value;
 
                         // At this time we support only text type attributes.
                         if (value.type.name === constants.typeText) {
@@ -283,6 +287,8 @@ define([
                     error: onAddVariantAttributeError.bind(this)
                 }
             );
+
+            this.options
         },
 
         /**
@@ -324,7 +330,7 @@ define([
          * Called when post variant attribute was successful.
          */
         onAddVariantAttributeSuccess = function() {
-            // TODO: translation
+            this.options.data.attributes.variantAttributes.push(this.attributes[selectedAttributeId]);
             this.sandbox.emit('sulu.labels.success.show', 'labels.success.save-desc', 'labels.success');
             this.sandbox.emit(
                 'husky.datagrid.' + constants.variantAttributesDatagridInstanceName + '.record.add',
@@ -333,6 +339,18 @@ define([
                     'name': selectedAttributeName
                 }
             );
+        },
+
+        /**
+         * Removes variant attribute with given id from array.
+         *
+         * @param {Number} id
+         */
+        removeVariantAttributeFromProduct = function(id) {
+            var attributes = this.options.data.attributes.variantAttributes;
+            this.options.data.attributes.variantAttributes = $.grep(attributes, function(value) {
+                return value.id != id;
+            });
         },
 
         /**
@@ -348,6 +366,8 @@ define([
          * @param {Number} id
          */
         onDeleteVariantAttributeSuccess = function(id) {
+            removeVariantAttributeFromProduct.call(this, id);
+
             // Remove record from datagrid.
             this.sandbox.emit(
                 'husky.datagrid.' + constants.variantAttributesDatagridInstanceName + '.record.remove',
@@ -700,13 +720,12 @@ define([
          * Constructor of component.
          */
         initialize: function() {
+            this.attributes = [];
+
             bindCustomEvents.call(this);
 
-            // Set correct status.
-            this.status = Config.get('product.status.inactive');
-            if (!!this.options.data) {
-                this.status = this.options.data.attributes.status;
-            }
+            this.status = this.options.data.attributes.status;
+
             // Reset status if it has been changed before and has not been saved.
             this.sandbox.emit('product.state.change', this.status);
 

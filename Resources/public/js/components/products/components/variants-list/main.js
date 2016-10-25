@@ -67,7 +67,7 @@ define([
         /**
          * Called when save button of toolbar is clicked.
          */
-        onSaveClicked = function() {
+        onProductSaveClicked = function() {
             this.options.data.attributes.status = HeaderUtil.getSelectedStatus();
             this.sandbox.emit('sulu.products.save', this.options.data.attributes, true);
         },
@@ -76,7 +76,8 @@ define([
          * Bind custom events.
          */
         bindCustomEvents = function() {
-            this.sandbox.on('sulu.toolbar.save', onSaveClicked.bind(this));
+            this.sandbox.on('sulu.toolbar.save', onProductSaveClicked.bind(this));
+            this.sandbox.on('sulu.toolbar.delete', onProductDeleteClicked.bind(this));
             this.sandbox.on('sulu.products.saved', HeaderUtil.setSaveButton.bind(this, false));
 
             this.sandbox.on(
@@ -85,6 +86,13 @@ define([
             );
 
             this.sandbox.on('sulu.product-variant-overlay.closed', onCloseVariantOverlay.bind(this));
+        },
+
+        /**
+         * Called when header delete button is clicked.
+         */
+        onProductDeleteClicked = function() {
+            this.sandbox.emit('sulu.product.delete', this.options.data.id);
         },
 
         /**
@@ -139,7 +147,7 @@ define([
             });
 
             variant.destroy({
-                success: onDeleteSuccess.bind(this),
+                success: onDeleteSuccess.bind(this, numberOfDeletions),
                 error: onDeleteError.bind(this)
             });
         },
@@ -147,7 +155,8 @@ define([
         /**
          * Called when delete call was successful.
          */
-        onDeleteSuccess = function() {
+        onDeleteSuccess = function(numberOfDeletions) {
+            this.options.data.attributes.numberOfVariants -= numberOfDeletions;
             updateDatagrid.call(this);
             this.sandbox.emit('sulu.labels.success.show', 'labels.success.delete-desc', 'labels.success');
             this.sandbox.emit('husky.datagrid.' + constants.datagridInstanceName + '.selected.update');
@@ -199,14 +208,19 @@ define([
          * @param {Object} data
          * @param {String} locale
          */
-        onVariantSaved = function(data, locale) {
+        onVariantSubmit = function(data, locale) {
             var variant = Variant.findOrCreate({
                 id: data.id,
                 productId: this.options.data.id,
                 locale: locale
             });
+            var isUpdate = !!data.id;
+
             variant.save(data, {
                 success: function() {
+                    if (!isUpdate) {
+                        this.options.data.attributes.numberOfVariants++;
+                    }
                     updateDatagrid.call(this);
                     this.sandbox.emit('sulu.labels.success.show', 'labels.success.save-desc', 'labels.success');
                 }.bind(this),
@@ -243,7 +257,7 @@ define([
                         locale: this.options.locale,
                         parentPrices: this.options.data.attributes.prices,
                         variantAttributes: this.options.data.attributes.variantAttributes,
-                        okCallback: onVariantSaved.bind(this)
+                        okCallback: onVariantSubmit.bind(this)
                     }
                 }]);
             }.bind(this));
@@ -263,8 +277,7 @@ define([
             this.currenciesLoaded = loadCurrencies.call(this);
 
             // Set correct status in header bar.
-            this.status = this.options.data.attributes.status;
-            this.sandbox.emit('product.state.change', this.status);
+            this.sandbox.emit('product.state.change', this.options.data.attributes.status);
 
             render.call(this);
 
