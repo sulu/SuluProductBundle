@@ -3,6 +3,8 @@ CHANGELOG for Sulu Product Bundle
 
 * dev-develop
 
+    * ENHANCEMENT Not showing variants in product list.
+    * FEATURE     Changed delete behavior when product contains variants.
     * FEATURE     Added UI for handling variants.
     * FEATURE     Added field numberOfVariants to products.
     * FEATURE     Added UI for handling variant attributes.

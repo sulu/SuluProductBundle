@@ -213,6 +213,13 @@ class ProductController extends RestController implements ClassResourceInterface
             $listBuilder->addGroupBy($fieldDescriptors['id']);
         }
 
+        // Do not show product variants in list.
+        $listBuilder->where(
+            $filterFieldDescriptors['type_id'],
+            $this->getProductTypesMap()['PRODUCT_VARIANT'],
+            DoctrineListBuilder::WHERE_COMPARATOR_UNEQUAL
+        );
+
         if (json_decode($request->get('disablePagination'))) {
             return [
                 '_embedded' => [
@@ -376,6 +383,14 @@ class ProductController extends RestController implements ClassResourceInterface
     private function getEntityManager()
     {
         return $this->get('doctrine.orm.entity_manager');
+    }
+
+    /**
+     * @return array
+     */
+    private function getProductTypesMap()
+    {
+        return $this->getParameter('sulu_product.product_types_map');
     }
 
     /**
