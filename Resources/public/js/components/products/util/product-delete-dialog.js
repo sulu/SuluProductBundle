@@ -16,12 +16,12 @@ define([], function() {
      * @param {Number} numberOfVariants
      */
     var confirmDeleteDialog = function(callbackFunction, numberOfVariants) {
+        var warningMessage = 'sulu.overlay.delete-desc';
+
         // Check if callback is a function.
         if (!!callbackFunction && typeof(callbackFunction) !== 'function') {
             throw 'callback is not a function';
         }
-
-        var warningMessage = 'sulu.overlay.delete-desc';
 
         if (numberOfVariants > 0) {
             warningMessage = this.sandbox.translate('sulu_product.dialog.delete-product-with-variants');
@@ -35,8 +35,7 @@ define([], function() {
             warningMessage,
             callbackFunction.bind(this, false),
             callbackFunction.bind(this, true)
-        )
-        ;
+        );
     };
 
     return {
