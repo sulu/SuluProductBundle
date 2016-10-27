@@ -423,6 +423,7 @@
                 <source>sulu_product.types.product-variant</source>
                 <target>Variant</target>
             </trans-unit>
+            <!-- Labels -->
             <trans-unit id="92" resname="sulu_product.labels.save-error">
                 <source>sulu_product.labels.save-error</source>
                 <target>Error while saving.</target>
@@ -430,6 +431,14 @@
             <trans-unit id="93" resname="sulu_product.labels.delete-error">
                 <source>sulu_product.labels.delete-error</source>
                 <target>Deletion not possible.</target>
+            </trans-unit>
+            <trans-unit id="94" resname="sulu_product.dialog.delete-product-with-variants">
+                <source>sulu_product.dialog.delete-product-with-variants</source>
+                <target><![CDATA[
+                    This operation deletes data and cannot be undone.<br/>
+                    The product contains <strong>%number% variants</strong>, which also will be deleted.<br/>
+                    Would you like to continue?
+               ]]></target>
             </trans-unit>
             <!-- Attributes page -->
             <trans-unit id="attributes-01" resname="sulu_product.variant-attributes">
@@ -459,6 +468,10 @@
             <trans-unit id="attributes-07" resname="sulu_product.variant-overlay.warning-description">
                 <source>sulu_product.variant-overlay.warning-description</source>
                 <target>When changing the language, unsaved data may be lost! Would you like to continue?</target>
+            </trans-unit>
+            <trans-unit id="attributes-08" resname="sulu_product.labels.no-variant-attributes-warning">
+                <source>sulu_product.labels.no-variant-attributes-warning</source>
+                <target>You haven't defined any variant attributes yet, therefore you won't be able to add new variants.</target>
             </trans-unit>
         </body>
     </file>

@@ -20,6 +20,10 @@ define([
             toolbarInstanceName: 'variants'
         },
 
+        selectors = {
+            listToolbar: '#js-list-toolbar'
+        },
+
         /**
          * Returns flat product variants url.
          *
@@ -45,7 +49,7 @@ define([
                 'product-variants-list',
                 '/admin/api/product-variants/fields',
                 {
-                    el: '#list-toolbar',
+                    el: selectors.listToolbar,
                     instanceName: constants.toolbarInstanceName,
                     small: false,
                     template: this.sandbox.sulu.buttons.get(
@@ -129,6 +133,16 @@ define([
         render = function() {
             this.sandbox.dom.html(this.$el, this.renderTemplate('/admin/product/template/product/variants'));
             startComponents.call(this);
+
+            // Check if variant-attributes are set, otherwise hide toolbar and show warning label.
+            if (this.options.data.attributes.variantAttributes.length === 0) {
+                $(selectors.listToolbar).hide();
+                this.sandbox.emit(
+                    'sulu.labels.warning.show',
+                    'sulu_product.labels.no-variant-attributes-warning',
+                    'labels.warning'
+                );
+            }
         },
 
         /**

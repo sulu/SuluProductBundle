@@ -12,48 +12,64 @@ define([], function() {
     'use strict';
 
     /**
-     * @var ids - array of ids to delete
-     * @var callback - callback function returns true or false if data got deleted
+     * @param {Function} callbackFunction Callback function returns true or false if data got deleted.
+     * @param {Number} numberOfVariants
      */
-    var confirmDeleteDialog = function(callbackFunction) {
-        // check if callback is a function
+    var confirmDeleteDialog = function(callbackFunction, numberOfVariants) {
+        var warningMessage = 'sulu.overlay.delete-desc';
+
+        // Check if callback is a function.
         if (!!callbackFunction && typeof(callbackFunction) !== 'function') {
             throw 'callback is not a function';
         }
-        // show dialog
-        this.sandbox.emit('sulu.overlay.show-warning',
+
+        if (numberOfVariants > 0) {
+            warningMessage = this.sandbox.translate('sulu_product.dialog.delete-product-with-variants');
+            warningMessage = warningMessage.replace('%number%', numberOfVariants.toString());
+        }
+
+        // Show dialog.
+        this.sandbox.emit(
+            'sulu.overlay.show-warning',
             'sulu.overlay.be-careful',
-            'sulu.overlay.delete-desc',
+            warningMessage,
             callbackFunction.bind(this, false),
             callbackFunction.bind(this, true)
         );
     };
 
     return {
-
         /**
-         * Shows a dialog when a contact should be deleted
-         * @param sandbox
-         * @param product
+         * Shows a dialog when a contact should be deleted.
+         *
+         * @param {Object} sandbox
+         * @param {Object} product
          */
         show: function(sandbox, product) {
             if (!!sandbox && !!product) {
                 this.sandbox = sandbox;
-                confirmDeleteDialog.call(this, function(wasConfirmed) {
-                    if (wasConfirmed) {
-                        this.sandbox.emit('sulu.header.toolbar.item.loading', 'options-button');
-                        product.destroy({
-                            success: function() {
-                                this.sandbox.emit('sulu.router.navigate', 'pim/products');
-                            }.bind(this)
-                        });
-                    }
-                }.bind(this));
+                confirmDeleteDialog.call(
+                    this,
+                    function(wasConfirmed) {
+                        if (wasConfirmed) {
+                            this.sandbox.emit('sulu.header.toolbar.item.loading', 'options-button');
+                            product.destroy({
+                                success: function() {
+                                    this.sandbox.emit('sulu.router.navigate', 'pim/products');
+                                }.bind(this)
+                            });
+                        }
+                    }.bind(this),
+                    product.attributes.numberOfVariants
+                );
             }
         },
 
         /**
-         * Shows a dialog when removing media from a product
+         * Shows a dialog when removing media from a product.
+         *
+         * @param {Object} sandbox
+         * @param {Function} callback
          */
         showMediaRemoveDialog: function(sandbox, callback) {
             this.sandbox = sandbox;

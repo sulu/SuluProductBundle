@@ -1697,7 +1697,7 @@ class ProductManager implements ProductManagerInterface
         if (($statusId == StatusEntity::ACTIVE || $statusId == StatusEntity::INACTIVE)
             && $existingProduct->getStatus()->getId() != $statusId
         ) {
-            // Check if the same product already exists in IMPORTED state
+            // Check if the same product already exists in IMPORTED state.
             $products = $this->productRepository->findByLocaleAndInternalItemNumber(
                 $locale,
                 $existingProduct->getInternalItemNumber()
@@ -1893,7 +1893,7 @@ class ProductManager implements ProductManagerInterface
      */
     protected function singleDelete($id)
     {
-        // id must be an integer
+        // Id must be an integer.
         if (!is_numeric($id)) {
             throw new InvalidProductAttributeException('id', $id);
         }
@@ -1904,7 +1904,7 @@ class ProductManager implements ProductManagerInterface
             throw new ProductNotFoundException($id);
         }
 
-        // do not allow to delete entity if child is existent
+        // Do not allow to delete entity if child is existent.
         if (count($product->getChildren()) > 0) {
             throw new ProductChildrenExistException($id);
         }
