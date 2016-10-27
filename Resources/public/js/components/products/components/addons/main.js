@@ -11,8 +11,10 @@ define([
     'config',
     'suluproduct/models/product-addon',
     'text!suluproduct/components/products/components/addons/overlay.html',
-    'text!suluproduct/components/products/components/addons/price.html'
-], function(Config, ProductAddon, OverlayTemplate, PriceTemplate) {
+    'text!suluproduct/components/products/components/addons/price.html',
+    'services/product-type-manager'
+], function(Config, ProductAddon, OverlayTemplate, PriceTemplate, ProductTypeManager) {
+
     'use strict';
 
     var currencies = null,
@@ -26,6 +28,21 @@ define([
             selectInstanceName: 'product-addon-select',
             priceListElementId: '#addon-price-list',
             loaderElementClass: '.loader'
+        },
+
+        /**
+         * Returns auto complete url for fetching product addons.
+         * @returns {string}
+         */
+        getProductAddonAutoCompletionUrl = function() {
+            var allowedTypes = [
+                ProductTypeManager.types.PRODUCT,
+                ProductTypeManager.types.PRODUCT_WITH_VARIANTS,
+                ProductTypeManager.types.PRODUCT_ADDON
+            ];
+
+            return '/admin/api/products?flat=true&searchFields=number,name&fields=id,name,number&type=' +
+                allowedTypes.join(',')
         },
 
         /**
@@ -352,7 +369,7 @@ define([
             var autoCompleteOptions = Config.get('suluproduct.components.autocomplete.default');
             autoCompleteOptions.instanceName = 'addons-search';
             autoCompleteOptions.el = '#addons-search-field';
-            autoCompleteOptions.remoteUrl = '/admin/api/products?flat=true&searchFields=number,name&fields=id,name,number&type=3';
+            autoCompleteOptions.remoteUrl = getProductAddonAutoCompletionUrl();
             autoCompleteOptions.noNewValues = true;
             autoCompleteOptions.fields = [
                 {
