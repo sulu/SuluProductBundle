@@ -18,7 +18,7 @@
  * @params {String}   [options.instanceName = null] Name of this instance.
  * @params {String}   [options.locale] Default locale for overlay.
  * @params {Array}    [options.parentPrices] Prices of the parent product.
- * @params {Array}    [options.parentName] Name of parent product.
+ * @params {String}   [options.parentName] Name of parent product.
  * @params {Array}    [options.variantAttributes] List of attributes that have to be implemented set by each variant.
  * @params {Function} [options.okCallback] Callback function when variant has been saved. Provides data
  *                     and locale as parameter.

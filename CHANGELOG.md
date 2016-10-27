@@ -1,7 +1,7 @@
 CHANGELOG for Sulu Product Bundle
 =================================
 
-* dev-develop
+* 0.16.1 (2016-10-27)
 
     * BUGFIX      Fixed deleting of variant attributes.
     * ENHANCEMENT Pre-fill name field of variant overlay.
