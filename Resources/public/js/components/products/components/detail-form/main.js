@@ -78,10 +78,6 @@ define([
                 this.save();
             }.bind(this));
 
-            this.sandbox.on('sulu.toolbar.delete', function() {
-                this.sandbox.emit('sulu.product.delete', this.sandbox.dom.val('#id'));
-            }.bind(this));
-
             this.sandbox.on('sulu.products.saved', function() {
                 this.setHeaderBar(true);
             }, this);

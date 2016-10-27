@@ -1,6 +1,4 @@
 @import 'variables.scss';
+@import 'basic.scss';
 @import "modules/import.scss";
-
-.is-hidden {
-  display: none;
-}
+@import "modules/variant-overlay.scss";

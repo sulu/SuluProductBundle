@@ -21,6 +21,7 @@ use Sulu\Component\Security\Authentication\UserInterface;
 class Attribute implements TimestampableInterface
 {
     const ATTRIBUTE_TYPE_TEXT = 1;
+
     /**
      * @var \DateTime
      */

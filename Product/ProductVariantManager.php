@@ -19,6 +19,9 @@ use Sulu\Bundle\ProductBundle\Entity\TypeRepository;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductException;
 use Sulu\Bundle\ProductBundle\Product\Exception\ProductNotFoundException;
 use Sulu\Bundle\ProductBundle\Traits\ArrayDataTrait;
+use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescriptor;
+use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineGroupConcatFieldDescriptor;
+use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineJoinDescriptor;
 use Sulu\Component\Security\Authentication\UserInterface;
 use Sulu\Component\Security\Authentication\UserRepositoryInterface;
 
@@ -28,6 +31,11 @@ use Sulu\Component\Security\Authentication\UserRepositoryInterface;
 class ProductVariantManager implements ProductVariantManagerInterface
 {
     use ArrayDataTrait;
+
+    protected static $productEntityName = 'SuluProductBundle:Product';
+    protected static $productAttributeEntityName = 'SuluProductBundle:ProductAttribute';
+    protected static $attributeValueEntityName = 'SuluProductBundle:AttributeValue';
+    protected static $attributeValueTranslationEntityName = 'SuluProductBundle:AttributeValueTranslation';
 
     /**
      * @var ProductManagerInterface
@@ -110,6 +118,71 @@ class ProductVariantManager implements ProductVariantManagerInterface
     /**
      * {@inheritdoc}
      */
+    public function retrieveFieldDescriptors($locale)
+    {
+        $fieldDescriptors = [];
+
+        /* Since all field descriptors already are defined in product-manager,
+           we just need to copy the one's whe need. */
+        $productFieldDescriptors = $this->productManager->getFieldDescriptors($locale);
+
+        $fieldDescriptors['id'] = $productFieldDescriptors['id'];
+
+        $fieldDescriptors['number'] = new DoctrineFieldDescriptor(
+            'number',
+            'number',
+            self::$productEntityName,
+            'public.number',
+            [],
+            false,
+            true,
+            'string'
+        );
+
+        $fieldDescriptors['name'] = $productFieldDescriptors['name'];
+        $fieldDescriptors['price'] = $productFieldDescriptors['price'];
+        $fieldDescriptors['parent'] = $productFieldDescriptors['parent'];
+
+        $fieldDescriptors['attributes'] = new DoctrineGroupConcatFieldDescriptor(
+            new DoctrineFieldDescriptor(
+                'name',
+                'attributeTranslation',
+                self::$attributeValueTranslationEntityName,
+                '',
+                [
+                    static::$productAttributeEntityName => new DoctrineJoinDescriptor(
+                        static::$productAttributeEntityName,
+                        static::$productEntityName . '.productAttributes'
+                    ),
+                    static::$attributeValueEntityName => new DoctrineJoinDescriptor(
+                        static::$attributeValueEntityName,
+                        static::$productAttributeEntityName . '.attributeValue'
+                    ),
+                    self::$attributeValueTranslationEntityName => new DoctrineJoinDescriptor(
+                        static::$attributeValueTranslationEntityName,
+                        static::$attributeValueEntityName . '.translations',
+                        self::$attributeValueTranslationEntityName . '.locale = \'' . $locale . '\''
+                    ),
+                ]
+            ),
+            'attributes',
+            'sulu_product.attributes',
+            ', ',
+            false,
+            true,
+            'string',
+            '',
+            '',
+            false,
+            false
+        );
+
+        return $fieldDescriptors;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function createVariant($parentId, array $variantData, $locale, $userId)
     {
         // Check if parent product exists.
@@ -180,6 +253,23 @@ class ProductVariantManager implements ProductVariantManagerInterface
         $this->entityManager->remove($variant);
 
         return $variant;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function deleteVariants($parentId, array $variantIds)
+    {
+        foreach ($variantIds as $variantId) {
+            $variant = $this->deleteVariant($variantId);
+
+            // Check variant parent.
+            if ($variant->getParent()->getId() !== (int) $parentId) {
+                throw new ProductException(
+                    sprintf('Product with id \'%s\' has no variant with id \'%s\'', $parentId, $variantId)
+                );
+            }
+        }
     }
 
     /**

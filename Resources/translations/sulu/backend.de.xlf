@@ -440,6 +440,26 @@
                 <source>sulu_product.attribute.overlay.no-attributes</source>
                 <target>Keine Attribute vorhanden</target>
             </trans-unit>
+            <trans-unit id="attributes-03" resname="sulu_product.attributes">
+                <source>sulu_product.attributes</source>
+                <target>Attribute</target>
+            </trans-unit>
+            <trans-unit id="attributes-04" resname="sulu_product.variant-overlay.title">
+                <source>sulu_product.variant-overlay.title</source>
+                <target>Neue Variante erstellen</target>
+            </trans-unit>
+            <trans-unit id="attributes-05" resname="sulu_product.variant-overlay.title-edit">
+                <source>sulu_product.variant-overlay.title-edit</source>
+                <target>Variante bearbeiten</target>
+            </trans-unit>
+            <trans-unit id="attributes-06" resname="sulu_product.variant-overlay.warning-title">
+                <source>sulu_product.variant-overlay.warning-title</source>
+                <target>Achtung</target>
+            </trans-unit>
+            <trans-unit id="attributes-07" resname="sulu_product.variant-overlay.warning-description">
+                <source>sulu_product.variant-overlay.warning-description</source>
+                <target>Beim Wechseln der Sprache können nicht gespeicherte Daten verloren gehen! Willst du wirklich fortfahren?</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>

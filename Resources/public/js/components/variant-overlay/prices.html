@@ -1,0 +1,47 @@
+<div class="variant-overlay-content is-hidden"
+     data-type="collection"
+     data-mapper-property='[{"data":"prices","tpl":"prices-tpl"}]'>
+    <script type="text/template" id="prices-tpl">
+        <div>
+            <~ var uid = _.uniqueId('price_') ~>
+            <~ var isDisabled = price === null ~>
+            <div class="grid-row m-bottom-5">
+                <div class="grid-col-4">
+                    <input id="price-<~= currency.code ~>"
+                           class="form-element husky-validate salesprice align-right"
+                           type="text"
+                           data-type="decimal"
+                           data-validation-max="999999999"
+                           data-validation-min="0.0"
+                           data-mapper-property="price"
+                    <~= isDisabled ? ' disabled="disabled"' : '' ~>/>
+                </div>
+                <input class="hidden" data-mapper-property="currency" data-form="true" data-type="attributes"/>
+
+                <div class="grid-col-3">
+                    <span class="grey-font form-text"><~= currency.code ~></span>
+                </div>
+                <div class="grid-col-5 vertical-centered-checkbox-group">
+                    <div class="custom-checkbox">
+                        <input id="change-price-<~= currency.code ~>"
+                               class="form-element husky-validate change-price"
+                               type="checkbox"
+                               data-currency-code="<~= currency.code ~>"
+                        <~= !isDisabled ? 'checked="checked"' : '' ~>
+                        "/>
+                        <span class="icon"></span>
+                    </div>
+                    <label for="change-price-<~= currency.code ~>">
+                        <%= translate('product.product-addons.change-price') %>
+                    </label>
+
+                </div>
+            </div>
+            <div class="grid-row">
+                <div class="grid-col-12 grey-font small-font">
+                    <%= translate('product.product-addons.base-price') %>: <~= basePrice ~> <~= currency.code ~>
+                </div>
+            </div>
+        </div>
+    </script>
+</div>

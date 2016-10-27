@@ -1,5 +1,5 @@
 /*
- * This file is part of the Sulu CMS.
+ * This file is part of Sulu.
  *
  * (c) MASSIVE ART WebServices GmbH
  *
@@ -10,6 +10,7 @@
 require.config({
     paths: {
         suluproduct: '../../suluproduct/js',
+        suluproductcss: '../../suluproduct/css',
         'suluproduct/util/header': '../../suluproduct/js/components/products/util/header',
         'suluproduct/util/locale-util': '../../suluproduct/js/util/locale-util',
         'suluproduct/util/price-calculation-util':'../../suluproduct/js/util/price-calculation-util',
@@ -21,13 +22,16 @@ require.config({
     }
 });
 
-define(['config', 'extensions/sulu-buttons-productbundle'], function(Config, ProductButtons) {
+define([
+    'config',
+    'extensions/sulu-buttons-productbundle',
+    'css!suluproductcss/main'
+], function(Config, ProductButtons) {
 
     'use strict';
 
     return {
-
-        name: "SuluProductBundle",
+        name: 'SuluProductBundle',
 
         initialize: function(app) {
 

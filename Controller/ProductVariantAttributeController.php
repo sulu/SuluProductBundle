@@ -165,8 +165,11 @@ class ProductVariantAttributeController extends RestController implements ClassR
         $list = new ListRepresentation(
             $listBuilder->execute(),
             self::$entityKey,
-            'get_attributes',
-            $request->query->all(),
+            'get_product_productvariant_attributes',
+            array_merge(
+                ['productId' => $productId],
+                $request->query->all()
+            ),
             $listBuilder->getCurrentPage(),
             $listBuilder->getLimit(),
             $listBuilder->count()

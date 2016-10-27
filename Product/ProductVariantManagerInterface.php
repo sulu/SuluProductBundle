@@ -12,6 +12,7 @@
 namespace Sulu\Bundle\ProductBundle\Product;
 
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
+use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescriptorInterface;
 
 /**
  * This interface contains all methods a ProductVariantManager needs to implement.
@@ -50,4 +51,21 @@ interface ProductVariantManagerInterface
      * @return ProductInterface
      */
     public function deleteVariant($variantId);
+
+    /**
+     * Deletes a given set of variants.
+     *
+     * @param int $parentId
+     * @param array $variantIds
+     */
+    public function deleteVariants($parentId, array $variantIds);
+
+    /**
+     * Returns all field descriptors for product variants.
+     *
+     * @param string $locale
+     *
+     * @return DoctrineFieldDescriptorInterface[]
+     */
+    public function retrieveFieldDescriptors($locale);
 }

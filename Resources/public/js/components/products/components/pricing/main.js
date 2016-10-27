@@ -36,10 +36,6 @@ define(['config'], function(Config) {
         },
 
         bindCustomEvents = function() {
-            this.sandbox.on('sulu.toolbar.delete', function() {
-                this.sandbox.emit('sulu.product.delete', this.sandbox.dom.val('#id'));
-            }.bind(this));
-
             this.sandbox.on('product.state.change', function(status) {
                 if (!this.options.data ||
                     !this.options.data.attributes.status ||

@@ -61,10 +61,14 @@ class Product extends BaseProduct
      */
     protected $isRecurringPrice = false;
 
+    /**
+     * Constructor of Product entity.
+     */
     public function __construct()
     {
         parent::__construct();
         $this->productAttributes = new ArrayCollection();
+        $this->variantAttributes = new ArrayCollection();
         $this->translations = new ArrayCollection();
         $this->addons = new ArrayCollection();
         $this->children = new ArrayCollection();

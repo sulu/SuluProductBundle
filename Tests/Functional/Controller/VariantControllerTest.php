@@ -440,6 +440,56 @@ class VariantControllerTest extends SuluTestCase
     }
 
     /**
+     * Test deleting multiple variants at once.
+     */
+    public function testMultipleDelete()
+    {
+        $variantIds = [
+            $this->productVariants[0]->getId(),
+            $this->productVariants[1]->getId(),
+        ];
+
+        $this->client->request(
+            'DELETE',
+            '/api/products/' . $this->product->getId() . '/variants?ids=' . implode(',', $variantIds)
+        );
+        $this->assertEquals(204, $this->client->getResponse()->getStatusCode());
+
+        $this->client->request(
+            'GET',
+            '/api/products/' . $this->product->getId() . '/variants/' . $this->productVariants[0]->getId()
+        );
+        $this->assertEquals(404, $this->client->getResponse()->getStatusCode());
+        $this->client->request(
+            'GET',
+            '/api/products/' . $this->product->getId() . '/variants/' . $this->productVariants[1]->getId()
+        );
+        $this->assertEquals(404, $this->client->getResponse()->getStatusCode());
+
+        // Check number of variants.
+        $this->client->request(
+            'GET',
+            '/api/products/' . $this->product->getId() . '?locale=' . self::REQUEST_LOCALE
+        );
+        $response = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertEquals(0, $response['numberOfVariants']);
+    }
+
+    /**
+     * Test trying to delete multiple variants without providing ids.
+     */
+    public function testMultipleDeleteWithoutIds()
+    {
+        $variantIds = [];
+
+        $this->client->request(
+            'DELETE',
+            '/api/products/' . $this->product->getId() . '/variants?ids=' . implode(',', $variantIds)
+        );
+        $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
+    }
+
+    /**
      * Test deleting a product variant.
      */
     public function testDeleteOfNonParent()

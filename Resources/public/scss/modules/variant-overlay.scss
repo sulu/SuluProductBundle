@@ -1,0 +1,20 @@
+.form-text {
+    display: table-cell;
+    vertical-align: middle;
+    height: 30px;
+}
+
+.vertical-centered-checkbox-group {
+    label {
+        display: inline-block;
+        position: relative;
+        top: 5px;
+    }
+}
+
+.warning-message {
+    padding: 10px 105px 40px;
+    font-size: 16px;
+    color: #999;
+    text-align: center;
+}

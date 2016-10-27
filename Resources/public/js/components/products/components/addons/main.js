@@ -32,30 +32,20 @@ define([
          * Bind custom events.
          */
         bindCustomEvents = function() {
-            // Delete product.
-            this.sandbox.on('sulu.toolbar.delete', function() {
-                deleteProduct.call(this);
-            }.bind(this));
-
             // Listen for status changes, enable the save button.
-            this.sandbox.on('product.state.change', function(status) {
-                handleStatusChanges.call(this, status);
-            }, this);
+            this.sandbox.on('product.state.change', handleStatusChanges.bind(this, status));
 
             // Save status if the save button in the toolbar is clicked.
-            this.sandbox.on('sulu.toolbar.save', function() {
-                saveProduct.call(this);
-            }, this);
+            this.sandbox.on('sulu.toolbar.save', saveProduct.bind(this));
 
             // Listen on the saved event for changes in the status of the product.
-            this.sandbox.on('sulu.products.saved', function() {
-                handleProductSaved.call(this);
-            }, this);
+            this.sandbox.on('sulu.products.saved', handleProductSaved.bind(this));
 
             // Enable toolbar items if elements are selected.
-            this.sandbox.on('husky.datagrid.' + constants.datagridInstanceName + '.number.selections', function(number) {
-                enableToolbarItems.call(this, number);
-            }, this);
+            this.sandbox.on(
+                'husky.datagrid.' + constants.datagridInstanceName + '.number.selections',
+                enableToolbarItems.bind(this)
+            );
 
             // Start prices component if a product is selected in the addon auto-complete search.
             this.sandbox.on('husky.auto-complete.addons-search.select', function(selectedAddon) {
@@ -74,20 +64,12 @@ define([
         },
 
         /**
-         * Delete product.
-         */
-        deleteProduct = function() {
-            this.sandbox.emit('sulu.product.delete', this.options.data.id);
-        },
-
-        /**
          * Handle status change.
          *
          * @param {object} status
          */
         handleStatusChanges = function(status) {
-            if (!this.options.data ||
-                !this.options.data.attributes.status ||
+            if (!this.options.data || !this.options.data.attributes.status ||
                 this.options.data.attributes.status.id !== status.id
             ) {
                 this.status = status;
@@ -123,7 +105,7 @@ define([
          * @param {object} selectedAddon
          */
         handleAutoCompleteSelection = function(selectedAddon) {
-             // Remove prices (only important if another product was already selected before).
+            // Remove prices (only important if another product was already selected before).
             this.sandbox.dom.empty(this.$find(constants.priceListElementId));
 
             // Start the price list loader.
@@ -271,9 +253,10 @@ define([
          * Delete selected product addons.
          */
         removeSelected = function() {
-            this.sandbox.emit('husky.datagrid.' + constants.datagridInstanceName + '.items.get-selected', function(ids) {
-                removeAddons.call(this, ids);
-            }.bind(this));
+            this.sandbox.emit('husky.datagrid.' + constants.datagridInstanceName + '.items.get-selected',
+                function(ids) {
+                    removeAddons.call(this, ids);
+                }.bind(this));
         },
 
         /**
@@ -487,7 +470,7 @@ define([
                                 callback: removeSelected.bind(this)
                             }
                         }
-                     })
+                    })
                 },
                 {
                     el: '#product-addons-list',
@@ -524,14 +507,14 @@ define([
             initList.call(this);
         },
 
+        /**
+         * Components constructor function.
+         */
         initialize: function() {
             bindCustomEvents.call(this);
             bindDomEvents.call(this);
 
-            this.status = Config.get('product.status.inactive');
-            if (!!this.options.data) {
-                this.status = this.options.data.attributes.status;
-            }
+            this.status = this.options.data.attributes.status;
 
             // Reset status if it has been changed before and has not been saved.
             this.sandbox.emit('product.state.change', this.status);

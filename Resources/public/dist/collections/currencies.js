@@ -1,0 +1,1 @@
+define(["mvc/collection","suluproduct/models/currency"],function(a,b){"use strict";return new a({model:b,locale:null,initialize:function(a){this.setLocale(a.locale)},setLocale:function(a){this.locale=a},parse:function(a){return a._embedded?a._embedded.currencies:a},url:function(){return"/admin/api/currencies?flat=true&locale="+this.locale}})});

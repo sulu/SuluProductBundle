@@ -397,6 +397,8 @@ class ProductManager implements ProductManagerInterface
         );
         // TODO: currency should be dynamically set
         $currency = $this->defaultCurrency;
+        $currencyEntity = $this->currencyRepository->findByCode($currency);
+        $currencyId = $currencyEntity->getId();
         $fieldDescriptors['price'] = new DoctrineFieldDescriptor(
             'price',
             'price',
@@ -406,13 +408,8 @@ class ProductManager implements ProductManagerInterface
                 self::$productPriceEntityName => new DoctrineJoinDescriptor(
                     self::$productPriceEntityName,
                     static::$productEntityName . '.prices',
-                    self::$productPriceEntityName . '.minimumQuantity = 0'
-                ),
-                // TODO: sort by minimum quantity
-                self::$currencyEntityName => new DoctrineJoinDescriptor(
-                    self::$currencyEntityName,
-                    static::$productPriceEntityName . '.currency',
-                    self::$currencyEntityName . '.code = \'' . $currency . '\''
+                    self::$productPriceEntityName . '.minimumQuantity = 0 AND ' .
+                    self::$productPriceEntityName . '.currency = ' . $currencyId
                 ),
             ],
             false,
@@ -1226,7 +1223,7 @@ class ProductManager implements ProductManagerInterface
         if (isset($data['status']) && isset($data['status']['id'])) {
             $statusId = $data['status']['id'];
             /** @var Status $status */
-            $this->setStatusForProduct($product, $statusId);
+            $this->setStatusForProduct($product->getEntity(), $statusId);
         }
 
         if (isset($data['type']) && isset($data['type']['id'])) {
@@ -1720,17 +1717,15 @@ class ProductManager implements ProductManagerInterface
     /**
      * Sets the status for a given product.
      *
-     * @param Product $product
+     * @param ProductInterface $product
      * @param int $statusId
      *
      * @throws ProductDependencyNotFoundException
      */
-    public function setStatusForProduct(Product $product, $statusId)
+    public function setStatusForProduct(ProductInterface $product, $statusId)
     {
-        $productEntity = $product->getEntity();
-
         // Check if status has changed.
-        if ($productEntity->getStatus() && $productEntity->getStatus()->getId() === $statusId) {
+        if ($product->getStatus() && $product->getStatus()->getId() === $statusId) {
             return;
         }
 
@@ -1743,10 +1738,10 @@ class ProductManager implements ProductManagerInterface
         $product->setStatus($status);
 
         // If product has variants, set status for all variants as well.
-        if ($productEntity->getType()
-            && $productEntity->getType()->getId() === (int) $this->productTypesMap['PRODUCT_WITH_VARIANTS']
+        if ($product->getType()
+            && $product->getType()->getId() === (int) $this->productTypesMap['PRODUCT_WITH_VARIANTS']
         ) {
-            $variants = $this->productRepository->findByParent($productEntity);
+            $variants = $this->productRepository->findByParent($product);
             foreach ($variants as $variant) {
                 $variant->setStatus($status);
             }

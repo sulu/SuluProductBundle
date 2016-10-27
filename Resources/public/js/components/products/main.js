@@ -76,12 +76,11 @@ define([
                 this.renderList();
             } else if (this.options.display === 'tab') {
                 this.renderTabs().then(function() {
-                    if (this.options.content !== 'variants') {
-                        HeaderUtil.initToolbar(
-                            this.sandbox,
-                            this.product.get('status')
-                        );
-                    }
+                    HeaderUtil.initToolbar(
+                        this.sandbox,
+                        this.product.get('status'),
+                        this.product.get('id')
+                    );
                 }.bind(this));
             } else if (this.options.display === 'import') {
                 this.renderImport();
@@ -153,7 +152,7 @@ define([
             this.sandbox.on('sulu.products.save-error', function(response) {
                 if (response && response.responseJSON && response.responseJSON.code) {
                     // Response code 1 == ProductException::PRODUCT_NOT_VALID
-                    if(response.responseJSON.code == 1) {
+                    if (response.responseJSON.code == 1) {
                         this.sandbox.emit(
                             'sulu.labels.error.show',
                             'labels.error.product-not-valid',
@@ -178,19 +177,19 @@ define([
             if (!!data && !!data.ids && !!data.status) {
                 var url = '/admin/api/products?action=changeState&ids=' + data.ids + '&statusId=' + data.status;
                 this.sandbox.util.save(url, 'POST')
-                    .then(function() {
-                        if (!!data.updateTable) {
-                            this.sandbox.emit('sulu.product.workflow.completed');
-                        }
-                    }.bind(this))
-                    .fail(function(error) {
-                        this.sandbox.emit('sulu.labels.error.show',
-                            this.sandbox.translate('product.workflow.state.changed.error'),
-                            'labels.error',
-                            ''
-                        );
-                        this.sandbox.logger.error('error while changing state of products', error);
-                    }.bind(this));
+                .then(function() {
+                    if (!!data.updateTable) {
+                        this.sandbox.emit('sulu.product.workflow.completed');
+                    }
+                }.bind(this))
+                .fail(function(error) {
+                    this.sandbox.emit('sulu.labels.error.show',
+                        this.sandbox.translate('product.workflow.state.changed.error'),
+                        'labels.error',
+                        ''
+                    );
+                    this.sandbox.logger.error('error while changing state of products', error);
+                }.bind(this));
             }
         },
 
@@ -209,7 +208,7 @@ define([
 
                 if (mediaIds.indexOf(id) === -1) {
                     this.product.set({
-                       'media': this.product.get('media').concat({'id': id})
+                        'media': this.product.get('media').concat({'id': id})
                     });
                     mediaIds.push(id);
                 }

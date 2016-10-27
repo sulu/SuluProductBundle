@@ -21,7 +21,7 @@ interface ProductManagerInterface
     /**
      * Returns the FieldDescriptors for the products.
      *
-     * @param int $locale
+     * @param string $locale
      *
      * @return DoctrineFieldDescriptor[]
      */

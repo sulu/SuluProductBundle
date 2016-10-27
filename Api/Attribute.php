@@ -214,16 +214,25 @@ class Attribute extends ApiWrapper
     {
         $attributeTranslation = $this->getTranslationByLocale($this->locale);
 
-        if (!$attributeTranslation && $useFallback) {
-            $attributeTranslation = $this->getTranslationByLocale($this->fallbackLocale);
-        }
-
         if (!$attributeTranslation) {
-            $attributeTranslation = new AttributeTranslation();
-            $attributeTranslation->setLocale($this->locale);
-            $attributeTranslation->setAttribute($this->entity);
+            if ($useFallback) {
+                // Check if translation exists for fallback locale.
+                $attributeTranslation = $this->getTranslationByLocale($this->fallbackLocale);
 
-            $this->entity->addTranslation($attributeTranslation);
+                // Otherwise check if any translation exists.
+                if (!$attributeTranslation && $this->entity->getTranslations()->count() > 0) {
+                    $attributeTranslation = $this->entity->getTranslations()->first();
+                }
+            }
+
+            // If still no translation exists, create an empty object.
+            if (!$attributeTranslation) {
+                $attributeTranslation = new AttributeTranslation();
+                $attributeTranslation->setLocale($this->locale);
+                $attributeTranslation->setAttribute($this->entity);
+
+                $this->entity->addTranslation($attributeTranslation);
+            }
         }
 
         return $attributeTranslation;
@@ -251,11 +260,11 @@ class Attribute extends ApiWrapper
     }
 
     /**
-    * @VirtualProperty
-    * @SerializedName("key")
-    *
-    * @return string
-    */
+     * @VirtualProperty
+     * @SerializedName("key")
+     *
+     * @return string
+     */
     public function getKey()
     {
         return $this->getEntity()->getKey();

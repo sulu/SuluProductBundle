@@ -440,6 +440,26 @@
                 <source>sulu_product.attribute.overlay.no-attributes</source>
                 <target>No attributes found</target>
             </trans-unit>
+            <trans-unit id="attributes-03" resname="sulu_product.attributes">
+                <source>sulu_product.attributes</source>
+                <target>Attributes</target>
+            </trans-unit>
+            <trans-unit id="attributes-04" resname="sulu_product.variant-overlay.title">
+                <source>sulu_product.variant-overlay.title</source>
+                <target>Create a new variant</target>
+            </trans-unit>
+            <trans-unit id="attributes-05" resname="sulu_product.variant-overlay.title-edit">
+                <source>sulu_product.variant-overlay.title-edit</source>
+                <target>Edit variant</target>
+            </trans-unit>
+            <trans-unit id="attributes-06" resname="sulu_product.variant-overlay.warning-title">
+                <source>sulu_product.variant-overlay.warning-title</source>
+                <target>Attention</target>
+            </trans-unit>
+            <trans-unit id="attributes-07" resname="sulu_product.variant-overlay.warning-description">
+                <source>sulu_product.variant-overlay.warning-description</source>
+                <target>When changing the language, unsaved data may be lost! Would you like to continue?</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>
