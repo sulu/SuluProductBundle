@@ -9,6 +9,7 @@ env:
   - DB=mysql
 
 before_script:
+  - phpenv config-add travis.php.ini
   - composer self-update
   - composer install
   - if [[ "$DB" == "mysql" ]]; then mysql -e "CREATE DATABASE sulu_test;"; fi

@@ -248,7 +248,7 @@ class VariantController extends RestController implements ClassResourceInterface
     {
         $requestIds = $request->get('ids');
 
-        if (!empty($requestIds)) {
+        if (empty($requestIds)) {
             throw new ProductException('No ids provided for variant deletion');
         }
 
