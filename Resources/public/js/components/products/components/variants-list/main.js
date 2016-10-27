@@ -10,7 +10,7 @@
 define([
     'suluproduct/collections/currencies',
     'suluproduct/models/variant',
-    'suluproduct/util/header',
+    'suluproduct/util/header'
 ], function(Currencies, Variant, HeaderUtil) {
 
     'use strict';
@@ -21,9 +21,25 @@ define([
         },
 
         /**
+         * Returns flat product variants url.
+         *
+         * @returns {String}
+         */
+        getProductVariantsUrl = function() {
+            var variant = new Variant({
+                locale: this.options.locale,
+                productId: this.options.data.id,
+                flat: true
+            });
+
+            return variant.url();
+        },
+
+        /**
          * Starts toolbar and datagrid components.
          */
         startComponents = function() {
+
             this.sandbox.sulu.initListToolbarAndList.call(
                 this,
                 'product-variants-list',
@@ -58,8 +74,7 @@ define([
                     instanceName: constants.datagridInstanceName,
                     resultKey: 'products',
                     searchFields: ['name'],
-                    url: '/admin/api/products/' + this.options.data.id + '/variants?flat=true&locale=' +
-                    this.options.locale
+                    url: getProductVariantsUrl.call(this)
                 }
             );
         },
@@ -77,7 +92,6 @@ define([
          */
         bindCustomEvents = function() {
             this.sandbox.on('sulu.toolbar.save', onProductSaveClicked.bind(this));
-            this.sandbox.on('sulu.toolbar.delete', onProductDeleteClicked.bind(this));
             this.sandbox.on('sulu.products.saved', HeaderUtil.setSaveButton.bind(this, false));
 
             this.sandbox.on(
@@ -86,13 +100,6 @@ define([
             );
 
             this.sandbox.on('sulu.product-variant-overlay.closed', onCloseVariantOverlay.bind(this));
-        },
-
-        /**
-         * Called when header delete button is clicked.
-         */
-        onProductDeleteClicked = function() {
-            this.sandbox.emit('sulu.product.delete', this.options.data.id);
         },
 
         /**
@@ -129,6 +136,9 @@ define([
          */
         onDeleteClicked = function() {
             var selectedIds = [];
+            var numberOfDeletions = null;
+            var variant = null;
+
             this.sandbox.emit(
                 'husky.datagrid.' + constants.datagridInstanceName + '.items.get-selected',
                 function(ids) {
@@ -136,12 +146,12 @@ define([
                 }
             );
 
-            var numberOfDeletions = selectedIds.length;
+            numberOfDeletions = selectedIds.length;
             if (numberOfDeletions < 1) {
                 return;
             }
 
-            var variant = new Variant({
+            variant = new Variant({
                 productId: this.options.data.id,
                 ids: selectedIds
             });
@@ -190,8 +200,7 @@ define([
             var currencies = new Currencies({locale: this.options.locale});
             currencies.fetch({
                 success: function(data) {
-                    this.currencies = data.toJSON();
-                    deferred.resolve();
+                    deferred.resolve(data.toJSON());
                 }.bind(this),
                 error: function() {
                     console.error('Error while loading currencies');
@@ -242,7 +251,7 @@ define([
          */
         openAddOverlay = function(data) {
             // Only open overlay, onconce currencies are loaded.
-            this.currenciesLoaded.then(function() {
+            this.currenciesLoaded.then(function(currencies) {
                 // Create container for overlay.
                 this.$overlay = this.sandbox.dom.createElement('<div>');
                 this.sandbox.dom.append(this.$el, this.$overlay);
@@ -253,7 +262,7 @@ define([
                     options: {
                         el: this.$overlay,
                         data: data,
-                        currencies: this.currencies,
+                        currencies: currencies,
                         locale: this.options.locale,
                         parentPrices: this.options.data.attributes.prices,
                         variantAttributes: this.options.data.attributes.variantAttributes,

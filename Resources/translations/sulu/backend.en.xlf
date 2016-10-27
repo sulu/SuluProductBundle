@@ -458,7 +458,7 @@
             </trans-unit>
             <trans-unit id="attributes-07" resname="sulu_product.variant-overlay.warning-description">
                 <source>sulu_product.variant-overlay.warning-description</source>
-                <target>When changing the language, unsaved data may be lost! Would you like to continue.</target>
+                <target>When changing the language, unsaved data may be lost! Would you like to continue?</target>
             </trans-unit>
         </body>
     </file>

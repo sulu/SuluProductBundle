@@ -32,10 +32,10 @@ class ProductVariantManager implements ProductVariantManagerInterface
 {
     use ArrayDataTrait;
 
-    private static $productEntityName = 'SuluProductBundle:Product';
-    private static $productAttributeEntityName = 'SuluProductBundle:ProductAttribute';
-    private static $attributeValueEntityName = 'SuluProductBundle:AttributeValue';
-    private static $attributeValueTranslationEntityName = 'SuluProductBundle:AttributeValueTranslation';
+    protected static $productEntityName = 'SuluProductBundle:Product';
+    protected static $productAttributeEntityName = 'SuluProductBundle:ProductAttribute';
+    protected static $attributeValueEntityName = 'SuluProductBundle:AttributeValue';
+    protected static $attributeValueTranslationEntityName = 'SuluProductBundle:AttributeValueTranslation';
 
     /**
      * @var ProductManagerInterface
@@ -122,8 +122,8 @@ class ProductVariantManager implements ProductVariantManagerInterface
     {
         $fieldDescriptors = [];
 
-        // Since all field descriptors already are defined in product-manager,
-        // we just need to copy the one's whe need.
+        /* Since all field descriptors already are defined in product-manager,
+           we just need to copy the one's whe need. */
         $productFieldDescriptors = $this->productManager->getFieldDescriptors($locale);
 
         $fieldDescriptors['id'] = $productFieldDescriptors['id'];

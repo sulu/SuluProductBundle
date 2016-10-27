@@ -26,10 +26,19 @@ define(['config'], function(Config) {
          * Bind all custom events.
          */
         bindCustomEvents = function() {
+            this.sandbox.on('sulu.toolbar.delete', onDeleteClicked.bind(this));
+
             this.sandbox.once('husky.toolbar.header.initialized', setStatus.bind(this, this.status));
 
             this.sandbox.off('product.state.change');
             this.sandbox.on('product.state.change', onStatusChanged.bind(this));
+        },
+
+        /**
+         * Called when delete button is clicked.
+         */
+        onDeleteClicked = function(productId) {
+            this.sandbox.emit('sulu.product.delete', productId);
         },
 
         /**
@@ -77,7 +86,7 @@ define(['config'], function(Config) {
          * @param {Object} sandbox
          * @param {Object} status
          */
-        initToolbar: function(sandbox, status) {
+        initToolbar: function(sandbox, status, productId) {
             this.sandbox = sandbox;
             this.status = status;
 

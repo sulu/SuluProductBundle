@@ -14,7 +14,14 @@ define(['mvc/relationalmodel'], function(RelationalModel) {
         var variant = new RelationalModel({
             productId: null,
             locale: null,
+            ids: null,
+            flat: false,
 
+            /**
+             * Returns url for variant model.
+             *
+             * @returns {string}
+             */
             url: function() {
                 var url = '/admin/api/products/' + this.productId + '/variants';
                 var params = {};
@@ -30,6 +37,9 @@ define(['mvc/relationalmodel'], function(RelationalModel) {
                 if (this.locale) {
                     params.locale = this.locale;
                 }
+                if (this.flat) {
+                    params.flat = this.flat;
+                }
                 if (Object.keys(params).length) {
                     url += '?' + $.param(params);
                 }
@@ -37,6 +47,9 @@ define(['mvc/relationalmodel'], function(RelationalModel) {
                 return url;
             },
 
+            /**
+             * {@inheritdoc}
+             */
             destroy: function(options) {
                 var options = $.extend(true, {
                     method: 'DELETE'
@@ -45,12 +58,19 @@ define(['mvc/relationalmodel'], function(RelationalModel) {
                 $.ajax(this.url(), options);
             },
 
+            /**
+             * {@inheritdoc}
+             */
             initialize: function(options) {
                 this.locale = options.locale;
                 this.productId = options.productId;
                 this.ids = options.ids;
+                this.flat = options.flat;
             },
 
+            /**
+             * {@inheritdoc}
+             */
             defaults: function() {
                 return {
                     id: null,

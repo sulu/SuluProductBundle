@@ -37,6 +37,9 @@ class VariantController extends RestController implements ClassResourceInterface
     protected static $entityName = 'SuluProductBundle:Product';
     protected static $entityKey = 'products';
 
+    /**
+     * {@inheritdoc}
+     */
     public function getSecurityContext()
     {
         return SuluProductAdmin::CONTEXT_PRODUCTS;
@@ -237,11 +240,18 @@ class VariantController extends RestController implements ClassResourceInterface
      * @param Request $request
      * @param int $parentId
      *
+     * @throws ProductException
+     *
      * @return Response
      */
     public function multipleDeleteAction(Request $request, $parentId)
     {
         $requestIds = $request->get('ids');
+
+        if (!empty($requestIds)) {
+            throw new ProductException('No ids provided for variant deletion');
+        }
+
         $variantIds = explode(',', $requestIds);
 
         $this->getProductVariantManager()->deleteVariants($parentId, $variantIds);

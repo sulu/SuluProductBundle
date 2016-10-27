@@ -78,7 +78,8 @@ define([
                 this.renderTabs().then(function() {
                     HeaderUtil.initToolbar(
                         this.sandbox,
-                        this.product.get('status')
+                        this.product.get('status'),
+                        this.product.get('id')
                     );
                 }.bind(this));
             } else if (this.options.display === 'import') {

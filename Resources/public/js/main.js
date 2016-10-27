@@ -31,7 +31,7 @@ define([
     'use strict';
 
     return {
-        name: "SuluProductBundle",
+        name: 'SuluProductBundle',
 
         initialize: function(app) {
 

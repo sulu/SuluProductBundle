@@ -476,6 +476,20 @@ class VariantControllerTest extends SuluTestCase
     }
 
     /**
+     * Test trying to delete multiple variants without providing ids.
+     */
+    public function testMultipleDeleteWithoutIds()
+    {
+        $variantIds = [];
+
+        $this->client->request(
+            'DELETE',
+            '/api/products/' . $this->product->getId() . '/variants?ids=' . implode(',', $variantIds)
+        );
+        $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
+    }
+
+    /**
      * Test deleting a product variant.
      */
     public function testDeleteOfNonParent()

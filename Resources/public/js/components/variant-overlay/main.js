@@ -76,6 +76,18 @@ define([
         },
 
         /**
+         * Returns event name for husky overlay.
+         *
+         * @param {String} eventName
+         *
+         * @returns {String}
+         */
+        retrieveOverlayEventName = function(eventName) {
+            return 'husky.overlay.' + retrievePreparedInstanceName.call(this) + eventName
+        },
+
+
+        /**
          * Returns instance name with a postfixed '.' if its defined.
          * Otherwise an empty string is returned.
          *
@@ -143,10 +155,10 @@ define([
          * @returns {boolean}
          */
         onWarningCancelClicked = function() {
-            this.sandbox.emit(retrieveOverlayEventName.call(this, 'slide-left'));
-
-            // Set back local to previous selection.
+            // Set back locale to previous selection.
             var locales = this.sandbox.sulu.locales;
+
+            this.sandbox.emit(retrieveOverlayEventName.call(this, 'slide-left'));
             this.sandbox.emit('husky.select.null.update', locales , [locales.indexOf(this.options.locale)], false);
 
             return false;
@@ -267,43 +279,6 @@ define([
         },
 
         /**
-         * Returns event name for husky overlay.
-         *
-         * @param {String} eventName
-         *
-         * @returns {String}
-         */
-        retrieveOverlayEventName = function(eventName) {
-            return 'husky.overlay.' + retrievePreparedInstanceName.call(this) + eventName
-        },
-
-        /**
-         * Fetches product based on options.data.id.
-         * If non id given, the deferred is resolved immediately.
-         *
-         * @returns {Object} Deferred
-         */
-        fetchProductData = function() {
-            var productDataLoaded = $.Deferred();
-            if (this.options.data && this.options.data.id) {
-                var product = Product.findOrCreate({id: this.options.data.id});
-                product.fetchLocale(this.options.locale, {
-                    success: function(data) {
-                        productDataLoaded.resolve(data.toJSON());
-                    }.bind(this),
-                    error: function() {
-                        productDataLoaded.reject();
-                        console.error('Error while fetching product data');
-                    }
-                });
-            } else {
-                productDataLoaded.resolve();
-            }
-
-            return productDataLoaded.promise();
-        },
-
-        /**
          * Shows loader in overlay tabs and hides content.
          */
         showOverlayLoader = function() {
@@ -328,7 +303,7 @@ define([
                 showOverlayLoader.call(this);
             }
             fetchProductData.call(this).then(function(product) {
-                // Set product data. If non given set defaults.
+                // Set product data. If none given set defaults.
                 if (!product) {
                     product = {
                         attributes: retrieveParsedVariantAttributes.call(this)
@@ -339,6 +314,32 @@ define([
 
                 createOverlayForm.call(this, product);
             }.bind(this));
+        },
+
+        /**
+         * Fetches product based on options.data.id.
+         * If none id given, the deferred is resolved immediately.
+         *
+         * @returns {Object} Deferred
+         */
+        fetchProductData = function() {
+            var productDataLoaded = $.Deferred();
+            if (this.options.data && this.options.data.id) {
+                var product = Product.findOrCreate({id: this.options.data.id});
+                product.fetchLocale(this.options.locale, {
+                    success: function(data) {
+                        productDataLoaded.resolve(data.toJSON());
+                    },
+                    error: function() {
+                        productDataLoaded.reject();
+                        console.error('Error while fetching product data');
+                    }
+                });
+            } else {
+                productDataLoaded.resolve();
+            }
+
+            return productDataLoaded.promise();
         },
 
         /**
@@ -430,7 +431,7 @@ define([
 
         /**
          * Returns base price string for a given currency.
-         * If non given, returns '-'.
+         * If none given, returns '-'.
          *
          * @param {Number} currencyId
          *
@@ -479,6 +480,7 @@ define([
          * @param {Object} data
          */
         parseDataForSubmit = function(data) {
+            var prices = [];
             if (data.id === '') {
                 delete data.id;
             }
@@ -488,10 +490,9 @@ define([
             });
 
             // Parse prices.
-            var prices = [];
             this.sandbox.util.foreach(data.prices, function(price) {
                 // Do not save prices without a valid price.
-                if (price.price == "") {
+                if (price.price == '') {
                     return;
                 }
                 price.price = parseInt(price.price);
@@ -542,18 +543,19 @@ define([
          */
         onSubmitClicked = function() {
             // Validate form.
-            if (!this.sandbox.form.validate(selectors.form)) {
-                // Open details tab.
-                this.sandbox.emit('husky.tabs.item.select', openTab(0));
-
-                return false;
-            }
             if (!validatePrices.call(this)) {
                 // Open prices tab.
                 this.sandbox.emit('husky.tabs.item.select', openTab(1));
 
                 return false;
             }
+            if (!this.sandbox.form.validate(selectors.form)) {
+                // Open details tab.
+                this.sandbox.emit('husky.tabs.item.select', openTab(0));
+
+                return false;
+            }
+
             // Get data from form.
             var data = this.sandbox.form.getData(selectors.form);
 
@@ -575,7 +577,6 @@ define([
 
             // Render overlay.
             render.call(this);
-
 
             bindCustomEvents.call(this);
             bindDomEvents.call(this);

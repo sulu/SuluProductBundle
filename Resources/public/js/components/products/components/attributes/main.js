@@ -82,8 +82,6 @@ define([
          * Bind custom events.
          */
         bindCustomEvents = function() {
-            this.sandbox.on('sulu.toolbar.delete', onDeleteClicked.bind(this));
-
             this.sandbox.on('product.state.change', onStatusChanged.bind(this));
 
             this.sandbox.on('sulu.toolbar.save', onSaveClicked.bind(this));
@@ -102,13 +100,6 @@ define([
         },
 
         /**
-         * Called when delete button is clicked.
-         */
-        onDeleteClicked = function() {
-            this.sandbox.emit('sulu.product.delete', this.options.data.id);
-        },
-
-        /**
          * Enables or disables toolbar based on number of items that were selected.
          *
          * @param {Number} number
@@ -117,6 +108,7 @@ define([
         onProductAttributeSelection = function(toolBarInstanceName, number) {
             var postfix = number > 0 ? 'enable' : 'disable';
             this.sandbox.emit(
+                'husky.toolbar.' + toolBarInstanceName + '.item.' + postfix,
                 'husky.toolbar.' + toolBarInstanceName + '.item.' + postfix,
                 'delete',
                 false)
@@ -287,8 +279,6 @@ define([
                     error: onAddVariantAttributeError.bind(this)
                 }
             );
-
-            this.options
         },
 
         /**

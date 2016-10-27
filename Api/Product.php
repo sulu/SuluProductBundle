@@ -1307,7 +1307,11 @@ class Product extends ApiWrapper implements ApiProductInterface
     {
         $variantAttributes = [];
         foreach ($this->entity->getVariantAttributes() as $attribute) {
-            $variantAttributes[] = new Attribute($attribute, $this->locale, $this->locale);
+            $variantAttributes[] = new Attribute(
+                $attribute,
+                $this->locale,
+                $this->productLocaleManager->getFallbackLocale()
+            );
         }
 
         return $variantAttributes;

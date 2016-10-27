@@ -50,10 +50,6 @@ define(['config', 'suluproduct/util/product-delete-dialog'], function(Config, De
         },
 
         bindCustomEvents: function() {
-            this.sandbox.on('sulu.toolbar.delete', function() {
-                this.sandbox.emit('sulu.product.delete', this.options.id);
-            }.bind(this));
-
             this.sandbox.on('product.state.change', function(status) {
                 if (!this.options.data ||
                     !this.options.data.attributes.status ||
