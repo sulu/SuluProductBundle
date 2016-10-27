@@ -7,6 +7,7 @@ Add the following to composer.json
 
 ```
 "sulu/product-bundle": "~0.12"
+"sulu/validation-bundle": "dev-master@dev",
 ```
 
 Add the following to your application kernel:
