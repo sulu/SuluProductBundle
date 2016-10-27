@@ -279,6 +279,7 @@ define([
                         currencies: currencies,
                         locale: this.options.locale,
                         parentPrices: this.options.data.attributes.prices,
+                        parentName: this.options.data.attributes.name,
                         variantAttributes: this.options.data.attributes.variantAttributes,
                         okCallback: onVariantSubmit.bind(this)
                     }

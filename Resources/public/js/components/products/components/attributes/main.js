@@ -109,7 +109,6 @@ define([
             var postfix = number > 0 ? 'enable' : 'disable';
             this.sandbox.emit(
                 'husky.toolbar.' + toolBarInstanceName + '.item.' + postfix,
-                'husky.toolbar.' + toolBarInstanceName + '.item.' + postfix,
                 'delete',
                 false)
         },

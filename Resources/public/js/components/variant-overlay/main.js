@@ -18,6 +18,7 @@
  * @params {String}   [options.instanceName = null] Name of this instance.
  * @params {String}   [options.locale] Default locale for overlay.
  * @params {Array}    [options.parentPrices] Prices of the parent product.
+ * @params {Array}    [options.parentName] Name of parent product.
  * @params {Array}    [options.variantAttributes] List of attributes that have to be implemented set by each variant.
  * @params {Function} [options.okCallback] Callback function when variant has been saved. Provides data
  *                     and locale as parameter.
@@ -38,7 +39,8 @@ define([
             instanceName: null,
             locale: null,
             variantAttributes: [],
-            parentPrices: []
+            parentPrices: [],
+            parentName: ''
         },
 
         selectors = {
@@ -306,6 +308,7 @@ define([
                 // Set product data. If none given set defaults.
                 if (!product) {
                     product = {
+                        name: this.options.parentName,
                         attributes: retrieveParsedVariantAttributes.call(this)
                     }
                 }
