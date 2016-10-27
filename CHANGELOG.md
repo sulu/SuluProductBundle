@@ -1,21 +1,24 @@
 CHANGELOG for Sulu Product Bundle
 =================================
 
-* dev-develop
+* 0.16.1 (2016-10-27)
+
+    * BUGFIX      Fixed deleting of variant attributes.
+    * ENHANCEMENT Pre-fill name field of variant overlay.
 
 * 0.16.0 (2016-10-27)
 
-* FEATURE     Added functionality for adding product and product with variants as addons.
-* ENHANCEMENT Not showing variants in product list.
-* FEATURE     Changed delete behavior when product contains variants.
-* FEATURE     Added UI for handling variants.
-* FEATURE     Added field numberOfVariants to products.
-* FEATURE     Added UI for handling variant attributes.
-* FEATURE     Implemented api for get, adding and delete variant-attribute relations.
-* FEATURE     Implemented new variants api to create, update and delete product variants.
-* FEATURE     Added product type key to id map as parameter to container.
-* BUGFIX      Fixed wrong path to get action schema.
-* FEATURE     Added validation schema for get products api.
+    * FEATURE     Added functionality for adding product and product with variants as addons.
+    * ENHANCEMENT Not showing variants in product list.
+    * FEATURE     Changed delete behavior when product contains variants.
+    * FEATURE     Added UI for handling variants.
+    * FEATURE     Added field numberOfVariants to products.
+    * FEATURE     Added UI for handling variant attributes.
+    * FEATURE     Implemented api for get, adding and delete variant-attribute relations.
+    * FEATURE     Implemented new variants api to create, update and delete product variants.
+    * FEATURE     Added product type key to id map as parameter to container.
+    * BUGFIX      Fixed wrong path to get action schema.
+    * FEATURE     Added validation schema for get products api.
 
 * 0.15.1 (2016-10-18)
 
