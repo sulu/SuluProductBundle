@@ -11,6 +11,7 @@
 
 namespace Sulu\Bundle\ProductBundle\Product;
 
+use Sulu\Bundle\ProductBundle\Api\ApiAddonProductInterface;
 use Sulu\Bundle\ProductBundle\Api\ApiProductInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 
@@ -32,4 +33,12 @@ interface ProductFactoryInterface
      * @return ApiProductInterface
      */
     public function createApiEntity(ProductInterface $product, $locale);
+
+    /**
+     * @param ProductInterface $product
+     * @param string $locale
+     *
+     * @return ApiAddonProductInterface
+     */
+    public function createAddonProductApiEntity(ProductInterface $product, $locale);
 }

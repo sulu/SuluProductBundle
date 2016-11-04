@@ -16,6 +16,8 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Sulu\Bundle\CategoryBundle\Entity\Category;
 use Sulu\Bundle\CategoryBundle\Entity\CategoryTranslation;
+use Sulu\Bundle\ProductBundle\Entity\Addon;
+use Sulu\Bundle\ProductBundle\Entity\AddonPrice;
 use Sulu\Bundle\ProductBundle\Entity\Attribute;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSet;
 use Sulu\Bundle\ProductBundle\Entity\AttributeSetTranslation;
@@ -28,6 +30,7 @@ use Sulu\Bundle\ProductBundle\Entity\DeliveryStatus;
 use Sulu\Bundle\ProductBundle\Entity\DeliveryStatusTranslation;
 use Sulu\Bundle\ProductBundle\Entity\Product;
 use Sulu\Bundle\ProductBundle\Entity\ProductAttribute;
+use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductPrice;
 use Sulu\Bundle\ProductBundle\Entity\ProductTranslation;
 use Sulu\Bundle\ProductBundle\Entity\SpecialPrice;
@@ -570,6 +573,30 @@ class ProductControllerTest extends SuluTestCase
     }
 
     /**
+     * Creates a new Product-Addon relation.
+     *
+     * @param ProductInterface $product
+     * @param ProductInterface $addonProduct
+     * @param float $price
+     * @param Currency $currency
+     */
+    private function createAddon(ProductInterface $product, ProductInterface $addonProduct, $price, Currency $currency)
+    {
+        $addon = new Addon();
+        $this->em->persist($addon);
+        $addon->setAddon($addonProduct);
+        $addon->setProduct($product);
+        $product->addAddon($addon);
+
+        $addonPrice = new AddonPrice();
+        $this->em->persist($addonPrice);
+        $addonPrice->setCurrency($currency);
+        $addonPrice->setPrice($price);
+        $addonPrice->setAddon($addon);
+        $addon->addAddonPrice($addonPrice);
+    }
+
+    /**
      * Tests if sulu validation is working for get products.
      */
     public function testValidation()
@@ -625,6 +652,32 @@ class ProductControllerTest extends SuluTestCase
             ],
             $response['prices']
         );
+    }
+
+    /**
+     * Tests property addons of get product by id.
+     */
+    public function testGetByIdWithAddon()
+    {
+        $this->createAddon($this->product1, $this->product2, 2.3, $this->currency1);
+
+        $this->getEntityManager()->flush();
+
+        $this->client->request('GET', static::getGetUrlForProduct($this->product1->getId()));
+        $response = json_decode($this->client->getResponse()->getContent(), true);
+
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+
+        // Check if addon is delivered through api.
+        $this->assertCount(1, $response['addons']);
+        $addon = $response['addons'][0];
+        $this->assertCount(1, $addon['addonPrices']);
+        $this->assertEquals($this->product2->getId(), $addon['id']);
+
+        // Check if price is part of api.
+        $price = $addon['addonPrices'][0];
+        $this->assertEquals(2.3, $price['price']);
+        $this->assertEquals($this->currency1->getId(), $price['currency']['id']);
     }
 
     /**

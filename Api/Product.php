@@ -34,6 +34,7 @@ use Sulu\Bundle\ProductBundle\Entity\Status as StatusEntity;
 use Sulu\Bundle\ProductBundle\Entity\TaxClass as TaxClassEntity;
 use Sulu\Bundle\ProductBundle\Entity\Type as TypeEntity;
 use Sulu\Bundle\ProductBundle\Entity\Unit as UnitEntity;
+use Sulu\Bundle\ProductBundle\Product\ProductFactory;
 use Sulu\Bundle\ProductBundle\Product\ProductLocaleManager;
 use Sulu\Bundle\ProductBundle\Util\PriceFormatter;
 use Sulu\Component\Rest\ApiWrapper;
@@ -68,10 +69,16 @@ class Product extends ApiWrapper implements ApiProductInterface
     protected $productLocaleManager;
 
     /**
+     * @var ProductFactory
+     */
+    protected $productFactory;
+
+    /**
      * @param Entity $product The product to wrap
      * @param string $locale The locale of this product
      * @param PriceFormatter $priceFormatter
      * @param ProductLocaleManager $productLocaleManager
+     * @param ProductFactory $productFactory
      * @param AccountManager|null $accountManager
      */
     public function __construct(
@@ -79,11 +86,13 @@ class Product extends ApiWrapper implements ApiProductInterface
         $locale,
         PriceFormatter $priceFormatter,
         ProductLocaleManager $productLocaleManager,
+        ProductFactory $productFactory,
         AccountManager $accountManager = null
     ) {
         $this->entity = $product;
         $this->priceFormatter = $priceFormatter;
         $this->productLocaleManager = $productLocaleManager;
+        $this->productFactory = $productFactory;
         $this->accountManager = $accountManager;
 
         $this->locale = $locale;
@@ -487,17 +496,11 @@ class Product extends ApiWrapper implements ApiProductInterface
     {
         $parent = $this->entity->getParent();
 
-        if ($parent) {
-            return new static(
-                $parent,
-                $this->locale,
-                $this->priceFormatter,
-                $this->productLocaleManager,
-                $this->accountManager
-            );
+        if (!$parent) {
+            return null;
         }
 
-        return null;
+        return $this->productFactory->createApiEntity($parent, $this->locale);
     }
 
     /**
@@ -1329,12 +1332,13 @@ class Product extends ApiWrapper implements ApiProductInterface
         $addons = $this->entity->getAddons();
         /** @var AddonEntity $addon */
         foreach ($addons as $addon) {
-            $apiAddons[] = new static(
+            $apiAddon = $this->productFactory->createAddonProductApiEntity(
                 $addon->getAddon(),
                 $this->locale,
-                $this->priceFormatter,
-                $this->productLocaleManager
+                iterator_to_array($addon->getAddonPrices())
             );
+
+            $apiAddons[] = $apiAddon;
         }
 
         return $apiAddons;

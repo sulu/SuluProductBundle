@@ -17,7 +17,7 @@
         "oro/doctrine-extensions": "1.0.*",
         "symfony-cmf/routing-bundle": "1.2.*",
         "sulu/sulu": "~1.2",
-        "sulu/validation-bundle": "dev-master",
+        "sulu/validation-bundle": "~0.1",
         "jackalope/jackalope-doctrine-dbal": "~1.2.0",
         "jackalope/jackalope-jackrabbit": "~1.2.0"
     },

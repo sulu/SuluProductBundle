@@ -1,6 +1,10 @@
 CHANGELOG for Sulu Product Bundle
 =================================
 
+* dev-develop
+    * BUGFIX      Resolved wrong locale in xliff file.
+    * FEATURE     Added property `addonPrices` to addons in products api.
+
 * 0.16.1 (2016-10-27)
 
     * BUGFIX      Fixed deleting of variant attributes.

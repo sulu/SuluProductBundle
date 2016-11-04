@@ -48,7 +48,7 @@ class AddonPrice
     /**
      * @param int $id
      *
-     * @return self
+     * @return $this
      */
     public function setId($id)
     {
@@ -68,7 +68,7 @@ class AddonPrice
     /**
      * @param Currency $currency
      *
-     * @return self
+     * @return $this
      */
     public function setCurrency(Currency $currency)
     {
@@ -88,7 +88,7 @@ class AddonPrice
     /**
      * @param float $price
      *
-     * @return self
+     * @return $this
      */
     public function setPrice($price)
     {
@@ -108,7 +108,7 @@ class AddonPrice
     /**
      * @param Addon $addon
      *
-     * @return self
+     * @return $this
      */
     public function setAddon(Addon $addon)
     {

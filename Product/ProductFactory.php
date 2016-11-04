@@ -12,6 +12,7 @@
 namespace Sulu\Bundle\ProductBundle\Product;
 
 use Sulu\Bundle\ContactBundle\Contact\AccountManager;
+use Sulu\Bundle\ProductBundle\Api\AddonProduct as ApiAddonProduct;
 use Sulu\Bundle\ProductBundle\Api\Product as ApiProduct;
 use Sulu\Bundle\ProductBundle\Entity\Product;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
@@ -67,7 +68,24 @@ class ProductFactory implements ProductFactoryInterface
             $locale,
             $this->priceFormatter,
             $this->productLocaleManager,
+            $this,
             $this->accountManager
+        );
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function createAddonProductApiEntity(ProductInterface $product, $locale, array $addonPrices = [])
+    {
+        return new ApiAddonProduct(
+            $product,
+            $locale,
+            $this->priceFormatter,
+            $this->productLocaleManager,
+            $this,
+            $this->accountManager,
+            $addonPrices
         );
     }
 }

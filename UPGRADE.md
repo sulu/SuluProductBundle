@@ -1,5 +1,23 @@
 # Upgrade
 
+## dev-develop
+
+### Product Factory
+
+A new method for creating api addon products has been added.
+If you are extending the product factory you'll need to implement the
+method `createAddonProductApiEntity`.
+
+### ApiProduct
+
+The constructor of ApiProduct entity has changed.
+Now an instance of `ProductFactoryInterface` is needed.
+Therefore, if you inherit from an ApiProduct you'll
+
+* need to inject the factory to the API entity and also
+* need to overwrite the ApiAddonProduct which extends the ApiProduct.
+
+
 ## 0.15.0
 
 ### Formatter locale
@@ -20,7 +38,7 @@ SuluValidationBundle has been included and as first step a schema for
 `GET products by id` has been created. The schema now includes a locale for
 products:
 
-If you have requested a product without providing the locale, you now 
+If you have requested a product without providing the locale, you now
 need to add a locale to your call e.g.
 
 ```
@@ -43,7 +61,7 @@ DROP TABLE IF EXISTS pr_type_translations;
 SET FOREIGN_KEY_CHECKS=1;
 ```
 
-Now re-import fixtures with the following command: 
+Now re-import fixtures with the following command:
 
 ```
 bin/console doctrine:schema:update
@@ -58,5 +76,5 @@ statements.
 
 ### Product type cleanups
 
-Removed the inversed side of relation `type.products`, since only the 
+Removed the inversed side of relation `type.products`, since only the
 relation `product.types` should be used.

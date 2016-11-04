@@ -6,8 +6,7 @@ SuluProductBundle [![Build Status](https://travis-ci.org/sulu/SuluProductBundle.
 Add the following to composer.json
 
 ```
-"sulu/product-bundle": "~0.12"
-"sulu/validation-bundle": "dev-master@dev",
+"sulu/product-bundle": "~0.16"
 ```
 
 Add the following to your application kernel:
@@ -58,7 +57,7 @@ sulu_product:
 
 ## Localization
 
-Multiple locales for managing products can be defined in the config. 
+Multiple locales for managing products can be defined in the config.
 If non defined, 'en' is taken as default.
 
 If the users language matches any of the given locales, that one is displayed in the admin area.

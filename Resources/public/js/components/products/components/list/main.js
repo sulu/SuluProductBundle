@@ -29,7 +29,7 @@ define(['config'], function(Config) {
         retrieveProductsUrl = function() {
             return '/admin/api/products?flat=true'
                 + '&status_id=' + Config.get('product.list.statuses.ids')
-                + '&locale' + this.options.locale;
+                + '&locale=' + this.options.locale;
         },
 
         addProduct = function(type) {
