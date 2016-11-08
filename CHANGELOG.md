@@ -2,6 +2,8 @@ CHANGELOG for Sulu Product Bundle
 =================================
 
 * dev-develop
+
+    * FEATURE     Implemented custom routing with sulu-route-bundle.
     * BUGFIX      Fixed status change in addons tab.
 
 * 0.16.2 (2016-11-04)

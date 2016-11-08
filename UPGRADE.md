@@ -2,6 +2,13 @@
 
 ## 0.16.2
 
+### Product Routing
+
+ProductWebsiteController routing has been replaced by SuluRouteBundle.
+Therefore you'll need to specify the desired route as described in
+[README](README.md#custom-routing)
+
+
 ### Product Factory
 
 A new method for creating api addon products has been added.

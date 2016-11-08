@@ -450,7 +450,7 @@
                 <target>Keine Attribute vorhanden</target>
             </trans-unit>
             <trans-unit id="attributes-03" resname="sulu_product.attributes">
-                <source>sulu_product.attributes</source>
+                <source>sulu_product.attributs</source>
                 <target>Attribute</target>
             </trans-unit>
             <trans-unit id="attributes-04" resname="sulu_product.variant-overlay.title">

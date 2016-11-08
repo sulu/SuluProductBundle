@@ -1,0 +1,91 @@
+{% trans_default_domain 'backend' %}
+{% extends 'master.html.twig' %}
+
+{% block meta %}
+    {% block title %}
+        <title>
+            {{ product.name }}
+        </title>
+    {% endblock %}
+{% endblock %}
+
+{% block content %}
+    <section class="product-details info">
+        <div class="product-details-header">
+            <div class="clearfix">
+                <h1>
+                    {{ product.name }}
+                </h1>
+
+                <div class="wrap product-info-small">
+                    <div>
+                        {{ 'product.number' | trans }}: {{ product.number }}
+                    </div>
+
+                    {% if product.globalTradeItemNumber %}
+                        <div>
+                            {{ 'product.gtin' | trans }}:
+                            {{ product.globalTradeItemNumber }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if product.shortDescription %}
+                <div class="clearfix m-bottom-15">
+                    <p>
+                        {% autoescape %}
+                            {{ product.shortDescription | striptags() | raw }}
+                        {% endautoescape %}
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="description">
+            <p>
+                {% autoescape %}
+                    {{ product.longDescription | striptags('<p><strong><u><em><ul><ol><li>') | raw }}
+                {% endautoescape %}
+            </p>
+        </div>
+
+        {% if product.manufacturer %}
+            <div class="m-bottom-20">
+                <h4>
+                    {{ 'product.manufacturer' | trans }}
+                </h4>
+
+                <p>
+                    {{ product.manufacturer }}
+                </p>
+            </div>
+        {% endif %}
+
+        {% if product.attributes | length > 0 %}
+            <div>
+                <h4 class="m-bottom-5">
+                    {{ 'sulu_product.attributes' | trans }}
+                </h4>
+
+                <table class="specifications">
+                    {% for attribute in product.attributes %}
+                        {% set className = loop.index % 2 == 1 ? 'dark' : '' %}
+
+                        {% if attribute.attribute.name and attribute.attributeValue.name %}
+                            <tr class="{{ className }}">
+                                <td>
+                                    {{ attribute.attribute.name }}
+                                </td>
+
+                                <td>
+                                    {{ attribute.attributeValue.name }}
+                                </td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                </table>
+            </div>
+        {% endif %}
+    </section>
+{% endblock %}
