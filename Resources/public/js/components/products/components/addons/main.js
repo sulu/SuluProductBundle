@@ -50,7 +50,7 @@ define([
          */
         bindCustomEvents = function() {
             // Listen for status changes, enable the save button.
-            this.sandbox.on('product.state.change', handleStatusChanges.bind(this, status));
+            this.sandbox.on('product.state.change', handleStatusChanges.bind(this));
 
             // Save status if the save button in the toolbar is clicked.
             this.sandbox.on('sulu.toolbar.save', saveProduct.bind(this));

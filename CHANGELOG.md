@@ -1,6 +1,9 @@
 CHANGELOG for Sulu Product Bundle
 =================================
 
+* dev-develop
+    * BUGFIX      Fixed status change in addons tab.
+
 * 0.16.2 (2016-11-04)
 
     * BUGFIX      Resolved wrong locale in xliff file.

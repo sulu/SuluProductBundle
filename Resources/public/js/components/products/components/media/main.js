@@ -30,11 +30,7 @@ define(['config', 'suluproduct/util/product-delete-dialog'], function(Config, De
             this.removedSelections = [];
             this.currentSelection = this.sandbox.util.arrayGetColumn(this.options.data.attributes.media, 'id');
 
-            if (!!this.options.data) {
-                this.status = this.options.data.attributes.status;
-            } else {
-                this.status = Config.get('product.status.inactive');
-            }
+            this.status = this.options.data.attributes.status;
 
             // reset status if it has been changed before and has not been saved
             this.sandbox.emit('product.state.change', this.status);
