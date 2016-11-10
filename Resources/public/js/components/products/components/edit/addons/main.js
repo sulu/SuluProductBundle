@@ -10,8 +10,8 @@
 define([
     'config',
     'suluproduct/models/product-addon',
-    'text!suluproduct/components/products/components/addons/overlay.html',
-    'text!suluproduct/components/products/components/addons/price.html',
+    'text!suluproduct/components/products/components/edit/addons/overlay.html',
+    'text!suluproduct/components/products/components/edit/addons/price.html',
     'services/product-type-manager'
 ], function(Config, ProductAddon, OverlayTemplate, PriceTemplate, ProductTypeManager) {
 

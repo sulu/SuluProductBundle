@@ -1,0 +1,13 @@
+{
+    "title": "Get all media of a product schema and fields",
+    "type": "object",
+    "properties": {
+        "locale": {
+            "type": "string",
+            "minLength": 2
+        }
+    },
+    "required": [
+        "locale"
+    ]
+}

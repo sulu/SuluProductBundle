@@ -50,19 +50,7 @@
                 <source>product.type</source>
                 <target>Product type</target>
             </trans-unit>
-            <trans-unit id="13" resname="content-navigation.product.general">
-                <source>content-navigation.product.general</source>
-                <target>General</target>
-            </trans-unit>
-            <trans-unit id="14" resname="content-navigation.product.variants">
-                <source>content-navigation.product.variants</source>
-                <target>Variants</target>
-            </trans-unit>
-            <trans-unit id="15" resname="content-navigation.product.pricing">
-                <source>content-navigation.product.pricing</source>
-                <target>Pricing</target>
-            </trans-unit>
-            <trans-unit id="16" resname="product.tax-class">
+           <trans-unit id="16" resname="product.tax-class">
                 <source>product.tax-class</source>
                 <target>Tax class</target>
             </trans-unit>
@@ -146,10 +134,6 @@
                 <source>product.parent</source>
                 <target>Main product</target>
             </trans-unit>
-            <trans-unit id="38" resname="content-navigation.product.media">
-                <source>content-navigation.product.media</source>
-                <target>Documents</target>
-            </trans-unit>
             <trans-unit id="39" resname="product.internal-item-number">
                 <source>product.internal-item-number</source>
                 <target>Internal Id</target>
@@ -225,10 +209,6 @@
             <trans-unit id="57" resname="product.bulkprice.andMore">
                 <source>product.bulkprice.andMore</source>
                 <target>and more ...</target>
-            </trans-unit>
-            <trans-unit id="58" resname="content-navigation.product.attributes">
-                <source>content-navigation.product.attributes</source>
-                <target>Attributes</target>
             </trans-unit>
             <trans-unit id="59" resname="product.attribute.value">
                 <source>product.attribute.value</source>
@@ -362,10 +342,6 @@
                 <source>products.isRecurringPrice</source>
                 <target>Recurring price</target>
             </trans-unit>
-            <trans-unit id="77" resname="content-navigation.product.addons">
-                <source>content-navigation.product.addons</source>
-                <target>Product addons</target>
-            </trans-unit>
             <trans-unit id="78" resname="product.product-addons.add">
                 <source>product.product-addons.add</source>
                 <target>Add product addon</target>
@@ -473,6 +449,31 @@
                 <source>sulu_product.labels.no-variant-attributes-warning</source>
                 <target>You haven't defined any variant attributes yet, therefore you won't be able to add new variants.</target>
             </trans-unit>
-        </body>
+            <!-- Content Navigation -->
+            <trans-unit id="content-navigation-1" resname="content-navigation.product.general">
+                <source>content-navigation.product.general</source>
+                <target>General</target>
+            </trans-unit>
+            <trans-unit id="content-navigation-2" resname="content-navigation.product.variants">
+                <source>content-navigation.product.variants</source>
+                <target>Variants</target>
+            </trans-unit>
+            <trans-unit id="content-navigation-3" resname="content-navigation.product.pricing">
+                <source>content-navigation.product.pricing</source>
+                <target>Pricing</target>
+            </trans-unit>
+            <trans-unit id="content-navigation-4" resname="content-navigation.product.media">
+                <source>content-navigation.product.media</source>
+                <target>Documents</target>
+            </trans-unit>
+            <trans-unit id="content-navigation-5" resname="content-navigation.product.attributes">
+                <source>content-navigation.product.attributes</source>
+                <target>Attributes</target>
+            </trans-unit>
+            <trans-unit id="content-navigation-6" resname="content-navigation.product.addons">
+                <source>content-navigation.product.addons</source>
+                <target>Product addons</target>
+            </trans-unit>
+         </body>
     </file>
 </xliff>

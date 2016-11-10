@@ -9,7 +9,7 @@
 
 define([
     'config',
-    'text!suluproduct/components/products/components/attributes/overlay-content.html',
+    'text!suluproduct/components/products/components/edit/attributes/overlay-content.html',
     'services/product-type-manager',
     'suluproduct/collections/attributes',
     'suluproduct/models/variantAttribute'
