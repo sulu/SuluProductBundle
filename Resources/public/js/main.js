@@ -19,7 +19,8 @@ require.config({
         'extensions/sulu-buttons-productbundle': '../../suluproduct/js/extensions/sulu-buttons',
         'type/product-selection': '../../suluproduct/js/validation/types/product-selection',
         'services/product-type-manager': '../../suluproduct/js/services/products/product-type-manager',
-        'services/product-media-manager': '../../suluproduct/js/services/products/product-media-manager'
+        'services/product-media-manager': '../../suluproduct/js/services/products/product-media-manager',
+        'services/product/product-seo-manager': '../../suluproduct/js/services/products/product-seo-manager'
     }
 });
 

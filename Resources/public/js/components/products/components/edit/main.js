@@ -52,7 +52,12 @@ define(['config', 'suluproduct/util/locale-util'], function(Config, LocaleUtil) 
                     }
                 },
                 tabs: {
-                    url: '/admin/content-navigations?alias=' + this.options.productType
+                    url: '/admin/content-navigations?alias=' + this.options.productType,
+                    options: {
+                        data: function() {
+                            return this.sandbox.util.deepCopy(this.data);
+                        }.bind(this)
+                    }
                 }
             };
         }

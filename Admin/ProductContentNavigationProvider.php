@@ -29,6 +29,14 @@ class ProductContentNavigationProvider implements ContentNavigationProviderInter
         $details->setComponent('products/components/edit/detail-form@suluproduct');
         $details->setResetStore(false);
 
+        // SEO
+        $seo = new ContentNavigationItem('content-navigation.contents.seo');
+        $seo->setId('seo');
+        $seo->setAction('seo');
+        $seo->setPosition(17);
+        $seo->setComponent('products/components/edit/seo@suluproduct');
+        $seo->setDisplay(['edit']);
+
         // Pricing
         $pricing = new ContentNavigationItem('content-navigation.product.pricing');
         $pricing->setId('pricing');
@@ -71,6 +79,7 @@ class ProductContentNavigationProvider implements ContentNavigationProviderInter
             $media,
             $attributes,
             $addons,
+            $seo,
         ];
     }
 }
