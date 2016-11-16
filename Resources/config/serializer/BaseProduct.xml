@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<serializer>
+    <class name="Sulu\Bundle\ProductBundle\Entity\BaseProduct" exclusion-policy="ALL">
+        <property name="id" type="integer" expose="true" groups="preview"/>
+        <property name="number" type="string" expose="true" groups="preview"/>
+        <property name="globalTradeItemNumber" type="string" expose="true" groups="preview"/>
+        <property name="internalItemNumber" type="string" expose="true" groups="preview"/>
+        <property name="manufacturer" type="string" expose="true" groups="preview"/>
+        <property name="cost" type="float" expose="true" groups="preview"/>
+        <property name="priceInfo" type="string" expose="true" groups="preview"/>
+        <property name="created" type="DateTime" expose="true" groups="preview"/>
+        <property name="changed" type="DateTime" expose="true" groups="preview"/>
+        <property name="isDeprecated" type="boolean" expose="true" groups="preview"/>
+        <property name="orderContentRation" type="float" expose="true" groups="preview"/>
+        <property name="minimumOrderQuantity" type="float" expose="true" groups="preview"/>
+        <property name="recommendedOrderQuantity" type="float" expose="true" groups="preview"/>
+        <property name="deliveryTime" type="integer" expose="true" groups="preview"/>
+        <property name="searchTerms" type="string" expose="true" groups="preview"/>
+        <property name="areGrossPrices" type="boolean" expose="true" groups="preview"/>
+        <property name="numberOfVariants" type="integer" expose="true" groups="preview"/>
+
+        <!--changer, creator-->
+        <!-- manufacturerCountry, supplier-->
+
+        <property name="type" expose="true" groups="preview">
+            <type>Sulu\Bundle\ProductBundle\Entity\Type</type>
+        </property>
+        <property name="status" expose="true" groups="preview">
+            <type>Sulu\Bundle\ProductBundle\Entity\Status</type>
+        </property>
+        <property name="taxClass" expose="true" groups="preview">
+            <type>Sulu\Bundle\ProductBundle\Entity\TaxClass</type>
+        </property>
+        <property name="attributeSet" expose="true" groups="preview">
+            <type>Sulu\Bundle\ProductBundle\Entity\AttributeSet</type>
+        </property>
+        <property name="contentUnit" expose="true" groups="preview">
+            <type>Sulu\Bundle\ProductBundle\Entity\Unit</type>
+        </property>
+        <property name="orderUnit" expose="true" groups="preview">
+            <type>Sulu\Bundle\ProductBundle\Entity\Unit</type>
+        </property>
+        <property name="deliveryStatus" expose="true" groups="preview">
+            <type>Sulu\Bundle\ProductBundle\Entity\DeliveryStatus</type>
+        </property>
+        <property name="parent" expose="true" groups="preview">
+            <type>Sulu\Bundle\ProductBundle\Entity\Product</type>
+        </property>
+        <property name="orderUnit" expose="true" groups="preview">
+            <type>Sulu\Bundle\ProductBundle\Entity\Unit</type>
+        </property>
+
+        <property name="addons" expose="true" groups="preview">
+            <type><![CDATA[ArrayCollection<Sulu\Bundle\ProductBundle\Entity\Addon>]]></type>
+        </property>
+        <property name="children" expose="true" groups="preview">
+            <type><![CDATA[ArrayCollection<Sulu\Bundle\ProductBundle\Entity\Product>]]></type>
+        </property>
+        <property name="sets" expose="true" groups="preview">
+            <type><![CDATA[ArrayCollection<Sulu\Bundle\ProductBundle\Entity\Product>]]></type>
+        </property>
+        <property name="relations" expose="true" groups="preview">
+            <type><![CDATA[ArrayCollection<Sulu\Bundle\ProductBundle\Entity\Product>]]></type>
+        </property>
+        <property name="upsells" expose="true" groups="preview">
+            <type><![CDATA[ArrayCollection<Sulu\Bundle\ProductBundle\Entity\Product>]]></type>
+        </property>
+        <property name="crosssells" expose="true" groups="preview">
+            <type><![CDATA[ArrayCollection<Sulu\Bundle\ProductBundle\Entity\Product>]]></type>
+        </property>
+        <property name="categories" expose="true" groups="preview">
+            <type><![CDATA[ArrayCollection<Sulu\Bundle\CategoryBundle\Entity\Category>]]></type>
+        </property>
+        <property name="tags" expose="true" groups="preview">
+            <type><![CDATA[ArrayCollection<Sulu\Bundle\TagBundle\Entity\Tags>]]></type>
+        </property>
+        <property name="media" expose="true" groups="preview">
+            <type><![CDATA[ArrayCollection<Sulu\Bundle\MediaBundle\Entity\Media>]]></type>
+        </property>
+    </class>
+</serializer>

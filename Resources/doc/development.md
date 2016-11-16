@@ -25,3 +25,11 @@ e.g.
 
 Statuses are loaded into the database with data-fixtures.
 All available statuses are defined in the Status entity as constants.
+
+## Preview and Serialization
+
+Preview uses the serialized product entities for displaying changes. The
+serialization properties are defined in xml files in
+`Resources/config/serializer`. If a new property is added to the
+product entity and you'd like the preview to notice, the property also
+needs to be added to the serialization xml.

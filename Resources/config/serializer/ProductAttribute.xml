@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<serializer>
+    <class name="Sulu\Bundle\ProductBundle\Entity\ProductAttribute" exclusion-policy="ALL">
+        <property name="id" type="integer" expose="true" groups="preview"/>
+
+        <property name="product" expose="true" groups="preview">
+            <type>Sulu\Bundle\ProductBundle\Entity\Product</type>
+        </property>
+        <property name="attribute" expose="true" groups="preview">
+            <type>Sulu\Bundle\ProductBundle\Entity\Attribute</type>
+        </property>
+        <property name="attributeValue" expose="true" groups="preview">
+            <type>Sulu\Bundle\ProductBundle\Entity\AttributeValue</type>
+        </property>
+    </class>
+</serializer>

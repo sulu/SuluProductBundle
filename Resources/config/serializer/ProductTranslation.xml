@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<serializer>
+    <class name="Sulu\Bundle\ProductBundle\Entity\ProductTranslation" exclusion-policy="ALL">
+        <property name="id" type="integer" expose="true" groups="preview"/>
+        <property name="locale" type="string" expose="true" groups="preview"/>
+        <property name="name" type="string" expose="true" groups="preview"/>
+        <property name="shortDescription" type="string" expose="true" groups="preview"/>
+        <property name="longDescription" type="string" expose="true" groups="preview"/>
+        <!-- TODO: uncomment the following line once PR #341 is merged -->
+        <!--<property name="contentTitle" type="string" expose="true" groups="preview"/>-->
+
+        <property name="product" expose="true" groups="preview">
+            <type>Sulu\Bundle\ProductBundle\Entity\Product</type>
+        </property>
+        <property name="route" expose="true" groups="preview">
+            <type>Sulu\Bundle\RouteBundle\Entity\Route</type>
+        </property>
+    </class>
+</serializer>

@@ -78,6 +78,7 @@ class SuluProductExtension extends Extension implements PrependExtensionInterfac
                 ]
             );
         }
+
         if ($container->hasExtension('fos_rest')) {
             $container->prependExtensionConfig(
                 'fos_rest',
@@ -88,6 +89,22 @@ class SuluProductExtension extends Extension implements PrependExtensionInterfac
                             'Sulu\Bundle\ProductBundle\Product\Exception\ProductNotFoundException' => 400,
                             'Sulu\Component\Rest\Exception\EntityNotFoundException' => 404,
                             'Sulu\Bundle\ProductBundle\Product\Exception\ProductException' => 400,
+                        ],
+                    ],
+                ]
+            );
+        }
+
+        if ($container->hasExtension('jms_serializer')) {
+            $container->prependExtensionConfig(
+                'jms_serializer',
+                [
+                    'metadata' => [
+                        'directories' => [
+                            [
+                                'path' => __DIR__ . '/../Resources/config/serializer',
+                                'namespace_prefix' => 'Sulu\Bundle\ProductBundle\Entity',
+                            ],
                         ],
                     ],
                 ]

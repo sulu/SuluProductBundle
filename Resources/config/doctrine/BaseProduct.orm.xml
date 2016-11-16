@@ -86,19 +86,6 @@
 
         <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface" mapped-by="parent"
                      field="children"/>
-        <!-- Missing inverse associations -->
-        <!--
-        <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductAttribute" mapped-by="product"
-                     field="attributes"/>
-        <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductTranslation" mapped-by="product"
-                     field="translations"/>
-        <one-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductPrice"
-                     mapped-by="product"
-                     field="prices"/>
-
-        <many-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface" field="setProducts"
-                     mapped-by="sets"/>
-        -->
 
         <many-to-many target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface" field="sets"
                       inversed-by="setProducts">

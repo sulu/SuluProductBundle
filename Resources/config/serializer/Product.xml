@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<serializer>
+    <class name="Sulu\Bundle\ProductBundle\Entity\Product" exclusion-policy="ALL">
+        <property name="isRecurringPrice" type="boolean" expose="true" groups="preview"/>
+
+        <property name="translations" expose="true" groups="preview">
+            <type><![CDATA[ArrayCollection<Sulu\Bundle\ProductBundle\Entity\ProductTranslation>]]></type>
+        </property>
+        <property name="productAttributes" expose="true" groups="preview">
+            <type><![CDATA[ArrayCollection<Sulu\Bundle\ProductBundle\Entity\ProductAttribute>]]></type>
+        </property>
+        <property name="prices" expose="true" groups="preview">
+            <type><![CDATA[ArrayCollection<Sulu\Bundle\ProductBundle\Entity\ProductPrice>]]></type>
+        </property>
+    </class>
+</serializer>

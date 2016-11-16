@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<serializer>
+    <class name="Sulu\Bundle\ProductBundle\Entity\Attribute" exclusion-policy="ALL">
+        <property name="id" type="integer" expose="true" groups="preview"/>
+        <property name="key" type="string" expose="true" groups="preview"/>
+
+        <property name="translations" expose="true" groups="preview">
+            <type><![CDATA[ArrayCollection<Sulu\Bundle\ProductBundle\Entity\AttributeTranslation>]]></type>
+        </property>
+    </class>
+</serializer>
