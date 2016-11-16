@@ -10,7 +10,7 @@
 define([
     'config',
     'text!suluproduct/components/products/components/edit/attributes/overlay-content.html',
-    'services/product-type-manager',
+    'services/product/product-type-manager',
     'suluproduct/collections/attributes',
     'suluproduct/models/variantAttribute'
 ], function(Config, OverlayTpl, ProductTypeManager, Attributes, VariantAttribute) {

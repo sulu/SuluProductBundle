@@ -399,16 +399,20 @@
                 <source>sulu_product.types.product-variant</source>
                 <target>Variante</target>
             </trans-unit>
+            <trans-unit id="92" resname="sulu_product.route-path">
+                <source>sulu_product.route-path</source>
+                <target>Adresse</target>
+            </trans-unit>
             <!-- Labels -->
-            <trans-unit id="92" resname="sulu_product.labels.save-error">
+            <trans-unit id="labels-01" resname="sulu_product.labels.save-error">
                 <source>sulu_product.labels.save-error</source>
                 <target>Speichern nicht möglich.</target>
             </trans-unit>
-            <trans-unit id="93" resname="sulu_product.labels.delete-error">
+            <trans-unit id="labels-02" resname="sulu_product.labels.delete-error">
                 <source>sulu_product.labels.delete-error</source>
                 <target>Löschen nicht möglich.</target>
             </trans-unit>
-            <trans-unit id="94" resname="sulu_product.dialog.delete-product-with-variants">
+            <trans-unit id="labels-03" resname="sulu_product.dialog.delete-product-with-variants">
                 <source>sulu_product.dialog.delete-product-with-variants</source>
                 <target><![CDATA[
                     Diese Operation löscht Daten und kann nicht rückgängig gemacht werden.<br/>
@@ -473,6 +477,10 @@
             <trans-unit id="content-navigation-6" resname="content-navigation.product.addons">
                 <source>content-navigation.product.addons</source>
                 <target>Produkterweiterungen</target>
+            </trans-unit>
+            <trans-unit id="content-navigation-7" resname="content-navigation.product.content">
+                <source>content-navigation.product.content</source>
+                <target>Inhalte</target>
             </trans-unit>
         </body>
     </file>

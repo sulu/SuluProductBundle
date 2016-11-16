@@ -29,6 +29,15 @@ class ProductContentNavigationProvider implements ContentNavigationProviderInter
         $details->setComponent('products/components/edit/detail-form@suluproduct');
         $details->setResetStore(false);
 
+        // Content
+        $content = new ContentNavigationItem('content-navigation.product.content');
+        $content->setId('content');
+        $content->setAction('content');
+        $content->setPosition(15);
+        $content->setComponent('products/components/edit/content@suluproduct');
+        $content->setDisplay(['edit']);
+        $content->setResetStore(false);
+
         // Pricing
         $pricing = new ContentNavigationItem('content-navigation.product.pricing');
         $pricing->setId('pricing');
@@ -67,6 +76,7 @@ class ProductContentNavigationProvider implements ContentNavigationProviderInter
 
         return [
             $details,
+            $content,
             $pricing,
             $media,
             $attributes,

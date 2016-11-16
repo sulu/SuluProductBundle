@@ -1410,10 +1410,6 @@ class ProductManager implements ProductManagerInterface
             }
         }
 
-        // Handle product route.
-        $productTranslation = $this->retrieveOrCreateProductTranslationByLocale($product->getEntity(), $locale);
-        $this->productRouteManager->saveRoute($productTranslation, $this->getProperty($data, 'routeUrl'));
-
         if ($flush) {
             $this->em->flush();
         }

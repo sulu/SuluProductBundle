@@ -43,7 +43,6 @@ define([
          * Starts toolbar and datagrid components.
          */
         startComponents = function() {
-
             this.sandbox.sulu.initListToolbarAndList.call(
                 this,
                 'product-variants-list',

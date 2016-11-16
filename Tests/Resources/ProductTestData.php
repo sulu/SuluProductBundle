@@ -58,7 +58,7 @@ class ProductTestData
 {
     use TestDataTrait;
 
-    const LOCALE = 'de';
+    const LOCALE = 'en';
 
     const MEDIA_TYPE_ID = 1;
     const COLLECTION_TYPE_ID = 1;
@@ -411,7 +411,7 @@ class ProductTestData
      * @param ProductInterface $product
      * @param string $locale
      */
-    public function addProductTranslation($product, $locale = 'en')
+    public function addProductTranslation($product, $locale = self::LOCALE)
     {
         $productTranslation = new ProductTranslation();
         $this->entityManager->persist($productTranslation);
@@ -419,9 +419,10 @@ class ProductTestData
         // Set values.
         $productTranslation->setProduct($product);
         $productTranslation->setLocale($locale);
-        $productTranslation->setName('EnglishProductTranslationName-' . $this->productCount);
-        $productTranslation->setShortDescription('EnglishProductShortDescription-' . $this->productCount);
-        $productTranslation->setLongDescription('EnglishProductLongDescription-' . $this->productCount);
+        $productTranslation->setName('ProductTranslationName-' . $this->productCount);
+        $productTranslation->setShortDescription('ProductShortDescription-' . $this->productCount);
+        $productTranslation->setLongDescription('ProductLongDescription-' . $this->productCount);
+        $productTranslation->setContentTitle('ProductContentDescription-' . $this->productCount);
 
         // Add to product.
         $product->addTranslation($productTranslation);

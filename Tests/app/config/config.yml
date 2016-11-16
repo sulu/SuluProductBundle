@@ -16,3 +16,11 @@ sulu_product:
     fixtures:
         attributes:
             - Resources/attributes.xml
+
+sulu_route:
+    mappings:
+        Sulu\Bundle\ProductBundle\Entity\ProductTranslation:
+            generator: schema
+            options:
+                route_schema: /products/{object.getName()}
+

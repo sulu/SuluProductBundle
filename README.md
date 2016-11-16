@@ -70,6 +70,15 @@ sulu_product:
     template: AcmeShopBundle:views:templates/productdetail.html.twig
 ```
 
+**Note:** If you use Sulu `1.3.*` routing has to be defined as follows:
+
+```
+sulu_route:
+    mappings:
+        Sulu\Bundle\ProductBundle\Entity\ProductTranslation:
+            route_schema: /products/{object.getName()}
+```
+
 ## Localization
 
 Multiple locales for managing products can be defined in the config.

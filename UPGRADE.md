@@ -1,5 +1,13 @@
 # Upgrade
 
+## dev-develop
+
+### ProductTestData
+
+Changed default locale of product test data from `de` to `en`. This does
+not affect product translations, since they were `en` by default
+(inconsistency).
+
 ## 0.16.2
 
 ### Product Routing

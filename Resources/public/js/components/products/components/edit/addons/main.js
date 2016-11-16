@@ -12,7 +12,7 @@ define([
     'suluproduct/models/product-addon',
     'text!suluproduct/components/products/components/edit/addons/overlay.html',
     'text!suluproduct/components/products/components/edit/addons/price.html',
-    'services/product-type-manager'
+    'services/product/product-type-manager'
 ], function(Config, ProductAddon, OverlayTemplate, PriceTemplate, ProductTypeManager) {
 
     'use strict';

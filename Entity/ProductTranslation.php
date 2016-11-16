@@ -55,6 +55,11 @@ class ProductTranslation implements RoutableInterface
     private $product;
 
     /**
+     * @var string
+     */
+    private $contentTitle;
+
+    /**
      * Set languageCode.
      *
      * @param string $languageCode
@@ -198,5 +203,23 @@ class ProductTranslation implements RoutableInterface
     public function setRoute(RouteInterface $route)
     {
         $this->route = $route;
+    }
+
+    /**
+     * @return string
+     */
+    public function getContentTitle()
+    {
+        return $this->contentTitle;
+    }
+
+    /**
+     * @param string $contentTitle
+     *
+     * @return string
+     */
+    public function setContentTitle($contentTitle)
+    {
+        $this->contentTitle = $contentTitle;
     }
 }

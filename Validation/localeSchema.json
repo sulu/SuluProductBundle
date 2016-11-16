@@ -1,5 +1,5 @@
 {
-    "title": "Get product by id schema",
+    "title": "Schema that requires a locale only",
     "type": "object",
     "properties": {
         "locale": {

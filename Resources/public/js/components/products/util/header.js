@@ -86,9 +86,10 @@ define(['config'], function(Config) {
          * @param {Object} sandbox
          * @param {Object} status
          */
-        initToolbar: function(sandbox, status, productId) {
+        initToolbar: function(sandbox, status) {
             this.sandbox = sandbox;
             this.status = status;
+            this.initialStatus = status;
 
             bindCustomEvents.call(this, status);
             setStatus.call(this, status);
@@ -101,6 +102,19 @@ define(['config'], function(Config) {
          */
         getSelectedStatus: function() {
             return this.status;
+        },
+
+        /**
+         * If status has changed the status is returned, otherwise, false is returned.
+         *
+         * @returns {Bool|Object}
+         */
+        retrieveChangedStatus: function() {
+            if (this.initialStatus !== this.status) {
+                return this.status;
+            }
+
+            return false;
         },
 
         /**

@@ -2,6 +2,9 @@ CHANGELOG for Sulu Product Bundle
 =================================
 
 * dev-develop
+    * ENHANCEMENT Adapted ProductTestData and corrected locale behaviour.
+    * FEATURE     Implemented content api and mapper service for storing content to database.
+    * FEATURE     Implemented content tab for managing content route path and title.
     * BUGFIX      Fixed media tab for sulu version >= 1.3.
     * ENHANCEMENT Changed component structure for content-tabs. They are now located in edit.
     * FEATURE     Implemented custom routing with sulu-route-bundle.

@@ -4,6 +4,7 @@ language: php
 
 php:
   - 5.5
+  - 7.0
 
 env:
   - DB=mysql
@@ -15,4 +16,4 @@ before_script:
   - if [[ "$DB" == "mysql" ]]; then mysql -e "CREATE DATABASE sulu_test;"; fi
   - vendor/symfony-cmf/testing/bin/console doctrine:schema:create
 
-script: phpunit --coverage-text
+script: phpunit

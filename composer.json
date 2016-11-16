@@ -22,6 +22,7 @@
         "jackalope/jackalope-jackrabbit": "~1.2.0"
     },
     "require-dev": {
+        "sulu/sulu": "~1.4",
         "zendframework/zendsearch": "@dev",
         "sensio/framework-extra-bundle":  "~3.0",
         "symfony/symfony": "2.8.*",

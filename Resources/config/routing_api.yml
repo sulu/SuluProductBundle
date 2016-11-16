@@ -26,6 +26,11 @@ sulu_product.media:
     parent: sulu_product.products
     resource: Sulu\Bundle\ProductBundle\Controller\ProductMediaController
 
+sulu_product.content:
+    type: rest
+    parent: sulu_product.products
+    resource: Sulu\Bundle\ProductBundle\Controller\ProductContentController
+
 sulu_product.product_addons:
     type: rest
     resource: Sulu\Bundle\ProductBundle\Controller\AddonController

@@ -11,6 +11,7 @@
         <field name="name" type="string" length="255" nullable="true" column="name"/>
         <field name="shortDescription" type="text" nullable="true" column="shortDescription"/>
         <field name="longDescription" type="text" nullable="true" column="longDescription"/>
+        <field name="contentTitle" type="text" nullable="true" column="contentTitle"/>
 
         <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface" field="product"
                      inversed-by="translations">

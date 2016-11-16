@@ -9,7 +9,7 @@
 
 define([
     'suluproduct/util/product-delete-dialog',
-    'services/product-media-manager'
+    'services/product/product-media-manager'
 ], function(DeleteDialog, ProductMediaManager) {
 
     'use strict';

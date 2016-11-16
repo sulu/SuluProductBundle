@@ -32,7 +32,6 @@
         <parameter key="sulu_product.unit_manager.class">Sulu\Bundle\ProductBundle\Product\UnitManager</parameter>
         <parameter key="sulu_product.currency_manager.class">Sulu\Bundle\ProductBundle\Product\CurrencyManager</parameter>
         <parameter key="sulu_product.price_manager.class">Sulu\Bundle\ProductBundle\Product\ProductPriceManager</parameter>
-        <parameter key="sulu_product.productwebsite.controller.class">Sulu\Bundle\ProductBundle\Controller\ProductWebsiteController</parameter>
         <parameter key="sulu_product.attribute_value_manager.class">Sulu\Bundle\ProductBundle\Product\AttributeValueManager</parameter>
         <parameter key="sulu_product.product_factory.class">Sulu\Bundle\ProductBundle\Product\ProductFactory</parameter>
         <parameter key="sulu_product.product_entity">Sulu\Bundle\ProductBundle\Entity\Product</parameter>
@@ -234,14 +233,10 @@
             <argument type="service" id="sulu_route.manager.route_manager"/>
             <argument>%sulu_route.mappings%</argument>
         </service>
-        <!-- CONTROLLER -->
-        <service id="sulu_product.productwebsite.controller" class="%sulu_product.productwebsite.controller.class%"
-                 scope="request">
-            <argument type="service" id="templating"/>
+        <!--MAPPER-->
+        <service id="sulu_product.product_content_mapper" class="Sulu\Bundle\ProductBundle\Product\Mapper\ProductContentMapper">
             <argument type="service" id="sulu_product.product_manager"/>
-            <argument type="service" id="sulu_core.webspace.request_analyzer" on-invalid="ignore"/>
-            <argument type="service" id="sulu_website.resolver.request_analyzer"/>
-            <argument>%sulu_product.template%</argument>
+            <argument type="service" id="sulu_product.product_route_manager"/>
         </service>
         <!-- NAVIGATION -->
         <service id="sulu_product.admin.addon_content_navigation_provider" class="%sulu_product.admin.addon_content_navigation_provider.class%">
