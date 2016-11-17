@@ -116,10 +116,6 @@ define(['config'], function(Config) {
         };
 
     return {
-        name: 'Sulu Product Pricing View',
-
-        view: true,
-
         templates: ['/admin/product/template/product/pricing'],
 
         initialize: function() {

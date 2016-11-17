@@ -6,8 +6,7 @@
         <property name="name" type="string" expose="true" groups="preview"/>
         <property name="shortDescription" type="string" expose="true" groups="preview"/>
         <property name="longDescription" type="string" expose="true" groups="preview"/>
-        <!-- TODO: uncomment the following line once PR #341 is merged -->
-        <!--<property name="contentTitle" type="string" expose="true" groups="preview"/>-->
+        <property name="contentTitle" type="string" expose="true" groups="preview"/>
 
         <property name="product" expose="true" groups="preview">
             <type>Sulu\Bundle\ProductBundle\Entity\Product</type>

@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <serializer>
     <class name="Sulu\Bundle\ProductBundle\Entity\BaseProduct" exclusion-policy="ALL">
+
+        <!-- Missing properties are: manufacturerCountry, supplier, changer, creator-->
+
         <property name="id" type="integer" expose="true" groups="preview"/>
         <property name="number" type="string" expose="true" groups="preview"/>
         <property name="globalTradeItemNumber" type="string" expose="true" groups="preview"/>
@@ -18,9 +21,6 @@
         <property name="searchTerms" type="string" expose="true" groups="preview"/>
         <property name="areGrossPrices" type="boolean" expose="true" groups="preview"/>
         <property name="numberOfVariants" type="integer" expose="true" groups="preview"/>
-
-        <!--changer, creator-->
-        <!-- manufacturerCountry, supplier-->
 
         <property name="type" expose="true" groups="preview">
             <type>Sulu\Bundle\ProductBundle\Entity\Type</type>

@@ -55,7 +55,6 @@ class ProductPreviewObjectProvider implements PreviewObjectProviderInterface
         ProductManagerInterface $productManager,
         SerializerInterface $serializer,
         TokenStorageInterface $tokenStorage
-
     ) {
         $this->productRepository = $productRepository;
         $this->productManager = $productManager;
@@ -86,9 +85,7 @@ class ProductPreviewObjectProvider implements PreviewObjectProviderInterface
      */
     public function setValues($object, $locale, array $data)
     {
-        // Get id of currently logged user.
-        $userId = $this->tokenStorage->getToken()->getUser()->getId();
-        $this->productManager->save($data, $locale, $userId, $data['id']);
+        // TODO: Implement.
     }
 
     /**
@@ -119,7 +116,7 @@ class ProductPreviewObjectProvider implements PreviewObjectProviderInterface
      */
     public function deserialize($serializedObject, $objectClass)
     {
-        $translation =  $this->serializer->deserialize(
+        $translation = $this->serializer->deserialize(
             $serializedObject,
             $objectClass,
             'json',
@@ -127,7 +124,7 @@ class ProductPreviewObjectProvider implements PreviewObjectProviderInterface
                 ->setSerializeNull(true)
                 ->setGroups(['preview'])
         );
-        // Add translation itself, since it was not serialized (avoid circular serialization)
+        // Add translation itself, since it was not serialized to avoid circular serialization.
         $translation->getProduct()->addTranslation($translation);
 
         return $translation;

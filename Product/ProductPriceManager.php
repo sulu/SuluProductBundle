@@ -11,7 +11,6 @@
 
 namespace Sulu\Bundle\ProductBundle\Product;
 
-use JMS\Serializer\Annotation\Groups;
 use Sulu\Bundle\ProductBundle\Entity\Addon;
 use Sulu\Bundle\ProductBundle\Entity\AddonPrice;
 use Sulu\Bundle\ProductBundle\Entity\CurrencyRepository;

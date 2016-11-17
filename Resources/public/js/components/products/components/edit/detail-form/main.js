@@ -8,9 +8,8 @@
  */
 
 define([
-    'config',
-    'services/sulupreview/preview'
-], function(Config, Preview) {
+    'config'
+], function(Config) {
 
     'use strict';
 
@@ -34,22 +33,6 @@ define([
         };
 
     return {
-
-        name: 'Sulu Product Form',
-
-        view: true,
-
-        layout: function() {
-            return {
-                content: {
-                    width: 'fixed',
-                    leftSpace: true,
-                    rightSpace: true
-                },
-                sidebar: (!!this.options.id) ? 'max' : false
-            }
-        },
-
         templates: [templatePaths.form],
 
         initialize: function() {
@@ -69,42 +52,16 @@ define([
 
             this.setHeaderBar(true);
 
-            this.preview.bindDomEvents(this.$el);
-
             this.render();
 
             this.listenForChange();
         },
 
-        /**
-         * Loads data for starting preview
-         *
-         * TODO: move to edit component.
-         *
-         * @returns {Object}
-         */
-        loadComponentData: function() {
-            if (!this.options.id) {
-                return {};
-            }
-
-            //return this.sandbox.util.load(this.options.url).done(function(data) {
-            this.preview = Preview.initialize({});
-            this.preview.start(
-                'Sulu\\Bundle\\ProductBundle\\Entity\\ProductTranslation',
-                this.options.id,
-                this.options.locale,
-                this.options.data
-            );
-
-            return this.options.data;
-            //});
-        },
-
         bindCustomEvents: function() {
             this.sandbox.on('product.state.change', function(status) {
-                if (!this.options.data || !this.options.data.attributes.status ||
-                    this.options.data.attributes.status.id !== status.id
+                if (!this.options.data
+                    || !this.options.data.attributes.status
+                    || this.options.data.attributes.status.id !== status.id
                 ) {
                     this.status = status;
                     this.options.data.attributes.status = this.status;
@@ -222,11 +179,15 @@ define([
         bindTagEvents: function(data) {
             if (!!data.tags && data.tags.length > 0) {
                 // set tags after auto complete list was initialized
-                this.sandbox.on('husky.auto-complete-list.' + this.autoCompleteInstanceName + '.initialized',
+                this.sandbox.on(
+                    'husky.auto-complete-list.' + this.autoCompleteInstanceName + '.initialized',
                     function() {
-                        this.sandbox.emit('husky.auto-complete-list.' + this.autoCompleteInstanceName + '.set-tags',
-                            data.tags);
-                    }.bind(this));
+                        this.sandbox.emit(
+                            'husky.auto-complete-list.' + this.autoCompleteInstanceName + '.set-tags',
+                            data.tags
+                        );
+                    }.bind(this)
+                );
             }
         },
 
@@ -294,15 +255,19 @@ define([
             // Comment by Elias Hiller: Timeout needed to avoid activation of save button too early
             setTimeout(function() {
                 // Listen for change after items have been added.
-                this.sandbox.on('husky.auto-complete-list.' + this.autoCompleteInstanceName + '.items-added',
+                this.sandbox.on(
+                    'husky.auto-complete-list.' + this.autoCompleteInstanceName + '.items-added',
                     function() {
                         this.setHeaderBar(false);
-                    }.bind(this));
+                    }.bind(this)
+                );
                 // Listen for change after items have been deleted.
-                this.sandbox.on('husky.auto-complete-list.' + this.autoCompleteInstanceName + '.item-deleted',
+                this.sandbox.on(
+                    'husky.auto-complete-list.' + this.autoCompleteInstanceName + '.item-deleted',
                     function() {
                         this.setHeaderBar(false);
-                    }.bind(this));
+                    }.bind(this)
+                );
             }.bind(this), 1000);
         }
     };

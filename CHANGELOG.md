@@ -2,6 +2,7 @@ CHANGELOG for Sulu Product Bundle
 =================================
 
 * dev-develop
+    * FEATURE     Added product preview for edit tabs.
     * ENHANCEMENT Adapted ProductTestData and corrected locale behaviour.
     * FEATURE     Implemented content api and mapper service for storing content to database.
     * FEATURE     Implemented content tab for managing content route path and title.

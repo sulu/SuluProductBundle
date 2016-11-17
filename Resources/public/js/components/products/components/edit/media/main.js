@@ -228,7 +228,6 @@ define([
         };
 
     return {
-        view: true,
         templates: ['/admin/product/template/product/documents'],
 
         /**

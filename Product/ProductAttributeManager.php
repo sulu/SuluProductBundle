@@ -142,16 +142,6 @@ class ProductAttributeManager
     }
 
     /**
-     * Deletes a ProductAttribute from database.
-     *
-     * @param ProductAttribute $productAttribute
-     */
-    public function deleteProductAttribute(ProductAttribute $productAttribute)
-    {
-        $this->entityManager->remove($productAttribute);
-    }
-
-    /**
      * Removes attribute value translation in given locale from given attribute.
      *
      * @param AttributeValue $attributeValue

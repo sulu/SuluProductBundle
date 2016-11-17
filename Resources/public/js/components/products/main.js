@@ -16,6 +16,7 @@ define([
     'suluproduct/util/product-delete-dialog',
     'config'
 ], function(Product, Category, AppConfig, HeaderUtil, LocaleUtil, DeleteDialog, Config) {
+
     'use strict';
 
     var types = {
@@ -45,6 +46,7 @@ define([
         PRODUCT_DELETE = eventNamespace + 'delete',
 
         /**
+         * @event sulu.products.import
          * @description Opens the form for importing products
          */
         PRODUCT_IMPORT = eventNamespace + 'import',
@@ -322,7 +324,7 @@ define([
                 this.product.set({id: this.options.id});
                 this.product.fetchLocale(this.options.locale, {
                     success: function(model) {
-                        // pass data as backbone model
+                        // Pass data as backbone model.
                         component.options.data = this.product;
                         component.options.productType = types[model.get('type').id];
                         this.sandbox.start([component]);
