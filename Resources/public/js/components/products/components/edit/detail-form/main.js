@@ -37,6 +37,7 @@ define([
 
         initialize: function() {
             this.saved = true;
+            this.preview = this.options.getPreview();
             this.dfdFormIsSet = this.sandbox.data.deferred();
             if (!!this.options.data) {
                 this.status = this.options.data.attributes.status;
@@ -55,6 +56,24 @@ define([
             this.render();
 
             this.listenForChange();
+
+            this.initializePreviewListener();
+        },
+
+        /**
+         * Listener that updates preview, once the form changes.
+         */
+        initializePreviewListener: function() {
+            if (!!this.preview) {
+                this.preview.bindDomEvents(this.$el);
+
+                // TODO: This needs to be replaced by dom event listener of husky auto-complete.
+                // Bind supplier auto-complete.
+                this.sandbox.on('husky.auto-complete.supplier.select', function(data) {
+                    // First set selected data to component.
+                    this.preview.updateProperty('supplier', data);
+                }.bind(this));
+            }
         },
 
         bindCustomEvents: function() {

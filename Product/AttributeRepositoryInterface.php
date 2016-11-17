@@ -12,11 +12,12 @@
 namespace Sulu\Bundle\ProductBundle\Product;
 
 use Sulu\Bundle\ProductBundle\Entity\AttributeInterface;
+use Sulu\Component\Persistence\Repository\RepositoryInterface;
 
 /**
- * The interface for the AtributeRepository.
+ * The interface for the AttributeRepository.
  */
-interface AttributeRepositoryInterface
+interface AttributeRepositoryInterface extends RepositoryInterface
 {
     /**
      * Finds the attribute with the given ID.

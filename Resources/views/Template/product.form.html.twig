@@ -8,7 +8,7 @@
                 <label for="name" class="required"><%= translate('product.name') %></label>
                 <input type="text"
                        id="name"
-                       class="preview-update form-element"
+                       class="form-element preview-update"
                        data-mapper-property="name"
                        data-validation-required="true"
                        data-validation-max-length="255"
@@ -22,7 +22,7 @@
                 <label for="number" class="required"><%= translate('product.number') %></label>
                 <input type="text"
                        id="number"
-                       class="form-element"
+                       class="form-element preview-update"
                        data-mapper-property="number"
                        data-validation-required="true"
                        data-validation-max-length="255"/>
@@ -31,7 +31,7 @@
         <div class="grid-col-6">
             <div class="form-group">
                 <label for="supplier-input"><%=translate('product.supplier')%></label>
-                <div id="supplierField"></div>
+                <div id="supplierField" class="preview-change-update" ></div>
             </div>
         </div>
     </div>
@@ -41,6 +41,7 @@
             <div class="form-group">
                 <label for="orderUnit" class="required"><%=translate('product.orderUnit')%></label>
                 <div id="orderUnit"
+                     class="preview-change-update"
                      data-aura-component="select@husky"
                      data-aura-data="{{ units|json_encode() }}"
                      data-aura-default-label="<%=translate('public.please-choose')%>"
@@ -60,7 +61,7 @@
         <div class="grid-col-6">
             <div class="form-group">
                 <label for="recommendedOrderQuantity"><%= translate('product.recommendedOrderQuantity') %></label>
-                <input class="form-element"
+                <input class="form-element preview-update"
                        type="text"
                        id="recommendedOrderQuantity"
                        data-mapper-property="recommendedOrderQuantity"
@@ -76,6 +77,7 @@
                 <label for="contentUnit"><%=translate('product.contentUnit')%></label>
 
                 <div id="contentUnit"
+                     class="preview-change-update"
                      data-aura-component="select@husky"
                      data-aura-data="{{ units|json_encode() }}"
                      data-aura-default-label="<%=translate('public.please-choose')%>"
@@ -96,9 +98,9 @@
         <div class="grid-col-6">
             <div class="form-group">
                 <label for="recommendedOrderQuantity"><%= translate('product.orderContentRatio') %></label>
-                <input class="form-element"
-                       type="text"
+                <input type="text"
                        id="orderContentRatio"
+                       class="form-element preview-update"
                        data-mapper-property="orderContentRatio"
                        data-type="decimal"
                        data-validation-required="false"/>
@@ -110,9 +112,9 @@
         <div class="grid-col-6">
             <div class="form-group">
                 <label for="deliveryTime"><%= translate('product.deliveryTime') %></label>
-                <input class="form-element"
-                       type="text"
+                <input type="text"
                        id="deliveryTime"
+                       class="form-element preview-update"
                        data-mapper-property="deliveryTime"
                        data-type="decimal"/>
             </div>
@@ -120,9 +122,9 @@
         <div class="grid-col-6">
             <div class="form-group">
                 <label for="minimumOrderQuantity"><%= translate('product.minimumOrderQuantity') %></label>
-                <input class="form-element"
-                       type="text"
+                <input type="text"
                        id="minimumOrderQuantity"
+                       class="form-element preview-update"
                        data-mapper-property="minimumOrderQuantity"
                        data-type="decimal"/>
             </div>
@@ -133,18 +135,18 @@
         <div class="grid-col-6">
             <div class="form-group">
                 <label for="manufacturer"><%= translate('products.manufacturer') %></label>
-                <input class="form-element"
-                       type="text"
+                <input type="text"
                        id="manufacturer"
+                       class="form-element preview-update"
                        data-mapper-property="manufacturer"/>
             </div>
         </div>
         <div class="grid-col-6">
             <div class="form-group">
                 <label for="globalTradeItemNumber"><%= translate('product.globalTradeItemNumber') %></label>
-                <input class="form-element"
-                       type="text"
+                <input type="text"
                        id="globalTradeItemNumber"
+                       class="form-element preview-update"
                        data-mapper-property="globalTradeItemNumber"/>
             </div>
         </div>
@@ -155,6 +157,7 @@
             <div class="form-group">
                 <label for="deliveryStatus"><%= translate('product.deliveryStatus') %></label>
                 <div id="deliveryStatus"
+                     class="preview-change-update"
                      data-aura-component="select@husky"
                      data-aura-data="{{ deliveryStates|json_encode() }}"
                      data-aura-default-label="<%=translate('public.please-choose')%>"
@@ -183,7 +186,7 @@
             <div class="form-group">
                 <label for="long-description" class="top"><%= translate('product.long-description') %></label>
                 <textarea id="long-description"
-                          class="form-element"
+                          class="form-element preview-update"
                           data-type="textEditor"
                           data-type-instance-name="long-description"
                           data-aura-component="ckeditor@husky"
@@ -199,7 +202,7 @@
             <div class="form-group">
                 <label for="short-description" class="top"><%= translate('product.short-description') %></label>
                 <textarea id="short-description"
-                          class="form-element trigger-save-button"
+                          class="form-element trigger-save-button preview-update"
                           data-mapper-property="shortDescription"></textarea>
             </div>
         </div>
@@ -211,7 +214,7 @@
                 <label for="short-description" class="top"><%= translate('product.search-terms') %></label>
                 <textarea id="search-terms"
                           maxlength="{{ MAX_SEARCH_TERMS_LENGTH }}"
-                          class="form-element trigger-save-button"
+                          class="form-element trigger-save-button preview-update"
                           data-mapper-property="searchTerms"></textarea>
             </div>
         </div>

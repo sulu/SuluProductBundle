@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<serializer>
+    <class name="Sulu\Bundle\ProductBundle\Entity\Addon" exclusion-policy="ALL">
+        <property name="id" type="integer" expose="true" groups="preview"/>
+
+        <property name="product" expose="true" groups="preview">
+            <type>Sulu\Bundle\ProductBundle\Entity\Product</type>
+        </property>
+        <property name="addon" expose="true" groups="preview">
+            <type>Sulu\Bundle\ProductBundle\Entity\Product</type>
+        </property>
+        <property name="addonPrices" expose="true" groups="preview">
+            <type><![CDATA[ArrayCollection<Sulu\Bundle\ProductBundle\Entity\AddonPrice>]]></type>
+        </property>
+    </class>
+</serializer>

@@ -12,11 +12,12 @@
 namespace Sulu\Bundle\ProductBundle\Product;
 
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
+use Sulu\Component\Persistence\Repository\RepositoryInterface;
 
 /**
  * The interface for the ProductRepository.
  */
-interface ProductRepositoryInterface
+interface ProductRepositoryInterface extends RepositoryInterface
 {
     /**
      * Finds the product with the given ID.

@@ -13,7 +13,7 @@ namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Sulu\Bundle\CategoryBundle\Entity\Category;
+use Sulu\Bundle\CategoryBundle\Entity\CategoryInterface;
 use Sulu\Bundle\ContactBundle\Entity\AccountInterface;
 use Sulu\Bundle\ContactBundle\Entity\Country;
 use Sulu\Bundle\MediaBundle\Entity\Media;
@@ -843,11 +843,11 @@ abstract class BaseProduct implements ProductInterface
     /**
      * Add categories.
      *
-     * @param Category $categories
+     * @param CategoryInterface $categories
      *
      * @return BaseProduct
      */
-    public function addCategory(Category $categories)
+    public function addCategory(CategoryInterface $categories)
     {
         $this->categories[] = $categories;
 
@@ -857,9 +857,9 @@ abstract class BaseProduct implements ProductInterface
     /**
      * Remove categories.
      *
-     * @param Category $categories
+     * @param CategoryInterface $categories
      */
-    public function removeCategory(Category $categories)
+    public function removeCategory(CategoryInterface $categories)
     {
         $this->categories->removeElement($categories);
     }

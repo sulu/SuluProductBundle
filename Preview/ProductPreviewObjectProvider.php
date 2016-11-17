@@ -15,6 +15,8 @@ use JMS\Serializer\DeserializationContext;
 use JMS\Serializer\SerializationContext;
 use JMS\Serializer\SerializerInterface;
 use Sulu\Bundle\PreviewBundle\Preview\Object\PreviewObjectProviderInterface;
+use Sulu\Bundle\ProductBundle\Entity\ProductTranslation;
+use Sulu\Bundle\ProductBundle\Product\Mapper\ProductMapperInterface;
 use Sulu\Bundle\ProductBundle\Product\ProductManagerInterface;
 use Sulu\Bundle\ProductBundle\Product\ProductRepositoryInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
@@ -45,21 +47,29 @@ class ProductPreviewObjectProvider implements PreviewObjectProviderInterface
     private $tokenStorage;
 
     /**
+     * @var ProductMapperInterface
+     */
+    private $productMapper;
+
+    /**
      * @param ProductRepositoryInterface $productRepository
      * @param ProductManagerInterface $productManager
      * @param SerializerInterface $serializer
      * @param TokenStorageInterface $tokenStorage
+     * @param ProductMapperInterface $productMapper
      */
     public function __construct(
         ProductRepositoryInterface $productRepository,
         ProductManagerInterface $productManager,
         SerializerInterface $serializer,
-        TokenStorageInterface $tokenStorage
+        TokenStorageInterface $tokenStorage,
+        ProductMapperInterface $productMapper
     ) {
         $this->productRepository = $productRepository;
         $this->productManager = $productManager;
         $this->serializer = $serializer;
         $this->tokenStorage = $tokenStorage;
+        $this->productMapper = $productMapper;
     }
 
     /**
@@ -74,6 +84,8 @@ class ProductPreviewObjectProvider implements PreviewObjectProviderInterface
 
     /**
      * {@inheritdoc}
+     *
+     * @param ProductTranslation $object
      */
     public function getId($object)
     {
@@ -82,14 +94,18 @@ class ProductPreviewObjectProvider implements PreviewObjectProviderInterface
 
     /**
      * {@inheritdoc}
+     *
+     * @param ProductTranslation $object
      */
     public function setValues($object, $locale, array $data)
     {
-        // TODO: Implement.
+        $this->productMapper->map($object->getProduct(), $data, $locale);
     }
 
     /**
      * {@inheritdoc}
+     *
+     * @param ProductTranslation $object
      */
     public function setContext($object, $locale, array $context)
     {
@@ -98,6 +114,8 @@ class ProductPreviewObjectProvider implements PreviewObjectProviderInterface
 
     /**
      * {@inheritdoc}
+     *
+     * @param ProductTranslation $object
      */
     public function serialize($object)
     {
@@ -122,6 +140,7 @@ class ProductPreviewObjectProvider implements PreviewObjectProviderInterface
             'json',
             DeserializationContext::create()
                 ->setSerializeNull(true)
+                ->setAttribute('data', json_decode($serializedObject, true))
                 ->setGroups(['preview'])
         );
         // Add translation itself, since it was not serialized to avoid circular serialization.

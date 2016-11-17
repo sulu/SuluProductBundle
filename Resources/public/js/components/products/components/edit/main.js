@@ -67,16 +67,31 @@ define([
                     }
                 },
                 tabs: {
-                    url: '/admin/content-navigations?alias=' + this.options.productType
+                    url: '/admin/content-navigations?alias=' + this.options.productType,
+                    options: {
+                        getPreview: this.getPreview.bind(this)
+                    }
                 }
             };
         },
 
+        /**
+         * Initialization function of edit product component.
+         */
         initialize: function() {
+            this.preview = null;
+            this.initializePreview();
+        },
+
+        /**
+         * Starts the preview component if product already exists.
+         */
+        initializePreview: function() {
             if (!this.options.id) {
                 return;
             }
 
+            // Start Preview component.
             this.preview = Preview.initialize({});
             this.preview.start(
                 'Sulu\\Bundle\\ProductBundle\\Entity\\ProductTranslation',
@@ -84,8 +99,15 @@ define([
                 this.options.locale,
                 this.options.data
             );
+        },
 
-            this.preview.bindDomEvents(this.$el);
+        /**
+         * Callback for receiving preview object.
+         *
+         * @returns {Object}
+         */
+        getPreview: function() {
+            return this.preview;
         }
     };
 });

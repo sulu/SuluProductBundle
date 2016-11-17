@@ -12,7 +12,7 @@
 namespace Sulu\Bundle\ProductBundle\Entity;
 
 use Doctrine\Common\Collections\Collection;
-use Sulu\Bundle\CategoryBundle\Entity\Category;
+use Sulu\Bundle\CategoryBundle\Entity\CategoryInterface;
 use Sulu\Bundle\ContactBundle\Entity\AccountInterface;
 use Sulu\Bundle\ContactBundle\Entity\Country;
 use Sulu\Bundle\MediaBundle\Entity\Media;
@@ -389,7 +389,7 @@ interface ProductInterface
     /**
      * Get prices.
      *
-     * @return ProductPrice[]
+     * @return ProductPrice[]|Collection
      */
     public function getPrices();
 
@@ -523,18 +523,18 @@ interface ProductInterface
     /**
      * Add categories.
      *
-     * @param Category $categories
+     * @param CategoryInterface $categories
      *
      * @return BaseProduct
      */
-    public function addCategory(Category $categories);
+    public function addCategory(CategoryInterface $categories);
 
     /**
      * Remove categories.
      *
-     * @param Category $categories
+     * @param CategoryInterface $categories
      */
-    public function removeCategory(Category $categories);
+    public function removeCategory(CategoryInterface $categories);
 
     /**
      * Get categories.
@@ -638,4 +638,66 @@ interface ProductInterface
      * @return $this
      */
     public function setNumberOfVariants($numberOfVariants);
+
+    /**
+     * @param DeliveryStatus $deliveryStatus
+     *
+     * @return $this
+     */
+    public function setDeliveryStatus(DeliveryStatus $deliveryStatus);
+
+    /**
+     * @return DeliveryStatus
+     */
+    public function getDeliveryStatus();
+
+    /**
+     * @return Unit
+     */
+    public function getOrderUnit();
+
+    /**
+     * @param Unit $orderUnit
+     *
+     * @return $this
+     */
+    public function setOrderUnit(Unit $orderUnit);
+
+    /**
+     * @return Unit
+     */
+    public function getContentUnit();
+
+    /**
+     * @param Unit $orderUnit
+     *
+     * @return $this
+     */
+    public function setContentUnit(Unit $orderUnit);
+
+    /**
+     * @return bool $isRecurringPrice
+     */
+    public function isRecurringPrice();
+
+    /**
+     * @param bool $isRecurringPrice
+     *
+     * @return $this
+     */
+    public function setIsRecurringPrice($isRecurringPrice);
+
+    /**
+     * @param SpecialPrice $specialPrice
+     *
+     * @return $this
+     */
+    public function removeSpecialPrice(SpecialPrice $specialPrice);
+
+    /**
+     * @param AccountInterface|null $supplier
+     *
+     * @return $this
+     */
+    public function setSupplier(AccountInterface $supplier = null);
 }

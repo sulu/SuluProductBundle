@@ -1786,9 +1786,6 @@ class ProductManager implements ProductManagerInterface
         if (isset($matchedEntry['price'])) {
             $price->setPrice($matchedEntry['price']);
         }
-        if (isset($matchedEntry['priceInfo'])) {
-            $price->getEntity()->setPriceInfo($matchedEntry['priceInfo']);
-        }
         if (isset($matchedEntry['currency'])) {
             $currency = $this->currencyRepository->find($matchedEntry['currency']['id']);
             if (!$currency) {
@@ -1832,9 +1829,6 @@ class ProductManager implements ProductManagerInterface
             $price->setPrice($priceData['price']);
             $price->setProduct($product);
             $price->setCurrency($currency);
-            if (isset($priceData['priceInfo'])) {
-                $price->setPriceInfo($priceData['priceInfo']);
-            }
             if (isset($priceData['minimumQuantity'])) {
                 $price->setMinimumQuantity($priceData['minimumQuantity']);
             }

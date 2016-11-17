@@ -243,6 +243,21 @@
             <argument type="service" id="sulu_product.product_manager"/>
             <argument type="service" id="sulu_product.product_route_manager"/>
         </service>
+        <service id="sulu_product.product_mapper" class="Sulu\Bundle\ProductBundle\Product\Mapper\ProductMapper">
+            <argument type="service" id="doctrine.orm.entity_manager"/>
+            <argument type="service" id="sulu_product.product_manager"/>
+            <argument type="service" id="sulu.repository.product"/>
+            <argument type="service" id="sulu_product.product_attribute_manager"/>
+            <argument type="service" id="sulu_product.attribute_repository"/>
+            <argument type="service" id="sulu_tag.tag_repository"/>
+            <argument type="service" id="sulu_product.delivery_status_repository"/>
+            <argument type="service" id="sulu_product.type_repository"/>
+            <argument type="service" id="sulu_product.unit_repository"/>
+            <argument type="service" id="sulu_contact.account_repository"/>
+            <argument type="service" id="sulu_product.tax_class_repository"/>
+            <argument type="service" id="sulu_product.price_manager"/>
+            <argument type="service" id="sulu.repository.category"/>
+        </service>
 
         <!-- NAVIGATION -->
         <service id="sulu_product.admin.addon_content_navigation_provider" class="%sulu_product.admin.addon_content_navigation_provider.class%">
@@ -273,6 +288,7 @@
             <argument type="service" id="sulu_product.product_manager"/>
             <argument type="service" id="jms_serializer"/>
             <argument type="service" id="security.token_storage" on-invalid="ignore"/>
+            <argument type="service" id="sulu_product.product_mapper"/>
 
             <tag name="sulu_preview.object_provider" class="Sulu\Bundle\ProductBundle\Entity\ProductTranslation"/>
         </service>
@@ -290,6 +306,13 @@
             <argument type="service" id="doctrine.orm.entity_manager"/>
 
             <tag name="kernel.event_listener" event="%sulu_product.events.product_translation_post_persist%" method="postPersist"/>
+        </service>
+
+        <service id="sulu_product.serializer.preview" class="Sulu\Bundle\ProductBundle\EventListener\PreviewSerializeEventSubscriber">
+            <argument type="service" id="sulu.repository.user"/>
+            <argument type="service" id="sulu_contact.account_repository"/>
+
+            <tag name="jms_serializer.event_subscriber" />
         </service>
 
         <!--ROUTING-->

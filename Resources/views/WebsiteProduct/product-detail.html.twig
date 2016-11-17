@@ -13,54 +13,108 @@
     <section class="product-details info">
         <div class="product-details-header">
             <div class="clearfix">
-                <h1>
+                <h1 property="name">
                     {{ product.name }}
                 </h1>
 
-                <div class="wrap product-info-small">
-                    <div>
-                        {{ 'product.number' | trans }}: {{ product.number }}
+                <div class="product-info-small">
+                    <div property="number">
+                        {% if product.number %}
+                            {{ 'product.number' | trans }}: {{ product.number }}
+                        {% endif %}
                     </div>
-
-                    {% if product.globalTradeItemNumber %}
-                        <div>
-                            {{ 'product.gtin' | trans }}:
-                            {{ product.globalTradeItemNumber }}
-                        </div>
-                    {% endif %}
+                    <div property="globalTradeItemNumber">
+                        {% if product.globalTradeItemNumber %}
+                            {{ 'product.globalTradeItemNumber' | trans }}: {{ product.globalTradeItemNumber }}
+                        {% endif %}
+                    </div>
+                    <div property="orderUnit">
+                        {{ 'product.order-unit' | trans }}: {{ product.orderUnit.name }}
+                    </div>
+                    <div property="recommendedOrderQuantity">
+                        {% if product.recommendedOrderQuantity > 0 %}
+                            {{ 'product.recommendedOrderQuantity' | trans }}: {{ product.recommendedOrderQuantity }}
+                        {% endif %}
+                    </div>
+                    <div property="minimumOrderQuantity">
+                        {% if product.minimumOrderQuantity > 0 %}
+                            {{ 'product.minimumOrderQuantity' | trans }}: {{ product.minimumOrderQuantity }}
+                        {% endif %}
+                    </div>
+                    <div property="orderContentRatio">
+                        {% if product.contentUnit and product.orderContentRatio > 0 %}
+                            {{ 'product.orderContentRatio' | trans }}: {{ product.orderContentRatio }}
+                        {% endif %}
+                    </div>
+                    <div property="contentUnit">
+                        {% if product.contentUnit %}
+                            {{ 'product.contentUnit' | trans }}: {{ product.contentUnit.name }}
+                        {% endif %}
+                    </div>
+                    <div property="deliveryTime">
+                        {% if product.deliveryTime > 0 %}
+                            {{ 'product.deliveryTime' | trans }}: {{ product.deliveryTime }}
+                        {% endif %}
+                    </div>
+                    <div property="deliveryStatus">
+                        {% if product.deliveryStatus %}
+                            {{ 'product.deliveryStatus' | trans }}: {{ product.deliveryStatus.name }}
+                        {% endif %}
+                    </div>
                 </div>
             </div>
 
-            {% if product.shortDescription %}
-                <div class="clearfix m-bottom-15">
+            <div property="shortDescription" class="clearfix m-bottom-15">
+                {% if product.shortDescription %}
                     <p>
                         {% autoescape %}
                             {{ product.shortDescription | striptags() | raw }}
                         {% endautoescape %}
                     </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div property="longDescription" class="description">
+            {% if product.longDescription %}
+                <h4>
+                    {{ 'product.long-description' | trans }}
+                </h4>
+                <p>
+                    {% autoescape %}
+                        {{ product.longDescription | striptags('<p><strong><u><em><ul><ol><li>') | raw }}
+                    {% endautoescape %}
+                </p>
+            {% endif %}
+        </div>
+
+        <div property="manufacturer">
+            {% if product.manufacturer %}
+                <div class="m-bottom-20">
+                    <h4>
+                        {{ 'product.manufacturer' | trans }}
+                    </h4>
+
+                    <p>
+                        {{ product.manufacturer }}
+                    </p>
                 </div>
             {% endif %}
         </div>
 
-        <div class="description">
-            <p>
-                {% autoescape %}
-                    {{ product.longDescription | striptags('<p><strong><u><em><ul><ol><li>') | raw }}
-                {% endautoescape %}
-            </p>
+        <div property="supplier">
+            {% if product.supplier %}
+                <div class="m-bottom-20">
+                    <h4>
+                        {{ 'product.supplier' | trans }}
+                    </h4>
+
+                    <p>
+                        {{ product.supplier.name }}
+                    </p>
+                </div>
+            {% endif %}
         </div>
-
-        {% if product.manufacturer %}
-            <div class="m-bottom-20">
-                <h4>
-                    {{ 'product.manufacturer' | trans }}
-                </h4>
-
-                <p>
-                    {{ product.manufacturer }}
-                </p>
-            </div>
-        {% endif %}
 
         {% if product.attributes | length > 0 %}
             <div>

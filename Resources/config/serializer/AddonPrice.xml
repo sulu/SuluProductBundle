@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<serializer>
+    <class name="Sulu\Bundle\ProductBundle\Entity\AddonPrice" exclusion-policy="ALL">
+        <property name="id" type="integer" expose="true" groups="preview"/>
+        <property name="price" type="float" expose="true" groups="preview"/>
+
+        <property name="currency" expose="true" groups="preview">
+            <type>Sulu\Bundle\ProductBundle\Entity\Currency</type>
+        </property>
+    </class>
+</serializer>
