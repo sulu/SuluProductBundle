@@ -272,6 +272,7 @@
             <argument type="service" id="sulu_product.product_repository"/>
             <argument type="service" id="sulu_product.product_manager"/>
             <argument type="service" id="jms_serializer"/>
+            <argument type="service" id="security.token_storage" on-invalid="ignore"/>
 
             <tag name="sulu_preview.object_provider" class="Sulu\Bundle\ProductBundle\Entity\ProductTranslation"/>
         </service>

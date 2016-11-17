@@ -1723,12 +1723,7 @@ class ProductManager implements ProductManagerInterface
     }
 
     /**
-     * Sets the status for a given product.
-     *
-     * @param ProductInterface $product
-     * @param int $statusId
-     *
-     * @throws ProductDependencyNotFoundException
+     * {@inheritdoc}
      */
     public function setStatusForProduct(ProductInterface $product, $statusId)
     {

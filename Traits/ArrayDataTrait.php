@@ -34,4 +34,27 @@ trait ArrayDataTrait
 
         return $data[$key];
     }
+
+    /**
+     * Passes float value of data array with given key to callback function.
+     * If data value is not numeric, default is set.
+     * If data does not contain given key, nothing happens.
+     *
+     * @param callable $callback
+     * @param array $data
+     * @param string $key
+     * @param mixed $default
+     */
+    private function setFloatValueOfDataArray(callable $callback, array $data, $key, $default = null)
+    {
+        if (array_key_exists($key, $data)) {
+            $value = $default;
+            if (is_numeric($data[$key])) {
+                floatval($data[$key]);
+            }
+
+            call_user_func($callback, $value);
+        }
+    }
+
 }

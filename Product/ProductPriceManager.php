@@ -57,14 +57,7 @@ class ProductPriceManager implements ProductPriceManagerInterface
     }
 
     /**
-     * @param ProductInterface $product
-     * @param float $priceValue
-     * @param float $minimumQuantity
-     * @param null|int $currencyId
-     *
-     * @throws ProductDependencyNotFoundException
-     *
-     * @return ProductPrice
+     * {@inheritdoc}
      */
     public function createNewProductPriceForCurrency(
         ProductInterface $product,
@@ -94,13 +87,7 @@ class ProductPriceManager implements ProductPriceManagerInterface
     }
 
     /**
-     * Returns the bulk price for a certain quantity of the product by a given currency.
-     *
-     * @param ProductInterface $product
-     * @param float $quantity
-     * @param null|string $currency
-     *
-     * @return null|ProductPrice
+     * {@inheritdoc}
      */
     public function getBulkPriceForCurrency(ProductInterface $product, $quantity, $currency = null)
     {
@@ -124,12 +111,7 @@ class ProductPriceManager implements ProductPriceManagerInterface
     }
 
     /**
-     * Returns the base prices for the product by a given currency.
-     *
-     * @param ProductInterface $product
-     * @param null|string $currency
-     *
-     * @return null|ProductPrice
+     * {@inheritdoc}
      */
     public function getBasePriceForCurrency(ProductInterface $product, $currency = null)
     {
@@ -198,15 +180,7 @@ class ProductPriceManager implements ProductPriceManagerInterface
     }
 
     /**
-     * Helper function to get a formatted price for a given currency and locale.
-     *
-     * @param int $price
-     * @param string $symbol
-     * @param string $locale
-     *
-     * @Groups({"cart"})
-     *
-     * @return string
+     * {@inheritdoc}
      */
     public function getFormattedPrice($price, $symbol = 'EUR', $locale = null)
     {

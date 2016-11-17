@@ -14,6 +14,7 @@ namespace Sulu\Bundle\ProductBundle\Product;
 use Sulu\Bundle\ProductBundle\Api\Product;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductTranslation;
+use Sulu\Bundle\ProductBundle\Product\Exception\ProductDependencyNotFoundException;
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescriptor;
 
 /**
@@ -113,4 +114,14 @@ interface ProductManagerInterface
      * @return ProductTranslation
      */
     public function retrieveOrCreateProductTranslationByLocale(ProductInterface $product, $locale);
+
+    /**
+     * Sets the status for a given product.
+     *
+     * @param ProductInterface $product
+     * @param int $statusId
+     *
+     * @throws ProductDependencyNotFoundException
+     */
+    public function setStatusForProduct(ProductInterface $product, $statusId);
 }

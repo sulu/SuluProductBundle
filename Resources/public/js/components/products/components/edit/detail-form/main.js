@@ -69,6 +69,8 @@ define([
 
             this.setHeaderBar(true);
 
+            this.preview.bindDomEvents(this.$el);
+
             this.render();
 
             this.listenForChange();

@@ -15,12 +15,30 @@ use Sulu\Bundle\ProductBundle\Entity\Addon;
 use Sulu\Bundle\ProductBundle\Entity\AddonPrice;
 use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductPrice;
+use Sulu\Bundle\ProductBundle\Product\Exception\ProductDependencyNotFoundException;
 
 /**
  * This interface contains all methods a ProductPriceManager needs to implement.
  */
 interface ProductPriceManagerInterface
 {
+    /**
+     * @param ProductInterface $product
+     * @param float $priceValue
+     * @param float $minimumQuantity
+     * @param null|int $currencyId
+     *
+     * @throws ProductDependencyNotFoundException
+     *
+     * @return ProductPrice
+     */
+    public function createNewProductPriceForCurrency(
+        ProductInterface $product,
+        $priceValue,
+        $minimumQuantity,
+        $currencyId
+    );
+
     /**
      * Returns the bulk price for a certain quantity of the product by a given currency.
      *

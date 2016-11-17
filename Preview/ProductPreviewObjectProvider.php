@@ -17,6 +17,7 @@ use JMS\Serializer\SerializerInterface;
 use Sulu\Bundle\PreviewBundle\Preview\Object\PreviewObjectProviderInterface;
 use Sulu\Bundle\ProductBundle\Product\ProductManagerInterface;
 use Sulu\Bundle\ProductBundle\Product\ProductRepositoryInterface;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 /**
  * Integrates products into preview-system.
@@ -39,18 +40,27 @@ class ProductPreviewObjectProvider implements PreviewObjectProviderInterface
     private $productManager;
 
     /**
+     * @var TokenStorageInterface
+     */
+    private $tokenStorage;
+
+    /**
      * @param ProductRepositoryInterface $productRepository
      * @param ProductManagerInterface $productManager
      * @param SerializerInterface $serializer
+     * @param TokenStorageInterface $tokenStorage
      */
     public function __construct(
         ProductRepositoryInterface $productRepository,
         ProductManagerInterface $productManager,
-        SerializerInterface $serializer
+        SerializerInterface $serializer,
+        TokenStorageInterface $tokenStorage
+
     ) {
         $this->productRepository = $productRepository;
         $this->productManager = $productManager;
         $this->serializer = $serializer;
+        $this->tokenStorage = $tokenStorage;
     }
 
     /**
@@ -76,20 +86,9 @@ class ProductPreviewObjectProvider implements PreviewObjectProviderInterface
      */
     public function setValues($object, $locale, array $data)
     {
-//        $propertyAccess = PropertyAccess::createPropertyAccessorBuilder()
-//            ->enableMagicCall()
-//            ->getPropertyAccessor();
-//
-//        $structure = $object->getStructure();
-//        foreach ($data as $property => $value) {
-//            try {
-//                $propertyAccess->setValue($structure, $property, $value);
-//            } catch (\InvalidArgumentException $e) {
-//                //ignore not existing properties
-//            }
-//        }
-
-        // TODO: ???
+        // Get id of currently logged user.
+        $userId = $this->tokenStorage->getToken()->getUser()->getId();
+        $this->productManager->save($data, $locale, $userId, $data['id']);
     }
 
     /**
@@ -97,10 +96,6 @@ class ProductPreviewObjectProvider implements PreviewObjectProviderInterface
      */
     public function setContext($object, $locale, array $context)
     {
-//        if (array_key_exists('template', $context)) {
-//            $object->setStructureType($context['template']);
-//        }
-
         return $object;
     }
 

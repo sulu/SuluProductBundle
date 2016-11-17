@@ -6,8 +6,13 @@
         <div class="grid-col-12">
             <div class="form-group">
                 <label for="name" class="required"><%= translate('product.name') %></label>
-                <input class="form-element" type="text" id="name" data-validation-required="true"
-                       data-validation-max-length="255" data-mapper-property="name"/>
+                <input type="text"
+                       id="name"
+                       class="preview-update form-element"
+                       data-mapper-property="name"
+                       data-validation-required="true"
+                       data-validation-max-length="255"
+                />
             </div>
         </div>
     </div>
@@ -119,14 +124,14 @@
             <div class="form-group">
                 <label for="manufacturer"><%= translate('products.manufacturer') %></label>
                 <input class="form-element" type="text" id="manufacturer"
-                       data-mapper-property="manufacturer" />
+                       data-mapper-property="manufacturer"/>
             </div>
         </div>
         <div class="grid-col-6">
             <div class="form-group">
                 <label for="globalTradeItemNumber"><%= translate('product.globalTradeItemNumber') %></label>
                 <input class="form-element" type="text" id="globalTradeItemNumber"
-                       data-mapper-property="globalTradeItemNumber" />
+                       data-mapper-property="globalTradeItemNumber"/>
             </div>
         </div>
     </div>
