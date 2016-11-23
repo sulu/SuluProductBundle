@@ -2009,7 +2009,7 @@ class ProductManager implements ProductManagerInterface
                 }
 
                 // If attribute value is empty do not add.
-                if (!$attributeDataValueName) {
+                if ('' === $attributeDataValueName || null === $attributeDataValueName) {
                     // If already set on product, remove attribute value translation.
                     if (array_key_exists($attributeId, $productAttributes)) {
                         /** @var ProductAttribute $productAttribute */

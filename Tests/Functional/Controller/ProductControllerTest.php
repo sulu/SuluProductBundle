@@ -1028,6 +1028,10 @@ class ProductControllerTest extends SuluTestCase
                     'attributeId' => $this->productAttribute2->getAttribute()->getId(),
                     'attributeValueName' => $this->attributeValueTranslation2->getName(),
                 ],
+                2 => [
+                    'attributeId' => $this->productAttribute2->getAttribute()->getId(),
+                    'attributeValueName' => 0,
+                ],
             ],
         ];
 
@@ -1035,8 +1039,10 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
 
         $response = json_decode($this->client->getResponse()->getContent());
+        $this->assertCount(3, $response->attributes);
         $this->assertEquals('EnglishAttributeValue-1', $response->attributes[0]->attributeValueName);
         $this->assertEquals('EnglishAttributeValue-2', $response->attributes[1]->attributeValueName);
+        $this->assertEquals('0', $response->attributes[2]->attributeValueName);
     }
 
     /**
