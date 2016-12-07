@@ -122,7 +122,6 @@ class AttributeManager implements AttributeManagerInterface
             false,
             true,
             'translation'
-
         );
 
         $fieldDescriptors['key'] = new DoctrineFieldDescriptor(
