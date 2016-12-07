@@ -739,7 +739,6 @@ class ProductControllerTest extends SuluTestCase
                     'name' => 'USD',
                     'number' => '2',
                     'code' => 'usd',
-
                 ],
             ],
             $response['prices']
