@@ -1,6 +1,10 @@
 CHANGELOG for Sulu Product Bundle
 =================================
 
+* 0.15.2 (2016-12-07)
+
+    * BUGFIX      Fixed schema validation
+
 * 0.15.1 (2016-10-18)
 
     * BUGFIX      Added own user settings key for product media list
