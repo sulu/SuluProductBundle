@@ -16,8 +16,7 @@
                      inversed-by="productAttributes">
             <join-column name="idAttributes" referenced-column-name="id" nullable="false"/>
         </many-to-one>
-        <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\AttributeValue" field="attributeValue"
-                     inversed-by="productAttributes">
+        <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\AttributeValue" field="attributeValue">
             <join-column name="idAttributeValues" referenced-column-name="id" nullable="false"/>
         </many-to-one>
     </entity>

@@ -34,6 +34,9 @@ CHANGELOG for Sulu Product Bundle
     * BUGFIX      Fixed wrong path to get action schema.
     * FEATURE     Added validation schema for get products api.
 
+* 0.15.2 (2016-12-07)
+    * BUGFIX      Fixed schema validation
+
 * 0.15.1 (2016-10-18)
     * BUGFIX      Added own user settings key for product media list
 
