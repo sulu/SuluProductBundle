@@ -95,12 +95,12 @@ class ProductLocaleManager
         $language = strstr($locale, '_', true);
 
         foreach ($this->configuration['locales'] as $availableLocale) {
-            // If locale matches request locale, the exact matching was found.
+            // If locale matches, the exact matching was found.
             if ($availableLocale === $locale) {
                 return $availableLocale;
             }
 
-            // Check if request language (without locale) matches.
+            // Check if language (without locale) matches.
             if ($language == $availableLocale) {
                 $languageFound = $availableLocale;
             }
