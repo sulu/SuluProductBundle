@@ -64,30 +64,52 @@ class ProductLocaleManager
      */
     public function retrieveLocale(UserInterface $user, $requestLocale = null)
     {
-        // Use request locale if defined.
+        $proofedLocale = null;
+
+        // When request locale is defined, check if we can use it.
         if ($requestLocale && is_string($requestLocale)) {
-            return $requestLocale;
+            $proofedLocale = $this->proofLocale($requestLocale);
         }
 
-        $languageMatch = null;
-        $userLanguage = strstr($user->getLocale(), '_', true);
-
-        foreach ($this->configuration['locales'] as $locale) {
-            // If locale matches users locale, the exact matching was found.
-            if ($user->getLocale() == $locale) {
-                return $locale;
-            }
-
-            // Check if users language (without locale) matches.
-            if ($userLanguage == $locale) {
-                $languageMatch = $locale;
-            }
+        if (!$proofedLocale) {
+            $proofedLocale = $this->proofLocale($user->getLocale());
         }
 
-        if ($languageMatch) {
-            return $languageMatch;
+        if ($proofedLocale) {
+            return $proofedLocale;
         }
 
         return $this->configuration['fallback_locale'];
+    }
+
+    /**
+     * Check if given locale is available in the configured locales.
+     *
+     * @param string $locale
+     *
+     * @return null|string
+     */
+    protected function proofLocale($locale)
+    {
+        $languageFound = null;
+        $language = strstr($locale, '_', true);
+
+        foreach ($this->configuration['locales'] as $availableLocale) {
+            // If locale matches request locale, the exact matching was found.
+            if ($availableLocale === $locale) {
+                return $availableLocale;
+            }
+
+            // Check if request language (without locale) matches.
+            if ($language == $availableLocale) {
+                $languageFound = $availableLocale;
+            }
+        }
+
+        if ($languageFound) {
+            return $languageFound;
+        }
+
+        return null;
     }
 }
