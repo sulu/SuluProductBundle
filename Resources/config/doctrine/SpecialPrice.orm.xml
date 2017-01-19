@@ -14,7 +14,7 @@
         <field name="endDate" type="datetime" length="255" nullable="true" column="endDate"/>
 
         <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface"
-                     field="product" inversed-by="prices">
+                     field="product" inversed-by="specialPrices">
             <join-column name="idProducts" referenced-column-name="id" on-delete="CASCADE"/>
         </many-to-one>
         <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\Currency" field="currency">

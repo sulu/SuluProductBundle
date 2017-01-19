@@ -1,0 +1,26 @@
+<form id="content-form">
+    <div class="highlight-section fixed-width">
+        <div class="grid-row content">
+            <div class="form-group floating grid-col-12">
+                <label for="title" class="pointer "><%= translate('public.title') %></label>
+                <input id="title"
+                       class="form-element input-large"
+                       type="text"
+                       data-mapper-property="title"
+                       data-validation-max-length="255" />
+            </div>
+            <div class="floating grid-col-12">
+                <div class="form-group grid-col-6">
+                    <label for="routePath" class="pointer "><%= translate('sulu_product.route-path') %></label>
+                    <div id="routePath"
+                         class="preview-update trigger-save-button"
+                         data-aura-component="resource-locator@sulucontent"
+                         data-form="true"
+                         data-mapper-property="routePath"
+                         data-type="resourceLocator"
+                         data-validation-max-length="255"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

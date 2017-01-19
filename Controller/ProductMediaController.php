@@ -11,11 +11,16 @@
 
 namespace Sulu\Bundle\ProductBundle\Controller;
 
+use Doctrine\ORM\EntityManagerInterface;
+use FOS\RestBundle\Controller\Annotations\Get;
 use FOS\RestBundle\Controller\Annotations\RouteResource;
+use Sulu\Bundle\MediaBundle\Entity\MediaRepositoryInterface;
 use Sulu\Bundle\MediaBundle\Media\Manager\MediaManagerInterface;
 use Sulu\Bundle\ProductBundle\Api\Product;
+use Sulu\Bundle\ProductBundle\Product\Exception\ProductException;
 use Sulu\Bundle\ProductBundle\Product\ProductManagerInterface;
 use Sulu\Bundle\ProductBundle\Product\ProductMediaManagerInterface;
+use Sulu\Bundle\ProductBundle\Product\ProductRepositoryInterface;
 use Sulu\Component\Rest\Exception\EntityNotFoundException;
 use Sulu\Component\Rest\Exception\RestException;
 use Sulu\Component\Rest\ListBuilder\Doctrine\DoctrineListBuilderFactory;
@@ -26,8 +31,6 @@ use Sulu\Exception\FeatureNotImplementedException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-// TODO Refactor: use manager for product-media
-
 /**
  * Makes setting and removing of media for a product available through a REST API.
  *
@@ -35,49 +38,35 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class ProductMediaController extends RestController
 {
-    protected static $mediaEntityName = 'SuluMediaBundle:Media';
-    protected static $productEntityName = 'SuluProductBundle:Product';
-
-    private $mediaManager;
-    private $productManager;
-
     /**
-     * Returns the product manager.
+     * Returns all fields that can be used by list.
      *
-     * @return ProductManagerInterface
-     */
-    protected function getProductManager()
-    {
-        if (!$this->productManager) {
-            $this->productManager = $this->get('sulu_product.product_manager');
-        }
-
-        return $this->productManager;
-    }
-
-    /**
-     * Returns the media manager.
+     * @Get("products/media/fields")
      *
-     * @return MediaManagerInterface
-     */
-    protected function getMediaManager()
-    {
-        if (!$this->mediaManager) {
-            $this->mediaManager = $this->get('sulu_media.media_manager');
-        }
-
-        return $this->mediaManager;
-    }
-
-    /**
-     * Adds a new media to the account.
-     *
-     * @param int $id - the product id
      * @param Request $request
      *
      * @return Response
      */
-    public function postAction($id, Request $request)
+    public function getFieldsAction(Request $request)
+    {
+        $locale = $request->get('locale');
+
+        return $this->handleView(
+            $this->view(
+                array_values($this->getManager()->getFieldDescriptors($locale))
+            )
+        );
+    }
+
+    /**
+     * Adds a new media to the product.
+     *
+     * @param Request $request
+     * @param int $productId
+     *
+     * @return Response
+     */
+    public function postAction(Request $request, $productId)
     {
         $locale = $this->getLocale($request);
         $mediaId = $request->get('mediaId', '');
@@ -85,15 +74,15 @@ class ProductMediaController extends RestController
         try {
             $em = $this->getDoctrine()->getManager();
             /** @var Product $product */
-            $product = $this->getProductManager()->findByIdAndLocale($id, $locale);
+            $product = $this->getProductManager()->findByIdAndLocale($productId, $locale);
             $media = $this->getMediaManager()->getById($mediaId, $locale);
 
             if (!$product) {
-                throw new EntityNotFoundException(self::$productEntityName, $id);
+                throw new EntityNotFoundException($this->getProductEntityName(), $productId);
             }
 
             if (!$media) {
-                throw new EntityNotFoundException(self::$mediaEntityName, $mediaId);
+                throw new EntityNotFoundException($this->getMediaEntityName(), $mediaId);
             }
 
             if ($product->containsMedia($media)) {
@@ -119,77 +108,61 @@ class ProductMediaController extends RestController
     }
 
     /**
-     * Removes default prices from product.
+     * Updates media of a product.
      *
-     * @param Product $product
+     * @param Request $request
+     * @param int $productId
+     *
+     * @throws EntityNotFoundException
+     * @throws ProductException
+     *
+     * @return Response
      */
-    private function removeDefaultPrices(Product $product)
+    public function putAction(Request $request, $productId)
     {
-        $defaultPrices = [];
+        $mediaIds = $request->get('mediaIds');
 
-        // get default prices
-        foreach ($product->getPrices() as $price) {
-            if ($price->getId() === null) {
-                $defaultPrices[] = $price;
-            }
+        if (null === $mediaIds || !is_array($mediaIds)) {
+            throw new ProductException('No media ids given.');
         }
 
-        foreach ($defaultPrices as $price) {
-            $product->removePrice($price->getEntity());
+        /** @var Product $product */
+        $product = $this->getProductRepository()->find($productId);
+        if (!$product) {
+            throw new EntityNotFoundException($this->getProductEntityName(), $productId);
         }
+
+        $this->getProductMediaManager()->save($product, $mediaIds);
+        $this->getEntityManager()->flush();
+
+        $view = $this->view(null, Response::HTTP_NO_CONTENT);
+
+        return $this->handleView($view);
     }
 
     /**
      * Removes a media from the relation.
      *
-     * @param int $id - account id
+     * @param int $productId
      * @param int $mediaId
-     * @param Request $request
+     *
+     * @throws EntityNotFoundException
+     * @throws ProductException
      *
      * @return Response
      */
-    public function deleteAction($id, $mediaId, Request $request)
+    public function deleteAction($productId, $mediaId)
     {
-        $locale = $this->getLocale($request);
-
-        try {
-            $delete = function () use ($id, $mediaId, $locale) {
-                $em = $this->getDoctrine()->getManager();
-
-                /** @var Product $product */
-                $product = $this->getProductManager()->findByIdAndLocale($id, $locale);
-                $media = $this->getMediaManager()->getById($mediaId, $locale);
-
-                if (!$product) {
-                    throw new EntityNotFoundException(self::$productEntityName, $id);
-                }
-
-                if (!$media) {
-                    throw new EntityNotFoundException(self::$mediaEntityName, $mediaId);
-                }
-
-                if (!$product->containsMedia($media)) {
-                    throw new RestException(
-                        'Relation between ' . self::$productEntityName .
-                        ' and ' . self::$mediaEntityName . ' with id ' . $mediaId . ' does not exists!'
-                    );
-                }
-
-                //FIXME this is just a temporary solution
-                // issue https://github.com/massiveart/POOL-ALPIN/issues/1467
-                $this->removeDefaultPrices($product);
-                $product->removeMedia($media);
-                $em->flush();
-            };
-
-            $view = $this->responseDelete($id, $delete);
-        } catch (EntityNotFoundException $enfe) {
-            $view = $this->view($enfe->toArray(), 404);
-        } catch (RestException $exc) {
-            $view = $this->view($exc->toArray(), 400);
-        } catch (\Exception $e) {
-            $view = $this->view($e->getMessage(), 400);
+        /** @var Product $product */
+        $product = $this->getProductRepository()->find($productId);
+        if (!$product) {
+            throw new EntityNotFoundException($this->getProductEntityName(), $productId);
         }
+
+        $this->getProductMediaManager()->delete($product, [$mediaId]);
+
+        $view = $this->view(null, Response::HTTP_NO_CONTENT);
+        $this->getEntityManager()->flush();
 
         return $this->handleView($view);
     }
@@ -231,7 +204,7 @@ class ProductMediaController extends RestController
      */
     protected function getListRepresentation($id, $request)
     {
-        $locale = $this->getUser()->getLocale();
+        $locale = $request->get('locale');
 
         /** @var RestHelperInterface $restHelper */
         $restHelper = $this->get('sulu_core.doctrine_rest_helper');
@@ -240,7 +213,7 @@ class ProductMediaController extends RestController
         $factory = $this->get('sulu_core.doctrine_list_builder_factory');
 
         $listBuilder = $factory->create($this->container->getParameter('sulu_product.product_entity'));
-        $fieldDescriptors = $this->getManager()->getFieldDescriptors();
+        $fieldDescriptors = $this->getManager()->getFieldDescriptors($locale);
         $listBuilder->where($fieldDescriptors['product'], $id);
 
         $restHelper->initializeListBuilder(
@@ -290,17 +263,11 @@ class ProductMediaController extends RestController
     }
 
     /**
-     * Returns all fields that can be used by list.
-     *
-     * @return Response
+     * @return EntityManagerInterface
      */
-    public function fieldsAction()
+    protected function getEntityManager()
     {
-        return $this->handleView(
-            $this->view(
-                array_values($this->getManager()->getFieldDescriptors())
-            )
-        );
+        return $this->get('doctrine.orm.entity_manager');
     }
 
     /**
@@ -311,5 +278,92 @@ class ProductMediaController extends RestController
     protected function getManager()
     {
         return $this->get('sulu_product.product_media_manager');
+    }
+
+    /**
+     * Returns the product manager.
+     *
+     * @return ProductManagerInterface
+     */
+    protected function getProductManager()
+    {
+        return $this->get('sulu_product.product_manager');
+    }
+
+    /**
+     * Returns the product repository.
+     *
+     * @return ProductRepositoryInterface
+     */
+    protected function getProductRepository()
+    {
+        return $this->get('sulu_product.product_repository');
+    }
+
+    /**
+     * Returns the media repository.
+     *
+     * @return MediaRepositoryInterface
+     */
+    protected function getMediaRepository()
+    {
+        return $this->get('sulu.repository.media');
+    }
+
+    /**
+     * Returns the product media manager.
+     *
+     * @return ProductMediaManagerInterface
+     */
+    protected function getProductMediaManager()
+    {
+        return $this->get('sulu_product.product_media_manager');
+    }
+
+    /**
+     * Returns the media manager.
+     *
+     * @return MediaManagerInterface
+     */
+    protected function getMediaManager()
+    {
+        return $this->get('sulu_media.media_manager');
+    }
+
+    /**
+     * @return string
+     */
+    protected function getMediaEntityName()
+    {
+        return $this->getMediaEntityName()->getClassName();
+    }
+
+    /**
+     * @return string
+     */
+    protected function getProductEntityName()
+    {
+        return $this->getProductRepository()->getClassName();
+    }
+
+    /**
+     * Removes default prices from product.
+     *
+     * @param Product $product
+     */
+    private function removeDefaultPrices(Product $product)
+    {
+        $defaultPrices = [];
+
+        // get default prices
+        foreach ($product->getPrices() as $price) {
+            if ($price->getId() === null) {
+                $defaultPrices[] = $price;
+            }
+        }
+
+        foreach ($defaultPrices as $price) {
+            $product->removePrice($price->getEntity());
+        }
     }
 }

@@ -16,6 +16,9 @@ use Sulu\Bundle\ProductBundle\Entity\ProductInterface;
 use Sulu\Bundle\ProductBundle\Entity\ProductTranslation;
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescriptor;
 
+/**
+ * Interface for product manager service.
+ */
 interface ProductManagerInterface
 {
     /**

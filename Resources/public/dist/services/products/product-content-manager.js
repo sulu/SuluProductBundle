@@ -1,0 +1,1 @@
+define(["jquery","services/husky/util"],function(a,b){"use strict";var c="/admin/api/products/%s/content?locale=%s",d=function(a,b){var d=c.replace("%s",a).replace("%s",b);return d};return{load:function(a,c){return b.load(d(a,c))},save:function(a,c,e){var f="PUT";return b.save(d(a,c),f,e)}}});

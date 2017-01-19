@@ -26,15 +26,24 @@ class ProductContentNavigationProvider implements ContentNavigationProviderInter
         $details->setId('details');
         $details->setAction('details');
         $details->setPosition(10);
-        $details->setComponent('products/components/detail-form@suluproduct');
+        $details->setComponent('products/components/edit/detail-form@suluproduct');
         $details->setResetStore(false);
+
+        // Content
+        $content = new ContentNavigationItem('content-navigation.product.content');
+        $content->setId('content');
+        $content->setAction('content');
+        $content->setPosition(15);
+        $content->setComponent('products/components/edit/content@suluproduct');
+        $content->setDisplay(['edit']);
+        $content->setResetStore(false);
 
         // Pricing
         $pricing = new ContentNavigationItem('content-navigation.product.pricing');
         $pricing->setId('pricing');
         $pricing->setAction('pricing');
         $pricing->setPosition(20);
-        $pricing->setComponent('products/components/pricing@suluproduct');
+        $pricing->setComponent('products/components/edit/pricing@suluproduct');
         $pricing->setDisplay(['edit']);
         $pricing->setResetStore(false);
 
@@ -43,7 +52,7 @@ class ProductContentNavigationProvider implements ContentNavigationProviderInter
         $media->setId('media');
         $media->setAction('media');
         $media->setPosition(60);
-        $media->setComponent('products/components/media@suluproduct');
+        $media->setComponent('products/components/edit/media@suluproduct');
         $media->setDisplay(['edit']);
         $media->setResetStore(false);
 
@@ -52,7 +61,7 @@ class ProductContentNavigationProvider implements ContentNavigationProviderInter
         $attributes->setId('attributes');
         $attributes->setAction('attributes');
         $attributes->setPosition(30);
-        $attributes->setComponent('products/components/attributes@suluproduct');
+        $attributes->setComponent('products/components/edit/attributes@suluproduct');
         $attributes->setDisplay(['edit']);
         $attributes->setResetStore(false);
 
@@ -61,12 +70,13 @@ class ProductContentNavigationProvider implements ContentNavigationProviderInter
         $addons->setId('addons');
         $addons->setAction('addons');
         $addons->setPosition(50);
-        $addons->setComponent('products/components/addons@suluproduct');
+        $addons->setComponent('products/components/edit/addons@suluproduct');
         $addons->setDisplay(['edit']);
         $addons->setResetStore(false);
 
         return [
             $details,
+            $content,
             $pricing,
             $media,
             $attributes,

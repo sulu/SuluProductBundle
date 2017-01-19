@@ -11,10 +11,13 @@
 
 namespace Sulu\Bundle\ProductBundle\Entity;
 
+use Sulu\Bundle\RouteBundle\Model\RoutableInterface;
+use Sulu\Bundle\RouteBundle\Model\RouteInterface;
+
 /**
- * ProductTranslation.
+ * Entity class for product translations.
  */
-class ProductTranslation
+class ProductTranslation implements RoutableInterface
 {
     /**
      * @var string
@@ -42,9 +45,19 @@ class ProductTranslation
     private $id;
 
     /**
-     * @var \Sulu\Bundle\ProductBundle\Entity\ProductInterface
+     * @var RouteInterface
+     */
+    private $route;
+
+    /**
+     * @var ProductInterface
      */
     private $product;
+
+    /**
+     * @var string
+     */
+    private $contentTitle;
 
     /**
      * Set languageCode.
@@ -155,11 +168,11 @@ class ProductTranslation
     /**
      * Set product.
      *
-     * @param \Sulu\Bundle\ProductBundle\Entity\ProductInterface $product
+     * @param ProductInterface $product
      *
      * @return ProductTranslation
      */
-    public function setProduct(\Sulu\Bundle\ProductBundle\Entity\ProductInterface $product)
+    public function setProduct(ProductInterface $product)
     {
         $this->product = $product;
 
@@ -169,10 +182,44 @@ class ProductTranslation
     /**
      * Get product.
      *
-     * @return \Sulu\Bundle\ProductBundle\Entity\ProductInterface
+     * @return ProductInterface
      */
     public function getProduct()
     {
         return $this->product;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getRoute()
+    {
+        return $this->route;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setRoute(RouteInterface $route)
+    {
+        $this->route = $route;
+    }
+
+    /**
+     * @return string
+     */
+    public function getContentTitle()
+    {
+        return $this->contentTitle;
+    }
+
+    /**
+     * @param string $contentTitle
+     *
+     * @return string
+     */
+    public function setContentTitle($contentTitle)
+    {
+        $this->contentTitle = $contentTitle;
     }
 }

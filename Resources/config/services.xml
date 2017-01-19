@@ -32,7 +32,6 @@
         <parameter key="sulu_product.unit_manager.class">Sulu\Bundle\ProductBundle\Product\UnitManager</parameter>
         <parameter key="sulu_product.currency_manager.class">Sulu\Bundle\ProductBundle\Product\CurrencyManager</parameter>
         <parameter key="sulu_product.price_manager.class">Sulu\Bundle\ProductBundle\Product\ProductPriceManager</parameter>
-        <parameter key="sulu_product.productwebsite.controller.class">Sulu\Bundle\ProductBundle\Controller\ProductWebsiteController</parameter>
         <parameter key="sulu_product.attribute_value_manager.class">Sulu\Bundle\ProductBundle\Product\AttributeValueManager</parameter>
         <parameter key="sulu_product.product_factory.class">Sulu\Bundle\ProductBundle\Product\ProductFactory</parameter>
         <parameter key="sulu_product.product_entity">Sulu\Bundle\ProductBundle\Entity\Product</parameter>
@@ -42,6 +41,7 @@
         <parameter key="sulu_product.price_formatter.class">Sulu\Bundle\ProductBundle\Util\PriceFormatter</parameter>
         <parameter key="sulu_product.product_attribute_manager.class">Sulu\Bundle\ProductBundle\Product\ProductAttributeManager</parameter>
         <parameter key="sulu_product.product_variant_attribute_manager.class">Sulu\Bundle\ProductBundle\Product\ProductVariantAttributeManager</parameter>
+        <parameter key="sulu_product.events.product_translation_post_persist" type="constant">Sulu\Bundle\ProductBundle\Event\Events::PRODUCT_TRANSLATION_CREATED</parameter>
     </parameters>
     <services>
         <!-- ADMIN -->
@@ -127,6 +127,10 @@
             <factory service="doctrine.orm.entity_manager" method="getRepository"/>
             <argument>SuluProductBundle:Addon</argument>
         </service>
+        <service id="sulu_product.product_translation_repository" class="Sulu\Bundle\ProductBundle\Entity\ProductTranslationRepository">
+            <factory service="doctrine.orm.entity_manager" method="getRepository"/>
+            <argument>SuluProductBundle:ProductTranslation</argument>
+        </service>
         <!--UTILS-->
         <service id="sulu_product.price_formatter" class="%sulu_product.price_formatter.class%">
             <argument>%sulu_product.default_formatter_locale%</argument>
@@ -153,14 +157,15 @@
             <argument type="service" id="sulu_product.unit_repository"/>
             <argument type="service" id="sulu_product.product_factory"/>
             <argument type="service" id="sulu_category.category_repository"/>
-            <argument type="service" id="sulu_security.user_repository" />
-            <argument type="service" id="sulu_media.media_manager" />
+            <argument type="service" id="sulu_security.user_repository"/>
+            <argument type="service" id="sulu_media.media_manager"/>
             <argument type="service" id="doctrine.orm.entity_manager"/>
             <argument type="service" id="sulu_contact.account_repository"/>
             <argument type="service" id="sulu_tag.tag_repository"/>
             <argument>%sulu_product.default_currency%</argument>
             <argument type="service" id="sulu_product.product_attribute_manager"/>
             <argument>%sulu_product.product_types_map%</argument>
+            <argument type="service" id="sulu_product.product_route_manager"/>
         </service>
         <service id="sulu_product.product_variant_attribute_manager" class="%sulu_product.product_variant_attribute_manager.class%">
             <argument type="service" id="sulu_product.product_repository"/>
@@ -185,7 +190,7 @@
         </service>
         <service id="sulu_product.attribute_manager" class="%sulu_product.attribute_manager.class%">
             <argument type="service" id="sulu_product.attribute_repository"/>
-            <argument type="service" id="sulu_security.user_repository" />
+            <argument type="service" id="sulu_security.user_repository"/>
             <argument type="service" id="sulu_product.attribute_type_repository"/>
             <argument type="service" id="doctrine.orm.entity_manager"/>
             <argument type="service" id="sulu_product.product_locale_manager"/>
@@ -197,7 +202,7 @@
         </service>
         <service id="sulu_product.attribute_value_manager" class="%sulu_product.attribute_value_manager.class%">
             <argument type="service" id="sulu_product.attribute_value_repository"/>
-            <argument type="service" id="sulu_security.user_repository" />
+            <argument type="service" id="sulu_security.user_repository"/>
             <argument type="service" id="doctrine.orm.entity_manager"/>
             <argument type="service" id="sulu_product.product_locale_manager"/>
         </service>
@@ -217,20 +222,21 @@
             <argument type="service" id="sulu_product.currency_repository"/>
         </service>
         <service id="sulu_product.product_media_manager" class="%sulu_product.product_media_manager.class%">
-            <argument type="service" id="sulu_media.media_manager" />
+            <argument type="service" id="sulu_media.media_manager"/>
+            <argument type="service" id="sulu.repository.media"/>
             <argument>%sulu_product.product_entity%</argument>
         </service>
         <service id="sulu_product.product_locale_manager" class="%sulu_product.product_locale_manager.class%">
             <argument>%sulu_product%</argument>
         </service>
-        <!-- CONTROLLER -->
-        <service id="sulu_product.productwebsite.controller" class="%sulu_product.productwebsite.controller.class%"
-                 scope="request">
-            <argument type="service" id="templating"/>
+        <service id="sulu_product.product_route_manager" class="Sulu\Bundle\ProductBundle\Product\ProductRouteManager">
+            <argument type="service" id="sulu_route.manager.route_manager"/>
+            <argument>%sulu_route.mappings%</argument>
+        </service>
+        <!--MAPPER-->
+        <service id="sulu_product.product_content_mapper" class="Sulu\Bundle\ProductBundle\Product\Mapper\ProductContentMapper">
             <argument type="service" id="sulu_product.product_manager"/>
-            <argument type="service" id="sulu_core.webspace.request_analyzer" on-invalid="ignore"/>
-            <argument type="service" id="sulu_website.resolver.request_analyzer"/>
-            <argument>%sulu_product.template%</argument>
+            <argument type="service" id="sulu_product.product_route_manager"/>
         </service>
         <!-- NAVIGATION -->
         <service id="sulu_product.admin.addon_content_navigation_provider" class="%sulu_product.admin.addon_content_navigation_provider.class%">
@@ -256,6 +262,27 @@
             <tag name="sulu.localization_provider"/>
         </service>
 
+        <!--ENTITY LISTENER-->
+        <service id="sulu_product.product_translation_entity_listener" class="Sulu\Bundle\ProductBundle\EntityListener\ProductTranslationEntityListener">
+            <argument type="service" id="event_dispatcher"/>
+
+            <tag name="doctrine.orm.entity_listener"/>
+        </service>
+
+        <!--EVENT LISTENER-->
+        <service id="sulu_product.product_translation_event_listener" class="Sulu\Bundle\ProductBundle\EventListener\ProductTranslationEventListener">
+            <argument type="service" id="sulu_product.product_route_manager"/>
+            <argument type="service" id="doctrine.orm.entity_manager"/>
+
+            <tag name="kernel.event_listener" event="%sulu_product.events.product_translation_post_persist%" method="postPersist"/>
+        </service>
+
+        <!--ROUTING-->
+        <service id="sulu_product.product_route_defaults_provider" class="Sulu\Bundle\ProductBundle\Routing\ProductRouteDefaultsProvider">
+            <argument type="service" id="sulu_product.product_translation_repository"/>
+
+            <tag name="sulu_route.defaults_provider"/>
+        </service>
         <!--JS CONFIG-->
         <service id="sulu_product.js_config" class="%sulu_product.js_config.class%">
             <argument>sulu-product</argument>

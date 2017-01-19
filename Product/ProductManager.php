@@ -192,6 +192,11 @@ class ProductManager implements ProductManagerInterface
     private $productTypesMap;
 
     /**
+     * @var ProductRouteManagerInterface
+     */
+    private $productRouteManager;
+
+    /**
      * @param ProductRepositoryInterface $productRepository
      * @param SpecialPriceRepository $specialPriceRepository
      * @param AttributeSetRepository $attributeSetRepository
@@ -213,6 +218,7 @@ class ProductManager implements ProductManagerInterface
      * @param string $defaultCurrency
      * @param ProductAttributeManager $productAttributeManager
      * @param array $productTypesMap
+     * @param ProductRouteManagerInterface $productRouteManager
      */
     public function __construct(
         ProductRepositoryInterface $productRepository,
@@ -235,7 +241,8 @@ class ProductManager implements ProductManagerInterface
         TagRepositoryInterface $tagRepository,
         $defaultCurrency,
         ProductAttributeManager $productAttributeManager,
-        array $productTypesMap
+        array $productTypesMap,
+        ProductRouteManagerInterface $productRouteManager
     ) {
         $this->productRepository = $productRepository;
         $this->specialPriceRepository = $specialPriceRepository;
@@ -258,6 +265,7 @@ class ProductManager implements ProductManagerInterface
         $this->defaultCurrency = $defaultCurrency;
         $this->productAttributeManager = $productAttributeManager;
         $this->productTypesMap = $productTypesMap;
+        $this->productRouteManager = $productRouteManager;
     }
 
     /**
@@ -1040,7 +1048,7 @@ class ProductManager implements ProductManagerInterface
         $publishedProduct = null;
 
         if ($id) {
-            // Update an extisting product
+            // Update an existing product.
             $product = $this->fetchProduct($id, $locale);
             $publishedProduct = $this->getExistingActiveOrInactiveProduct($product, $data['status']['id'], $locale);
         } else {
@@ -1518,11 +1526,11 @@ class ProductManager implements ProductManagerInterface
         $userId,
         $id
     ) {
-        // check if status is set
+        // Check if status is set.
         $this->checkDataSet($data, 'status', false) && $this->checkDataSet($data['status'], 'id', false);
 
         if ($id) {
-            // Update an extisting product
+            // Update an extisting product.
             $product = $this->productRepository->findById($id);
             $this->setStatusForProduct($product, $data['status']['id']);
         } else {
