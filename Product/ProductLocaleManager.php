@@ -64,19 +64,19 @@ class ProductLocaleManager
      */
     public function retrieveLocale(UserInterface $user, $requestLocale = null)
     {
-        $proofedLocale = null;
+        $checkedLocale = null;
 
         // When request locale is defined, check if we can use it.
         if ($requestLocale && is_string($requestLocale)) {
-            $proofedLocale = $this->proofLocale($requestLocale);
+            $checkedLocale = $this->checkLocale($requestLocale);
         }
 
-        if (!$proofedLocale) {
-            $proofedLocale = $this->proofLocale($user->getLocale());
+        if (!$checkedLocale) {
+            $checkedLocale = $this->checkLocale($user->getLocale());
         }
 
-        if ($proofedLocale) {
-            return $proofedLocale;
+        if ($checkedLocale) {
+            return $checkedLocale;
         }
 
         return $this->configuration['fallback_locale'];
@@ -89,7 +89,7 @@ class ProductLocaleManager
      *
      * @return null|string
      */
-    protected function proofLocale($locale)
+    protected function checkLocale($locale)
     {
         $languageFound = null;
         $language = strstr($locale, '_', true);
