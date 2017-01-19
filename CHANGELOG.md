@@ -10,6 +10,10 @@ CHANGELOG for Sulu Product Bundle
     * FEATURE     Implemented custom routing with sulu-route-bundle.
     * BUGFIX      Fixed status change in addons tab.
 
+* 0.16.4 (2017-01-19)
+
+    * BUGFIX      ProductLocaleManager: Proof also if the requested locale is available.
+
 * 0.16.3 (2016-11-22)
     * BUGFIX      Fixed setting attributes of value '0'.
 
