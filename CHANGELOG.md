@@ -9,6 +9,10 @@ CHANGELOG for Sulu Product Bundle
     * ENHANCEMENT Changed component structure for content-tabs. They are now located in edit.
     * FEATURE     Implemented custom routing with sulu-route-bundle.
     * BUGFIX      Fixed status change in addons tab.
+    
+* 0.16.5 (2017-01-24)
+    
+    * BUGFIX      ProductLocaleManager: Made user nullable.
 
 * 0.16.4 (2017-01-19)
 
