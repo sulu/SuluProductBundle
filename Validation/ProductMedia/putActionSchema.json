@@ -1,0 +1,15 @@
+{
+    "title": "Schema for put media to a product",
+    "type": "object",
+    "properties": {
+        "mediaIds": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+                "type": "integer",
+                "required": []
+            }
+        }
+    },
+    "required": ["mediaIds"]
+}

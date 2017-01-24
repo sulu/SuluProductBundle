@@ -1,7 +1,8 @@
 <doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
-    <entity name="Sulu\Bundle\ProductBundle\Entity\ProductTranslation" table="pr_product_translations">
+    <entity name="Sulu\Bundle\ProductBundle\Entity\ProductTranslation" table="pr_product_translations"
+            repository-class="Sulu\Bundle\ProductBundle\Entity\ProductTranslationRepository">
         <id name="id" type="integer" column="id">
             <generator strategy="AUTO"/>
         </id>
@@ -10,10 +11,21 @@
         <field name="name" type="string" length="255" nullable="true" column="name"/>
         <field name="shortDescription" type="text" nullable="true" column="shortDescription"/>
         <field name="longDescription" type="text" nullable="true" column="longDescription"/>
+        <field name="contentTitle" type="text" nullable="true" column="contentTitle"/>
 
         <many-to-one target-entity="Sulu\Bundle\ProductBundle\Entity\ProductInterface" field="product"
                      inversed-by="translations">
             <join-column name="idProducts" referenced-column-name="id" nullable="false" on-delete="CASCADE"/>
         </many-to-one>
+        <many-to-one field="route" target-entity="Sulu\Bundle\RouteBundle\Entity\Route">
+            <cascade>
+                <cascade-all/>
+            </cascade>
+            <join-column name="idRoutes" referenced-column-name="id" nullable="true" on-delete="SET NULL"/>
+        </many-to-one>
+
+        <entity-listeners>
+            <entity-listener class="Sulu\Bundle\ProductBundle\EntityListener\ProductTranslationEntityListener"/>
+        </entity-listeners>
     </entity>
 </doctrine-mapping>

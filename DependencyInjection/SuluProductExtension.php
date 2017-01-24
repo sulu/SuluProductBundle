@@ -59,14 +59,21 @@ class SuluProductExtension extends Extension implements PrependExtensionInterfac
                 'sulu_validation',
                 [
                     'schemas' => [
-                        //Products
-                        'get_product' => '@SuluProductBundle/Validation/Products/getActionSchema.json',
+                        // Products
+                        'get_product' => '@SuluProductBundle/Validation/localeSchema.json',
+                        // Product Media
+                        'get_product_media_fields' => '@SuluProductBundle/Validation/localeSchema.json',
+                        'cget_product_media' => '@SuluProductBundle/Validation/localeSchema.json',
+                        'put_product_media' => '@SuluProductBundle/Validation/ProductMedia/putActionSchema.json',
                         // Variants
-                        'get_product_variants' => '@SuluProductBundle/Validation/Variants/cGetActionSchema.json',
+                        'get_product_variants' => '@SuluProductBundle/Validation/localeSchema.json',
                         'post_product_variant' => '@SuluProductBundle/Validation/Variants/postPutActionSchema.json',
                         'put_product_variant' => '@SuluProductBundle/Validation/Variants/postPutActionSchema.json',
-                        'get_product_productvariant_attribute_fields' => '@SuluProductBundle/Validation/VariantAttributes/cGetActionSchema.json',
-                        'get_product_productvariant_attributes' => '@SuluProductBundle/Validation/VariantAttributes/cGetActionSchema.json',
+                        'get_product_productvariant_attribute_fields' => '@SuluProductBundle/Validation/localeSchema.json',
+                        'get_product_productvariant_attributes' => '@SuluProductBundle/Validation/localeSchema.json',
+                        // Content
+                        'get_product_content' => '@SuluProductBundle/Validation/localeSchema.json',
+                        'put_product_content' => '@SuluProductBundle/Validation/localeSchema.json',
                     ],
                 ]
             );
@@ -79,6 +86,7 @@ class SuluProductExtension extends Extension implements PrependExtensionInterfac
                         'codes' => [
                             'Sulu\Bundle\ProductBundle\Product\Exception\AttributeNotFoundException' => 400,
                             'Sulu\Bundle\ProductBundle\Product\Exception\ProductNotFoundException' => 400,
+                            'Sulu\Component\Rest\Exception\EntityNotFoundException' => 404,
                             'Sulu\Bundle\ProductBundle\Product\Exception\ProductException' => 400,
                         ],
                     ],

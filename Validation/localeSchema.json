@@ -1,0 +1,13 @@
+{
+    "title": "Schema that requires a locale only",
+    "type": "object",
+    "properties": {
+        "locale": {
+            "type": "string",
+            "minLength": 2
+        }
+    },
+    "required": [
+        "locale"
+    ]
+}

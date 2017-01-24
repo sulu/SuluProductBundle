@@ -133,9 +133,6 @@ define([
                 this.deleteVariants(ids);
             }, this);
 
-            // Handling media.
-            this.sandbox.on('sulu.products.media.save', this.saveMedia.bind(this));
-
             // Workflow.
             this.sandbox.on('sulu.products.workflow.triggered', this.triggerWorkflowAction.bind(this));
 
@@ -189,78 +186,6 @@ define([
                         ''
                     );
                     this.sandbox.logger.error('error while changing state of products', error);
-                }.bind(this));
-            }
-        },
-
-        saveMedia: function(productId, newMediaIds, removedMediaIds) {
-            this.sandbox.emit('sulu.header.toolbar.item.loading', 'save');
-
-            this.processAjaxForMedia(newMediaIds, productId, 'POST');
-            this.processAjaxForMedia(removedMediaIds, productId, 'DELETE');
-
-            var mediaIds = this.sandbox.util.arrayGetColumn(this.product.attributes.media, 'id');
-            var i, len, id;
-
-            // Add new media to backbone model.
-            for (i = -1, len = newMediaIds.length; ++i < len;) {
-                id = newMediaIds[i];
-
-                if (mediaIds.indexOf(id) === -1) {
-                    this.product.set({
-                        'media': this.product.get('media').concat({'id': id})
-                    });
-                    mediaIds.push(id);
-                }
-            }
-
-            // Remove deleted media from backbone model.
-            for (i = -1, len = removedMediaIds.length; ++i < len;) {
-                id = removedMediaIds[i];
-
-                var mediaIndex = mediaIds.indexOf(id);
-
-                if (mediaIndex > -1) {
-                    this.product.get('media').splice(mediaIndex, 1);
-                    mediaIds.splice(mediaIndex, 1);
-                }
-            }
-
-        },
-
-        // TODO make only one request
-        processAjaxForMedia: function(mediaIds, productId, type) {
-            var requests = [],
-                medias = [],
-                url;
-
-            if (mediaIds.length > 0) {
-                this.sandbox.util.each(mediaIds, function(index, id) {
-
-                    if (type === 'DELETE') {
-                        url = '/admin/api/products/' + productId + '/media/' + id;
-                    } else if (type === 'POST') {
-                        url = '/admin/api/products/' + productId + '/media';
-                    }
-
-                    requests.push(
-                        this.sandbox.util.ajax({
-                            url: url,
-                            data: {mediaId: id},
-                            type: type
-                        }).fail(function() {
-                            this.sandbox.logger.error("Error while saving media!");
-                        }.bind(this))
-                    );
-                    medias.push(id);
-                }.bind(this));
-
-                this.sandbox.util.when.apply(null, requests).then(function() {
-                    if (type === 'DELETE') {
-                        this.sandbox.emit('sulu.products.media.removed', medias);
-                    } else if (type === 'POST') {
-                        this.sandbox.emit('sulu.products.media.saved', medias);
-                    }
                 }.bind(this));
             }
         },
@@ -381,7 +306,7 @@ define([
 
             var $tabContainer = this.sandbox.dom.createElement('<div/>'),
                 component = {
-                    name: 'products/components/content@suluproduct',
+                    name: 'products/components/edit@suluproduct',
                     options: {
                         el: $tabContainer,
                         locale: this.options.locale

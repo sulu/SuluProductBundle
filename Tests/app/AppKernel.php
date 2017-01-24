@@ -12,8 +12,14 @@
 use Sulu\Bundle\TestBundle\Kernel\SuluTestKernel;
 use Symfony\Component\Config\Loader\LoaderInterface;
 
+/**
+ * App kernel for testing product-bundle.
+ */
 class AppKernel extends SuluTestKernel
 {
+    /**
+     * {@inheritdoc}
+     */
     public function registerBundles()
     {
         $bundles = parent::registerBundles();
@@ -23,6 +29,9 @@ class AppKernel extends SuluTestKernel
         return $bundles;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function registerContainerConfiguration(LoaderInterface $loader)
     {
         parent::registerContainerConfiguration($loader);

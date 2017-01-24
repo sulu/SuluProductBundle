@@ -658,7 +658,7 @@ class ProductMediaControllerTest extends SuluTestCase
      */
     public function testGetAllMedia()
     {
-        $this->client->request('GET', '/api/products/' . $this->product1->getId() . '/media?flat=true');
+        $this->client->request('GET', '/api/products/' . $this->product1->getId() . '/media?flat=true&locale=en');
         $response = json_decode($this->client->getResponse()->getContent());
         $items = $response->_embedded->media;
 
@@ -666,6 +666,71 @@ class ProductMediaControllerTest extends SuluTestCase
         $this->assertEquals(2, count($items));
 
         $this->checkProductAttributes();
+
+        // Now test without providing locale.
+        $this->client->request('GET', '/api/products/' . $this->product1->getId() . '/media?flat=true');
+        $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
+    }
+
+    /**
+     * Test PUT of media ids.
+     */
+    public function testPutMedia()
+    {
+        $this->client->request(
+            'PUT',
+            '/api/products/' . $this->product1->getId() . '/media',
+            [
+                'mediaIds' => [
+                    $this->media1->getId(),
+                    $this->media2->getId(),
+                ],
+            ]
+        );
+
+        $this->assertEquals(204, $this->client->getResponse()->getStatusCode());
+
+        $this->em->refresh($this->product1);
+        $this->assertCount(2, $this->product1->getMedia());
+        $this->checkProductAttributes();
+    }
+
+    /**
+     * Test PUT without providing media ids.
+     */
+    public function testPutWithoutMediaIds()
+    {
+        $this->client->request('PUT', '/api/products/' . $this->product1->getId() . '/media');
+        $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
+    }
+
+    /**
+     * Test PUT with not existing media ids.
+     */
+    public function testPutNonExistingMedia()
+    {
+        $this->client->request(
+            'PUT',
+            '/api/products/' . $this->product1->getId() . '/media',
+            [
+                'mediaIds' => [
+                    -1234,
+                ],
+            ]
+        );
+        $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
+
+        $this->client->request(
+            'PUT',
+            '/api/products/' . $this->product1->getId() . '/media',
+            [
+                'mediaIds' => [
+                    $this->media1->getId(),
+                    -1234,
+                ],
+            ]
+        );
+        $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
     }
 
     /**

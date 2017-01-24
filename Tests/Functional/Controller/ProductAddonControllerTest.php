@@ -514,7 +514,6 @@ class ProductAddonControllerTest extends SuluTestCase
         $this->em->persist($this->tag1);
         $this->em->persist($this->tag2);
 
-
         $this->addon = new Addon();
         $this->addon->setAddon($this->product2);
         $this->addon->setProduct($this->product1);
