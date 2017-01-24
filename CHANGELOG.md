@@ -1,6 +1,10 @@
 CHANGELOG for Sulu Product Bundle
 =================================
 
+* 0.16.5 (2017-01-24)
+    
+    * BUGFIX      ProductLocaleManager: Made user nullable.
+
 * 0.16.4 (2017-01-19)
 
     * BUGFIX      ProductLocaleManager: Proof also if the requested locale is available.
