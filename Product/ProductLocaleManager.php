@@ -53,16 +53,16 @@ class ProductLocaleManager
      * If request-locale is set, then use this one.
      * Else If users locale matches any of the given locales, that one is taken
      * as default.
-     * If locale does not match exactly, the users language is compared as well.
+     * If locale does not match exactly, the users language is compared as well when its provided.
      * If there are no matches at all, the default-locale as defined in the config
      * is returned.
      *
-     * @param UserInterface $user
+     * @param UserInterface|null $user
      * @param null|string $requestLocale
      *
      * @return string
      */
-    public function retrieveLocale(UserInterface $user, $requestLocale = null)
+    public function retrieveLocale(UserInterface $user = null, $requestLocale = null)
     {
         $checkedLocale = null;
 
@@ -71,7 +71,7 @@ class ProductLocaleManager
             $checkedLocale = $this->checkLocale($requestLocale);
         }
 
-        if (!$checkedLocale) {
+        if (!$checkedLocale && $user && $user->getLocale()) {
             $checkedLocale = $this->checkLocale($user->getLocale());
         }
 
