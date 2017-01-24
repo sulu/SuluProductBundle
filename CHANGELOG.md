@@ -2,6 +2,7 @@ CHANGELOG for Sulu Product Bundle
 =================================
 
 * dev-develop
+    * BUGFIX      Fixed style-ci config.
     * ENHANCEMENT Adapted ProductTestData and corrected locale behaviour.
     * FEATURE     Implemented content api and mapper service for storing content to database.
     * FEATURE     Implemented content tab for managing content route path and title.
@@ -9,13 +10,11 @@ CHANGELOG for Sulu Product Bundle
     * ENHANCEMENT Changed component structure for content-tabs. They are now located in edit.
     * FEATURE     Implemented custom routing with sulu-route-bundle.
     * BUGFIX      Fixed status change in addons tab.
-    
+
 * 0.16.5 (2017-01-24)
-    
     * BUGFIX      ProductLocaleManager: Made user nullable.
 
 * 0.16.4 (2017-01-19)
-
     * BUGFIX      ProductLocaleManager: Proof also if the requested locale is available.
 
 * 0.16.3 (2016-11-22)
