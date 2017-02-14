@@ -1,7 +1,7 @@
 CHANGELOG for Sulu Product Bundle
 =================================
 
-* dev-develop
+* 0.17.0 (2017-02-14)
     * BUGFIX      Fixed style-ci config.
     * ENHANCEMENT Adapted ProductTestData and corrected locale behaviour.
     * FEATURE     Implemented content api and mapper service for storing content to database.

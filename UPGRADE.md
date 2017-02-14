@@ -2,13 +2,13 @@
 
 ## dev-develop
 
+## 0.17.0
+
 ### ProductTestData
 
 Changed default locale of product test data from `de` to `en`. This does
 not affect product translations, since they were `en` by default
 (inconsistency).
-
-## 0.16.2
 
 ### Product Routing
 
@@ -16,6 +16,7 @@ ProductWebsiteController routing has been replaced by SuluRouteBundle.
 Therefore you'll need to specify the desired route as described in
 [README](README.md#custom-routing)
 
+## 0.16.2
 
 ### Product Factory
 
