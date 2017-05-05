@@ -12,4 +12,3 @@ disabled:
     - phpdoc_to_comment
     - blankline_after_open_tag
     - function_declaration
-    - simplified_null_return

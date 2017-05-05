@@ -15,7 +15,6 @@ use Doctrine\ORM\EntityManager;
 use Sulu\Bundle\ProductBundle\Entity\Status as StatusEntity;
 use Sulu\Bundle\ProductBundle\Entity\StatusTranslation as StatusTranslationEntity;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
-use Symfony\Bundle\FrameworkBundle\Client;
 
 class StatusManagerTest extends SuluTestCase
 {

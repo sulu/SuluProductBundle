@@ -289,13 +289,6 @@ class ProductVariantManager implements ProductVariantManagerInterface
 
         $this->processAttributes($variant, $variantData, $locale);
         $this->processPrices($variant, $variantData);
-
-        // Check if entity is going to be updated.
-        $this->entityManager->getUnitOfWork()->computeChangeSets();
-        if ($this->entityManager->getUnitOfWork()->isScheduledForUpdate($variant)) {
-            $variant->setChanger($this->getUserReferenceById($userId));
-            $variant->setChanged(new \DateTime());
-        }
     }
 
     /**
@@ -354,7 +347,7 @@ class ProductVariantManager implements ProductVariantManagerInterface
      */
     private function processPrices(ProductInterface $variant, array $variantData)
     {
-        if (!count($variantData['prices'])) {
+        if (!isset($variantData['prices']) || !is_array($variantData['prices'])) {
             return;
         }
 
