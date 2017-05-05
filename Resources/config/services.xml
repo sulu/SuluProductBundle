@@ -249,6 +249,13 @@
             <tag name="sulu_admin.content_navigation" alias="product-with-variants"/>
             <tag name="sulu.context" context="admin"/>
         </service>
+
+        <service id="sulu_product.event_listener.product" class="Sulu\Bundle\ProductBundle\EventListener\ProductEventListener">
+            <argument type="service" id="doctrine.orm.entity_manager"/>
+            <argument type="service" id="security.token_storage"/>
+
+            <tag name="doctrine.event_listener" event="preUpdate"/>
+        </service>
         <!--PROVIDER-->
         <service id="sulu_product.localization_provider" class="Sulu\Component\Localization\Provider\LocalizationProvider">
             <argument>%sulu_product.locales%</argument>
