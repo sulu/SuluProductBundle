@@ -11,6 +11,11 @@ CHANGELOG for Sulu Product Bundle
     * FEATURE     Implemented custom routing with sulu-route-bundle.
     * BUGFIX      Fixed status change in addons tab.
 
+* 0.16.6 (2017-05-05)
+    * BUGFIX      Variants: Fixed removing all price overrides from variant.
+    * BUGFIX      Variants: Fixed set price to 0.
+    * BUGFIX      Variants: Fixed setting variant number (Changer and changed needed to be removed.)
+
 * 0.16.5 (2017-01-24)
     * BUGFIX      ProductLocaleManager: Made user nullable.
 
