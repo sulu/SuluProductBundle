@@ -54,7 +54,7 @@ sulu_route:
 sulu_product:
     category_root_key: ~
     default_currency: 'EUR'
-    default_formatter_locale 'en'
+    default_formatter_locale: 'en'
     display_recurring_prices: true
     fallback_locale: de
     fixtures:
