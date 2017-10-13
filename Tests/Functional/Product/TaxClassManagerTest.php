@@ -15,7 +15,6 @@ use Doctrine\ORM\EntityManager;
 use Sulu\Bundle\ProductBundle\Entity\TaxClass as TaxClassEntity;
 use Sulu\Bundle\ProductBundle\Entity\TaxClassTranslation as TaxClassTranslationEntity;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
-use Symfony\Bundle\FrameworkBundle\Client;
 
 class TaxClassManagerTest extends SuluTestCase
 {

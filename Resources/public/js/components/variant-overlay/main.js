@@ -495,7 +495,7 @@ define([
             // Parse prices.
             this.sandbox.util.foreach(data.prices, function(price) {
                 // Do not save prices without a valid price.
-                if (price.price == '') {
+                if (price.price === '') {
                     return;
                 }
                 price.price = parseInt(price.price);
