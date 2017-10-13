@@ -1,6 +1,13 @@
 CHANGELOG for Sulu Product Bundle
 =================================
 
+* 0.17.1 (2017-10-13)
+
+    * BUGFIX      Addons: Fixed addon overlay if price is overwritten with value 0.
+    * BUGFIX      Variants: Fixed removing all price overrides from variant.
+    * BUGFIX      Variants: Fixed set price to 0.
+    * BUGFIX      Variants: Fixed setting variant number (Changer and changed needed to be removed.)
+
 * 0.17.0 (2017-02-14)
     * BUGFIX      Fixed style-ci config.
     * ENHANCEMENT Adapted ProductTestData and corrected locale behaviour.
