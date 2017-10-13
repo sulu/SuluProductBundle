@@ -35,7 +35,7 @@ module.exports = function (grunt) {
             },
             scripts: {
                 files: ['Resources/public/**'],
-                tasks: ['publish']
+                tasks: ['build']
             }
         },
         jshint: {

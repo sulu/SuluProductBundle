@@ -330,12 +330,12 @@ define([
                     priceRow.id = currency.id;
 
                     priceRow.defaultPrice = this.sandbox.numberFormat(0, 'n');
-                    if (!!defaultPrices[currency.code]) {
+                    if (defaultPrices[currency.code]) {
                         priceRow.defaultPrice = this.sandbox.numberFormat(defaultPrices[currency.code], 'n');
                     }
 
                     priceRow.price = priceRow.defaultPrice;
-                    if (!!productAddonPrices[currency.code]) {
+                    if (productAddonPrices[currency.code] || 0 === productAddonPrices[currency.code]) {
                         priceRow.price = this.sandbox.numberFormat(productAddonPrices[currency.code], 'n');
                     }
 
