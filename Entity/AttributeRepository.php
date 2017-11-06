@@ -81,6 +81,22 @@ class AttributeRepository extends EntityRepository implements AttributeRepositor
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function searchByLocaleAndQueryString($locale, $queryString)
+    {
+        try {
+            $queryBuilder = $this->getAttributeQuery($locale);
+            $queryBuilder->andWhere($queryBuilder->expr()->like('translations.name', ':queryString'));
+            $queryBuilder->setParameter('queryString', '%' . $queryString . '%');
+
+            return $queryBuilder->getQuery()->getResult();
+        } catch (NoResultException $exc) {
+            return null;
+        }
+    }
+
+    /**
      * Returns the query for attributes.
      *
      * @param string $locale The locale to load

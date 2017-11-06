@@ -9,8 +9,8 @@
 
 define([
     'config',
-    'text!suluproduct/components/products/components/edit/attributes/overlay-content.html',
-    'services/product/product-type-manager',
+    'text!suluproduct/components/products/components/attributes/overlay-content.html',
+    'services/product-type-manager',
     'suluproduct/collections/attributes',
     'suluproduct/models/variantAttribute'
 ], function(Config, OverlayTpl, ProductTypeManager, Attributes, VariantAttribute) {
@@ -573,17 +573,13 @@ define([
             var selectOptions = {
                 el: '#selectBox',
                 instanceName: constants.selectInstanceName,
-                multipleSelect: false,
-                defaultLabel: defaultLabel,
-                preSelectedElements: preSelectedElement,
-                valueName: 'name',
-                isNative: true,
-                data: selectData
+                prefetchUrl: '/admin/api/attributes',
+                remoteUrl: '/admin/api/attributes'
             };
 
             this.sandbox.start([
                 {
-                    name: 'select@husky',
+                    name: 'auto-complete@husky',
                     options: selectOptions
                 }
             ]);

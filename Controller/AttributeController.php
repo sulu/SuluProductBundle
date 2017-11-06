@@ -93,12 +93,13 @@ class AttributeController extends RestController implements ClassResourceInterfa
     public function cgetAction(Request $request)
     {
         $locale = $this->getProductLocaleManager()->retrieveLocale($this->getUser(), $request->get('locale'));
+        $queryString = $request->get('query');
 
         if ($request->get('flat') == 'true') {
             $list = $this->getListRepresentation($request);
         } else {
             $list = new CollectionRepresentation(
-                $this->getManager()->findAllByLocale($locale),
+                $this->getManager()->findAllByLocaleAndQueryString($locale, $queryString),
                 self::$entityKey
             );
         }
