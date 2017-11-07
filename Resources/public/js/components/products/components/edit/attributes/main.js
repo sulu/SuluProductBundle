@@ -9,8 +9,8 @@
 
 define([
     'config',
-    'text!suluproduct/components/products/components/attributes/overlay-content.html',
-    'services/product-type-manager',
+    'text!suluproduct/components/products/components/edit/attributes/overlay-content.html',
+    'services/product/product-type-manager',
     'suluproduct/collections/attributes',
     'suluproduct/models/variantAttribute'
 ], function(Config, OverlayTpl, ProductTypeManager, Attributes, VariantAttribute) {
@@ -550,37 +550,25 @@ define([
         },
 
         /**
-         * Starts the select component with given data.
+         * Starts the autocomplete component.
          *
-         * @param {Array} selectData
          */
-        startAttributesSelect = function(selectData) {
-            var preSelectedElement = [];
-            var defaultLabel = this.sandbox.translate('product.attribute.overlay.defaultlabel');
+        startAttributesSelect = function() {
 
-            // Preselect first element.
-            if (selectData.length > 0 &&
-                typeof(selectData[0]) === "object" &&
-                typeof(selectData[0].name) === "string"
-            ) {
-                selectedAttributeId = selectData[0].id;
-                preSelectedElement.push(selectData[0].name);
-            } else {
-                defaultLabel = this.sandbox.translate('sulu_product.attribute.overlay.no-attributes')
-            }
-
-            // Create select box in overlay.
-            var selectOptions = {
-                el: '#selectBox',
+            // Create autocomplete box in overlay.
+            var autocompleteOptions = {
+                el: '#autoCompleteAttributes',
                 instanceName: constants.selectInstanceName,
                 prefetchUrl: '/admin/api/attributes',
-                remoteUrl: '/admin/api/attributes'
+                remoteUrl: '/admin/api/attributes',
+                resultKey: 'attributes',
+                limit: 10
             };
 
             this.sandbox.start([
                 {
                     name: 'auto-complete@husky',
-                    options: selectOptions
+                    options: autocompleteOptions
                 }
             ]);
 
