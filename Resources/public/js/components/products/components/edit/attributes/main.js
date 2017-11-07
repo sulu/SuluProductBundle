@@ -32,7 +32,7 @@ define([
             attributesToolbarInstanceName: 'product-attribute-list-toolbar',
             variantAttributesToolbarInstanceName: 'variant-attribute-list-toolbar',
             overlayInstanceName: 'product-attribute-overlay',
-            selectInstanceName: 'product-attribute-select'
+            autocompleteInstanceName: 'product-attribute-autocomplete'
         },
 
 
@@ -202,14 +202,12 @@ define([
          * Creates the overlay.
          */
         onAddAttributeClicked = function() {
-            fetchAttributesForSelect.call(this).done(function(selectData) {
-                createAddOverlay.call(
-                    this,
-                    createAddOverlayContent.call(this, false),
-                    onAddAttributeOkClicked.bind(this)
-                );
-                startAttributesSelect.call(this, selectData);
-            }.bind(this));
+            createAddOverlay.call(
+                this,
+                createAddOverlayContent.call(this, false),
+                onAddAttributeOkClicked.bind(this)
+            );
+            startAttributesSelect.call(this);
         },
 
         /**
@@ -231,9 +229,7 @@ define([
 
             this.sendData = {};
             var attributeValueName = this.sandbox.dom.val('#attribute-name');
-
             var attributes = this.options.data.attributes.attributes;
-
             var result = _.findWhere(attributes, {'attributeId': selectedAttributeId});
 
             if (result) {
@@ -557,12 +553,12 @@ define([
 
             // Create autocomplete box in overlay.
             var autocompleteOptions = {
-                el: '#autoCompleteAttributes',
-                instanceName: constants.selectInstanceName,
+                el: '#auto-complete-attributes',
+                instanceName: constants.autocompleteInstanceName,
                 prefetchUrl: '/admin/api/attributes',
                 remoteUrl: '/admin/api/attributes',
                 resultKey: 'attributes',
-                limit: 10
+                limit: 10,
             };
 
             this.sandbox.start([
@@ -573,10 +569,12 @@ define([
             ]);
 
             // Define callback when attribute is selected.
-            this.sandbox.on('husky.select.' + constants.selectInstanceName + '.selected.item', function(item, name) {
-                selectedAttributeId = parseInt(item);
-                selectedAttributeName = name;
-            });
+            this.sandbox.on('husky.auto-complete.' + constants.autocompleteInstanceName + '.select',
+                function(item, name) {
+                    selectedAttributeId = parseInt(item.id);
+                    selectedAttributeName = item.name;
+                }
+            );
         },
 
         /**
