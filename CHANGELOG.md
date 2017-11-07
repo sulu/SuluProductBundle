@@ -3,6 +3,8 @@ CHANGELOG for Sulu Product Bundle
 
 * unreleased
 
+* 0.17.2 (2017-11-07)
+
     * FEATURE     Changed attributes dropdown to autocomplete field. 
 
 * 0.17.1 (2017-10-13)
