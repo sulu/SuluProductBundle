@@ -550,7 +550,6 @@ define([
          *
          */
         startAttributesSelect = function() {
-
             // Create autocomplete box in overlay.
             var autocompleteOptions = {
                 el: '#auto-complete-attributes',
