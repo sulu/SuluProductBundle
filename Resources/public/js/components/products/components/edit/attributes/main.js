@@ -32,7 +32,7 @@ define([
             attributesToolbarInstanceName: 'product-attribute-list-toolbar',
             variantAttributesToolbarInstanceName: 'variant-attribute-list-toolbar',
             overlayInstanceName: 'product-attribute-overlay',
-            selectInstanceName: 'product-attribute-select'
+            autocompleteInstanceName: 'product-attribute-autocomplete'
         },
 
 
@@ -202,14 +202,12 @@ define([
          * Creates the overlay.
          */
         onAddAttributeClicked = function() {
-            fetchAttributesForSelect.call(this).done(function(selectData) {
-                createAddOverlay.call(
-                    this,
-                    createAddOverlayContent.call(this, false),
-                    onAddAttributeOkClicked.bind(this)
-                );
-                startAttributesSelect.call(this, selectData);
-            }.bind(this));
+            createAddOverlay.call(
+                this,
+                createAddOverlayContent.call(this, false),
+                onAddAttributeOkClicked.bind(this)
+            );
+            startAttributesSelect.call(this);
         },
 
         /**
@@ -231,9 +229,7 @@ define([
 
             this.sendData = {};
             var attributeValueName = this.sandbox.dom.val('#attribute-name');
-
             var attributes = this.options.data.attributes.attributes;
-
             var result = _.findWhere(attributes, {'attributeId': selectedAttributeId});
 
             if (result) {
@@ -550,49 +546,34 @@ define([
         },
 
         /**
-         * Starts the select component with given data.
+         * Starts the autocomplete component.
          *
-         * @param {Array} selectData
          */
-        startAttributesSelect = function(selectData) {
-            var preSelectedElement = [];
-            var defaultLabel = this.sandbox.translate('product.attribute.overlay.defaultlabel');
-
-            // Preselect first element.
-            if (selectData.length > 0 &&
-                typeof(selectData[0]) === "object" &&
-                typeof(selectData[0].name) === "string"
-            ) {
-                selectedAttributeId = selectData[0].id;
-                preSelectedElement.push(selectData[0].name);
-            } else {
-                defaultLabel = this.sandbox.translate('sulu_product.attribute.overlay.no-attributes')
-            }
-
-            // Create select box in overlay.
-            var selectOptions = {
-                el: '#selectBox',
-                instanceName: constants.selectInstanceName,
-                multipleSelect: false,
-                defaultLabel: defaultLabel,
-                preSelectedElements: preSelectedElement,
-                valueName: 'name',
-                isNative: true,
-                data: selectData
+        startAttributesSelect = function() {
+            // Create autocomplete box in overlay.
+            var autocompleteOptions = {
+                el: '#auto-complete-attributes',
+                instanceName: constants.autocompleteInstanceName,
+                prefetchUrl: '/admin/api/attributes',
+                remoteUrl: '/admin/api/attributes',
+                resultKey: 'attributes',
+                limit: 10,
             };
 
             this.sandbox.start([
                 {
-                    name: 'select@husky',
-                    options: selectOptions
+                    name: 'auto-complete@husky',
+                    options: autocompleteOptions
                 }
             ]);
 
             // Define callback when attribute is selected.
-            this.sandbox.on('husky.select.' + constants.selectInstanceName + '.selected.item', function(item, name) {
-                selectedAttributeId = parseInt(item);
-                selectedAttributeName = name;
-            });
+            this.sandbox.on('husky.auto-complete.' + constants.autocompleteInstanceName + '.select',
+                function(item, name) {
+                    selectedAttributeId = parseInt(item.id);
+                    selectedAttributeName = item.name;
+                }
+            );
         },
 
         /**
