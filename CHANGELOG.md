@@ -1,6 +1,10 @@
 CHANGELOG for Sulu Product Bundle
 =================================
 
+* unreleased
+
+    * FEATURE     Changed attributes dropdown to autocomplete field. 
+
 * 0.17.1 (2017-10-13)
 
     * BUGFIX      Addons: Fixed addon overlay if price is overwritten with value 0.
