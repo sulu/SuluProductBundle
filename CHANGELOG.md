@@ -3,6 +3,10 @@ CHANGELOG for Sulu Product Bundle
 
 * unreleased
 
+* 0.17.3 (2018-01-12)
+
+    * FEATURE     Adapted dependency for willdurand/hateoas-bundle to work with new Sulu versions.
+
 * 0.17.2 (2017-11-07)
 
     * FEATURE     Changed attributes dropdown to autocomplete field. 
