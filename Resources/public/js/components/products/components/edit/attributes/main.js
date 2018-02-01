@@ -554,7 +554,6 @@ define([
             var autocompleteOptions = {
                 el: '#auto-complete-attributes',
                 instanceName: constants.autocompleteInstanceName,
-                prefetchUrl: '/admin/api/attributes',
                 remoteUrl: '/admin/api/attributes',
                 resultKey: 'attributes',
                 limit: 10,
