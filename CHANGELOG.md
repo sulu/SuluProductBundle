@@ -3,6 +3,10 @@ CHANGELOG for Sulu Product Bundle
 
 * unreleased
 
+* 0.17.4 (2018-02-01)
+
+    * BUGFIX      Fixed duplicated results in attributes autocomplete field.
+
 * 0.17.3 (2018-01-12)
 
     * FEATURE     Adapted dependency for willdurand/hateoas-bundle to work with new Sulu versions.
