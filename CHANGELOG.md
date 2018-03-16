@@ -3,6 +3,10 @@ CHANGELOG for Sulu Product Bundle
 
 * unreleased
 
+* 0.17.5 (2018-03-16)
+
+    * BUGFIX      Fixed removing of products in the content type.
+
 * 0.17.4 (2018-02-01)
 
     * BUGFIX      Fixed duplicated results in attributes autocomplete field.
