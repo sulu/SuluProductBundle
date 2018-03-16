@@ -263,7 +263,7 @@ define(function() {
         removeHandler: function(id) {
             var data = this.getData();
             for (var i = -1, length = data.length; ++i < length;) {
-                if (id === data[i]) {
+                if (id === parseInt(data[i])) {
                     data.splice(i, 1);
                     break;
                 }
