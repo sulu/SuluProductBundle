@@ -85,7 +85,7 @@ define(['config'], function(Config) {
          *
          * @param {Object} sandbox
          * @param {Object} status
-         * @param {Integer} productId
+         * @param {Number} productId
          */
         initToolbar: function(sandbox, status, productId) {
             this.sandbox = sandbox;
