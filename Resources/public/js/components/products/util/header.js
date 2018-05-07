@@ -26,7 +26,7 @@ define(['config'], function(Config) {
          * Bind all custom events.
          */
         bindCustomEvents = function() {
-            this.sandbox.on('sulu.toolbar.delete', onDeleteClicked.bind(this));
+            this.sandbox.on('sulu.toolbar.delete', onDeleteClicked.bind(this, this.productId));
 
             this.sandbox.once('husky.toolbar.header.initialized', setStatus.bind(this, this.status));
 
@@ -85,11 +85,13 @@ define(['config'], function(Config) {
          *
          * @param {Object} sandbox
          * @param {Object} status
+         * @param {Integer} productId
          */
-        initToolbar: function(sandbox, status) {
+        initToolbar: function(sandbox, status, productId) {
             this.sandbox = sandbox;
             this.status = status;
             this.initialStatus = status;
+            this.productId = productId;
 
             bindCustomEvents.call(this, status);
             setStatus.call(this, status);
