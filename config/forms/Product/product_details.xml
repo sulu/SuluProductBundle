@@ -1,0 +1,24 @@
+<?xml version="1.0" ?>
+<form xmlns="http://schemas.sulu.io/template/template"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/form-1.0.xsd">
+
+    <key>product_details</key>
+
+    <properties>
+        <property name="name" type="text_line" mandatory="true" colspan="9">
+            <meta>
+                <title>sulu_admin.name</title>
+            </meta>
+            <params>
+                <param name="headline" value="true"/>
+            </params>
+        </property>
+
+        <property name="code" type="text_line" colspan="3">
+            <meta>
+                <title>sulu_product.code</title>
+            </meta>
+        </property>
+    </properties>
+</form>

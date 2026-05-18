@@ -1,0 +1,15 @@
+{
+    "name": "sulu/product-bundle",
+    "type": "symfony-bundle",
+    "description": "Sulu Product Bundle",
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "sulu/sulu": "~3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Sulu\\Product\\": "src/"
+        }
+    }
+}
