@@ -47,7 +47,7 @@ class ProductResourceLoader implements ResourceLoaderInterface
                 'stage' => DimensionContentInterface::STAGE_LIVE,
             ],
             [],
-            [ProductRepositoryInterface::GROUP_SELECT_ARTICLE_WEBSITE => true]
+            [ProductRepositoryInterface::GROUP_SELECT_PRODUCT_WEBSITE => true]
         );
 
         $mappedResult = [];

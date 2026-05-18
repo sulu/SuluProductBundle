@@ -33,7 +33,17 @@ use Sulu\Product\Domain\Event\ProductTranslationCopiedEvent;
 use Sulu\Product\Domain\Event\ProductTranslationRemovedEvent;
 use Sulu\Product\Domain\Event\ProductTranslationRestoredEvent;
 use Sulu\Product\Domain\Event\ProductWorkflowTransitionAppliedEvent;
+use Sulu\Product\Domain\Model\Attribute;
+use Sulu\Product\Domain\Model\AttributeInterface;
+use Sulu\Product\Domain\Model\AttributeOption;
+use Sulu\Product\Domain\Model\AttributeOptionInterface;
+use Sulu\Product\Domain\Model\AttributeOptionTranslation;
+use Sulu\Product\Domain\Model\AttributeOptionTranslationInterface;
+use Sulu\Product\Domain\Model\AttributeTranslation;
+use Sulu\Product\Domain\Model\AttributeTranslationInterface;
 use Sulu\Product\Domain\Model\Product;
+use Sulu\Product\Domain\Model\ProductAttribute;
+use Sulu\Product\Domain\Model\ProductAttributeInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
@@ -347,7 +357,7 @@ final class SuluProductBundle extends AbstractBundle
                 ProductAdmin::SECURITY_CONTEXT,
             ])
             ->tag('sulu.context', ['context' => 'admin'])
-            ->tag('sulu_preview.object_provider', ['provider-key' => 'products']);
+            ->tag('sulu_preview.object_provider', ['provider-key' => ProductDimensionContentInterface::RESOURCE_KEY]);
 
         $services->set('sulu_product.product_teaser_provider')
             ->class(ProductTeaserProvider::class)
@@ -379,7 +389,6 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_content.dimension_content_query_enhancer'),
                 new Reference('sulu_admin.smart_content_query_enhancer'),
                 new Reference('doctrine.orm.entity_manager'),
-                new Reference('sulu_admin.metadata_group_provider'),
             ])
         ->tag('sulu_content.smart_content_provider', ['type' => ProductInterface::RESOURCE_KEY]);
 
@@ -389,7 +398,6 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_content.dimension_content_query_enhancer'),
                 new Reference('sulu_admin.smart_content_query_enhancer'),
                 new Reference('doctrine.orm.entity_manager'),
-                new Reference('sulu_admin.metadata_group_provider'),
             ])
             ->tag('sulu_content.smart_content_provider', ['type' => PageTreeProductSmartContentProvider::PROVIDER_TYPE]);
 
@@ -471,7 +479,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_admin.metadata_provider_registry'),
                 new Reference('sulu_http_cache.cache_lifetime.resolver'),
             ])
-            ->tag('sulu_route.route_defaults_provider', ['resource_key' => 'products']);
+            ->tag('sulu_route.route_defaults_provider', ['resource_key' => ProductDimensionContentInterface::RESOURCE_KEY]);
 
         $services->set('sulu_product.admin_product_index_listener')
             ->class(AdminProductIndexListener::class)
@@ -491,7 +499,6 @@ final class SuluProductBundle extends AbstractBundle
             ->class(AdminProductReindexProvider::class)
             ->args([
                 new Reference('doctrine.orm.entity_manager'),
-                new Reference('sulu_admin.metadata_group_provider'),
                 tagged_iterator('sulu_product.admin_product_reindex_provider_enhancer'),
             ])
             ->tag('cmsig_seal.reindex_provider');
@@ -556,7 +563,6 @@ final class SuluProductBundle extends AbstractBundle
                     ],
                     'templates' => [
                         ProductInterface::TEMPLATE_TYPE => [
-                            'default_type' => 'product',
                             'directories' => [
                                 'app' => '%kernel.project_dir%/config/templates/products',
                             ],
@@ -569,7 +575,7 @@ final class SuluProductBundle extends AbstractBundle
                                 'detail' => 'sulu_product.get_product',
                             ],
                         ],
-                        'product-contents' => [
+                        ProductDimensionContentInterface::RESOURCE_KEY => [
                             'routes' => [
                                 'detail' => 'sulu_product.get_product_content',
                             ],
@@ -711,6 +717,11 @@ final class SuluProductBundle extends AbstractBundle
             ProductInterface::class => 'sulu.model.product.class',
             ProductDimensionContentInterface::class => 'sulu.model.product_content.class',
             ProductTranslationInterface::class => ProductTranslation::class,
+            ProductAttributeInterface::class => ProductAttribute::class,
+            AttributeInterface::class => Attribute::class,
+            AttributeTranslationInterface::class => AttributeTranslation::class,
+            AttributeOptionInterface::class => AttributeOption::class,
+            AttributeOptionTranslationInterface::class => AttributeOptionTranslation::class,
         ], $container);
     }
 }

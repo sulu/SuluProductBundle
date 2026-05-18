@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <entity name="Sulu\Product\Domain\Model\AttributeOption" table="pr_attribute_options">
+        <id name="id" type="integer" column="id">
+            <generator strategy="AUTO"/>
+        </id>
+
+        <field name="uuid" type="guid" nullable="true" unique="true"/>
+        <field name="key" type="string" length="255" nullable="false" column="attribute_option_key"/>
+
+        <many-to-one field="attribute"
+                     target-entity="Sulu\Product\Domain\Model\AttributeInterface"
+                     inversed-by="options">
+            <join-column name="idAttributes" referenced-column-name="id"
+                         nullable="false" on-delete="CASCADE"/>
+        </many-to-one>
+
+        <one-to-many field="translations"
+                     target-entity="Sulu\Product\Domain\Model\AttributeOptionTranslationInterface"
+                     mapped-by="attributeOption">
+            <cascade><cascade-persist/><cascade-remove/></cascade>
+        </one-to-many>
+
+        <unique-constraints>
+            <unique-constraint columns="idAttributes,attribute_option_key"
+                               name="UNIQ_pr_attr_opt_key"/>
+        </unique-constraints>
+    </entity>
+</doctrine-mapping>

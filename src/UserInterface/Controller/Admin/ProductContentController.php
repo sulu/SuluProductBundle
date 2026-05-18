@@ -21,7 +21,9 @@ use Sulu\Component\Rest\ListBuilder\PaginatedRepresentation;
 use Sulu\Component\Rest\RestHelperInterface;
 use Sulu\Component\Security\SecuredControllerInterface;
 use Sulu\Content\Application\ContentManager\ContentManagerInterface;
+use Sulu\Content\Domain\Exception\ContentNotFoundException;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
 use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushStamp;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -87,15 +89,25 @@ final class ProductContentController implements SecuredControllerInterface
 
         try {
             $product = $this->productRepository->getOneBy(
-                \array_merge(['uuid' => $id, 'loadGhost' => true], $dimensionAttributes),
-                [ProductRepositoryInterface::GROUP_SELECT_ARTICLE_ADMIN => true],
+                ['uuid' => $id],
+                [
+                    ProductRepositoryInterface::SELECT_PRODUCT_CONTENT => [
+                        'dimensionAttributes' => $dimensionAttributes,
+                        'selects' => [DimensionContentQueryEnhancer::GROUP_SELECT_CONTENT_ADMIN => true],
+                    ],
+                ],
             );
         } catch (ProductNotFoundException $e) {
             $exception = new EntityNotFoundException($e->getModel(), $id, $e);
             return new JsonResponse($exception->toArray(), 404);
         }
 
-        $dimensionContent = $this->contentManager->resolve($product, $dimensionAttributes);
+        try {
+            $dimensionContent = $this->contentManager->resolve($product, $dimensionAttributes);
+        } catch (ContentNotFoundException) {
+            return new JsonResponse(['template' => ProductInterface::TEMPLATE_TYPE]);
+        }
+
         $normalizedContent = $this->contentManager->normalize($dimensionContent);
 
         return new JsonResponse($this->normalizer->normalize(

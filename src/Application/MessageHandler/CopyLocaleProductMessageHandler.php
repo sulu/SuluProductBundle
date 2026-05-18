@@ -37,7 +37,7 @@ final class CopyLocaleProductMessageHandler
         $product = $this->productRepository->getOneBy(
             $message->getIdentifier(),
             [
-                ProductRepositoryInterface::SELECT_ARTICLE_CONTENT => [
+                ProductRepositoryInterface::SELECT_PRODUCT_CONTENT => [
                     'selects' => [],
                     'dimensionAttributes' => [
                         'locale' => [$message->getSourceLocale(), $message->getTargetLocale()],

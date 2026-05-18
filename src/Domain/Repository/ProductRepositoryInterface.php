@@ -27,14 +27,14 @@ interface ProductRepositoryInterface
      * this allows that no controller need to be overwritten when something additional should be
      * loaded at that endpoint.
      */
-    public const GROUP_SELECT_ARTICLE_ADMIN = 'product_admin';
-    public const GROUP_SELECT_ARTICLE_WEBSITE = 'product_website';
+    public const GROUP_SELECT_PRODUCT_ADMIN = 'product_admin';
+    public const GROUP_SELECT_PRODUCT_WEBSITE = 'product_website';
 
     /**
      * Withs represents additional selects which can be load to join and select specific sub entities.
      * They are used by groups.
      */
-    public const SELECT_ARTICLE_CONTENT = 'with-product-content';
+    public const SELECT_PRODUCT_CONTENT = 'with-product-content';
 
     public function createNew(?string $uuid = null): ProductInterface;
 

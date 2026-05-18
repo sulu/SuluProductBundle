@@ -47,7 +47,7 @@ final class ModifyProductMessageHandler
                 'locale' => $locale,
             ],
             [
-                ProductRepositoryInterface::SELECT_ARTICLE_CONTENT => [
+                ProductRepositoryInterface::SELECT_PRODUCT_CONTENT => [
                     'selects' => [DimensionContentQueryEnhancer::GROUP_SELECT_CONTENT_ADMIN => true],
                     'dimensionAttributes' => [
                         'locale' => $locale,

@@ -38,7 +38,7 @@ final class ApplyWorkflowTransitionProductMessageHandler
         $product = $this->productRepository->getOneBy(
             $message->getIdentifier(),
             [
-                ProductRepositoryInterface::SELECT_ARTICLE_CONTENT => [
+                ProductRepositoryInterface::SELECT_PRODUCT_CONTENT => [
                     'selects' => [DimensionContentQueryEnhancer::GROUP_SELECT_CONTENT_ADMIN => true],
                     'dimensionAttributes' => [
                         'locale' => $message->getLocale(),

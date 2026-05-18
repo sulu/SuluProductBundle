@@ -18,6 +18,7 @@
     "sulu_product.route": "Route",
     "sulu_product.last_modified_enabled": "Enable last modified date",
     "sulu_product.last_modified_date": "Last modified date",
+    "sulu_product.code_already_used": "The code \"{code}\" is already assigned to another product.",
     "sulu_activity.resource.products": "Product",
     "sulu_activity.resource.products.translation": "Translation",
     "sulu_activity.description.products.created": "{userFullName} has created the product \"{resourceTitle}\"",

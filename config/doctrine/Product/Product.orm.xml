@@ -25,5 +25,12 @@
             </cascade>
         </one-to-many>
 
+        <one-to-many field="attributes" target-entity="Sulu\Product\Domain\Model\ProductAttributeInterface" mapped-by="product">
+            <cascade>
+                <cascade-persist/>
+                <cascade-remove/>
+            </cascade>
+        </one-to-many>
+
     </mapped-superclass>
 </doctrine-mapping>

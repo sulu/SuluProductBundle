@@ -28,11 +28,15 @@ class Product implements ProductInterface
     /** @var Collection<int, ProductTranslationInterface> */
     protected Collection $translations;
 
+    /** @var Collection<int, ProductAttributeInterface> */
+    protected Collection $attributes;
+
     public function __construct(?string $uuid = null)
     {
         $this->uuid = $uuid ?: Uuid::v7()->toRfc4122();
         $this->initializeDimensionContents();
         $this->translations = new ArrayCollection();
+        $this->attributes = new ArrayCollection();
     }
 
     public function getId(): string
@@ -89,6 +93,28 @@ class Product implements ProductInterface
     public function removeTranslation(ProductTranslationInterface $translation): self
     {
         $this->translations->removeElement($translation);
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, ProductAttributeInterface>
+     */
+    public function getAttributes(): Collection
+    {
+        return $this->attributes;
+    }
+
+    public function addAttribute(ProductAttributeInterface $attribute): self
+    {
+        if (!$this->attributes->contains($attribute)) {
+            $this->attributes->add($attribute);
+        }
+        return $this;
+    }
+
+    public function removeAttribute(ProductAttributeInterface $attribute): self
+    {
+        $this->attributes->removeElement($attribute);
         return $this;
     }
 

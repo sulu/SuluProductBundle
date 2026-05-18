@@ -31,13 +31,13 @@ final class ProductRepository implements ProductRepositoryInterface
      */
     private const SELECTS = [
         // GROUPS
-        self::GROUP_SELECT_ARTICLE_ADMIN => [
-            self::SELECT_ARTICLE_CONTENT => [
+        self::GROUP_SELECT_PRODUCT_ADMIN => [
+            self::SELECT_PRODUCT_CONTENT => [
                 DimensionContentQueryEnhancer::GROUP_SELECT_CONTENT_ADMIN => true,
             ],
         ],
-        self::GROUP_SELECT_ARTICLE_WEBSITE => [
-            self::SELECT_ARTICLE_CONTENT => [
+        self::GROUP_SELECT_PRODUCT_WEBSITE => [
+            self::SELECT_PRODUCT_CONTENT => [
                 DimensionContentQueryEnhancer::GROUP_SELECT_CONTENT_WEBSITE => true,
             ],
         ],
@@ -281,9 +281,9 @@ final class ProductRepository implements ProductRepositoryInterface
         }
 
         // selects
-        if ($selects[self::SELECT_ARTICLE_CONTENT] ?? null) {
+        if ($selects[self::SELECT_PRODUCT_CONTENT] ?? null) {
             /** @var array{dimensionAttributes?: array<string, mixed>, selects?: array<string, bool>} $contentConfig */
-            $contentConfig = $selects[self::SELECT_ARTICLE_CONTENT];
+            $contentConfig = $selects[self::SELECT_PRODUCT_CONTENT];
             $queryBuilder->leftJoin(
                 'product.dimensionContents',
                 'dimensionContent',

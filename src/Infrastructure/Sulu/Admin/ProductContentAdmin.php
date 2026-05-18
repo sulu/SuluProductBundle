@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Sulu\Product\Infrastructure\Sulu\Admin;
 
 use Sulu\Bundle\AdminBundle\Admin\Admin;
+use Sulu\Bundle\AdminBundle\Admin\View\PreviewFormViewBuilderInterface;
 use Sulu\Bundle\AdminBundle\Admin\View\ViewCollection;
 use Sulu\Content\Infrastructure\Sulu\Admin\ContentViewBuilderFactoryInterface;
 use Sulu\Component\Security\Authorization\PermissionTypes;
@@ -50,6 +51,9 @@ class ProductContentAdmin extends Admin
         );
 
         foreach ($viewBuilders as $viewBuilder) {
+            if ($viewBuilder instanceof PreviewFormViewBuilderInterface) {
+                $viewBuilder->setPreviewCondition('workflowPlace != null');
+            }
             $viewCollection->add($viewBuilder);
         }
     }

@@ -21,8 +21,6 @@ use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 use Sulu\Product\Infrastructure\Sulu\Search\Visitor\AdminProductReindexProviderEnhancerInterface;
-use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormGroup;
-use Sulu\Bundle\AdminBundle\Metadata\GroupProviderInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 
 /**
@@ -50,7 +48,6 @@ final class AdminProductReindexProvider implements ReindexProviderInterface
      */
     public function __construct(
         EntityManagerInterface $entityManager,
-        private readonly GroupProviderInterface $groupProvider,
         private readonly iterable $enhancers = [],
     ) {
         $this->dimensionContentRepository = $entityManager->getRepository(ProductDimensionContentInterface::class);
@@ -65,20 +62,9 @@ final class AdminProductReindexProvider implements ReindexProviderInterface
     public function provide(ReindexConfig $reindexConfig): \Generator
     {
         $products = $this->loadProducts($reindexConfig->getIdentifiers());
-        /** @var FormGroup[] $groups */
-        $groups = $this->groupProvider->getGroups();
 
         /** @var Product $product */
         foreach ($products as $product) {
-            $groupIdentifier = null;
-
-            foreach ($groups as $group) {
-                if (\in_array($product['templateKey'], $group->templates)) {
-                    $groupIdentifier = $group->identifier;
-                    break;
-                }
-            }
-
             $data = [
                 'id' => ProductInterface::RESOURCE_KEY . '__' . ((string) $product['productId']) . '__' . $product['locale'],
                 'resourceKey' => ProductInterface::RESOURCE_KEY,
@@ -87,10 +73,7 @@ final class AdminProductReindexProvider implements ReindexProviderInterface
                 'createdAt' => $product['created']->format('c'),
                 'title' => $product['title'],
                 'locale' => $product['locale'],
-                'metadata' => [
-                    'group' => $groupIdentifier,
-                ],
-                'securityContext' => ProductAdmin::getProductSecurityContext($groupIdentifier ?? 'default'),
+                'securityContext' => ProductAdmin::SECURITY_CONTEXT,
             ];
 
             foreach ($this->enhancers as $enhancer) {

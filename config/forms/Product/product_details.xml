@@ -19,6 +19,10 @@
             <meta>
                 <title>sulu_product.code</title>
             </meta>
+
+            <params>
+                <param name="headline" value="true"/>
+            </params>
         </property>
     </properties>
 </form>

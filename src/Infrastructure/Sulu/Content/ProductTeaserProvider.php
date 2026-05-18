@@ -88,7 +88,7 @@ class ProductTeaserProvider implements TeaserProviderInterface
                 'stage' => DimensionContentInterface::STAGE_LIVE,
             ],
             selects: [
-                ProductRepositoryInterface::SELECT_ARTICLE_CONTENT => [
+                ProductRepositoryInterface::SELECT_PRODUCT_CONTENT => [
                     DimensionContentQueryEnhancer::GROUP_SELECT_CONTENT_WEBSITE => true,
                 ],
             ]

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Domain\Model;
 
+use Doctrine\Common\Collections\Collection;
 use Sulu\Component\Persistence\Model\AuditableInterface;
 use Sulu\Content\Domain\Model\ContentRichEntityInterface;
 
@@ -37,5 +38,14 @@ interface ProductInterface extends AuditableInterface, ContentRichEntityInterfac
     public function addTranslation(ProductTranslationInterface $translation): self;
 
     public function removeTranslation(ProductTranslationInterface $translation): self;
+
+    /**
+     * @return Collection<int, ProductAttributeInterface>
+     */
+    public function getAttributes(): Collection;
+
+    public function addAttribute(ProductAttributeInterface $attribute): self;
+
+    public function removeAttribute(ProductAttributeInterface $attribute): self;
 
 }

@@ -57,7 +57,7 @@ class ProductRouteDefaultsProvider implements RouteDefaultsProviderInterface
                 'uuid' => $id,
             ],
             [
-                ProductRepositoryInterface::SELECT_ARTICLE_CONTENT => [
+                ProductRepositoryInterface::SELECT_PRODUCT_CONTENT => [
                     'dimensionAttributes' => $dimensionAttributes,
                     'selects' => [
                         DimensionContentQueryEnhancer::SELECT_EXCERPT_TAGS => true,

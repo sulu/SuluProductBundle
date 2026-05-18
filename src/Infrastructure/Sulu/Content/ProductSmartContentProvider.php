@@ -17,7 +17,6 @@ use Doctrine\ORM\QueryBuilder;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\ResourceLoader\ProductResourceLoader;
-use Sulu\Bundle\AdminBundle\Metadata\GroupProviderInterface;
 use Sulu\Bundle\AdminBundle\SmartContent\Configuration\Builder;
 use Sulu\Bundle\AdminBundle\SmartContent\Configuration\BuilderInterface;
 use Sulu\Bundle\AdminBundle\SmartContent\Configuration\ProviderConfigurationInterface;
@@ -36,8 +35,6 @@ use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
  *       tagOperator: 'AND'|'OR',
  *       websiteTags: string[],
  *       websiteTagOperator: 'AND'|'OR',
- *       types: string[],
- *       typesOperator: 'OR',
  *       templateKeys?: string[],
  *       locale: string,
  *       dataSource: string|null,
@@ -60,8 +57,6 @@ use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
  *        tagOperator: 'AND'|'OR',
  *        websiteTags: string[],
  *        websiteTagOperator: 'AND'|'OR',
- *        types: string[],
- *        typesOperator: 'OR',
  *        templateKeys?: string[],
  *        locale: string,
  *        dataSource: string|null,
@@ -96,7 +91,6 @@ readonly class ProductSmartContentProvider implements SmartContentProviderInterf
         private DimensionContentQueryEnhancer $dimensionContentQueryEnhancer,
         private SmartContentQueryEnhancer $smartContentQueryEnhancer,
         EntityManagerInterface $entityManager,
-        private GroupProviderInterface $groupProvider,
     ) {
         $this->entityRepository = $entityManager->getRepository(ProductInterface::class);
         $this->entityDimensionContentRepository = $entityManager->getRepository(ProductDimensionContentInterface::class);
@@ -125,15 +119,6 @@ readonly class ProductSmartContentProvider implements SmartContentProviderInterf
                     ['column' => 'title', 'title' => 'sulu_admin.title'],
                 ],
             )
-            ->enableTypes(\array_values(\array_map(
-                function($group) {
-                    return [
-                        'title' => $group->title,
-                        'type' => $group->identifier,
-                    ];
-                },
-                $this->groupProvider->getGroups(),
-            )))
             ->enableProperties([
                 'title' => 'title',
                 'url' => 'url',
@@ -247,7 +232,6 @@ readonly class ProductSmartContentProvider implements SmartContentProviderInterf
      *         websiteTags: string[],
      *         websiteTagOperator: 'AND'|'OR',
      *         templateKeys?: string[],
-     *         typesOperator: 'OR',
      *         locale: string,
      *         dataSource: string|null,
      *         limit: int|null,
@@ -260,12 +244,17 @@ readonly class ProductSmartContentProvider implements SmartContentProviderInterf
      */
     protected function mapFilters(array $filters, array $params = []): array
     {
-        $filters['templateKeys'] = $this->resolveTemplateKeys(
-            $filters['templateKeys'] ?? [],
-            $filters['types'],
-            $params,
-        );
-        unset($filters['types']);
+        $templateKeys = \array_values($filters['templateKeys'] ?? []);
+        $templateParam = $params['templateKeys'] ?? null;
+        if (\is_string($templateParam)) {
+            $templateKeysParam = \array_values(\array_filter(\array_map('trim', \explode(',', $templateParam))));
+            if ([] !== $templateKeysParam) {
+                $templateKeys = [] !== $templateKeys
+                    ? \array_values(\array_intersect($templateKeys, $templateKeysParam))
+                    : $templateKeysParam;
+            }
+        }
+        $filters['templateKeys'] = $templateKeys;
 
         if ($filters['categories']) {
             $filters['categoryIds'] = $filters['categories'];
@@ -278,61 +267,6 @@ readonly class ProductSmartContentProvider implements SmartContentProviderInterf
         }
 
         return $filters;
-    }
-
-    /**
-     * @param array<string> $existingTemplateKeys
-     * @param array<string> $filterGroupIdentifiers
-     * @param array<string, mixed> $params
-     *
-     * @return list<string>
-     */
-    private function resolveTemplateKeys(array $existingTemplateKeys, array $filterGroupIdentifiers, array $params): array
-    {
-        $groupIdentifiers = $filterGroupIdentifiers;
-        if ([] === $groupIdentifiers) {
-            $groupsParam = $params['groups'] ?? null;
-            if (\is_string($groupsParam)) {
-                $groupIdentifiers = \array_values(\array_filter(\array_map('trim', \explode(',', $groupsParam))));
-            }
-        }
-
-        $templateKeys = \array_values($existingTemplateKeys);
-        if ([] !== $groupIdentifiers) {
-            $templatesFromGroups = $this->expandGroupsToTemplates($groupIdentifiers);
-            $templateKeys = [] !== $templateKeys
-                ? \array_values(\array_intersect($templateKeys, $templatesFromGroups))
-                : $templatesFromGroups;
-        }
-
-        $templateParam = $params['templateKeys'] ?? null;
-        if (\is_string($templateParam)) {
-            $templateKeysParam = \array_values(\array_filter(\array_map('trim', \explode(',', $templateParam))));
-            if ([] !== $templateKeysParam) {
-                $templateKeys = [] !== $templateKeys
-                    ? \array_values(\array_intersect($templateKeys, $templateKeysParam))
-                    : $templateKeysParam;
-            }
-        }
-
-        return $templateKeys;
-    }
-
-    /**
-     * @param array<string> $identifiers
-     *
-     * @return list<string>
-     */
-    private function expandGroupsToTemplates(array $identifiers): array
-    {
-        $templates = [];
-        foreach ($this->groupProvider->getGroups() as $group) {
-            if (\in_array($group->identifier, $identifiers, true)) {
-                $templates = \array_merge($templates, \array_filter($group->templates, 'is_string'));
-            }
-        }
-
-        return \array_values(\array_unique($templates));
     }
 
     /**

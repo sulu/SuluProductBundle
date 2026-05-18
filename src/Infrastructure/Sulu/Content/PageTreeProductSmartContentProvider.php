@@ -16,7 +16,6 @@ namespace Sulu\Product\Infrastructure\Sulu\Content;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 use Sulu\Product\Domain\Model\ProductInterface;
-use Sulu\Bundle\AdminBundle\Metadata\GroupProviderInterface;
 use Sulu\Bundle\AdminBundle\SmartContent\Configuration\BuilderInterface;
 use Sulu\Bundle\AdminBundle\SmartContent\SmartContentQueryEnhancer;
 use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
@@ -31,13 +30,11 @@ readonly class PageTreeProductSmartContentProvider extends ProductSmartContentPr
         DimensionContentQueryEnhancer $dimensionContentQueryEnhancer,
         SmartContentQueryEnhancer $smartContentQueryEnhancer,
         EntityManagerInterface $entityManager,
-        GroupProviderInterface $groupProvider,
     ) {
         parent::__construct(
             $dimensionContentQueryEnhancer,
             $smartContentQueryEnhancer,
             $entityManager,
-            $groupProvider,
         );
     }
 

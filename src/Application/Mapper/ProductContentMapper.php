@@ -45,7 +45,6 @@ final class ProductContentMapper implements ProductMapperInterface
 
         $dimensionAttributes = ['locale' => $locale];
 
-        // TODO this will be changed to `$product`, `$dimensionAttributes`, `$data`
         $this->contentPersister->persist($product, $data, $dimensionAttributes);
     }
 }

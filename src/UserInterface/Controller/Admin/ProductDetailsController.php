@@ -13,10 +13,12 @@ declare(strict_types=1);
 
 namespace Sulu\Product\UserInterface\Controller\Admin;
 
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Sulu\Product\Application\Message\CreateProductMessage;
 use Sulu\Product\Application\Message\ModifyProductMessage;
 use Sulu\Product\Application\Message\RemoveProductMessage;
 use Sulu\Product\Application\Message\RemoveProductTranslationMessage;
+use Sulu\Product\Domain\Exception\ProductCodeNotUniqueException;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
@@ -91,8 +93,12 @@ final class ProductDetailsController implements SecuredControllerInterface
         $data = $this->getData($request);
         $message = new CreateProductMessage($data);
 
-        /** @var ProductInterface $product */
-        $product = $this->handle(new Envelope($message, [new EnableFlushStamp()]));
+        try {
+            /** @var ProductInterface $product */
+            $product = $this->handle(new Envelope($message, [new EnableFlushStamp()]));
+        } catch (UniqueConstraintViolationException $e) {
+            throw new ProductCodeNotUniqueException($data['code']);
+        }
 
         return new JsonResponse($this->serializeProduct($product, $this->getLocale($request)), 201);
     }
@@ -101,7 +107,12 @@ final class ProductDetailsController implements SecuredControllerInterface
     {
         $data = $this->getData($request);
         $message = new ModifyProductMessage(['uuid' => $id], $data);
-        $this->handle(new Envelope($message, [new EnableFlushStamp()]));
+
+        try {
+            $this->handle(new Envelope($message, [new EnableFlushStamp()]));
+        } catch (UniqueConstraintViolationException $e) {
+            throw new ProductCodeNotUniqueException($data['code']);
+        }
 
         $product = $this->productRepository->findOneBy(['uuid' => $id]);
 
