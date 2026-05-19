@@ -23,6 +23,10 @@ interface AttributeOptionInterface
 
     public function setKey(string $key): self;
 
+    public function getPosition(): int;
+
+    public function setPosition(int $position): self;
+
     public function getAttribute(): AttributeInterface;
 
     public function getTranslation(?string $locale = null): ?AttributeOptionTranslationInterface;

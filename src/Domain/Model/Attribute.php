@@ -50,6 +50,13 @@ class Attribute implements AttributeInterface
         return $this->uuid;
     }
 
+    public function setUuid(string $uuid): self
+    {
+        $this->uuid = $uuid;
+
+        return $this;
+    }
+
     public function getKey(): string
     {
         return $this->key;
@@ -84,6 +91,7 @@ class Attribute implements AttributeInterface
     public function getTranslation(?string $locale = null): ?AttributeTranslationInterface
     {
         $locale ??= $this->currentLocale;
+
         foreach ($this->translations as $translation) {
             if ($translation->getLocale() === $locale) {
                 return $translation;

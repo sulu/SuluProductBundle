@@ -24,6 +24,8 @@ class AttributeOption implements AttributeOptionInterface
 
     protected string $key;
 
+    protected int $position = 0;
+
     protected AttributeInterface $attribute;
 
     protected ?string $currentLocale = null;
@@ -56,6 +58,18 @@ class AttributeOption implements AttributeOptionInterface
     public function setKey(string $key): self
     {
         $this->key = $key;
+
+        return $this;
+    }
+
+    public function getPosition(): int
+    {
+        return $this->position;
+    }
+
+    public function setPosition(int $position): self
+    {
+        $this->position = $position;
 
         return $this;
     }

@@ -51,3 +51,33 @@ sulu_product.get_product_versions:
     methods: GET
     controller: sulu_product.admin_product_content_controller::getVersionsAction
     format: json
+
+sulu_product.get_attributes:
+    path: /attributes.{_format}
+    methods: GET
+    controller: sulu_product.admin_attribute_details_controller::cgetAction
+    format: json
+
+sulu_product.get_attribute:
+    path: /attributes/{id}.{_format}
+    methods: GET
+    controller: sulu_product.admin_attribute_details_controller::getAction
+    format: json
+
+sulu_product.post_attribute:
+    path: /attributes.{_format}
+    methods: POST
+    controller: sulu_product.admin_attribute_details_controller::postAction
+    format: json
+
+sulu_product.put_attribute:
+    path: /attributes/{id}.{_format}
+    methods: PUT
+    controller: sulu_product.admin_attribute_details_controller::putAction
+    format: json
+
+sulu_product.delete_attribute:
+    path: /attributes/{id}.{_format}
+    methods: DELETE
+    controller: sulu_product.admin_attribute_details_controller::deleteAction
+    format: json
