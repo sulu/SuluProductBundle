@@ -25,5 +25,9 @@ interface AttributeTranslationInterface
 
     public function setName(string $name): self;
 
+    public function getDescription(): ?string;
+
+    public function setDescription(?string $description): self;
+
     public function getAttribute(): AttributeInterface;
 }

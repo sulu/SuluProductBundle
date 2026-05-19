@@ -21,6 +21,8 @@ class AttributeTranslation implements AttributeTranslationInterface
 
     protected string $name;
 
+    protected ?string $description = null;
+
     protected AttributeInterface $attribute;
 
     public function __construct(AttributeInterface $attribute, string $locale, string $name)
@@ -55,6 +57,18 @@ class AttributeTranslation implements AttributeTranslationInterface
     public function setName(string $name): self
     {
         $this->name = $name;
+
+        return $this;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(?string $description): self
+    {
+        $this->description = $description;
 
         return $this;
     }

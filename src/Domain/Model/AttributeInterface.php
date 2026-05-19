@@ -20,9 +20,15 @@ interface AttributeInterface
     public const TYPE_JSON = 'json';
     public const TYPE_OPTIONS = 'options';
 
+    public const RESOURCE_KEY = 'attributes';
+    public const FORM_KEY = 'attribute_details';
+    public const LIST_KEY = 'attributes';
+
     public function getId(): int;
 
     public function getUuid(): ?string;
+
+    public function setUuid(string $uuid): self;
 
     public function getKey(): string;
 

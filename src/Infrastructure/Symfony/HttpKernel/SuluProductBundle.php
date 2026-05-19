@@ -22,8 +22,11 @@ use Sulu\Product\Application\Mapper\ProductDetailsMapper;
 use Sulu\Product\Application\Mapper\ProductMapperInterface;
 use Sulu\Product\Application\MessageHandler\ApplyWorkflowTransitionProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\CopyLocaleProductMessageHandler;
+use Sulu\Product\Application\MessageHandler\CreateAttributeMessageHandler;
 use Sulu\Product\Application\MessageHandler\CreateProductMessageHandler;
+use Sulu\Product\Application\MessageHandler\ModifyAttributeMessageHandler;
 use Sulu\Product\Application\MessageHandler\ModifyProductMessageHandler;
+use Sulu\Product\Application\MessageHandler\RemoveAttributeMessageHandler;
 use Sulu\Product\Application\MessageHandler\RemoveProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\RemoveProductTranslationMessageHandler;
 use Sulu\Product\Application\MessageHandler\RestoreProductVersionMessageHandler;
@@ -53,11 +56,15 @@ use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Model\ProductTranslation;
 use Sulu\Product\Domain\Model\ProductTranslationInterface;
+use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Infrastructure\Doctrine\Repository\AttributeRepository;
 use Sulu\Product\Infrastructure\Doctrine\Repository\ProductRepository;
+use Sulu\Product\Infrastructure\Sulu\Admin\AttributeAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductContentAdmin;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\AdditionalWebspacesDataMapper;
+use Sulu\Product\Infrastructure\Sulu\Content\Select\AttributeTypeSelectService;
 use Sulu\Product\Infrastructure\Sulu\Content\Merger\AdditionalWebspacesMerger;
 use Sulu\Product\Infrastructure\Sulu\Content\PageTreeProductSmartContentProvider;
 use Sulu\Product\Infrastructure\Sulu\Content\ProductLinkProvider;
@@ -81,6 +88,7 @@ use Sulu\Product\Infrastructure\Sulu\Search\WebsiteProductReindexProvider;
 use Sulu\Product\Infrastructure\Sulu\Sitemap\ProductsSitemapProvider;
 use Sulu\Product\Infrastructure\Sulu\Trash\ProductTrashItemHandler;
 use Sulu\Product\Infrastructure\Symfony\Twig\ProductTwigExtension;
+use Sulu\Product\UserInterface\Controller\Admin\AttributeDetailsController;
 use Sulu\Product\UserInterface\Controller\Admin\ProductContentController;
 use Sulu\Product\UserInterface\Controller\Admin\ProductDetailsController;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
@@ -135,6 +143,15 @@ final class SuluProductBundle extends AbstractBundle
                     ->prototype('array')->useAttributeAsKey('locale')->prototype('scalar')->end()->end()
                     ->defaultValue([])
                 ->end()
+                ->arrayNode('attribute_types')
+                    ->useAttributeAsKey('key')
+                    ->arrayPrototype()
+                        ->children()
+                            ->scalarNode('form_key')->defaultNull()->end()
+                            ->scalarNode('form_type')->defaultNull()->end()
+                        ->end()
+                    ->end()
+                ->end()
                 ->arrayNode('objects')
                     ->addDefaultsIfNotSet()
                     ->children()
@@ -172,6 +189,10 @@ final class SuluProductBundle extends AbstractBundle
         $defaultAdditionalWebspaces = $config['default_additional_webspaces'] ?? [];
         $builder->setParameter('sulu_product.default_main_webspace', $defaultMainWebspace);
         $builder->setParameter('sulu_product.default_additional_webspaces', $defaultAdditionalWebspaces);
+
+        /** @var array<string, array{form_key: string|null, form_type: string|null}> $attributeTypes */
+        $attributeTypes = $config['attribute_types'] ?? [];
+        $builder->setParameter('sulu_product.attribute_types', $attributeTypes);
 
         $services = $container->services();
 
@@ -294,6 +315,65 @@ final class SuluProductBundle extends AbstractBundle
             ])
             ->tag('sulu.context', ['context' => 'admin'])
             ->tag('sulu.admin');
+
+        $services->set('sulu_product.attribute_admin')
+            ->class(AttributeAdmin::class)
+            ->args([
+                new Reference('sulu_admin.view_builder_factory'),
+                new Reference('sulu_security.security_checker'),
+                new Reference('sulu.core.localization_manager'),
+            ])
+            ->tag('sulu.context', ['context' => 'admin'])
+            ->tag('sulu.admin');
+
+        $services->set('sulu_product.attribute_type_select_service')
+            ->class(AttributeTypeSelectService::class)
+            ->public()
+            ->args([
+                param('sulu_product.attribute_types'),
+                new Reference('translator'),
+            ]);
+
+        $services->set('sulu_product.attribute_repository')
+            ->class(AttributeRepository::class)
+            ->args([
+                new Reference('doctrine.orm.entity_manager'),
+            ]);
+
+        $services->alias(AttributeRepositoryInterface::class, 'sulu_product.attribute_repository');
+
+        $services->set('sulu_product.create_attribute_handler')
+            ->class(CreateAttributeMessageHandler::class)
+            ->args([
+                new Reference('sulu_product.attribute_repository'),
+            ])
+            ->tag('messenger.message_handler');
+
+        $services->set('sulu_product.modify_attribute_handler')
+            ->class(ModifyAttributeMessageHandler::class)
+            ->args([
+                new Reference('sulu_product.attribute_repository'),
+            ])
+            ->tag('messenger.message_handler');
+
+        $services->set('sulu_product.remove_attribute_handler')
+            ->class(RemoveAttributeMessageHandler::class)
+            ->args([
+                new Reference('sulu_product.attribute_repository'),
+            ])
+            ->tag('messenger.message_handler');
+
+        $services->set('sulu_product.admin_attribute_details_controller')
+            ->class(AttributeDetailsController::class)
+            ->public()
+            ->args([
+                new Reference('sulu_product.attribute_repository'),
+                new Reference('sulu_message_bus'),
+                new Reference('sulu_core.list_builder.field_descriptor_factory'),
+                new Reference('sulu_core.doctrine_list_builder_factory'),
+                new Reference('sulu_core.doctrine_rest_helper'),
+            ])
+            ->tag('sulu.context', ['context' => 'admin']);
 
         $services->set('sulu_product.product_repository')
             ->class(ProductRepository::class)
@@ -586,6 +666,12 @@ final class SuluProductBundle extends AbstractBundle
                                 'detail' => 'sulu_product.get_product_content',
                             ],
                         ],
+                        'attributes' => [
+                            'routes' => [
+                                'list' => 'sulu_product.get_attributes',
+                                'detail' => 'sulu_product.get_attribute',
+                            ],
+                        ],
                     ],
                     'field_type_options' => [
                         'selection' => [
@@ -663,6 +749,15 @@ final class SuluProductBundle extends AbstractBundle
                 }
             }
         }
+
+        $builder->prependExtensionConfig('sulu_product', [
+            'attribute_types' => [
+                'number' => [],
+                'text' => [],
+                'json' => [],
+                'options' => [],
+            ],
+        ]);
 
         if ($builder->hasExtension('sulu_search')) {
             $builder->prependExtensionConfig(
