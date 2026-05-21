@@ -54,7 +54,7 @@ final class ProductContentController implements SecuredControllerInterface
 
     public function getVersionsAction(Request $request, string $id): JsonResponse
     {
-        $locale = $request->query->get('locale');
+        $locale = $this->getLocale($request);
 
         /** @var DoctrineFieldDescriptorInterface[] $fieldDescriptors */
         $fieldDescriptors = $this->fieldDescriptorFactory->getFieldDescriptors('products_versions');

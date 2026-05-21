@@ -13,14 +13,14 @@ declare(strict_types=1);
 
 namespace Sulu\Product\UserInterface\Controller\Admin;
 
-use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Sulu\Product\Application\Message\CreateProductMessage;
 use Sulu\Product\Application\Message\ModifyProductMessage;
 use Sulu\Product\Application\Message\RemoveProductMessage;
 use Sulu\Product\Application\Message\RemoveProductTranslationMessage;
-use Sulu\Product\Domain\Exception\ProductCodeNotUniqueException;
+use Sulu\Product\Domain\Exception\ProductNotFoundException;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 use Sulu\Component\Rest\ListBuilder\Doctrine\DoctrineListBuilder;
 use Sulu\Component\Rest\ListBuilder\Doctrine\DoctrineListBuilderFactoryInterface;
@@ -63,7 +63,7 @@ final class ProductDetailsController implements SecuredControllerInterface
         $listBuilder = $this->listBuilderFactory->create(ProductInterface::class);
         $listBuilder->setIdField($fieldDescriptors['id']);
         $this->restHelper->initializeListBuilder($listBuilder, $fieldDescriptors);
-        $listBuilder->setParameter('locale', $request->query->get('locale'));
+        $listBuilder->setParameter('locale', $this->getLocale($request));
 
         $listRepresentation = new PaginatedRepresentation(
             $listBuilder->execute(),
@@ -92,13 +92,8 @@ final class ProductDetailsController implements SecuredControllerInterface
     {
         $data = $this->getData($request);
         $message = new CreateProductMessage($data);
-
-        try {
-            /** @var ProductInterface $product */
-            $product = $this->handle(new Envelope($message, [new EnableFlushStamp()]));
-        } catch (UniqueConstraintViolationException $e) {
-            throw new ProductCodeNotUniqueException($data['code']);
-        }
+        /** @var ProductInterface $product */
+        $product = $this->handle(new Envelope($message, [new EnableFlushStamp()]));
 
         return new JsonResponse($this->serializeProduct($product, $this->getLocale($request)), 201);
     }
@@ -110,8 +105,8 @@ final class ProductDetailsController implements SecuredControllerInterface
 
         try {
             $this->handle(new Envelope($message, [new EnableFlushStamp()]));
-        } catch (UniqueConstraintViolationException $e) {
-            throw new ProductCodeNotUniqueException($data['code']);
+        } catch (ProductNotFoundException $e) {
+            throw new NotFoundHttpException($e->getMessage(), $e);
         }
 
         $product = $this->productRepository->findOneBy(['uuid' => $id]);

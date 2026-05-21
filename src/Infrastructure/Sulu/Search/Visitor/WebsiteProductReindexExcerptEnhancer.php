@@ -16,7 +16,7 @@ namespace Sulu\Product\Infrastructure\Sulu\Search\Visitor;
 use Doctrine\ORM\QueryBuilder;
 
 /**
- * @internal if you need to override this service, create a new service based on the WebsitePageReindexProviderEnhancerInterface
+ * @internal if you need to override this service, create a new service based on the WebsiteProductReindexProviderEnhancerInterface
  * instead of extending this class
  *
  * @final

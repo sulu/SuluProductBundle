@@ -120,6 +120,20 @@ final class ProductRepository implements ProductRepositoryInterface
         return $product;
     }
 
+    public function existBy(array $filters): bool
+    {
+        $queryBuilder = $this->entityRepository->createQueryBuilder('product')
+            ->select('COUNT(product.uuid)');
+
+        $code = $filters['code'] ?? null;
+        if (null !== $code) {
+            $queryBuilder->andWhere('product.code = :code')
+                ->setParameter('code', $code);
+        }
+
+        return (int) $queryBuilder->getQuery()->getSingleScalarResult() > 0;
+    }
+
     public function countBy(array $filters = []): int
     {
         // The countBy method will ignore any page and limit parameters

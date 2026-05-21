@@ -645,17 +645,6 @@ final class SuluProductBundle extends AbstractBundle
             );
         }
 
-        if ($builder->hasExtension('doctrine_migrations')) {
-            $builder->prependExtensionConfig(
-                'doctrine_migrations',
-                [
-                    'migrations_paths' => [
-                        'Sulu\\Product\\Migrations' => \dirname(__DIR__, 4) . '/src/Migrations',
-                    ],
-                ],
-            );
-        }
-
         if ($builder->hasExtension('sulu_search')) {
             $suluSearchConfigs = $builder->getExtensionConfig('sulu_search');
 

@@ -14,6 +14,7 @@ namespace Sulu\Product\Application\MessageHandler;
 use Sulu\Product\Application\Mapper\ProductMapperInterface;
 use Sulu\Product\Application\Message\CreateProductMessage;
 use Sulu\Product\Domain\Event\ProductCreatedEvent;
+use Sulu\Product\Domain\Exception\ProductCodeNotUniqueException;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
@@ -50,6 +51,11 @@ final class CreateProductMessageHandler
 
         if (!\array_key_exists('authored', $data)) {
             $data['authored'] = (new \DateTimeImmutable())->format('c');
+        }
+
+        $code = $data['code'] ?? null;
+        if (null !== $code && $this->productRepository->existBy(['code' => $code])) {
+            throw new ProductCodeNotUniqueException($code);
         }
 
         $product = $this->productRepository->createNew($message->getUuid());

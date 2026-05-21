@@ -1,5 +1,5 @@
 {
-    "sulu_product.products": "Produkt",
+    "sulu_product.products": "Produkte",
     "sulu_product.product": "Produkt",
     "sulu_product.code": "Code",
     "sulu_product.no_product_selected": "Kein Produkt ausgewählt",
@@ -29,7 +29,7 @@
     "sulu_activity.description.products.workflow_transition.unpublish": "{userFullName} hat das Produkt \"{resourceTitle}\" nicht mehr veröffentlicht",
     "sulu_activity.description.products.workflow_transition.remove_draft": "{userFullName} hat den Entwurf des Produkts \"{resourceTitle}\" verworfen",
     "sulu_activity.description.products.copied": "{userFullName} hat das Produkt \"{resourceTitle}\" kopiert",
-    "sulu_activity.description.pages.restored": "{userFullName} hat das Produkt \"{resourceTitle}\" wiederhergestellt",
+    "sulu_activity.description.products.restored": "{userFullName} hat das Produkt \"{resourceTitle}\" wiederhergestellt",
     "sulu_activity.description.products.translation_added": "{userFullName} hat eine neue Sprachvariante für \"{resourceLocale}\" zum Produkt \"{resourceTitle}\" hinzugefügt",
     "sulu_activity.description.products.translation_copied": "{userFullName} hat die Sprachvariante für \"{context_sourceLocale}\" des Produkts \"{resourceTitle}\" nach \"{resourceLocale}\" kopiert",
     "sulu_activity.description.products.translation_removed": "{userFullName} hat die Sprachvariante für \"{resourceLocale}\" des Produkts \"{resourceTitle}\" gelöscht",

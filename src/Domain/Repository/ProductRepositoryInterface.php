@@ -73,6 +73,13 @@ interface ProductRepositoryInterface
 
     /**
      * @param array{
+     *     code?: string,
+     * } $filters
+     */
+    public function existBy(array $filters): bool;
+
+    /**
+     * @param array{
      *     uuid?: string,
      *     uuids?: string[],
      *     locale?: string,

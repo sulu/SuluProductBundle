@@ -14,6 +14,7 @@ namespace Sulu\Product\Application\MessageHandler;
 use Sulu\Product\Application\Mapper\ProductMapperInterface;
 use Sulu\Product\Application\Message\ModifyProductMessage;
 use Sulu\Product\Domain\Event\ProductModifiedEvent;
+use Sulu\Product\Domain\Exception\ProductCodeNotUniqueException;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
@@ -41,6 +42,8 @@ final class ModifyProductMessageHandler
         /** @var string $locale */
         $locale = $data['locale'];
 
+        $code = $data['code'] ?? null;
+
         $product = $this->productRepository->getOneBy(
             [
                 ...$identifier,
@@ -56,6 +59,10 @@ final class ModifyProductMessageHandler
                 ],
             ]
         );
+
+        if (null !== $code && $code !== $product->getCode() && $this->productRepository->existBy(['code' => $code])) {
+            throw new ProductCodeNotUniqueException($code);
+        }
 
         foreach ($this->productMappers as $productMapper) {
             $productMapper->mapProductData($product, $data);
