@@ -7,9 +7,38 @@
         "php": "^8.2",
         "sulu/sulu": "~3.0"
     },
+    "require-dev": {
+        "handcraftedinthealps/code-coverage-checker": "^0.2.1",
+        "phpspec/prophecy-phpunit": "^2.0",
+        "phpunit/phpunit": "^11.0",
+        "symfony/dotenv": "^7.0",
+        "symfony/browser-kit": "^8.0",
+        "cmsig/seal-memory-adapter": "^0.12.10"
+    },
     "autoload": {
         "psr-4": {
             "Sulu\\Product\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Sulu\\Product\\Tests\\": "tests/",
+            "Sulu\\Content\\Tests\\": "vendor/sulu/sulu/packages/content/tests/"
+        }
+    },
+    "scripts": {
+        "bootstrap-test-environment": [
+            "@php tests/Application/bin/console.php doctrine:database:drop --if-exists --force --env test",
+            "@php tests/Application/bin/console.php doctrine:database:create --env test",
+            "@php tests/Application/bin/console.php doctrine:schema:update --force --complete --env test"
+        ],
+        "test": "@php vendor/bin/phpunit",
+        "test-with-coverage": "@php vendor/bin/phpunit --coverage-php tests/reports/coverage.php --coverage-html tests/reports/html --log-junit tests/reports/junit.xml",
+        "check-coverage": "@php vendor/bin/code-coverage-checker \"tests/reports/coverage.php\" \"line\" \"100.00\""
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true
         }
     }
 }
