@@ -2,6 +2,15 @@
 
 declare(strict_types=1);
 
+/*
+ * This file is part of Sulu.
+ *
+ * (c) Sulu GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace Sulu\Product\Domain\Model;
 
 use Doctrine\Common\Collections\Collection;
@@ -47,5 +56,4 @@ interface ProductInterface extends AuditableInterface, ContentRichEntityInterfac
     public function addAttribute(ProductAttributeInterface $attribute): self;
 
     public function removeAttribute(ProductAttributeInterface $attribute): self;
-
 }

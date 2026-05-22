@@ -11,14 +11,14 @@
 
 namespace Sulu\Product\Application\MessageHandler;
 
+use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
+use Sulu\Bundle\SecurityBundle\Entity\User;
 use Sulu\Product\Application\Mapper\ProductMapperInterface;
 use Sulu\Product\Application\Message\CreateProductMessage;
 use Sulu\Product\Domain\Event\ProductCreatedEvent;
 use Sulu\Product\Domain\Exception\ProductCodeNotUniqueException;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
-use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
-use Sulu\Bundle\SecurityBundle\Entity\User;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 /**
@@ -53,6 +53,7 @@ final class CreateProductMessageHandler
             $data['authored'] = (new \DateTimeImmutable())->format('c');
         }
 
+        /** @var string|null $code */
         $code = $data['code'] ?? null;
         if (null !== $code && $this->productRepository->existBy(['code' => $code])) {
             throw new ProductCodeNotUniqueException($code);

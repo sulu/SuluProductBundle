@@ -25,6 +25,7 @@ class WebspaceSettingsConfigurationResolverTest extends TestCase
 {
     use ProphecyTrait;
 
+    /** @var ObjectProphecy<WebspaceManagerInterface> */
     private ObjectProphecy $webspaceManager;
 
     protected function setUp(): void
@@ -62,8 +63,12 @@ class WebspaceSettingsConfigurationResolverTest extends TestCase
     public function testResolveMainWebspaceWithNoConfigMultipleWebspaces(): void
     {
         $resolver = new WebspaceSettingsConfigurationResolver([], [], $this->webspaceManager->reveal());
-        $webspace = new Webspace(); $webspace->setName('sulu-io'); $webspace->setKey('sulu-io');
-        $webspace2 = new Webspace(); $webspace2->setName('blog'); $webspace2->setKey('blog');
+        $webspace = new Webspace();
+        $webspace->setName('sulu-io');
+        $webspace->setKey('sulu-io');
+        $webspace2 = new Webspace();
+        $webspace2->setName('blog');
+        $webspace2->setKey('blog');
         $webspaceCollection = new WebspaceCollection(['default' => $webspace, 'additional' => $webspace2]);
         $this->webspaceManager->getWebspaceCollection()->willReturn($webspaceCollection);
         $this->expectException(\Exception::class);

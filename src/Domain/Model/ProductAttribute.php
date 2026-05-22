@@ -2,6 +2,15 @@
 
 declare(strict_types=1);
 
+/*
+ * This file is part of Sulu.
+ *
+ * (c) Sulu GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace Sulu\Product\Domain\Model;
 
 class ProductAttribute implements ProductAttributeInterface
@@ -52,6 +61,7 @@ class ProductAttribute implements ProductAttributeInterface
     public function setAttributeOptionKey(?string $key): self
     {
         $this->attributeOptionKey = $key;
+
         return $this;
     }
 
@@ -63,6 +73,7 @@ class ProductAttribute implements ProductAttributeInterface
     public function setNumber(?float $number): self
     {
         $this->number = $number;
+
         return $this;
     }
 
@@ -74,6 +85,7 @@ class ProductAttribute implements ProductAttributeInterface
     public function setText(?string $text): self
     {
         $this->text = $text;
+
         return $this;
     }
 
@@ -85,6 +97,7 @@ class ProductAttribute implements ProductAttributeInterface
     public function setJson(mixed $json): self
     {
         $this->json = $json;
+
         return $this;
     }
 
@@ -114,6 +127,7 @@ class ProductAttribute implements ProductAttributeInterface
     public function setAttributeOption(?AttributeOptionInterface $option): self
     {
         $this->attributeOption = $option;
+
         return $this;
     }
 }

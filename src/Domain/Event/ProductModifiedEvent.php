@@ -13,11 +13,11 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Domain\Event;
 
+use Sulu\Bundle\ActivityBundle\Domain\Event\DomainEvent;
+use Sulu\Content\Domain\Model\DimensionContentCollection;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
-use Sulu\Bundle\ActivityBundle\Domain\Event\DomainEvent;
-use Sulu\Content\Domain\Model\DimensionContentCollection;
 
 class ProductModifiedEvent extends DomainEvent
 {

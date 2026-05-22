@@ -13,11 +13,11 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Infrastructure\Sulu\Content\DataMapper;
 
-use Sulu\Product\Application\Webspace\WebspaceSettingsConfigurationResolver;
-use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Component\Webspace\Manager\WebspaceManagerInterface;
 use Sulu\Content\Application\ContentDataMapper\DataMapper\DataMapperInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Product\Application\Webspace\WebspaceSettingsConfigurationResolver;
+use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Webmozart\Assert\Assert;
 
 class AdditionalWebspacesDataMapper implements DataMapperInterface

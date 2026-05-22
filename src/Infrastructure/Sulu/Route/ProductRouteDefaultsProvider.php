@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Infrastructure\Sulu\Route;
 
-use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\CacheLifetimeMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\TemplateMetadata;
@@ -25,6 +24,7 @@ use Sulu\Content\Application\ContentAggregator\ContentAggregatorInterface;
 use Sulu\Content\Domain\Exception\ContentNotFoundException;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
+use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Route\Application\Routing\Matcher\RouteDefaultsProviderInterface;
 use Sulu\Route\Domain\Model\Route;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;

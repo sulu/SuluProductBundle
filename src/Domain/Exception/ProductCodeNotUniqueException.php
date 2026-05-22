@@ -12,16 +12,12 @@
 namespace Sulu\Product\Domain\Exception;
 
 use Sulu\Component\Rest\Exception\TranslationErrorMessageExceptionInterface;
-use Sulu\Product\Domain\Model\ProductInterface;
 
 class ProductCodeNotUniqueException extends \Exception implements TranslationErrorMessageExceptionInterface
 {
-    /**
-     * @var string
-     */
-    private $productCode;
+    private string $productCode;
 
-    public function __construct($productCode)
+    public function __construct(string $productCode)
     {
         parent::__construct(\sprintf('A product with the code "%s" is already in use.', $productCode));
 

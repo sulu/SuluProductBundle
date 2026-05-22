@@ -2,6 +2,15 @@
 
 declare(strict_types=1);
 
+/*
+ * This file is part of Sulu.
+ *
+ * (c) Sulu GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace Sulu\Product\Tests\Functional\Integration;
 
 use PHPUnit\Framework\Attributes\CoversNothing;
@@ -25,6 +34,12 @@ class ProductDetailsControllerTest extends SuluTestCase
         );
     }
 
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+        restore_exception_handler();
+    }
+
     public function testGetEmptyList(): void
     {
         self::purgeDatabase();
@@ -35,7 +50,10 @@ class ProductDetailsControllerTest extends SuluTestCase
         $this->assertHttpStatusCode(200, $response);
 
         $data = \json_decode((string) $response->getContent(), true);
-        $this->assertSame([], $data['_embedded']['products']);
+        $this->assertIsArray($data);
+        $embedded = $data['_embedded'];
+        $this->assertIsArray($embedded);
+        $this->assertSame([], $embedded['products']);
     }
 
     public function testPost(): string
@@ -57,9 +75,12 @@ class ProductDetailsControllerTest extends SuluTestCase
         $this->assertHttpStatusCode(201, $response);
 
         $data = \json_decode((string) $response->getContent(), true);
-        $this->assertNotEmpty($data['id']);
+        $this->assertIsArray($data);
+        $id = $data['id'];
+        $this->assertIsString($id);
+        $this->assertNotEmpty($id);
 
-        return $data['id'];
+        return $id;
     }
 
     #[Depends('testPost')]
@@ -93,6 +114,7 @@ class ProductDetailsControllerTest extends SuluTestCase
         $this->assertHttpStatusCode(200, $response);
 
         $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
         $this->assertSame('PROD-001', $data['code']);
 
         return $id;

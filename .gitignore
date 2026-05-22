@@ -1,5 +1,35 @@
-/vendor/
+# PHPUnit
+/phpunit.xml
+.phpunit.result.cache
+
+coverage-report
+var
+
+# Composer
+/composer.phar
 /composer.lock
-/tests/Application/var/
-/.phpunit.result.cache
+/auth.json
+/vendor
+
+# IDEs
+.idea/*
+*.iml
+*~
+
+# System files
+.DS_Store
+
+# tests
+tests/Application/var
+
+# php-cs-fixer
+.php_cs.cache
+.php-cs-fixer.cache
+
+# Symfony
+.env.local
+.env.*.local
+
+# Test reports
 /tests/reports/
+/coverage/

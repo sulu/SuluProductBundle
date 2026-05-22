@@ -2,6 +2,15 @@
 
 declare(strict_types=1);
 
+/*
+ * This file is part of Sulu.
+ *
+ * (c) Sulu GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace Sulu\Product\Domain\Model;
 
 use Doctrine\Common\Collections\ArrayCollection;
@@ -57,6 +66,7 @@ class Product implements ProductInterface
     public function setCode(?string $code): self
     {
         $this->code = $code;
+
         return $this;
     }
 
@@ -68,6 +78,7 @@ class Product implements ProductInterface
     public function setCurrentLocale(string $locale): self
     {
         $this->currentLocale = $locale;
+
         return $this;
     }
 
@@ -79,6 +90,7 @@ class Product implements ProductInterface
                 return $translation;
             }
         }
+
         return null;
     }
 
@@ -87,12 +99,14 @@ class Product implements ProductInterface
         if (!$this->translations->contains($translation)) {
             $this->translations->add($translation);
         }
+
         return $this;
     }
 
     public function removeTranslation(ProductTranslationInterface $translation): self
     {
         $this->translations->removeElement($translation);
+
         return $this;
     }
 
@@ -109,12 +123,14 @@ class Product implements ProductInterface
         if (!$this->attributes->contains($attribute)) {
             $this->attributes->add($attribute);
         }
+
         return $this;
     }
 
     public function removeAttribute(ProductAttributeInterface $attribute): self
     {
         $this->attributes->removeElement($attribute);
+
         return $this;
     }
 

@@ -2,6 +2,15 @@
 
 declare(strict_types=1);
 
+/*
+ * This file is part of Sulu.
+ *
+ * (c) Sulu GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace Sulu\Product\Domain\Model;
 
 use Doctrine\Common\Collections\ArrayCollection;
@@ -49,6 +58,7 @@ class Attribute implements AttributeInterface
     public function setKey(string $key): self
     {
         $this->key = $key;
+
         return $this;
     }
 
@@ -60,12 +70,14 @@ class Attribute implements AttributeInterface
     public function setType(string $type): self
     {
         $this->type = $type;
+
         return $this;
     }
 
     public function setCurrentLocale(string $locale): self
     {
         $this->currentLocale = $locale;
+
         return $this;
     }
 
@@ -77,6 +89,7 @@ class Attribute implements AttributeInterface
                 return $translation;
             }
         }
+
         return null;
     }
 
@@ -85,12 +98,14 @@ class Attribute implements AttributeInterface
         if (!$this->translations->contains($translation)) {
             $this->translations->add($translation);
         }
+
         return $this;
     }
 
     public function removeTranslation(AttributeTranslationInterface $translation): self
     {
         $this->translations->removeElement($translation);
+
         return $this;
     }
 
@@ -106,6 +121,7 @@ class Attribute implements AttributeInterface
                 return $option;
             }
         }
+
         return null;
     }
 
@@ -114,12 +130,14 @@ class Attribute implements AttributeInterface
         if (!$this->options->contains($option)) {
             $this->options->add($option);
         }
+
         return $this;
     }
 
     public function removeOption(AttributeOptionInterface $option): self
     {
         $this->options->removeElement($option);
+
         return $this;
     }
 }

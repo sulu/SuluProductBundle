@@ -28,7 +28,9 @@ class AdditionalWebspacesDataMapperTest extends TestCase
 {
     use ProphecyTrait;
 
+    /** @var ObjectProphecy<WebspaceSettingsConfigurationResolver> */
     private ObjectProphecy $configurationResolver;
+    /** @var ObjectProphecy<WebspaceManagerInterface> */
     private ObjectProphecy $webspaceManager;
 
     protected function setUp(): void

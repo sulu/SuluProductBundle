@@ -11,15 +11,15 @@
 
 namespace Sulu\Product\Application\MessageHandler;
 
+use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
+use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
 use Sulu\Product\Application\Mapper\ProductMapperInterface;
 use Sulu\Product\Application\Message\ModifyProductMessage;
 use Sulu\Product\Domain\Event\ProductModifiedEvent;
 use Sulu\Product\Domain\Exception\ProductCodeNotUniqueException;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
-use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
-use Sulu\Content\Domain\Model\DimensionContentInterface;
-use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
 
 /**
  * @internal This class should not be instantiated by a project.
@@ -42,6 +42,7 @@ final class ModifyProductMessageHandler
         /** @var string $locale */
         $locale = $data['locale'];
 
+        /** @var string|null $code */
         $code = $data['code'] ?? null;
 
         $product = $this->productRepository->getOneBy(

@@ -5,7 +5,7 @@
     "sulu_product.no_product_selected": "No product selected",
     "sulu_product.single_selection_overlay_title": "Choose product",
     "sulu_product.selection_overlay_title": "Choose products",
-    "sulu_product.selection_label": "{count} products selected",
+    "sulu_product.selection_label": "{count} {count, plural, =1 {product} other {products}} selected",
     "sulu_product.webspace_settings": "Webspace Settings",
     "sulu_product.customize_webspace_settings": "Customize",
     "sulu_product.main_webspace": "Main webspace",

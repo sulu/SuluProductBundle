@@ -15,11 +15,11 @@ namespace Sulu\Product\Infrastructure\Sulu\Content;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
-use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Bundle\AdminBundle\SmartContent\Configuration\BuilderInterface;
 use Sulu\Bundle\AdminBundle\SmartContent\SmartContentQueryEnhancer;
 use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
 use Sulu\Page\Domain\Model\PageInterface;
+use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Route\Domain\Model\Route;
 
 readonly class PageTreeProductSmartContentProvider extends ProductSmartContentProvider

@@ -11,14 +11,14 @@
 
 namespace Sulu\Product\Application\MessageHandler;
 
+use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
+use Sulu\Bundle\TrashBundle\Application\TrashManager\TrashManagerInterface;
+use Sulu\Content\Domain\Model\DimensionContentCollection;
 use Sulu\Product\Application\Message\RemoveProductMessage;
 use Sulu\Product\Domain\Event\ProductRemovedEvent;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
-use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
-use Sulu\Bundle\TrashBundle\Application\TrashManager\TrashManagerInterface;
-use Sulu\Content\Domain\Model\DimensionContentCollection;
 
 /**
  * @internal This class should not be instantiated by a project.

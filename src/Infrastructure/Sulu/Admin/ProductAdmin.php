@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Infrastructure\Sulu\Admin;
 
-use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Bundle\ActivityBundle\Infrastructure\Sulu\Admin\View\ActivityViewBuilderFactoryInterface;
 use Sulu\Bundle\AdminBundle\Admin\Admin;
 use Sulu\Bundle\AdminBundle\Admin\Navigation\NavigationItem;
@@ -24,6 +23,7 @@ use Sulu\Bundle\AdminBundle\Admin\View\ViewCollection;
 use Sulu\Component\Localization\Manager\LocalizationManagerInterface;
 use Sulu\Component\Security\Authorization\PermissionTypes;
 use Sulu\Component\Security\Authorization\SecurityCheckerInterface;
+use Sulu\Product\Domain\Model\ProductInterface;
 
 /**
  * @final

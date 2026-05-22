@@ -53,6 +53,7 @@ class SingleProductSelectionPropertyResolverTest extends TestCase
         $this->assertSame(['id' => null], $contentView->getView());
     }
 
+    /** @return iterable<string, array{mixed}> */
     public static function provideUnresolvableData(): iterable
     {
         yield 'null' => [null];
@@ -78,6 +79,7 @@ class SingleProductSelectionPropertyResolverTest extends TestCase
         $this->assertSame(['id' => $data], $contentView->getView());
     }
 
+    /** @return iterable<string, array{string}> */
     public static function provideResolvableData(): iterable
     {
         yield 'string_id' => ['1'];

@@ -13,9 +13,6 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Infrastructure\Sulu\Content;
 
-use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
-use Sulu\Product\Domain\Model\ProductInterface;
-use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Bundle\AdminBundle\Teaser\Configuration\TeaserConfiguration;
 use Sulu\Bundle\AdminBundle\Teaser\Provider\TeaserProviderInterface;
 use Sulu\Bundle\AdminBundle\Teaser\Teaser;
@@ -25,6 +22,9 @@ use Sulu\Content\Application\ContentEnhancer\ContentEnhancerInterface;
 use Sulu\Content\Domain\Exception\ContentNotFoundException;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
+use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
+use Sulu\Product\Domain\Model\ProductInterface;
+use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 class ProductTeaserProvider implements TeaserProviderInterface

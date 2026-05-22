@@ -11,10 +11,10 @@
 
 namespace Sulu\Product\Infrastructure\Sulu\Content\PropertyResolver;
 
-use Sulu\Product\Domain\Model\ProductInterface;
-use Sulu\Product\Infrastructure\Sulu\Content\ResourceLoader\ProductResourceLoader;
 use Sulu\Content\Application\ContentResolver\Value\ContentView;
 use Sulu\Content\Application\PropertyResolver\Resolver\PropertyResolverInterface;
+use Sulu\Product\Domain\Model\ProductInterface;
+use Sulu\Product\Infrastructure\Sulu\Content\ResourceLoader\ProductResourceLoader;
 
 /**
  * @internal if you need to override this service, create a new service with based on PropertyResolverInterface instead of extending this class

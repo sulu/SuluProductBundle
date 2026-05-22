@@ -2,6 +2,15 @@
 
 declare(strict_types=1);
 
+/*
+ * This file is part of Sulu.
+ *
+ * (c) Sulu GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace Sulu\Product\Domain\Model;
 
 use Doctrine\Common\Collections\ArrayCollection;
@@ -47,6 +56,7 @@ class AttributeOption implements AttributeOptionInterface
     public function setKey(string $key): self
     {
         $this->key = $key;
+
         return $this;
     }
 
@@ -63,6 +73,7 @@ class AttributeOption implements AttributeOptionInterface
                 return $translation;
             }
         }
+
         return null;
     }
 
@@ -71,12 +82,14 @@ class AttributeOption implements AttributeOptionInterface
         if (!$this->translations->contains($translation)) {
             $this->translations->add($translation);
         }
+
         return $this;
     }
 
     public function removeTranslation(AttributeOptionTranslationInterface $translation): self
     {
         $this->translations->removeElement($translation);
+
         return $this;
     }
 }

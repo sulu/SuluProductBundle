@@ -53,6 +53,7 @@ class ProductSelectionPropertyResolverTest extends TestCase
         $this->assertSame(['ids' => []], $contentView->getView());
     }
 
+    /** @return iterable<string, array{mixed}> */
     public static function provideUnresolvableData(): iterable
     {
         yield 'null' => [null];
@@ -64,6 +65,9 @@ class ProductSelectionPropertyResolverTest extends TestCase
         yield 'id_list' => [['id' => [1, 2]]];
     }
 
+    /**
+     * @param array<int, string> $data
+     */
     #[DataProvider('provideResolvableData')]
     public function testResolveResolvableData(array $data): void
     {
@@ -87,6 +91,7 @@ class ProductSelectionPropertyResolverTest extends TestCase
         $this->assertSame(['ids' => $data], $contentView->getView());
     }
 
+    /** @return iterable<string, array{array<int, string>}> */
     public static function provideResolvableData(): iterable
     {
         yield 'empty' => [[]];
@@ -97,6 +102,7 @@ class ProductSelectionPropertyResolverTest extends TestCase
     {
         $contentView = $this->resolver->resolve(['1'], 'en', ['resourceLoader' => 'custom_product']);
         $content = $contentView->getContent();
+        $this->assertIsArray($content);
         $this->assertInstanceOf(ResolvableResource::class, $content[0]);
         $this->assertSame('1', $content[0]->getId());
         $this->assertSame('custom_product', $content[0]->getResourceLoaderKey());

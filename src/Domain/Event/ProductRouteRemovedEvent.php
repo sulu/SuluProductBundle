@@ -13,9 +13,9 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Domain\Event;
 
+use Sulu\Bundle\ActivityBundle\Domain\Event\DomainEvent;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
-use Sulu\Bundle\ActivityBundle\Domain\Event\DomainEvent;
 
 class ProductRouteRemovedEvent extends DomainEvent
 {

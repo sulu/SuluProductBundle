@@ -15,7 +15,6 @@ namespace Sulu\Product\Infrastructure\Sulu\Sitemap;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
-use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Bundle\WebsiteBundle\Sitemap\AbstractSitemapProvider;
 use Sulu\Bundle\WebsiteBundle\Sitemap\SitemapAlternateLink;
 use Sulu\Bundle\WebsiteBundle\Sitemap\SitemapUrl;
@@ -23,6 +22,7 @@ use Sulu\Component\Localization\Localization;
 use Sulu\Component\Webspace\Manager\WebspaceManagerInterface;
 use Sulu\Component\Webspace\PortalInformation;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Product\Domain\Model\ProductInterface;
 
 /**
  * @internal your code should not create direct dependencies on this implementation

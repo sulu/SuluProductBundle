@@ -11,8 +11,8 @@
 
 namespace Sulu\Product\Application\Mapper;
 
-use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Content\Application\ContentPersister\ContentPersisterInterface;
+use Sulu\Product\Domain\Model\ProductInterface;
 use Webmozart\Assert\Assert;
 
 /**

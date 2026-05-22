@@ -11,9 +11,9 @@
 
 namespace Sulu\Product\Domain\Repository;
 
+use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
 use Sulu\Product\Domain\Model\ProductInterface;
-use Sulu\Content\Domain\Model\DimensionContentInterface;
 
 /**
  * Implementation can be found in the following class:.

@@ -11,13 +11,13 @@
 
 namespace Sulu\Product\Application\MessageHandler;
 
+use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
+use Sulu\Content\Application\ContentCopier\ContentCopierInterface;
+use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Application\Message\CopyLocaleProductMessage;
 use Sulu\Product\Domain\Event\ProductTranslationCopiedEvent;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
-use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
-use Sulu\Content\Application\ContentCopier\ContentCopierInterface;
-use Sulu\Content\Domain\Model\DimensionContentInterface;
 
 /**
  * @internal This class should not be instantiated by a project.

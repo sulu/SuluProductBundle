@@ -2,16 +2,17 @@
 
 declare(strict_types=1);
 
+/*
+ * This file is part of Sulu.
+ *
+ * (c) Sulu GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace Sulu\Product\UserInterface\Controller\Admin;
 
-use Sulu\Product\Application\Message\ApplyWorkflowTransitionProductMessage;
-use Sulu\Product\Application\Message\CopyLocaleProductMessage;
-use Sulu\Product\Application\Message\ModifyProductMessage;
-use Sulu\Product\Application\Message\RestoreProductVersionMessage;
-use Sulu\Product\Domain\Exception\ProductNotFoundException;
-use Sulu\Product\Domain\Model\ProductInterface;
-use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
-use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 use Sulu\Component\Rest\Exception\EntityNotFoundException;
 use Sulu\Component\Rest\ListBuilder\Doctrine\DoctrineListBuilder;
 use Sulu\Component\Rest\ListBuilder\Doctrine\DoctrineListBuilderFactoryInterface;
@@ -25,6 +26,14 @@ use Sulu\Content\Domain\Exception\ContentNotFoundException;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
 use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushStamp;
+use Sulu\Product\Application\Message\ApplyWorkflowTransitionProductMessage;
+use Sulu\Product\Application\Message\CopyLocaleProductMessage;
+use Sulu\Product\Application\Message\ModifyProductMessage;
+use Sulu\Product\Application\Message\RestoreProductVersionMessage;
+use Sulu\Product\Domain\Exception\ProductNotFoundException;
+use Sulu\Product\Domain\Model\ProductInterface;
+use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -99,6 +108,7 @@ final class ProductContentController implements SecuredControllerInterface
             );
         } catch (ProductNotFoundException $e) {
             $exception = new EntityNotFoundException($e->getModel(), $id, $e);
+
             return new JsonResponse($exception->toArray(), 404);
         }
 
@@ -129,6 +139,7 @@ final class ProductContentController implements SecuredControllerInterface
     public function postTriggerAction(Request $request, string $id): Response
     {
         $this->handleAction($request, $id);
+
         return $this->getAction($request, $id);
     }
 
@@ -168,6 +179,7 @@ final class ProductContentController implements SecuredControllerInterface
                 (string) $request->query->get('dest'),
             );
             $this->handle(new Envelope($message, [new EnableFlushStamp()]));
+
             return;
         }
 
@@ -183,6 +195,7 @@ final class ProductContentController implements SecuredControllerInterface
                 $request->query->all(),
             );
             $this->handle(new Envelope($message, [new EnableFlushStamp()]));
+
             return;
         }
 

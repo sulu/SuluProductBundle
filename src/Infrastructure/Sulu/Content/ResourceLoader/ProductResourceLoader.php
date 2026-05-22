@@ -13,9 +13,9 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Infrastructure\Sulu\Content\ResourceLoader;
 
-use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Content\Application\ResourceLoader\Loader\ResourceLoaderInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 
 /**
  * @internal if you need to override this service, create a new service with based on ResourceLoaderInterface instead of extending this class

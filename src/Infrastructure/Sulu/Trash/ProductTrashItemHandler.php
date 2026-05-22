@@ -14,14 +14,6 @@ declare(strict_types=1);
 namespace Sulu\Product\Infrastructure\Sulu\Trash;
 
 use Doctrine\Common\Collections\ArrayCollection;
-use Sulu\Product\Application\Mapper\ProductMapperInterface;
-use Sulu\Product\Domain\Event\ProductRestoredEvent;
-use Sulu\Product\Domain\Event\ProductTranslationRestoredEvent;
-use Sulu\Product\Domain\Model\ProductDimensionContent;
-use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
-use Sulu\Product\Domain\Model\ProductInterface;
-use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
-use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
 use Sulu\Bundle\TrashBundle\Application\RestoreConfigurationProvider\RestoreConfiguration;
 use Sulu\Bundle\TrashBundle\Application\RestoreConfigurationProvider\RestoreConfigurationProviderInterface;
@@ -33,6 +25,14 @@ use Sulu\Content\Application\ContentMerger\ContentMergerInterface;
 use Sulu\Content\Application\ContentNormalizer\ContentNormalizerInterface;
 use Sulu\Content\Domain\Model\DimensionContentCollection;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Product\Application\Mapper\ProductMapperInterface;
+use Sulu\Product\Domain\Event\ProductRestoredEvent;
+use Sulu\Product\Domain\Event\ProductTranslationRestoredEvent;
+use Sulu\Product\Domain\Model\ProductDimensionContent;
+use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
+use Sulu\Product\Domain\Model\ProductInterface;
+use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 use Webmozart\Assert\Assert;
 
 /**

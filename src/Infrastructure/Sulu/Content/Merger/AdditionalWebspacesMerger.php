@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Infrastructure\Sulu\Content\Merger;
 
-use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Content\Application\ContentMerger\Merger\MergerInterface;
+use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 
 class AdditionalWebspacesMerger implements MergerInterface
 {

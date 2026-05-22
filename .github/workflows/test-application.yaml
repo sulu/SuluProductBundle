@@ -30,7 +30,7 @@ jobs:
             matrix:
                 include:
                     - php-version: '8.2'
-                      database: mysql
+                      database: mysql-57
                       dependency-versions: 'lowest'
                       php-extensions: 'ctype, iconv, mysql, gd'
                       tools: 'composer:v2'
@@ -39,36 +39,29 @@ jobs:
                           DATABASE_URL: mysql://root@127.0.0.1:3306/sulu_test?serverVersion=5.7&charset=utf8mb4
 
                     - php-version: '8.3'
-                      database: mysql
+                      database: mysql-80
                       dependency-versions: 'highest'
                       php-extensions: 'ctype, iconv, mysql, gd'
                       tools: 'composer:v2'
                       env:
                           SYMFONY_DEPRECATIONS_HELPER: weak
-                          DATABASE_URL: mysql://root@127.0.0.1:3306/sulu_test?serverVersion=8.0&charset=utf8mb4
+                          DATABASE_URL: mysql://root:ChangeMe@127.0.0.1:3306/sulu_test?serverVersion=8.0&charset=utf8mb4
 
                     - php-version: '8.4'
-                      database: mysql
+                      database: mysql-80
                       dependency-versions: 'highest'
                       php-extensions: 'ctype, iconv, mysql, gd'
                       tools: 'composer:v2'
                       env:
                           SYMFONY_DEPRECATIONS_HELPER: weak
-                          DATABASE_URL: mysql://root@127.0.0.1:3306/sulu_test?serverVersion=8.0&charset=utf8mb4
-
-        services:
-            mysql:
-                image: mysql:8.0
-                env:
-                    MYSQL_ALLOW_EMPTY_PASSWORD: yes
-                    MYSQL_DATABASE: sulu_test
-                ports:
-                    - 3306:3306
-                options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+                          DATABASE_URL: mysql://root:ChangeMe@127.0.0.1:3306/sulu_test?serverVersion=8.0&charset=utf8mb4
 
         steps:
             - name: Checkout project
               uses: actions/checkout@v4
+
+            - name: Start Database
+              run: docker compose -f tests/docker/docker-compose.${{ matrix.database }}.yml up --wait
 
             - name: Install and configure PHP
               uses: shivammathur/setup-php@v2
@@ -104,21 +97,14 @@ jobs:
             SULU_ADMIN_EMAIL:
             COMPOSER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             SYMFONY_DEPRECATIONS_HELPER: weak
-            DATABASE_URL: mysql://root@127.0.0.1:3306/sulu_test?serverVersion=8.0&charset=utf8mb4
-
-        services:
-            mysql:
-                image: mysql:8.0
-                env:
-                    MYSQL_ALLOW_EMPTY_PASSWORD: yes
-                    MYSQL_DATABASE: sulu_test
-                ports:
-                    - 3306:3306
-                options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+            DATABASE_URL: mysql://root:ChangeMe@127.0.0.1:3306/sulu_test?serverVersion=8.0&charset=utf8mb4
 
         steps:
             - name: Checkout project
               uses: actions/checkout@v4
+
+            - name: Start Database
+              run: docker compose -f tests/docker/docker-compose.mysql-80.yml up --wait
 
             - name: Install and configure PHP
               uses: shivammathur/setup-php@v2
