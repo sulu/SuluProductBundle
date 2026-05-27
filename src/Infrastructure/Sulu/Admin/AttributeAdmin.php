@@ -2,9 +2,17 @@
 
 declare(strict_types=1);
 
+/*
+ * This file is part of Sulu.
+ *
+ * (c) Sulu GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace Sulu\Product\Infrastructure\Sulu\Admin;
 
-use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Bundle\AdminBundle\Admin\Admin;
 use Sulu\Bundle\AdminBundle\Admin\Navigation\NavigationItemCollection;
 use Sulu\Bundle\AdminBundle\Admin\View\ToolbarAction;
@@ -13,6 +21,7 @@ use Sulu\Bundle\AdminBundle\Admin\View\ViewCollection;
 use Sulu\Component\Localization\Manager\LocalizationManagerInterface;
 use Sulu\Component\Security\Authorization\PermissionTypes;
 use Sulu\Component\Security\Authorization\SecurityCheckerInterface;
+use Sulu\Product\Domain\Model\AttributeInterface;
 
 /**
  * @final

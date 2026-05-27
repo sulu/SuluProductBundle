@@ -17,6 +17,11 @@ use Sulu\Bundle\HttpCacheBundle\ReferenceStore\ReferenceStore;
 use Sulu\Bundle\PersistenceBundle\DependencyInjection\PersistenceExtensionTrait;
 use Sulu\Bundle\PersistenceBundle\PersistenceBundleTrait;
 use Sulu\Content\Infrastructure\Sulu\Preview\ContentObjectProvider;
+use Sulu\Product\Application\AttributeType\AttributeTypeInterface;
+use Sulu\Product\Application\AttributeType\JsonAttributeType;
+use Sulu\Product\Application\AttributeType\NumberAttributeType;
+use Sulu\Product\Application\AttributeType\OptionsAttributeType;
+use Sulu\Product\Application\AttributeType\TextAttributeType;
 use Sulu\Product\Application\Mapper\ProductContentMapper;
 use Sulu\Product\Application\Mapper\ProductDetailsMapper;
 use Sulu\Product\Application\Mapper\ProductMapperInterface;
@@ -64,7 +69,6 @@ use Sulu\Product\Infrastructure\Sulu\Admin\AttributeAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductContentAdmin;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\AdditionalWebspacesDataMapper;
-use Sulu\Product\Infrastructure\Sulu\Content\Select\AttributeTypeSelectService;
 use Sulu\Product\Infrastructure\Sulu\Content\Merger\AdditionalWebspacesMerger;
 use Sulu\Product\Infrastructure\Sulu\Content\PageTreeProductSmartContentProvider;
 use Sulu\Product\Infrastructure\Sulu\Content\ProductLinkProvider;
@@ -73,6 +77,7 @@ use Sulu\Product\Infrastructure\Sulu\Content\ProductTeaserProvider;
 use Sulu\Product\Infrastructure\Sulu\Content\PropertyResolver\ProductSelectionPropertyResolver;
 use Sulu\Product\Infrastructure\Sulu\Content\PropertyResolver\SingleProductSelectionPropertyResolver;
 use Sulu\Product\Infrastructure\Sulu\Content\ResourceLoader\ProductResourceLoader;
+use Sulu\Product\Infrastructure\Sulu\Content\Select\AttributeTypeSelectService;
 use Sulu\Product\Infrastructure\Sulu\HttpCache\EventSubscriber\ProductCacheInvalidationSubscriber;
 use Sulu\Product\Infrastructure\Sulu\Reference\ProductReferenceRefresher;
 use Sulu\Product\Infrastructure\Sulu\Route\ProductRouteDefaultsProvider;
@@ -96,7 +101,6 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
-use function Symfony\Component\DependencyInjection\Loader\Configurator\param;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
 
 use Symfony\Component\DependencyInjection\Reference;
@@ -143,15 +147,6 @@ final class SuluProductBundle extends AbstractBundle
                     ->prototype('array')->useAttributeAsKey('locale')->prototype('scalar')->end()->end()
                     ->defaultValue([])
                 ->end()
-                ->arrayNode('attribute_types')
-                    ->useAttributeAsKey('key')
-                    ->arrayPrototype()
-                        ->children()
-                            ->scalarNode('form_key')->defaultNull()->end()
-                            ->scalarNode('form_type')->defaultNull()->end()
-                        ->end()
-                    ->end()
-                ->end()
                 ->arrayNode('objects')
                     ->addDefaultsIfNotSet()
                     ->children()
@@ -190,15 +185,31 @@ final class SuluProductBundle extends AbstractBundle
         $builder->setParameter('sulu_product.default_main_webspace', $defaultMainWebspace);
         $builder->setParameter('sulu_product.default_additional_webspaces', $defaultAdditionalWebspaces);
 
-        /** @var array<string, array{form_key: string|null, form_type: string|null}> $attributeTypes */
-        $attributeTypes = $config['attribute_types'] ?? [];
-        $builder->setParameter('sulu_product.attribute_types', $attributeTypes);
-
         $services = $container->services();
 
-        // Define autoconfigure interfaces for mappers
+        // Define autoconfigure interfaces
+        $builder->registerForAutoconfiguration(AttributeTypeInterface::class)
+            ->addTag('sulu_product.attribute_type');
+
         $builder->registerForAutoconfiguration(ProductMapperInterface::class)
             ->addTag('sulu_product.product_mapper');
+
+        // Built-in attribute types
+        $services->set('sulu_product.attribute_type_number')
+            ->class(NumberAttributeType::class)
+            ->tag('sulu_product.attribute_type');
+
+        $services->set('sulu_product.attribute_type_text')
+            ->class(TextAttributeType::class)
+            ->tag('sulu_product.attribute_type');
+
+        $services->set('sulu_product.attribute_type_json')
+            ->class(JsonAttributeType::class)
+            ->tag('sulu_product.attribute_type');
+
+        $services->set('sulu_product.attribute_type_options')
+            ->class(OptionsAttributeType::class)
+            ->tag('sulu_product.attribute_type');
 
         // Message Handler services
         $services->set('sulu_product.create_product_handler')
@@ -330,7 +341,7 @@ final class SuluProductBundle extends AbstractBundle
             ->class(AttributeTypeSelectService::class)
             ->public()
             ->args([
-                param('sulu_product.attribute_types'),
+                tagged_iterator('sulu_product.attribute_type'),
                 new Reference('translator'),
             ]);
 
@@ -749,15 +760,6 @@ final class SuluProductBundle extends AbstractBundle
                 }
             }
         }
-
-        $builder->prependExtensionConfig('sulu_product', [
-            'attribute_types' => [
-                'number' => [],
-                'text' => [],
-                'json' => [],
-                'options' => [],
-            ],
-        ]);
 
         if ($builder->hasExtension('sulu_search')) {
             $builder->prependExtensionConfig(

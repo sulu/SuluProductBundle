@@ -2,16 +2,18 @@
 
 declare(strict_types=1);
 
+/*
+ * This file is part of Sulu.
+ *
+ * (c) Sulu GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace Sulu\Product\UserInterface\Controller\Admin;
 
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
-use Sulu\Product\Application\Message\CreateAttributeMessage;
-use Sulu\Product\Application\Message\ModifyAttributeMessage;
-use Sulu\Product\Application\Message\RemoveAttributeMessage;
-use Sulu\Product\Domain\Model\AttributeInterface;
-use Sulu\Product\Domain\Model\AttributeOptionInterface;
-use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
-use Sulu\Product\Infrastructure\Sulu\Admin\AttributeAdmin;
 use Sulu\Component\Rest\ListBuilder\Doctrine\DoctrineListBuilder;
 use Sulu\Component\Rest\ListBuilder\Doctrine\DoctrineListBuilderFactoryInterface;
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescriptorInterface;
@@ -20,6 +22,14 @@ use Sulu\Component\Rest\ListBuilder\PaginatedRepresentation;
 use Sulu\Component\Rest\RestHelperInterface;
 use Sulu\Component\Security\SecuredControllerInterface;
 use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushStamp;
+use Sulu\Product\Application\Message\CreateAttributeMessage;
+use Sulu\Product\Application\Message\ModifyAttributeMessage;
+use Sulu\Product\Application\Message\RemoveAttributeMessage;
+use Sulu\Product\Domain\Exception\AttributeNotFoundException;
+use Sulu\Product\Domain\Model\AttributeInterface;
+use Sulu\Product\Domain\Model\AttributeOptionInterface;
+use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
+use Sulu\Product\Infrastructure\Sulu\Admin\AttributeAdmin;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -87,7 +97,7 @@ final class AttributeDetailsController implements SecuredControllerInterface
             /** @var AttributeInterface $attribute */
             $attribute = $this->handle(new Envelope($message, [new EnableFlushStamp()]));
         } catch (UniqueConstraintViolationException $e) {
-            return new JsonResponse(['detail' => \sprintf('Attribute with key "%s" already exists.', $data['key'] ?? '')], 409);
+            return new JsonResponse(['detail' => \sprintf('Attribute with key "%s" already exists.', $data['key'])], 409);
         }
 
         return new JsonResponse($this->serializeAttribute($attribute, $this->getLocale($request)), 201);
@@ -102,8 +112,8 @@ final class AttributeDetailsController implements SecuredControllerInterface
             /** @var AttributeInterface $attribute */
             $attribute = $this->handle(new Envelope($message, [new EnableFlushStamp()]));
         } catch (UniqueConstraintViolationException $e) {
-            return new JsonResponse(['detail' => \sprintf('Attribute with key "%s" already exists.', $data['key'] ?? '')], 409);
-        } catch (\RuntimeException $e) {
+            return new JsonResponse(['detail' => \sprintf('Attribute with key "%s" already exists.', $data['key'])], 409);
+        } catch (AttributeNotFoundException $e) {
             return new JsonResponse(['detail' => $e->getMessage()], 404);
         }
 
@@ -116,7 +126,7 @@ final class AttributeDetailsController implements SecuredControllerInterface
 
         try {
             $this->handle(new Envelope($message, [new EnableFlushStamp()]));
-        } catch (\RuntimeException $e) {
+        } catch (AttributeNotFoundException $e) {
             return new JsonResponse(['detail' => $e->getMessage()], 404);
         }
 
@@ -133,13 +143,39 @@ final class AttributeDetailsController implements SecuredControllerInterface
         return $request->query->getString('locale', $request->getLocale());
     }
 
-    /** @return array<string, mixed> */
+    /** @return array{
+     *    locale: string,
+     *    key: string,
+     *    name: string,
+     *    type: string,
+     *    description: string|null,
+     *    options: list<array{
+     *        type: string,
+     *        key: string,
+     *        name: string,
+     *    }>,
+     * }
+     */
     private function getData(Request $request): array
     {
-        return \array_replace(
+        /** @var array{
+         *     locale: string,
+         *     key: string,
+         *     name: string,
+         *     type: string,
+         *     description: string|null,
+         *     options: list<array{
+         *         type: string,
+         *         key: string,
+         *         name: string,
+         *     }>
+         * } $data */
+        $data = \array_replace(
             $request->request->all(),
             ['locale' => $this->getLocale($request)],
         );
+
+        return $data;
     }
 
     /** @return array<string, mixed> */
@@ -158,7 +194,7 @@ final class AttributeDetailsController implements SecuredControllerInterface
             'name' => $translation?->getName() ?? '',
             'description' => $translation?->getDescription(),
             'options' => \array_map(
-                fn(AttributeOptionInterface $option) => [
+                fn (AttributeOptionInterface $option) => [
                     'type' => 'option',
                     'key' => $option->getKey(),
                     'name' => $option->getTranslation($locale)?->getName() ?? '',
