@@ -13,15 +13,16 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Infrastructure\Sulu\Content\Select;
 
+use Sulu\Product\Application\AttributeType\AttributeTypeInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class AttributeTypeSelectService
 {
     /**
-     * @param array<string, array{form_key: string|null, form_type: string|null}> $attributeTypes
+     * @param iterable<AttributeTypeInterface> $attributeTypes
      */
     public function __construct(
-        private array $attributeTypes,
+        private iterable $attributeTypes,
         private TranslatorInterface $translator,
     ) {
     }
@@ -31,12 +32,16 @@ final class AttributeTypeSelectService
      */
     public function getValues(string $locale): array
     {
-        return \array_values(\array_map(
-            fn(string $key) => [
-                'name'  => $key,
+        $values = [];
+
+        foreach ($this->attributeTypes as $type) {
+            $key = $type->getKey();
+            $values[] = [
+                'name' => $key,
                 'title' => $this->translator->trans('sulu_product.type_' . $key, [], 'admin', $locale),
-            ],
-            \array_keys($this->attributeTypes),
-        ));
+            ];
+        }
+
+        return $values;
     }
 }

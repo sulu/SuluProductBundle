@@ -2,6 +2,15 @@
 
 declare(strict_types=1);
 
+/*
+ * This file is part of Sulu.
+ *
+ * (c) Sulu GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace Sulu\Product\Application\MessageHandler;
 
 use Sulu\Product\Application\Message\CreateAttributeMessage;
@@ -19,20 +28,32 @@ final class CreateAttributeMessageHandler
 
     public function __invoke(CreateAttributeMessage $message): AttributeInterface
     {
+        /** @var array{
+         *     locale: string,
+         *     key: string,
+         *     name: string,
+         *     type: string,
+         *     description: string|null,
+         *     options: list<array{
+         *        type: string,
+         *        key: string,
+         *        name: string,
+         *     }>|null,
+         * } $data */
         $data = $message->getData();
-        $locale = (string) $data['locale'];
+        $locale = $data['locale'];
 
         $attribute = $this->attributeRepository->create();
-        $attribute->setKey((string) $data['key']);
-        $attribute->setType((string) ($data['type'] ?? AttributeInterface::TYPE_NUMBER));
+        $attribute->setKey($data['key']);
+        $attribute->setType($data['type']);
 
-        $translation = new AttributeTranslation($attribute, $locale, (string) ($data['name'] ?? ''));
-        $translation->setDescription($data['description'] ?? null);
+        $translation = new AttributeTranslation($attribute, $locale, $data['name']);
+        $translation->setDescription($data['description']);
         $attribute->addTranslation($translation);
 
         $position = 0;
         foreach (($data['options'] ?? []) as $optionData) {
-            $optionKey = (string) ($optionData['key'] ?? '');
+            $optionKey = $optionData['key'];
 
             if ('' === $optionKey) {
                 continue;
@@ -40,7 +61,7 @@ final class CreateAttributeMessageHandler
 
             $option = new AttributeOption($attribute, $optionKey);
             $option->setPosition($position++);
-            $option->addTranslation(new AttributeOptionTranslation($option, $locale, (string) ($optionData['name'] ?? '')));
+            $option->addTranslation(new AttributeOptionTranslation($option, $locale, $optionData['name']));
             $attribute->addOption($option);
         }
 

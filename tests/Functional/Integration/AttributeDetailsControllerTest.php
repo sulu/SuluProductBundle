@@ -22,7 +22,7 @@ use Symfony\Bundle\FrameworkBundle\KernelBrowser;
  * The integration test should have no impact on the coverage so we set it to coversNothing.
  */
 #[CoversNothing]
-class ProductDetailsControllerTest extends SuluTestCase
+class AttributeDetailsControllerTest extends SuluTestCase
 {
     protected KernelBrowser $client;
 
@@ -44,29 +44,28 @@ class ProductDetailsControllerTest extends SuluTestCase
     {
         self::purgeDatabase();
 
-        $this->client->request('GET', '/admin/api/products.json?locale=en');
+        $this->client->request('GET', '/admin/api/attributes.json?locale=en');
         $response = $this->client->getResponse();
 
         $this->assertHttpStatusCode(200, $response);
 
         $data = \json_decode((string) $response->getContent(), true);
         $this->assertIsArray($data);
-        $embedded = $data['_embedded'];
-        $this->assertIsArray($embedded);
-        $this->assertSame([], $embedded['products']);
     }
 
     public function testPost(): string
     {
         $this->client->request(
             'POST',
-            '/admin/api/products.json?locale=en',
+            '/admin/api/attributes.json?locale=en',
             [],
             [],
             [],
             \json_encode([
                 'locale' => 'en',
-                'template' => 'product',
+                'key' => 'color',
+                'name' => 'Color',
+                'type' => 'text',
             ]) ?: null,
         );
 
@@ -86,10 +85,14 @@ class ProductDetailsControllerTest extends SuluTestCase
     #[Depends('testPost')]
     public function testGet(string $id): string
     {
-        $this->client->request('GET', '/admin/api/products/' . $id . '.json?locale=en');
+        $this->client->request('GET', '/admin/api/attributes/' . $id . '.json?locale=en');
         $response = $this->client->getResponse();
 
         $this->assertHttpStatusCode(200, $response);
+
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertSame('color', $data['key']);
 
         return $id;
     }
@@ -99,13 +102,15 @@ class ProductDetailsControllerTest extends SuluTestCase
     {
         $this->client->request(
             'PUT',
-            '/admin/api/products/' . $id . '.json?locale=en',
+            '/admin/api/attributes/' . $id . '.json?locale=en',
             [],
             [],
             [],
             \json_encode([
                 'locale' => 'en',
-                'code' => 'PROD-001',
+                'key' => 'colour',
+                'name' => 'Colour',
+                'type' => 'text',
             ]) ?: null,
         );
 
@@ -115,14 +120,43 @@ class ProductDetailsControllerTest extends SuluTestCase
 
         $data = \json_decode((string) $response->getContent(), true);
         $this->assertIsArray($data);
-        $this->assertSame('PROD-001', $data['code']);
+        $this->assertSame('colour', $data['key']);
 
         return $id;
     }
 
-    public function testGetInvalidIdReturns404(): void
+    public function testGetNotFound(): void
     {
-        $this->client->request('GET', '/admin/api/products/non-existent-uuid.json?locale=en');
+        $this->client->request('GET', '/admin/api/attributes/non-existent-uuid.json?locale=en');
+        $response = $this->client->getResponse();
+
+        $this->assertHttpStatusCode(404, $response);
+    }
+
+    public function testPutNotFound(): void
+    {
+        $this->client->request(
+            'PUT',
+            '/admin/api/attributes/non-existent-uuid.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'key' => 'color',
+                'name' => 'Color',
+                'type' => 'text',
+            ]) ?: null,
+        );
+
+        $response = $this->client->getResponse();
+
+        $this->assertHttpStatusCode(404, $response);
+    }
+
+    public function testDeleteNotFound(): void
+    {
+        $this->client->request('DELETE', '/admin/api/attributes/non-existent-uuid.json?locale=en');
         $response = $this->client->getResponse();
 
         $this->assertHttpStatusCode(404, $response);
@@ -131,7 +165,7 @@ class ProductDetailsControllerTest extends SuluTestCase
     #[Depends('testPut')]
     public function testDelete(string $id): void
     {
-        $this->client->request('DELETE', '/admin/api/products/' . $id . '.json?locale=en');
+        $this->client->request('DELETE', '/admin/api/attributes/' . $id . '.json?locale=en');
         $response = $this->client->getResponse();
 
         $this->assertHttpStatusCode(204, $response);
