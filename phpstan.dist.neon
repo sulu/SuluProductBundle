@@ -1,0 +1,33 @@
+includes:
+    - phpstan-baseline.neon
+    - vendor/jangregor/phpstan-prophecy/extension.neon
+    - vendor/phpstan/phpstan-symfony/extension.neon
+    - vendor/phpstan/phpstan-doctrine/extension.neon
+    - vendor/phpstan/phpstan-doctrine/rules.neon
+    - vendor/phpstan/phpstan-phpunit/extension.neon
+    - vendor/phpstan/phpstan-phpunit/rules.neon
+    - vendor/phpstan/phpstan-webmozart-assert/extension.neon
+    - vendor/spaze/phpstan-disallowed-calls/extension.neon
+
+parameters:
+    phpVersion: 80200
+    paths:
+        - src
+        - tests
+    level: max
+    parallel:
+        processTimeout: 300.0
+    reportUnmatchedIgnoredErrors: false
+    excludePaths:
+        - %currentWorkingDirectory%/tests/Application/var/*
+        - %currentWorkingDirectory%/tests/Application/Kernel.php
+    disallowedMethodCalls:
+        -
+            method: 'Doctrine\Common\Collections\Collection::clear()'
+            message: 'use add and removeElement methods instead of clear to avoid unintended data loss if domain event listeners reflush during postFlush event'
+    symfony:
+        containerXmlPath: %currentWorkingDirectory%/tests/Application/var/cache/admin/test/default/Sulu_Product_Tests_Application_KernelTestDebugContainer.xml
+        consoleApplicationLoader: tests/phpstan/console-application.php
+        constantHassers: false
+    doctrine:
+        objectManagerLoader: tests/phpstan/object-manager.php
