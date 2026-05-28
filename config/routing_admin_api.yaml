@@ -1,0 +1,53 @@
+sulu_product.get_products:
+    path: /products.{_format}
+    methods: GET
+    controller: sulu_product.admin_product_details_controller::cgetAction
+    format: json
+
+sulu_product.get_product:
+    path: /products/{id}.{_format}
+    methods: GET
+    controller: sulu_product.admin_product_details_controller::getAction
+    format: json
+
+sulu_product.post_product:
+    path: /products.{_format}
+    methods: POST
+    controller: sulu_product.admin_product_details_controller::postAction
+    format: json
+
+sulu_product.put_product:
+    path: /products/{id}.{_format}
+    methods: PUT
+    controller: sulu_product.admin_product_details_controller::putAction
+    format: json
+
+sulu_product.delete_product:
+    path: /products/{id}.{_format}
+    methods: DELETE
+    controller: sulu_product.admin_product_details_controller::deleteAction
+    format: json
+
+sulu_product.get_product_content:
+    path: /product-contents/{id}.{_format}
+    methods: GET
+    controller: sulu_product.admin_product_content_controller::getAction
+    format: json
+
+sulu_product.put_product_content:
+    path: /product-contents/{id}.{_format}
+    methods: PUT
+    controller: sulu_product.admin_product_content_controller::putAction
+    format: json
+
+sulu_product.post_product_content_trigger:
+    path: /product-contents/{id}.{_format}
+    methods: POST
+    controller: sulu_product.admin_product_content_controller::postTriggerAction
+    format: json
+
+sulu_product.get_product_versions:
+    path: /product-contents/{id}/versions.{_format}
+    methods: GET
+    controller: sulu_product.admin_product_content_controller::getVersionsAction
+    format: json

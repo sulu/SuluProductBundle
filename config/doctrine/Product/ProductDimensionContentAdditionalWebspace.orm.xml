@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <entity
+        name="Sulu\Product\Domain\Model\ProductDimensionContentAdditionalWebspace"
+        table="pr_product_dimension_content_additional_webspaces"
+    >
+        <id name="id" type="integer" column="id">
+            <generator strategy="AUTO"/>
+        </id>
+
+        <field name="additionalWebspace" type="string" column="name" length="31" />
+
+        <many-to-one field="productDimensionContent" target-entity="Sulu\Product\Domain\Model\ProductDimensionContent" inversed-by="additionalWebspaces">
+            <join-column name="product_dimension_content_id" referenced-column-name="id" on-delete="CASCADE" nullable="false" />
+        </many-to-one>
+
+        <indexes>
+            <index name="idx_product_additional_webspace" fields="additionalWebspace"/>
+        </indexes>
+    </entity>
+</doctrine-mapping>

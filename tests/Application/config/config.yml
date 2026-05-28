@@ -1,0 +1,13 @@
+framework:
+    workflows: null
+    messenger:
+        transports:
+            sync: 'sync://'
+        routing:
+
+twig:
+    paths:
+        - '%kernel.project_dir%/templates'
+
+sulu_product:
+    default_main_webspace: 'sulu-io'

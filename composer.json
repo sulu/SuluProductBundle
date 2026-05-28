@@ -1,0 +1,109 @@
+{
+    "name": "sulu/product-bundle",
+    "type": "symfony-bundle",
+    "description": "Sulu Product Bundle",
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "cmsig/seal": "^0.12",
+        "doctrine/collections": "^2.0",
+        "doctrine/orm": "^3.0",
+        "sulu/messenger": "^1.0",
+        "sulu/sulu": "~3.0",
+        "symfony/config": "^7.0",
+        "symfony/dependency-injection": "^7.0",
+        "symfony/event-dispatcher": "^7.0",
+        "symfony/http-foundation": "^7.0",
+        "symfony/http-kernel": "^7.0",
+        "symfony/messenger": "^7.0",
+        "symfony/routing": "^7.0",
+        "symfony/security-core": "^7.0",
+        "symfony/serializer": "^7.0",
+        "symfony/translation-contracts": "^3.0",
+        "symfony/uid": "^7.0",
+        "twig/twig": "^3.0",
+        "webmozart/assert": "^1.0"
+    },
+    "require-dev": {
+        "ext-filter": "*",
+        "handcraftedinthealps/code-coverage-checker": "^0.2.1",
+        "jangregor/phpstan-prophecy": "^2.0",
+        "php-cs-fixer/shim": "^3.14",
+        "phpspec/prophecy": "^1.0",
+        "phpspec/prophecy-phpunit": "^2.0",
+        "phpstan/phpstan": "^2.0",
+        "phpstan/phpstan-doctrine": "^2.0",
+        "phpstan/phpstan-phpunit": "^2.0",
+        "phpstan/phpstan-symfony": "^2.0",
+        "phpstan/phpstan-webmozart-assert": "^2.0",
+        "phpunit/phpunit": "^11.0",
+        "rector/rector": "^2.0",
+        "shipmonk/composer-dependency-analyser": "^1.0",
+        "spaze/phpstan-disallowed-calls": "^4.7",
+        "symfony/browser-kit": "^8.0",
+        "symfony/console": "^7.0",
+        "symfony/dotenv": "^7.0",
+        "symfony/framework-bundle": "^7.0",
+        "cmsig/seal-memory-adapter": "^0.12.10"
+    },
+    "autoload": {
+        "psr-4": {
+            "Sulu\\Product\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Sulu\\Product\\Tests\\": "tests/",
+            "Sulu\\Content\\Tests\\": "vendor/sulu/sulu/packages/content/tests/"
+        }
+    },
+    "scripts": {
+        "bootstrap-test-environment": [
+            "@php tests/Application/bin/console.php doctrine:database:drop --if-exists --force --env test",
+            "@php tests/Application/bin/console.php doctrine:database:create --env test",
+            "@php tests/Application/bin/console.php doctrine:schema:update --force --complete --env test"
+        ],
+        "test": "@php vendor/bin/phpunit",
+        "test-with-coverage": "@php vendor/bin/phpunit --coverage-php tests/reports/coverage.php --coverage-html tests/reports/html --log-junit tests/reports/junit.xml",
+        "check-coverage": "@php vendor/bin/code-coverage-checker \"tests/reports/coverage.php\" \"line\" \"100.00\"",
+        "lint": [
+            "@lint-composer",
+            "@lint-composer-dependencies",
+            "@lint-doctrine",
+            "@lint-container",
+            "@lint-yaml",
+            "@lint-rector",
+            "@php-cs",
+            "@phpstan"
+        ],
+        "fix": [
+            "@rector",
+            "@php-cs-fix"
+        ],
+        "phpstan": [
+            "@php tests/Application/bin/console.php cache:warmup --env test",
+            "@php vendor/bin/phpstan analyse"
+        ],
+        "php-cs": "@php vendor/bin/php-cs-fixer fix --verbose --diff --dry-run",
+        "php-cs-fix": "@php vendor/bin/php-cs-fixer fix",
+        "lint-rector": [
+            "Composer\\Config::disableProcessTimeout",
+            "@php tests/Application/bin/console.php cache:warmup --env test",
+            "@php vendor/bin/rector process --dry-run"
+        ],
+        "rector": [
+            "Composer\\Config::disableProcessTimeout",
+            "@php vendor/bin/rector process"
+        ],
+        "lint-composer": "@composer validate --strict",
+        "lint-composer-dependencies": "@php vendor/bin/composer-dependency-analyser",
+        "lint-doctrine": "@php tests/Application/bin/console.php doctrine:schema:validate --skip-sync --env test",
+        "lint-container": "@php tests/Application/bin/console.php lint:container --env test",
+        "lint-yaml": "@php tests/Application/bin/console.php lint:yaml tests/Application/config --env test"
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
+    }
+}

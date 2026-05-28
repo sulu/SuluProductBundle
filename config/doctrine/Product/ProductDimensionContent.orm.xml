@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <mapped-superclass
+        name="Sulu\Product\Domain\Model\ProductDimensionContent"
+        table="pr_product_dimension_contents"
+    >
+        <id name="id" type="integer" column="id">
+            <generator strategy="AUTO"/>
+        </id>
+
+        <field name="title" type="string" column="title" length="191" nullable="true"/>
+        <field name="customizeWebspaceSettings" type="boolean" column="customizeWebspaceSettings" nullable="false"/>
+
+        <many-to-one field="product" target-entity="Sulu\Product\Domain\Model\ProductInterface" inversed-by="dimensionContents">
+            <join-columns>
+                <join-column name="productUuid" referenced-column-name="uuid" on-delete="CASCADE" nullable="false"/>
+            </join-columns>
+        </many-to-one>
+
+        <one-to-many
+                field="additionalWebspaces"
+                target-entity="Sulu\Product\Domain\Model\ProductDimensionContentAdditionalWebspace"
+                mapped-by="productDimensionContent"
+                orphan-removal="true"
+        >
+            <cascade>
+                <cascade-persist/>
+            </cascade>
+        </one-to-many>
+    </mapped-superclass>
+</doctrine-mapping>
