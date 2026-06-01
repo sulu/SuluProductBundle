@@ -119,7 +119,10 @@ class Attribute implements AttributeInterface
 
     public function getOptions(): array
     {
-        return $this->options->toArray();
+        $options = $this->options->toArray();
+        \usort($options, static fn (AttributeOptionInterface $a, AttributeOptionInterface $b) => $a->getPosition() <=> $b->getPosition());
+
+        return $options;
     }
 
     public function getOption(string $key): ?AttributeOptionInterface

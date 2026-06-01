@@ -125,6 +125,56 @@ class AttributeDetailsControllerTest extends SuluTestCase
         return $id;
     }
 
+    #[Depends('testPut')]
+    public function testDelete(string $id): void
+    {
+        $this->client->request('DELETE', '/admin/api/attributes/' . $id . '.json?locale=en');
+        $response = $this->client->getResponse();
+
+        $this->assertHttpStatusCode(204, $response);
+    }
+
+    public function testGetSerializesOptions(): void
+    {
+        self::purgeDatabase();
+
+        $this->client->request(
+            'POST',
+            '/admin/api/attributes.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'key' => 'size',
+                'name' => 'Size',
+                'type' => 'options',
+                'options' => [
+                    ['key' => 'small', 'name' => 'Small'],
+                    ['key' => 'large', 'name' => 'Large'],
+                ],
+            ]) ?: null,
+        );
+        $postResponse = $this->client->getResponse();
+        $this->assertHttpStatusCode(201, $postResponse);
+        $postData = \json_decode((string) $postResponse->getContent(), true);
+        $this->assertIsArray($postData);
+        $id = $postData['id'];
+        $this->assertIsString($id);
+
+        $this->client->request('GET', '/admin/api/attributes/' . $id . '.json?locale=en');
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(200, $response);
+
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
+        /** @var array{options: list<array{type: string, key: string, name: string}>} $data */
+        $this->assertCount(2, $data['options']);
+        $this->assertSame('option', $data['options'][0]['type']);
+        $this->assertSame('small', $data['options'][0]['key']);
+        $this->assertSame('Small', $data['options'][0]['name']);
+    }
+
     public function testGetNotFound(): void
     {
         $this->client->request('GET', '/admin/api/attributes/non-existent-uuid.json?locale=en');
