@@ -69,4 +69,12 @@ class WebsiteProductIndexListenerTest extends TestCase
         $this->messageBus->dispatch($expectedConfig)->willReturn(new Envelope($expectedConfig))->shouldBeCalledOnce();
         $this->listener->onProductChanged($event);
     }
+
+    public function testOnProductChangedWithoutLocaleDoesNotDispatch(): void
+    {
+        $product = new Product('123');
+        $event = new ProductWorkflowTransitionAppliedEvent($product, DimensionContentInterface::STAGE_LIVE, '');
+        $this->messageBus->dispatch(\Prophecy\Argument::any())->shouldNotBeCalled();
+        $this->listener->onProductChanged($event);
+    }
 }

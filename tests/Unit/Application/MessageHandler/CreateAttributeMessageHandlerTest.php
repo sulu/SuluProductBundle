@@ -59,8 +59,11 @@ class CreateAttributeMessageHandlerTest extends TestCase
         $this->assertSame($attribute, $result);
         $this->assertSame('color', $attribute->getKey());
         $this->assertSame('text', $attribute->getType());
-        $this->assertSame('Color', $attribute->getTranslation('en')?->getName());
-        $this->assertSame('Color of the product', $attribute->getTranslation('en')?->getDescription());
+
+        $translation = $attribute->getTranslation('en');
+        $this->assertNotNull($translation);
+        $this->assertSame('Color', $translation->getName());
+        $this->assertSame('Color of the product', $translation->getDescription());
     }
 
     public function testCreateAttributeWithOptions(): void

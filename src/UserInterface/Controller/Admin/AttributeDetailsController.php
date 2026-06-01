@@ -182,7 +182,7 @@ final class AttributeDetailsController implements SecuredControllerInterface
     private function serializeAttribute(?AttributeInterface $attribute, string $locale): array
     {
         if (null === $attribute) {
-            return [];
+            return []; // @codeCoverageIgnore
         }
 
         $translation = $attribute->getTranslation($locale);

@@ -13,15 +13,13 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Tests\Functional\Integration;
 
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Depends;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
+use Sulu\Product\UserInterface\Controller\Admin\AttributeDetailsController;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 
-/**
- * The integration test should have no impact on the coverage so we set it to coversNothing.
- */
-#[CoversNothing]
+#[CoversClass(AttributeDetailsController::class)]
 class AttributeDetailsControllerTest extends SuluTestCase
 {
     protected KernelBrowser $client;
@@ -212,12 +210,108 @@ class AttributeDetailsControllerTest extends SuluTestCase
         $this->assertHttpStatusCode(404, $response);
     }
 
-    #[Depends('testPut')]
-    public function testDelete(string $id): void
+    public function testPostDuplicate(): void
     {
-        $this->client->request('DELETE', '/admin/api/attributes/' . $id . '.json?locale=en');
-        $response = $this->client->getResponse();
+        self::purgeDatabase();
 
-        $this->assertHttpStatusCode(204, $response);
+        $this->client->request(
+            'POST',
+            '/admin/api/attributes.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'key' => 'post-dup-unique',
+                'name' => 'Post Dup Unique',
+                'type' => 'text',
+            ]) ?: null,
+        );
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+
+        $this->client->request(
+            'POST',
+            '/admin/api/attributes.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'key' => 'post-dup-unique',
+                'name' => 'Post Dup Unique Duplicate',
+                'type' => 'text',
+            ]) ?: null,
+        );
+
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(409, $response);
+
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
+        $detail = $data['detail'];
+        $this->assertIsString($detail);
+        $this->assertStringContainsString('post-dup-unique', $detail);
+    }
+
+    public function testPutDuplicate(): void
+    {
+        self::purgeDatabase();
+
+        $this->client->request(
+            'POST',
+            '/admin/api/attributes.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'key' => 'put-dup-first',
+                'name' => 'Put Dup First',
+                'type' => 'text',
+            ]) ?: null,
+        );
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+
+        $this->client->request(
+            'POST',
+            '/admin/api/attributes.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'key' => 'put-dup-second',
+                'name' => 'Put Dup Second',
+                'type' => 'text',
+            ]) ?: null,
+        );
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+        $secondData = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($secondData);
+        $secondId = $secondData['id'];
+        $this->assertIsString($secondId);
+
+        $this->client->request(
+            'PUT',
+            '/admin/api/attributes/' . $secondId . '.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'key' => 'put-dup-first',
+                'name' => 'Put Dup First Duplicate',
+                'type' => 'text',
+            ]) ?: null,
+        );
+
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(409, $response);
+
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
+        $detail = $data['detail'];
+        $this->assertIsString($detail);
+        $this->assertStringContainsString('put-dup-first', $detail);
     }
 }

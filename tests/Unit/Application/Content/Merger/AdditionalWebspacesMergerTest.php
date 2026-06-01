@@ -30,6 +30,26 @@ class AdditionalWebspacesMergerTest extends TestCase
         return new AdditionalWebspacesMerger();
     }
 
+    public function testMergeDoesNothingWhenTargetNotProductDimensionContent(): void
+    {
+        $merger = $this->getAdditionalWebspacesMergerInstance();
+        $target = $this->prophesize(\Sulu\Content\Domain\Model\DimensionContentInterface::class);
+        $source = $this->prophesize(\Sulu\Content\Domain\Model\DimensionContentInterface::class);
+        $source->willImplement(ProductDimensionContentInterface::class);
+        $merger->merge($target->reveal(), $source->reveal());
+        $this->expectNotToPerformAssertions();
+    }
+
+    public function testMergeDoesNothingWhenSourceNotProductDimensionContent(): void
+    {
+        $merger = $this->getAdditionalWebspacesMergerInstance();
+        $target = $this->prophesize(\Sulu\Content\Domain\Model\DimensionContentInterface::class);
+        $target->willImplement(ProductDimensionContentInterface::class);
+        $source = $this->prophesize(\Sulu\Content\Domain\Model\DimensionContentInterface::class);
+        $merger->merge($target->reveal(), $source->reveal());
+        $this->expectNotToPerformAssertions();
+    }
+
     public function testMergeCustomizeWebspaceSettingsSet(): void
     {
         $merger = $this->getAdditionalWebspacesMergerInstance();

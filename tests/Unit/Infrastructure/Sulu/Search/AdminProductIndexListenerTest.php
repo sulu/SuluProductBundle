@@ -98,4 +98,20 @@ class AdminProductIndexListenerTest extends TestCase
         $this->messageBus->dispatch($expectedConfig)->willReturn(new Envelope($expectedConfig))->shouldBeCalledOnce();
         $this->listener->onProductChanged($event);
     }
+
+    public function testOnProductChangedWithRemovedEventWithoutLocalesDoesNotDispatch(): void
+    {
+        $product = new Product('789');
+        $event = new ProductRemovedEvent($product->getUuid(), 'Uncool product', []);
+        $this->messageBus->dispatch(\Prophecy\Argument::any())->shouldNotBeCalled();
+        $this->listener->onProductChanged($event);
+    }
+
+    public function testOnProductChangedWithoutLocaleDoesNotDispatch(): void
+    {
+        $product = new Product('123');
+        $event = new ProductCreatedEvent($product, '', []);
+        $this->messageBus->dispatch(\Prophecy\Argument::any())->shouldNotBeCalled();
+        $this->listener->onProductChanged($event);
+    }
 }

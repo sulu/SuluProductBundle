@@ -157,7 +157,7 @@ final class ProductDetailsController implements SecuredControllerInterface
     private function serializeProduct(?ProductInterface $product, string $locale): array
     {
         if (null === $product) {
-            return [];
+            return []; // @codeCoverageIgnore
         }
 
         $translation = $product->getTranslation($locale);

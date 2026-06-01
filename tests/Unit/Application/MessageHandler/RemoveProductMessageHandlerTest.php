@@ -23,6 +23,7 @@ use Sulu\Product\Application\Message\RemoveProductMessage;
 use Sulu\Product\Application\MessageHandler\RemoveProductMessageHandler;
 use Sulu\Product\Domain\Event\ProductRemovedEvent;
 use Sulu\Product\Domain\Model\Product;
+use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 
@@ -63,6 +64,49 @@ class RemoveProductMessageHandlerTest extends TestCase
         );
 
         $message = new RemoveProductMessage(['uuid' => 'prod-uuid'], 'en');
+
+        ($handler)($message);
+    }
+
+    public function testRemoveProductFallsBackToAvailableLocaleForTitle(): void
+    {
+        $product = new Product('prod-uuid-fallback');
+
+        // Unlocalized draft content with availableLocales set
+        $unlocalizedContent = new ProductDimensionContent($product);
+        $unlocalizedContent->addAvailableLocale('en');
+        $unlocalizedContent->addAvailableLocale('de');
+
+        // 'en' localized content — no title
+        $enContent = new ProductDimensionContent($product);
+        $enContent->setLocale('en');
+
+        // 'de' localized content — has title
+        $deContent = new ProductDimensionContent($product);
+        $deContent->setLocale('de');
+        $deContent->setTemplateData(['title' => 'German Title']);
+
+        $product->addDimensionContent($unlocalizedContent);
+        $product->addDimensionContent($enContent);
+        $product->addDimensionContent($deContent);
+
+        $this->productRepository->getOneBy(['uuid' => 'prod-uuid-fallback'])
+            ->shouldBeCalledOnce()
+            ->willReturn($product);
+
+        $this->productRepository->remove($product)
+            ->shouldBeCalledOnce();
+
+        $this->domainEventCollector->collect(Argument::type(ProductRemovedEvent::class))
+            ->shouldBeCalledOnce();
+
+        $handler = new RemoveProductMessageHandler(
+            $this->productRepository->reveal(),
+            $this->domainEventCollector->reveal(),
+            null,
+        );
+
+        $message = new RemoveProductMessage(['uuid' => 'prod-uuid-fallback'], 'en');
 
         ($handler)($message);
     }

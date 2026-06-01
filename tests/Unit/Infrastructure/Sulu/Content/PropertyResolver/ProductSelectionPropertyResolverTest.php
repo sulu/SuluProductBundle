@@ -31,6 +31,11 @@ class ProductSelectionPropertyResolverTest extends TestCase
         $this->resolver = new ProductSelectionPropertyResolver();
     }
 
+    public function testGetType(): void
+    {
+        $this->assertSame('product_selection', ProductSelectionPropertyResolver::getType());
+    }
+
     public function testResolveEmpty(): void
     {
         $contentView = $this->resolver->resolve([], 'en');
@@ -134,6 +139,15 @@ class ProductSelectionPropertyResolverTest extends TestCase
         $this->assertSame(['properties' => ['title' => 'title', 'url' => 'url']], $content[0]->getMetadata());
         $references = $contentView->getReferences();
         $this->assertCount(1, $references);
+    }
+
+    public function testResolveListWithNonStringIdentifier(): void
+    {
+        // When a list element is not a string, the resolver returns ContentView::create([], $params)
+        // where $params = [], so getView() returns [] (no 'ids' key added).
+        $contentView = $this->resolver->resolve(['valid-uuid', 123], 'en');
+        $this->assertEmpty($contentView->getContent());
+        $this->assertSame([], $contentView->getView());
     }
 
     public function testResolveWithEmptyMetadata(): void
