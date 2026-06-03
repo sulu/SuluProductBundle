@@ -31,6 +31,11 @@ class SingleProductSelectionPropertyResolverTest extends TestCase
         $this->resolver = new SingleProductSelectionPropertyResolver();
     }
 
+    public function testGetType(): void
+    {
+        $this->assertSame('single_product_selection', SingleProductSelectionPropertyResolver::getType());
+    }
+
     public function testResolveNull(): void
     {
         $contentView = $this->resolver->resolve(null, 'en');

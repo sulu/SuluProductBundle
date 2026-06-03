@@ -1,0 +1,146 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of Sulu.
+ *
+ * (c) Sulu GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
+namespace Sulu\Product\Tests\Unit\Domain\Model;
+
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\TestCase;
+use Sulu\Product\Domain\Model\Attribute;
+use Sulu\Product\Domain\Model\AttributeInterface;
+use Sulu\Product\Domain\Model\AttributeOption;
+use Sulu\Product\Domain\Model\AttributeTranslation;
+
+#[CoversClass(Attribute::class)]
+class AttributeTest extends TestCase
+{
+    public function testConstructorDefaults(): void
+    {
+        $attribute = new Attribute();
+        $this->assertNull($attribute->getUuid());
+        $this->assertSame(AttributeInterface::TYPE_NUMBER, $attribute->getType());
+        $this->assertSame([], $attribute->getOptions());
+        $this->assertNull($attribute->getTranslation('en'));
+    }
+
+    public function testSetKeyIsFluentAndStores(): void
+    {
+        $attribute = new Attribute();
+        $this->assertSame($attribute, $attribute->setKey('color'));
+        $this->assertSame('color', $attribute->getKey());
+    }
+
+    public function testSetTypeIsFluentAndStores(): void
+    {
+        $attribute = new Attribute();
+        $this->assertSame($attribute, $attribute->setType(AttributeInterface::TYPE_TEXT));
+        $this->assertSame(AttributeInterface::TYPE_TEXT, $attribute->getType());
+    }
+
+    public function testSetCurrentLocaleIsFluentAndUsedByGetTranslation(): void
+    {
+        $attribute = new Attribute();
+        $this->assertSame($attribute, $attribute->setCurrentLocale('de'));
+
+        $translationDe = new AttributeTranslation($attribute, 'de', 'Farbe');
+        $attribute->addTranslation($translationDe);
+
+        $this->assertSame($translationDe, $attribute->getTranslation());
+    }
+
+    public function testGetTranslationByExplicitLocale(): void
+    {
+        $attribute = new Attribute();
+        $en = new AttributeTranslation($attribute, 'en', 'Color');
+        $de = new AttributeTranslation($attribute, 'de', 'Farbe');
+        $attribute->addTranslation($en);
+        $attribute->addTranslation($de);
+
+        $this->assertSame($en, $attribute->getTranslation('en'));
+        $this->assertSame($de, $attribute->getTranslation('de'));
+        $this->assertNull($attribute->getTranslation('fr'));
+    }
+
+    public function testAddTranslationIsFluentAndDeduplicates(): void
+    {
+        $attribute = new Attribute();
+        $translation = new AttributeTranslation($attribute, 'en', 'Color');
+
+        $this->assertSame($attribute, $attribute->addTranslation($translation));
+        $attribute->addTranslation($translation);
+
+        // Adding same instance twice should not duplicate; only one translation lookup
+        $this->assertSame($translation, $attribute->getTranslation('en'));
+    }
+
+    public function testRemoveTranslationIsFluent(): void
+    {
+        $attribute = new Attribute();
+        $translation = new AttributeTranslation($attribute, 'en', 'Color');
+        $attribute->addTranslation($translation);
+
+        $this->assertSame($attribute, $attribute->removeTranslation($translation));
+        $this->assertNull($attribute->getTranslation('en'));
+    }
+
+    public function testGetOptionsReturnsArray(): void
+    {
+        $attribute = new Attribute();
+        $option = new AttributeOption($attribute, 'red');
+
+        $attribute->addOption($option);
+
+        $this->assertSame([$option], $attribute->getOptions());
+    }
+
+    public function testGetOptionByKey(): void
+    {
+        $attribute = new Attribute();
+        $red = new AttributeOption($attribute, 'red');
+        $blue = new AttributeOption($attribute, 'blue');
+        $attribute->addOption($red);
+        $attribute->addOption($blue);
+
+        $this->assertSame($red, $attribute->getOption('red'));
+        $this->assertSame($blue, $attribute->getOption('blue'));
+        $this->assertNull($attribute->getOption('green'));
+    }
+
+    public function testAddOptionIsFluentAndDeduplicates(): void
+    {
+        $attribute = new Attribute();
+        $option = new AttributeOption($attribute, 'red');
+
+        $this->assertSame($attribute, $attribute->addOption($option));
+        $attribute->addOption($option);
+
+        $this->assertCount(1, $attribute->getOptions());
+    }
+
+    public function testRemoveOptionIsFluent(): void
+    {
+        $attribute = new Attribute();
+        $option = new AttributeOption($attribute, 'red');
+        $attribute->addOption($option);
+
+        $this->assertSame($attribute, $attribute->removeOption($option));
+        $this->assertCount(0, $attribute->getOptions());
+    }
+
+    public function testGetIdReturnsDoctrineGeneratedId(): void
+    {
+        $model = new Attribute();
+        $ref = new \ReflectionProperty(Attribute::class, 'id');
+        $ref->setValue($model, 42);
+        $this->assertSame(42, $model->getId());
+    }
+}

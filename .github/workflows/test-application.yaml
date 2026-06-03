@@ -8,6 +8,9 @@ on:
             - '[0-9]+.[0-9]+'
     workflow_dispatch:
 
+env:
+    CI_GROUP_OUTPUT: true
+
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
     cancel-in-progress: true
@@ -56,6 +59,16 @@ jobs:
                           SYMFONY_DEPRECATIONS_HELPER: weak
                           DATABASE_URL: mysql://root:ChangeMe@127.0.0.1:3306/sulu_test?serverVersion=8.0&charset=utf8mb4
 
+                    - php-version: '8.5'
+                      database: mysql-84
+                      dependency-versions: 'highest'
+                      php-extensions: 'ctype, iconv, mysql, gd'
+                      tools: 'composer:snapshot'
+                      composer-stability: 'dev'
+                      env:
+                          SYMFONY_DEPRECATIONS_HELPER: weak
+                          DATABASE_URL: mysql://root:ChangeMe@127.0.0.1:3306/sulu_test?serverVersion=8.4&charset=utf8mb4
+
         steps:
             - name: Checkout project
               uses: actions/checkout@v4
@@ -72,6 +85,15 @@ jobs:
                   ini-values: memory_limit=-1
                   coverage: none
 
+            - name: Remove Lint Tools
+              # These tools are not required to run tests, so we are removing them to improve dependency resolving and
+              # testing lowest versions.
+              run: composer remove "*php-cs-fixer*" "*phpstan*" "*rector*" --dev --no-update
+
+            - name: Set composer stability
+              if: ${{ matrix.composer-stability }}
+              run: composer config minimum-stability ${{ matrix.composer-stability }}
+
             - name: Install composer dependencies
               uses: ramsey/composer-install@v3
               with:
@@ -84,6 +106,53 @@ jobs:
             - name: Execute test cases
               run: composer test
               env: ${{ matrix.env }}
+
+    php-lint:
+        name: "PHP Lint"
+        runs-on: ubuntu-22.04
+        timeout-minutes: 30
+
+        env:
+            APP_ENV: test
+            APP_SECRET: a448d1dfcaa563fce56c2fd9981f662b
+            MAILER_URL: null://localhost
+            SULU_ADMIN_EMAIL:
+            COMPOSER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+        steps:
+            - name: Checkout project
+              uses: actions/checkout@v4
+
+            - name: Install and configure PHP
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.3'
+                  extensions: 'ctype, iconv, mysql'
+                  tools: 'composer:v2'
+                  ini-values: memory_limit=-1
+                  coverage: none
+
+            - name: Install composer dependencies
+              uses: ramsey/composer-install@v3
+              with:
+                  dependency-versions: highest
+
+            - name: Output versions and installed dependencies
+              run: |
+                  echo 'PHP Version:'
+                  php --version
+                  echo ''
+                  echo 'PHP Modules:'
+                  php -m
+                  echo ''
+                  echo 'Composer Info:'
+                  composer info
+                  echo ''
+                  echo 'Composer Lock:'
+                  cat composer.lock
+
+            - name: Lint code
+              run: composer lint
 
     php-coverage:
         name: "PHP Coverage"

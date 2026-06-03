@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Sulu\Product\Tests\Unit\Infrastructure\Sulu\HttpCache\EventSubscriber;
 
 use PHPUnit\Framework\TestCase;
+use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Bundle\CategoryBundle\Entity\Category;
@@ -194,8 +195,9 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
             'en'
         );
 
-        $this->cacheManager->invalidateReference()->shouldNotBeCalled();
-        $this->cacheManager->invalidatePath()->shouldNotBeCalled();
+        $this->cacheManager->invalidateReference(Argument::cetera())->shouldNotBeCalled();
+        $this->cacheManager->invalidatePath(Argument::cetera())->shouldNotBeCalled();
+        $this->cacheManager->invalidateTag(Argument::cetera())->shouldNotBeCalled();
 
         $this->subscriber->onWorkflowTransition($event);
     }
@@ -313,5 +315,99 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
             ->shouldBeCalled();
 
         $this->subscriber->onWorkflowTransition($event);
+    }
+
+    public function testWorkflowTransitionSkipsWhenNoCacheManager(): void
+    {
+        $subscriber = new ProductCacheInvalidationSubscriber(
+            null,
+            $this->routeRepository->reveal(),
+            $this->contentAggregator->reveal(),
+            $this->routeGenerator->reveal(),
+            $this->webspaceManager->reveal()
+        );
+
+        $product = new Product('product-uuid-123');
+        $event = new ProductWorkflowTransitionAppliedEvent(
+            $product,
+            WorkflowInterface::WORKFLOW_TRANSITION_PUBLISH,
+            'en'
+        );
+
+        // The local $subscriber has null cacheManager; $this->cacheManager is irrelevant here.
+        // Test passes if no unexpected Prophecy calls are made.
+        $this->expectNotToPerformAssertions();
+
+        $subscriber->onWorkflowTransition($event);
+    }
+
+    public function testProductRemovedSkipsWhenNoCacheManager(): void
+    {
+        $subscriber = new ProductCacheInvalidationSubscriber(
+            null,
+            $this->routeRepository->reveal(),
+            $this->contentAggregator->reveal(),
+            $this->routeGenerator->reveal(),
+            $this->webspaceManager->reveal()
+        );
+
+        $event = new ProductRemovedEvent(
+            'product-uuid-456',
+            'Test Product',
+            ['locales' => ['en']]
+        );
+
+        // The local $subscriber has null cacheManager; $this->cacheManager is irrelevant here.
+        // Test passes if no unexpected Prophecy calls are made.
+        $this->expectNotToPerformAssertions();
+
+        $subscriber->onProductRemoved($event);
+    }
+
+    public function testInvalidatePathsSkipsWhenLocaleIsNull(): void
+    {
+        $product = new Product('product-uuid-123');
+
+        /** @var \Prophecy\Prophecy\ObjectProphecy<ProductWorkflowTransitionAppliedEvent> $eventProphecy */
+        $eventProphecy = $this->prophesize(ProductWorkflowTransitionAppliedEvent::class);
+        $eventProphecy->getWorkflowTransitionName()->willReturn(WorkflowInterface::WORKFLOW_TRANSITION_PUBLISH);
+        $eventProphecy->getProduct()->willReturn($product);
+        $eventProphecy->getResourceLocale()->willReturn(null);
+
+        $this->cacheManager->supportsTags()->willReturn(false);
+        $this->cacheManager->invalidateTag('product-uuid-123')->shouldBeCalled();
+
+        // routeRepository->findBy must NOT be called because locale is null
+        // contentAggregator->aggregate must NOT be called because locale is null
+        // (No predictions set — unexpected calls will cause test failure)
+
+        $this->subscriber->onWorkflowTransition($eventProphecy->reveal());
+    }
+
+    public function testInvalidateExcerptSkipsWhenLocaleIsNull(): void
+    {
+        $product = new Product('product-uuid-123');
+
+        /** @var \Prophecy\Prophecy\ObjectProphecy<ProductWorkflowTransitionAppliedEvent> $eventProphecy */
+        $eventProphecy = $this->prophesize(ProductWorkflowTransitionAppliedEvent::class);
+        $eventProphecy->getWorkflowTransitionName()->willReturn(WorkflowInterface::WORKFLOW_TRANSITION_PUBLISH);
+        $eventProphecy->getProduct()->willReturn($product);
+        $eventProphecy->getResourceLocale()->willReturn(null);
+
+        $this->cacheManager->supportsTags()->willReturn(true);
+        $this->cacheManager->invalidateTag('product-uuid-123')->shouldBeCalled();
+
+        // contentAggregator->aggregate must NOT be called because locale is null
+        // (No predictions set — unexpected calls will cause test failure)
+
+        $this->subscriber->onWorkflowTransition($eventProphecy->reveal());
+    }
+
+    public function testGetSubscribedEvents(): void
+    {
+        $events = ProductCacheInvalidationSubscriber::getSubscribedEvents();
+
+        $this->assertArrayHasKey(ProductWorkflowTransitionAppliedEvent::class, $events);
+        $this->assertArrayHasKey(ProductRemovedEvent::class, $events);
     }
 }

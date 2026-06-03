@@ -172,4 +172,33 @@ class AdditionalWebspacesDataMapperTest extends TestCase
         $data = ['customizeWebspaceSettings' => true, 'mainWebspace' => 'sulu-io', 'additionalWebspaces' => ['example-com']];
         $dataMapper->map($unlocalizedDimensionContent->reveal(), $dimensionContent->reveal(), $data);
     }
+
+    public function testMapThrowsWhenWebspaceNotFound(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('nonexistent-webspace');
+        $dataMapper = $this->getAdditionalWebspacesDataMapperInstance();
+        $unlocalizedDimensionContent = $this->prophesize(DimensionContentInterface::class);
+        $dimensionContent = $this->prophesize(DimensionContentInterface::class);
+        $dimensionContent->willImplement(ProductDimensionContentInterface::class);
+        $dimensionContent->setCustomizeWebspaceSettings(true)->shouldBeCalled()->willReturn($dimensionContent->reveal());
+        $dimensionContent->getLocale()->willReturn('en');
+        $this->webspaceManager->findWebspaceByKey('nonexistent-webspace')->willReturn(null);
+        $data = ['customizeWebspaceSettings' => true, 'mainWebspace' => 'sulu-io', 'additionalWebspaces' => ['nonexistent-webspace']];
+        $dataMapper->map($unlocalizedDimensionContent->reveal(), $dimensionContent->reveal(), $data);
+    }
+
+    public function testMapSkipsLocaleValidationWhenLocaleIsEmpty(): void
+    {
+        $dataMapper = $this->getAdditionalWebspacesDataMapperInstance();
+        $unlocalizedDimensionContent = $this->prophesize(DimensionContentInterface::class);
+        $dimensionContent = $this->prophesize(DimensionContentInterface::class);
+        $dimensionContent->willImplement(ProductDimensionContentInterface::class);
+        $dimensionContent->setCustomizeWebspaceSettings(true)->shouldBeCalled()->willReturn($dimensionContent->reveal());
+        $dimensionContent->getLocale()->willReturn(null);
+        $dimensionContent->setAdditionalWebspaces(['example-com'])->shouldBeCalled()->willReturn($dimensionContent->reveal());
+        // webspaceManager->findWebspaceByKey() must NOT be called when locale is empty (early return)
+        $data = ['customizeWebspaceSettings' => true, 'mainWebspace' => 'sulu-io', 'additionalWebspaces' => ['example-com']];
+        $dataMapper->map($unlocalizedDimensionContent->reveal(), $dimensionContent->reveal(), $data);
+    }
 }

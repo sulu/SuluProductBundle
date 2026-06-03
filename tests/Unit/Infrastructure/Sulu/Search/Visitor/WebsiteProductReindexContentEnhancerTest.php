@@ -21,6 +21,7 @@ use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\SectionMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\TagMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\TypedFormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\MetadataProviderInterface;
@@ -633,6 +634,224 @@ class WebsiteProductReindexContentEnhancerTest extends TestCase
         $returnedData = $this->enhancer->enhanceDocument($result, ['content' => []]);
 
         $this->assertSame(['Body content'], $returnedData['content']);
+    }
+
+    public function testVisitWithUnknownTemplateKeyReturnsUnchanged(): void
+    {
+        $formMetadata = new FormMetadata();
+        $formMetadata->setKey('default');
+
+        $typedFormMetadata = new TypedFormMetadata();
+        $typedFormMetadata->addForm('default', $formMetadata);
+
+        $this->formMetadataProvider->getMetadata('product', 'en', [])
+            ->willReturn($typedFormMetadata)
+            ->shouldBeCalledOnce();
+
+        $result = [
+            'templateKey' => 'missing',
+            'locale' => 'en',
+            'templateData' => ['title' => 'Test'],
+        ];
+
+        $data = ['content' => []];
+
+        $returnedData = $this->enhancer->enhanceDocument($result, $data);
+
+        $this->assertSame($data, $returnedData);
+    }
+
+    public function testVisitSkipsNonFieldMetadataInsideBlock(): void
+    {
+        $textField = new FieldMetadata('text');
+        $textField->setType('text_line');
+        $textField->addTag($this->createTag(TagMetadata::SEARCH_FIELD_TAG));
+
+        $section = new SectionMetadata('section');
+
+        $blockTypeForm = new FormMetadata();
+        $blockTypeForm->setKey('text');
+        $blockTypeForm->addItem($section);
+        $blockTypeForm->addItem($textField);
+
+        $blocksField = new FieldMetadata('blocks');
+        $blocksField->setType('block');
+        $blocksField->addType($blockTypeForm);
+
+        $formMetadata = new FormMetadata();
+        $formMetadata->setKey('default');
+        $formMetadata->addItem($blocksField);
+
+        $typedFormMetadata = new TypedFormMetadata();
+        $typedFormMetadata->addForm('default', $formMetadata);
+
+        $this->formMetadataProvider->getMetadata('product', 'en', [])
+            ->willReturn($typedFormMetadata)
+            ->shouldBeCalledOnce();
+
+        $result = [
+            'templateKey' => 'default',
+            'locale' => 'en',
+            'templateData' => [
+                'blocks' => [
+                    ['type' => 'text', 'text' => 'Block text'],
+                ],
+            ],
+        ];
+
+        $returnedData = $this->enhancer->enhanceDocument($result, ['content' => []]);
+
+        $this->assertSame(['Block text'], $returnedData['content']);
+    }
+
+    public function testTitleRoleWithUnsupportedTypeIsIgnored(): void
+    {
+        $titleField = new FieldMetadata('headline');
+        $titleField->setType('media_selection');
+        $titleField->addTag($this->createTag(TagMetadata::SEARCH_FIELD_TAG, 'title'));
+
+        $formMetadata = new FormMetadata();
+        $formMetadata->setKey('default');
+        $formMetadata->addItem($titleField);
+
+        $typedFormMetadata = new TypedFormMetadata();
+        $typedFormMetadata->addForm('default', $formMetadata);
+
+        $this->formMetadataProvider->getMetadata('product', 'en', [])
+            ->willReturn($typedFormMetadata)
+            ->shouldBeCalledOnce();
+
+        $result = [
+            'templateKey' => 'default',
+            'locale' => 'en',
+            'templateData' => [
+                'headline' => ['id' => 1],
+            ],
+        ];
+
+        $returnedData = $this->enhancer->enhanceDocument($result, ['content' => [], 'title' => '']);
+
+        $this->assertSame('', $returnedData['title']);
+    }
+
+    public function testImageRoleWithUnsupportedTypeIsIgnored(): void
+    {
+        $imageField = new FieldMetadata('image');
+        $imageField->setType('text_line');
+        $imageField->addTag($this->createTag(TagMetadata::SEARCH_FIELD_TAG, 'image'));
+
+        $formMetadata = new FormMetadata();
+        $formMetadata->setKey('default');
+        $formMetadata->addItem($imageField);
+
+        $typedFormMetadata = new TypedFormMetadata();
+        $typedFormMetadata->addForm('default', $formMetadata);
+
+        $this->formMetadataProvider->getMetadata('product', 'en', [])
+            ->willReturn($typedFormMetadata)
+            ->shouldBeCalledOnce();
+
+        $result = [
+            'templateKey' => 'default',
+            'locale' => 'en',
+            'templateData' => [
+                'image' => '/some-path',
+            ],
+        ];
+
+        $returnedData = $this->enhancer->enhanceDocument($result, ['content' => []]);
+
+        $this->assertArrayNotHasKey('mediaId', $returnedData);
+    }
+
+    public function testImageRoleWithNonArrayValueIsIgnored(): void
+    {
+        $imageField = new FieldMetadata('image');
+        $imageField->setType('single_media_selection');
+        $imageField->addTag($this->createTag(TagMetadata::SEARCH_FIELD_TAG, 'image'));
+
+        $formMetadata = new FormMetadata();
+        $formMetadata->setKey('default');
+        $formMetadata->addItem($imageField);
+
+        $typedFormMetadata = new TypedFormMetadata();
+        $typedFormMetadata->addForm('default', $formMetadata);
+
+        $this->formMetadataProvider->getMetadata('product', 'en', [])
+            ->willReturn($typedFormMetadata)
+            ->shouldBeCalledOnce();
+
+        $result = [
+            'templateKey' => 'default',
+            'locale' => 'en',
+            'templateData' => [
+                'image' => 'not-an-array',
+            ],
+        ];
+
+        $returnedData = $this->enhancer->enhanceDocument($result, ['content' => []]);
+
+        $this->assertArrayNotHasKey('mediaId', $returnedData);
+    }
+
+    public function testFieldValueWithNonArrayIntermediatePathReturnsNull(): void
+    {
+        $field = new FieldMetadata('blocks.text');
+        $field->setType('text_line');
+        $field->addTag($this->createTag(TagMetadata::SEARCH_FIELD_TAG));
+
+        $formMetadata = new FormMetadata();
+        $formMetadata->setKey('default');
+        $formMetadata->addItem($field);
+
+        $typedFormMetadata = new TypedFormMetadata();
+        $typedFormMetadata->addForm('default', $formMetadata);
+
+        $this->formMetadataProvider->getMetadata('product', 'en', [])
+            ->willReturn($typedFormMetadata)
+            ->shouldBeCalledOnce();
+
+        $result = [
+            'templateKey' => 'default',
+            'locale' => 'en',
+            'templateData' => [
+                'blocks' => 'a-scalar-not-an-array',
+            ],
+        ];
+
+        $returnedData = $this->enhancer->enhanceDocument($result, ['content' => []]);
+
+        $this->assertSame([], $returnedData['content']);
+    }
+
+    public function testFieldValueWithScalarValueProducesNoContent(): void
+    {
+        $field = new FieldMetadata('count');
+        $field->setType('text_line');
+        $field->addTag($this->createTag(TagMetadata::SEARCH_FIELD_TAG));
+
+        $formMetadata = new FormMetadata();
+        $formMetadata->setKey('default');
+        $formMetadata->addItem($field);
+
+        $typedFormMetadata = new TypedFormMetadata();
+        $typedFormMetadata->addForm('default', $formMetadata);
+
+        $this->formMetadataProvider->getMetadata('product', 'en', [])
+            ->willReturn($typedFormMetadata)
+            ->shouldBeCalledOnce();
+
+        $result = [
+            'templateKey' => 'default',
+            'locale' => 'en',
+            'templateData' => [
+                'count' => 123,
+            ],
+        ];
+
+        $returnedData = $this->enhancer->enhanceDocument($result, ['content' => []]);
+
+        $this->assertSame([], $returnedData['content']);
     }
 
     private function createBlockFormMetadata(): FormMetadata
