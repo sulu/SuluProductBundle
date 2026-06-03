@@ -22,6 +22,7 @@ use Sulu\Product\Application\Mapper\ProductMapperInterface;
 use Sulu\Product\Application\Message\ModifyProductMessage;
 use Sulu\Product\Application\MessageHandler\ModifyProductMessageHandler;
 use Sulu\Product\Domain\Event\ProductModifiedEvent;
+use Sulu\Product\Domain\Exception\ProductCodeNotUniqueException;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 
@@ -79,5 +80,27 @@ class ModifyProductMessageHandlerTest extends TestCase
         $result = ($this->handler)($message);
 
         $this->assertSame($product, $result);
+    }
+
+    public function testModifyProductThrowsOnDuplicateCode(): void
+    {
+        $product = new Product('prod-uuid');
+        $data = ['locale' => 'en', 'code' => 'TAKEN-CODE'];
+
+        $this->productRepository->getOneBy(
+            Argument::that(fn (array $filters) => isset($filters['locale']) && 'en' === $filters['locale']),
+            Argument::type('array')
+        )
+            ->shouldBeCalledOnce()
+            ->willReturn($product);
+
+        $this->productRepository->existBy(['code' => 'TAKEN-CODE'])
+            ->willReturn(true);
+
+        $message = new ModifyProductMessage(['uuid' => 'prod-uuid'], $data);
+
+        $this->expectException(ProductCodeNotUniqueException::class);
+
+        ($this->handler)($message);
     }
 }

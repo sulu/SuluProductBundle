@@ -48,6 +48,16 @@ class WebsiteProductReindexExcerptEnhancerTest extends TestCase
         $this->assertSame('', $returnedData['mediaId']);
     }
 
+    public function testExcerptDataNonArrayReturnsUnchanged(): void
+    {
+        $queryResult = ['excerptData' => 'not-an-array'];
+        $document = ['content' => [], 'title' => '', 'mediaId' => ''];
+
+        $returnedData = $this->enhancer->enhanceDocument($queryResult, $document);
+
+        $this->assertSame($document, $returnedData);
+    }
+
     public function testExcerptDataMissingReturnsUnchanged(): void
     {
         $queryResult = [];
