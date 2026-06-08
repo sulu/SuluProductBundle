@@ -48,7 +48,7 @@ final class CreateAttributeMessageHandler
         $attribute->setType($data['type']);
 
         $translation = new AttributeTranslation($attribute, $locale, $data['name']);
-        $translation->setDescription($data['description']);
+        $translation->setDescription($data['description'] ?? null);
         $attribute->addTranslation($translation);
 
         $position = 0;

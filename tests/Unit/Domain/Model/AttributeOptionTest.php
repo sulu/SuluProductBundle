@@ -37,6 +37,7 @@ class AttributeOptionTest extends TestCase
         $option = new AttributeOption($attribute, 'red');
 
         $this->assertNull($option->getUuid());
+        $this->assertSame(0, $option->getPosition());
         $this->assertNull($option->getTranslation('en'));
     }
 
@@ -47,6 +48,15 @@ class AttributeOptionTest extends TestCase
 
         $this->assertSame($option, $option->setKey('green'));
         $this->assertSame('green', $option->getKey());
+    }
+
+    public function testSetPositionIsFluentAndStores(): void
+    {
+        $attribute = new Attribute();
+        $option = new AttributeOption($attribute, 'red');
+
+        $this->assertSame($option, $option->setPosition(5));
+        $this->assertSame(5, $option->getPosition());
     }
 
     public function testGetTranslationByLocaleAndUnknownReturnsNull(): void

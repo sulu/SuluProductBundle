@@ -13,12 +13,11 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Tests\Unit\Domain\Exception;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Product\Domain\Exception\AttributeNotFoundException;
 
-/**
- * @covers \Sulu\Product\Domain\Exception\AttributeNotFoundException
- */
+#[CoversClass(AttributeNotFoundException::class)]
 class AttributeNotFoundExceptionTest extends TestCase
 {
     public function testGetCriteria(): void
