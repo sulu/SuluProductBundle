@@ -40,7 +40,7 @@ use Symfony\Component\Messenger\MessageBusInterface;
 /**
  * @internal
  */
-final class AttributeDetailsController implements SecuredControllerInterface
+final class AttributeController implements SecuredControllerInterface
 {
     use HandleTrait;
 
@@ -63,7 +63,7 @@ final class AttributeDetailsController implements SecuredControllerInterface
         $listBuilder = $this->listBuilderFactory->create(AttributeInterface::class);
         $listBuilder->setIdField($fieldDescriptors['id']);
         $this->restHelper->initializeListBuilder($listBuilder, $fieldDescriptors);
-        $listBuilder->setParameter('locale', $request->query->get('locale'));
+        $listBuilder->setParameter('locale', $this->getLocale($request));
 
         $listRepresentation = new PaginatedRepresentation(
             $listBuilder->execute(),
@@ -182,7 +182,7 @@ final class AttributeDetailsController implements SecuredControllerInterface
     private function serializeAttribute(?AttributeInterface $attribute, string $locale): array
     {
         if (null === $attribute) {
-            return [];
+            return []; // @codeCoverageIgnore
         }
 
         $translation = $attribute->getTranslation($locale);

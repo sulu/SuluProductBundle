@@ -93,7 +93,7 @@ use Sulu\Product\Infrastructure\Sulu\Search\WebsiteProductReindexProvider;
 use Sulu\Product\Infrastructure\Sulu\Sitemap\ProductsSitemapProvider;
 use Sulu\Product\Infrastructure\Sulu\Trash\ProductTrashItemHandler;
 use Sulu\Product\Infrastructure\Symfony\Twig\ProductTwigExtension;
-use Sulu\Product\UserInterface\Controller\Admin\AttributeDetailsController;
+use Sulu\Product\UserInterface\Controller\Admin\AttributeController;
 use Sulu\Product\UserInterface\Controller\Admin\ProductContentController;
 use Sulu\Product\UserInterface\Controller\Admin\ProductDetailsController;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
@@ -375,7 +375,7 @@ final class SuluProductBundle extends AbstractBundle
             ->tag('messenger.message_handler');
 
         $services->set('sulu_product.admin_attribute_details_controller')
-            ->class(AttributeDetailsController::class)
+            ->class(AttributeController::class)
             ->public()
             ->args([
                 new Reference('sulu_product.attribute_repository'),

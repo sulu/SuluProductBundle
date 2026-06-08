@@ -23,7 +23,7 @@
             <joins ref="translation"/>
         </property>
 
-        <property name="key" translation="sulu_product.key" visibility="yes" searchability="yes">
+        <property name="key" translation="sulu_admin.key" visibility="yes" searchability="yes">
             <field-name>key</field-name>
             <entity-name>Sulu\Product\Domain\Model\AttributeInterface</entity-name>
         </property>

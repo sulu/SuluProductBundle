@@ -21,7 +21,7 @@ use Sulu\Product\Domain\Model\AttributeTranslation;
 #[CoversClass(AttributeTranslation::class)]
 class AttributeTranslationTest extends TestCase
 {
-    public function testConstructorAssignsValues(): void
+    public function testConstructorAssignsValuesAndDefaults(): void
     {
         $attribute = new Attribute();
         $translation = new AttributeTranslation($attribute, 'en', 'Color');
@@ -29,6 +29,7 @@ class AttributeTranslationTest extends TestCase
         $this->assertSame($attribute, $translation->getAttribute());
         $this->assertSame('en', $translation->getLocale());
         $this->assertSame('Color', $translation->getName());
+        $this->assertNull($translation->getDescription());
     }
 
     public function testSetLocaleIsFluentAndStores(): void
@@ -45,6 +46,17 @@ class AttributeTranslationTest extends TestCase
 
         $this->assertSame($translation, $translation->setName('Farbe'));
         $this->assertSame('Farbe', $translation->getName());
+    }
+
+    public function testSetDescriptionIsFluentAndStores(): void
+    {
+        $translation = new AttributeTranslation(new Attribute(), 'en', 'Color');
+
+        $this->assertSame($translation, $translation->setDescription('A color attribute'));
+        $this->assertSame('A color attribute', $translation->getDescription());
+
+        $translation->setDescription(null);
+        $this->assertNull($translation->getDescription());
     }
 
     public function testGetIdReturnsDoctrineGeneratedId(): void

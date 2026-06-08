@@ -46,12 +46,12 @@
                     <properties>
                         <property name="key" type="text_line" mandatory="true" colspan="6">
                             <meta>
-                                <title>sulu_product.key</title>
+                                <title>sulu_admin.key</title>
                             </meta>
                         </property>
                         <property name="name" type="text_line" mandatory="true" colspan="6">
                             <meta>
-                                <title>sulu_product.name</title>
+                                <title>sulu_admin.name</title>
                             </meta>
                         </property>
                     </properties>
