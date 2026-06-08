@@ -50,6 +50,13 @@ class Attribute implements AttributeInterface
         return $this->uuid;
     }
 
+    public function setUuid(string $uuid): self
+    {
+        $this->uuid = $uuid;
+
+        return $this;
+    }
+
     public function getKey(): string
     {
         return $this->key;
@@ -84,6 +91,7 @@ class Attribute implements AttributeInterface
     public function getTranslation(?string $locale = null): ?AttributeTranslationInterface
     {
         $locale ??= $this->currentLocale;
+
         foreach ($this->translations as $translation) {
             if ($translation->getLocale() === $locale) {
                 return $translation;
@@ -111,7 +119,10 @@ class Attribute implements AttributeInterface
 
     public function getOptions(): array
     {
-        return $this->options->toArray();
+        $options = $this->options->toArray();
+        \usort($options, static fn (AttributeOptionInterface $a, AttributeOptionInterface $b) => $a->getPosition() <=> $b->getPosition());
+
+        return $options;
     }
 
     public function getOption(string $key): ?AttributeOptionInterface

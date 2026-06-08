@@ -9,6 +9,7 @@
 
         <field name="locale" type="string" length="5" nullable="false"/>
         <field name="name" type="string" length="255" nullable="false"/>
+        <field name="description" type="text" nullable="true"/>
 
         <many-to-one field="attribute"
                      target-entity="Sulu\Product\Domain\Model\AttributeInterface"

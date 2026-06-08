@@ -32,6 +32,13 @@ class AttributeTest extends TestCase
         $this->assertNull($attribute->getTranslation('en'));
     }
 
+    public function testSetUuidIsFluentAndStores(): void
+    {
+        $attribute = new Attribute();
+        $this->assertSame($attribute, $attribute->setUuid('uuid-value'));
+        $this->assertSame('uuid-value', $attribute->getUuid());
+    }
+
     public function testSetKeyIsFluentAndStores(): void
     {
         $attribute = new Attribute();
