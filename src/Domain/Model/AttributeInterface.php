@@ -19,6 +19,7 @@ interface AttributeInterface
     public const TYPE_TEXT = 'text';
     public const TYPE_JSON = 'json';
     public const TYPE_OPTIONS = 'options';
+    public const TYPE_MEDIA = 'media';
 
     public const RESOURCE_KEY = 'attributes';
     public const FORM_KEY = 'attribute_details';

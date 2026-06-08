@@ -19,6 +19,7 @@ use Sulu\Bundle\PersistenceBundle\PersistenceBundleTrait;
 use Sulu\Content\Infrastructure\Sulu\Preview\ContentObjectProvider;
 use Sulu\Product\Application\AttributeType\AttributeTypeInterface;
 use Sulu\Product\Application\AttributeType\JsonAttributeType;
+use Sulu\Product\Application\AttributeType\MediaAttributeType;
 use Sulu\Product\Application\AttributeType\NumberAttributeType;
 use Sulu\Product\Application\AttributeType\OptionsAttributeType;
 use Sulu\Product\Application\AttributeType\TextAttributeType;
@@ -209,6 +210,10 @@ final class SuluProductBundle extends AbstractBundle
 
         $services->set('sulu_product.attribute_type_options')
             ->class(OptionsAttributeType::class)
+            ->tag('sulu_product.attribute_type');
+
+        $services->set('sulu_product.attribute_type_media')
+            ->class(MediaAttributeType::class)
             ->tag('sulu_product.attribute_type');
 
         // Message Handler services

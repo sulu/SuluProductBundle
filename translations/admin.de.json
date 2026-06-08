@@ -7,6 +7,8 @@
     "sulu_product.type_json": "JSON",
     "sulu_product.type_options": "Optionen",
     "sulu_product.type_date": "Datum",
+    "sulu_product.type_media": "Medien",
+    "sulu_product.media": "Medien",
     "sulu_product.option": "Option",
     "sulu_product.product": "Produkt",
     "sulu_product.code": "Code",
