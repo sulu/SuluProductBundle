@@ -1,0 +1,26 @@
+<?xml version="1.0" ?>
+<list xmlns="http://schemas.sulu.io/list-builder/list">
+    <key>attribute_sets</key>
+
+    <joins name="translation">
+        <join>
+            <entity-name>translation</entity-name>
+            <field-name>Sulu\Product\Domain\Model\AttributeSetInterface.translations</field-name>
+            <method>LEFT</method>
+            <condition>translation.locale = :locale</condition>
+        </join>
+    </joins>
+
+    <properties>
+        <property name="id" translation="sulu_admin.id" visibility="no">
+            <field-name>uuid</field-name>
+            <entity-name>Sulu\Product\Domain\Model\AttributeSetInterface</entity-name>
+        </property>
+
+        <property name="name" translation="sulu_admin.name" visibility="always" searchability="yes">
+            <field-name>name</field-name>
+            <entity-name>translation</entity-name>
+            <joins ref="translation"/>
+        </property>
+    </properties>
+</list>

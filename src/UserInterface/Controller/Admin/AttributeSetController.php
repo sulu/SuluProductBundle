@@ -22,14 +22,13 @@ use Sulu\Component\Rest\ListBuilder\PaginatedRepresentation;
 use Sulu\Component\Rest\RestHelperInterface;
 use Sulu\Component\Security\SecuredControllerInterface;
 use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushStamp;
-use Sulu\Product\Application\Message\CreateAttributeMessage;
-use Sulu\Product\Application\Message\ModifyAttributeMessage;
-use Sulu\Product\Application\Message\RemoveAttributeMessage;
-use Sulu\Product\Domain\Exception\AttributeNotFoundException;
-use Sulu\Product\Domain\Model\AttributeInterface;
-use Sulu\Product\Domain\Model\AttributeOptionInterface;
-use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
-use Sulu\Product\Infrastructure\Sulu\Admin\AttributeAdmin;
+use Sulu\Product\Application\Message\CreateAttributeSetMessage;
+use Sulu\Product\Application\Message\ModifyAttributeSetMessage;
+use Sulu\Product\Application\Message\RemoveAttributeSetMessage;
+use Sulu\Product\Domain\Exception\AttributeSetNotFoundException;
+use Sulu\Product\Domain\Model\AttributeSetAttributeInterface;
+use Sulu\Product\Domain\Model\AttributeSetInterface;
+use Sulu\Product\Domain\Repository\AttributeSetRepositoryInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -38,16 +37,16 @@ use Symfony\Component\Messenger\HandleTrait;
 use Symfony\Component\Messenger\MessageBusInterface;
 
 /**
- * @phpstan-import-type CreateAttributeMessageData from CreateAttributeMessage
- *
  * @internal
  */
-final class AttributeController implements SecuredControllerInterface
+final class AttributeSetController implements SecuredControllerInterface
 {
     use HandleTrait;
 
+    public const SECURITY_CONTEXT = 'sulu.product.attribute_sets';
+
     public function __construct(
-        private AttributeRepositoryInterface $attributeRepository,
+        private AttributeSetRepositoryInterface $attributeSetRepository,
         MessageBusInterface $messageBus,
         private FieldDescriptorFactoryInterface $fieldDescriptorFactory,
         private DoctrineListBuilderFactoryInterface $listBuilderFactory,
@@ -59,17 +58,17 @@ final class AttributeController implements SecuredControllerInterface
     public function cgetAction(Request $request): Response
     {
         /** @var DoctrineFieldDescriptorInterface[] $fieldDescriptors */
-        $fieldDescriptors = $this->fieldDescriptorFactory->getFieldDescriptors(AttributeInterface::RESOURCE_KEY);
+        $fieldDescriptors = $this->fieldDescriptorFactory->getFieldDescriptors(AttributeSetInterface::RESOURCE_KEY);
 
         /** @var DoctrineListBuilder $listBuilder */
-        $listBuilder = $this->listBuilderFactory->create(AttributeInterface::class);
+        $listBuilder = $this->listBuilderFactory->create(AttributeSetInterface::class);
         $listBuilder->setIdField($fieldDescriptors['id']);
         $this->restHelper->initializeListBuilder($listBuilder, $fieldDescriptors);
         $listBuilder->setParameter('locale', $this->getLocale($request));
 
         $listRepresentation = new PaginatedRepresentation(
             $listBuilder->execute(),
-            AttributeInterface::RESOURCE_KEY,
+            AttributeSetInterface::RESOURCE_KEY,
             (int) $listBuilder->getCurrentPage(),
             (int) $listBuilder->getLimit(),
             $listBuilder->count(),
@@ -81,54 +80,65 @@ final class AttributeController implements SecuredControllerInterface
     public function getAction(Request $request, string $id): Response
     {
         $locale = $this->getLocale($request);
-        $attribute = $this->attributeRepository->findOneBy(['uuid' => $id]);
+        $set = $this->attributeSetRepository->findOneBy(['uuid' => $id]);
 
-        if (null === $attribute) {
-            return new JsonResponse(['detail' => 'Attribute not found.'], 404);
+        if (null === $set) {
+            return new JsonResponse(['detail' => 'AttributeSet not found.'], 404);
         }
 
-        return new JsonResponse($this->serializeAttribute($attribute, $locale));
+        return new JsonResponse($this->serializeAttributeSet($set, $locale));
     }
 
     public function postAction(Request $request): Response
     {
         $data = $this->getData($request);
-        $message = new CreateAttributeMessage($data);
+        $message = new CreateAttributeSetMessage(
+            $data['locale'],
+            $data['name'],
+            $data['description'],
+            $data['attributes'],
+        );
 
         try {
-            /** @var AttributeInterface $attribute */
-            $attribute = $this->handle(new Envelope($message, [new EnableFlushStamp()]));
+            /** @var AttributeSetInterface $set */
+            $set = $this->handle(new Envelope($message, [new EnableFlushStamp()]));
         } catch (UniqueConstraintViolationException $e) {
-            return new JsonResponse(['detail' => \sprintf('Attribute with key "%s" already exists.', $data['key'])], 409);
+            return new JsonResponse(['detail' => 'AttributeSet already exists.'], 409);
         }
 
-        return new JsonResponse($this->serializeAttribute($attribute, $this->getLocale($request)), 201);
+        return new JsonResponse($this->serializeAttributeSet($set, $this->getLocale($request)), 201);
     }
 
     public function putAction(Request $request, string $id): Response
     {
         $data = $this->getData($request);
-        $message = new ModifyAttributeMessage(['uuid' => $id], $data);
+        $message = new ModifyAttributeSetMessage(
+            $id,
+            $data['locale'],
+            $data['name'],
+            $data['description'],
+            $data['attributes'],
+        );
 
         try {
-            /** @var AttributeInterface $attribute */
-            $attribute = $this->handle(new Envelope($message, [new EnableFlushStamp()]));
+            /** @var AttributeSetInterface $set */
+            $set = $this->handle(new Envelope($message, [new EnableFlushStamp()]));
         } catch (UniqueConstraintViolationException $e) {
-            return new JsonResponse(['detail' => \sprintf('Attribute with key "%s" already exists.', $data['key'])], 409);
-        } catch (AttributeNotFoundException $e) {
+            return new JsonResponse(['detail' => 'AttributeSet already exists.'], 409);
+        } catch (AttributeSetNotFoundException $e) {
             return new JsonResponse(['detail' => $e->getMessage()], 404);
         }
 
-        return new JsonResponse($this->serializeAttribute($attribute, $this->getLocale($request)));
+        return new JsonResponse($this->serializeAttributeSet($set, $this->getLocale($request)));
     }
 
     public function deleteAction(Request $request, string $id): Response
     {
-        $message = new RemoveAttributeMessage(['uuid' => $id]);
+        $message = new RemoveAttributeSetMessage($id);
 
         try {
             $this->handle(new Envelope($message, [new EnableFlushStamp()]));
-        } catch (AttributeNotFoundException $e) {
+        } catch (AttributeSetNotFoundException $e) {
             return new JsonResponse(['detail' => $e->getMessage()], 404);
         }
 
@@ -137,7 +147,7 @@ final class AttributeController implements SecuredControllerInterface
 
     public function getSecurityContext(): string
     {
-        return AttributeAdmin::SECURITY_CONTEXT;
+        return self::SECURITY_CONTEXT;
     }
 
     public function getLocale(Request $request): string
@@ -145,43 +155,48 @@ final class AttributeController implements SecuredControllerInterface
         return $request->query->getString('locale', $request->getLocale());
     }
 
-    /**
-     * @return CreateAttributeMessageData
+    /** @return array{
+     *   locale: string,
+     *   name: string,
+     *   description: string|null,
+     *   attributes: list<array{attribute: string, required?: bool, position: int}>,
+     * }
      */
     private function getData(Request $request): array
     {
-        /** @var CreateAttributeMessageData $data */
-        $data = \array_replace(
-            $request->request->all(),
-            ['locale' => $this->getLocale($request)],
-        );
+        /** @var array{
+         *     locale: string,
+         *     name: string,
+         *     description: string|null,
+         *     attributes: list<array{attribute: string, required?: bool, position: int}>,
+         * } $data */
+        $data = [
+            'name' => $request->request->get('name', ''),
+            'description' => $request->request->get('description'),
+            'attributes' => $request->request->all('attributes'),
+            'locale' => $this->getLocale($request),
+        ];
 
         return $data;
     }
 
     /** @return array<string, mixed> */
-    private function serializeAttribute(?AttributeInterface $attribute, string $locale): array
+    private function serializeAttributeSet(AttributeSetInterface $set, string $locale): array
     {
-        if (null === $attribute) {
-            return []; // @codeCoverageIgnore
-        }
-
-        $translation = $attribute->getTranslation($locale);
+        $translation = $set->getTranslation($locale);
 
         return [
-            'id' => $attribute->getUuid(),
-            'key' => $attribute->getKey(),
-            'type' => $attribute->getType(),
-            'externalIdentifier' => $attribute->getExternalIdentifier(),
+            'id' => $set->getUuid() ?? '',
             'name' => $translation?->getName() ?? '',
             'description' => $translation?->getDescription(),
-            'options' => \array_map(
-                fn (AttributeOptionInterface $option) => [
-                    'type' => 'option',
-                    'key' => $option->getKey(),
-                    'name' => $option->getTranslation($locale)?->getName() ?? '',
+            'externalIdentifier' => $set->getExternalIdentifier(),
+            'attributes' => \array_map(
+                static fn (AttributeSetAttributeInterface $sa) => [
+                    'type' => 'attribute_item',
+                    'attribute' => $sa->getAttribute()->getUuid(),
+                    'required' => $sa->getRequired(),
                 ],
-                $attribute->getOptions(),
+                $set->getSetAttributes(),
             ),
         ];
     }

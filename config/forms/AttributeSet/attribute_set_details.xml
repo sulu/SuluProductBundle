@@ -3,7 +3,7 @@
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/form-1.0.xsd">
 
-    <key>attribute_details</key>
+    <key>attribute_set_details</key>
 
     <properties>
         <property name="name" type="text_line" mandatory="true">
@@ -24,46 +24,30 @@
             </meta>
         </property>
 
-        <property name="key" type="text_line" mandatory="true" colspan="6">
-            <meta>
-                <title>sulu_admin.key</title>
-            </meta>
-        </property>
-
-        <property name="type" type="single_select" mandatory="true" colspan="6">
-            <meta>
-                <title>sulu_product.type</title>
-            </meta>
-            <params>
-                <param name="values" type="expression"
-                    value="service('sulu_product.attribute_type_select_service').getValues(locale)"/>
-            </params>
-        </property>
-
         <property name="description" type="text_editor">
             <meta>
                 <title>sulu_admin.description</title>
             </meta>
         </property>
 
-        <block name="options" default-type="option" colspan="12" visibleCondition='type == "options"'>
+        <block name="attributes" default-type="attribute_item" colspan="12">
             <meta>
-                <title>sulu_product.options</title>
+                <title>sulu_product.attributes</title>
             </meta>
             <types>
-                <type name="option">
+                <type name="attribute_item">
                     <meta>
-                        <title>sulu_product.option</title>
+                        <title>sulu_product.attribute</title>
                     </meta>
                     <properties>
-                        <property name="key" type="text_line" mandatory="true" colspan="6">
+                        <property name="attribute" type="single_attribute_selection" mandatory="true" colspan="10">
                             <meta>
-                                <title>sulu_admin.key</title>
+                                <title>sulu_product.attribute</title>
                             </meta>
                         </property>
-                        <property name="name" type="text_line" mandatory="true" colspan="6">
+                        <property name="required" type="checkbox" colspan="2">
                             <meta>
-                                <title>sulu_admin.name</title>
+                                <title>sulu_product.required</title>
                             </meta>
                         </property>
                     </properties>

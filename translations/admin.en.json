@@ -1,6 +1,10 @@
 {
     "sulu_product.products": "Products",
     "sulu_product.attributes": "Attributes",
+    "sulu_product.attribute_sets": "Attribute Sets",
+    "sulu_product.required": "Required",
+    "sulu_product.no_attribute_selected": "No attribute selected",
+    "sulu_product.select_attribute": "Select attribute",
     "sulu_product.type": "Type",
     "sulu_product.type_number": "Number",
     "sulu_product.type_text": "Text",
@@ -10,6 +14,7 @@
     "sulu_product.option": "Option",
     "sulu_product.product": "Product",
     "sulu_product.code": "Code",
+    "sulu_product.external_identifier": "External Identifier",
     "sulu_product.options": "Options",
     "sulu_product.no_product_selected": "No product selected",
     "sulu_product.single_selection_overlay_title": "Choose product",

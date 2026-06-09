@@ -39,6 +39,15 @@ class AttributeTest extends TestCase
         $this->assertSame('uuid-value', $attribute->getUuid());
     }
 
+    public function testSetExternalIdentifierIsFluentAndStores(): void
+    {
+        $attribute = new Attribute();
+        $this->assertSame($attribute, $attribute->setExternalIdentifier('ext-123'));
+        $this->assertSame('ext-123', $attribute->getExternalIdentifier());
+        $attribute->setExternalIdentifier(null);
+        $this->assertNull($attribute->getExternalIdentifier());
+    }
+
     public function testSetKeyIsFluentAndStores(): void
     {
         $attribute = new Attribute();

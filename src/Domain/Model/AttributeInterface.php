@@ -30,6 +30,10 @@ interface AttributeInterface
 
     public function setUuid(string $uuid): self;
 
+    public function getExternalIdentifier(): ?string;
+
+    public function setExternalIdentifier(?string $externalIdentifier): self;
+
     public function getKey(): string;
 
     public function setKey(string $key): self;

@@ -40,6 +40,10 @@ interface ProductInterface extends AuditableInterface, ContentRichEntityInterfac
 
     public function getTranslation(string $locale): ?ProductTranslationInterface;
 
+    public function getExternalIdentifier(): ?string;
+
+    public function setExternalIdentifier(?string $externalIdentifier): self;
+
     public function addTranslation(ProductTranslationInterface $translation): self;
 
     public function removeTranslation(ProductTranslationInterface $translation): self;

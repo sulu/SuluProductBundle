@@ -23,6 +23,8 @@ class Attribute implements AttributeInterface
 
     protected ?string $uuid = null;
 
+    protected ?string $externalIdentifier = null;
+
     protected string $key;
 
     protected string $type = self::TYPE_NUMBER;
@@ -52,6 +54,18 @@ class Attribute implements AttributeInterface
     public function setUuid(string $uuid): self
     {
         $this->uuid = $uuid;
+
+        return $this;
+    }
+
+    public function getExternalIdentifier(): ?string
+    {
+        return $this->externalIdentifier;
+    }
+
+    public function setExternalIdentifier(?string $externalIdentifier): self
+    {
+        $this->externalIdentifier = $externalIdentifier;
 
         return $this;
     }

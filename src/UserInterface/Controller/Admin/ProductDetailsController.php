@@ -171,6 +171,7 @@ final class ProductDetailsController implements SecuredControllerInterface
             'id' => $product->getUuid(),
             'name' => $translation?->getName() ?? '',
             'code' => $product->getCode(),
+            'externalIdentifier' => $product->getExternalIdentifier(),
         ];
     }
 }

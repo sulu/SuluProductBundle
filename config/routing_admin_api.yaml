@@ -81,3 +81,33 @@ sulu_product.delete_attribute:
     methods: DELETE
     controller: sulu_product.admin_attribute_details_controller::deleteAction
     format: json
+
+sulu_product.get_attribute_sets:
+    path: /attribute-sets.{_format}
+    methods: GET
+    controller: sulu_product.admin_attribute_set_details_controller::cgetAction
+    format: json
+
+sulu_product.get_attribute_set:
+    path: /attribute-sets/{id}.{_format}
+    methods: GET
+    controller: sulu_product.admin_attribute_set_details_controller::getAction
+    format: json
+
+sulu_product.post_attribute_set:
+    path: /attribute-sets.{_format}
+    methods: POST
+    controller: sulu_product.admin_attribute_set_details_controller::postAction
+    format: json
+
+sulu_product.put_attribute_set:
+    path: /attribute-sets/{id}.{_format}
+    methods: PUT
+    controller: sulu_product.admin_attribute_set_details_controller::putAction
+    format: json
+
+sulu_product.delete_attribute_set:
+    path: /attribute-sets/{id}.{_format}
+    methods: DELETE
+    controller: sulu_product.admin_attribute_set_details_controller::deleteAction
+    format: json

@@ -62,6 +62,15 @@ class ProductTest extends TestCase
         $this->assertNull($product->getCode());
     }
 
+    public function testSetExternalIdentifierIsFluentAndStores(): void
+    {
+        $product = new Product();
+        $this->assertSame($product, $product->setExternalIdentifier('ext-789'));
+        $this->assertSame('ext-789', $product->getExternalIdentifier());
+        $product->setExternalIdentifier(null);
+        $this->assertNull($product->getExternalIdentifier());
+    }
+
     public function testGetTranslationByExplicitLocale(): void
     {
         $product = new Product();

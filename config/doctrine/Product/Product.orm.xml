@@ -11,6 +11,7 @@
         </id>
 
         <field name="code" type="string" nullable="true" unique="true" length="255"/>
+        <field name="externalIdentifier" type="string" length="255" nullable="true" column="external_identifier"/>
 
         <one-to-many field="dimensionContents" target-entity="Sulu\Product\Domain\Model\ProductDimensionContentInterface" mapped-by="product">
             <cascade>
