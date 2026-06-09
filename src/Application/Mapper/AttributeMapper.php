@@ -31,6 +31,10 @@ final class AttributeMapper implements AttributeMapperInterface
     public function mapAttributeData(AttributeInterface $attribute, CreateAttributeMessage|ModifyAttributeMessage $message): void
     {
         $attribute->setKey($message->getKey());
+        $attribute->setMeasurementFamily($message->getMeasurementFamily());
+        $attribute->setUnit($message->getUnit());
+        $attribute->setMin($message->getMin());
+        $attribute->setMax($message->getMax());
         $this->mapTranslation($attribute, $message);
         $this->mapOptions($attribute, $message);
 

@@ -220,6 +220,106 @@ class ModifyAttributeMessageHandlerTest extends TestCase
         $this->assertSame('large', \reset($options)->getKey());
     }
 
+    public function testModifyAttributeSetsMeasurementUnit(): void
+    {
+        $attribute = new Attribute(new AttributeGroup());
+        $attribute->setPosition(0);
+
+        $this->attributeRepository->getOneBy(['uuid' => 'attr-uuid'])->willReturn($attribute);
+        $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
+
+        $handler = $this->createHandler();
+
+        ($handler)(new ModifyAttributeMessage(['uuid' => 'attr-uuid'], [
+            'locale' => 'en',
+            'key' => 'weight',
+            'type' => 'number',
+            'name' => 'Weight',
+            'position' => 0,
+            'measurementFamily' => 'weight',
+            'unit' => 'KILOGRAM',
+        ]));
+
+        $this->assertSame('weight', $attribute->getMeasurementFamily());
+        $this->assertSame('KILOGRAM', $attribute->getUnit());
+    }
+
+    public function testModifyAttributeClearsMeasurementUnitWhenNullPassed(): void
+    {
+        $attribute = new Attribute(new AttributeGroup());
+        $attribute->setPosition(0);
+        $attribute->setMeasurementFamily('weight');
+        $attribute->setUnit('KILOGRAM');
+
+        $this->attributeRepository->getOneBy(['uuid' => 'attr-uuid'])->willReturn($attribute);
+        $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
+
+        $handler = $this->createHandler();
+
+        ($handler)(new ModifyAttributeMessage(['uuid' => 'attr-uuid'], [
+            'locale' => 'en',
+            'key' => 'weight',
+            'type' => 'number',
+            'name' => 'Weight',
+            'position' => 0,
+            'measurementFamily' => null,
+            'unit' => null,
+        ]));
+
+        $this->assertNull($attribute->getMeasurementFamily());
+        $this->assertNull($attribute->getUnit());
+    }
+
+    public function testModifyAttributeSetsMinMax(): void
+    {
+        $attribute = new Attribute(new AttributeGroup());
+        $attribute->setPosition(0);
+
+        $this->attributeRepository->getOneBy(['uuid' => 'attr-uuid'])->willReturn($attribute);
+        $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
+
+        $handler = $this->createHandler();
+
+        ($handler)(new ModifyAttributeMessage(['uuid' => 'attr-uuid'], [
+            'locale' => 'en',
+            'key' => 'weight',
+            'type' => 'number',
+            'name' => 'Weight',
+            'position' => 0,
+            'min' => 1.0,
+            'max' => 50.0,
+        ]));
+
+        $this->assertSame(1.0, $attribute->getMin());
+        $this->assertSame(50.0, $attribute->getMax());
+    }
+
+    public function testModifyAttributeClearsMinMaxWhenNullPassed(): void
+    {
+        $attribute = new Attribute(new AttributeGroup());
+        $attribute->setPosition(0);
+        $attribute->setMin(1.0);
+        $attribute->setMax(50.0);
+
+        $this->attributeRepository->getOneBy(['uuid' => 'attr-uuid'])->willReturn($attribute);
+        $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
+
+        $handler = $this->createHandler();
+
+        ($handler)(new ModifyAttributeMessage(['uuid' => 'attr-uuid'], [
+            'locale' => 'en',
+            'key' => 'weight',
+            'type' => 'number',
+            'name' => 'Weight',
+            'position' => 0,
+            'min' => null,
+            'max' => null,
+        ]));
+
+        $this->assertNull($attribute->getMin());
+        $this->assertNull($attribute->getMax());
+    }
+
     public function testModifyAttributeUpdatesPositionFromData(): void
     {
         $group = new AttributeGroup();

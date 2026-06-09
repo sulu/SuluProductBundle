@@ -1,0 +1,16 @@
+<?xml version="1.0" ?>
+<list xmlns="http://schemas.sulu.io/list-builder/list">
+    <key>measurement_units</key>
+
+    <properties>
+        <property name="id" translation="sulu_admin.id" visibility="no">
+            <field-name>id</field-name>
+            <entity-name>Sulu\Product\Infrastructure\Measurement\MeasurementFamilyRegistry</entity-name>
+        </property>
+
+        <property name="title" translation="sulu_product.unit" visibility="always" searchability="yes">
+            <field-name>title</field-name>
+            <entity-name>Sulu\Product\Infrastructure\Measurement\MeasurementFamilyRegistry</entity-name>
+        </property>
+    </properties>
+</list>

@@ -39,6 +39,13 @@ class Attribute implements AttributeInterface
 
     protected AttributeGroupInterface $group;
 
+    protected ?string $measurementFamily = null;
+
+    protected ?string $unit = null;
+
+    /** @var array<string, mixed> */
+    protected array $config = [];
+
     public function __construct(AttributeGroupInterface $group)
     {
         $this->translations = new ArrayCollection();
@@ -102,7 +109,7 @@ class Attribute implements AttributeInterface
     public function getTranslation(string $locale): ?AttributeTranslationInterface
     {
         $criteria = Criteria::create()
-            ->where(Criteria::expr()->eq('locale', $locale));
+        ->where(Criteria::expr()->eq('locale', $locale));
 
         /** @var AttributeTranslationInterface|false $translation */
         $translation = $this->translations->matching($criteria)->first();
@@ -181,6 +188,66 @@ class Attribute implements AttributeInterface
     public function setGroup(AttributeGroupInterface $group): self
     {
         $this->group = $group;
+
+        return $this;
+    }
+
+    public function getMeasurementFamily(): ?string
+    {
+        return $this->measurementFamily;
+    }
+
+    public function setMeasurementFamily(?string $measurementFamily): self
+    {
+        $this->measurementFamily = $measurementFamily;
+
+        return $this;
+    }
+
+    public function getUnit(): ?string
+    {
+        return $this->unit;
+    }
+
+    public function setUnit(?string $unit): self
+    {
+        $this->unit = $unit;
+
+        return $this;
+    }
+
+    public function getMin(): ?float
+    {
+        $value = $this->config['min'] ?? null;
+
+        return null !== $value ? (float) $value : null;
+    }
+
+    public function setMin(?float $min): self
+    {
+        if (null === $min) {
+            unset($this->config['min']);
+        } else {
+            $this->config['min'] = $min;
+        }
+
+        return $this;
+    }
+
+    public function getMax(): ?float
+    {
+        $value = $this->config['max'] ?? null;
+
+        return null !== $value ? (float) $value : null;
+    }
+
+    public function setMax(?float $max): self
+    {
+        if (null === $max) {
+            unset($this->config['max']);
+        } else {
+            $this->config['max'] = $max;
+        }
 
         return $this;
     }

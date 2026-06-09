@@ -121,6 +121,82 @@ class CreateAttributeMessageHandlerTest extends TestCase
         $this->assertSame('Large', $options[1]->getTranslation('en')?->getName());
     }
 
+    public function testCreateAttributeWithMeasurementUnit(): void
+    {
+        $group = $this->makeGroup();
+        $attribute = new Attribute($group);
+
+        $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid-1'])->willReturn($group);
+        $this->attributeGroupRepository->save($group)->shouldBeCalledOnce();
+        $this->attributeRepository->create($group)->willReturn($attribute);
+        $this->attributeRepository->findNextPositionInGroup($group)->willReturn(0);
+        $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
+
+        $result = ($this->createHandler())(new CreateAttributeMessage([
+            'locale' => 'en',
+            'key' => 'height',
+            'name' => 'Height',
+            'type' => 'number',
+            'description' => null,
+            'group' => 'group-uuid-1',
+            'measurementFamily' => 'length',
+            'unit' => 'CENTIMETER',
+        ]));
+
+        $this->assertSame('length', $result->getMeasurementFamily());
+        $this->assertSame('CENTIMETER', $result->getUnit());
+    }
+
+    public function testCreateAttributeWithoutMeasurementUnitLeavesNulls(): void
+    {
+        $group = $this->makeGroup();
+        $attribute = new Attribute($group);
+
+        $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid-1'])->willReturn($group);
+        $this->attributeGroupRepository->save($group)->shouldBeCalledOnce();
+        $this->attributeRepository->create($group)->willReturn($attribute);
+        $this->attributeRepository->findNextPositionInGroup($group)->willReturn(0);
+        $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
+
+        $result = ($this->createHandler())(new CreateAttributeMessage([
+            'locale' => 'en',
+            'key' => 'color',
+            'name' => 'Color',
+            'type' => 'text',
+            'description' => null,
+            'group' => 'group-uuid-1',
+        ]));
+
+        $this->assertNull($result->getMeasurementFamily());
+        $this->assertNull($result->getUnit());
+    }
+
+    public function testCreateAttributeWithMinMax(): void
+    {
+        $group = $this->makeGroup();
+        $attribute = new Attribute($group);
+
+        $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid-1'])->willReturn($group);
+        $this->attributeGroupRepository->save($group)->shouldBeCalledOnce();
+        $this->attributeRepository->create($group)->willReturn($attribute);
+        $this->attributeRepository->findNextPositionInGroup($group)->willReturn(0);
+        $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
+
+        $result = ($this->createHandler())(new CreateAttributeMessage([
+            'locale' => 'en',
+            'key' => 'weight',
+            'name' => 'Weight',
+            'type' => 'number',
+            'description' => null,
+            'group' => 'group-uuid-1',
+            'min' => 0.0,
+            'max' => 100.0,
+        ]));
+
+        $this->assertSame(0.0, $result->getMin());
+        $this->assertSame(100.0, $result->getMax());
+    }
+
     public function testCreateAttributeSetsPositionFromData(): void
     {
         $group = $this->makeGroup();
