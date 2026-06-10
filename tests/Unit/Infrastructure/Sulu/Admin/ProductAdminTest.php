@@ -26,7 +26,7 @@ use Sulu\Component\Localization\Manager\LocalizationManagerInterface;
 use Sulu\Component\Security\Authorization\PermissionTypes;
 use Sulu\Component\Security\Authorization\SecurityCheckerInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeAdmin;
-use Sulu\Product\Infrastructure\Sulu\Admin\AttributeSetAdmin;
+use Sulu\Product\Infrastructure\Sulu\Admin\AttributeGroupAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 
 #[CoversClass(ProductAdmin::class)]
@@ -69,7 +69,7 @@ class ProductAdminTest extends TestCase
     {
         $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(false);
         $this->securityChecker->hasPermission(AttributeAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(false);
-        $this->securityChecker->hasPermission(AttributeSetAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(false);
+        $this->securityChecker->hasPermission(AttributeGroupAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(false);
 
         $collection = new NavigationItemCollection();
         $this->admin->configureNavigationItems($collection);
@@ -81,7 +81,7 @@ class ProductAdminTest extends TestCase
     {
         $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(true);
         $this->securityChecker->hasPermission(AttributeAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(true);
-        $this->securityChecker->hasPermission(AttributeSetAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(false);
+        $this->securityChecker->hasPermission(AttributeGroupAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(false);
 
         $collection = new NavigationItemCollection();
         $this->admin->configureNavigationItems($collection);
@@ -96,7 +96,7 @@ class ProductAdminTest extends TestCase
     {
         $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(true);
         $this->securityChecker->hasPermission(AttributeAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(false);
-        $this->securityChecker->hasPermission(AttributeSetAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(false);
+        $this->securityChecker->hasPermission(AttributeGroupAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(false);
 
         $collection = new NavigationItemCollection();
         $this->admin->configureNavigationItems($collection);
@@ -107,11 +107,11 @@ class ProductAdminTest extends TestCase
         $this->assertCount(1, $parent->getChildren());
     }
 
-    public function testConfigureNavigationItemsAddsAttributeSetsChild(): void
+    public function testConfigureNavigationItemsAddsAttributeGroupsChild(): void
     {
         $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(false);
         $this->securityChecker->hasPermission(AttributeAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(false);
-        $this->securityChecker->hasPermission(AttributeSetAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(true);
+        $this->securityChecker->hasPermission(AttributeGroupAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(true);
 
         $collection = new NavigationItemCollection();
         $this->admin->configureNavigationItems($collection);
@@ -122,14 +122,14 @@ class ProductAdminTest extends TestCase
         $children = $parent->getChildren();
         $this->assertCount(1, $children);
         $child = \reset($children);
-        $this->assertSame(AttributeSetAdmin::LIST_VIEW, $child->getView());
+        $this->assertSame(AttributeGroupAdmin::LIST_VIEW, $child->getView());
     }
 
     public function testConfigureNavigationItemsAllThreeChildren(): void
     {
         $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(true);
         $this->securityChecker->hasPermission(AttributeAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(true);
-        $this->securityChecker->hasPermission(AttributeSetAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(true);
+        $this->securityChecker->hasPermission(AttributeGroupAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(true);
 
         $collection = new NavigationItemCollection();
         $this->admin->configureNavigationItems($collection);

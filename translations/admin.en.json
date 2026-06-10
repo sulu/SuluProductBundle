@@ -1,7 +1,8 @@
 {
     "sulu_product.products": "Products",
+    "sulu_product.attribute": "Attribute",
     "sulu_product.attributes": "Attributes",
-    "sulu_product.attribute_sets": "Attribute Sets",
+    "sulu_product.attribute_groups": "Attribute Groups",
     "sulu_product.required": "Required",
     "sulu_product.no_attribute_selected": "No attribute selected",
     "sulu_product.select_attribute": "Select attribute",

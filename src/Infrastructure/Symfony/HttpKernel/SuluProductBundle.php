@@ -28,14 +28,14 @@ use Sulu\Product\Application\Mapper\ProductDetailsMapper;
 use Sulu\Product\Application\Mapper\ProductMapperInterface;
 use Sulu\Product\Application\MessageHandler\ApplyWorkflowTransitionProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\CopyLocaleProductMessageHandler;
+use Sulu\Product\Application\MessageHandler\CreateAttributeGroupMessageHandler;
 use Sulu\Product\Application\MessageHandler\CreateAttributeMessageHandler;
-use Sulu\Product\Application\MessageHandler\CreateAttributeSetMessageHandler;
 use Sulu\Product\Application\MessageHandler\CreateProductMessageHandler;
+use Sulu\Product\Application\MessageHandler\ModifyAttributeGroupMessageHandler;
 use Sulu\Product\Application\MessageHandler\ModifyAttributeMessageHandler;
-use Sulu\Product\Application\MessageHandler\ModifyAttributeSetMessageHandler;
 use Sulu\Product\Application\MessageHandler\ModifyProductMessageHandler;
+use Sulu\Product\Application\MessageHandler\RemoveAttributeGroupMessageHandler;
 use Sulu\Product\Application\MessageHandler\RemoveAttributeMessageHandler;
-use Sulu\Product\Application\MessageHandler\RemoveAttributeSetMessageHandler;
 use Sulu\Product\Application\MessageHandler\RemoveProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\RemoveProductTranslationMessageHandler;
 use Sulu\Product\Application\MessageHandler\RestoreProductVersionMessageHandler;
@@ -50,17 +50,17 @@ use Sulu\Product\Domain\Event\ProductTranslationRemovedEvent;
 use Sulu\Product\Domain\Event\ProductTranslationRestoredEvent;
 use Sulu\Product\Domain\Event\ProductWorkflowTransitionAppliedEvent;
 use Sulu\Product\Domain\Model\Attribute;
+use Sulu\Product\Domain\Model\AttributeGroup;
+use Sulu\Product\Domain\Model\AttributeGroupAttribute;
+use Sulu\Product\Domain\Model\AttributeGroupAttributeInterface;
+use Sulu\Product\Domain\Model\AttributeGroupInterface;
+use Sulu\Product\Domain\Model\AttributeGroupTranslation;
+use Sulu\Product\Domain\Model\AttributeGroupTranslationInterface;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeOption;
 use Sulu\Product\Domain\Model\AttributeOptionInterface;
 use Sulu\Product\Domain\Model\AttributeOptionTranslation;
 use Sulu\Product\Domain\Model\AttributeOptionTranslationInterface;
-use Sulu\Product\Domain\Model\AttributeSet;
-use Sulu\Product\Domain\Model\AttributeSetAttribute;
-use Sulu\Product\Domain\Model\AttributeSetAttributeInterface;
-use Sulu\Product\Domain\Model\AttributeSetInterface;
-use Sulu\Product\Domain\Model\AttributeSetTranslation;
-use Sulu\Product\Domain\Model\AttributeSetTranslationInterface;
 use Sulu\Product\Domain\Model\AttributeTranslation;
 use Sulu\Product\Domain\Model\AttributeTranslationInterface;
 use Sulu\Product\Domain\Model\Product;
@@ -71,14 +71,14 @@ use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Model\ProductTranslation;
 use Sulu\Product\Domain\Model\ProductTranslationInterface;
+use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
-use Sulu\Product\Domain\Repository\AttributeSetRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Infrastructure\Doctrine\Repository\AttributeGroupRepository;
 use Sulu\Product\Infrastructure\Doctrine\Repository\AttributeRepository;
-use Sulu\Product\Infrastructure\Doctrine\Repository\AttributeSetRepository;
 use Sulu\Product\Infrastructure\Doctrine\Repository\ProductRepository;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeAdmin;
-use Sulu\Product\Infrastructure\Sulu\Admin\AttributeSetAdmin;
+use Sulu\Product\Infrastructure\Sulu\Admin\AttributeGroupAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductContentAdmin;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\AdditionalWebspacesDataMapper;
@@ -108,7 +108,7 @@ use Sulu\Product\Infrastructure\Sulu\Sitemap\ProductsSitemapProvider;
 use Sulu\Product\Infrastructure\Sulu\Trash\ProductTrashItemHandler;
 use Sulu\Product\Infrastructure\Symfony\Twig\ProductTwigExtension;
 use Sulu\Product\UserInterface\Controller\Admin\AttributeController;
-use Sulu\Product\UserInterface\Controller\Admin\AttributeSetController;
+use Sulu\Product\UserInterface\Controller\Admin\AttributeGroupController;
 use Sulu\Product\UserInterface\Controller\Admin\ProductContentController;
 use Sulu\Product\UserInterface\Controller\Admin\ProductDetailsController;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
@@ -406,39 +406,39 @@ final class SuluProductBundle extends AbstractBundle
             ])
             ->tag('sulu.context', ['context' => 'admin']);
 
-        $services->set('sulu_product.attribute_set_repository')
-            ->class(AttributeSetRepository::class)
+        $services->set('sulu_product.attribute_group_repository')
+            ->class(AttributeGroupRepository::class)
             ->args([
                 new Reference('doctrine.orm.entity_manager'),
             ]);
 
-        $services->alias(AttributeSetRepositoryInterface::class, 'sulu_product.attribute_set_repository');
+        $services->alias(AttributeGroupRepositoryInterface::class, 'sulu_product.attribute_group_repository');
 
-        $services->set('sulu_product.create_attribute_set_handler')
-            ->class(CreateAttributeSetMessageHandler::class)
+        $services->set('sulu_product.create_attribute_group_handler')
+            ->class(CreateAttributeGroupMessageHandler::class)
             ->args([
-                new Reference('sulu_product.attribute_set_repository'),
+                new Reference('sulu_product.attribute_group_repository'),
                 new Reference('sulu_product.attribute_repository'),
             ])
             ->tag('messenger.message_handler');
 
-        $services->set('sulu_product.modify_attribute_set_handler')
-            ->class(ModifyAttributeSetMessageHandler::class)
+        $services->set('sulu_product.modify_attribute_group_handler')
+            ->class(ModifyAttributeGroupMessageHandler::class)
             ->args([
-                new Reference('sulu_product.attribute_set_repository'),
+                new Reference('sulu_product.attribute_group_repository'),
                 new Reference('sulu_product.attribute_repository'),
             ])
             ->tag('messenger.message_handler');
 
-        $services->set('sulu_product.remove_attribute_set_handler')
-            ->class(RemoveAttributeSetMessageHandler::class)
+        $services->set('sulu_product.remove_attribute_group_handler')
+            ->class(RemoveAttributeGroupMessageHandler::class)
             ->args([
-                new Reference('sulu_product.attribute_set_repository'),
+                new Reference('sulu_product.attribute_group_repository'),
             ])
             ->tag('messenger.message_handler');
 
-        $services->set('sulu_product.attribute_set_admin')
-            ->class(AttributeSetAdmin::class)
+        $services->set('sulu_product.attribute_group_admin')
+            ->class(AttributeGroupAdmin::class)
             ->args([
                 new Reference('sulu_admin.view_builder_factory'),
                 new Reference('sulu_security.security_checker'),
@@ -447,11 +447,11 @@ final class SuluProductBundle extends AbstractBundle
             ->tag('sulu.context', ['context' => 'admin'])
             ->tag('sulu.admin');
 
-        $services->set('sulu_product.admin_attribute_set_details_controller')
-            ->class(AttributeSetController::class)
+        $services->set('sulu_product.admin_attribute_group_details_controller')
+            ->class(AttributeGroupController::class)
             ->public()
             ->args([
-                new Reference('sulu_product.attribute_set_repository'),
+                new Reference('sulu_product.attribute_group_repository'),
                 new Reference('sulu_message_bus'),
                 new Reference('sulu_core.list_builder.field_descriptor_factory'),
                 new Reference('sulu_core.doctrine_list_builder_factory'),
@@ -763,10 +763,10 @@ final class SuluProductBundle extends AbstractBundle
                                 'detail' => 'sulu_product.get_attribute',
                             ],
                         ],
-                        'attribute_sets' => [
+                        'attribute_groups' => [
                             'routes' => [
-                                'list' => 'sulu_product.get_attribute_sets',
-                                'detail' => 'sulu_product.get_attribute_set',
+                                'list' => 'sulu_product.get_attribute_groups',
+                                'detail' => 'sulu_product.get_attribute_group',
                             ],
                         ],
                     ],
@@ -908,9 +908,9 @@ final class SuluProductBundle extends AbstractBundle
             AttributeTranslationInterface::class => AttributeTranslation::class,
             AttributeOptionInterface::class => AttributeOption::class,
             AttributeOptionTranslationInterface::class => AttributeOptionTranslation::class,
-            AttributeSetInterface::class => AttributeSet::class,
-            AttributeSetTranslationInterface::class => AttributeSetTranslation::class,
-            AttributeSetAttributeInterface::class => AttributeSetAttribute::class,
+            AttributeGroupInterface::class => AttributeGroup::class,
+            AttributeGroupTranslationInterface::class => AttributeGroupTranslation::class,
+            AttributeGroupAttributeInterface::class => AttributeGroupAttribute::class,
         ], $container);
     }
 }
