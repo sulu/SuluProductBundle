@@ -16,6 +16,7 @@ namespace Sulu\Product\Infrastructure\Doctrine\Repository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Sulu\Product\Domain\Model\AttributeGroup;
+use Sulu\Product\Domain\Model\AttributeGroupAttribute;
 use Sulu\Product\Domain\Model\AttributeGroupInterface;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Symfony\Component\Uid\Uuid;
@@ -47,6 +48,19 @@ final class AttributeGroupRepository implements AttributeGroupRepositoryInterfac
         $attributeGroup = $this->entityRepository->findOneBy($criteria);
 
         return $attributeGroup;
+    }
+
+    public function countGroupAttributes(array $criteria): int
+    {
+        $qb = $this->entityManager->createQueryBuilder()
+            ->select('COUNT(ga)')
+            ->from(AttributeGroupAttribute::class, 'ga');
+
+        foreach ($criteria as $field => $value) {
+            $qb->andWhere("ga.{$field} = :{$field}")->setParameter($field, $value);
+        }
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
     }
 
     public function save(AttributeGroupInterface $attributeGroup): void

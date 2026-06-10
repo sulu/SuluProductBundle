@@ -154,7 +154,7 @@ class AttributeGroupControllerTest extends TestCase
         $attributeGroup = new AttributeGroup();
         $attributeGroup->setUuid('test-uuid-with-attrs');
 
-        $attribute = new Attribute();
+        $attribute = new Attribute(new AttributeGroup());
         $attribute->setUuid('attr-uuid-1');
         $attribute->setKey('color');
         $attribute->setType('text');

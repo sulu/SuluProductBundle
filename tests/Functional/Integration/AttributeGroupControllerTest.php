@@ -171,4 +171,38 @@ class AttributeGroupControllerTest extends SuluTestCase
 
         $this->assertHttpStatusCode(404, $response);
     }
+
+    public function testDeleteNonEmpty(): void
+    {
+        self::purgeDatabase();
+
+        $this->client->request(
+            'POST',
+            '/admin/api/attribute-groups.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode(['locale' => 'en', 'name' => 'Non-Empty Group', 'description' => null, 'attributes' => []]) ?: null,
+        );
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+        $groupData = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($groupData);
+        $groupId = $groupData['id'];
+        $this->assertIsString($groupId);
+
+        $this->client->request(
+            'POST',
+            '/admin/api/attributes.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode(['locale' => 'en', 'key' => 'del-group-attr', 'name' => 'Attr', 'type' => 'text', 'attributeGroup' => $groupId]) ?: null,
+        );
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+
+        $this->client->request('DELETE', '/admin/api/attribute-groups/' . $groupId . '.json?locale=en');
+        $response = $this->client->getResponse();
+
+        $this->assertHttpStatusCode(409, $response);
+    }
 }

@@ -89,12 +89,18 @@ class AttributeGroupTest extends TestCase
     public function testGetGroupAttributesSortedByPosition(): void
     {
         $group = new AttributeGroup();
-        $a = new AttributeGroupAttribute($group, new Attribute());
-        $a->setPosition(1);
-        $b = new AttributeGroupAttribute($group, new Attribute());
-        $b->setPosition(0);
+
+        $attrA = new Attribute(new AttributeGroup());
+        $attrA->setPosition(1);
+        $a = new AttributeGroupAttribute($group, $attrA);
+
+        $attrB = new Attribute(new AttributeGroup());
+        $attrB->setPosition(0);
+        $b = new AttributeGroupAttribute($group, $attrB);
+
         $group->addGroupAttribute($a);
         $group->addGroupAttribute($b);
+
         $sorted = $group->getGroupAttributes();
         $this->assertSame($b, $sorted[0]);
         $this->assertSame($a, $sorted[1]);
@@ -103,7 +109,7 @@ class AttributeGroupTest extends TestCase
     public function testAddGroupAttributeDeduplicates(): void
     {
         $group = new AttributeGroup();
-        $a = new AttributeGroupAttribute($group, new Attribute());
+        $a = new AttributeGroupAttribute($group, new Attribute(new AttributeGroup()));
         $group->addGroupAttribute($a);
         $group->addGroupAttribute($a);
         $this->assertCount(1, $group->getGroupAttributes());
@@ -112,7 +118,7 @@ class AttributeGroupTest extends TestCase
     public function testRemoveGroupAttributeIsFluent(): void
     {
         $group = new AttributeGroup();
-        $a = new AttributeGroupAttribute($group, new Attribute());
+        $a = new AttributeGroupAttribute($group, new Attribute(new AttributeGroup()));
         $group->addGroupAttribute($a);
         $this->assertSame($group, $group->removeGroupAttribute($a));
         $this->assertCount(0, $group->getGroupAttributes());

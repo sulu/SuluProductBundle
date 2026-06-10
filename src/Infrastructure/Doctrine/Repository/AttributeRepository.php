@@ -19,6 +19,7 @@ use Doctrine\ORM\NoResultException;
 use Doctrine\ORM\QueryBuilder;
 use Sulu\Product\Domain\Exception\AttributeNotFoundException;
 use Sulu\Product\Domain\Model\Attribute;
+use Sulu\Product\Domain\Model\AttributeGroupInterface;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Symfony\Component\Uid\Uuid;
@@ -39,9 +40,9 @@ final class AttributeRepository implements AttributeRepositoryInterface
         $this->entityRepository = $repo;
     }
 
-    public function create(): AttributeInterface
+    public function create(AttributeGroupInterface $attributeGroup): AttributeInterface
     {
-        $attribute = new Attribute();
+        $attribute = new Attribute($attributeGroup);
         $attribute->setUuid(Uuid::v7()->toRfc4122());
 
         return $attribute;
@@ -97,6 +98,61 @@ final class AttributeRepository implements AttributeRepositoryInterface
         }
 
         return $queryBuilder;
+    }
+
+    public function findNextPositionInGroup(AttributeGroupInterface $group): int
+    {
+        $result = $this->entityManager->createQueryBuilder()
+            ->select('MAX(a.position)')
+            ->from(Attribute::class, 'a')
+            ->where('a.attributeGroup = :group')
+            ->setParameter('group', $group)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return null !== $result ? (int) $result + 1 : 0;
+    }
+
+    public function findByGroupWithPositionAtLeast(AttributeGroupInterface $group, int $position, ?AttributeInterface $exclude = null): array
+    {
+        $qb = $this->entityManager->createQueryBuilder()
+            ->select('a')
+            ->from(Attribute::class, 'a')
+            ->where('a.attributeGroup = :group')
+            ->andWhere('a.position >= :position')
+            ->setParameter('group', $group)
+            ->setParameter('position', $position);
+
+        if (null !== $exclude) {
+            $qb->andWhere('a != :exclude')->setParameter('exclude', $exclude);
+        }
+
+        /** @var AttributeInterface[] $result */
+        $result = $qb->getQuery()->getResult();
+
+        return $result;
+    }
+
+    public function findByGroupWithPositionBetween(AttributeGroupInterface $group, int $min, int $max, ?AttributeInterface $exclude = null): array
+    {
+        $qb = $this->entityManager->createQueryBuilder()
+            ->select('a')
+            ->from(Attribute::class, 'a')
+            ->where('a.attributeGroup = :group')
+            ->andWhere('a.position >= :min')
+            ->andWhere('a.position <= :max')
+            ->setParameter('group', $group)
+            ->setParameter('min', $min)
+            ->setParameter('max', $max);
+
+        if (null !== $exclude) {
+            $qb->andWhere('a != :exclude')->setParameter('exclude', $exclude);
+        }
+
+        /** @var AttributeInterface[] $result */
+        $result = $qb->getQuery()->getResult();
+
+        return $result;
     }
 
     public function save(AttributeInterface $attribute): void

@@ -18,6 +18,7 @@ use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Product\Application\Message\RemoveAttributeGroupMessage;
 use Sulu\Product\Application\MessageHandler\RemoveAttributeGroupMessageHandler;
+use Sulu\Product\Domain\Exception\AttributeGroupNotEmptyException;
 use Sulu\Product\Domain\Exception\AttributeGroupNotFoundException;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
@@ -41,11 +42,29 @@ class RemoveAttributeGroupMessageHandlerTest extends TestCase
         $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid'])
             ->shouldBeCalledOnce()
             ->willReturn($attributeGroup);
-
+        $this->attributeGroupRepository->countGroupAttributes(['attributeGroup' => $attributeGroup])
+            ->willReturn(0);
         $this->attributeGroupRepository->remove($attributeGroup)
             ->shouldBeCalledOnce();
 
         $handler = new RemoveAttributeGroupMessageHandler($this->attributeGroupRepository->reveal());
+
+        ($handler)(new RemoveAttributeGroupMessage('group-uuid'));
+    }
+
+    public function testRemoveAttributeGroupThrowsWhenGroupHasAttributes(): void
+    {
+        $attributeGroup = new AttributeGroup();
+
+        $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid'])
+            ->willReturn($attributeGroup);
+        $this->attributeGroupRepository->countGroupAttributes(['attributeGroup' => $attributeGroup])
+            ->willReturn(3);
+        $this->attributeGroupRepository->remove($attributeGroup)->shouldNotBeCalled();
+
+        $handler = new RemoveAttributeGroupMessageHandler($this->attributeGroupRepository->reveal());
+
+        $this->expectException(AttributeGroupNotEmptyException::class);
 
         ($handler)(new RemoveAttributeGroupMessage('group-uuid'));
     }

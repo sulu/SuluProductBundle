@@ -20,6 +20,7 @@ use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Product\Domain\Model\Attribute;
+use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeTranslation;
 use Sulu\Product\Infrastructure\Sulu\Content\Select\AttributeSelectService;
 
@@ -46,7 +47,7 @@ class AttributeSelectServiceTest extends TestCase
 
     public function testGetValuesReturnsUuidAndTranslatedName(): void
     {
-        $attribute = new Attribute();
+        $attribute = new Attribute(new AttributeGroup());
         $attribute->setUuid('some-uuid');
         $attribute->setKey('color');
         $translation = new AttributeTranslation($attribute, 'en', 'Color');
@@ -64,7 +65,7 @@ class AttributeSelectServiceTest extends TestCase
 
     public function testGetValuesFallsBackToUuidWhenNoTranslation(): void
     {
-        $attribute = new Attribute();
+        $attribute = new Attribute(new AttributeGroup());
         $attribute->setUuid('fallback-uuid');
         $attribute->setKey('size');
 

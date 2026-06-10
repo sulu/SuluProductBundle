@@ -24,6 +24,7 @@ use Sulu\Component\Webspace\Analyzer\RequestAnalyzerInterface;
 use Sulu\Content\Application\ContentAggregator\ContentAggregatorInterface;
 use Sulu\Content\Application\ContentResolver\ContentResolverInterface;
 use Sulu\Product\Domain\Model\Attribute;
+use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeOption;
 use Sulu\Product\Domain\Model\AttributeOptionTranslation;
@@ -146,7 +147,7 @@ class ProductTwigExtensionTest extends TestCase
     {
         $product = new Product('uuid-1');
 
-        $attribute = new Attribute();
+        $attribute = new Attribute(new AttributeGroup());
         $attribute->setKey('color');
         $attribute->setType(AttributeInterface::TYPE_TEXT);
         $translation = new AttributeTranslation($attribute, 'en', 'Color');
@@ -189,7 +190,7 @@ class ProductTwigExtensionTest extends TestCase
     {
         $product = new Product('uuid-1');
 
-        $attribute = new Attribute();
+        $attribute = new Attribute(new AttributeGroup());
         $attribute->setKey('color');
         $attribute->setType(AttributeInterface::TYPE_OPTIONS);
         $attrTranslation = new AttributeTranslation($attribute, 'en', 'Color');
@@ -226,7 +227,7 @@ class ProductTwigExtensionTest extends TestCase
     {
         $product = new Product('uuid-1');
 
-        $attribute = new Attribute();
+        $attribute = new Attribute(new AttributeGroup());
         $attribute->setKey('weight');
         $attribute->setType(AttributeInterface::TYPE_NUMBER);
 
@@ -256,7 +257,7 @@ class ProductTwigExtensionTest extends TestCase
     {
         $product = new Product('uuid-1');
 
-        $attribute = new Attribute();
+        $attribute = new Attribute(new AttributeGroup());
         $attribute->setKey('meta');
         $attribute->setType(AttributeInterface::TYPE_JSON);
 
@@ -286,7 +287,7 @@ class ProductTwigExtensionTest extends TestCase
     {
         $product = new Product('uuid-1');
 
-        $attribute = new Attribute();
+        $attribute = new Attribute(new AttributeGroup());
         $attribute->setKey('custom');
         $attribute->setType('unknown_type');
 

@@ -27,6 +27,7 @@ namespace Sulu\Product\Application\Message;
  *     name: string,
  *     description?: string|null,
  *     options?: list<AttributeOptionMessageData>|null,
+ *     position?: int|null,
  * }&array<string, mixed>
  */
 class ModifyAttributeMessage
@@ -72,6 +73,11 @@ class ModifyAttributeMessage
     public function getDescription(): ?string
     {
         return $this->data['description'] ?? null;
+    }
+
+    public function getPosition(): ?int
+    {
+        return $this->data['position'] ?? null;
     }
 
     /**

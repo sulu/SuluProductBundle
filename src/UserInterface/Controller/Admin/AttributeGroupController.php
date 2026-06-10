@@ -25,6 +25,7 @@ use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushS
 use Sulu\Product\Application\Message\CreateAttributeGroupMessage;
 use Sulu\Product\Application\Message\ModifyAttributeGroupMessage;
 use Sulu\Product\Application\Message\RemoveAttributeGroupMessage;
+use Sulu\Product\Domain\Exception\AttributeGroupNotEmptyException;
 use Sulu\Product\Domain\Exception\AttributeGroupNotFoundException;
 use Sulu\Product\Domain\Model\AttributeGroupAttributeInterface;
 use Sulu\Product\Domain\Model\AttributeGroupInterface;
@@ -140,6 +141,8 @@ final class AttributeGroupController implements SecuredControllerInterface
             $this->handle(new Envelope($message, [new EnableFlushStamp()]));
         } catch (AttributeGroupNotFoundException $e) {
             return new JsonResponse(['detail' => $e->getMessage()], 404);
+        } catch (AttributeGroupNotEmptyException $e) {
+            return new JsonResponse(['detail' => $e->getMessage()], 409);
         }
 
         return new Response('', 204);

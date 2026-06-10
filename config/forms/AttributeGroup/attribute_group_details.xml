@@ -29,25 +29,5 @@
                 <title>sulu_admin.description</title>
             </meta>
         </property>
-
-        <block name="attributes" default-type="attribute_item" colspan="12">
-            <meta>
-                <title>sulu_product.attributes</title>
-            </meta>
-            <types>
-                <type name="attribute_item">
-                    <meta>
-                        <title>sulu_product.attribute</title>
-                    </meta>
-                    <properties>
-                        <property name="attribute" type="single_attribute_selection" mandatory="true" colspan="12">
-                            <meta>
-                                <title>sulu_product.attribute</title>
-                            </meta>
-                        </property>
-                    </properties>
-                </type>
-            </types>
-        </block>
     </properties>
 </form>

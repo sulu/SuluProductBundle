@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Sulu\Product\Application\MessageHandler;
 
 use Sulu\Product\Application\Message\RemoveAttributeGroupMessage;
+use Sulu\Product\Domain\Exception\AttributeGroupNotEmptyException;
 use Sulu\Product\Domain\Exception\AttributeGroupNotFoundException;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 
@@ -29,6 +30,11 @@ final class RemoveAttributeGroupMessageHandler
 
         if (null === $attributeGroup) {
             throw new AttributeGroupNotFoundException(['uuid' => $message->getUuid()]);
+        }
+
+        $attributeCount = $this->attributeGroupRepository->countGroupAttributes(['attributeGroup' => $attributeGroup]);
+        if ($attributeCount > 0) {
+            throw new AttributeGroupNotEmptyException($message->getUuid(), $attributeCount);
         }
 
         $this->attributeGroupRepository->remove($attributeGroup);

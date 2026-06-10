@@ -15,20 +15,76 @@ namespace Sulu\Product\Application\Mapper;
 
 use Sulu\Product\Application\Message\CreateAttributeMessage;
 use Sulu\Product\Application\Message\ModifyAttributeMessage;
+use Sulu\Product\Domain\Model\AttributeGroupAttribute;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeOption;
 use Sulu\Product\Domain\Model\AttributeOptionTranslation;
 use Sulu\Product\Domain\Model\AttributeTranslation;
+use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 
 final class AttributeMapper
 {
+    public function __construct(private AttributeRepositoryInterface $attributeRepository)
+    {
+    }
+
     public function mapAttributeData(AttributeInterface $attribute, CreateAttributeMessage|ModifyAttributeMessage $message): void
     {
         $attribute->setKey($message->getKey());
-        $attribute->setType($message->getType());
-
         $this->mapTranslation($attribute, $message);
         $this->mapOptions($attribute, $message);
+
+        if ($message instanceof CreateAttributeMessage) {
+            $attribute->setType($message->getType());
+            $this->mapCreatePosition($attribute, $message);
+        } else {
+            $this->syncPosition($attribute, $message->getPosition());
+        }
+    }
+
+    private function mapCreatePosition(AttributeInterface $attribute, CreateAttributeMessage $message): void
+    {
+        $attributeGroup = $attribute->getAttributeGroup();
+        $position = $message->getPosition();
+
+        if (null !== $position) {
+            foreach ($this->attributeRepository->findByGroupWithPositionAtLeast($attributeGroup, $position) as $other) {
+                $other->setPosition($other->getPosition() + 1);
+            }
+            $attribute->setPosition($position);
+        } else {
+            $attribute->setPosition($this->attributeRepository->findNextPositionInGroup($attributeGroup));
+        }
+
+        $groupAttr = new AttributeGroupAttribute($attributeGroup, $attribute);
+        $groupAttr->setPosition($attribute->getPosition());
+        $attributeGroup->addGroupAttribute($groupAttr);
+    }
+
+    private function syncPosition(AttributeInterface $attribute, ?int $newPosition): void
+    {
+        $group = $attribute->getAttributeGroup();
+        $oldPosition = $attribute->getPosition();
+
+        if (null === $newPosition) {
+            $newPosition = $this->attributeRepository->findNextPositionInGroup($group) - 1;
+        }
+
+        if ($newPosition === $oldPosition) {
+            return;
+        }
+
+        if ($newPosition > $oldPosition) {
+            foreach ($this->attributeRepository->findByGroupWithPositionBetween($group, $oldPosition + 1, $newPosition, $attribute) as $other) {
+                $other->setPosition($other->getPosition() - 1);
+            }
+        } else {
+            foreach ($this->attributeRepository->findByGroupWithPositionAtLeast($group, $newPosition, $attribute) as $other) {
+                $other->setPosition($other->getPosition() + 1);
+            }
+        }
+
+        $attribute->setPosition($newPosition);
     }
 
     private function mapTranslation(AttributeInterface $attribute, CreateAttributeMessage|ModifyAttributeMessage $message): void

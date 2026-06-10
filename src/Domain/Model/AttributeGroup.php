@@ -106,7 +106,7 @@ class AttributeGroup implements AttributeGroupInterface
     public function getGroupAttributes(): array
     {
         $groupAttributes = $this->groupAttributes->toArray();
-        \usort($groupAttributes, static fn (AttributeGroupAttributeInterface $a, AttributeGroupAttributeInterface $b) => $a->getPosition() <=> $b->getPosition());
+        \usort($groupAttributes, static fn (AttributeGroupAttributeInterface $a, AttributeGroupAttributeInterface $b) => $a->getAttribute()->getPosition() <=> $b->getAttribute()->getPosition());
 
         return $groupAttributes;
     }

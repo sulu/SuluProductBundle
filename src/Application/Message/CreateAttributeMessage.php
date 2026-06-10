@@ -26,6 +26,8 @@ namespace Sulu\Product\Application\Message;
  *     name: string,
  *     description?: string|null,
  *     options?: list<AttributeOptionMessageData>|null,
+ *     attributeGroup: string,
+ *     position?: int|null,
  * }&array<string, mixed>
  */
 class CreateAttributeMessage
@@ -60,6 +62,16 @@ class CreateAttributeMessage
     public function getDescription(): ?string
     {
         return $this->data['description'] ?? null;
+    }
+
+    public function getAttributeGroup(): string
+    {
+        return $this->data['attributeGroup'];
+    }
+
+    public function getPosition(): ?int
+    {
+        return $this->data['position'] ?? null;
     }
 
     /**

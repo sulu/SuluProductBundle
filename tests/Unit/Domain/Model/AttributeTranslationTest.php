@@ -16,6 +16,7 @@ namespace Sulu\Product\Tests\Unit\Domain\Model;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Product\Domain\Model\Attribute;
+use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeTranslation;
 
 #[CoversClass(AttributeTranslation::class)]
@@ -23,7 +24,7 @@ class AttributeTranslationTest extends TestCase
 {
     public function testConstructorAssignsValuesAndDefaults(): void
     {
-        $attribute = new Attribute();
+        $attribute = new Attribute(new AttributeGroup());
         $translation = new AttributeTranslation($attribute, 'en', 'Color');
 
         $this->assertSame($attribute, $translation->getAttribute());
@@ -34,7 +35,7 @@ class AttributeTranslationTest extends TestCase
 
     public function testSetLocaleIsFluentAndStores(): void
     {
-        $translation = new AttributeTranslation(new Attribute(), 'en', 'Color');
+        $translation = new AttributeTranslation(new Attribute(new AttributeGroup()), 'en', 'Color');
 
         $this->assertSame($translation, $translation->setLocale('de'));
         $this->assertSame('de', $translation->getLocale());
@@ -42,7 +43,7 @@ class AttributeTranslationTest extends TestCase
 
     public function testSetNameIsFluentAndStores(): void
     {
-        $translation = new AttributeTranslation(new Attribute(), 'en', 'Color');
+        $translation = new AttributeTranslation(new Attribute(new AttributeGroup()), 'en', 'Color');
 
         $this->assertSame($translation, $translation->setName('Farbe'));
         $this->assertSame('Farbe', $translation->getName());
@@ -50,7 +51,7 @@ class AttributeTranslationTest extends TestCase
 
     public function testSetDescriptionIsFluentAndStores(): void
     {
-        $translation = new AttributeTranslation(new Attribute(), 'en', 'Color');
+        $translation = new AttributeTranslation(new Attribute(new AttributeGroup()), 'en', 'Color');
 
         $this->assertSame($translation, $translation->setDescription('A color attribute'));
         $this->assertSame('A color attribute', $translation->getDescription());
@@ -61,7 +62,7 @@ class AttributeTranslationTest extends TestCase
 
     public function testGetIdReturnsDoctrineGeneratedId(): void
     {
-        $model = new AttributeTranslation(new Attribute(), 'en', 'Color');
+        $model = new AttributeTranslation(new Attribute(new AttributeGroup()), 'en', 'Color');
         $ref = new \ReflectionProperty(AttributeTranslation::class, 'id');
         $ref->setValue($model, 42);
         $this->assertSame(42, $model->getId());

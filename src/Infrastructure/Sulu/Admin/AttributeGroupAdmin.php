@@ -22,6 +22,7 @@ use Sulu\Component\Localization\Manager\LocalizationManagerInterface;
 use Sulu\Component\Security\Authorization\PermissionTypes;
 use Sulu\Component\Security\Authorization\SecurityCheckerInterface;
 use Sulu\Product\Domain\Model\AttributeGroupInterface;
+use Sulu\Product\Domain\Model\AttributeInterface;
 
 /**
  * @final
@@ -34,6 +35,7 @@ class AttributeGroupAdmin extends Admin
     public const LIST_VIEW = 'sulu_product.attribute_group.list';
     public const ADD_TABS_VIEW = 'sulu_product.attribute_group.add_tabs';
     public const EDIT_TABS_VIEW = 'sulu_product.attribute_group.edit_tabs';
+    public const ATTRIBUTES_LIST_VIEW = 'sulu_product.attribute_group.edit_tabs.attributes';
 
     public function __construct(
         private ViewBuilderFactoryInterface $viewBuilderFactory,
@@ -113,6 +115,18 @@ class AttributeGroupAdmin extends Admin
                 ->setTabTitle('sulu_admin.details')
                 ->setTabOrder(10)
                 ->addToolbarActions($editToolbarActions)
+                ->setParent(static::EDIT_TABS_VIEW),
+        );
+
+        $viewCollection->add(
+            $this->viewBuilderFactory->createListViewBuilder(static::ATTRIBUTES_LIST_VIEW, '/attributes')
+                ->setResourceKey(AttributeInterface::RESOURCE_KEY)
+                ->setListKey(AttributeInterface::LIST_KEY)
+                ->addListAdapters(['table'])
+                ->addRouterAttributesToListRequest(['locale', 'id' => 'attributeGroup'])
+                ->setEditView(AttributeAdmin::EDIT_TABS_VIEW)
+                ->setTabTitle('sulu_product.attributes')
+                ->setTabOrder(20)
                 ->setParent(static::EDIT_TABS_VIEW),
         );
     }

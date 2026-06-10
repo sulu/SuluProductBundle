@@ -102,7 +102,7 @@ class AttributeGroupAdminTest extends TestCase
         $this->admin->configureViews($viewCollection);
 
         $this->assertTrue($viewCollection->has(AttributeGroupAdmin::LIST_VIEW));
-        $this->assertCount(5, $viewCollection->all());
+        $this->assertCount(6, $viewCollection->all());
     }
 
     public function testConfigureViewsAddsAddTabsView(): void
@@ -147,11 +147,12 @@ class AttributeGroupAdminTest extends TestCase
         $viewCollection = new ViewCollection();
         $this->admin->configureViews($viewCollection);
 
-        $this->assertCount(5, $viewCollection->all());
+        $this->assertCount(6, $viewCollection->all());
         $this->assertTrue($viewCollection->has(AttributeGroupAdmin::LIST_VIEW));
         $this->assertTrue($viewCollection->has(AttributeGroupAdmin::ADD_TABS_VIEW));
         $this->assertTrue($viewCollection->has(AttributeGroupAdmin::EDIT_TABS_VIEW));
         $this->assertTrue($viewCollection->has(AttributeGroupAdmin::ADD_TABS_VIEW . '.details'));
         $this->assertTrue($viewCollection->has(AttributeGroupAdmin::EDIT_TABS_VIEW . '.details'));
+        $this->assertTrue($viewCollection->has(AttributeGroupAdmin::ATTRIBUTES_LIST_VIEW));
     }
 }

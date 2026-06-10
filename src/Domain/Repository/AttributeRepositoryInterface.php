@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Sulu\Product\Domain\Repository;
 
 use Sulu\Product\Domain\Exception\AttributeNotFoundException;
+use Sulu\Product\Domain\Model\AttributeGroupInterface;
 use Sulu\Product\Domain\Model\AttributeInterface;
 
 /**
@@ -24,7 +25,7 @@ use Sulu\Product\Domain\Model\AttributeInterface;
  */
 interface AttributeRepositoryInterface
 {
-    public function create(): AttributeInterface;
+    public function create(AttributeGroupInterface $attributeGroup): AttributeInterface;
 
     /**
      * @param AttributeRepositoryFilters $filters
@@ -37,6 +38,18 @@ interface AttributeRepositoryInterface
      * @throws AttributeNotFoundException
      */
     public function getOneBy(array $filters): AttributeInterface;
+
+    public function findNextPositionInGroup(AttributeGroupInterface $group): int;
+
+    /**
+     * @return AttributeInterface[]
+     */
+    public function findByGroupWithPositionAtLeast(AttributeGroupInterface $group, int $position, ?AttributeInterface $exclude = null): array;
+
+    /**
+     * @return AttributeInterface[]
+     */
+    public function findByGroupWithPositionBetween(AttributeGroupInterface $group, int $min, int $max, ?AttributeInterface $exclude = null): array;
 
     public function save(AttributeInterface $attribute): void;
 

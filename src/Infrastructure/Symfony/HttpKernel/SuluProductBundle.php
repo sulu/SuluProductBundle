@@ -369,13 +369,17 @@ final class SuluProductBundle extends AbstractBundle
         $services->alias(AttributeRepositoryInterface::class, 'sulu_product.attribute_repository');
 
         $services->set('sulu_product.attribute_mapper')
-            ->class(AttributeMapper::class);
+            ->class(AttributeMapper::class)
+            ->args([
+                new Reference('sulu_product.attribute_repository'),
+            ]);
 
         $services->set('sulu_product.create_attribute_handler')
             ->class(CreateAttributeMessageHandler::class)
             ->args([
                 new Reference('sulu_product.attribute_repository'),
                 new Reference('sulu_product.attribute_mapper'),
+                new Reference('sulu_product.attribute_group_repository'),
             ])
             ->tag('messenger.message_handler');
 
@@ -813,6 +817,20 @@ final class SuluProductBundle extends AbstractBundle
                                         'empty_text' => 'sulu_product.no_attribute_selected',
                                         'icon' => 'su-tag',
                                         'overlay_title' => 'sulu_product.select_attribute',
+                                    ],
+                                ],
+                            ],
+                            'single_attribute_group_selection' => [
+                                'default_type' => 'list_overlay',
+                                'resource_key' => 'attribute_groups',
+                                'types' => [
+                                    'list_overlay' => [
+                                        'adapter' => 'table',
+                                        'list_key' => 'attribute_groups',
+                                        'display_properties' => ['name'],
+                                        'empty_text' => 'sulu_product.no_attribute_group_selected',
+                                        'icon' => 'su-tag',
+                                        'overlay_title' => 'sulu_product.attribute_groups',
                                     ],
                                 ],
                             ],

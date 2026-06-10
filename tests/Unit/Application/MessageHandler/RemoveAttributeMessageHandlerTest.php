@@ -20,6 +20,7 @@ use Sulu\Product\Application\Message\RemoveAttributeMessage;
 use Sulu\Product\Application\MessageHandler\RemoveAttributeMessageHandler;
 use Sulu\Product\Domain\Exception\AttributeNotFoundException;
 use Sulu\Product\Domain\Model\Attribute;
+use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 
 class RemoveAttributeMessageHandlerTest extends TestCase
@@ -36,7 +37,7 @@ class RemoveAttributeMessageHandlerTest extends TestCase
 
     public function testRemoveAttribute(): void
     {
-        $attribute = new Attribute();
+        $attribute = new Attribute(new AttributeGroup());
         $identifier = [
             'key' => 'color',
         ];

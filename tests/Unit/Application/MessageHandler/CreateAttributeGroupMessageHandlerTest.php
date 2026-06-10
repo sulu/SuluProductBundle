@@ -110,12 +110,12 @@ class CreateAttributeGroupMessageHandlerTest extends TestCase
     {
         $attributeGroup = new AttributeGroup();
 
-        $attribute1 = new Attribute();
+        $attribute1 = new Attribute(new AttributeGroup());
         $attribute1->setUuid('attr-uuid-1');
         $attribute1->setKey('color');
         $attribute1->setType('text');
 
-        $attribute2 = new Attribute();
+        $attribute2 = new Attribute(new AttributeGroup());
         $attribute2->setUuid('attr-uuid-2');
         $attribute2->setKey('size');
         $attribute2->setType('options');

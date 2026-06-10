@@ -35,10 +35,15 @@ class Attribute implements AttributeInterface
     /** @var Collection<int, AttributeOptionInterface> */
     protected Collection $options;
 
-    public function __construct()
+    protected int $position = 0;
+
+    protected AttributeGroupInterface $attributeGroup;
+
+    public function __construct(AttributeGroupInterface $attributeGroup)
     {
         $this->translations = new ArrayCollection();
         $this->options = new ArrayCollection();
+        $this->attributeGroup = $attributeGroup;
     }
 
     public function getId(): int
@@ -152,6 +157,30 @@ class Attribute implements AttributeInterface
     public function removeOption(AttributeOptionInterface $option): self
     {
         $this->options->removeElement($option);
+
+        return $this;
+    }
+
+    public function getPosition(): int
+    {
+        return $this->position;
+    }
+
+    public function setPosition(int $position): self
+    {
+        $this->position = $position;
+
+        return $this;
+    }
+
+    public function getAttributeGroup(): AttributeGroupInterface
+    {
+        return $this->attributeGroup;
+    }
+
+    public function setAttributeGroup(AttributeGroupInterface $attributeGroup): self
+    {
+        $this->attributeGroup = $attributeGroup;
 
         return $this;
     }

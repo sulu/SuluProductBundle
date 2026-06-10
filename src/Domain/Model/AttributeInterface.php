@@ -56,4 +56,12 @@ interface AttributeInterface
     public function addOption(AttributeOptionInterface $option): self;
 
     public function removeOption(AttributeOptionInterface $option): self;
+
+    public function getPosition(): int;
+
+    public function setPosition(int $position): self;
+
+    public function getAttributeGroup(): AttributeGroupInterface;
+
+    public function setAttributeGroup(AttributeGroupInterface $attributeGroup): self;
 }

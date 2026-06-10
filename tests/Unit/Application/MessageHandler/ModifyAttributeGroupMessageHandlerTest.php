@@ -105,7 +105,7 @@ class ModifyAttributeGroupMessageHandlerTest extends TestCase
     {
         $attributeGroup = new AttributeGroup();
 
-        $attribute = new Attribute();
+        $attribute = new Attribute(new AttributeGroup());
         $attribute->setUuid('attr-uuid-1');
         $attribute->setKey('color');
         $attribute->setType('text');
@@ -133,7 +133,7 @@ class ModifyAttributeGroupMessageHandlerTest extends TestCase
     {
         $attributeGroup = new AttributeGroup();
 
-        $attribute = new Attribute();
+        $attribute = new Attribute(new AttributeGroup());
         $attribute->setUuid('attr-uuid-1');
         $attribute->setKey('color');
         $attribute->setType('text');
@@ -163,12 +163,12 @@ class ModifyAttributeGroupMessageHandlerTest extends TestCase
     {
         $attributeGroup = new AttributeGroup();
 
-        $attributeToKeep = new Attribute();
+        $attributeToKeep = new Attribute(new AttributeGroup());
         $attributeToKeep->setUuid('attr-uuid-keep');
         $attributeToKeep->setKey('color');
         $attributeToKeep->setType('text');
 
-        $attributeToRemove = new Attribute();
+        $attributeToRemove = new Attribute(new AttributeGroup());
         $attributeToRemove->setUuid('attr-uuid-remove');
         $attributeToRemove->setKey('size');
         $attributeToRemove->setType('options');
@@ -221,7 +221,7 @@ class ModifyAttributeGroupMessageHandlerTest extends TestCase
     {
         $attributeGroup = new AttributeGroup();
 
-        $attribute = new Attribute();
+        $attribute = new Attribute(new AttributeGroup());
         $attribute->setUuid('attr-uuid-1');
         $attribute->setKey('color');
         $attribute->setType('text');

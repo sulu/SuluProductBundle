@@ -65,7 +65,15 @@ final class AttributeController implements SecuredControllerInterface
         $listBuilder = $this->listBuilderFactory->create(AttributeInterface::class);
         $listBuilder->setIdField($fieldDescriptors['id']);
         $this->restHelper->initializeListBuilder($listBuilder, $fieldDescriptors);
+        if (!$request->query->has('sortBy')) {
+            $listBuilder->sort($fieldDescriptors['position'], 'asc');
+        }
         $listBuilder->setParameter('locale', $this->getLocale($request));
+
+        $attributeGroupUuid = $request->query->get('attributeGroup');
+        if ($attributeGroupUuid) {
+            $listBuilder->where($fieldDescriptors['attributeGroup'], $attributeGroupUuid);
+        }
 
         $listRepresentation = new PaginatedRepresentation(
             $listBuilder->execute(),
@@ -172,7 +180,9 @@ final class AttributeController implements SecuredControllerInterface
             'id' => $attribute->getUuid(),
             'key' => $attribute->getKey(),
             'type' => $attribute->getType(),
+            'position' => $attribute->getPosition(),
             'externalIdentifier' => $attribute->getExternalIdentifier(),
+            'attributeGroup' => $attribute->getAttributeGroup()->getUuid(),
             'name' => $translation?->getName() ?? '',
             'description' => $translation?->getDescription(),
             'options' => \array_map(

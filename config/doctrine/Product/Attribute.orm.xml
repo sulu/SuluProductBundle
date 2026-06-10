@@ -13,6 +13,9 @@
         <field name="type" type="string" length="32" nullable="false">
             <options><option name="default">number</option></options>
         </field>
+        <field name="position" type="integer" nullable="false" column="position">
+            <options><option name="default">0</option></options>
+        </field>
 
         <one-to-many field="translations"
                      target-entity="Sulu\Product\Domain\Model\AttributeTranslationInterface"
@@ -25,5 +28,11 @@
                      mapped-by="attribute">
             <cascade><cascade-persist/><cascade-remove/></cascade>
         </one-to-many>
+
+        <many-to-one field="attributeGroup"
+                     target-entity="Sulu\Product\Domain\Model\AttributeGroupInterface"
+                     fetch="EAGER">
+            <join-column name="idAttributeGroups" referenced-column-name="id" nullable="false"/>
+        </many-to-one>
     </entity>
 </doctrine-mapping>

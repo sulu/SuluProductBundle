@@ -16,15 +16,20 @@ namespace Sulu\Product\Tests\Functional\Repository;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
+use Sulu\Product\Domain\Model\AttributeGroupAttribute;
 use Sulu\Product\Domain\Model\AttributeGroupInterface;
 use Sulu\Product\Domain\Model\AttributeGroupTranslation;
+use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
+use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Infrastructure\Doctrine\Repository\AttributeGroupRepository;
 
 #[CoversClass(AttributeGroupRepository::class)]
 class AttributeGroupRepositoryTest extends SuluTestCase
 {
     private AttributeGroupRepositoryInterface $repository;
+
+    private AttributeRepositoryInterface $attributeRepository;
 
     private EntityManagerInterface $entityManager;
 
@@ -36,6 +41,10 @@ class AttributeGroupRepositoryTest extends SuluTestCase
         /** @var AttributeGroupRepositoryInterface $repository */
         $repository = $container->get(AttributeGroupRepositoryInterface::class);
         $this->repository = $repository;
+
+        /** @var AttributeRepositoryInterface $attributeRepository */
+        $attributeRepository = $container->get(AttributeRepositoryInterface::class);
+        $this->attributeRepository = $attributeRepository;
 
         /** @var EntityManagerInterface $entityManager */
         $entityManager = $container->get('doctrine.orm.entity_manager');
@@ -124,5 +133,36 @@ class AttributeGroupRepositoryTest extends SuluTestCase
         $this->entityManager->clear();
 
         $this->assertNull($this->repository->findOneBy(['uuid' => $uuid]));
+    }
+
+    public function testCountGroupAttributesReturnsZeroForEmptyGroup(): void
+    {
+        $group = $this->repository->create();
+        $this->repository->save($group);
+        $this->entityManager->flush();
+
+        $this->assertSame(0, $this->repository->countGroupAttributes(['attributeGroup' => $group]));
+    }
+
+    public function testCountGroupAttributesCountsLinkedAttributes(): void
+    {
+        $group = $this->repository->create();
+        $this->repository->save($group);
+
+        foreach (['count-attr-a', 'count-attr-b'] as $i => $key) {
+            $attribute = $this->attributeRepository->create($group);
+            $attribute->setKey($key);
+            $attribute->setType(AttributeInterface::TYPE_TEXT);
+            $this->attributeRepository->save($attribute);
+
+            $ga = new AttributeGroupAttribute($group, $attribute);
+            $ga->setPosition($i);
+            $group->addGroupAttribute($ga);
+        }
+
+        $this->repository->save($group);
+        $this->entityManager->flush();
+
+        $this->assertSame(2, $this->repository->countGroupAttributes(['attributeGroup' => $group]));
     }
 }
