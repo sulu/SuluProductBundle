@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of Sulu.
  *
@@ -11,48 +13,42 @@
 
 namespace Sulu\Product\Application\Message;
 
-use Webmozart\Assert\Assert;
-
+/**
+ * @phpstan-type ModifyProductMessageIdentifier array{
+ *     uuid?: string,
+ * }&array<string, mixed>
+ * @phpstan-type ModifyProductMessageData array{
+ *     locale: string,
+ *     code?: string,
+ * }&array<string, mixed>
+ */
 class ModifyProductMessage
 {
     /**
-     * @var array{
-     *     uuid?: string
-     * }
+     * @param ModifyProductMessageIdentifier $identifier
+     * @param ModifyProductMessageData $data
      */
-    private $identifier;
-
-    /**
-     * @var array<string, mixed>
-     */
-    private $data;
-
-    /**
-     * @param array{
-     *     uuid?: string
-     * } $identifier
-     * @param array<string, mixed> $data
-     */
-    public function __construct(array $identifier, array $data)
-    {
-        Assert::string($data['locale'] ?? null, 'Expected a "locale" string given.');
-
-        $this->identifier = $identifier;
-        $this->data = $data;
+    public function __construct(
+        private readonly array $identifier,
+        private readonly array $data,
+    ) {
     }
 
     /**
-     * @return array{
-     *     uuid?: string
-     * }
+     * @return ModifyProductMessageIdentifier
      */
     public function getIdentifier(): array
     {
         return $this->identifier;
     }
 
+    public function getLocale(): string
+    {
+        return $this->data['locale'];
+    }
+
     /**
-     * @return array<string, mixed>
+     * @return ModifyProductMessageData
      */
     public function getData(): array
     {

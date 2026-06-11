@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of Sulu.
  *
@@ -14,31 +16,20 @@ namespace Sulu\Product\Application\Message;
 class ApplyWorkflowTransitionProductMessage
 {
     /**
-     * @var array{
-     *     uuid?: string,
-     * }
-     */
-    private array $identifier;
-
-    private string $locale;
-
-    private string $transitionName;
-
-    /**
      * @param array{
-     *     uuid?: string
+     *     uuid?: string,
      * } $identifier
      */
-    public function __construct(array $identifier, string $locale, string $transitionName)
-    {
-        $this->identifier = $identifier;
-        $this->locale = $locale;
-        $this->transitionName = $transitionName;
+    public function __construct(
+        private readonly array $identifier,
+        private readonly string $locale,
+        private readonly string $transitionName,
+    ) {
     }
 
     /**
      * @return array{
-     *     uuid?: string
+     *     uuid?: string,
      * }
      */
     public function getIdentifier(): array

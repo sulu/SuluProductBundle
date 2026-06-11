@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of Sulu.
  *
@@ -11,38 +13,36 @@
 
 namespace Sulu\Product\Application\Message;
 
-use Webmozart\Assert\Assert;
-
+/**
+ * @phpstan-type CreateProductMessageData array{
+ *     locale: string,
+ *     uuid?: string,
+ *     code?: string,
+ *     author?: int|null,
+ *     authored?: string,
+ * }&array<string, mixed>
+ */
 class CreateProductMessage
 {
     /**
-     * @var array<string, mixed>
+     * @param CreateProductMessageData $data
      */
-    private array $data;
-
-    private ?string $uuid = null;
-
-    /**
-     * @param array<string, mixed> $data
-     */
-    public function __construct(array $data)
+    public function __construct(private readonly array $data)
     {
-        $uuid = $data['uuid'] ?? null;
+    }
 
-        Assert::string($data['locale'] ?? null, 'Expected a "locale" string given.');
-        Assert::nullOrString($uuid, 'Expected "uuid" to be a string.');
-
-        $this->data = $data;
-        $this->uuid = $uuid;
+    public function getLocale(): string
+    {
+        return $this->data['locale'];
     }
 
     public function getUuid(): ?string
     {
-        return $this->uuid;
+        return $this->data['uuid'] ?? null;
     }
 
     /**
-     * @return array<string, mixed>
+     * @return CreateProductMessageData
      */
     public function getData(): array
     {

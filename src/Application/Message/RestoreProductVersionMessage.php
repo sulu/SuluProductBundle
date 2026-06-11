@@ -20,10 +20,10 @@ class RestoreProductVersionMessage
      * @param array<string, mixed> $options
      */
     public function __construct(
-        private array $productIdentifier,
-        private int $version,
-        private string $locale,
-        private array $options = []
+        private readonly array $productIdentifier,
+        private readonly int $version,
+        private readonly string $locale,
+        private readonly array $options = [],
     ) {
     }
 
