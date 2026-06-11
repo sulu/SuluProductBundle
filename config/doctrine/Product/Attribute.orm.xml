@@ -14,24 +14,31 @@
             <options><option name="default">number</option></options>
         </field>
         <field name="position" type="integer" nullable="false" column="position">
-            <options><option name="default">0</option></options>
+            <options>
+                <option name="default">0</option>
+            </options>
         </field>
 
         <one-to-many field="translations"
                      target-entity="Sulu\Product\Domain\Model\AttributeTranslationInterface"
-                     mapped-by="attribute">
-            <cascade><cascade-persist/><cascade-remove/></cascade>
+                     mapped-by="attribute"
+                     orphan-removal="true">
+            <cascade>
+                <cascade-persist/>
+            </cascade>
         </one-to-many>
 
         <one-to-many field="options"
                      target-entity="Sulu\Product\Domain\Model\AttributeOptionInterface"
-                     mapped-by="attribute">
-            <cascade><cascade-persist/><cascade-remove/></cascade>
+                     mapped-by="attribute"
+                     orphan-removal="true">
+            <cascade>
+                <cascade-persist/>
+            </cascade>
         </one-to-many>
 
-        <many-to-one field="attributeGroup"
-                     target-entity="Sulu\Product\Domain\Model\AttributeGroupInterface"
-                     fetch="EAGER">
+        <many-to-one field="group"
+                     target-entity="Sulu\Product\Domain\Model\AttributeGroupInterface">
             <join-column name="idAttributeGroups" referenced-column-name="id" nullable="false"/>
         </many-to-one>
     </entity>

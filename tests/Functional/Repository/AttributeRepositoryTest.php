@@ -364,4 +364,32 @@ class AttributeRepositoryTest extends SuluTestCase
         $uuids = \array_map(fn (AttributeInterface $a) => $a->getUuid(), $results);
         $this->assertNotContains($attrs[0]->getUuid(), $uuids);
     }
+
+    public function testCountByReturnsZeroForEmptyGroup(): void
+    {
+        $group = $this->createGroup();
+
+        $this->assertSame(0, $this->repository->countBy(['group' => $group]));
+    }
+
+    public function testCountByCountsAttributesInGroup(): void
+    {
+        $group = $this->createGroup();
+        $other = $this->createGroup();
+
+        foreach (['count-a', 'count-b'] as $key) {
+            $a = $this->repository->create($group);
+            $a->setKey($key);
+            $this->repository->save($a);
+        }
+
+        $outsider = $this->repository->create($other);
+        $outsider->setKey('count-other');
+        $this->repository->save($outsider);
+
+        $this->entityManager->flush();
+
+        $this->assertSame(2, $this->repository->countBy(['group' => $group]));
+        $this->assertSame(1, $this->repository->countBy(['group' => $other]));
+    }
 }

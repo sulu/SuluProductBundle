@@ -17,26 +17,29 @@ use Sulu\Product\Application\Message\RemoveAttributeGroupMessage;
 use Sulu\Product\Domain\Exception\AttributeGroupNotEmptyException;
 use Sulu\Product\Domain\Exception\AttributeGroupNotFoundException;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
+use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 
 final class RemoveAttributeGroupMessageHandler
 {
-    public function __construct(private AttributeGroupRepositoryInterface $attributeGroupRepository)
-    {
+    public function __construct(
+        private AttributeGroupRepositoryInterface $attributeGroupRepository,
+        private AttributeRepositoryInterface $attributeRepository,
+    ) {
     }
 
     public function __invoke(RemoveAttributeGroupMessage $message): void
     {
-        $attributeGroup = $this->attributeGroupRepository->findOneBy(['uuid' => $message->getUuid()]);
+        $group = $this->attributeGroupRepository->findOneBy(['uuid' => $message->getUuid()]);
 
-        if (null === $attributeGroup) {
+        if (null === $group) {
             throw new AttributeGroupNotFoundException(['uuid' => $message->getUuid()]);
         }
 
-        $attributeCount = $this->attributeGroupRepository->countGroupAttributes(['attributeGroup' => $attributeGroup]);
+        $attributeCount = $this->attributeRepository->countBy(['group' => $group]);
         if ($attributeCount > 0) {
             throw new AttributeGroupNotEmptyException($message->getUuid(), $attributeCount);
         }
 
-        $this->attributeGroupRepository->remove($attributeGroup);
+        $this->attributeGroupRepository->remove($group);
     }
 }

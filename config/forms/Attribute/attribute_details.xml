@@ -40,7 +40,7 @@
             </params>
         </property>
 
-        <property name="attributeGroup" type="single_attribute_group_selection" mandatory="true" colspan="9">
+        <property name="group" type="single_attribute_group_selection" mandatory="true" colspan="9">
             <meta>
                 <title>sulu_product.attribute_group</title>
             </meta>

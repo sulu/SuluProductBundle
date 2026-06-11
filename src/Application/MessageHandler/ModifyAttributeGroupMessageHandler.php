@@ -31,41 +31,37 @@ final class ModifyAttributeGroupMessageHandler
 
     public function __invoke(ModifyAttributeGroupMessage $message): AttributeGroupInterface
     {
-        $attributeGroup = $this->attributeGroupRepository->findOneBy(['uuid' => $message->getUuid()]);
+        $group = $this->attributeGroupRepository->findOneBy(['uuid' => $message->getUuid()]);
 
-        if (null === $attributeGroup) {
+        if (null === $group) {
             throw new AttributeGroupNotFoundException(['uuid' => $message->getUuid()]);
         }
 
-        $translation = $attributeGroup->getTranslation($message->getLocale());
+        $translation = $group->getTranslation($message->getLocale());
         if (null === $translation) {
-            $translation = new AttributeGroupTranslation($attributeGroup, $message->getLocale(), $message->getName());
-            $attributeGroup->addTranslation($translation);
+            $translation = new AttributeGroupTranslation($group, $message->getLocale(), $message->getName());
+            $group->addTranslation($translation);
         } else {
             $translation->setName($message->getName());
         }
         $translation->setDescription($message->getDescription());
 
-        // Build map of existing groupAttributes keyed by attribute UUID
         $existingMap = [];
-        foreach ($attributeGroup->getGroupAttributes() as $groupAttr) {
+        foreach ($group->getGroupAttributes() as $groupAttr) {
             $existingMap[$groupAttr->getAttribute()->getUuid()] = $groupAttr;
         }
 
-        // Build set of submitted attribute UUIDs
         $submittedUuids = \array_map(
             fn (array $entry) => $entry['attribute'],
             $message->getAttributes(),
         );
 
-        // Remove entries no longer in submitted list
         foreach ($existingMap as $uuid => $groupAttr) {
             if (!\in_array($uuid, $submittedUuids, true)) {
-                $attributeGroup->removeGroupAttribute($groupAttr);
+                $group->removeGroupAttribute($groupAttr);
             }
         }
 
-        // Add or update submitted entries
         foreach ($message->getAttributes() as $index => $entry) {
             $attrUuid = $entry['attribute'];
 
@@ -79,14 +75,14 @@ final class ModifyAttributeGroupMessageHandler
                     continue;
                 }
 
-                $groupAttr = new AttributeGroupAttribute($attributeGroup, $attribute);
+                $groupAttr = new AttributeGroupAttribute($group, $attribute);
                 $groupAttr->setPosition($index);
-                $attributeGroup->addGroupAttribute($groupAttr);
+                $group->addGroupAttribute($groupAttr);
             }
         }
 
-        $this->attributeGroupRepository->save($attributeGroup);
+        $this->attributeGroupRepository->save($group);
 
-        return $attributeGroup;
+        return $group;
     }
 }

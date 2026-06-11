@@ -28,7 +28,7 @@ class AttributeGroupTranslationTest extends TestCase
         $this->assertSame('en', $t->getLocale());
         $this->assertSame('My Group', $t->getName());
         $this->assertNull($t->getDescription());
-        $this->assertSame($group, $t->getAttributeGroup());
+        $this->assertSame($group, $t->getGroup());
     }
 
     public function testSettersAreFluent(): void

@@ -44,7 +44,7 @@ final class AttributeMapper
 
     private function mapCreatePosition(AttributeInterface $attribute, CreateAttributeMessage $message): void
     {
-        $attributeGroup = $attribute->getAttributeGroup();
+        $attributeGroup = $attribute->getGroup();
         $position = $message->getPosition();
 
         if (null !== $position) {
@@ -63,7 +63,7 @@ final class AttributeMapper
 
     private function syncPosition(AttributeInterface $attribute, ?int $newPosition): void
     {
-        $group = $attribute->getAttributeGroup();
+        $group = $attribute->getGroup();
         $oldPosition = $attribute->getPosition();
 
         if (null === $newPosition) {

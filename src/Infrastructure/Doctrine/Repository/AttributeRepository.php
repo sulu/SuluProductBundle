@@ -40,9 +40,9 @@ final class AttributeRepository implements AttributeRepositoryInterface
         $this->entityRepository = $repo;
     }
 
-    public function create(AttributeGroupInterface $attributeGroup): AttributeInterface
+    public function create(AttributeGroupInterface $group): AttributeInterface
     {
-        $attribute = new Attribute($attributeGroup);
+        $attribute = new Attribute($group);
         $attribute->setUuid(Uuid::v7()->toRfc4122());
 
         return $attribute;
@@ -100,12 +100,26 @@ final class AttributeRepository implements AttributeRepositoryInterface
         return $queryBuilder;
     }
 
+    /** @param array<string, mixed> $criteria */
+    public function countBy(array $criteria): int
+    {
+        $qb = $this->entityManager->createQueryBuilder()
+            ->select('COUNT(a)')
+            ->from(Attribute::class, 'a');
+
+        foreach ($criteria as $field => $value) {
+            $qb->andWhere("a.{$field} = :{$field}")->setParameter($field, $value);
+        }
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
+    }
+
     public function findNextPositionInGroup(AttributeGroupInterface $group): int
     {
         $result = $this->entityManager->createQueryBuilder()
             ->select('MAX(a.position)')
             ->from(Attribute::class, 'a')
-            ->where('a.attributeGroup = :group')
+            ->where('a.group = :group')
             ->setParameter('group', $group)
             ->getQuery()
             ->getSingleScalarResult();
@@ -118,7 +132,7 @@ final class AttributeRepository implements AttributeRepositoryInterface
         $qb = $this->entityManager->createQueryBuilder()
             ->select('a')
             ->from(Attribute::class, 'a')
-            ->where('a.attributeGroup = :group')
+            ->where('a.group = :group')
             ->andWhere('a.position >= :position')
             ->setParameter('group', $group)
             ->setParameter('position', $position);
@@ -138,7 +152,7 @@ final class AttributeRepository implements AttributeRepositoryInterface
         $qb = $this->entityManager->createQueryBuilder()
             ->select('a')
             ->from(Attribute::class, 'a')
-            ->where('a.attributeGroup = :group')
+            ->where('a.group = :group')
             ->andWhere('a.position >= :min')
             ->andWhere('a.position <= :max')
             ->setParameter('group', $group)

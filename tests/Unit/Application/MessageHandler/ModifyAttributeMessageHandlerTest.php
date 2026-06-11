@@ -224,7 +224,6 @@ class ModifyAttributeMessageHandlerTest extends TestCase
     {
         $group = new AttributeGroup();
         $attribute = new Attribute($group);
-        $attribute->setAttributeGroup($group);
         $attribute->setPosition(0);
 
         $this->attributeRepository->getOneBy(['uuid' => 'attr-uuid'])->willReturn($attribute);
@@ -249,7 +248,6 @@ class ModifyAttributeMessageHandlerTest extends TestCase
         $group = new AttributeGroup();
         $group->setUuid('group-uuid-1');
         $attribute = new Attribute($group);
-        $attribute->setAttributeGroup($group);
         $attribute->setPosition(5);
 
         $displaced = new Attribute(new AttributeGroup());
@@ -277,7 +275,6 @@ class ModifyAttributeMessageHandlerTest extends TestCase
     {
         $group = new AttributeGroup();
         $attribute = new Attribute($group);
-        $attribute->setAttributeGroup($group);
         $attribute->setPosition(1);
 
         $other1 = new Attribute(new AttributeGroup());
@@ -309,7 +306,6 @@ class ModifyAttributeMessageHandlerTest extends TestCase
     {
         $group = new AttributeGroup();
         $attribute = new Attribute($group);
-        $attribute->setAttributeGroup($group);
         $attribute->setPosition(1);
 
         $between = new Attribute(new AttributeGroup());
@@ -338,7 +334,6 @@ class ModifyAttributeMessageHandlerTest extends TestCase
         $group = new AttributeGroup();
         $group->setUuid('group-uuid-1');
         $attribute = new Attribute($group);
-        $attribute->setAttributeGroup($group);
         $attribute->setPosition(3);
 
         $this->attributeRepository->getOneBy(['uuid' => 'attr-uuid'])->willReturn($attribute);

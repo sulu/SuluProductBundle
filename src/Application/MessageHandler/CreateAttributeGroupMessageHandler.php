@@ -30,15 +30,15 @@ final class CreateAttributeGroupMessageHandler
 
     public function __invoke(CreateAttributeGroupMessage $message): AttributeGroupInterface
     {
-        $attributeGroup = $this->attributeGroupRepository->create();
+        $group = $this->attributeGroupRepository->create();
 
-        $translation = new AttributeGroupTranslation($attributeGroup, $message->getLocale(), $message->getName());
+        $translation = new AttributeGroupTranslation($group, $message->getLocale(), $message->getName());
 
         if (null !== $message->getDescription()) {
             $translation->setDescription($message->getDescription());
         }
 
-        $attributeGroup->addTranslation($translation);
+        $group->addTranslation($translation);
 
         foreach ($message->getAttributes() as $index => $entry) {
             $attribute = $this->attributeRepository->findOneBy(['uuid' => $entry['attribute']]);
@@ -47,13 +47,13 @@ final class CreateAttributeGroupMessageHandler
                 continue;
             }
 
-            $groupAttr = new AttributeGroupAttribute($attributeGroup, $attribute);
+            $groupAttr = new AttributeGroupAttribute($group, $attribute);
             $groupAttr->setPosition($index);
-            $attributeGroup->addGroupAttribute($groupAttr);
+            $group->addGroupAttribute($groupAttr);
         }
 
-        $this->attributeGroupRepository->save($attributeGroup);
+        $this->attributeGroupRepository->save($group);
 
-        return $attributeGroup;
+        return $group;
     }
 }

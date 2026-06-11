@@ -25,7 +25,7 @@ use Sulu\Product\Domain\Model\AttributeInterface;
  */
 interface AttributeRepositoryInterface
 {
-    public function create(AttributeGroupInterface $attributeGroup): AttributeInterface;
+    public function create(AttributeGroupInterface $group): AttributeInterface;
 
     /**
      * @param AttributeRepositoryFilters $filters
@@ -39,15 +39,23 @@ interface AttributeRepositoryInterface
      */
     public function getOneBy(array $filters): AttributeInterface;
 
+    /** @param array<string, mixed> $criteria */
+    public function countBy(array $criteria): int;
+
+    /** @internal TODO: move to a Doctrine listener */
     public function findNextPositionInGroup(AttributeGroupInterface $group): int;
 
     /**
      * @return AttributeInterface[]
+     *
+     * @internal TODO: move to a Doctrine listener
      */
     public function findByGroupWithPositionAtLeast(AttributeGroupInterface $group, int $position, ?AttributeInterface $exclude = null): array;
 
     /**
      * @return AttributeInterface[]
+     *
+     * @internal TODO: move to a Doctrine listener
      */
     public function findByGroupWithPositionBetween(AttributeGroupInterface $group, int $min, int $max, ?AttributeInterface $exclude = null): array;
 

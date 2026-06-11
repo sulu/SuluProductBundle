@@ -29,5 +29,5 @@ interface AttributeGroupTranslationInterface
 
     public function setDescription(?string $description): self;
 
-    public function getAttributeGroup(): AttributeGroupInterface;
+    public function getGroup(): AttributeGroupInterface;
 }

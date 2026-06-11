@@ -31,14 +31,14 @@ final class CreateAttributeMessageHandler
 
     public function __invoke(CreateAttributeMessage $message): AttributeInterface
     {
-        /** @var AttributeGroupInterface $attributeGroup */
-        $attributeGroup = $this->attributeGroupRepository->findOneBy(['uuid' => $message->getAttributeGroup()]);
+        /** @var AttributeGroupInterface $group */
+        $group = $this->attributeGroupRepository->findOneBy(['uuid' => $message->getGroup()]);
 
-        $attribute = $this->attributeRepository->create($attributeGroup);
+        $attribute = $this->attributeRepository->create($group);
         $this->attributeMapper->mapAttributeData($attribute, $message);
 
         $this->attributeRepository->save($attribute);
-        $this->attributeGroupRepository->save($attributeGroup);
+        $this->attributeGroupRepository->save($group);
 
         return $attribute;
     }

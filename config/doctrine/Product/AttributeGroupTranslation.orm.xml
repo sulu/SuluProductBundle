@@ -11,7 +11,7 @@
         <field name="name" type="string" length="255" nullable="false"/>
         <field name="description" type="text" nullable="true"/>
 
-        <many-to-one field="attributeGroup"
+        <many-to-one field="group"
                      target-entity="Sulu\Product\Domain\Model\AttributeGroupInterface"
                      inversed-by="translations">
             <join-column name="idAttributeGroups" referenced-column-name="id"

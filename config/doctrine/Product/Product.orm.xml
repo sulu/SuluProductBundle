@@ -19,17 +19,17 @@
             </cascade>
         </one-to-many>
 
-        <one-to-many field="translations" target-entity="Sulu\Product\Domain\Model\ProductTranslationInterface" mapped-by="product">
+        <one-to-many field="translations" target-entity="Sulu\Product\Domain\Model\ProductTranslationInterface" mapped-by="product"
+                     orphan-removal="true">
             <cascade>
                 <cascade-persist/>
-                <cascade-remove/>
             </cascade>
         </one-to-many>
 
-        <one-to-many field="attributes" target-entity="Sulu\Product\Domain\Model\ProductAttributeInterface" mapped-by="product">
+        <one-to-many field="attributes" target-entity="Sulu\Product\Domain\Model\ProductAttributeInterface" mapped-by="product"
+                     orphan-removal="true">
             <cascade>
                 <cascade-persist/>
-                <cascade-remove/>
             </cascade>
         </one-to-many>
 

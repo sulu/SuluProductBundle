@@ -16,7 +16,6 @@ namespace Sulu\Product\Infrastructure\Doctrine\Repository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Sulu\Product\Domain\Model\AttributeGroup;
-use Sulu\Product\Domain\Model\AttributeGroupAttribute;
 use Sulu\Product\Domain\Model\AttributeGroupInterface;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Symfony\Component\Uid\Uuid;
@@ -35,41 +34,28 @@ final class AttributeGroupRepository implements AttributeGroupRepositoryInterfac
 
     public function create(): AttributeGroupInterface
     {
-        $attributeGroup = new AttributeGroup();
-        $attributeGroup->setUuid(Uuid::v7()->toRfc4122());
+        $group = new AttributeGroup();
+        $group->setUuid(Uuid::v7()->toRfc4122());
 
-        return $attributeGroup;
+        return $group;
     }
 
     /** @param array<string, mixed> $criteria */
     public function findOneBy(array $criteria): ?AttributeGroupInterface
     {
-        /** @var AttributeGroupInterface|null $attributeGroup */
-        $attributeGroup = $this->entityRepository->findOneBy($criteria);
+        /** @var AttributeGroupInterface|null $group */
+        $group = $this->entityRepository->findOneBy($criteria);
 
-        return $attributeGroup;
+        return $group;
     }
 
-    public function countGroupAttributes(array $criteria): int
+    public function save(AttributeGroupInterface $group): void
     {
-        $qb = $this->entityManager->createQueryBuilder()
-            ->select('COUNT(ga)')
-            ->from(AttributeGroupAttribute::class, 'ga');
-
-        foreach ($criteria as $field => $value) {
-            $qb->andWhere("ga.{$field} = :{$field}")->setParameter($field, $value);
-        }
-
-        return (int) $qb->getQuery()->getSingleScalarResult();
+        $this->entityManager->persist($group);
     }
 
-    public function save(AttributeGroupInterface $attributeGroup): void
+    public function remove(AttributeGroupInterface $group): void
     {
-        $this->entityManager->persist($attributeGroup);
-    }
-
-    public function remove(AttributeGroupInterface $attributeGroup): void
-    {
-        $this->entityManager->remove($attributeGroup);
+        $this->entityManager->remove($group);
     }
 }

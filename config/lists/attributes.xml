@@ -11,10 +11,10 @@
         </join>
     </joins>
 
-    <joins name="attributeGroup">
+    <joins name="group">
         <join>
             <entity-name>Sulu\Product\Domain\Model\AttributeGroupInterface</entity-name>
-            <field-name>Sulu\Product\Domain\Model\AttributeInterface.attributeGroup</field-name>
+            <field-name>Sulu\Product\Domain\Model\AttributeInterface.group</field-name>
             <method>LEFT</method>
         </join>
     </joins>
@@ -46,10 +46,10 @@
             <entity-name>Sulu\Product\Domain\Model\AttributeInterface</entity-name>
         </property>
 
-        <property name="attributeGroup" visibility="never">
+        <property name="group" visibility="never">
             <field-name>uuid</field-name>
             <entity-name>Sulu\Product\Domain\Model\AttributeGroupInterface</entity-name>
-            <joins ref="attributeGroup"/>
+            <joins ref="group"/>
         </property>
     </properties>
 </list>

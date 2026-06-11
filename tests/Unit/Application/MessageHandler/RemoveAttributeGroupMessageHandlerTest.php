@@ -22,6 +22,7 @@ use Sulu\Product\Domain\Exception\AttributeGroupNotEmptyException;
 use Sulu\Product\Domain\Exception\AttributeGroupNotFoundException;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
+use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 
 class RemoveAttributeGroupMessageHandlerTest extends TestCase
 {
@@ -30,39 +31,49 @@ class RemoveAttributeGroupMessageHandlerTest extends TestCase
     /** @var ObjectProphecy<AttributeGroupRepositoryInterface> */
     private ObjectProphecy $attributeGroupRepository;
 
+    /** @var ObjectProphecy<AttributeRepositoryInterface> */
+    private ObjectProphecy $attributeRepository;
+
     protected function setUp(): void
     {
         $this->attributeGroupRepository = $this->prophesize(AttributeGroupRepositoryInterface::class);
+        $this->attributeRepository = $this->prophesize(AttributeRepositoryInterface::class);
     }
 
     public function testRemoveAttributeGroup(): void
     {
-        $attributeGroup = new AttributeGroup();
+        $group = new AttributeGroup();
 
         $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid'])
             ->shouldBeCalledOnce()
-            ->willReturn($attributeGroup);
-        $this->attributeGroupRepository->countGroupAttributes(['attributeGroup' => $attributeGroup])
+            ->willReturn($group);
+        $this->attributeRepository->countBy(['group' => $group])
             ->willReturn(0);
-        $this->attributeGroupRepository->remove($attributeGroup)
+        $this->attributeGroupRepository->remove($group)
             ->shouldBeCalledOnce();
 
-        $handler = new RemoveAttributeGroupMessageHandler($this->attributeGroupRepository->reveal());
+        $handler = new RemoveAttributeGroupMessageHandler(
+            $this->attributeGroupRepository->reveal(),
+            $this->attributeRepository->reveal(),
+        );
 
         ($handler)(new RemoveAttributeGroupMessage('group-uuid'));
     }
 
     public function testRemoveAttributeGroupThrowsWhenGroupHasAttributes(): void
     {
-        $attributeGroup = new AttributeGroup();
+        $group = new AttributeGroup();
 
         $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid'])
-            ->willReturn($attributeGroup);
-        $this->attributeGroupRepository->countGroupAttributes(['attributeGroup' => $attributeGroup])
+            ->willReturn($group);
+        $this->attributeRepository->countBy(['group' => $group])
             ->willReturn(3);
-        $this->attributeGroupRepository->remove($attributeGroup)->shouldNotBeCalled();
+        $this->attributeGroupRepository->remove($group)->shouldNotBeCalled();
 
-        $handler = new RemoveAttributeGroupMessageHandler($this->attributeGroupRepository->reveal());
+        $handler = new RemoveAttributeGroupMessageHandler(
+            $this->attributeGroupRepository->reveal(),
+            $this->attributeRepository->reveal(),
+        );
 
         $this->expectException(AttributeGroupNotEmptyException::class);
 
@@ -74,7 +85,10 @@ class RemoveAttributeGroupMessageHandlerTest extends TestCase
         $this->attributeGroupRepository->findOneBy(['uuid' => 'non-existent'])
             ->willReturn(null);
 
-        $handler = new RemoveAttributeGroupMessageHandler($this->attributeGroupRepository->reveal());
+        $handler = new RemoveAttributeGroupMessageHandler(
+            $this->attributeGroupRepository->reveal(),
+            $this->attributeRepository->reveal(),
+        );
 
         $this->expectException(AttributeGroupNotFoundException::class);
 

@@ -438,6 +438,7 @@ final class SuluProductBundle extends AbstractBundle
             ->class(RemoveAttributeGroupMessageHandler::class)
             ->args([
                 new Reference('sulu_product.attribute_group_repository'),
+                new Reference('sulu_product.attribute_repository'),
             ])
             ->tag('messenger.message_handler');
 

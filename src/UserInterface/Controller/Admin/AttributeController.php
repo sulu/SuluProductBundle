@@ -70,9 +70,9 @@ final class AttributeController implements SecuredControllerInterface
         }
         $listBuilder->setParameter('locale', $this->getLocale($request));
 
-        $attributeGroupUuid = $request->query->get('attributeGroup');
-        if ($attributeGroupUuid) {
-            $listBuilder->where($fieldDescriptors['attributeGroup'], $attributeGroupUuid);
+        $groupUuid = $request->query->get('group');
+        if ($groupUuid) {
+            $listBuilder->where($fieldDescriptors['group'], $groupUuid);
         }
 
         $listRepresentation = new PaginatedRepresentation(
@@ -182,7 +182,7 @@ final class AttributeController implements SecuredControllerInterface
             'type' => $attribute->getType(),
             'position' => $attribute->getPosition(),
             'externalIdentifier' => $attribute->getExternalIdentifier(),
-            'attributeGroup' => $attribute->getAttributeGroup()->getUuid(),
+            'group' => $attribute->getGroup()->getUuid(),
             'name' => $translation?->getName() ?? '',
             'description' => $translation?->getDescription(),
             'options' => \array_map(

@@ -64,19 +64,19 @@ class ModifyAttributeGroupMessageHandlerTest extends TestCase
 
     public function testModifyAttributeGroupCreatesTranslationWhenMissing(): void
     {
-        $attributeGroup = new AttributeGroup();
+        $group = new AttributeGroup();
 
         $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid'])
-            ->willReturn($attributeGroup);
-        $this->attributeGroupRepository->save($attributeGroup)->shouldBeCalledOnce();
+            ->willReturn($group);
+        $this->attributeGroupRepository->save($group)->shouldBeCalledOnce();
 
         $handler = $this->createHandler();
 
         $result = ($handler)(new ModifyAttributeGroupMessage('group-uuid', 'en', 'My Group', 'A description'));
 
-        $this->assertSame($attributeGroup, $result);
+        $this->assertSame($group, $result);
 
-        $translation = $attributeGroup->getTranslation('en');
+        $translation = $group->getTranslation('en');
         $this->assertNotNull($translation);
         $this->assertSame('My Group', $translation->getName());
         $this->assertSame('A description', $translation->getDescription());
@@ -84,14 +84,14 @@ class ModifyAttributeGroupMessageHandlerTest extends TestCase
 
     public function testModifyAttributeGroupUpdatesExistingTranslation(): void
     {
-        $attributeGroup = new AttributeGroup();
-        $translation = new AttributeGroupTranslation($attributeGroup, 'en', 'Old Name');
+        $group = new AttributeGroup();
+        $translation = new AttributeGroupTranslation($group, 'en', 'Old Name');
         $translation->setDescription('Old description');
-        $attributeGroup->addTranslation($translation);
+        $group->addTranslation($translation);
 
         $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid'])
-            ->willReturn($attributeGroup);
-        $this->attributeGroupRepository->save($attributeGroup)->shouldBeCalledOnce();
+            ->willReturn($group);
+        $this->attributeGroupRepository->save($group)->shouldBeCalledOnce();
 
         $handler = $this->createHandler();
 
@@ -103,7 +103,7 @@ class ModifyAttributeGroupMessageHandlerTest extends TestCase
 
     public function testModifyAttributeGroupAddsNewGroupAttribute(): void
     {
-        $attributeGroup = new AttributeGroup();
+        $group = new AttributeGroup();
 
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setUuid('attr-uuid-1');
@@ -111,8 +111,8 @@ class ModifyAttributeGroupMessageHandlerTest extends TestCase
         $attribute->setType('text');
 
         $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid'])
-            ->willReturn($attributeGroup);
-        $this->attributeGroupRepository->save($attributeGroup)->shouldBeCalledOnce();
+            ->willReturn($group);
+        $this->attributeGroupRepository->save($group)->shouldBeCalledOnce();
 
         $this->attributeRepository->findOneBy(['uuid' => 'attr-uuid-1'])
             ->willReturn($attribute);
@@ -123,7 +123,7 @@ class ModifyAttributeGroupMessageHandlerTest extends TestCase
             ['attribute' => 'attr-uuid-1'],
         ]));
 
-        $groupAttributes = $attributeGroup->getGroupAttributes();
+        $groupAttributes = $group->getGroupAttributes();
         $this->assertCount(1, $groupAttributes);
         $this->assertSame($attribute, $groupAttributes[0]->getAttribute());
         $this->assertSame(0, $groupAttributes[0]->getPosition());
@@ -131,20 +131,20 @@ class ModifyAttributeGroupMessageHandlerTest extends TestCase
 
     public function testModifyAttributeGroupUpdatesExistingGroupAttribute(): void
     {
-        $attributeGroup = new AttributeGroup();
+        $group = new AttributeGroup();
 
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setUuid('attr-uuid-1');
         $attribute->setKey('color');
         $attribute->setType('text');
 
-        $groupAttr = new AttributeGroupAttribute($attributeGroup, $attribute);
+        $groupAttr = new AttributeGroupAttribute($group, $attribute);
         $groupAttr->setPosition(5);
-        $attributeGroup->addGroupAttribute($groupAttr);
+        $group->addGroupAttribute($groupAttr);
 
         $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid'])
-            ->willReturn($attributeGroup);
-        $this->attributeGroupRepository->save($attributeGroup)->shouldBeCalledOnce();
+            ->willReturn($group);
+        $this->attributeGroupRepository->save($group)->shouldBeCalledOnce();
 
         $this->attributeRepository->findOneBy(['uuid' => 'attr-uuid-1'])->shouldNotBeCalled();
 
@@ -154,14 +154,14 @@ class ModifyAttributeGroupMessageHandlerTest extends TestCase
             ['attribute' => 'attr-uuid-1'],
         ]));
 
-        $groupAttributes = $attributeGroup->getGroupAttributes();
+        $groupAttributes = $group->getGroupAttributes();
         $this->assertCount(1, $groupAttributes);
         $this->assertSame(0, $groupAttributes[0]->getPosition());
     }
 
     public function testModifyAttributeGroupRemovesStaleGroupAttributes(): void
     {
-        $attributeGroup = new AttributeGroup();
+        $group = new AttributeGroup();
 
         $attributeToKeep = new Attribute(new AttributeGroup());
         $attributeToKeep->setUuid('attr-uuid-keep');
@@ -173,17 +173,17 @@ class ModifyAttributeGroupMessageHandlerTest extends TestCase
         $attributeToRemove->setKey('size');
         $attributeToRemove->setType('options');
 
-        $groupAttrKeep = new AttributeGroupAttribute($attributeGroup, $attributeToKeep);
+        $groupAttrKeep = new AttributeGroupAttribute($group, $attributeToKeep);
         $groupAttrKeep->setPosition(0);
-        $groupAttrRemove = new AttributeGroupAttribute($attributeGroup, $attributeToRemove);
+        $groupAttrRemove = new AttributeGroupAttribute($group, $attributeToRemove);
         $groupAttrRemove->setPosition(1);
 
-        $attributeGroup->addGroupAttribute($groupAttrKeep);
-        $attributeGroup->addGroupAttribute($groupAttrRemove);
+        $group->addGroupAttribute($groupAttrKeep);
+        $group->addGroupAttribute($groupAttrRemove);
 
         $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid'])
-            ->willReturn($attributeGroup);
-        $this->attributeGroupRepository->save($attributeGroup)->shouldBeCalledOnce();
+            ->willReturn($group);
+        $this->attributeGroupRepository->save($group)->shouldBeCalledOnce();
 
         $handler = $this->createHandler();
 
@@ -191,7 +191,7 @@ class ModifyAttributeGroupMessageHandlerTest extends TestCase
             ['attribute' => 'attr-uuid-keep'],
         ]));
 
-        $groupAttributes = $attributeGroup->getGroupAttributes();
+        $groupAttributes = $group->getGroupAttributes();
         $this->assertCount(1, $groupAttributes);
         $this->assertSame($attributeToKeep, $groupAttributes[0]->getAttribute());
         $this->assertSame(0, $groupAttributes[0]->getPosition());
@@ -199,11 +199,11 @@ class ModifyAttributeGroupMessageHandlerTest extends TestCase
 
     public function testModifyAttributeGroupSkipsMissingAttributeOnAdd(): void
     {
-        $attributeGroup = new AttributeGroup();
+        $group = new AttributeGroup();
 
         $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid'])
-            ->willReturn($attributeGroup);
-        $this->attributeGroupRepository->save($attributeGroup)->shouldBeCalledOnce();
+            ->willReturn($group);
+        $this->attributeGroupRepository->save($group)->shouldBeCalledOnce();
 
         $this->attributeRepository->findOneBy(['uuid' => 'non-existent'])
             ->willReturn(null);
@@ -214,29 +214,29 @@ class ModifyAttributeGroupMessageHandlerTest extends TestCase
             ['attribute' => 'non-existent'],
         ]));
 
-        $this->assertCount(0, $attributeGroup->getGroupAttributes());
+        $this->assertCount(0, $group->getGroupAttributes());
     }
 
     public function testModifyAttributeGroupClearsAllGroupAttributesWhenEmpty(): void
     {
-        $attributeGroup = new AttributeGroup();
+        $group = new AttributeGroup();
 
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setUuid('attr-uuid-1');
         $attribute->setKey('color');
         $attribute->setType('text');
 
-        $groupAttr = new AttributeGroupAttribute($attributeGroup, $attribute);
-        $attributeGroup->addGroupAttribute($groupAttr);
+        $groupAttr = new AttributeGroupAttribute($group, $attribute);
+        $group->addGroupAttribute($groupAttr);
 
         $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid'])
-            ->willReturn($attributeGroup);
-        $this->attributeGroupRepository->save($attributeGroup)->shouldBeCalledOnce();
+            ->willReturn($group);
+        $this->attributeGroupRepository->save($group)->shouldBeCalledOnce();
 
         $handler = $this->createHandler();
 
         ($handler)(new ModifyAttributeGroupMessage('group-uuid', 'en', 'My Group', null, []));
 
-        $this->assertCount(0, $attributeGroup->getGroupAttributes());
+        $this->assertCount(0, $group->getGroupAttributes());
     }
 }

@@ -49,13 +49,13 @@ class CreateAttributeGroupMessageHandlerTest extends TestCase
 
     public function testCreateAttributeGroup(): void
     {
-        $attributeGroup = new AttributeGroup();
+        $group = new AttributeGroup();
 
         $this->attributeGroupRepository->create()
             ->shouldBeCalledOnce()
-            ->willReturn($attributeGroup);
+            ->willReturn($group);
 
-        $this->attributeGroupRepository->save($attributeGroup)
+        $this->attributeGroupRepository->save($group)
             ->shouldBeCalledOnce();
 
         $handler = $this->createHandler();
@@ -64,9 +64,9 @@ class CreateAttributeGroupMessageHandlerTest extends TestCase
 
         $result = ($handler)($message);
 
-        $this->assertSame($attributeGroup, $result);
+        $this->assertSame($group, $result);
 
-        $translation = $attributeGroup->getTranslation('en');
+        $translation = $group->getTranslation('en');
         $this->assertNotNull($translation);
         $this->assertSame('My Group', $translation->getName());
         $this->assertSame('A description', $translation->getDescription());
@@ -74,10 +74,10 @@ class CreateAttributeGroupMessageHandlerTest extends TestCase
 
     public function testCreateAttributeGroupWithNullDescription(): void
     {
-        $attributeGroup = new AttributeGroup();
+        $group = new AttributeGroup();
 
-        $this->attributeGroupRepository->create()->shouldBeCalledOnce()->willReturn($attributeGroup);
-        $this->attributeGroupRepository->save($attributeGroup)->shouldBeCalledOnce();
+        $this->attributeGroupRepository->create()->shouldBeCalledOnce()->willReturn($group);
+        $this->attributeGroupRepository->save($group)->shouldBeCalledOnce();
 
         $handler = $this->createHandler();
 
@@ -85,17 +85,17 @@ class CreateAttributeGroupMessageHandlerTest extends TestCase
 
         ($handler)($message);
 
-        $translation = $attributeGroup->getTranslation('en');
+        $translation = $group->getTranslation('en');
         $this->assertNotNull($translation);
         $this->assertNull($translation->getDescription());
     }
 
     public function testCreateAttributeGroupWithEmptyAttributes(): void
     {
-        $attributeGroup = new AttributeGroup();
+        $group = new AttributeGroup();
 
-        $this->attributeGroupRepository->create()->shouldBeCalledOnce()->willReturn($attributeGroup);
-        $this->attributeGroupRepository->save($attributeGroup)->shouldBeCalledOnce();
+        $this->attributeGroupRepository->create()->shouldBeCalledOnce()->willReturn($group);
+        $this->attributeGroupRepository->save($group)->shouldBeCalledOnce();
 
         $handler = $this->createHandler();
 
@@ -103,12 +103,12 @@ class CreateAttributeGroupMessageHandlerTest extends TestCase
 
         ($handler)($message);
 
-        $this->assertCount(0, $attributeGroup->getGroupAttributes());
+        $this->assertCount(0, $group->getGroupAttributes());
     }
 
     public function testCreateAttributeGroupWithAttributes(): void
     {
-        $attributeGroup = new AttributeGroup();
+        $group = new AttributeGroup();
 
         $attribute1 = new Attribute(new AttributeGroup());
         $attribute1->setUuid('attr-uuid-1');
@@ -120,8 +120,8 @@ class CreateAttributeGroupMessageHandlerTest extends TestCase
         $attribute2->setKey('size');
         $attribute2->setType('options');
 
-        $this->attributeGroupRepository->create()->shouldBeCalledOnce()->willReturn($attributeGroup);
-        $this->attributeGroupRepository->save($attributeGroup)->shouldBeCalledOnce();
+        $this->attributeGroupRepository->create()->shouldBeCalledOnce()->willReturn($group);
+        $this->attributeGroupRepository->save($group)->shouldBeCalledOnce();
 
         $this->attributeRepository->findOneBy(['uuid' => 'attr-uuid-1'])
             ->willReturn($attribute1);
@@ -137,7 +137,7 @@ class CreateAttributeGroupMessageHandlerTest extends TestCase
 
         ($handler)($message);
 
-        $groupAttributes = $attributeGroup->getGroupAttributes();
+        $groupAttributes = $group->getGroupAttributes();
         $this->assertCount(2, $groupAttributes);
         $this->assertSame($attribute1, $groupAttributes[0]->getAttribute());
         $this->assertSame(0, $groupAttributes[0]->getPosition());
@@ -147,10 +147,10 @@ class CreateAttributeGroupMessageHandlerTest extends TestCase
 
     public function testCreateAttributeGroupSkipsMissingAttribute(): void
     {
-        $attributeGroup = new AttributeGroup();
+        $group = new AttributeGroup();
 
-        $this->attributeGroupRepository->create()->shouldBeCalledOnce()->willReturn($attributeGroup);
-        $this->attributeGroupRepository->save($attributeGroup)->shouldBeCalledOnce();
+        $this->attributeGroupRepository->create()->shouldBeCalledOnce()->willReturn($group);
+        $this->attributeGroupRepository->save($group)->shouldBeCalledOnce();
 
         $this->attributeRepository->findOneBy(['uuid' => 'non-existent'])
             ->willReturn(null);
@@ -163,6 +163,6 @@ class CreateAttributeGroupMessageHandlerTest extends TestCase
 
         ($handler)($message);
 
-        $this->assertCount(0, $attributeGroup->getGroupAttributes());
+        $this->assertCount(0, $group->getGroupAttributes());
     }
 }

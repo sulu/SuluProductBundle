@@ -21,7 +21,7 @@ interface AttributeGroupAttributeInterface
 
     public function setPosition(int $position): self;
 
-    public function getAttributeGroup(): AttributeGroupInterface;
+    public function getGroup(): AttributeGroupInterface;
 
     public function getAttribute(): AttributeInterface;
 

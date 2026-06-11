@@ -83,7 +83,7 @@ class AttributeControllerTest extends SuluTestCase
                 [],
                 [],
                 [],
-                \json_encode(['locale' => 'en', 'key' => $key, 'name' => $key, 'type' => 'text', 'attributeGroup' => $groupAId]) ?: null,
+                \json_encode(['locale' => 'en', 'key' => $key, 'name' => $key, 'type' => 'text', 'group' => $groupAId]) ?: null,
             );
             $this->assertHttpStatusCode(201, $this->client->getResponse());
         }
@@ -94,11 +94,11 @@ class AttributeControllerTest extends SuluTestCase
             [],
             [],
             [],
-            \json_encode(['locale' => 'en', 'key' => 'attr-b1', 'name' => 'attr-b1', 'type' => 'text', 'attributeGroup' => $groupBId]) ?: null,
+            \json_encode(['locale' => 'en', 'key' => 'attr-b1', 'name' => 'attr-b1', 'type' => 'text', 'group' => $groupBId]) ?: null,
         );
         $this->assertHttpStatusCode(201, $this->client->getResponse());
 
-        $this->client->request('GET', '/admin/api/attributes.json?locale=en&attributeGroup=' . $groupAId);
+        $this->client->request('GET', '/admin/api/attributes.json?locale=en&group=' . $groupAId);
         $response = $this->client->getResponse();
         $this->assertHttpStatusCode(200, $response);
 
@@ -126,7 +126,7 @@ class AttributeControllerTest extends SuluTestCase
                 'key' => 'color',
                 'name' => 'Color',
                 'type' => 'text',
-                'attributeGroup' => $groupId,
+                'group' => $groupId,
             ]) ?: null,
         );
 
@@ -212,7 +212,7 @@ class AttributeControllerTest extends SuluTestCase
                 'key' => 'size',
                 'name' => 'Size',
                 'type' => 'options',
-                'attributeGroup' => $groupId,
+                'group' => $groupId,
                 'options' => [
                     ['key' => 'small', 'name' => 'Small'],
                     ['key' => 'large', 'name' => 'Large'],
@@ -293,7 +293,7 @@ class AttributeControllerTest extends SuluTestCase
                 'key' => 'post-dup-unique',
                 'name' => 'Post Dup Unique',
                 'type' => 'text',
-                'attributeGroup' => $groupId,
+                'group' => $groupId,
             ]) ?: null,
         );
         $this->assertHttpStatusCode(201, $this->client->getResponse());
@@ -309,7 +309,7 @@ class AttributeControllerTest extends SuluTestCase
                 'key' => 'post-dup-unique',
                 'name' => 'Post Dup Unique Duplicate',
                 'type' => 'text',
-                'attributeGroup' => $groupId,
+                'group' => $groupId,
             ]) ?: null,
         );
 
@@ -339,7 +339,7 @@ class AttributeControllerTest extends SuluTestCase
                 'key' => 'put-dup-first',
                 'name' => 'Put Dup First',
                 'type' => 'text',
-                'attributeGroup' => $groupId,
+                'group' => $groupId,
             ]) ?: null,
         );
         $this->assertHttpStatusCode(201, $this->client->getResponse());
@@ -355,7 +355,7 @@ class AttributeControllerTest extends SuluTestCase
                 'key' => 'put-dup-second',
                 'name' => 'Put Dup Second',
                 'type' => 'text',
-                'attributeGroup' => $groupId,
+                'group' => $groupId,
             ]) ?: null,
         );
         $this->assertHttpStatusCode(201, $this->client->getResponse());

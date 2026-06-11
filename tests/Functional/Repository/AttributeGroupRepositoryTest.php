@@ -135,16 +135,16 @@ class AttributeGroupRepositoryTest extends SuluTestCase
         $this->assertNull($this->repository->findOneBy(['uuid' => $uuid]));
     }
 
-    public function testCountGroupAttributesReturnsZeroForEmptyGroup(): void
+    public function testCountByReturnsZeroForEmptyGroup(): void
     {
         $group = $this->repository->create();
         $this->repository->save($group);
         $this->entityManager->flush();
 
-        $this->assertSame(0, $this->repository->countGroupAttributes(['attributeGroup' => $group]));
+        $this->assertSame(0, $this->attributeRepository->countBy(['group' => $group]));
     }
 
-    public function testCountGroupAttributesCountsLinkedAttributes(): void
+    public function testCountByCountsLinkedAttributes(): void
     {
         $group = $this->repository->create();
         $this->repository->save($group);
@@ -163,6 +163,6 @@ class AttributeGroupRepositoryTest extends SuluTestCase
         $this->repository->save($group);
         $this->entityManager->flush();
 
-        $this->assertSame(2, $this->repository->countGroupAttributes(['attributeGroup' => $group]));
+        $this->assertSame(2, $this->attributeRepository->countBy(['group' => $group]));
     }
 }

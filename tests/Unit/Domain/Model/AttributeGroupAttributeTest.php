@@ -28,7 +28,7 @@ class AttributeGroupAttributeTest extends TestCase
         $attribute = new Attribute(new AttributeGroup());
         $ga = new AttributeGroupAttribute($group, $attribute);
         $this->assertSame(0, $ga->getPosition());
-        $this->assertSame($group, $ga->getAttributeGroup());
+        $this->assertSame($group, $ga->getGroup());
         $this->assertSame($attribute, $ga->getAttribute());
     }
 

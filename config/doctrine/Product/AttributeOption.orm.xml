@@ -24,8 +24,11 @@
 
         <one-to-many field="translations"
                      target-entity="Sulu\Product\Domain\Model\AttributeOptionTranslationInterface"
-                     mapped-by="attributeOption">
-            <cascade><cascade-persist/><cascade-remove/></cascade>
+                     mapped-by="attributeOption"
+                     orphan-removal="true">
+            <cascade>
+                <cascade-persist/>
+            </cascade>
         </one-to-many>
 
         <unique-constraints>

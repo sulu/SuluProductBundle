@@ -68,15 +68,13 @@ class CreateAttributeMessageHandlerTest extends TestCase
         $this->attributeRepository->findNextPositionInGroup($group)->willReturn(0);
         $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
 
-        $handler = $this->createHandler();
-
-        $result = ($handler)(new CreateAttributeMessage([
+        $result = ($this->createHandler())(new CreateAttributeMessage([
             'locale' => 'en',
             'key' => 'color',
             'name' => 'Color',
             'type' => 'text',
             'description' => 'Color of the product',
-            'attributeGroup' => 'group-uuid-1',
+            'group' => 'group-uuid-1',
         ]));
 
         $this->assertSame($attribute, $result);
@@ -100,15 +98,13 @@ class CreateAttributeMessageHandlerTest extends TestCase
         $this->attributeRepository->findNextPositionInGroup($group)->willReturn(0);
         $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
 
-        $handler = $this->createHandler();
-
-        $result = ($handler)(new CreateAttributeMessage([
+        $result = ($this->createHandler())(new CreateAttributeMessage([
             'locale' => 'en',
             'key' => 'size',
             'name' => 'Size',
             'type' => 'options',
             'description' => null,
-            'attributeGroup' => 'group-uuid-1',
+            'group' => 'group-uuid-1',
             'options' => [
                 ['type' => 'option', 'key' => 'small', 'name' => 'Small'],
                 ['type' => 'option', 'key' => 'large', 'name' => 'Large'],
@@ -136,14 +132,12 @@ class CreateAttributeMessageHandlerTest extends TestCase
         $this->attributeRepository->findByGroupWithPositionAtLeast($group, 5)->willReturn([]);
         $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
 
-        $handler = $this->createHandler();
-
-        ($handler)(new CreateAttributeMessage([
+        ($this->createHandler())(new CreateAttributeMessage([
             'locale' => 'en',
             'key' => 'color',
             'name' => 'Color',
             'type' => 'text',
-            'attributeGroup' => 'group-uuid-1',
+            'group' => 'group-uuid-1',
             'position' => 5,
         ]));
 
@@ -152,29 +146,24 @@ class CreateAttributeMessageHandlerTest extends TestCase
 
     public function testCreateAttributeWithAttributeGroupCreatesJoinRecord(): void
     {
-        $attribute = new Attribute(new AttributeGroup());
-        $group = new AttributeGroup();
-        $group->setUuid('group-uuid-1');
+        $group = $this->makeGroup();
+        $attribute = new Attribute($group);
 
         $this->attributeRepository->create($group)->willReturn($attribute);
         $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
         $this->attributeRepository->findNextPositionInGroup($group)->willReturn(0);
-
-        $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid-1'])
-            ->willReturn($group);
+        $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid-1'])->willReturn($group);
         $this->attributeGroupRepository->save($group)->shouldBeCalledOnce();
 
-        $handler = $this->createHandler();
-
-        ($handler)(new CreateAttributeMessage([
+        ($this->createHandler())(new CreateAttributeMessage([
             'locale' => 'en',
             'key' => 'color',
             'name' => 'Color',
             'type' => 'text',
-            'attributeGroup' => 'group-uuid-1',
+            'group' => 'group-uuid-1',
         ]));
 
-        $this->assertSame($group, $attribute->getAttributeGroup());
+        $this->assertSame($group, $attribute->getGroup());
 
         $groupAttributes = $group->getGroupAttributes();
         $this->assertCount(1, $groupAttributes);
@@ -184,8 +173,7 @@ class CreateAttributeMessageHandlerTest extends TestCase
 
     public function testCreateAttributeWithGroupAppendsPosition(): void
     {
-        $group = new AttributeGroup();
-        $group->setUuid('group-uuid-1');
+        $group = $this->makeGroup();
 
         $existingAttr = new Attribute($group);
         $existingAttr->setKey('existing');
@@ -199,19 +187,15 @@ class CreateAttributeMessageHandlerTest extends TestCase
         $this->attributeRepository->create($group)->willReturn($attribute2);
         $this->attributeRepository->save($attribute2)->shouldBeCalledOnce();
         $this->attributeRepository->findNextPositionInGroup($group)->willReturn(1);
-
-        $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid-1'])
-            ->willReturn($group);
+        $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid-1'])->willReturn($group);
         $this->attributeGroupRepository->save($group)->shouldBeCalledOnce();
 
-        $handler = $this->createHandler();
-
-        ($handler)(new CreateAttributeMessage([
+        ($this->createHandler())(new CreateAttributeMessage([
             'locale' => 'en',
             'key' => 'size',
             'name' => 'Size',
             'type' => 'text',
-            'attributeGroup' => 'group-uuid-1',
+            'group' => 'group-uuid-1',
         ]));
 
         $groupAttributes = $group->getGroupAttributes();
@@ -221,25 +205,21 @@ class CreateAttributeMessageHandlerTest extends TestCase
 
     public function testCreateAttributeAutoSetsPositionToMaxPlusOne(): void
     {
-        $group = new AttributeGroup();
-        $group->setUuid('group-uuid-1');
+        $group = $this->makeGroup();
         $attribute = new Attribute($group);
 
         $this->attributeRepository->create($group)->willReturn($attribute);
         $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
         $this->attributeRepository->findNextPositionInGroup($group)->willReturn(5);
-
         $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid-1'])->willReturn($group);
         $this->attributeGroupRepository->save($group)->shouldBeCalledOnce();
 
-        $handler = $this->createHandler();
-
-        ($handler)(new CreateAttributeMessage([
+        ($this->createHandler())(new CreateAttributeMessage([
             'locale' => 'en',
             'key' => 'color',
             'name' => 'Color',
             'type' => 'text',
-            'attributeGroup' => 'group-uuid-1',
+            'group' => 'group-uuid-1',
         ]));
 
         $this->assertSame(5, $attribute->getPosition());
@@ -247,8 +227,7 @@ class CreateAttributeMessageHandlerTest extends TestCase
 
     public function testCreateAttributeWithExplicitPositionShiftsOthers(): void
     {
-        $group = new AttributeGroup();
-        $group->setUuid('group-uuid-1');
+        $group = $this->makeGroup();
         $attribute = new Attribute($group);
 
         $displaced = new Attribute($group);
@@ -257,18 +236,15 @@ class CreateAttributeMessageHandlerTest extends TestCase
         $this->attributeRepository->create($group)->willReturn($attribute);
         $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
         $this->attributeRepository->findByGroupWithPositionAtLeast($group, 2)->willReturn([$displaced]);
-
         $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid-1'])->willReturn($group);
         $this->attributeGroupRepository->save($group)->shouldBeCalledOnce();
 
-        $handler = $this->createHandler();
-
-        ($handler)(new CreateAttributeMessage([
+        ($this->createHandler())(new CreateAttributeMessage([
             'locale' => 'en',
             'key' => 'color',
             'name' => 'Color',
             'type' => 'text',
-            'attributeGroup' => 'group-uuid-1',
+            'group' => 'group-uuid-1',
             'position' => 2,
         ]));
 

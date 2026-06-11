@@ -123,7 +123,7 @@ class AttributeGroupAdmin extends Admin
                 ->setResourceKey(AttributeInterface::RESOURCE_KEY)
                 ->setListKey(AttributeInterface::LIST_KEY)
                 ->addListAdapters(['table'])
-                ->addRouterAttributesToListRequest(['locale', 'id' => 'attributeGroup'])
+                ->addRouterAttributesToListRequest(['locale', 'id' => 'group'])
                 ->setEditView(AttributeAdmin::EDIT_TABS_VIEW)
                 ->setTabTitle('sulu_product.attributes')
                 ->setTabOrder(20)

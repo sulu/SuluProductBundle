@@ -19,13 +19,13 @@ class AttributeGroupAttribute implements AttributeGroupAttributeInterface
 
     protected int $position = 0;
 
-    protected AttributeGroupInterface $attributeGroup;
+    protected AttributeGroupInterface $group;
 
     protected AttributeInterface $attribute;
 
-    public function __construct(AttributeGroupInterface $attributeGroup, AttributeInterface $attribute)
+    public function __construct(AttributeGroupInterface $group, AttributeInterface $attribute)
     {
-        $this->attributeGroup = $attributeGroup;
+        $this->group = $group;
         $this->attribute = $attribute;
     }
 
@@ -46,9 +46,9 @@ class AttributeGroupAttribute implements AttributeGroupAttributeInterface
         return $this;
     }
 
-    public function getAttributeGroup(): AttributeGroupInterface
+    public function getGroup(): AttributeGroupInterface
     {
-        return $this->attributeGroup;
+        return $this->group;
     }
 
     public function getAttribute(): AttributeInterface

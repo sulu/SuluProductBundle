@@ -23,11 +23,11 @@ class AttributeGroupTranslation implements AttributeGroupTranslationInterface
 
     protected ?string $description = null;
 
-    protected AttributeGroupInterface $attributeGroup;
+    protected AttributeGroupInterface $group;
 
-    public function __construct(AttributeGroupInterface $attributeGroup, string $locale, string $name)
+    public function __construct(AttributeGroupInterface $group, string $locale, string $name)
     {
-        $this->attributeGroup = $attributeGroup;
+        $this->group = $group;
         $this->locale = $locale;
         $this->name = $name;
     }
@@ -73,8 +73,8 @@ class AttributeGroupTranslation implements AttributeGroupTranslationInterface
         return $this;
     }
 
-    public function getAttributeGroup(): AttributeGroupInterface
+    public function getGroup(): AttributeGroupInterface
     {
-        return $this->attributeGroup;
+        return $this->group;
     }
 }

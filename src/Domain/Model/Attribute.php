@@ -37,13 +37,13 @@ class Attribute implements AttributeInterface
 
     protected int $position = 0;
 
-    protected AttributeGroupInterface $attributeGroup;
+    protected AttributeGroupInterface $group;
 
-    public function __construct(AttributeGroupInterface $attributeGroup)
+    public function __construct(AttributeGroupInterface $group)
     {
         $this->translations = new ArrayCollection();
         $this->options = new ArrayCollection();
-        $this->attributeGroup = $attributeGroup;
+        $this->group = $group;
     }
 
     public function getId(): int
@@ -173,14 +173,14 @@ class Attribute implements AttributeInterface
         return $this;
     }
 
-    public function getAttributeGroup(): AttributeGroupInterface
+    public function getGroup(): AttributeGroupInterface
     {
-        return $this->attributeGroup;
+        return $this->group;
     }
 
-    public function setAttributeGroup(AttributeGroupInterface $attributeGroup): self
+    public function setGroup(AttributeGroupInterface $group): self
     {
-        $this->attributeGroup = $attributeGroup;
+        $this->group = $group;
 
         return $this;
     }

@@ -12,15 +12,19 @@
 
         <one-to-many field="translations"
                      target-entity="Sulu\Product\Domain\Model\AttributeGroupTranslationInterface"
-                     mapped-by="attributeGroup">
-            <cascade><cascade-persist/><cascade-remove/></cascade>
+                     mapped-by="group">
+            <cascade>
+                <cascade-persist/>
+            </cascade>
         </one-to-many>
 
         <one-to-many field="groupAttributes"
                      target-entity="Sulu\Product\Domain\Model\AttributeGroupAttributeInterface"
-                     mapped-by="attributeGroup"
+                     mapped-by="group"
                      orphan-removal="true">
-            <cascade><cascade-persist/><cascade-remove/></cascade>
+            <cascade>
+                <cascade-persist/>
+            </cascade>
         </one-to-many>
     </entity>
 </doctrine-mapping>

@@ -196,7 +196,7 @@ class AttributeGroupControllerTest extends SuluTestCase
             [],
             [],
             [],
-            \json_encode(['locale' => 'en', 'key' => 'del-group-attr', 'name' => 'Attr', 'type' => 'text', 'attributeGroup' => $groupId]) ?: null,
+            \json_encode(['locale' => 'en', 'key' => 'del-group-attr', 'name' => 'Attr', 'type' => 'text', 'group' => $groupId]) ?: null,
         );
         $this->assertHttpStatusCode(201, $this->client->getResponse());
 
