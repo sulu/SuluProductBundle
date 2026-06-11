@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Sulu\Product\Application\MessageHandler;
 
 use Sulu\Product\Application\Message\RemoveAttributeMessage;
-use Sulu\Product\Domain\Exception\AttributeNotFoundException;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 
 final class RemoveAttributeMessageHandler
@@ -25,13 +24,7 @@ final class RemoveAttributeMessageHandler
 
     public function __invoke(RemoveAttributeMessage $message): void
     {
-        $identifier = $message->getIdentifier();
-
-        $attribute = $this->attributeRepository->findOneBy(['uuid' => $identifier['uuid'] ?? null]);
-
-        if (null === $attribute) {
-            throw new AttributeNotFoundException(['uuid' => $identifier['uuid'] ?? null]);
-        }
+        $attribute = $this->attributeRepository->getOneBy($message->getIdentifier());
 
         $this->attributeRepository->remove($attribute);
     }

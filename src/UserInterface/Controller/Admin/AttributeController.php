@@ -38,6 +38,8 @@ use Symfony\Component\Messenger\HandleTrait;
 use Symfony\Component\Messenger\MessageBusInterface;
 
 /**
+ * @phpstan-import-type CreateAttributeMessageData from CreateAttributeMessage
+ *
  * @internal
  */
 final class AttributeController implements SecuredControllerInterface
@@ -143,33 +145,12 @@ final class AttributeController implements SecuredControllerInterface
         return $request->query->getString('locale', $request->getLocale());
     }
 
-    /** @return array{
-     *    locale: string,
-     *    key: string,
-     *    name: string,
-     *    type: string,
-     *    description: string|null,
-     *    options: list<array{
-     *        type: string,
-     *        key: string,
-     *        name: string,
-     *    }>,
-     * }
+    /**
+     * @return CreateAttributeMessageData
      */
     private function getData(Request $request): array
     {
-        /** @var array{
-         *     locale: string,
-         *     key: string,
-         *     name: string,
-         *     type: string,
-         *     description: string|null,
-         *     options: list<array{
-         *         type: string,
-         *         key: string,
-         *         name: string,
-         *     }>
-         * } $data */
+        /** @var CreateAttributeMessageData $data */
         $data = \array_replace(
             $request->request->all(),
             ['locale' => $this->getLocale($request)],

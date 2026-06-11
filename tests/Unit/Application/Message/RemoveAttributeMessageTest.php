@@ -22,7 +22,10 @@ class RemoveAttributeMessageTest extends TestCase
 {
     public function testGetIdentifier(): void
     {
-        $identifier = ['uuid' => 'attribute-123'];
+        $identifier = [
+            'uuid' => 'attribute-123',
+            'key' => 'color',
+        ];
 
         $message = new RemoveAttributeMessage($identifier);
 

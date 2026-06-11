@@ -37,28 +37,36 @@ class RemoveAttributeMessageHandlerTest extends TestCase
     public function testRemoveAttribute(): void
     {
         $attribute = new Attribute();
+        $identifier = [
+            'key' => 'color',
+        ];
 
-        $this->attributeRepository->findOneBy(['uuid' => 'attr-uuid'])
+        $this->attributeRepository->getOneBy($identifier)
             ->shouldBeCalledOnce()
             ->willReturn($attribute);
+
+        $this->attributeRepository->findOneBy($identifier)
+            ->shouldNotBeCalled();
 
         $this->attributeRepository->remove($attribute)
             ->shouldBeCalledOnce();
 
         $handler = new RemoveAttributeMessageHandler($this->attributeRepository->reveal());
 
-        ($handler)(new RemoveAttributeMessage(['uuid' => 'attr-uuid']));
+        ($handler)(new RemoveAttributeMessage($identifier));
     }
 
     public function testRemoveAttributeThrowsNotFoundWhenMissing(): void
     {
-        $this->attributeRepository->findOneBy(['uuid' => 'non-existent'])
-            ->willReturn(null);
+        $identifier = ['key' => 'non-existent'];
+
+        $this->attributeRepository->getOneBy($identifier)
+            ->willThrow(new AttributeNotFoundException($identifier));
 
         $handler = new RemoveAttributeMessageHandler($this->attributeRepository->reveal());
 
         $this->expectException(AttributeNotFoundException::class);
 
-        ($handler)(new RemoveAttributeMessage(['uuid' => 'non-existent']));
+        ($handler)(new RemoveAttributeMessage($identifier));
     }
 }

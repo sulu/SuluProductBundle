@@ -15,6 +15,7 @@ namespace Sulu\Product\Domain\Model;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\Criteria;
 use Sulu\Component\Persistence\Model\AuditableTrait;
 use Sulu\Content\Domain\Model\ContentRichEntityTrait;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
@@ -31,8 +32,6 @@ class Product implements ProductInterface
     protected string $uuid;
 
     protected ?string $code = null;
-
-    protected ?string $currentLocale = null;
 
     /** @var Collection<int, ProductTranslationInterface> */
     protected Collection $translations;
@@ -70,28 +69,15 @@ class Product implements ProductInterface
         return $this;
     }
 
-    public function getCurrentLocale(): ?string
+    public function getTranslation(string $locale): ?ProductTranslationInterface
     {
-        return $this->currentLocale;
-    }
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq('locale', $locale));
 
-    public function setCurrentLocale(string $locale): self
-    {
-        $this->currentLocale = $locale;
+        /** @var ProductTranslationInterface|false $translation */
+        $translation = $this->translations->matching($criteria)->first();
 
-        return $this;
-    }
-
-    public function getTranslation(?string $locale = null): ?ProductTranslationInterface
-    {
-        $locale ??= $this->currentLocale;
-        foreach ($this->translations as $translation) {
-            if ($translation->getLocale() === $locale) {
-                return $translation;
-            }
-        }
-
-        return null;
+        return $translation ?: null;
     }
 
     public function addTranslation(ProductTranslationInterface $translation): self

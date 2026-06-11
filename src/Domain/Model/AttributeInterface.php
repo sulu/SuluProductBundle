@@ -38,9 +38,7 @@ interface AttributeInterface
 
     public function setType(string $type): self;
 
-    public function setCurrentLocale(string $locale): self;
-
-    public function getTranslation(?string $locale = null): ?AttributeTranslationInterface;
+    public function getTranslation(string $locale): ?AttributeTranslationInterface;
 
     public function addTranslation(AttributeTranslationInterface $translation): self;
 

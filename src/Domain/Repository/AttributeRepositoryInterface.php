@@ -13,14 +13,30 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Domain\Repository;
 
+use Sulu\Product\Domain\Exception\AttributeNotFoundException;
 use Sulu\Product\Domain\Model\AttributeInterface;
 
+/**
+ * @phpstan-type AttributeRepositoryFilters array{
+ *     uuid?: string,
+ *     key?: string,
+ * }
+ */
 interface AttributeRepositoryInterface
 {
     public function create(): AttributeInterface;
 
-    /** @param array<string, mixed> $criteria */
-    public function findOneBy(array $criteria): ?AttributeInterface;
+    /**
+     * @param AttributeRepositoryFilters $filters
+     */
+    public function findOneBy(array $filters): ?AttributeInterface;
+
+    /**
+     * @param AttributeRepositoryFilters $filters
+     *
+     * @throws AttributeNotFoundException
+     */
+    public function getOneBy(array $filters): AttributeInterface;
 
     public function save(AttributeInterface $attribute): void;
 

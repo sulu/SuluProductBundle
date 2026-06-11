@@ -22,6 +22,7 @@ use Sulu\Product\Application\AttributeType\JsonAttributeType;
 use Sulu\Product\Application\AttributeType\NumberAttributeType;
 use Sulu\Product\Application\AttributeType\OptionsAttributeType;
 use Sulu\Product\Application\AttributeType\TextAttributeType;
+use Sulu\Product\Application\Mapper\AttributeMapper;
 use Sulu\Product\Application\Mapper\ProductContentMapper;
 use Sulu\Product\Application\Mapper\ProductDetailsMapper;
 use Sulu\Product\Application\Mapper\ProductMapperInterface;
@@ -353,10 +354,14 @@ final class SuluProductBundle extends AbstractBundle
 
         $services->alias(AttributeRepositoryInterface::class, 'sulu_product.attribute_repository');
 
+        $services->set('sulu_product.attribute_mapper')
+            ->class(AttributeMapper::class);
+
         $services->set('sulu_product.create_attribute_handler')
             ->class(CreateAttributeMessageHandler::class)
             ->args([
                 new Reference('sulu_product.attribute_repository'),
+                new Reference('sulu_product.attribute_mapper'),
             ])
             ->tag('messenger.message_handler');
 
@@ -364,6 +369,7 @@ final class SuluProductBundle extends AbstractBundle
             ->class(ModifyAttributeMessageHandler::class)
             ->args([
                 new Reference('sulu_product.attribute_repository'),
+                new Reference('sulu_product.attribute_mapper'),
             ])
             ->tag('messenger.message_handler');
 

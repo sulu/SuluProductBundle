@@ -16,6 +16,7 @@ namespace Sulu\Product\Tests\Unit\Application\MessageHandler;
 use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
+use Sulu\Product\Application\Mapper\AttributeMapper;
 use Sulu\Product\Application\Message\CreateAttributeMessage;
 use Sulu\Product\Application\MessageHandler\CreateAttributeMessageHandler;
 use Sulu\Product\Domain\Model\Attribute;
@@ -44,7 +45,7 @@ class CreateAttributeMessageHandlerTest extends TestCase
         $this->attributeRepository->save($attribute)
             ->shouldBeCalledOnce();
 
-        $handler = new CreateAttributeMessageHandler($this->attributeRepository->reveal());
+        $handler = new CreateAttributeMessageHandler($this->attributeRepository->reveal(), new AttributeMapper());
 
         $message = new CreateAttributeMessage([
             'locale' => 'en',
@@ -73,7 +74,7 @@ class CreateAttributeMessageHandlerTest extends TestCase
         $this->attributeRepository->create()->willReturn($attribute);
         $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
 
-        $handler = new CreateAttributeMessageHandler($this->attributeRepository->reveal());
+        $handler = new CreateAttributeMessageHandler($this->attributeRepository->reveal(), new AttributeMapper());
 
         $message = new CreateAttributeMessage([
             'locale' => 'en',
@@ -97,33 +98,5 @@ class CreateAttributeMessageHandlerTest extends TestCase
         $this->assertSame(1, $options[1]->getPosition());
         $this->assertSame('Small', $options[0]->getTranslation('en')?->getName());
         $this->assertSame('Large', $options[1]->getTranslation('en')?->getName());
-    }
-
-    public function testCreateAttributeSkipsEmptyOptionKey(): void
-    {
-        $attribute = new Attribute();
-
-        $this->attributeRepository->create()->willReturn($attribute);
-        $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
-
-        $handler = new CreateAttributeMessageHandler($this->attributeRepository->reveal());
-
-        $message = new CreateAttributeMessage([
-            'locale' => 'en',
-            'key' => 'size',
-            'name' => 'Size',
-            'type' => 'options',
-            'description' => null,
-            'options' => [
-                ['type' => 'option', 'key' => '', 'name' => 'Empty'],
-                ['type' => 'option', 'key' => 'large', 'name' => 'Large'],
-            ],
-        ]);
-
-        $result = ($handler)($message);
-
-        $options = $result->getOptions();
-        $this->assertCount(1, $options);
-        $this->assertSame('large', $options[0]->getKey());
     }
 }

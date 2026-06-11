@@ -13,28 +13,65 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Application\Message;
 
-use Webmozart\Assert\Assert;
-
+/**
+ * @phpstan-type AttributeOptionMessageData array{
+ *     type?: string,
+ *     key: string,
+ *     name: string,
+ * }
+ * @phpstan-type CreateAttributeMessageData array{
+ *     locale: string,
+ *     key: string,
+ *     type: string,
+ *     name: string,
+ *     description?: string|null,
+ *     options?: list<AttributeOptionMessageData>|null,
+ * }&array<string, mixed>
+ */
 class CreateAttributeMessage
 {
     /**
-     * @var array<string, mixed>
+     * @param CreateAttributeMessageData $data
      */
-    private array $data;
-
-    /**
-     * @param array<string, mixed> $data
-     */
-    public function __construct(array $data)
+    public function __construct(private readonly array $data)
     {
-        Assert::string($data['locale'] ?? null, 'Expected a "locale" string given.');
-        Assert::string($data['key'] ?? null, 'Expected a "key" string given.');
+    }
 
-        $this->data = $data;
+    public function getLocale(): string
+    {
+        return $this->data['locale'];
+    }
+
+    public function getKey(): string
+    {
+        return $this->data['key'];
+    }
+
+    public function getType(): string
+    {
+        return $this->data['type'];
+    }
+
+    public function getName(): string
+    {
+        return $this->data['name'];
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->data['description'] ?? null;
     }
 
     /**
-     * @return array<string, mixed>
+     * @return list<AttributeOptionMessageData>|null
+     */
+    public function getOptions(): ?array
+    {
+        return $this->data['options'] ?? null;
+    }
+
+    /**
+     * @return CreateAttributeMessageData
      */
     public function getData(): array
     {

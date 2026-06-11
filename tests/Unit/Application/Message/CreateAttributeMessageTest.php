@@ -26,6 +26,7 @@ class CreateAttributeMessageTest extends TestCase
             'locale' => 'en',
             'key' => 'color',
             'type' => 'text',
+            'name' => 'Color',
         ];
 
         $message = new CreateAttributeMessage($data);
@@ -33,31 +34,38 @@ class CreateAttributeMessageTest extends TestCase
         $this->assertSame($data, $message->getData());
     }
 
-    public function testConstructorThrowsWhenLocaleMissing(): void
+    public function testTypedGetters(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $options = [
+            ['type' => 'option', 'key' => 'red', 'name' => 'Red'],
+        ];
 
-        new CreateAttributeMessage(['key' => 'color']);
+        $message = new CreateAttributeMessage([
+            'locale' => 'en',
+            'key' => 'color',
+            'type' => 'options',
+            'name' => 'Color',
+            'description' => 'Product color',
+            'options' => $options,
+        ]);
+
+        $this->assertSame('en', $message->getLocale());
+        $this->assertSame('color', $message->getKey());
+        $this->assertSame('options', $message->getType());
+        $this->assertSame('Color', $message->getName());
+        $this->assertSame('Product color', $message->getDescription());
+        $this->assertSame($options, $message->getOptions());
     }
 
-    public function testConstructorThrowsWhenKeyMissing(): void
+    public function testGetDescriptionReturnsNullWhenMissing(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $message = new CreateAttributeMessage([
+            'locale' => 'en',
+            'key' => 'color',
+            'type' => 'text',
+            'name' => 'Color',
+        ]);
 
-        new CreateAttributeMessage(['locale' => 'en']);
-    }
-
-    public function testConstructorThrowsWhenLocaleIsNotString(): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-
-        new CreateAttributeMessage(['locale' => 123, 'key' => 'color']);
-    }
-
-    public function testConstructorThrowsWhenKeyIsNotString(): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-
-        new CreateAttributeMessage(['locale' => 'en', 'key' => 42]);
+        $this->assertNull($message->getDescription());
     }
 }

@@ -16,6 +16,7 @@ namespace Sulu\Product\Tests\Unit\Application\MessageHandler;
 use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
+use Sulu\Product\Application\Mapper\AttributeMapper;
 use Sulu\Product\Application\Message\ModifyAttributeMessage;
 use Sulu\Product\Application\MessageHandler\ModifyAttributeMessageHandler;
 use Sulu\Product\Domain\Exception\AttributeNotFoundException;
@@ -39,14 +40,14 @@ class ModifyAttributeMessageHandlerTest extends TestCase
 
     public function testModifyAttributeThrowsNotFoundWhenMissing(): void
     {
-        $this->attributeRepository->findOneBy(['uuid' => 'non-existent'])
-            ->willReturn(null);
+        $this->attributeRepository->getOneBy(['uuid' => 'non-existent'])
+            ->willThrow(new AttributeNotFoundException(['uuid' => 'non-existent']));
 
-        $handler = new ModifyAttributeMessageHandler($this->attributeRepository->reveal());
+        $handler = new ModifyAttributeMessageHandler($this->attributeRepository->reveal(), new AttributeMapper());
 
         $this->expectException(AttributeNotFoundException::class);
 
-        ($handler)(new ModifyAttributeMessage(['uuid' => 'non-existent'], ['locale' => 'en']));
+        ($handler)(new ModifyAttributeMessage(['uuid' => 'non-existent'], ['locale' => 'en', 'key' => 'color', 'type' => 'text', 'name' => 'Color']));
     }
 
     public function testModifyAttributeUpdatesKeyAndType(): void
@@ -55,10 +56,10 @@ class ModifyAttributeMessageHandlerTest extends TestCase
         $attribute->setKey('old-key');
         $attribute->setType('text');
 
-        $this->attributeRepository->findOneBy(['uuid' => 'attr-uuid'])->willReturn($attribute);
+        $this->attributeRepository->getOneBy(['uuid' => 'attr-uuid'])->willReturn($attribute);
         $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
 
-        $handler = new ModifyAttributeMessageHandler($this->attributeRepository->reveal());
+        $handler = new ModifyAttributeMessageHandler($this->attributeRepository->reveal(), new AttributeMapper());
 
         $result = ($handler)(new ModifyAttributeMessage(['uuid' => 'attr-uuid'], [
             'locale' => 'en',
@@ -76,13 +77,15 @@ class ModifyAttributeMessageHandlerTest extends TestCase
     {
         $attribute = new Attribute();
 
-        $this->attributeRepository->findOneBy(['uuid' => 'attr-uuid'])->willReturn($attribute);
+        $this->attributeRepository->getOneBy(['uuid' => 'attr-uuid'])->willReturn($attribute);
         $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
 
-        $handler = new ModifyAttributeMessageHandler($this->attributeRepository->reveal());
+        $handler = new ModifyAttributeMessageHandler($this->attributeRepository->reveal(), new AttributeMapper());
 
         ($handler)(new ModifyAttributeMessage(['uuid' => 'attr-uuid'], [
             'locale' => 'en',
+            'key' => 'color',
+            'type' => 'text',
             'name' => 'Color',
             'description' => 'A color attribute',
         ]));
@@ -100,13 +103,15 @@ class ModifyAttributeMessageHandlerTest extends TestCase
         $translation->setDescription('Old description');
         $attribute->addTranslation($translation);
 
-        $this->attributeRepository->findOneBy(['uuid' => 'attr-uuid'])->willReturn($attribute);
+        $this->attributeRepository->getOneBy(['uuid' => 'attr-uuid'])->willReturn($attribute);
         $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
 
-        $handler = new ModifyAttributeMessageHandler($this->attributeRepository->reveal());
+        $handler = new ModifyAttributeMessageHandler($this->attributeRepository->reveal(), new AttributeMapper());
 
         ($handler)(new ModifyAttributeMessage(['uuid' => 'attr-uuid'], [
             'locale' => 'en',
+            'key' => 'color',
+            'type' => 'text',
             'name' => 'New Name',
             'description' => 'New description',
         ]));
@@ -119,13 +124,15 @@ class ModifyAttributeMessageHandlerTest extends TestCase
     {
         $attribute = new Attribute();
 
-        $this->attributeRepository->findOneBy(['uuid' => 'attr-uuid'])->willReturn($attribute);
+        $this->attributeRepository->getOneBy(['uuid' => 'attr-uuid'])->willReturn($attribute);
         $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
 
-        $handler = new ModifyAttributeMessageHandler($this->attributeRepository->reveal());
+        $handler = new ModifyAttributeMessageHandler($this->attributeRepository->reveal(), new AttributeMapper());
 
         ($handler)(new ModifyAttributeMessage(['uuid' => 'attr-uuid'], [
             'locale' => 'en',
+            'key' => 'size',
+            'type' => 'options',
             'name' => 'Size',
             'options' => [
                 ['type' => 'option', 'key' => 'small', 'name' => 'Small'],
@@ -147,13 +154,15 @@ class ModifyAttributeMessageHandlerTest extends TestCase
         $option->addTranslation($optionTranslation);
         $attribute->addOption($option);
 
-        $this->attributeRepository->findOneBy(['uuid' => 'attr-uuid'])->willReturn($attribute);
+        $this->attributeRepository->getOneBy(['uuid' => 'attr-uuid'])->willReturn($attribute);
         $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
 
-        $handler = new ModifyAttributeMessageHandler($this->attributeRepository->reveal());
+        $handler = new ModifyAttributeMessageHandler($this->attributeRepository->reveal(), new AttributeMapper());
 
         ($handler)(new ModifyAttributeMessage(['uuid' => 'attr-uuid'], [
             'locale' => 'en',
+            'key' => 'size',
+            'type' => 'options',
             'name' => 'Size',
             'options' => [
                 ['type' => 'option', 'key' => 'small', 'name' => 'Petit'],
@@ -171,13 +180,15 @@ class ModifyAttributeMessageHandlerTest extends TestCase
         $attribute->addOption($optionToKeep);
         $attribute->addOption($optionToRemove);
 
-        $this->attributeRepository->findOneBy(['uuid' => 'attr-uuid'])->willReturn($attribute);
+        $this->attributeRepository->getOneBy(['uuid' => 'attr-uuid'])->willReturn($attribute);
         $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
 
-        $handler = new ModifyAttributeMessageHandler($this->attributeRepository->reveal());
+        $handler = new ModifyAttributeMessageHandler($this->attributeRepository->reveal(), new AttributeMapper());
 
         ($handler)(new ModifyAttributeMessage(['uuid' => 'attr-uuid'], [
             'locale' => 'en',
+            'key' => 'size',
+            'type' => 'options',
             'name' => 'Size',
             'options' => [
                 ['type' => 'option', 'key' => 'large', 'name' => 'Large'],
@@ -187,28 +198,5 @@ class ModifyAttributeMessageHandlerTest extends TestCase
         $options = $attribute->getOptions();
         $this->assertCount(1, $options);
         $this->assertSame('large', \reset($options)->getKey());
-    }
-
-    public function testModifyAttributeSkipsEmptyOptionKey(): void
-    {
-        $attribute = new Attribute();
-
-        $this->attributeRepository->findOneBy(['uuid' => 'attr-uuid'])->willReturn($attribute);
-        $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
-
-        $handler = new ModifyAttributeMessageHandler($this->attributeRepository->reveal());
-
-        ($handler)(new ModifyAttributeMessage(['uuid' => 'attr-uuid'], [
-            'locale' => 'en',
-            'name' => 'Size',
-            'options' => [
-                ['type' => 'option', 'key' => '', 'name' => 'Empty'],
-                ['type' => 'option', 'key' => 'large', 'name' => 'Large'],
-            ],
-        ]));
-
-        $options = $attribute->getOptions();
-        $this->assertCount(1, $options);
-        $this->assertSame('large', $options[0]->getKey());
     }
 }

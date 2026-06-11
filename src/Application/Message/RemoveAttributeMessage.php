@@ -13,18 +13,24 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Application\Message;
 
+/**
+ * @phpstan-type RemoveAttributeMessageIdentifier array{
+ *     uuid?: string,
+ *     key?: string,
+ * }&array<string, mixed>
+ */
 class RemoveAttributeMessage
 {
+    /**
+     * @param RemoveAttributeMessageIdentifier $identifier
+     */
     public function __construct(
-        /** @var array{ uuid?: string } $identifier */
-        private array $identifier,
+        private readonly array $identifier,
     ) {
     }
 
     /**
-     * @return array{
-     *     uuid?: string
-     * }
+     * @return RemoveAttributeMessageIdentifier
      */
     public function getIdentifier(): array
     {

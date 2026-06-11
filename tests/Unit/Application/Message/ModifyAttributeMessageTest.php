@@ -22,8 +22,8 @@ class ModifyAttributeMessageTest extends TestCase
 {
     public function testGetIdentifier(): void
     {
-        $identifier = ['uuid' => 'attribute-123'];
-        $data = ['locale' => 'en', 'key' => 'color'];
+        $identifier = ['uuid' => 'attribute-123', 'key' => 'color'];
+        $data = ['locale' => 'en', 'key' => 'color', 'type' => 'text', 'name' => 'Color'];
 
         $message = new ModifyAttributeMessage($identifier, $data);
 
@@ -33,24 +33,44 @@ class ModifyAttributeMessageTest extends TestCase
     public function testGetData(): void
     {
         $identifier = ['uuid' => 'attribute-123'];
-        $data = ['locale' => 'en', 'key' => 'color'];
+        $data = ['locale' => 'en', 'key' => 'color', 'type' => 'text', 'name' => 'Color'];
 
         $message = new ModifyAttributeMessage($identifier, $data);
 
         $this->assertSame($data, $message->getData());
     }
 
-    public function testConstructorThrowsWhenLocaleMissing(): void
+    public function testTypedGetters(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $options = [
+            ['type' => 'option', 'key' => 'red', 'name' => 'Red'],
+        ];
 
-        new ModifyAttributeMessage(['uuid' => 'attribute-123'], ['key' => 'color']);
+        $message = new ModifyAttributeMessage(['key' => 'color'], [
+            'locale' => 'en',
+            'key' => 'new-color',
+            'type' => 'options',
+            'name' => 'Color',
+            'description' => 'Product color',
+            'options' => $options,
+        ]);
+
+        $this->assertSame('en', $message->getLocale());
+        $this->assertSame('new-color', $message->getKey());
+        $this->assertSame('options', $message->getType());
+        $this->assertSame('Color', $message->getName());
+        $this->assertSame('Product color', $message->getDescription());
+        $this->assertSame($options, $message->getOptions());
     }
 
-    public function testConstructorThrowsWhenLocaleIsNotString(): void
+    public function testMissingOptionalTypedGettersReturnNull(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $message = new ModifyAttributeMessage(
+            ['uuid' => 'attribute-123'],
+            ['locale' => 'en', 'key' => 'color', 'type' => 'text', 'name' => 'Color'],
+        );
 
-        new ModifyAttributeMessage(['uuid' => 'attribute-123'], ['locale' => 123]);
+        $this->assertNull($message->getDescription());
+        $this->assertNull($message->getOptions());
     }
 }

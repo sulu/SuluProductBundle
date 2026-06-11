@@ -53,17 +53,6 @@ class AttributeTest extends TestCase
         $this->assertSame(AttributeInterface::TYPE_TEXT, $attribute->getType());
     }
 
-    public function testSetCurrentLocaleIsFluentAndUsedByGetTranslation(): void
-    {
-        $attribute = new Attribute();
-        $this->assertSame($attribute, $attribute->setCurrentLocale('de'));
-
-        $translationDe = new AttributeTranslation($attribute, 'de', 'Farbe');
-        $attribute->addTranslation($translationDe);
-
-        $this->assertSame($translationDe, $attribute->getTranslation());
-    }
-
     public function testGetTranslationByExplicitLocale(): void
     {
         $attribute = new Attribute();

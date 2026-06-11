@@ -16,6 +16,7 @@ namespace Sulu\Product\Tests\Functional\Repository;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
+use Sulu\Product\Domain\Exception\AttributeNotFoundException;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeTranslation;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
@@ -104,6 +105,48 @@ class AttributeRepositoryTest extends SuluTestCase
         $this->assertSame('size', $loaded->getKey());
     }
 
+    public function testFindOneByIgnoresUnsupportedFilters(): void
+    {
+        $attribute = $this->repository->create();
+        $attribute->setKey('length');
+        $attribute->setType(AttributeInterface::TYPE_NUMBER);
+
+        $this->repository->save($attribute);
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        $loaded = $this->repository->findOneBy([
+            'key' => 'length',
+            'type' => AttributeInterface::TYPE_TEXT,
+        ]);
+
+        $this->assertInstanceOf(AttributeInterface::class, $loaded);
+        $this->assertSame('length', $loaded->getKey());
+        $this->assertSame(AttributeInterface::TYPE_NUMBER, $loaded->getType());
+    }
+
+    public function testGetOneByKeyReturnsAttribute(): void
+    {
+        $attribute = $this->repository->create();
+        $attribute->setKey('material');
+        $attribute->setType(AttributeInterface::TYPE_TEXT);
+
+        $this->repository->save($attribute);
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        $loaded = $this->repository->getOneBy(['key' => 'material']);
+
+        $this->assertSame('material', $loaded->getKey());
+    }
+
+    public function testGetOneByThrowsWhenNoMatch(): void
+    {
+        $this->expectException(AttributeNotFoundException::class);
+
+        $this->repository->getOneBy(['key' => 'does-not-exist']);
+    }
+
     public function testFindOneByReturnsNullWhenNoMatch(): void
     {
         $loaded = $this->repository->findOneBy(['key' => 'does-not-exist']);
@@ -139,9 +182,8 @@ class AttributeRepositoryTest extends SuluTestCase
         $loaded = $this->repository->findOneBy(['uuid' => $uuid]);
 
         $this->assertInstanceOf(AttributeInterface::class, $loaded);
-        $loaded->setCurrentLocale('en');
 
-        $loadedTranslation = $loaded->getTranslation();
+        $loadedTranslation = $loaded->getTranslation('en');
         $this->assertNotNull($loadedTranslation);
         $this->assertSame('en', $loadedTranslation->getLocale());
         $this->assertSame('Material', $loadedTranslation->getName());
