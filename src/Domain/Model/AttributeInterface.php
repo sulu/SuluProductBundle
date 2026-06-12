@@ -20,9 +20,15 @@ interface AttributeInterface
     public const TYPE_JSON = 'json';
     public const TYPE_OPTIONS = 'options';
 
+    public const RESOURCE_KEY = 'attributes';
+    public const FORM_KEY = 'attribute_details';
+    public const LIST_KEY = 'attributes';
+
     public function getId(): int;
 
     public function getUuid(): ?string;
+
+    public function setUuid(string $uuid): self;
 
     public function getKey(): string;
 
@@ -32,9 +38,7 @@ interface AttributeInterface
 
     public function setType(string $type): self;
 
-    public function setCurrentLocale(string $locale): self;
-
-    public function getTranslation(?string $locale = null): ?AttributeTranslationInterface;
+    public function getTranslation(string $locale): ?AttributeTranslationInterface;
 
     public function addTranslation(AttributeTranslationInterface $translation): self;
 

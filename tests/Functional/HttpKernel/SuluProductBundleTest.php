@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Sulu\Product\Tests\Functional\HttpKernel;
 
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
+use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Symfony\HttpKernel\SuluProductBundle;
 
@@ -31,6 +32,7 @@ class SuluProductBundleTest extends SuluTestCase
         $container = self::getContainer();
 
         $this->assertTrue($container->has(ProductRepositoryInterface::class));
+        $this->assertTrue($container->has(AttributeRepositoryInterface::class));
     }
 
     public function testContainerRegistersProductMappers(): void

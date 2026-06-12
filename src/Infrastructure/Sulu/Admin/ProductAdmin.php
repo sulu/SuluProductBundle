@@ -47,16 +47,30 @@ class ProductAdmin extends Admin
 
     public function configureNavigationItems(NavigationItemCollection $navigationItemCollection): void
     {
-        if (!$this->securityChecker->hasPermission(static::SECURITY_CONTEXT, PermissionTypes::EDIT)) {
+        $hasProducts = $this->securityChecker->hasPermission(static::SECURITY_CONTEXT, PermissionTypes::EDIT);
+        $hasAttributes = $this->securityChecker->hasPermission(AttributeAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT);
+
+        if (!$hasProducts && !$hasAttributes) {
             return;
         }
 
-        $navigationItem = new NavigationItem('sulu_product.products');
-        $navigationItem->setPosition(20);
-        $navigationItem->setIcon('su-newspaper');
-        $navigationItem->setView(static::LIST_VIEW);
+        $parent = new NavigationItem('sulu_product.products');
+        $parent->setPosition(20);
+        $parent->setIcon('su-newspaper');
 
-        $navigationItemCollection->add($navigationItem);
+        if ($hasProducts) {
+            $productsChild = new NavigationItem('sulu_product.products');
+            $productsChild->setView(static::LIST_VIEW);
+            $parent->addChild($productsChild);
+        }
+
+        if ($hasAttributes) {
+            $attributesChild = new NavigationItem('sulu_product.attributes');
+            $attributesChild->setView(AttributeAdmin::LIST_VIEW);
+            $parent->addChild($attributesChild);
+        }
+
+        $navigationItemCollection->add($parent);
     }
 
     public function configureViews(ViewCollection $viewCollection): void

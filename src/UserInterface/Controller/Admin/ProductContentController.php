@@ -44,6 +44,8 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 /**
  * @internal
+ *
+ * @phpstan-import-type ModifyProductMessageData from ModifyProductMessage
  */
 final class ProductContentController implements SecuredControllerInterface
 {
@@ -154,14 +156,17 @@ final class ProductContentController implements SecuredControllerInterface
     }
 
     /**
-     * @return array<string, mixed>
+     * @return ModifyProductMessageData
      */
     private function getData(Request $request): array
     {
-        return \array_replace(
+        /** @var ModifyProductMessageData $data */
+        $data = \array_replace(
             $request->request->all(),
             ['locale' => $this->getLocale($request)],
         );
+
+        return $data;
     }
 
     private function handleAction(Request $request, string $uuid): void

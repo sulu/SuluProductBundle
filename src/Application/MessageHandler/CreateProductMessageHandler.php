@@ -67,10 +67,7 @@ final class CreateProductMessageHandler
 
         $this->productRepository->add($product);
 
-        /** @var string $locale */
-        $locale = $data['locale'];
-
-        $this->domainEventCollector->collect(new ProductCreatedEvent($product, $locale, $data));
+        $this->domainEventCollector->collect(new ProductCreatedEvent($product, $message->getLocale(), $data));
 
         return $product;
     }

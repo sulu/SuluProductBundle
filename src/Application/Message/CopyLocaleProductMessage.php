@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of Sulu.
  *
@@ -14,31 +16,20 @@ namespace Sulu\Product\Application\Message;
 class CopyLocaleProductMessage
 {
     /**
-     * @var array{
-     *     uuid?: string
-     * }
-     */
-    private array $identifier;
-
-    private string $sourceLocale;
-
-    private string $targetLocale;
-
-    /**
      * @param array{
-     *     uuid?: string
+     *     uuid?: string,
      * } $identifier
      */
-    public function __construct(array $identifier, string $sourceLocale, string $targetLocale)
-    {
-        $this->identifier = $identifier;
-        $this->sourceLocale = $sourceLocale;
-        $this->targetLocale = $targetLocale;
+    public function __construct(
+        private readonly array $identifier,
+        private readonly string $sourceLocale,
+        private readonly string $targetLocale,
+    ) {
     }
 
     /**
      * @return array{
-     *     uuid?: string
+     *     uuid?: string,
      * }
      */
     public function getIdentifier(): array

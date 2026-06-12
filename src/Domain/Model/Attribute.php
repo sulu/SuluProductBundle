@@ -15,6 +15,7 @@ namespace Sulu\Product\Domain\Model;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\Criteria;
 
 class Attribute implements AttributeInterface
 {
@@ -25,8 +26,6 @@ class Attribute implements AttributeInterface
     protected string $key;
 
     protected string $type = self::TYPE_NUMBER;
-
-    protected ?string $currentLocale = null;
 
     /** @var Collection<int, AttributeTranslationInterface> */
     protected Collection $translations;
@@ -48,6 +47,13 @@ class Attribute implements AttributeInterface
     public function getUuid(): ?string
     {
         return $this->uuid;
+    }
+
+    public function setUuid(string $uuid): self
+    {
+        $this->uuid = $uuid;
+
+        return $this;
     }
 
     public function getKey(): string
@@ -74,23 +80,15 @@ class Attribute implements AttributeInterface
         return $this;
     }
 
-    public function setCurrentLocale(string $locale): self
+    public function getTranslation(string $locale): ?AttributeTranslationInterface
     {
-        $this->currentLocale = $locale;
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq('locale', $locale));
 
-        return $this;
-    }
+        /** @var AttributeTranslationInterface|false $translation */
+        $translation = $this->translations->matching($criteria)->first();
 
-    public function getTranslation(?string $locale = null): ?AttributeTranslationInterface
-    {
-        $locale ??= $this->currentLocale;
-        foreach ($this->translations as $translation) {
-            if ($translation->getLocale() === $locale) {
-                return $translation;
-            }
-        }
-
-        return null;
+        return $translation ?: null;
     }
 
     public function addTranslation(AttributeTranslationInterface $translation): self
@@ -111,7 +109,10 @@ class Attribute implements AttributeInterface
 
     public function getOptions(): array
     {
-        return $this->options->toArray();
+        $options = $this->options->toArray();
+        \usort($options, static fn (AttributeOptionInterface $a, AttributeOptionInterface $b) => $a->getPosition() <=> $b->getPosition());
+
+        return $options;
     }
 
     public function getOption(string $key): ?AttributeOptionInterface

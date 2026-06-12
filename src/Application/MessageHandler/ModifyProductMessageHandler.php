@@ -39,8 +39,7 @@ final class ModifyProductMessageHandler
     {
         $identifier = $message->getIdentifier();
         $data = $message->getData();
-        /** @var string $locale */
-        $locale = $data['locale'];
+        $locale = $message->getLocale();
 
         /** @var string|null $code */
         $code = $data['code'] ?? null;

@@ -39,6 +39,8 @@ use Symfony\Component\Messenger\MessageBusInterface;
 
 /**
  * @internal
+ *
+ * @phpstan-import-type CreateProductMessageData from CreateProductMessage
  */
 final class ProductDetailsController implements SecuredControllerInterface
 {
@@ -141,14 +143,17 @@ final class ProductDetailsController implements SecuredControllerInterface
     }
 
     /**
-     * @return array<string, mixed>
+     * @return CreateProductMessageData
      */
     private function getData(Request $request): array
     {
-        return \array_replace(
+        /** @var CreateProductMessageData $data */
+        $data = \array_replace(
             $request->request->all(),
             ['locale' => $this->getLocale($request)],
         );
+
+        return $data;
     }
 
     /**

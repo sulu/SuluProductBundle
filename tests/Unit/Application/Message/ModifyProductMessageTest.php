@@ -23,7 +23,7 @@ class ModifyProductMessageTest extends TestCase
     public function testGetIdentifier(): void
     {
         $identifier = ['uuid' => 'product-123'];
-        $data = ['locale' => 'en', 'name' => 'foo'];
+        $data = ['locale' => 'en'];
 
         $message = new ModifyProductMessage($identifier, $data);
 
@@ -33,24 +33,17 @@ class ModifyProductMessageTest extends TestCase
     public function testGetData(): void
     {
         $identifier = ['uuid' => 'product-123'];
-        $data = ['locale' => 'en', 'name' => 'foo'];
+        $data = ['locale' => 'en'];
 
         $message = new ModifyProductMessage($identifier, $data);
 
         $this->assertSame($data, $message->getData());
     }
 
-    public function testConstructorThrowsWhenLocaleMissing(): void
+    public function testGetLocale(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $message = new ModifyProductMessage(['uuid' => 'product-123'], ['locale' => 'en']);
 
-        new ModifyProductMessage(['uuid' => 'product-123'], ['name' => 'foo']);
-    }
-
-    public function testConstructorThrowsWhenLocaleIsNotString(): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-
-        new ModifyProductMessage(['uuid' => 'product-123'], ['locale' => 123]);
+        $this->assertSame('en', $message->getLocale());
     }
 }

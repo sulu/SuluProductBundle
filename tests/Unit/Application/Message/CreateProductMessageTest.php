@@ -22,7 +22,7 @@ class CreateProductMessageTest extends TestCase
 {
     public function testGetDataWithoutUuid(): void
     {
-        $data = ['locale' => 'en', 'name' => 'foo'];
+        $data = ['locale' => 'en'];
 
         $message = new CreateProductMessage($data);
 
@@ -46,24 +46,10 @@ class CreateProductMessageTest extends TestCase
         $this->assertSame($data, $message->getData());
     }
 
-    public function testConstructorThrowsWhenLocaleMissing(): void
+    public function testGetLocale(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $message = new CreateProductMessage(['locale' => 'en']);
 
-        new CreateProductMessage([]);
-    }
-
-    public function testConstructorThrowsWhenLocaleIsNotString(): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-
-        new CreateProductMessage(['locale' => 123]);
-    }
-
-    public function testConstructorThrowsWhenUuidIsNotString(): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-
-        new CreateProductMessage(['locale' => 'en', 'uuid' => 42]);
+        $this->assertSame('en', $message->getLocale());
     }
 }

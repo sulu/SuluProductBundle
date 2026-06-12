@@ -32,6 +32,13 @@ class AttributeTest extends TestCase
         $this->assertNull($attribute->getTranslation('en'));
     }
 
+    public function testSetUuidIsFluentAndStores(): void
+    {
+        $attribute = new Attribute();
+        $this->assertSame($attribute, $attribute->setUuid('uuid-value'));
+        $this->assertSame('uuid-value', $attribute->getUuid());
+    }
+
     public function testSetKeyIsFluentAndStores(): void
     {
         $attribute = new Attribute();
@@ -44,17 +51,6 @@ class AttributeTest extends TestCase
         $attribute = new Attribute();
         $this->assertSame($attribute, $attribute->setType(AttributeInterface::TYPE_TEXT));
         $this->assertSame(AttributeInterface::TYPE_TEXT, $attribute->getType());
-    }
-
-    public function testSetCurrentLocaleIsFluentAndUsedByGetTranslation(): void
-    {
-        $attribute = new Attribute();
-        $this->assertSame($attribute, $attribute->setCurrentLocale('de'));
-
-        $translationDe = new AttributeTranslation($attribute, 'de', 'Farbe');
-        $attribute->addTranslation($translationDe);
-
-        $this->assertSame($translationDe, $attribute->getTranslation());
     }
 
     public function testGetTranslationByExplicitLocale(): void

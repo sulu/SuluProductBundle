@@ -47,7 +47,6 @@ class ProductTest extends TestCase
         $product = new Product();
 
         $this->assertNull($product->getCode());
-        $this->assertNull($product->getCurrentLocale());
         $this->assertCount(0, $product->getAttributes());
         $this->assertNull($product->getTranslation('en'));
     }
@@ -61,18 +60,6 @@ class ProductTest extends TestCase
 
         $product->setCode(null);
         $this->assertNull($product->getCode());
-    }
-
-    public function testSetCurrentLocaleIsFluentAndUsedByGetTranslation(): void
-    {
-        $product = new Product();
-        $this->assertSame($product, $product->setCurrentLocale('de'));
-        $this->assertSame('de', $product->getCurrentLocale());
-
-        $de = new ProductTranslation($product, 'de', 'Produkt');
-        $product->addTranslation($de);
-
-        $this->assertSame($de, $product->getTranslation());
     }
 
     public function testGetTranslationByExplicitLocale(): void

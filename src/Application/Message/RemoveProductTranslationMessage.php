@@ -13,10 +13,12 @@ namespace Sulu\Product\Application\Message;
 
 class RemoveProductTranslationMessage
 {
+    /**
+     * @param array{uuid?: string} $identifier
+     */
     public function __construct(
-        /** @var array{ uuid?: string } $identifier */
-        private array $identifier,
-        private string $locale
+        private readonly array $identifier,
+        private readonly string $locale,
     ) {
     }
 

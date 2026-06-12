@@ -15,6 +15,7 @@ namespace Sulu\Product\Domain\Model;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\Criteria;
 
 class AttributeOption implements AttributeOptionInterface
 {
@@ -23,6 +24,8 @@ class AttributeOption implements AttributeOptionInterface
     protected ?string $uuid = null;
 
     protected string $key;
+
+    protected int $position = 0;
 
     protected AttributeInterface $attribute;
 
@@ -60,6 +63,18 @@ class AttributeOption implements AttributeOptionInterface
         return $this;
     }
 
+    public function getPosition(): int
+    {
+        return $this->position;
+    }
+
+    public function setPosition(int $position): self
+    {
+        $this->position = $position;
+
+        return $this;
+    }
+
     public function getAttribute(): AttributeInterface
     {
         return $this->attribute;
@@ -68,13 +83,14 @@ class AttributeOption implements AttributeOptionInterface
     public function getTranslation(?string $locale = null): ?AttributeOptionTranslationInterface
     {
         $locale ??= $this->currentLocale;
-        foreach ($this->translations as $translation) {
-            if ($translation->getLocale() === $locale) {
-                return $translation;
-            }
-        }
 
-        return null;
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq('locale', $locale));
+
+        /** @var AttributeOptionTranslationInterface|false $translation */
+        $translation = $this->translations->matching($criteria)->first();
+
+        return $translation ?: null;
     }
 
     public function addTranslation(AttributeOptionTranslationInterface $translation): self

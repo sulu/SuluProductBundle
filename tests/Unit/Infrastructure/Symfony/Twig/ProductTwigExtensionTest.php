@@ -149,7 +149,6 @@ class ProductTwigExtensionTest extends TestCase
         $attribute = new Attribute();
         $attribute->setKey('color');
         $attribute->setType(AttributeInterface::TYPE_TEXT);
-        $attribute->setCurrentLocale('en');
         $translation = new AttributeTranslation($attribute, 'en', 'Color');
         $attribute->addTranslation($translation);
 
@@ -193,7 +192,6 @@ class ProductTwigExtensionTest extends TestCase
         $attribute = new Attribute();
         $attribute->setKey('color');
         $attribute->setType(AttributeInterface::TYPE_OPTIONS);
-        $attribute->setCurrentLocale('en');
         $attrTranslation = new AttributeTranslation($attribute, 'en', 'Color');
         $attribute->addTranslation($attrTranslation);
 
@@ -231,7 +229,6 @@ class ProductTwigExtensionTest extends TestCase
         $attribute = new Attribute();
         $attribute->setKey('weight');
         $attribute->setType(AttributeInterface::TYPE_NUMBER);
-        $attribute->setCurrentLocale('en');
 
         $productAttribute = new ProductAttribute($product, $attribute, 'weight');
         $productAttribute->setNumber(42.5);
@@ -262,7 +259,6 @@ class ProductTwigExtensionTest extends TestCase
         $attribute = new Attribute();
         $attribute->setKey('meta');
         $attribute->setType(AttributeInterface::TYPE_JSON);
-        $attribute->setCurrentLocale('en');
 
         $productAttribute = new ProductAttribute($product, $attribute, 'meta');
         $productAttribute->setJson(['foo' => 'bar']);
@@ -293,7 +289,6 @@ class ProductTwigExtensionTest extends TestCase
         $attribute = new Attribute();
         $attribute->setKey('custom');
         $attribute->setType('unknown_type');
-        $attribute->setCurrentLocale('en');
 
         $productAttribute = new ProductAttribute($product, $attribute, 'custom');
         $productAttribute->setText('some-value');
