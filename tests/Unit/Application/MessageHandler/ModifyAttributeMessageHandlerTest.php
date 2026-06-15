@@ -43,7 +43,7 @@ class ModifyAttributeMessageHandlerTest extends TestCase
     {
         return new ModifyAttributeMessageHandler(
             $this->attributeRepository->reveal(),
-            new AttributeMapper($this->attributeRepository->reveal()),
+            [new AttributeMapper($this->attributeRepository->reveal())],
         );
     }
 

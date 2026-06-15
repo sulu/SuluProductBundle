@@ -13,54 +13,54 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Application\Message;
 
+/**
+ * @phpstan-type AttributeGroupAttributeMessageData array{
+ *     attribute: string,
+ * }
+ * @phpstan-type CreateAttributeGroupMessageData array{
+ *     locale: string,
+ *     name: string,
+ *     description?: string|null,
+ *     attributes?: list<AttributeGroupAttributeMessageData>|null,
+ * }
+ */
 class CreateAttributeGroupMessage
 {
-    private string $locale;
-
-    private string $name;
-
-    private ?string $description;
-
     /**
-     * @var array<array{attribute: string}>
+     * @param CreateAttributeGroupMessageData $data
      */
-    private array $attributes;
-
-    /**
-     * @param array<array{attribute: string}> $attributes
-     */
-    public function __construct(
-        string $locale,
-        string $name,
-        ?string $description = null,
-        array $attributes = [],
-    ) {
-        $this->locale = $locale;
-        $this->name = $name;
-        $this->description = $description;
-        $this->attributes = $attributes;
+    public function __construct(private readonly array $data)
+    {
     }
 
     public function getLocale(): string
     {
-        return $this->locale;
+        return $this->data['locale'];
     }
 
     public function getName(): string
     {
-        return $this->name;
+        return $this->data['name'];
     }
 
     public function getDescription(): ?string
     {
-        return $this->description;
+        return $this->data['description'] ?? null;
     }
 
     /**
-     * @return array<array{attribute: string}>
+     * @return list<AttributeGroupAttributeMessageData>
      */
     public function getAttributes(): array
     {
-        return $this->attributes;
+        return $this->data['attributes'] ?? [];
+    }
+
+    /**
+     * @return CreateAttributeGroupMessageData
+     */
+    public function getData(): array
+    {
+        return $this->data;
     }
 }

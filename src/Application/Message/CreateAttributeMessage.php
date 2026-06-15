@@ -28,7 +28,7 @@ namespace Sulu\Product\Application\Message;
  *     options?: list<AttributeOptionMessageData>|null,
  *     group: string,
  *     position?: int|null,
- * }&array<string, mixed>
+ * }
  */
 class CreateAttributeMessage
 {

@@ -15,23 +15,42 @@ namespace Sulu\Product\Tests\Unit\Application\Mapper;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Prophecy\PhpUnit\ProphecyTrait;
+use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Product\Application\Mapper\AttributeMapper;
 use Sulu\Product\Application\Message\CreateAttributeMessage;
 use Sulu\Product\Application\Message\ModifyAttributeMessage;
 use Sulu\Product\Domain\Model\Attribute;
+use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeOption;
 use Sulu\Product\Domain\Model\AttributeOptionTranslation;
 use Sulu\Product\Domain\Model\AttributeTranslation;
+use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 
 #[CoversClass(AttributeMapper::class)]
 class AttributeMapperTest extends TestCase
 {
+    use ProphecyTrait;
+
+    /** @var ObjectProphecy<AttributeRepositoryInterface> */
+    private ObjectProphecy $attributeRepository;
+
+    private AttributeMapper $mapper;
+
+    protected function setUp(): void
+    {
+        $this->attributeRepository = $this->prophesize(AttributeRepositoryInterface::class);
+        $this->mapper = new AttributeMapper($this->attributeRepository->reveal());
+    }
+
     public function testMapCreateAttributeMessage(): void
     {
-        $attribute = new Attribute();
-        $mapper = new AttributeMapper();
+        $group = new AttributeGroup();
+        $attribute = new Attribute($group);
 
-        $mapper->mapAttributeData($attribute, new CreateAttributeMessage([
+        $this->attributeRepository->findNextPositionInGroup($group)->willReturn(0);
+
+        $this->mapper->mapAttributeData($attribute, new CreateAttributeMessage([
             'locale' => 'en',
             'key' => 'color',
             'type' => 'options',
@@ -41,6 +60,7 @@ class AttributeMapperTest extends TestCase
                 ['type' => 'option', 'key' => 'red', 'name' => 'Red'],
                 ['type' => 'option', 'key' => 'blue', 'name' => 'Blue'],
             ],
+            'group' => 'group-uuid',
         ]));
 
         $this->assertSame('color', $attribute->getKey());
@@ -63,7 +83,8 @@ class AttributeMapperTest extends TestCase
 
     public function testMapModifyAttributeMessageUpdatesExistingData(): void
     {
-        $attribute = new Attribute();
+        $group = new AttributeGroup();
+        $attribute = new Attribute($group);
         $attribute->setKey('old-color');
         $attribute->setType('text');
         $translation = new AttributeTranslation($attribute, 'en', 'Old Color');
@@ -78,8 +99,10 @@ class AttributeMapperTest extends TestCase
         $blue->addTranslation(new AttributeOptionTranslation($blue, 'en', 'Blue'));
         $attribute->addOption($blue);
 
-        $mapper = new AttributeMapper();
-        $mapper->mapAttributeData($attribute, new ModifyAttributeMessage(['uuid' => 'attribute-uuid'], [
+        // position = 0 (default), findNextPositionInGroup returns 1 → newPosition = 0 = oldPosition → no change
+        $this->attributeRepository->findNextPositionInGroup($group)->willReturn(1);
+
+        $this->mapper->mapAttributeData($attribute, new ModifyAttributeMessage(['uuid' => 'attribute-uuid'], [
             'locale' => 'en',
             'key' => 'color',
             'type' => 'options',
@@ -92,7 +115,7 @@ class AttributeMapperTest extends TestCase
         ]));
 
         $this->assertSame('color', $attribute->getKey());
-        $this->assertSame('options', $attribute->getType());
+        $this->assertSame('text', $attribute->getType()); // type is immutable after creation, mapper does not update it
         $this->assertSame('Color', $translation->getName());
         $this->assertSame('Updated description', $translation->getDescription());
 
@@ -108,15 +131,18 @@ class AttributeMapperTest extends TestCase
 
     public function testMapModifyAttributeMessageLeavesMissingOptionalFieldsUnchanged(): void
     {
-        $attribute = new Attribute();
+        $group = new AttributeGroup();
+        $attribute = new Attribute($group);
         $attribute->setKey('color');
         $attribute->setType('text');
         $translation = new AttributeTranslation($attribute, 'en', 'Color');
         $translation->setDescription('Product color');
         $attribute->addTranslation($translation);
 
-        $mapper = new AttributeMapper();
-        $mapper->mapAttributeData($attribute, new ModifyAttributeMessage(['uuid' => 'attribute-uuid'], [
+        // position = 0 (default), findNextPositionInGroup returns 1 → newPosition = 0 = oldPosition → no change
+        $this->attributeRepository->findNextPositionInGroup($group)->willReturn(1);
+
+        $this->mapper->mapAttributeData($attribute, new ModifyAttributeMessage(['uuid' => 'attribute-uuid'], [
             'locale' => 'en',
             'key' => 'color',
             'type' => 'text',

@@ -93,12 +93,7 @@ final class AttributeGroupController implements SecuredControllerInterface
     public function postAction(Request $request): Response
     {
         $data = $this->getData($request);
-        $message = new CreateAttributeGroupMessage(
-            $data['locale'],
-            $data['name'],
-            $data['description'],
-            $data['attributes'],
-        );
+        $message = new CreateAttributeGroupMessage($data);
 
         try {
             /** @var AttributeGroupInterface $group */
@@ -113,13 +108,7 @@ final class AttributeGroupController implements SecuredControllerInterface
     public function putAction(Request $request, string $id): Response
     {
         $data = $this->getData($request);
-        $message = new ModifyAttributeGroupMessage(
-            $id,
-            $data['locale'],
-            $data['name'],
-            $data['description'],
-            $data['attributes'],
-        );
+        $message = new ModifyAttributeGroupMessage(['uuid' => $id], $data);
 
         try {
             /** @var AttributeGroupInterface $group */

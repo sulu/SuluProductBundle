@@ -22,7 +22,7 @@ use Sulu\Product\Domain\Model\AttributeOptionTranslation;
 use Sulu\Product\Domain\Model\AttributeTranslation;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 
-final class AttributeMapper
+final class AttributeMapper implements AttributeMapperInterface
 {
     public function __construct(private AttributeRepositoryInterface $attributeRepository)
     {

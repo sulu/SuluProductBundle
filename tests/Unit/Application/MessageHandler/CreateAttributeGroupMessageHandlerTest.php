@@ -60,7 +60,11 @@ class CreateAttributeGroupMessageHandlerTest extends TestCase
 
         $handler = $this->createHandler();
 
-        $message = new CreateAttributeGroupMessage('en', 'My Group', 'A description');
+        $message = new CreateAttributeGroupMessage([
+            'locale' => 'en',
+            'name' => 'My Group',
+            'description' => 'A description',
+        ]);
 
         $result = ($handler)($message);
 
@@ -81,7 +85,10 @@ class CreateAttributeGroupMessageHandlerTest extends TestCase
 
         $handler = $this->createHandler();
 
-        $message = new CreateAttributeGroupMessage('en', 'My Group', null);
+        $message = new CreateAttributeGroupMessage([
+            'locale' => 'en',
+            'name' => 'My Group',
+        ]);
 
         ($handler)($message);
 
@@ -99,7 +106,11 @@ class CreateAttributeGroupMessageHandlerTest extends TestCase
 
         $handler = $this->createHandler();
 
-        $message = new CreateAttributeGroupMessage('en', 'My Group', null, []);
+        $message = new CreateAttributeGroupMessage([
+            'locale' => 'en',
+            'name' => 'My Group',
+            'attributes' => [],
+        ]);
 
         ($handler)($message);
 
@@ -130,9 +141,13 @@ class CreateAttributeGroupMessageHandlerTest extends TestCase
 
         $handler = $this->createHandler();
 
-        $message = new CreateAttributeGroupMessage('en', 'My Group', null, [
-            ['attribute' => 'attr-uuid-1'],
-            ['attribute' => 'attr-uuid-2'],
+        $message = new CreateAttributeGroupMessage([
+            'locale' => 'en',
+            'name' => 'My Group',
+            'attributes' => [
+                ['attribute' => 'attr-uuid-1'],
+                ['attribute' => 'attr-uuid-2'],
+            ],
         ]);
 
         ($handler)($message);
@@ -157,8 +172,12 @@ class CreateAttributeGroupMessageHandlerTest extends TestCase
 
         $handler = $this->createHandler();
 
-        $message = new CreateAttributeGroupMessage('en', 'My Group', null, [
-            ['attribute' => 'non-existent'],
+        $message = new CreateAttributeGroupMessage([
+            'locale' => 'en',
+            'name' => 'My Group',
+            'attributes' => [
+                ['attribute' => 'non-existent'],
+            ],
         ]);
 
         ($handler)($message);

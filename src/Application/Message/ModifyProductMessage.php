@@ -16,11 +16,11 @@ namespace Sulu\Product\Application\Message;
 /**
  * @phpstan-type ModifyProductMessageIdentifier array{
  *     uuid?: string,
- * }&array<string, mixed>
+ * }
  * @phpstan-type ModifyProductMessageData array{
  *     locale: string,
  *     code?: string,
- * }&array<string, mixed>
+ * }
  */
 class ModifyProductMessage
 {

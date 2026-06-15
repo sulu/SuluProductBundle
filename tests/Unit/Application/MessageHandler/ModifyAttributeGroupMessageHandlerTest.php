@@ -50,29 +50,45 @@ class ModifyAttributeGroupMessageHandlerTest extends TestCase
         );
     }
 
+    /**
+     * @param list<array{attribute: string}> $attributes
+     */
+    private function makeMessage(string $uuid, string $locale, string $name, ?string $description = null, array $attributes = []): ModifyAttributeGroupMessage
+    {
+        $data = ['locale' => $locale, 'name' => $name];
+        if (null !== $description) {
+            $data['description'] = $description;
+        }
+        if ([] !== $attributes) {
+            $data['attributes'] = $attributes;
+        }
+
+        return new ModifyAttributeGroupMessage(['uuid' => $uuid], $data);
+    }
+
     public function testModifyAttributeGroupThrowsNotFoundWhenMissing(): void
     {
-        $this->attributeGroupRepository->findOneBy(['uuid' => 'non-existent'])
-            ->willReturn(null);
+        $this->attributeGroupRepository->getOneBy(['uuid' => 'non-existent'])
+            ->willThrow(new AttributeGroupNotFoundException(['uuid' => 'non-existent']));
 
         $handler = $this->createHandler();
 
         $this->expectException(AttributeGroupNotFoundException::class);
 
-        ($handler)(new ModifyAttributeGroupMessage('non-existent', 'en', 'Name'));
+        ($handler)($this->makeMessage('non-existent', 'en', 'Name'));
     }
 
     public function testModifyAttributeGroupCreatesTranslationWhenMissing(): void
     {
         $group = new AttributeGroup();
 
-        $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid'])
+        $this->attributeGroupRepository->getOneBy(['uuid' => 'group-uuid'])
             ->willReturn($group);
         $this->attributeGroupRepository->save($group)->shouldBeCalledOnce();
 
         $handler = $this->createHandler();
 
-        $result = ($handler)(new ModifyAttributeGroupMessage('group-uuid', 'en', 'My Group', 'A description'));
+        $result = ($handler)($this->makeMessage('group-uuid', 'en', 'My Group', 'A description'));
 
         $this->assertSame($group, $result);
 
@@ -89,13 +105,13 @@ class ModifyAttributeGroupMessageHandlerTest extends TestCase
         $translation->setDescription('Old description');
         $group->addTranslation($translation);
 
-        $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid'])
+        $this->attributeGroupRepository->getOneBy(['uuid' => 'group-uuid'])
             ->willReturn($group);
         $this->attributeGroupRepository->save($group)->shouldBeCalledOnce();
 
         $handler = $this->createHandler();
 
-        ($handler)(new ModifyAttributeGroupMessage('group-uuid', 'en', 'New Name', 'New description'));
+        ($handler)($this->makeMessage('group-uuid', 'en', 'New Name', 'New description'));
 
         $this->assertSame('New Name', $translation->getName());
         $this->assertSame('New description', $translation->getDescription());
@@ -110,7 +126,7 @@ class ModifyAttributeGroupMessageHandlerTest extends TestCase
         $attribute->setKey('color');
         $attribute->setType('text');
 
-        $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid'])
+        $this->attributeGroupRepository->getOneBy(['uuid' => 'group-uuid'])
             ->willReturn($group);
         $this->attributeGroupRepository->save($group)->shouldBeCalledOnce();
 
@@ -119,7 +135,7 @@ class ModifyAttributeGroupMessageHandlerTest extends TestCase
 
         $handler = $this->createHandler();
 
-        ($handler)(new ModifyAttributeGroupMessage('group-uuid', 'en', 'My Group', null, [
+        ($handler)($this->makeMessage('group-uuid', 'en', 'My Group', null, [
             ['attribute' => 'attr-uuid-1'],
         ]));
 
@@ -142,7 +158,7 @@ class ModifyAttributeGroupMessageHandlerTest extends TestCase
         $groupAttr->setPosition(5);
         $group->addGroupAttribute($groupAttr);
 
-        $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid'])
+        $this->attributeGroupRepository->getOneBy(['uuid' => 'group-uuid'])
             ->willReturn($group);
         $this->attributeGroupRepository->save($group)->shouldBeCalledOnce();
 
@@ -150,7 +166,7 @@ class ModifyAttributeGroupMessageHandlerTest extends TestCase
 
         $handler = $this->createHandler();
 
-        ($handler)(new ModifyAttributeGroupMessage('group-uuid', 'en', 'My Group', null, [
+        ($handler)($this->makeMessage('group-uuid', 'en', 'My Group', null, [
             ['attribute' => 'attr-uuid-1'],
         ]));
 
@@ -181,13 +197,13 @@ class ModifyAttributeGroupMessageHandlerTest extends TestCase
         $group->addGroupAttribute($groupAttrKeep);
         $group->addGroupAttribute($groupAttrRemove);
 
-        $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid'])
+        $this->attributeGroupRepository->getOneBy(['uuid' => 'group-uuid'])
             ->willReturn($group);
         $this->attributeGroupRepository->save($group)->shouldBeCalledOnce();
 
         $handler = $this->createHandler();
 
-        ($handler)(new ModifyAttributeGroupMessage('group-uuid', 'en', 'My Group', null, [
+        ($handler)($this->makeMessage('group-uuid', 'en', 'My Group', null, [
             ['attribute' => 'attr-uuid-keep'],
         ]));
 
@@ -201,7 +217,7 @@ class ModifyAttributeGroupMessageHandlerTest extends TestCase
     {
         $group = new AttributeGroup();
 
-        $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid'])
+        $this->attributeGroupRepository->getOneBy(['uuid' => 'group-uuid'])
             ->willReturn($group);
         $this->attributeGroupRepository->save($group)->shouldBeCalledOnce();
 
@@ -210,7 +226,7 @@ class ModifyAttributeGroupMessageHandlerTest extends TestCase
 
         $handler = $this->createHandler();
 
-        ($handler)(new ModifyAttributeGroupMessage('group-uuid', 'en', 'My Group', null, [
+        ($handler)($this->makeMessage('group-uuid', 'en', 'My Group', null, [
             ['attribute' => 'non-existent'],
         ]));
 
@@ -229,13 +245,13 @@ class ModifyAttributeGroupMessageHandlerTest extends TestCase
         $groupAttr = new AttributeGroupAttribute($group, $attribute);
         $group->addGroupAttribute($groupAttr);
 
-        $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid'])
+        $this->attributeGroupRepository->getOneBy(['uuid' => 'group-uuid'])
             ->willReturn($group);
         $this->attributeGroupRepository->save($group)->shouldBeCalledOnce();
 
         $handler = $this->createHandler();
 
-        ($handler)(new ModifyAttributeGroupMessage('group-uuid', 'en', 'My Group', null, []));
+        ($handler)($this->makeMessage('group-uuid', 'en', 'My Group'));
 
         $this->assertCount(0, $group->getGroupAttributes());
     }

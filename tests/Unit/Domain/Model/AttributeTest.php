@@ -142,6 +142,16 @@ class AttributeTest extends TestCase
         $this->assertCount(0, $attribute->getOptions());
     }
 
+    public function testSetGroupIsFluentAndStores(): void
+    {
+        $originalGroup = new AttributeGroup();
+        $newGroup = new AttributeGroup();
+        $attribute = new Attribute($originalGroup);
+
+        $this->assertSame($attribute, $attribute->setGroup($newGroup));
+        $this->assertSame($newGroup, $attribute->getGroup());
+    }
+
     public function testGetIdReturnsDoctrineGeneratedId(): void
     {
         $model = new Attribute(new AttributeGroup());

@@ -13,14 +13,29 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Domain\Repository;
 
+use Sulu\Product\Domain\Exception\AttributeGroupNotFoundException;
 use Sulu\Product\Domain\Model\AttributeGroupInterface;
 
+/**
+ * @phpstan-type AttributeGroupRepositoryFilters array{
+ *     uuid?: string,
+ * }
+ */
 interface AttributeGroupRepositoryInterface
 {
     public function create(): AttributeGroupInterface;
 
-    /** @param array<string, mixed> $criteria */
-    public function findOneBy(array $criteria): ?AttributeGroupInterface;
+    /**
+     * @param AttributeGroupRepositoryFilters $filters
+     */
+    public function findOneBy(array $filters): ?AttributeGroupInterface;
+
+    /**
+     * @param AttributeGroupRepositoryFilters $filters
+     *
+     * @throws AttributeGroupNotFoundException
+     */
+    public function getOneBy(array $filters): AttributeGroupInterface;
 
     public function save(AttributeGroupInterface $group): void;
 

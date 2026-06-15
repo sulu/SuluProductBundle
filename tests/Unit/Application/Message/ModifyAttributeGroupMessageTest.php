@@ -20,35 +20,36 @@ use Sulu\Product\Application\Message\ModifyAttributeGroupMessage;
 #[CoversClass(ModifyAttributeGroupMessage::class)]
 class ModifyAttributeGroupMessageTest extends TestCase
 {
-    public function testConstructorWithRequiredFields(): void
+    public function testGettersWithRequiredFields(): void
     {
         $message = new ModifyAttributeGroupMessage(
-            uuid: 'test-uuid-123',
-            locale: 'en',
-            name: 'Test Group',
+            ['uuid' => 'test-uuid-123'],
+            ['locale' => 'en', 'name' => 'Test Group'],
         );
 
         $this->assertSame('test-uuid-123', $message->getUuid());
+        $this->assertSame(['uuid' => 'test-uuid-123'], $message->getIdentifier());
         $this->assertSame('en', $message->getLocale());
         $this->assertSame('Test Group', $message->getName());
         $this->assertNull($message->getDescription());
         $this->assertSame([], $message->getAttributes());
     }
 
-    public function testConstructorWithAllFields(): void
+    public function testGettersWithAllFields(): void
     {
         $attributes = [
             ['attribute' => 'uuid-1'],
             ['attribute' => 'uuid-2'],
         ];
 
-        $message = new ModifyAttributeGroupMessage(
-            uuid: 'test-uuid-456',
-            locale: 'de',
-            name: 'Advanced Group',
-            description: 'A test description',
-            attributes: $attributes,
-        );
+        $data = [
+            'locale' => 'de',
+            'name' => 'Advanced Group',
+            'description' => 'A test description',
+            'attributes' => $attributes,
+        ];
+
+        $message = new ModifyAttributeGroupMessage(['uuid' => 'test-uuid-456'], $data);
 
         $this->assertSame('test-uuid-456', $message->getUuid());
         $this->assertSame('de', $message->getLocale());
@@ -57,35 +58,32 @@ class ModifyAttributeGroupMessageTest extends TestCase
         $this->assertSame($attributes, $message->getAttributes());
     }
 
-    public function testConstructorThrowsWhenUuidIsNotString(): void
+    public function testGetDataReturnsFullDataArray(): void
     {
-        $this->expectException(\TypeError::class);
+        $data = ['locale' => 'en', 'name' => 'Test Group'];
 
-        /* @phpstan-ignore argument.type, new.resultUnused */
-        new ModifyAttributeGroupMessage(uuid: 789, locale: 'en', name: 'Test Group');
+        $message = new ModifyAttributeGroupMessage(['uuid' => 'test-uuid'], $data);
+
+        $this->assertSame($data, $message->getData());
     }
 
-    public function testConstructorThrowsWhenLocaleIsNotString(): void
+    public function testGetDescriptionReturnsNullWhenMissing(): void
     {
-        $this->expectException(\TypeError::class);
+        $message = new ModifyAttributeGroupMessage(
+            ['uuid' => 'test-uuid'],
+            ['locale' => 'en', 'name' => 'Test Group'],
+        );
 
-        /* @phpstan-ignore argument.type, new.resultUnused */
-        new ModifyAttributeGroupMessage(uuid: 'test-uuid', locale: 456, name: 'Test Group');
+        $this->assertNull($message->getDescription());
     }
 
-    public function testConstructorThrowsWhenNameIsNotString(): void
+    public function testGetAttributesReturnsEmptyArrayWhenMissing(): void
     {
-        $this->expectException(\TypeError::class);
+        $message = new ModifyAttributeGroupMessage(
+            ['uuid' => 'test-uuid'],
+            ['locale' => 'en', 'name' => 'Test Group'],
+        );
 
-        /* @phpstan-ignore argument.type, new.resultUnused */
-        new ModifyAttributeGroupMessage(uuid: 'test-uuid', locale: 'en', name: 123);
-    }
-
-    public function testConstructorThrowsWhenDescriptionIsNotStringOrNull(): void
-    {
-        $this->expectException(\TypeError::class);
-
-        /* @phpstan-ignore argument.type, new.resultUnused */
-        new ModifyAttributeGroupMessage(uuid: 'test-uuid', locale: 'en', name: 'Test Group', description: 456);
+        $this->assertSame([], $message->getAttributes());
     }
 }

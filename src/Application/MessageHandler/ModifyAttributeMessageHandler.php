@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Application\MessageHandler;
 
-use Sulu\Product\Application\Mapper\AttributeMapper;
+use Sulu\Product\Application\Mapper\AttributeMapperInterface;
 use Sulu\Product\Application\Message\ModifyAttributeMessage;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
@@ -22,14 +22,18 @@ final class ModifyAttributeMessageHandler
 {
     public function __construct(
         private AttributeRepositoryInterface $attributeRepository,
-        private AttributeMapper $attributeMapper,
+        /** @var iterable<AttributeMapperInterface> */
+        private iterable $attributeMappers,
     ) {
     }
 
     public function __invoke(ModifyAttributeMessage $message): AttributeInterface
     {
         $attribute = $this->attributeRepository->getOneBy($message->getIdentifier());
-        $this->attributeMapper->mapAttributeData($attribute, $message);
+
+        foreach ($this->attributeMappers as $attributeMapper) {
+            $attributeMapper->mapAttributeData($attribute, $message);
+        }
 
         $this->attributeRepository->save($attribute);
 

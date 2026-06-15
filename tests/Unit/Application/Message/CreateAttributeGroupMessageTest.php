@@ -20,12 +20,12 @@ use Sulu\Product\Application\Message\CreateAttributeGroupMessage;
 #[CoversClass(CreateAttributeGroupMessage::class)]
 class CreateAttributeGroupMessageTest extends TestCase
 {
-    public function testConstructorWithRequiredFields(): void
+    public function testGettersWithRequiredFields(): void
     {
-        $message = new CreateAttributeGroupMessage(
-            locale: 'en',
-            name: 'Test Group',
-        );
+        $message = new CreateAttributeGroupMessage([
+            'locale' => 'en',
+            'name' => 'Test Group',
+        ]);
 
         $this->assertSame('en', $message->getLocale());
         $this->assertSame('Test Group', $message->getName());
@@ -33,19 +33,21 @@ class CreateAttributeGroupMessageTest extends TestCase
         $this->assertSame([], $message->getAttributes());
     }
 
-    public function testConstructorWithAllFields(): void
+    public function testGettersWithAllFields(): void
     {
         $attributes = [
             ['attribute' => 'uuid-1'],
             ['attribute' => 'uuid-2'],
         ];
 
-        $message = new CreateAttributeGroupMessage(
-            locale: 'de',
-            name: 'Advanced Group',
-            description: 'A test description',
-            attributes: $attributes,
-        );
+        $data = [
+            'locale' => 'de',
+            'name' => 'Advanced Group',
+            'description' => 'A test description',
+            'attributes' => $attributes,
+        ];
+
+        $message = new CreateAttributeGroupMessage($data);
 
         $this->assertSame('de', $message->getLocale());
         $this->assertSame('Advanced Group', $message->getName());
@@ -53,27 +55,36 @@ class CreateAttributeGroupMessageTest extends TestCase
         $this->assertSame($attributes, $message->getAttributes());
     }
 
-    public function testConstructorThrowsWhenLocaleIsNotString(): void
+    public function testGetDataReturnsFullArray(): void
     {
-        $this->expectException(\TypeError::class);
+        $data = [
+            'locale' => 'en',
+            'name' => 'Test Group',
+            'description' => 'A description',
+        ];
 
-        /* @phpstan-ignore argument.type, new.resultUnused */
-        new CreateAttributeGroupMessage(locale: 123, name: 'Test Group');
+        $message = new CreateAttributeGroupMessage($data);
+
+        $this->assertSame($data, $message->getData());
     }
 
-    public function testConstructorThrowsWhenNameIsNotString(): void
+    public function testGetDescriptionReturnsNullWhenMissing(): void
     {
-        $this->expectException(\TypeError::class);
+        $message = new CreateAttributeGroupMessage([
+            'locale' => 'en',
+            'name' => 'Test Group',
+        ]);
 
-        /* @phpstan-ignore argument.type, new.resultUnused */
-        new CreateAttributeGroupMessage(locale: 'en', name: 456);
+        $this->assertNull($message->getDescription());
     }
 
-    public function testConstructorThrowsWhenDescriptionIsNotStringOrNull(): void
+    public function testGetAttributesReturnsEmptyArrayWhenMissing(): void
     {
-        $this->expectException(\TypeError::class);
+        $message = new CreateAttributeGroupMessage([
+            'locale' => 'en',
+            'name' => 'Test Group',
+        ]);
 
-        /* @phpstan-ignore argument.type, new.resultUnused */
-        new CreateAttributeGroupMessage(locale: 'en', name: 'Test Group', description: 123);
+        $this->assertSame([], $message->getAttributes());
     }
 }

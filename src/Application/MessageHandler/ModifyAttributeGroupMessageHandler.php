@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Sulu\Product\Application\MessageHandler;
 
 use Sulu\Product\Application\Message\ModifyAttributeGroupMessage;
-use Sulu\Product\Domain\Exception\AttributeGroupNotFoundException;
 use Sulu\Product\Domain\Model\AttributeGroupAttribute;
 use Sulu\Product\Domain\Model\AttributeGroupInterface;
 use Sulu\Product\Domain\Model\AttributeGroupTranslation;
@@ -31,11 +30,7 @@ final class ModifyAttributeGroupMessageHandler
 
     public function __invoke(ModifyAttributeGroupMessage $message): AttributeGroupInterface
     {
-        $group = $this->attributeGroupRepository->findOneBy(['uuid' => $message->getUuid()]);
-
-        if (null === $group) {
-            throw new AttributeGroupNotFoundException(['uuid' => $message->getUuid()]);
-        }
+        $group = $this->attributeGroupRepository->getOneBy(['uuid' => $message->getUuid()]);
 
         $translation = $group->getTranslation($message->getLocale());
         if (null === $translation) {

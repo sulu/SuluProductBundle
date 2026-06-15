@@ -16,6 +16,7 @@ namespace Sulu\Product\Tests\Functional\Repository;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
+use Sulu\Product\Domain\Exception\AttributeGroupNotFoundException;
 use Sulu\Product\Domain\Model\AttributeGroupAttribute;
 use Sulu\Product\Domain\Model\AttributeGroupInterface;
 use Sulu\Product\Domain\Model\AttributeGroupTranslation;
@@ -133,6 +134,27 @@ class AttributeGroupRepositoryTest extends SuluTestCase
         $this->entityManager->clear();
 
         $this->assertNull($this->repository->findOneBy(['uuid' => $uuid]));
+    }
+
+    public function testGetOneByReturnsGroupWhenFound(): void
+    {
+        $group = $this->repository->create();
+        $this->repository->save($group);
+        $this->entityManager->flush();
+
+        $uuid = $group->getUuid();
+        $this->assertNotNull($uuid);
+        $this->entityManager->clear();
+
+        $loaded = $this->repository->getOneBy(['uuid' => $uuid]);
+        $this->assertSame($uuid, $loaded->getUuid());
+    }
+
+    public function testGetOneByThrowsNotFoundExceptionForUnknownUuid(): void
+    {
+        $this->expectException(AttributeGroupNotFoundException::class);
+
+        $this->repository->getOneBy(['uuid' => '00000000-0000-0000-0000-000000000000']);
     }
 
     public function testCountByReturnsZeroForEmptyGroup(): void

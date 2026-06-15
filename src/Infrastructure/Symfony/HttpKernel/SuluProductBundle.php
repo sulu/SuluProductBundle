@@ -23,6 +23,7 @@ use Sulu\Product\Application\AttributeType\NumberAttributeType;
 use Sulu\Product\Application\AttributeType\OptionsAttributeType;
 use Sulu\Product\Application\AttributeType\TextAttributeType;
 use Sulu\Product\Application\Mapper\AttributeMapper;
+use Sulu\Product\Application\Mapper\AttributeMapperInterface;
 use Sulu\Product\Application\Mapper\ProductContentMapper;
 use Sulu\Product\Application\Mapper\ProductDetailsMapper;
 use Sulu\Product\Application\Mapper\ProductMapperInterface;
@@ -209,6 +210,9 @@ final class SuluProductBundle extends AbstractBundle
         $builder->registerForAutoconfiguration(ProductMapperInterface::class)
             ->addTag('sulu_product.product_mapper');
 
+        $builder->registerForAutoconfiguration(AttributeMapperInterface::class)
+            ->addTag('sulu_product.attribute_mapper');
+
         // Built-in attribute types
         $services->set('sulu_product.attribute_type_number')
             ->class(NumberAttributeType::class)
@@ -372,13 +376,14 @@ final class SuluProductBundle extends AbstractBundle
             ->class(AttributeMapper::class)
             ->args([
                 new Reference('sulu_product.attribute_repository'),
-            ]);
+            ])
+            ->tag('sulu_product.attribute_mapper');
 
         $services->set('sulu_product.create_attribute_handler')
             ->class(CreateAttributeMessageHandler::class)
             ->args([
                 new Reference('sulu_product.attribute_repository'),
-                new Reference('sulu_product.attribute_mapper'),
+                tagged_iterator('sulu_product.attribute_mapper'),
                 new Reference('sulu_product.attribute_group_repository'),
             ])
             ->tag('messenger.message_handler');
@@ -387,7 +392,7 @@ final class SuluProductBundle extends AbstractBundle
             ->class(ModifyAttributeMessageHandler::class)
             ->args([
                 new Reference('sulu_product.attribute_repository'),
-                new Reference('sulu_product.attribute_mapper'),
+                tagged_iterator('sulu_product.attribute_mapper'),
             ])
             ->tag('messenger.message_handler');
 

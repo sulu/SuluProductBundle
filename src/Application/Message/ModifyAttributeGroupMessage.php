@@ -13,63 +13,72 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Application\Message;
 
+/**
+ * @phpstan-import-type AttributeGroupAttributeMessageData from CreateAttributeGroupMessage
+ *
+ * @phpstan-type ModifyAttributeGroupMessageIdentifier array{
+ *     uuid: string,
+ * }
+ * @phpstan-type ModifyAttributeGroupMessageData array{
+ *     locale: string,
+ *     name: string,
+ *     description?: string|null,
+ *     attributes?: list<AttributeGroupAttributeMessageData>|null,
+ * }
+ */
 class ModifyAttributeGroupMessage
 {
-    private string $uuid;
-
-    private string $locale;
-
-    private string $name;
-
-    private ?string $description;
-
     /**
-     * @var array<array{attribute: string}>
-     */
-    private array $attributes;
-
-    /**
-     * @param array<array{attribute: string}> $attributes
+     * @param ModifyAttributeGroupMessageIdentifier $identifier
+     * @param ModifyAttributeGroupMessageData $data
      */
     public function __construct(
-        string $uuid,
-        string $locale,
-        string $name,
-        ?string $description = null,
-        array $attributes = [],
+        private readonly array $identifier,
+        private readonly array $data,
     ) {
-        $this->uuid = $uuid;
-        $this->locale = $locale;
-        $this->name = $name;
-        $this->description = $description;
-        $this->attributes = $attributes;
+    }
+
+    /**
+     * @return ModifyAttributeGroupMessageIdentifier
+     */
+    public function getIdentifier(): array
+    {
+        return $this->identifier;
     }
 
     public function getUuid(): string
     {
-        return $this->uuid;
+        return $this->identifier['uuid'];
     }
 
     public function getLocale(): string
     {
-        return $this->locale;
+        return $this->data['locale'];
     }
 
     public function getName(): string
     {
-        return $this->name;
+        return $this->data['name'];
     }
 
     public function getDescription(): ?string
     {
-        return $this->description;
+        return $this->data['description'] ?? null;
     }
 
     /**
-     * @return array<array{attribute: string}>
+     * @return list<AttributeGroupAttributeMessageData>
      */
     public function getAttributes(): array
     {
-        return $this->attributes;
+        return $this->data['attributes'] ?? [];
+    }
+
+    /**
+     * @return ModifyAttributeGroupMessageData
+     */
+    public function getData(): array
+    {
+        return $this->data;
     }
 }

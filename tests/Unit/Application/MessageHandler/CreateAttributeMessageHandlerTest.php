@@ -44,7 +44,7 @@ class CreateAttributeMessageHandlerTest extends TestCase
     {
         return new CreateAttributeMessageHandler(
             $this->attributeRepository->reveal(),
-            new AttributeMapper($this->attributeRepository->reveal()),
+            [new AttributeMapper($this->attributeRepository->reveal())],
             $this->attributeGroupRepository->reveal(),
         );
     }

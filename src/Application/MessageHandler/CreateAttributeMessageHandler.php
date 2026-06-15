@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Application\MessageHandler;
 
-use Sulu\Product\Application\Mapper\AttributeMapper;
+use Sulu\Product\Application\Mapper\AttributeMapperInterface;
 use Sulu\Product\Application\Message\CreateAttributeMessage;
 use Sulu\Product\Domain\Model\AttributeGroupInterface;
 use Sulu\Product\Domain\Model\AttributeInterface;
@@ -24,7 +24,8 @@ final class CreateAttributeMessageHandler
 {
     public function __construct(
         private AttributeRepositoryInterface $attributeRepository,
-        private AttributeMapper $attributeMapper,
+        /** @var iterable<AttributeMapperInterface> */
+        private iterable $attributeMappers,
         private AttributeGroupRepositoryInterface $attributeGroupRepository,
     ) {
     }
@@ -35,7 +36,10 @@ final class CreateAttributeMessageHandler
         $group = $this->attributeGroupRepository->findOneBy(['uuid' => $message->getGroup()]);
 
         $attribute = $this->attributeRepository->create($group);
-        $this->attributeMapper->mapAttributeData($attribute, $message);
+
+        foreach ($this->attributeMappers as $attributeMapper) {
+            $attributeMapper->mapAttributeData($attribute, $message);
+        }
 
         $this->attributeRepository->save($attribute);
         $this->attributeGroupRepository->save($group);
