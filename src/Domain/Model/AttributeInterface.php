@@ -30,6 +30,10 @@ interface AttributeInterface
 
     public function setUuid(string $uuid): self;
 
+    public function getExternalIdentifier(): ?string;
+
+    public function setExternalIdentifier(?string $externalIdentifier): self;
+
     public function getKey(): string;
 
     public function setKey(string $key): self;
@@ -52,4 +56,12 @@ interface AttributeInterface
     public function addOption(AttributeOptionInterface $option): self;
 
     public function removeOption(AttributeOptionInterface $option): self;
+
+    public function getPosition(): int;
+
+    public function setPosition(int $position): self;
+
+    public function getGroup(): AttributeGroupInterface;
+
+    public function setGroup(AttributeGroupInterface $group): self;
 }

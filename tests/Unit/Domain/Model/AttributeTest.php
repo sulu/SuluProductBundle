@@ -16,6 +16,7 @@ namespace Sulu\Product\Tests\Unit\Domain\Model;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Product\Domain\Model\Attribute;
+use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeOption;
 use Sulu\Product\Domain\Model\AttributeTranslation;
@@ -25,7 +26,7 @@ class AttributeTest extends TestCase
 {
     public function testConstructorDefaults(): void
     {
-        $attribute = new Attribute();
+        $attribute = new Attribute(new AttributeGroup());
         $this->assertNull($attribute->getUuid());
         $this->assertSame(AttributeInterface::TYPE_NUMBER, $attribute->getType());
         $this->assertSame([], $attribute->getOptions());
@@ -34,28 +35,37 @@ class AttributeTest extends TestCase
 
     public function testSetUuidIsFluentAndStores(): void
     {
-        $attribute = new Attribute();
+        $attribute = new Attribute(new AttributeGroup());
         $this->assertSame($attribute, $attribute->setUuid('uuid-value'));
         $this->assertSame('uuid-value', $attribute->getUuid());
     }
 
+    public function testSetExternalIdentifierIsFluentAndStores(): void
+    {
+        $attribute = new Attribute(new AttributeGroup());
+        $this->assertSame($attribute, $attribute->setExternalIdentifier('ext-123'));
+        $this->assertSame('ext-123', $attribute->getExternalIdentifier());
+        $attribute->setExternalIdentifier(null);
+        $this->assertNull($attribute->getExternalIdentifier());
+    }
+
     public function testSetKeyIsFluentAndStores(): void
     {
-        $attribute = new Attribute();
+        $attribute = new Attribute(new AttributeGroup());
         $this->assertSame($attribute, $attribute->setKey('color'));
         $this->assertSame('color', $attribute->getKey());
     }
 
     public function testSetTypeIsFluentAndStores(): void
     {
-        $attribute = new Attribute();
+        $attribute = new Attribute(new AttributeGroup());
         $this->assertSame($attribute, $attribute->setType(AttributeInterface::TYPE_TEXT));
         $this->assertSame(AttributeInterface::TYPE_TEXT, $attribute->getType());
     }
 
     public function testGetTranslationByExplicitLocale(): void
     {
-        $attribute = new Attribute();
+        $attribute = new Attribute(new AttributeGroup());
         $en = new AttributeTranslation($attribute, 'en', 'Color');
         $de = new AttributeTranslation($attribute, 'de', 'Farbe');
         $attribute->addTranslation($en);
@@ -68,7 +78,7 @@ class AttributeTest extends TestCase
 
     public function testAddTranslationIsFluentAndDeduplicates(): void
     {
-        $attribute = new Attribute();
+        $attribute = new Attribute(new AttributeGroup());
         $translation = new AttributeTranslation($attribute, 'en', 'Color');
 
         $this->assertSame($attribute, $attribute->addTranslation($translation));
@@ -80,7 +90,7 @@ class AttributeTest extends TestCase
 
     public function testRemoveTranslationIsFluent(): void
     {
-        $attribute = new Attribute();
+        $attribute = new Attribute(new AttributeGroup());
         $translation = new AttributeTranslation($attribute, 'en', 'Color');
         $attribute->addTranslation($translation);
 
@@ -90,7 +100,7 @@ class AttributeTest extends TestCase
 
     public function testGetOptionsReturnsArray(): void
     {
-        $attribute = new Attribute();
+        $attribute = new Attribute(new AttributeGroup());
         $option = new AttributeOption($attribute, 'red');
 
         $attribute->addOption($option);
@@ -100,7 +110,7 @@ class AttributeTest extends TestCase
 
     public function testGetOptionByKey(): void
     {
-        $attribute = new Attribute();
+        $attribute = new Attribute(new AttributeGroup());
         $red = new AttributeOption($attribute, 'red');
         $blue = new AttributeOption($attribute, 'blue');
         $attribute->addOption($red);
@@ -113,7 +123,7 @@ class AttributeTest extends TestCase
 
     public function testAddOptionIsFluentAndDeduplicates(): void
     {
-        $attribute = new Attribute();
+        $attribute = new Attribute(new AttributeGroup());
         $option = new AttributeOption($attribute, 'red');
 
         $this->assertSame($attribute, $attribute->addOption($option));
@@ -124,7 +134,7 @@ class AttributeTest extends TestCase
 
     public function testRemoveOptionIsFluent(): void
     {
-        $attribute = new Attribute();
+        $attribute = new Attribute(new AttributeGroup());
         $option = new AttributeOption($attribute, 'red');
         $attribute->addOption($option);
 
@@ -132,9 +142,19 @@ class AttributeTest extends TestCase
         $this->assertCount(0, $attribute->getOptions());
     }
 
+    public function testSetGroupIsFluentAndStores(): void
+    {
+        $originalGroup = new AttributeGroup();
+        $newGroup = new AttributeGroup();
+        $attribute = new Attribute($originalGroup);
+
+        $this->assertSame($attribute, $attribute->setGroup($newGroup));
+        $this->assertSame($newGroup, $attribute->getGroup());
+    }
+
     public function testGetIdReturnsDoctrineGeneratedId(): void
     {
-        $model = new Attribute();
+        $model = new Attribute(new AttributeGroup());
         $ref = new \ReflectionProperty(Attribute::class, 'id');
         $ref->setValue($model, 42);
         $this->assertSame(42, $model->getId());

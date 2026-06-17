@@ -10,15 +10,27 @@
             <meta>
                 <title>sulu_admin.name</title>
             </meta>
+
+            <params>
+                <param name="headline" value="true"/>
+            </params>
         </property>
 
-        <property name="key" type="text_line" mandatory="true" colspan="6">
+        <property name="externalIdentifier" type="text_line"
+                  visibleCondition="!!externalIdentifier"
+                  disabledCondition="true">
+            <meta>
+                <title>sulu_product.external_identifier</title>
+            </meta>
+        </property>
+
+        <property name="key" type="text_line" mandatory="true" colspan="6" disabledCondition="!!id">
             <meta>
                 <title>sulu_admin.key</title>
             </meta>
         </property>
 
-        <property name="type" type="single_select" mandatory="true" colspan="6">
+        <property name="type" type="single_select" mandatory="true" colspan="6" disabledCondition="!!id">
             <meta>
                 <title>sulu_product.type</title>
             </meta>
@@ -26,6 +38,18 @@
                 <param name="values" type="expression"
                     value="service('sulu_product.attribute_type_select_service').getValues(locale)"/>
             </params>
+        </property>
+
+        <property name="group" type="single_attribute_group_selection" mandatory="true" colspan="9">
+            <meta>
+                <title>sulu_product.attribute_group</title>
+            </meta>
+        </property>
+
+        <property name="position" type="number" colspan="3">
+            <meta>
+                <title>sulu_product.position</title>
+            </meta>
         </property>
 
         <property name="description" type="text_editor">

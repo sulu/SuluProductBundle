@@ -17,8 +17,10 @@ use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Product\Domain\Exception\AttributeNotFoundException;
+use Sulu\Product\Domain\Model\AttributeGroupInterface;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeTranslation;
+use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Infrastructure\Doctrine\Repository\AttributeRepository;
 
@@ -26,6 +28,8 @@ use Sulu\Product\Infrastructure\Doctrine\Repository\AttributeRepository;
 class AttributeRepositoryTest extends SuluTestCase
 {
     private AttributeRepositoryInterface $repository;
+
+    private AttributeGroupRepositoryInterface $groupRepository;
 
     private EntityManagerInterface $entityManager;
 
@@ -37,6 +41,10 @@ class AttributeRepositoryTest extends SuluTestCase
         /** @var AttributeRepositoryInterface $repository */
         $repository = $container->get(AttributeRepositoryInterface::class);
         $this->repository = $repository;
+
+        /** @var AttributeGroupRepositoryInterface $groupRepository */
+        $groupRepository = $container->get(AttributeGroupRepositoryInterface::class);
+        $this->groupRepository = $groupRepository;
 
         /** @var EntityManagerInterface $entityManager */
         $entityManager = $container->get('doctrine.orm.entity_manager');
@@ -51,9 +59,18 @@ class AttributeRepositoryTest extends SuluTestCase
         \restore_exception_handler();
     }
 
+    private function createGroup(): AttributeGroupInterface
+    {
+        $group = $this->groupRepository->create();
+        $this->groupRepository->save($group);
+        $this->entityManager->flush();
+
+        return $group;
+    }
+
     public function testCreateReturnsFreshAttributeWithUuid(): void
     {
-        $attribute = $this->repository->create();
+        $attribute = $this->repository->create($this->createGroup());
 
         $this->assertNotNull($attribute->getUuid());
         $this->assertNotSame('', $attribute->getUuid());
@@ -61,15 +78,16 @@ class AttributeRepositoryTest extends SuluTestCase
 
     public function testCreateGeneratesUniqueUuidPerCall(): void
     {
-        $a = $this->repository->create();
-        $b = $this->repository->create();
+        $group = $this->createGroup();
+        $a = $this->repository->create($group);
+        $b = $this->repository->create($group);
 
         $this->assertNotSame($a->getUuid(), $b->getUuid());
     }
 
     public function testSavePersistsAttributeAndItCanBeFoundByUuid(): void
     {
-        $attribute = $this->repository->create();
+        $attribute = $this->repository->create($this->createGroup());
         $attribute->setKey('color');
         $attribute->setType(AttributeInterface::TYPE_TEXT);
 
@@ -91,7 +109,7 @@ class AttributeRepositoryTest extends SuluTestCase
 
     public function testFindOneByKeyReturnsAttribute(): void
     {
-        $attribute = $this->repository->create();
+        $attribute = $this->repository->create($this->createGroup());
         $attribute->setKey('size');
         $attribute->setType(AttributeInterface::TYPE_NUMBER);
 
@@ -107,7 +125,7 @@ class AttributeRepositoryTest extends SuluTestCase
 
     public function testFindOneByIgnoresUnsupportedFilters(): void
     {
-        $attribute = $this->repository->create();
+        $attribute = $this->repository->create($this->createGroup());
         $attribute->setKey('length');
         $attribute->setType(AttributeInterface::TYPE_NUMBER);
 
@@ -127,7 +145,7 @@ class AttributeRepositoryTest extends SuluTestCase
 
     public function testGetOneByKeyReturnsAttribute(): void
     {
-        $attribute = $this->repository->create();
+        $attribute = $this->repository->create($this->createGroup());
         $attribute->setKey('material');
         $attribute->setType(AttributeInterface::TYPE_TEXT);
 
@@ -163,7 +181,7 @@ class AttributeRepositoryTest extends SuluTestCase
 
     public function testFindOneByLoadsTranslationViaCurrentLocale(): void
     {
-        $attribute = $this->repository->create();
+        $attribute = $this->repository->create($this->createGroup());
         $attribute->setKey('material');
         $attribute->setType(AttributeInterface::TYPE_TEXT);
 
@@ -192,7 +210,7 @@ class AttributeRepositoryTest extends SuluTestCase
 
     public function testFindOneByExplicitLocaleReturnsCorrectTranslation(): void
     {
-        $attribute = $this->repository->create();
+        $attribute = $this->repository->create($this->createGroup());
         $attribute->setKey('weight');
         $attribute->setType(AttributeInterface::TYPE_NUMBER);
 
@@ -223,7 +241,7 @@ class AttributeRepositoryTest extends SuluTestCase
 
     public function testRemoveDeletesAttributeFromDatabase(): void
     {
-        $attribute = $this->repository->create();
+        $attribute = $this->repository->create($this->createGroup());
         $attribute->setKey('to-remove');
         $attribute->setType(AttributeInterface::TYPE_TEXT);
 
@@ -241,5 +259,137 @@ class AttributeRepositoryTest extends SuluTestCase
         $this->entityManager->clear();
 
         $this->assertNull($this->repository->findOneBy(['uuid' => $uuid]));
+    }
+
+    public function testFindNextPositionInGroupReturnsZeroWhenGroupIsEmpty(): void
+    {
+        $group = $this->createGroup();
+
+        $this->assertSame(0, $this->repository->findNextPositionInGroup($group));
+    }
+
+    public function testFindNextPositionInGroupReturnsMaxPositionPlusOne(): void
+    {
+        $group = $this->createGroup();
+
+        foreach ([0, 1, 5] as $i => $pos) {
+            $a = $this->repository->create($group);
+            $a->setKey('pos-attr-' . $i);
+            $a->setPosition($pos);
+            $this->repository->save($a);
+        }
+        $this->entityManager->flush();
+
+        $this->assertSame(6, $this->repository->findNextPositionInGroup($group));
+    }
+
+    public function testFindByGroupWithPositionAtLeastReturnsMatchingAttributes(): void
+    {
+        $group = $this->createGroup();
+
+        foreach ([0, 1, 2] as $i => $pos) {
+            $a = $this->repository->create($group);
+            $a->setKey('atleast-' . $i);
+            $a->setPosition($pos);
+            $this->repository->save($a);
+        }
+        $this->entityManager->flush();
+
+        $results = $this->repository->findByGroupWithPositionAtLeast($group, 1);
+
+        $this->assertCount(2, $results);
+        $positions = \array_map(fn (AttributeInterface $a) => $a->getPosition(), $results);
+        \sort($positions);
+        $this->assertSame([1, 2], $positions);
+    }
+
+    public function testFindByGroupWithPositionAtLeastExcludesSpecifiedAttribute(): void
+    {
+        $group = $this->createGroup();
+
+        $attrs = [];
+        foreach ([0, 1, 2] as $i => $pos) {
+            $a = $this->repository->create($group);
+            $a->setKey('atleast-excl-' . $i);
+            $a->setPosition($pos);
+            $this->repository->save($a);
+            $attrs[] = $a;
+        }
+        $this->entityManager->flush();
+
+        $results = $this->repository->findByGroupWithPositionAtLeast($group, 0, $attrs[0]);
+
+        $this->assertCount(2, $results);
+        $uuids = \array_map(fn (AttributeInterface $a) => $a->getUuid(), $results);
+        $this->assertNotContains($attrs[0]->getUuid(), $uuids);
+    }
+
+    public function testFindByGroupWithPositionBetweenReturnsAttrsInRange(): void
+    {
+        $group = $this->createGroup();
+
+        foreach ([0, 1, 2, 3] as $i => $pos) {
+            $a = $this->repository->create($group);
+            $a->setKey('between-' . $i);
+            $a->setPosition($pos);
+            $this->repository->save($a);
+        }
+        $this->entityManager->flush();
+
+        $results = $this->repository->findByGroupWithPositionBetween($group, 1, 2);
+
+        $this->assertCount(2, $results);
+        $positions = \array_map(fn (AttributeInterface $a) => $a->getPosition(), $results);
+        \sort($positions);
+        $this->assertSame([1, 2], $positions);
+    }
+
+    public function testFindByGroupWithPositionBetweenExcludesSpecifiedAttribute(): void
+    {
+        $group = $this->createGroup();
+
+        $attrs = [];
+        foreach ([0, 1, 2] as $i => $pos) {
+            $a = $this->repository->create($group);
+            $a->setKey('between-excl-' . $i);
+            $a->setPosition($pos);
+            $this->repository->save($a);
+            $attrs[] = $a;
+        }
+        $this->entityManager->flush();
+
+        $results = $this->repository->findByGroupWithPositionBetween($group, 0, 2, $attrs[0]);
+
+        $this->assertCount(2, $results);
+        $uuids = \array_map(fn (AttributeInterface $a) => $a->getUuid(), $results);
+        $this->assertNotContains($attrs[0]->getUuid(), $uuids);
+    }
+
+    public function testCountByReturnsZeroForEmptyGroup(): void
+    {
+        $group = $this->createGroup();
+
+        $this->assertSame(0, $this->repository->countBy(['group' => $group]));
+    }
+
+    public function testCountByCountsAttributesInGroup(): void
+    {
+        $group = $this->createGroup();
+        $other = $this->createGroup();
+
+        foreach (['count-a', 'count-b'] as $key) {
+            $a = $this->repository->create($group);
+            $a->setKey($key);
+            $this->repository->save($a);
+        }
+
+        $outsider = $this->repository->create($other);
+        $outsider->setKey('count-other');
+        $this->repository->save($outsider);
+
+        $this->entityManager->flush();
+
+        $this->assertSame(2, $this->repository->countBy(['group' => $group]));
+        $this->assertSame(1, $this->repository->countBy(['group' => $other]));
     }
 }

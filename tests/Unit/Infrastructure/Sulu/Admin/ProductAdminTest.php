@@ -15,20 +15,18 @@ namespace Sulu\Product\Tests\Unit\Infrastructure\Sulu\Admin;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
-use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
-use Sulu\Bundle\ActivityBundle\Infrastructure\Sulu\Admin\View\ActivityViewBuilderFactoryInterface;
+use Sulu\Bundle\ActivityBundle\Infrastructure\Sulu\Admin\ActivityAdmin;
+use Sulu\Bundle\ActivityBundle\Infrastructure\Sulu\Admin\View\ActivityViewBuilderFactory;
 use Sulu\Bundle\AdminBundle\Admin\Navigation\NavigationItemCollection;
-use Sulu\Bundle\AdminBundle\Admin\View\FormViewBuilderInterface;
-use Sulu\Bundle\AdminBundle\Admin\View\ListViewBuilderInterface;
-use Sulu\Bundle\AdminBundle\Admin\View\ResourceTabViewBuilderInterface;
-use Sulu\Bundle\AdminBundle\Admin\View\ViewBuilderFactoryInterface;
+use Sulu\Bundle\AdminBundle\Admin\View\ViewBuilderFactory;
 use Sulu\Bundle\AdminBundle\Admin\View\ViewCollection;
 use Sulu\Component\Localization\Manager\LocalizationManagerInterface;
 use Sulu\Component\Security\Authorization\PermissionTypes;
 use Sulu\Component\Security\Authorization\SecurityCheckerInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeAdmin;
+use Sulu\Product\Infrastructure\Sulu\Admin\AttributeGroupAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 
 #[CoversClass(ProductAdmin::class)]
@@ -36,8 +34,7 @@ class ProductAdminTest extends TestCase
 {
     use ProphecyTrait;
 
-    /** @var ObjectProphecy<ViewBuilderFactoryInterface> */
-    private ObjectProphecy $viewBuilderFactory;
+    private ViewBuilderFactory $viewBuilderFactory;
 
     /** @var ObjectProphecy<SecurityCheckerInterface> */
     private ObjectProphecy $securityChecker;
@@ -45,25 +42,26 @@ class ProductAdminTest extends TestCase
     /** @var ObjectProphecy<LocalizationManagerInterface> */
     private ObjectProphecy $localizationManager;
 
-    /** @var ObjectProphecy<ActivityViewBuilderFactoryInterface> */
-    private ObjectProphecy $activityViewBuilderFactory;
+    private ActivityViewBuilderFactory $activityViewBuilderFactory;
 
     private ProductAdmin $admin;
 
     protected function setUp(): void
     {
-        $this->viewBuilderFactory = $this->prophesize(ViewBuilderFactoryInterface::class);
+        $this->viewBuilderFactory = new ViewBuilderFactory();
         $this->securityChecker = $this->prophesize(SecurityCheckerInterface::class);
         $this->localizationManager = $this->prophesize(LocalizationManagerInterface::class);
         $this->localizationManager->getLocales()->willReturn(['en', 'de']);
-        $this->activityViewBuilderFactory = $this->prophesize(ActivityViewBuilderFactoryInterface::class);
-        $this->activityViewBuilderFactory->hasActivityListPermission()->willReturn(false);
+        $this->activityViewBuilderFactory = new ActivityViewBuilderFactory(
+            $this->viewBuilderFactory,
+            $this->securityChecker->reveal(),
+        );
 
         $this->admin = new ProductAdmin(
-            $this->viewBuilderFactory->reveal(),
+            $this->viewBuilderFactory,
             $this->securityChecker->reveal(),
             $this->localizationManager->reveal(),
-            $this->activityViewBuilderFactory->reveal(),
+            $this->activityViewBuilderFactory,
         );
     }
 
@@ -71,6 +69,7 @@ class ProductAdminTest extends TestCase
     {
         $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(false);
         $this->securityChecker->hasPermission(AttributeAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(false);
+        $this->securityChecker->hasPermission(AttributeGroupAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(false);
 
         $collection = new NavigationItemCollection();
         $this->admin->configureNavigationItems($collection);
@@ -82,6 +81,7 @@ class ProductAdminTest extends TestCase
     {
         $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(true);
         $this->securityChecker->hasPermission(AttributeAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(true);
+        $this->securityChecker->hasPermission(AttributeGroupAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(false);
 
         $collection = new NavigationItemCollection();
         $this->admin->configureNavigationItems($collection);
@@ -96,6 +96,7 @@ class ProductAdminTest extends TestCase
     {
         $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(true);
         $this->securityChecker->hasPermission(AttributeAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(false);
+        $this->securityChecker->hasPermission(AttributeGroupAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(false);
 
         $collection = new NavigationItemCollection();
         $this->admin->configureNavigationItems($collection);
@@ -104,6 +105,39 @@ class ProductAdminTest extends TestCase
         $this->assertCount(1, $items);
         $parent = \reset($items);
         $this->assertCount(1, $parent->getChildren());
+    }
+
+    public function testConfigureNavigationItemsAddsAttributeGroupsChild(): void
+    {
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(false);
+        $this->securityChecker->hasPermission(AttributeAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(false);
+        $this->securityChecker->hasPermission(AttributeGroupAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(true);
+
+        $collection = new NavigationItemCollection();
+        $this->admin->configureNavigationItems($collection);
+
+        $items = $collection->all();
+        $this->assertCount(1, $items);
+        $parent = \reset($items);
+        $children = $parent->getChildren();
+        $this->assertCount(1, $children);
+        $child = \reset($children);
+        $this->assertSame(AttributeGroupAdmin::LIST_VIEW, $child->getView());
+    }
+
+    public function testConfigureNavigationItemsAllThreeChildren(): void
+    {
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(true);
+        $this->securityChecker->hasPermission(AttributeAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(true);
+        $this->securityChecker->hasPermission(AttributeGroupAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(true);
+
+        $collection = new NavigationItemCollection();
+        $this->admin->configureNavigationItems($collection);
+
+        $items = $collection->all();
+        $this->assertCount(1, $items);
+        $parent = \reset($items);
+        $this->assertCount(3, $parent->getChildren());
     }
 
     public function testGetSecurityContexts(): void
@@ -135,13 +169,17 @@ class ProductAdminTest extends TestCase
         $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::ADD)->willReturn(true);
         $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::DELETE)->willReturn(true);
         $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(true);
-
-        $this->prepareFluentBuilders();
+        $this->securityChecker->hasPermission(ActivityAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(false);
 
         $viewCollection = new ViewCollection();
         $this->admin->configureViews($viewCollection);
 
-        $this->assertGreaterThan(0, \count($viewCollection->all()));
+        $this->assertCount(5, $viewCollection->all());
+        $this->assertTrue($viewCollection->has(ProductAdmin::LIST_VIEW));
+        $this->assertTrue($viewCollection->has(ProductAdmin::ADD_TABS_VIEW));
+        $this->assertTrue($viewCollection->has(ProductAdmin::EDIT_TABS_VIEW));
+        $this->assertTrue($viewCollection->has(ProductAdmin::ADD_TABS_VIEW . '.details'));
+        $this->assertTrue($viewCollection->has(ProductAdmin::EDIT_TABS_VIEW . '.details'));
     }
 
     public function testConfigureViewsWithActivityInsightsView(): void
@@ -150,60 +188,17 @@ class ProductAdminTest extends TestCase
         $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::ADD)->willReturn(false);
         $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::DELETE)->willReturn(false);
         $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(false);
+        $this->securityChecker->hasPermission(ActivityAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(true);
 
-        $this->activityViewBuilderFactory->hasActivityListPermission()->willReturn(true);
-
-        $this->prepareFluentBuilders();
-
-        // Pre-populate ViewCollection with the insights tab view so the condition is true
         $insightsViewName = ProductAdmin::EDIT_TABS_VIEW . '.insights';
-        $insightsBuilder = $this->prophesize(ResourceTabViewBuilderInterface::class);
-        $insightsBuilder->getName()->willReturn($insightsViewName);
-
-        $activityListBuilder = $this->prophesize(ListViewBuilderInterface::class);
-        $activityListBuilder->setParent(Argument::any())->willReturn($activityListBuilder->reveal());
-        $activityListBuilder->getName()->willReturn($insightsViewName . '.activity');
-
-        $this->activityViewBuilderFactory->createActivityListViewBuilder(Argument::cetera())->willReturn($activityListBuilder->reveal());
 
         $viewCollection = new ViewCollection();
-        $viewCollection->add($insightsBuilder->reveal());
+        $viewCollection->add(
+            $this->viewBuilderFactory->createResourceTabViewBuilder($insightsViewName, '/insights'),
+        );
 
         $this->admin->configureViews($viewCollection);
 
         $this->assertTrue($viewCollection->has($insightsViewName . '.activity'));
-    }
-
-    private function prepareFluentBuilders(): void
-    {
-        $listBuilder = $this->prophesize(ListViewBuilderInterface::class);
-        foreach ([
-            'setResourceKey', 'setListKey', 'addListAdapters', 'addLocales',
-            'setDefaultLocale', 'setAddView', 'setEditView', 'addToolbarActions',
-        ] as $method) {
-            $listBuilder->$method(Argument::any())->willReturn($listBuilder->reveal());
-        }
-        $listBuilder->getName()->willReturn(ProductAdmin::LIST_VIEW);
-
-        $resourceTabBuilder = $this->prophesize(ResourceTabViewBuilderInterface::class);
-        foreach ([
-            'setResourceKey', 'addLocales', 'setBackView', 'setTitleProperty',
-        ] as $method) {
-            $resourceTabBuilder->$method(Argument::any())->willReturn($resourceTabBuilder->reveal());
-        }
-        $resourceTabBuilder->getName()->willReturn('tab');
-
-        $formBuilder = $this->prophesize(FormViewBuilderInterface::class);
-        foreach ([
-            'setResourceKey', 'setFormKey', 'setTabTitle', 'setTabOrder',
-            'addToolbarActions', 'setEditView', 'setParent',
-        ] as $method) {
-            $formBuilder->$method(Argument::any())->willReturn($formBuilder->reveal());
-        }
-        $formBuilder->getName()->willReturn('form');
-
-        $this->viewBuilderFactory->createListViewBuilder(Argument::cetera())->willReturn($listBuilder->reveal());
-        $this->viewBuilderFactory->createResourceTabViewBuilder(Argument::cetera())->willReturn($resourceTabBuilder->reveal());
-        $this->viewBuilderFactory->createFormViewBuilder(Argument::cetera())->willReturn($formBuilder->reveal());
     }
 }

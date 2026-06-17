@@ -20,7 +20,7 @@ namespace Sulu\Product\Application\Message;
  *     code?: string,
  *     author?: int|null,
  *     authored?: string,
- * }&array<string, mixed>
+ * }
  */
 class CreateProductMessage
 {

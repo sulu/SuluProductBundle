@@ -16,6 +16,7 @@ namespace Sulu\Product\Tests\Unit\Domain\Model;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Product\Domain\Model\Attribute;
+use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeOption;
 use Sulu\Product\Domain\Model\AttributeOptionTranslation;
 
@@ -24,7 +25,7 @@ class AttributeOptionTest extends TestCase
 {
     public function testConstructorAssignsAttributeAndKey(): void
     {
-        $attribute = new Attribute();
+        $attribute = new Attribute(new AttributeGroup());
         $option = new AttributeOption($attribute, 'red');
 
         $this->assertSame($attribute, $option->getAttribute());
@@ -33,7 +34,7 @@ class AttributeOptionTest extends TestCase
 
     public function testConstructorDefaults(): void
     {
-        $attribute = new Attribute();
+        $attribute = new Attribute(new AttributeGroup());
         $option = new AttributeOption($attribute, 'red');
 
         $this->assertNull($option->getUuid());
@@ -43,7 +44,7 @@ class AttributeOptionTest extends TestCase
 
     public function testSetKeyIsFluentAndStores(): void
     {
-        $attribute = new Attribute();
+        $attribute = new Attribute(new AttributeGroup());
         $option = new AttributeOption($attribute, 'red');
 
         $this->assertSame($option, $option->setKey('green'));
@@ -52,7 +53,7 @@ class AttributeOptionTest extends TestCase
 
     public function testSetPositionIsFluentAndStores(): void
     {
-        $attribute = new Attribute();
+        $attribute = new Attribute(new AttributeGroup());
         $option = new AttributeOption($attribute, 'red');
 
         $this->assertSame($option, $option->setPosition(5));
@@ -61,7 +62,7 @@ class AttributeOptionTest extends TestCase
 
     public function testGetTranslationByLocaleAndUnknownReturnsNull(): void
     {
-        $attribute = new Attribute();
+        $attribute = new Attribute(new AttributeGroup());
         $option = new AttributeOption($attribute, 'red');
         $translation = new AttributeOptionTranslation($option, 'en', 'Red');
         $option->addTranslation($translation);
@@ -72,7 +73,7 @@ class AttributeOptionTest extends TestCase
 
     public function testAddTranslationIsFluentAndDeduplicates(): void
     {
-        $attribute = new Attribute();
+        $attribute = new Attribute(new AttributeGroup());
         $option = new AttributeOption($attribute, 'red');
         $translation = new AttributeOptionTranslation($option, 'en', 'Red');
 
@@ -84,7 +85,7 @@ class AttributeOptionTest extends TestCase
 
     public function testRemoveTranslationIsFluent(): void
     {
-        $attribute = new Attribute();
+        $attribute = new Attribute(new AttributeGroup());
         $option = new AttributeOption($attribute, 'red');
         $translation = new AttributeOptionTranslation($option, 'en', 'Red');
         $option->addTranslation($translation);
@@ -95,7 +96,7 @@ class AttributeOptionTest extends TestCase
 
     public function testGetIdReturnsDoctrineGeneratedId(): void
     {
-        $model = new AttributeOption(new Attribute(), 'red');
+        $model = new AttributeOption(new Attribute(new AttributeGroup()), 'red');
         $ref = new \ReflectionProperty(AttributeOption::class, 'id');
         $ref->setValue($model, 42);
         $this->assertSame(42, $model->getId());

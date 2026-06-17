@@ -16,6 +16,7 @@ namespace Sulu\Product\Tests\Unit\Domain\Model;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Product\Domain\Model\Attribute;
+use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeOption;
 use Sulu\Product\Domain\Model\AttributeOptionTranslation;
 
@@ -24,7 +25,7 @@ class AttributeOptionTranslationTest extends TestCase
 {
     public function testConstructorAssignsValues(): void
     {
-        $option = new AttributeOption(new Attribute(), 'red');
+        $option = new AttributeOption(new Attribute(new AttributeGroup()), 'red');
         $translation = new AttributeOptionTranslation($option, 'en', 'Red');
 
         $this->assertSame($option, $translation->getAttributeOption());
@@ -34,7 +35,7 @@ class AttributeOptionTranslationTest extends TestCase
 
     public function testSetLocaleIsFluentAndStores(): void
     {
-        $option = new AttributeOption(new Attribute(), 'red');
+        $option = new AttributeOption(new Attribute(new AttributeGroup()), 'red');
         $translation = new AttributeOptionTranslation($option, 'en', 'Red');
 
         $this->assertSame($translation, $translation->setLocale('de'));
@@ -43,7 +44,7 @@ class AttributeOptionTranslationTest extends TestCase
 
     public function testSetNameIsFluentAndStores(): void
     {
-        $option = new AttributeOption(new Attribute(), 'red');
+        $option = new AttributeOption(new Attribute(new AttributeGroup()), 'red');
         $translation = new AttributeOptionTranslation($option, 'en', 'Red');
 
         $this->assertSame($translation, $translation->setName('Rot'));
@@ -52,7 +53,7 @@ class AttributeOptionTranslationTest extends TestCase
 
     public function testGetIdReturnsDoctrineGeneratedId(): void
     {
-        $model = new AttributeOptionTranslation(new AttributeOption(new Attribute(), 'red'), 'en', 'Red');
+        $model = new AttributeOptionTranslation(new AttributeOption(new Attribute(new AttributeGroup()), 'red'), 'en', 'Red');
         $ref = new \ReflectionProperty(AttributeOptionTranslation::class, 'id');
         $ref->setValue($model, 42);
         $this->assertSame(42, $model->getId());

@@ -17,7 +17,7 @@ namespace Sulu\Product\Application\Message;
  * @phpstan-type RemoveAttributeMessageIdentifier array{
  *     uuid?: string,
  *     key?: string,
- * }&array<string, mixed>
+ * }
  */
 class RemoveAttributeMessage
 {

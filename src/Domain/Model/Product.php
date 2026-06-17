@@ -33,6 +33,8 @@ class Product implements ProductInterface
 
     protected ?string $code = null;
 
+    protected ?string $externalIdentifier = null;
+
     /** @var Collection<int, ProductTranslationInterface> */
     protected Collection $translations;
 
@@ -65,6 +67,18 @@ class Product implements ProductInterface
     public function setCode(?string $code): self
     {
         $this->code = $code;
+
+        return $this;
+    }
+
+    public function getExternalIdentifier(): ?string
+    {
+        return $this->externalIdentifier;
+    }
+
+    public function setExternalIdentifier(?string $externalIdentifier): self
+    {
+        $this->externalIdentifier = $externalIdentifier;
 
         return $this;
     }

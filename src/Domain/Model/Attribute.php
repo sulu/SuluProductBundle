@@ -23,6 +23,8 @@ class Attribute implements AttributeInterface
 
     protected ?string $uuid = null;
 
+    protected ?string $externalIdentifier = null;
+
     protected string $key;
 
     protected string $type = self::TYPE_NUMBER;
@@ -33,10 +35,15 @@ class Attribute implements AttributeInterface
     /** @var Collection<int, AttributeOptionInterface> */
     protected Collection $options;
 
-    public function __construct()
+    protected int $position = 0;
+
+    protected AttributeGroupInterface $group;
+
+    public function __construct(AttributeGroupInterface $group)
     {
         $this->translations = new ArrayCollection();
         $this->options = new ArrayCollection();
+        $this->group = $group;
     }
 
     public function getId(): int
@@ -52,6 +59,18 @@ class Attribute implements AttributeInterface
     public function setUuid(string $uuid): self
     {
         $this->uuid = $uuid;
+
+        return $this;
+    }
+
+    public function getExternalIdentifier(): ?string
+    {
+        return $this->externalIdentifier;
+    }
+
+    public function setExternalIdentifier(?string $externalIdentifier): self
+    {
+        $this->externalIdentifier = $externalIdentifier;
 
         return $this;
     }
@@ -138,6 +157,30 @@ class Attribute implements AttributeInterface
     public function removeOption(AttributeOptionInterface $option): self
     {
         $this->options->removeElement($option);
+
+        return $this;
+    }
+
+    public function getPosition(): int
+    {
+        return $this->position;
+    }
+
+    public function setPosition(int $position): self
+    {
+        $this->position = $position;
+
+        return $this;
+    }
+
+    public function getGroup(): AttributeGroupInterface
+    {
+        return $this->group;
+    }
+
+    public function setGroup(AttributeGroupInterface $group): self
+    {
+        $this->group = $group;
 
         return $this;
     }

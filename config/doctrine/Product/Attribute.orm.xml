@@ -8,21 +8,38 @@
         </id>
 
         <field name="uuid" type="guid" nullable="true" unique="true"/>
+        <field name="externalIdentifier" type="string" length="255" nullable="true" column="external_identifier"/>
         <field name="key" type="string" length="255" nullable="false" column="attribute_key" unique="true"/>
         <field name="type" type="string" length="32" nullable="false">
             <options><option name="default">number</option></options>
         </field>
+        <field name="position" type="integer" nullable="false" column="position">
+            <options>
+                <option name="default">0</option>
+            </options>
+        </field>
 
         <one-to-many field="translations"
                      target-entity="Sulu\Product\Domain\Model\AttributeTranslationInterface"
-                     mapped-by="attribute">
-            <cascade><cascade-persist/><cascade-remove/></cascade>
+                     mapped-by="attribute"
+                     orphan-removal="true">
+            <cascade>
+                <cascade-persist/>
+            </cascade>
         </one-to-many>
 
         <one-to-many field="options"
                      target-entity="Sulu\Product\Domain\Model\AttributeOptionInterface"
-                     mapped-by="attribute">
-            <cascade><cascade-persist/><cascade-remove/></cascade>
+                     mapped-by="attribute"
+                     orphan-removal="true">
+            <cascade>
+                <cascade-persist/>
+            </cascade>
         </one-to-many>
+
+        <many-to-one field="group"
+                     target-entity="Sulu\Product\Domain\Model\AttributeGroupInterface">
+            <join-column name="idAttributeGroups" referenced-column-name="id" nullable="false"/>
+        </many-to-one>
     </entity>
 </doctrine-mapping>

@@ -16,6 +16,7 @@ namespace Sulu\Product\Tests\Unit\Domain\Model;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Product\Domain\Model\Attribute;
+use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductAttribute;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
@@ -62,6 +63,15 @@ class ProductTest extends TestCase
         $this->assertNull($product->getCode());
     }
 
+    public function testSetExternalIdentifierIsFluentAndStores(): void
+    {
+        $product = new Product();
+        $this->assertSame($product, $product->setExternalIdentifier('ext-789'));
+        $this->assertSame('ext-789', $product->getExternalIdentifier());
+        $product->setExternalIdentifier(null);
+        $this->assertNull($product->getExternalIdentifier());
+    }
+
     public function testGetTranslationByExplicitLocale(): void
     {
         $product = new Product();
@@ -99,7 +109,7 @@ class ProductTest extends TestCase
     public function testGetAttributesReturnsCollection(): void
     {
         $product = new Product();
-        $attr = new Attribute();
+        $attr = new Attribute(new AttributeGroup());
         $productAttribute = new ProductAttribute($product, $attr, 'color');
 
         $product->addAttribute($productAttribute);
@@ -111,7 +121,7 @@ class ProductTest extends TestCase
     public function testAddAttributeIsFluentAndDeduplicates(): void
     {
         $product = new Product();
-        $attr = new Attribute();
+        $attr = new Attribute(new AttributeGroup());
         $productAttribute = new ProductAttribute($product, $attr, 'color');
 
         $this->assertSame($product, $product->addAttribute($productAttribute));
@@ -123,7 +133,7 @@ class ProductTest extends TestCase
     public function testRemoveAttributeIsFluent(): void
     {
         $product = new Product();
-        $attr = new Attribute();
+        $attr = new Attribute(new AttributeGroup());
         $productAttribute = new ProductAttribute($product, $attr, 'color');
         $product->addAttribute($productAttribute);
 

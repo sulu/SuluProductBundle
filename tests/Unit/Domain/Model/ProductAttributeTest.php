@@ -16,6 +16,7 @@ namespace Sulu\Product\Tests\Unit\Domain\Model;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Product\Domain\Model\Attribute;
+use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeOption;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductAttribute;
@@ -26,7 +27,7 @@ class ProductAttributeTest extends TestCase
     public function testConstructorAssignsReferencesAndDefaults(): void
     {
         $product = new Product();
-        $attribute = new Attribute();
+        $attribute = new Attribute(new AttributeGroup());
         $productAttribute = new ProductAttribute($product, $attribute, 'color');
 
         $this->assertSame($product, $productAttribute->getProduct());
@@ -43,7 +44,7 @@ class ProductAttributeTest extends TestCase
 
     public function testSetAttributeOptionKeyIsFluentAndStores(): void
     {
-        $productAttribute = new ProductAttribute(new Product(), new Attribute(), 'color');
+        $productAttribute = new ProductAttribute(new Product(), new Attribute(new AttributeGroup()), 'color');
 
         $this->assertSame($productAttribute, $productAttribute->setAttributeOptionKey('red'));
         $this->assertSame('red', $productAttribute->getAttributeOptionKey());
@@ -54,7 +55,7 @@ class ProductAttributeTest extends TestCase
 
     public function testSetNumberIsFluentAndStores(): void
     {
-        $productAttribute = new ProductAttribute(new Product(), new Attribute(), 'weight');
+        $productAttribute = new ProductAttribute(new Product(), new Attribute(new AttributeGroup()), 'weight');
 
         $this->assertSame($productAttribute, $productAttribute->setNumber(42.5));
         $this->assertSame(42.5, $productAttribute->getNumber());
@@ -65,7 +66,7 @@ class ProductAttributeTest extends TestCase
 
     public function testSetTextIsFluentAndStores(): void
     {
-        $productAttribute = new ProductAttribute(new Product(), new Attribute(), 'description');
+        $productAttribute = new ProductAttribute(new Product(), new Attribute(new AttributeGroup()), 'description');
 
         $this->assertSame($productAttribute, $productAttribute->setText('Hello'));
         $this->assertSame('Hello', $productAttribute->getText());
@@ -76,7 +77,7 @@ class ProductAttributeTest extends TestCase
 
     public function testSetJsonIsFluentAndStores(): void
     {
-        $productAttribute = new ProductAttribute(new Product(), new Attribute(), 'meta');
+        $productAttribute = new ProductAttribute(new Product(), new Attribute(new AttributeGroup()), 'meta');
         $data = ['foo' => 'bar', 'count' => 3];
 
         $this->assertSame($productAttribute, $productAttribute->setJson($data));
@@ -88,7 +89,7 @@ class ProductAttributeTest extends TestCase
 
     public function testSetAttributeOptionIsFluentAndStores(): void
     {
-        $attribute = new Attribute();
+        $attribute = new Attribute(new AttributeGroup());
         $productAttribute = new ProductAttribute(new Product(), $attribute, 'color');
         $option = new AttributeOption($attribute, 'red');
 
@@ -101,7 +102,7 @@ class ProductAttributeTest extends TestCase
 
     public function testGetValuePrefersAttributeOptionKey(): void
     {
-        $productAttribute = new ProductAttribute(new Product(), new Attribute(), 'color');
+        $productAttribute = new ProductAttribute(new Product(), new Attribute(new AttributeGroup()), 'color');
         $productAttribute->setAttributeOptionKey('red');
         $productAttribute->setNumber(1.0);
         $productAttribute->setText('text');
@@ -112,7 +113,7 @@ class ProductAttributeTest extends TestCase
 
     public function testGetValueFallsBackToNumber(): void
     {
-        $productAttribute = new ProductAttribute(new Product(), new Attribute(), 'weight');
+        $productAttribute = new ProductAttribute(new Product(), new Attribute(new AttributeGroup()), 'weight');
         $productAttribute->setNumber(2.5);
         $productAttribute->setText('text');
         $productAttribute->setJson(['x' => 1]);
@@ -122,7 +123,7 @@ class ProductAttributeTest extends TestCase
 
     public function testGetValueFallsBackToText(): void
     {
-        $productAttribute = new ProductAttribute(new Product(), new Attribute(), 'description');
+        $productAttribute = new ProductAttribute(new Product(), new Attribute(new AttributeGroup()), 'description');
         $productAttribute->setText('Hello');
         $productAttribute->setJson(['x' => 1]);
 
@@ -131,7 +132,7 @@ class ProductAttributeTest extends TestCase
 
     public function testGetValueFallsBackToJson(): void
     {
-        $productAttribute = new ProductAttribute(new Product(), new Attribute(), 'meta');
+        $productAttribute = new ProductAttribute(new Product(), new Attribute(new AttributeGroup()), 'meta');
         $productAttribute->setJson(['x' => 1]);
 
         $this->assertSame(['x' => 1], $productAttribute->getValue());
@@ -139,7 +140,7 @@ class ProductAttributeTest extends TestCase
 
     public function testGetIdReturnsDoctrineGeneratedId(): void
     {
-        $model = new ProductAttribute(new Product(), new Attribute(), 'color');
+        $model = new ProductAttribute(new Product(), new Attribute(new AttributeGroup()), 'color');
         $ref = new \ReflectionProperty(ProductAttribute::class, 'id');
         $ref->setValue($model, 42);
         $this->assertSame(42, $model->getId());

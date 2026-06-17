@@ -15,14 +15,10 @@ namespace Sulu\Product\Tests\Unit\Infrastructure\Sulu\Admin;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
-use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Bundle\AdminBundle\Admin\Navigation\NavigationItemCollection;
-use Sulu\Bundle\AdminBundle\Admin\View\FormViewBuilderInterface;
-use Sulu\Bundle\AdminBundle\Admin\View\ListViewBuilderInterface;
-use Sulu\Bundle\AdminBundle\Admin\View\ResourceTabViewBuilderInterface;
-use Sulu\Bundle\AdminBundle\Admin\View\ViewBuilderFactoryInterface;
+use Sulu\Bundle\AdminBundle\Admin\View\ViewBuilderFactory;
 use Sulu\Bundle\AdminBundle\Admin\View\ViewCollection;
 use Sulu\Component\Localization\Manager\LocalizationManagerInterface;
 use Sulu\Component\Security\Authorization\PermissionTypes;
@@ -34,8 +30,7 @@ class AttributeAdminTest extends TestCase
 {
     use ProphecyTrait;
 
-    /** @var ObjectProphecy<ViewBuilderFactoryInterface> */
-    private ObjectProphecy $viewBuilderFactory;
+    private ViewBuilderFactory $viewBuilderFactory;
 
     /** @var ObjectProphecy<SecurityCheckerInterface> */
     private ObjectProphecy $securityChecker;
@@ -47,13 +42,13 @@ class AttributeAdminTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->viewBuilderFactory = $this->prophesize(ViewBuilderFactoryInterface::class);
+        $this->viewBuilderFactory = new ViewBuilderFactory();
         $this->securityChecker = $this->prophesize(SecurityCheckerInterface::class);
         $this->localizationManager = $this->prophesize(LocalizationManagerInterface::class);
         $this->localizationManager->getLocales()->willReturn(['en', 'de']);
 
         $this->admin = new AttributeAdmin(
-            $this->viewBuilderFactory->reveal(),
+            $this->viewBuilderFactory,
             $this->securityChecker->reveal(),
             $this->localizationManager->reveal(),
         );
@@ -103,12 +98,15 @@ class AttributeAdminTest extends TestCase
         $this->securityChecker->hasPermission(AttributeAdmin::SECURITY_CONTEXT, PermissionTypes::DELETE)
             ->willReturn(true);
 
-        $this->prepareFluentBuilders();
-
         $viewCollection = new ViewCollection();
         $this->admin->configureViews($viewCollection);
 
-        $this->assertGreaterThan(0, \count($viewCollection->all()));
+        $this->assertCount(5, $viewCollection->all());
+        $this->assertTrue($viewCollection->has(AttributeAdmin::LIST_VIEW));
+        $this->assertTrue($viewCollection->has(AttributeAdmin::ADD_TABS_VIEW));
+        $this->assertTrue($viewCollection->has(AttributeAdmin::EDIT_TABS_VIEW));
+        $this->assertTrue($viewCollection->has(AttributeAdmin::ADD_TABS_VIEW . '.details'));
+        $this->assertTrue($viewCollection->has(AttributeAdmin::EDIT_TABS_VIEW . '.details'));
     }
 
     public function testConfigureViewsWithEditOnly(): void
@@ -120,44 +118,12 @@ class AttributeAdminTest extends TestCase
         $this->securityChecker->hasPermission(AttributeAdmin::SECURITY_CONTEXT, PermissionTypes::DELETE)
             ->willReturn(false);
 
-        $this->prepareFluentBuilders();
-
         $viewCollection = new ViewCollection();
         $this->admin->configureViews($viewCollection);
 
-        $this->assertGreaterThan(0, \count($viewCollection->all()));
-    }
-
-    private function prepareFluentBuilders(): void
-    {
-        $listBuilder = $this->prophesize(ListViewBuilderInterface::class);
-        foreach ([
-            'setResourceKey', 'setListKey', 'addListAdapters', 'addLocales',
-            'setDefaultLocale', 'setAddView', 'setEditView', 'addToolbarActions',
-        ] as $method) {
-            $listBuilder->$method(Argument::any())->willReturn($listBuilder->reveal());
-        }
-        $listBuilder->getName()->willReturn(AttributeAdmin::LIST_VIEW);
-
-        $resourceTabBuilder = $this->prophesize(ResourceTabViewBuilderInterface::class);
-        foreach ([
-            'setResourceKey', 'addLocales', 'setBackView', 'setTitleProperty',
-        ] as $method) {
-            $resourceTabBuilder->$method(Argument::any())->willReturn($resourceTabBuilder->reveal());
-        }
-        $resourceTabBuilder->getName()->willReturn('tab');
-
-        $formBuilder = $this->prophesize(FormViewBuilderInterface::class);
-        foreach ([
-            'setResourceKey', 'setFormKey', 'setTabTitle', 'setTabOrder',
-            'addToolbarActions', 'setEditView', 'setParent',
-        ] as $method) {
-            $formBuilder->$method(Argument::any())->willReturn($formBuilder->reveal());
-        }
-        $formBuilder->getName()->willReturn('form');
-
-        $this->viewBuilderFactory->createListViewBuilder(Argument::cetera())->willReturn($listBuilder->reveal());
-        $this->viewBuilderFactory->createResourceTabViewBuilder(Argument::cetera())->willReturn($resourceTabBuilder->reveal());
-        $this->viewBuilderFactory->createFormViewBuilder(Argument::cetera())->willReturn($formBuilder->reveal());
+        $this->assertCount(5, $viewCollection->all());
+        $this->assertTrue($viewCollection->has(AttributeAdmin::LIST_VIEW));
+        $this->assertTrue($viewCollection->has(AttributeAdmin::ADD_TABS_VIEW));
+        $this->assertTrue($viewCollection->has(AttributeAdmin::EDIT_TABS_VIEW));
     }
 }

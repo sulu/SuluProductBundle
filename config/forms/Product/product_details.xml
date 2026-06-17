@@ -10,6 +10,7 @@
             <meta>
                 <title>sulu_admin.name</title>
             </meta>
+
             <params>
                 <param name="headline" value="true"/>
             </params>
@@ -23,6 +24,14 @@
             <params>
                 <param name="headline" value="true"/>
             </params>
+        </property>
+
+        <property name="externalIdentifier" type="text_line"
+                  visibleCondition="!!externalIdentifier"
+                  disabledCondition="true">
+            <meta>
+                <title>sulu_product.external_identifier</title>
+            </meta>
         </property>
     </properties>
 </form>

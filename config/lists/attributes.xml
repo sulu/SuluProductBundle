@@ -11,6 +11,14 @@
         </join>
     </joins>
 
+    <joins name="group">
+        <join>
+            <entity-name>Sulu\Product\Domain\Model\AttributeGroupInterface</entity-name>
+            <field-name>Sulu\Product\Domain\Model\AttributeInterface.group</field-name>
+            <method>LEFT</method>
+        </join>
+    </joins>
+
     <properties>
         <property name="id" translation="sulu_admin.id" visibility="no">
             <field-name>uuid</field-name>
@@ -31,6 +39,17 @@
         <property name="type" translation="sulu_product.type" visibility="yes">
             <field-name>type</field-name>
             <entity-name>Sulu\Product\Domain\Model\AttributeInterface</entity-name>
+        </property>
+
+        <property name="position" translation="sulu_product.position" visibility="never" sortable="true">
+            <field-name>position</field-name>
+            <entity-name>Sulu\Product\Domain\Model\AttributeInterface</entity-name>
+        </property>
+
+        <property name="group" visibility="never">
+            <field-name>uuid</field-name>
+            <entity-name>Sulu\Product\Domain\Model\AttributeGroupInterface</entity-name>
+            <joins ref="group"/>
         </property>
     </properties>
 </list>

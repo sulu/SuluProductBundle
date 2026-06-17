@@ -19,7 +19,7 @@ namespace Sulu\Product\Application\Message;
  * @phpstan-type ModifyAttributeMessageIdentifier array{
  *     uuid?: string,
  *     key?: string,
- * }&array<string, mixed>
+ * }
  * @phpstan-type ModifyAttributeMessageData array{
  *     locale: string,
  *     key: string,
@@ -27,7 +27,8 @@ namespace Sulu\Product\Application\Message;
  *     name: string,
  *     description?: string|null,
  *     options?: list<AttributeOptionMessageData>|null,
- * }&array<string, mixed>
+ *     position?: int|null,
+ * }
  */
 class ModifyAttributeMessage
 {
@@ -72,6 +73,11 @@ class ModifyAttributeMessage
     public function getDescription(): ?string
     {
         return $this->data['description'] ?? null;
+    }
+
+    public function getPosition(): ?int
+    {
+        return $this->data['position'] ?? null;
     }
 
     /**

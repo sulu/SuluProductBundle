@@ -27,6 +27,7 @@ class CreateAttributeMessageTest extends TestCase
             'key' => 'color',
             'type' => 'text',
             'name' => 'Color',
+            'group' => 'group-uuid',
         ];
 
         $message = new CreateAttributeMessage($data);
@@ -47,6 +48,7 @@ class CreateAttributeMessageTest extends TestCase
             'name' => 'Color',
             'description' => 'Product color',
             'options' => $options,
+            'group' => 'group-uuid',
         ]);
 
         $this->assertSame('en', $message->getLocale());
@@ -64,6 +66,7 @@ class CreateAttributeMessageTest extends TestCase
             'key' => 'color',
             'type' => 'text',
             'name' => 'Color',
+            'group' => 'group-uuid',
         ]);
 
         $this->assertNull($message->getDescription());
