@@ -65,19 +65,13 @@ interface AttributeInterface
 
     public function setGroup(AttributeGroupInterface $group): self;
 
-    public function getMeasurementFamily(): ?string;
+    /**
+     * @return array<string, mixed>
+     */
+    public function getConfig(): array;
 
-    public function setMeasurementFamily(?string $measurementFamily): self;
-
-    public function getUnit(): ?string;
-
-    public function setUnit(?string $unit): self;
-
-    public function getMin(): ?float;
-
-    public function setMin(?float $min): self;
-
-    public function getMax(): ?float;
-
-    public function setMax(?float $max): self;
+    /**
+     * @param array<string, mixed> $config
+     */
+    public function setConfig(array $config): self;
 }

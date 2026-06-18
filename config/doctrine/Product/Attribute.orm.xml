@@ -19,8 +19,6 @@
             </options>
         </field>
 
-        <field name="measurementFamily" type="string" length="64" nullable="true" column="measurement_family"/>
-        <field name="unit" type="string" length="64" nullable="true"/>
         <field name="config" type="json" nullable="false"/>
 
         <one-to-many field="translations"

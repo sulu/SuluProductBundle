@@ -41,11 +41,10 @@ final class MeasurementUnitController implements SecuredControllerInterface
         $items = [];
         foreach ($families as $family) {
             foreach ($this->registry->getUnits($family) as $key => $symbol) {
-                $title = $this->buildTitle($key, $symbol);
-                if ('' !== $search && !\str_contains(\strtolower($title), $search)) {
+                if ('' !== $search && !\str_contains(\strtolower($symbol), $search)) {
                     continue;
                 }
-                $items[] = ['id' => $key, 'title' => $title];
+                $items[] = ['id' => $key, 'title' => $symbol];
             }
         }
 
@@ -60,7 +59,7 @@ final class MeasurementUnitController implements SecuredControllerInterface
         foreach ($this->registry->getFamilies() as $family) {
             $units = $this->registry->getUnits($family);
             if (\array_key_exists($id, $units)) {
-                return new JsonResponse(['id' => $id, 'title' => $this->buildTitle($id, $units[$id])]);
+                return new JsonResponse(['id' => $id, 'title' => $units[$id]]);
             }
         }
 
@@ -75,10 +74,5 @@ final class MeasurementUnitController implements SecuredControllerInterface
     public function getLocale(Request $request): string
     {
         return $request->query->getString('locale', $request->getLocale());
-    }
-
-    private function buildTitle(string $key, string $symbol): string
-    {
-        return \ucfirst(\strtolower(\str_replace('_', ' ', $key))) . ' (' . $symbol . ')';
     }
 }

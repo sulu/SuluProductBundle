@@ -39,10 +39,6 @@ class Attribute implements AttributeInterface
 
     protected AttributeGroupInterface $group;
 
-    protected ?string $measurementFamily = null;
-
-    protected ?string $unit = null;
-
     /** @var array<string, mixed> */
     protected array $config = [];
 
@@ -192,62 +188,20 @@ class Attribute implements AttributeInterface
         return $this;
     }
 
-    public function getMeasurementFamily(): ?string
+    /**
+     * @return array<string, mixed>
+     */
+    public function getConfig(): array
     {
-        return $this->measurementFamily;
+        return $this->config;
     }
 
-    public function setMeasurementFamily(?string $measurementFamily): self
+    /**
+     * @param array<string, mixed> $config
+     */
+    public function setConfig(array $config): self
     {
-        $this->measurementFamily = $measurementFamily;
-
-        return $this;
-    }
-
-    public function getUnit(): ?string
-    {
-        return $this->unit;
-    }
-
-    public function setUnit(?string $unit): self
-    {
-        $this->unit = $unit;
-
-        return $this;
-    }
-
-    public function getMin(): ?float
-    {
-        $value = $this->config['min'] ?? null;
-
-        return null !== $value ? (float) $value : null;
-    }
-
-    public function setMin(?float $min): self
-    {
-        if (null === $min) {
-            unset($this->config['min']);
-        } else {
-            $this->config['min'] = $min;
-        }
-
-        return $this;
-    }
-
-    public function getMax(): ?float
-    {
-        $value = $this->config['max'] ?? null;
-
-        return null !== $value ? (float) $value : null;
-    }
-
-    public function setMax(?float $max): self
-    {
-        if (null === $max) {
-            unset($this->config['max']);
-        } else {
-            $this->config['max'] = $max;
-        }
+        $this->config = $config;
 
         return $this;
     }

@@ -52,34 +52,34 @@
             </meta>
         </property>
 
-        <property name="measurementFamily" type="single_measurement_family_selection" colspan="6"
+        <property name="config/measurementFamily" type="single_measurement_family_selection" colspan="6"
                   visibleCondition='type == "number"'>
             <meta>
                 <title>sulu_product.measurement_family</title>
             </meta>
         </property>
 
-        <property name="unit" type="single_measurement_unit_selection" colspan="6"
+        <property name="config/unit" type="single_measurement_unit_selection" colspan="6"
                   visibleCondition='type == "number"'
-                  disabledCondition="!measurementFamily">
+                  disabledCondition="!config.measurementFamily">
             <meta>
                 <title>sulu_product.unit</title>
             </meta>
             <params>
                 <param name="resource_store_properties_to_request" type="collection">
-                    <param name="measurementFamily"/>
+                    <param name="measurementFamily" value="config/measurementFamily"/>
                 </param>
             </params>
         </property>
 
-        <property name="min" type="number" colspan="6"
+        <property name="config/min" type="number" colspan="6"
                   visibleCondition='type == "number"'>
             <meta>
                 <title>sulu_product.min</title>
             </meta>
         </property>
 
-        <property name="max" type="number" colspan="6"
+        <property name="config/max" type="number" colspan="6"
                   visibleCondition='type == "number"'>
             <meta>
                 <title>sulu_product.max</title>

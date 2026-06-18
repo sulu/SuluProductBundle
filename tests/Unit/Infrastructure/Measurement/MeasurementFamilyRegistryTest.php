@@ -79,21 +79,21 @@ class MeasurementFamilyRegistryTest extends TestCase
     public static function familySpotCheckProvider(): array
     {
         return [
-            'area ACRE'                  => ['area', 'ACRE', 'ac'],
-            'binary GIGABYTE'            => ['binary', 'GIGABYTE', 'GB'],
-            'decibel DECIBEL'            => ['decibel', 'DECIBEL', 'dB'],
-            'duration MINUTE'            => ['duration', 'MINUTE', 'min'],
-            'electric_charge COULOMB'    => ['electric_charge', 'COULOMB', 'C'],
-            'frequency MEGAHERTZ'        => ['frequency', 'MEGAHERTZ', 'MHz'],
-            'intensity AMPERE'           => ['intensity', 'AMPERE', 'A'],
-            'power KILOWATT'             => ['power', 'KILOWATT', 'kW'],
-            'pressure BAR'               => ['pressure', 'BAR', 'bar'],
-            'pressure MILLIBAR'          => ['pressure', 'MILLIBAR', 'mbar'],
-            'resistance OHM'             => ['resistance', 'OHM', 'Ω'],
-            'speed KILOMETER_PER_HOUR'   => ['speed', 'KILOMETER_PER_HOUR', 'km/h'],
-            'temperature CELSIUS'        => ['temperature', 'CELSIUS', '°C'],
-            'voltage VOLT'               => ['voltage', 'VOLT', 'V'],
-            'volume LITER'               => ['volume', 'LITER', 'L'],
+            'area ACRE' => ['area', 'ACRE', 'ac'],
+            'binary GIGABYTE' => ['binary', 'GIGABYTE', 'GB'],
+            'decibel DECIBEL' => ['decibel', 'DECIBEL', 'dB'],
+            'duration MINUTE' => ['duration', 'MINUTE', 'min'],
+            'electric_charge COULOMB' => ['electric_charge', 'COULOMB', 'C'],
+            'frequency MEGAHERTZ' => ['frequency', 'MEGAHERTZ', 'MHz'],
+            'intensity AMPERE' => ['intensity', 'AMPERE', 'A'],
+            'power KILOWATT' => ['power', 'KILOWATT', 'kW'],
+            'pressure BAR' => ['pressure', 'BAR', 'bar'],
+            'pressure MILLIBAR' => ['pressure', 'MILLIBAR', 'mbar'],
+            'resistance OHM' => ['resistance', 'OHM', 'Ω'],
+            'speed KILOMETER_PER_HOUR' => ['speed', 'KILOMETER_PER_HOUR', 'km/h'],
+            'temperature CELSIUS' => ['temperature', 'CELSIUS', '°C'],
+            'voltage VOLT' => ['voltage', 'VOLT', 'V'],
+            'volume LITER' => ['volume', 'LITER', 'L'],
         ];
     }
 

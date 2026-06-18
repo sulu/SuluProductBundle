@@ -28,10 +28,7 @@ namespace Sulu\Product\Application\Message;
  *     options?: list<AttributeOptionMessageData>|null,
  *     group: string,
  *     position?: int|null,
- *     measurementFamily?: string|null,
- *     unit?: string|null,
- *     min?: float|null,
- *     max?: float|null,
+ *     config?: array<string, mixed>,
  * }
  */
 class CreateAttributeMessage
@@ -86,24 +83,12 @@ class CreateAttributeMessage
         return $this->data['options'] ?? null;
     }
 
-    public function getMeasurementFamily(): ?string
+    /**
+     * @return array<string, mixed>
+     */
+    public function getConfig(): array
     {
-        return $this->data['measurementFamily'] ?? null;
-    }
-
-    public function getUnit(): ?string
-    {
-        return $this->data['unit'] ?? null;
-    }
-
-    public function getMin(): float|null
-    {
-        return $this->data['min'] ?? null;
-    }
-
-    public function getMax(): float|null
-    {
-        return $this->data['max'] ?? null;
+        return $this->data['config'] ?? [];
     }
 
     /**

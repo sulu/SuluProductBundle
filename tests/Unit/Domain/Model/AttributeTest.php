@@ -63,34 +63,26 @@ class AttributeTest extends TestCase
         $this->assertSame(AttributeInterface::TYPE_TEXT, $attribute->getType());
     }
 
-    public function testMeasurementFamilyDefaultsToNull(): void
+    public function testConfigDefaultsToEmptyArray(): void
     {
         $attribute = new Attribute(new AttributeGroup());
-        $this->assertNull($attribute->getMeasurementFamily());
+        $this->assertSame([], $attribute->getConfig());
     }
 
-    public function testSetMeasurementFamilyIsFluentAndStores(): void
+    public function testSetConfigIsFluentAndStores(): void
     {
         $attribute = new Attribute(new AttributeGroup());
-        $this->assertSame($attribute, $attribute->setMeasurementFamily('weight'));
-        $this->assertSame('weight', $attribute->getMeasurementFamily());
-        $attribute->setMeasurementFamily(null);
-        $this->assertNull($attribute->getMeasurementFamily());
+        $config = ['measurementFamily' => 'weight', 'unit' => 'KILOGRAM'];
+        $this->assertSame($attribute, $attribute->setConfig($config));
+        $this->assertSame($config, $attribute->getConfig());
     }
 
-    public function testUnitDefaultsToNull(): void
+    public function testSetConfigReplacesPreviousValue(): void
     {
         $attribute = new Attribute(new AttributeGroup());
-        $this->assertNull($attribute->getUnit());
-    }
-
-    public function testSetUnitIsFluentAndStores(): void
-    {
-        $attribute = new Attribute(new AttributeGroup());
-        $this->assertSame($attribute, $attribute->setUnit('KILOGRAM'));
-        $this->assertSame('KILOGRAM', $attribute->getUnit());
-        $attribute->setUnit(null);
-        $this->assertNull($attribute->getUnit());
+        $attribute->setConfig(['min' => 1.0, 'max' => 50.0]);
+        $attribute->setConfig([]);
+        $this->assertSame([], $attribute->getConfig());
     }
 
     public function testGetTranslationByExplicitLocale(): void
@@ -180,48 +172,6 @@ class AttributeTest extends TestCase
 
         $this->assertSame($attribute, $attribute->setGroup($newGroup));
         $this->assertSame($newGroup, $attribute->getGroup());
-    }
-
-    public function testMinDefaultsToNull(): void
-    {
-        $attribute = new Attribute(new AttributeGroup());
-        $this->assertNull($attribute->getMin());
-    }
-
-    public function testSetMinIsFluentAndStores(): void
-    {
-        $attribute = new Attribute(new AttributeGroup());
-        $this->assertSame($attribute, $attribute->setMin(1.5));
-        $this->assertSame(1.5, $attribute->getMin());
-    }
-
-    public function testSetMinNullClearsValue(): void
-    {
-        $attribute = new Attribute(new AttributeGroup());
-        $attribute->setMin(5.0);
-        $attribute->setMin(null);
-        $this->assertNull($attribute->getMin());
-    }
-
-    public function testMaxDefaultsToNull(): void
-    {
-        $attribute = new Attribute(new AttributeGroup());
-        $this->assertNull($attribute->getMax());
-    }
-
-    public function testSetMaxIsFluentAndStores(): void
-    {
-        $attribute = new Attribute(new AttributeGroup());
-        $this->assertSame($attribute, $attribute->setMax(99.9));
-        $this->assertSame(99.9, $attribute->getMax());
-    }
-
-    public function testSetMaxNullClearsValue(): void
-    {
-        $attribute = new Attribute(new AttributeGroup());
-        $attribute->setMax(10.0);
-        $attribute->setMax(null);
-        $this->assertNull($attribute->getMax());
     }
 
     public function testGetIdReturnsDoctrineGeneratedId(): void

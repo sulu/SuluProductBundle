@@ -193,10 +193,7 @@ final class AttributeController implements SecuredControllerInterface
                 ],
                 $attribute->getOptions(),
             ),
-            'measurementFamily' => $attribute->getMeasurementFamily(),
-            'unit' => $attribute->getUnit(),
-            'min' => $attribute->getMin(),
-            'max' => $attribute->getMax(),
+            'config' => $attribute->getConfig(),
         ];
     }
 }
