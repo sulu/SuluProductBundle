@@ -2,7 +2,7 @@
 <doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
-    <entity name="Sulu\Product\Domain\Model\ProductAttribute" table="pr_product_attributes">
+    <entity name="Sulu\Product\Domain\Model\ProductAttributeValue" table="pr_product_attribute_values">
         <id name="id" type="integer" column="id">
             <generator strategy="AUTO"/>
         </id>
@@ -30,6 +30,12 @@
                      target-entity="Sulu\Product\Domain\Model\AttributeOptionInterface">
             <join-column name="idAttributeOptions" referenced-column-name="id"
                          nullable="true" on-delete="SET NULL"/>
+        </many-to-one>
+
+        <many-to-one field="productFamilyAttribute"
+                     target-entity="Sulu\Product\Domain\Model\ProductFamilyAttributeInterface">
+            <join-column name="idProductFamilyAttributes" referenced-column-name="id"
+                         nullable="true" on-delete="CASCADE"/>
         </many-to-one>
 
         <indexes>

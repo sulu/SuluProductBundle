@@ -29,9 +29,7 @@ interface AttributeGroupInterface
 
     public function setExternalIdentifier(?string $externalIdentifier): self;
 
-    public function setCurrentLocale(string $locale): self;
-
-    public function getTranslation(?string $locale = null): ?AttributeGroupTranslationInterface;
+    public function getTranslation(string $locale): ?AttributeGroupTranslationInterface;
 
     public function addTranslation(AttributeGroupTranslationInterface $translation): self;
 

@@ -19,6 +19,7 @@ use Sulu\Product\Domain\Model\AttributeGroupInterface;
 /**
  * @phpstan-type AttributeGroupRepositoryFilters array{
  *     uuid?: string,
+ *     externalIdentifier?: string,
  * }
  */
 interface AttributeGroupRepositoryInterface
@@ -40,4 +41,9 @@ interface AttributeGroupRepositoryInterface
     public function save(AttributeGroupInterface $group): void;
 
     public function remove(AttributeGroupInterface $group): void;
+
+    /**
+     * @return list<AttributeGroupInterface>
+     */
+    public function findAll(): array;
 }

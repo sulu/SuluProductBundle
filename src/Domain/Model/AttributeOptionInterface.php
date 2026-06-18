@@ -29,7 +29,7 @@ interface AttributeOptionInterface
 
     public function getAttribute(): AttributeInterface;
 
-    public function getTranslation(?string $locale = null): ?AttributeOptionTranslationInterface;
+    public function getTranslation(string $locale): ?AttributeOptionTranslationInterface;
 
     public function addTranslation(AttributeOptionTranslationInterface $translation): self;
 

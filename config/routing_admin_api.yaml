@@ -135,3 +135,33 @@ sulu_product.delete_attribute_group:
     methods: DELETE
     controller: sulu_product.admin_attribute_group_details_controller::deleteAction
     format: json
+
+sulu_product.get_product_families:
+    path: /product-families.{_format}
+    methods: GET
+    controller: sulu_product.admin_product_family_controller::cgetAction
+    format: json
+
+sulu_product.get_product_family:
+    path: /product-families/{id}.{_format}
+    methods: GET
+    controller: sulu_product.admin_product_family_controller::getAction
+    format: json
+
+sulu_product.post_product_family:
+    path: /product-families.{_format}
+    methods: POST
+    controller: sulu_product.admin_product_family_controller::postAction
+    format: json
+
+sulu_product.put_product_family:
+    path: /product-families/{id}.{_format}
+    methods: PUT
+    controller: sulu_product.admin_product_family_controller::putAction
+    format: json
+
+sulu_product.delete_product_family:
+    path: /product-families/{id}.{_format}
+    methods: DELETE
+    controller: sulu_product.admin_product_family_controller::deleteAction
+    format: json

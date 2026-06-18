@@ -17,7 +17,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 
-class AttributeGroup implements AttributeGroupInterface
+class ProductFamily implements ProductFamilyInterface
 {
     protected int $id;
 
@@ -25,16 +25,16 @@ class AttributeGroup implements AttributeGroupInterface
 
     protected ?string $externalIdentifier = null;
 
-    /** @var Collection<int, AttributeGroupTranslationInterface> */
+    /** @var Collection<int, ProductFamilyTranslationInterface> */
     protected Collection $translations;
 
-    /** @var Collection<int, AttributeGroupAttributeInterface> */
-    protected Collection $groupAttributes;
+    /** @var Collection<int, ProductFamilyAttributeInterface> */
+    protected Collection $familyAttributes;
 
     public function __construct()
     {
         $this->translations = new ArrayCollection();
-        $this->groupAttributes = new ArrayCollection();
+        $this->familyAttributes = new ArrayCollection();
     }
 
     public function getId(): int
@@ -66,18 +66,18 @@ class AttributeGroup implements AttributeGroupInterface
         return $this;
     }
 
-    public function getTranslation(string $locale): ?AttributeGroupTranslationInterface
+    public function getTranslation(string $locale): ?ProductFamilyTranslationInterface
     {
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('locale', $locale));
 
-        /** @var AttributeGroupTranslationInterface|false $translation */
+        /** @var ProductFamilyTranslationInterface|false $translation */
         $translation = $this->translations->matching($criteria)->first();
 
         return $translation ?: null;
     }
 
-    public function addTranslation(AttributeGroupTranslationInterface $translation): self
+    public function addTranslation(ProductFamilyTranslationInterface $translation): self
     {
         if (!$this->translations->contains($translation)) {
             $this->translations->add($translation);
@@ -86,36 +86,30 @@ class AttributeGroup implements AttributeGroupInterface
         return $this;
     }
 
-    public function removeTranslation(AttributeGroupTranslationInterface $translation): self
+    public function removeTranslation(ProductFamilyTranslationInterface $translation): self
     {
         $this->translations->removeElement($translation);
 
         return $this;
     }
 
-    public function getGroupAttributes(): array
+    public function getFamilyAttributes(): array
     {
-        $groupAttributes = $this->groupAttributes->toArray();
-        \usort(
-            $groupAttributes,
-            static fn (AttributeGroupAttributeInterface $a, AttributeGroupAttributeInterface $b) => $a->getAttribute()->getPosition() <=> $b->getAttribute()->getPosition(),
-        );
-
-        return $groupAttributes;
+        return $this->familyAttributes->toArray();
     }
 
-    public function addGroupAttribute(AttributeGroupAttributeInterface $groupAttribute): self
+    public function addFamilyAttribute(ProductFamilyAttributeInterface $familyAttribute): self
     {
-        if (!$this->groupAttributes->contains($groupAttribute)) {
-            $this->groupAttributes->add($groupAttribute);
+        if (!$this->familyAttributes->contains($familyAttribute)) {
+            $this->familyAttributes->add($familyAttribute);
         }
 
         return $this;
     }
 
-    public function removeGroupAttribute(AttributeGroupAttributeInterface $groupAttribute): self
+    public function removeFamilyAttribute(ProductFamilyAttributeInterface $familyAttribute): self
     {
-        $this->groupAttributes->removeElement($groupAttribute);
+        $this->familyAttributes->removeElement($familyAttribute);
 
         return $this;
     }

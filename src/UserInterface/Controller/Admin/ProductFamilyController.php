@@ -1,0 +1,212 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of Sulu.
+ *
+ * (c) Sulu GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
+namespace Sulu\Product\UserInterface\Controller\Admin;
+
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+use Sulu\Component\Rest\ListBuilder\Doctrine\DoctrineListBuilder;
+use Sulu\Component\Rest\ListBuilder\Doctrine\DoctrineListBuilderFactoryInterface;
+use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescriptorInterface;
+use Sulu\Component\Rest\ListBuilder\Metadata\FieldDescriptorFactoryInterface;
+use Sulu\Component\Rest\ListBuilder\PaginatedRepresentation;
+use Sulu\Component\Rest\RestHelperInterface;
+use Sulu\Component\Security\SecuredControllerInterface;
+use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushStamp;
+use Sulu\Product\Application\Message\CreateProductFamilyMessage;
+use Sulu\Product\Application\Message\ModifyProductFamilyMessage;
+use Sulu\Product\Application\Message\RemoveProductFamilyMessage;
+use Sulu\Product\Domain\Exception\ProductFamilyNotFoundException;
+use Sulu\Product\Domain\Model\ProductFamilyInterface;
+use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Messenger\Envelope;
+use Symfony\Component\Messenger\HandleTrait;
+use Symfony\Component\Messenger\MessageBusInterface;
+
+/**
+ * @internal
+ */
+final class ProductFamilyController implements SecuredControllerInterface
+{
+    use HandleTrait;
+
+    public const SECURITY_CONTEXT = 'sulu.product.product_families';
+
+    public function __construct(
+        private ProductFamilyRepositoryInterface $productFamilyRepository,
+        MessageBusInterface $messageBus,
+        private FieldDescriptorFactoryInterface $fieldDescriptorFactory,
+        private DoctrineListBuilderFactoryInterface $listBuilderFactory,
+        private RestHelperInterface $restHelper,
+    ) {
+        $this->messageBus = $messageBus;
+    }
+
+    public function cgetAction(Request $request): Response
+    {
+        /** @var DoctrineFieldDescriptorInterface[] $fieldDescriptors */
+        $fieldDescriptors = $this->fieldDescriptorFactory->getFieldDescriptors(ProductFamilyInterface::RESOURCE_KEY);
+
+        /** @var DoctrineListBuilder $listBuilder */
+        $listBuilder = $this->listBuilderFactory->create(ProductFamilyInterface::class);
+        $listBuilder->setIdField($fieldDescriptors['id']);
+        $this->restHelper->initializeListBuilder($listBuilder, $fieldDescriptors);
+        $listBuilder->setParameter('locale', $this->getLocale($request));
+
+        $listRepresentation = new PaginatedRepresentation(
+            $listBuilder->execute(),
+            ProductFamilyInterface::RESOURCE_KEY,
+            (int) $listBuilder->getCurrentPage(),
+            (int) $listBuilder->getLimit(),
+            $listBuilder->count(),
+        );
+
+        return new JsonResponse($listRepresentation->toArray());
+    }
+
+    public function getAction(Request $request, string $id): Response
+    {
+        $locale = $this->getLocale($request);
+        $family = $this->productFamilyRepository->findOneBy(['uuid' => $id]);
+
+        if (null === $family) {
+            return new JsonResponse(['detail' => 'ProductFamily not found.'], 404);
+        }
+
+        return new JsonResponse($this->serializeProductFamily($family, $locale));
+    }
+
+    public function postAction(Request $request): Response
+    {
+        $message = new CreateProductFamilyMessage($this->getData($request));
+
+        try {
+            /** @var ProductFamilyInterface $family */
+            $family = $this->handle(new Envelope($message, [new EnableFlushStamp()]));
+        } catch (UniqueConstraintViolationException) {
+            return new JsonResponse(['detail' => 'ProductFamily already exists.'], 409);
+        }
+
+        return new JsonResponse($this->serializeProductFamily($family, $this->getLocale($request)), 201);
+    }
+
+    public function putAction(Request $request, string $id): Response
+    {
+        $message = new ModifyProductFamilyMessage(['uuid' => $id], $this->getData($request));
+
+        try {
+            /** @var ProductFamilyInterface $family */
+            $family = $this->handle(new Envelope($message, [new EnableFlushStamp()]));
+        } catch (UniqueConstraintViolationException) {
+            return new JsonResponse(['detail' => 'ProductFamily already exists.'], 409);
+        } catch (ProductFamilyNotFoundException $e) {
+            return new JsonResponse(['detail' => $e->getMessage()], 404);
+        }
+
+        return new JsonResponse($this->serializeProductFamily($family, $this->getLocale($request)));
+    }
+
+    public function deleteAction(Request $request, string $id): Response
+    {
+        try {
+            $this->handle(new Envelope(new RemoveProductFamilyMessage($id), [new EnableFlushStamp()]));
+        } catch (ProductFamilyNotFoundException $e) {
+            return new JsonResponse(['detail' => $e->getMessage()], 404);
+        }
+
+        return new Response('', 204);
+    }
+
+    public function getSecurityContext(): string
+    {
+        return self::SECURITY_CONTEXT;
+    }
+
+    public function getLocale(Request $request): string
+    {
+        return $request->query->getString('locale', $request->getLocale());
+    }
+
+    /**
+     * @return array{
+     *   locale: string,
+     *   name: string,
+     *   description: string|null,
+     *   familyAttributes: list<array{attribute: int, required: bool}>,
+     * }
+     */
+    private function getData(Request $request): array
+    {
+        /** @var string|null $description */
+        $description = $request->request->get('description');
+
+        return [
+            'name' => (string) $request->request->get('name', ''),
+            'description' => $description,
+            'familyAttributes' => $this->extractFamilyAttributes($request),
+            'locale' => $this->getLocale($request),
+        ];
+    }
+
+    /**
+     * Reshapes the visitor's flat dynamic fields (attribute_<id>_enabled / _required)
+     * into the sealed familyAttributes list. Only enabled attributes are kept.
+     *
+     * @return list<array{attribute: int, required: bool}>
+     */
+    private function extractFamilyAttributes(Request $request): array
+    {
+        $familyAttributes = [];
+
+        foreach ($request->request->all() as $key => $value) {
+            if (1 !== \preg_match('/^attribute_(\d+)_enabled$/', $key, $matches)) {
+                continue;
+            }
+
+            if (!$value) {
+                continue;
+            }
+
+            $attributeId = (int) $matches[1];
+            $familyAttributes[] = [
+                'attribute' => $attributeId,
+                'required' => (bool) $request->request->get('attribute_' . $attributeId . '_required', false),
+            ];
+        }
+
+        return $familyAttributes;
+    }
+
+    /** @return array<string, mixed> */
+    private function serializeProductFamily(ProductFamilyInterface $family, string $locale): array
+    {
+        $translation = $family->getTranslation($locale);
+
+        $data = [
+            'id' => $family->getUuid() ?? '',
+            'name' => $translation?->getName() ?? '',
+            'description' => $translation?->getDescription(),
+            'externalIdentifier' => $family->getExternalIdentifier(),
+        ];
+
+        foreach ($family->getFamilyAttributes() as $familyAttribute) {
+            $attributeId = $familyAttribute->getAttribute()->getId();
+            $data['attribute_' . $attributeId . '_enabled'] = true;
+            $data['attribute_' . $attributeId . '_required'] = $familyAttribute->isRequired();
+        }
+
+        return $data;
+    }
+}

@@ -18,8 +18,9 @@ use PHPUnit\Framework\TestCase;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\Product;
-use Sulu\Product\Domain\Model\ProductAttribute;
+use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
+use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductTranslation;
 use Symfony\Component\Uid\Uuid;
 
@@ -110,7 +111,7 @@ class ProductTest extends TestCase
     {
         $product = new Product();
         $attr = new Attribute(new AttributeGroup());
-        $productAttribute = new ProductAttribute($product, $attr, 'color');
+        $productAttribute = new ProductAttributeValue($product, $attr, 'color');
 
         $product->addAttribute($productAttribute);
 
@@ -122,7 +123,7 @@ class ProductTest extends TestCase
     {
         $product = new Product();
         $attr = new Attribute(new AttributeGroup());
-        $productAttribute = new ProductAttribute($product, $attr, 'color');
+        $productAttribute = new ProductAttributeValue($product, $attr, 'color');
 
         $this->assertSame($product, $product->addAttribute($productAttribute));
         $product->addAttribute($productAttribute);
@@ -134,7 +135,7 @@ class ProductTest extends TestCase
     {
         $product = new Product();
         $attr = new Attribute(new AttributeGroup());
-        $productAttribute = new ProductAttribute($product, $attr, 'color');
+        $productAttribute = new ProductAttributeValue($product, $attr, 'color');
         $product->addAttribute($productAttribute);
 
         $this->assertSame($product, $product->removeAttribute($productAttribute));
@@ -148,5 +149,18 @@ class ProductTest extends TestCase
 
         $this->assertInstanceOf(ProductDimensionContent::class, $dimensionContent);
         $this->assertSame($product, $dimensionContent->getResource());
+    }
+
+    public function testSetProductFamilyIsNullableAndFluent(): void
+    {
+        $product = new Product();
+        $this->assertNull($product->getProductFamily());
+
+        $family = new ProductFamily();
+        $this->assertSame($product, $product->setProductFamily($family));
+        $this->assertSame($family, $product->getProductFamily());
+
+        $product->setProductFamily(null);
+        $this->assertNull($product->getProductFamily());
     }
 }

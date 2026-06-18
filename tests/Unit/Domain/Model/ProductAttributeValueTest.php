@@ -19,16 +19,18 @@ use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeOption;
 use Sulu\Product\Domain\Model\Product;
-use Sulu\Product\Domain\Model\ProductAttribute;
+use Sulu\Product\Domain\Model\ProductAttributeValue;
+use Sulu\Product\Domain\Model\ProductFamily;
+use Sulu\Product\Domain\Model\ProductFamilyAttribute;
 
-#[CoversClass(ProductAttribute::class)]
-class ProductAttributeTest extends TestCase
+#[CoversClass(ProductAttributeValue::class)]
+class ProductAttributeValueTest extends TestCase
 {
     public function testConstructorAssignsReferencesAndDefaults(): void
     {
         $product = new Product();
         $attribute = new Attribute(new AttributeGroup());
-        $productAttribute = new ProductAttribute($product, $attribute, 'color');
+        $productAttribute = new ProductAttributeValue($product, $attribute, 'color');
 
         $this->assertSame($product, $productAttribute->getProduct());
         $this->assertSame($attribute, $productAttribute->getAttribute());
@@ -44,7 +46,7 @@ class ProductAttributeTest extends TestCase
 
     public function testSetAttributeOptionKeyIsFluentAndStores(): void
     {
-        $productAttribute = new ProductAttribute(new Product(), new Attribute(new AttributeGroup()), 'color');
+        $productAttribute = new ProductAttributeValue(new Product(), new Attribute(new AttributeGroup()), 'color');
 
         $this->assertSame($productAttribute, $productAttribute->setAttributeOptionKey('red'));
         $this->assertSame('red', $productAttribute->getAttributeOptionKey());
@@ -55,7 +57,7 @@ class ProductAttributeTest extends TestCase
 
     public function testSetNumberIsFluentAndStores(): void
     {
-        $productAttribute = new ProductAttribute(new Product(), new Attribute(new AttributeGroup()), 'weight');
+        $productAttribute = new ProductAttributeValue(new Product(), new Attribute(new AttributeGroup()), 'weight');
 
         $this->assertSame($productAttribute, $productAttribute->setNumber(42.5));
         $this->assertSame(42.5, $productAttribute->getNumber());
@@ -66,7 +68,7 @@ class ProductAttributeTest extends TestCase
 
     public function testSetTextIsFluentAndStores(): void
     {
-        $productAttribute = new ProductAttribute(new Product(), new Attribute(new AttributeGroup()), 'description');
+        $productAttribute = new ProductAttributeValue(new Product(), new Attribute(new AttributeGroup()), 'description');
 
         $this->assertSame($productAttribute, $productAttribute->setText('Hello'));
         $this->assertSame('Hello', $productAttribute->getText());
@@ -77,7 +79,7 @@ class ProductAttributeTest extends TestCase
 
     public function testSetJsonIsFluentAndStores(): void
     {
-        $productAttribute = new ProductAttribute(new Product(), new Attribute(new AttributeGroup()), 'meta');
+        $productAttribute = new ProductAttributeValue(new Product(), new Attribute(new AttributeGroup()), 'meta');
         $data = ['foo' => 'bar', 'count' => 3];
 
         $this->assertSame($productAttribute, $productAttribute->setJson($data));
@@ -90,7 +92,7 @@ class ProductAttributeTest extends TestCase
     public function testSetAttributeOptionIsFluentAndStores(): void
     {
         $attribute = new Attribute(new AttributeGroup());
-        $productAttribute = new ProductAttribute(new Product(), $attribute, 'color');
+        $productAttribute = new ProductAttributeValue(new Product(), $attribute, 'color');
         $option = new AttributeOption($attribute, 'red');
 
         $this->assertSame($productAttribute, $productAttribute->setAttributeOption($option));
@@ -102,7 +104,7 @@ class ProductAttributeTest extends TestCase
 
     public function testGetValuePrefersAttributeOptionKey(): void
     {
-        $productAttribute = new ProductAttribute(new Product(), new Attribute(new AttributeGroup()), 'color');
+        $productAttribute = new ProductAttributeValue(new Product(), new Attribute(new AttributeGroup()), 'color');
         $productAttribute->setAttributeOptionKey('red');
         $productAttribute->setNumber(1.0);
         $productAttribute->setText('text');
@@ -113,7 +115,7 @@ class ProductAttributeTest extends TestCase
 
     public function testGetValueFallsBackToNumber(): void
     {
-        $productAttribute = new ProductAttribute(new Product(), new Attribute(new AttributeGroup()), 'weight');
+        $productAttribute = new ProductAttributeValue(new Product(), new Attribute(new AttributeGroup()), 'weight');
         $productAttribute->setNumber(2.5);
         $productAttribute->setText('text');
         $productAttribute->setJson(['x' => 1]);
@@ -123,7 +125,7 @@ class ProductAttributeTest extends TestCase
 
     public function testGetValueFallsBackToText(): void
     {
-        $productAttribute = new ProductAttribute(new Product(), new Attribute(new AttributeGroup()), 'description');
+        $productAttribute = new ProductAttributeValue(new Product(), new Attribute(new AttributeGroup()), 'description');
         $productAttribute->setText('Hello');
         $productAttribute->setJson(['x' => 1]);
 
@@ -132,7 +134,7 @@ class ProductAttributeTest extends TestCase
 
     public function testGetValueFallsBackToJson(): void
     {
-        $productAttribute = new ProductAttribute(new Product(), new Attribute(new AttributeGroup()), 'meta');
+        $productAttribute = new ProductAttributeValue(new Product(), new Attribute(new AttributeGroup()), 'meta');
         $productAttribute->setJson(['x' => 1]);
 
         $this->assertSame(['x' => 1], $productAttribute->getValue());
@@ -140,9 +142,22 @@ class ProductAttributeTest extends TestCase
 
     public function testGetIdReturnsDoctrineGeneratedId(): void
     {
-        $model = new ProductAttribute(new Product(), new Attribute(new AttributeGroup()), 'color');
-        $ref = new \ReflectionProperty(ProductAttribute::class, 'id');
+        $model = new ProductAttributeValue(new Product(), new Attribute(new AttributeGroup()), 'color');
+        $ref = new \ReflectionProperty(ProductAttributeValue::class, 'id');
         $ref->setValue($model, 42);
         $this->assertSame(42, $model->getId());
+    }
+
+    public function testSetProductFamilyAttributeIsNullableAndFluent(): void
+    {
+        $value = new ProductAttributeValue(new Product(), new Attribute(new AttributeGroup()), 'color');
+        $this->assertNull($value->getProductFamilyAttribute());
+
+        $familyAttribute = new ProductFamilyAttribute(new ProductFamily(), new Attribute(new AttributeGroup()));
+        $this->assertSame($value, $value->setProductFamilyAttribute($familyAttribute));
+        $this->assertSame($familyAttribute, $value->getProductFamilyAttribute());
+
+        $value->setProductFamilyAttribute(null);
+        $this->assertNull($value->getProductFamilyAttribute());
     }
 }

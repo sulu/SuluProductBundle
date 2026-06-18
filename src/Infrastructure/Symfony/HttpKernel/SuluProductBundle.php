@@ -31,12 +31,15 @@ use Sulu\Product\Application\MessageHandler\ApplyWorkflowTransitionProductMessag
 use Sulu\Product\Application\MessageHandler\CopyLocaleProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\CreateAttributeGroupMessageHandler;
 use Sulu\Product\Application\MessageHandler\CreateAttributeMessageHandler;
+use Sulu\Product\Application\MessageHandler\CreateProductFamilyMessageHandler;
 use Sulu\Product\Application\MessageHandler\CreateProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\ModifyAttributeGroupMessageHandler;
 use Sulu\Product\Application\MessageHandler\ModifyAttributeMessageHandler;
+use Sulu\Product\Application\MessageHandler\ModifyProductFamilyMessageHandler;
 use Sulu\Product\Application\MessageHandler\ModifyProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\RemoveAttributeGroupMessageHandler;
 use Sulu\Product\Application\MessageHandler\RemoveAttributeMessageHandler;
+use Sulu\Product\Application\MessageHandler\RemoveProductFamilyMessageHandler;
 use Sulu\Product\Application\MessageHandler\RemoveProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\RemoveProductTranslationMessageHandler;
 use Sulu\Product\Application\MessageHandler\RestoreProductVersionMessageHandler;
@@ -65,24 +68,34 @@ use Sulu\Product\Domain\Model\AttributeOptionTranslationInterface;
 use Sulu\Product\Domain\Model\AttributeTranslation;
 use Sulu\Product\Domain\Model\AttributeTranslationInterface;
 use Sulu\Product\Domain\Model\Product;
-use Sulu\Product\Domain\Model\ProductAttribute;
-use Sulu\Product\Domain\Model\ProductAttributeInterface;
+use Sulu\Product\Domain\Model\ProductAttributeValue;
+use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
+use Sulu\Product\Domain\Model\ProductFamily;
+use Sulu\Product\Domain\Model\ProductFamilyAttribute;
+use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
+use Sulu\Product\Domain\Model\ProductFamilyInterface;
+use Sulu\Product\Domain\Model\ProductFamilyTranslation;
+use Sulu\Product\Domain\Model\ProductFamilyTranslationInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Model\ProductTranslation;
 use Sulu\Product\Domain\Model\ProductTranslationInterface;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
+use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Doctrine\Repository\AttributeGroupRepository;
 use Sulu\Product\Infrastructure\Doctrine\Repository\AttributeRepository;
+use Sulu\Product\Infrastructure\Doctrine\Repository\ProductFamilyRepository;
 use Sulu\Product\Infrastructure\Doctrine\Repository\ProductRepository;
 use Sulu\Product\Infrastructure\Measurement\MeasurementFamilyRegistry;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeGroupAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductContentAdmin;
+use Sulu\Product\Infrastructure\Sulu\Admin\ProductFamilyAdmin;
+use Sulu\Product\Infrastructure\Sulu\Admin\ProductFamilyFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\AdditionalWebspacesDataMapper;
 use Sulu\Product\Infrastructure\Sulu\Content\Merger\AdditionalWebspacesMerger;
 use Sulu\Product\Infrastructure\Sulu\Content\PageTreeProductSmartContentProvider;
@@ -115,6 +128,7 @@ use Sulu\Product\UserInterface\Controller\Admin\MeasurementFamilyController;
 use Sulu\Product\UserInterface\Controller\Admin\MeasurementUnitController;
 use Sulu\Product\UserInterface\Controller\Admin\ProductContentController;
 use Sulu\Product\UserInterface\Controller\Admin\ProductDetailsController;
+use Sulu\Product\UserInterface\Controller\Admin\ProductFamilyController;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -446,6 +460,37 @@ final class SuluProductBundle extends AbstractBundle
 
         $services->alias(AttributeGroupRepositoryInterface::class, 'sulu_product.attribute_group_repository');
 
+        $services->set('sulu_product.product_family_repository')
+            ->class(ProductFamilyRepository::class)
+            ->args([
+                new Reference('doctrine.orm.entity_manager'),
+            ]);
+
+        $services->alias(ProductFamilyRepositoryInterface::class, 'sulu_product.product_family_repository');
+
+        $services->set('sulu_product.create_product_family_handler')
+            ->class(CreateProductFamilyMessageHandler::class)
+            ->args([
+                new Reference('sulu_product.product_family_repository'),
+                new Reference('sulu_product.attribute_repository'),
+            ])
+            ->tag('messenger.message_handler');
+
+        $services->set('sulu_product.modify_product_family_handler')
+            ->class(ModifyProductFamilyMessageHandler::class)
+            ->args([
+                new Reference('sulu_product.product_family_repository'),
+                new Reference('sulu_product.attribute_repository'),
+            ])
+            ->tag('messenger.message_handler');
+
+        $services->set('sulu_product.remove_product_family_handler')
+            ->class(RemoveProductFamilyMessageHandler::class)
+            ->args([
+                new Reference('sulu_product.product_family_repository'),
+            ])
+            ->tag('messenger.message_handler');
+
         $services->set('sulu_product.create_attribute_group_handler')
             ->class(CreateAttributeGroupMessageHandler::class)
             ->args([
@@ -485,6 +530,36 @@ final class SuluProductBundle extends AbstractBundle
             ->public()
             ->args([
                 new Reference('sulu_product.attribute_group_repository'),
+                new Reference('sulu_message_bus'),
+                new Reference('sulu_core.list_builder.field_descriptor_factory'),
+                new Reference('sulu_core.doctrine_list_builder_factory'),
+                new Reference('sulu_core.doctrine_rest_helper'),
+            ])
+            ->tag('sulu.context', ['context' => 'admin']);
+
+        $services->set('sulu_product.product_family_admin')
+            ->class(ProductFamilyAdmin::class)
+            ->args([
+                new Reference('sulu_admin.view_builder_factory'),
+                new Reference('sulu_security.security_checker'),
+                new Reference('sulu.core.localization_manager'),
+            ])
+            ->tag('sulu.context', ['context' => 'admin'])
+            ->tag('sulu.admin');
+
+        $services->set('sulu_product.product_family_form_metadata_visitor')
+            ->class(ProductFamilyFormMetadataVisitor::class)
+            ->args([
+                new Reference('sulu_product.attribute_group_repository'),
+                new Reference('translator'),
+            ])
+            ->tag('sulu_admin.form_metadata_visitor');
+
+        $services->set('sulu_product.admin_product_family_controller')
+            ->class(ProductFamilyController::class)
+            ->public()
+            ->args([
+                new Reference('sulu_product.product_family_repository'),
                 new Reference('sulu_message_bus'),
                 new Reference('sulu_core.list_builder.field_descriptor_factory'),
                 new Reference('sulu_core.doctrine_list_builder_factory'),
@@ -814,6 +889,12 @@ final class SuluProductBundle extends AbstractBundle
                                 'detail' => 'sulu_product.get_measurement_unit',
                             ],
                         ],
+                        'product_families' => [
+                            'routes' => [
+                                'list' => 'sulu_product.get_product_families',
+                                'detail' => 'sulu_product.get_product_family',
+                            ],
+                        ],
                     ],
                     'field_type_options' => [
                         'selection' => [
@@ -987,7 +1068,7 @@ final class SuluProductBundle extends AbstractBundle
             ProductInterface::class => 'sulu.model.product.class',
             ProductDimensionContentInterface::class => 'sulu.model.product_content.class',
             ProductTranslationInterface::class => ProductTranslation::class,
-            ProductAttributeInterface::class => ProductAttribute::class,
+            ProductAttributeValueInterface::class => ProductAttributeValue::class,
             AttributeInterface::class => Attribute::class,
             AttributeTranslationInterface::class => AttributeTranslation::class,
             AttributeOptionInterface::class => AttributeOption::class,
@@ -995,6 +1076,9 @@ final class SuluProductBundle extends AbstractBundle
             AttributeGroupInterface::class => AttributeGroup::class,
             AttributeGroupTranslationInterface::class => AttributeGroupTranslation::class,
             AttributeGroupAttributeInterface::class => AttributeGroupAttribute::class,
+            ProductFamilyInterface::class => ProductFamily::class,
+            ProductFamilyTranslationInterface::class => ProductFamilyTranslation::class,
+            ProductFamilyAttributeInterface::class => ProductFamilyAttribute::class,
         ], $container);
     }
 }

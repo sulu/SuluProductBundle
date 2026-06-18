@@ -35,10 +35,12 @@ class Product implements ProductInterface
 
     protected ?string $externalIdentifier = null;
 
+    protected ?ProductFamilyInterface $productFamily = null;
+
     /** @var Collection<int, ProductTranslationInterface> */
     protected Collection $translations;
 
-    /** @var Collection<int, ProductAttributeInterface> */
+    /** @var Collection<int, ProductAttributeValueInterface> */
     protected Collection $attributes;
 
     public function __construct(?string $uuid = null)
@@ -83,6 +85,18 @@ class Product implements ProductInterface
         return $this;
     }
 
+    public function getProductFamily(): ?ProductFamilyInterface
+    {
+        return $this->productFamily;
+    }
+
+    public function setProductFamily(?ProductFamilyInterface $productFamily): self
+    {
+        $this->productFamily = $productFamily;
+
+        return $this;
+    }
+
     public function getTranslation(string $locale): ?ProductTranslationInterface
     {
         $criteria = Criteria::create()
@@ -111,14 +125,14 @@ class Product implements ProductInterface
     }
 
     /**
-     * @return Collection<int, ProductAttributeInterface>
+     * @return Collection<int, ProductAttributeValueInterface>
      */
     public function getAttributes(): Collection
     {
         return $this->attributes;
     }
 
-    public function addAttribute(ProductAttributeInterface $attribute): self
+    public function addAttribute(ProductAttributeValueInterface $attribute): self
     {
         if (!$this->attributes->contains($attribute)) {
             $this->attributes->add($attribute);
@@ -127,7 +141,7 @@ class Product implements ProductInterface
         return $this;
     }
 
-    public function removeAttribute(ProductAttributeInterface $attribute): self
+    public function removeAttribute(ProductAttributeValueInterface $attribute): self
     {
         $this->attributes->removeElement($attribute);
 

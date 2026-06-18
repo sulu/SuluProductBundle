@@ -49,11 +49,15 @@ interface ProductInterface extends AuditableInterface, ContentRichEntityInterfac
     public function removeTranslation(ProductTranslationInterface $translation): self;
 
     /**
-     * @return Collection<int, ProductAttributeInterface>
+     * @return Collection<int, ProductAttributeValueInterface>
      */
     public function getAttributes(): Collection;
 
-    public function addAttribute(ProductAttributeInterface $attribute): self;
+    public function addAttribute(ProductAttributeValueInterface $attribute): self;
 
-    public function removeAttribute(ProductAttributeInterface $attribute): self;
+    public function removeAttribute(ProductAttributeValueInterface $attribute): self;
+
+    public function getProductFamily(): ?ProductFamilyInterface;
+
+    public function setProductFamily(?ProductFamilyInterface $productFamily): self;
 }
