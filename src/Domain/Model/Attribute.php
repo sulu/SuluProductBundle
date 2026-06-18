@@ -39,6 +39,9 @@ class Attribute implements AttributeInterface
 
     protected AttributeGroupInterface $group;
 
+    /** @var array<string, mixed> */
+    protected array $config = [];
+
     public function __construct(AttributeGroupInterface $group)
     {
         $this->translations = new ArrayCollection();
@@ -102,7 +105,7 @@ class Attribute implements AttributeInterface
     public function getTranslation(string $locale): ?AttributeTranslationInterface
     {
         $criteria = Criteria::create()
-            ->where(Criteria::expr()->eq('locale', $locale));
+        ->where(Criteria::expr()->eq('locale', $locale));
 
         /** @var AttributeTranslationInterface|false $translation */
         $translation = $this->translations->matching($criteria)->first();
@@ -181,6 +184,24 @@ class Attribute implements AttributeInterface
     public function setGroup(AttributeGroupInterface $group): self
     {
         $this->group = $group;
+
+        return $this;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function getConfig(): array
+    {
+        return $this->config;
+    }
+
+    /**
+     * @param array<string, mixed> $config
+     */
+    public function setConfig(array $config): self
+    {
+        $this->config = $config;
 
         return $this;
     }

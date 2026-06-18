@@ -64,4 +64,14 @@ interface AttributeInterface
     public function getGroup(): AttributeGroupInterface;
 
     public function setGroup(AttributeGroupInterface $group): self;
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function getConfig(): array;
+
+    /**
+     * @param array<string, mixed> $config
+     */
+    public function setConfig(array $config): self;
 }

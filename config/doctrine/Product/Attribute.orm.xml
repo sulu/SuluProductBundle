@@ -19,6 +19,8 @@
             </options>
         </field>
 
+        <field name="config" type="json" nullable="false"/>
+
         <one-to-many field="translations"
                      target-entity="Sulu\Product\Domain\Model\AttributeTranslationInterface"
                      mapped-by="attribute"

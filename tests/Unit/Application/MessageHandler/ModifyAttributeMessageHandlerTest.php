@@ -220,6 +220,61 @@ class ModifyAttributeMessageHandlerTest extends TestCase
         $this->assertSame('large', \reset($options)->getKey());
     }
 
+    public function testModifyAttributeSetsConfig(): void
+    {
+        $attribute = new Attribute(new AttributeGroup());
+        $attribute->setPosition(0);
+
+        $this->attributeRepository->getOneBy(['uuid' => 'attr-uuid'])->willReturn($attribute);
+        $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
+
+        $handler = $this->createHandler();
+
+        ($handler)(new ModifyAttributeMessage(['uuid' => 'attr-uuid'], [
+            'locale' => 'en',
+            'key' => 'weight',
+            'type' => 'number',
+            'name' => 'Weight',
+            'position' => 0,
+            'config' => [
+                'measurementFamily' => 'weight',
+                'unit' => 'KILOGRAM',
+                'min' => 1.0,
+                'max' => 50.0,
+            ],
+        ]));
+
+        $this->assertSame([
+            'measurementFamily' => 'weight',
+            'unit' => 'KILOGRAM',
+            'min' => 1.0,
+            'max' => 50.0,
+        ], $attribute->getConfig());
+    }
+
+    public function testModifyAttributeClearsConfigWhenEmptyArrayPassed(): void
+    {
+        $attribute = new Attribute(new AttributeGroup());
+        $attribute->setPosition(0);
+        $attribute->setConfig(['measurementFamily' => 'weight', 'unit' => 'KILOGRAM']);
+
+        $this->attributeRepository->getOneBy(['uuid' => 'attr-uuid'])->willReturn($attribute);
+        $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
+
+        $handler = $this->createHandler();
+
+        ($handler)(new ModifyAttributeMessage(['uuid' => 'attr-uuid'], [
+            'locale' => 'en',
+            'key' => 'weight',
+            'type' => 'number',
+            'name' => 'Weight',
+            'position' => 0,
+            'config' => [],
+        ]));
+
+        $this->assertSame([], $attribute->getConfig());
+    }
+
     public function testModifyAttributeUpdatesPositionFromData(): void
     {
         $group = new AttributeGroup();

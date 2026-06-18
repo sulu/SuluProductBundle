@@ -52,6 +52,30 @@ sulu_product.get_product_versions:
     controller: sulu_product.admin_product_content_controller::getVersionsAction
     format: json
 
+sulu_product.get_measurement_families:
+    path: /measurement-families.{_format}
+    methods: GET
+    controller: sulu_product.admin_measurement_family_controller::cgetAction
+    format: json
+
+sulu_product.get_measurement_family:
+    path: /measurement-families/{id}.{_format}
+    methods: GET
+    controller: sulu_product.admin_measurement_family_controller::getAction
+    format: json
+
+sulu_product.get_measurement_units:
+    path: /measurement-units.{_format}
+    methods: GET
+    controller: sulu_product.admin_measurement_unit_controller::cgetAction
+    format: json
+
+sulu_product.get_measurement_unit:
+    path: /measurement-units/{id}.{_format}
+    methods: GET
+    controller: sulu_product.admin_measurement_unit_controller::getAction
+    format: json
+
 sulu_product.get_attributes:
     path: /attributes.{_format}
     methods: GET

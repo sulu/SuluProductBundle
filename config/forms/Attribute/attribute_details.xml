@@ -52,6 +52,40 @@
             </meta>
         </property>
 
+        <property name="config/measurementFamily" type="single_measurement_family_selection" colspan="6"
+                  visibleCondition='type == "number"'>
+            <meta>
+                <title>sulu_product.measurement_family</title>
+            </meta>
+        </property>
+
+        <property name="config/unit" type="single_measurement_unit_selection" colspan="6"
+                  visibleCondition='type == "number"'
+                  disabledCondition="!config.measurementFamily">
+            <meta>
+                <title>sulu_product.unit</title>
+            </meta>
+            <params>
+                <param name="resource_store_properties_to_request" type="collection">
+                    <param name="measurementFamily" value="config/measurementFamily"/>
+                </param>
+            </params>
+        </property>
+
+        <property name="config/min" type="number" colspan="6"
+                  visibleCondition='type == "number"'>
+            <meta>
+                <title>sulu_product.min</title>
+            </meta>
+        </property>
+
+        <property name="config/max" type="number" colspan="6"
+                  visibleCondition='type == "number"'>
+            <meta>
+                <title>sulu_product.max</title>
+            </meta>
+        </property>
+
         <property name="description" type="text_editor">
             <meta>
                 <title>sulu_admin.description</title>

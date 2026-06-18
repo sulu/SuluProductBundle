@@ -63,6 +63,28 @@ class AttributeTest extends TestCase
         $this->assertSame(AttributeInterface::TYPE_TEXT, $attribute->getType());
     }
 
+    public function testConfigDefaultsToEmptyArray(): void
+    {
+        $attribute = new Attribute(new AttributeGroup());
+        $this->assertSame([], $attribute->getConfig());
+    }
+
+    public function testSetConfigIsFluentAndStores(): void
+    {
+        $attribute = new Attribute(new AttributeGroup());
+        $config = ['measurementFamily' => 'weight', 'unit' => 'KILOGRAM'];
+        $this->assertSame($attribute, $attribute->setConfig($config));
+        $this->assertSame($config, $attribute->getConfig());
+    }
+
+    public function testSetConfigReplacesPreviousValue(): void
+    {
+        $attribute = new Attribute(new AttributeGroup());
+        $attribute->setConfig(['min' => 1.0, 'max' => 50.0]);
+        $attribute->setConfig([]);
+        $this->assertSame([], $attribute->getConfig());
+    }
+
     public function testGetTranslationByExplicitLocale(): void
     {
         $attribute = new Attribute(new AttributeGroup());

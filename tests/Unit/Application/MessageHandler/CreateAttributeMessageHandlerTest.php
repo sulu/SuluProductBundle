@@ -121,6 +121,63 @@ class CreateAttributeMessageHandlerTest extends TestCase
         $this->assertSame('Large', $options[1]->getTranslation('en')?->getName());
     }
 
+    public function testCreateAttributeWithConfig(): void
+    {
+        $group = $this->makeGroup();
+        $attribute = new Attribute($group);
+
+        $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid-1'])->willReturn($group);
+        $this->attributeGroupRepository->save($group)->shouldBeCalledOnce();
+        $this->attributeRepository->create($group)->willReturn($attribute);
+        $this->attributeRepository->findNextPositionInGroup($group)->willReturn(0);
+        $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
+
+        $result = ($this->createHandler())(new CreateAttributeMessage([
+            'locale' => 'en',
+            'key' => 'height',
+            'name' => 'Height',
+            'type' => 'number',
+            'description' => null,
+            'group' => 'group-uuid-1',
+            'config' => [
+                'measurementFamily' => 'length',
+                'unit' => 'CENTIMETER',
+                'min' => 0.0,
+                'max' => 100.0,
+            ],
+        ]));
+
+        $this->assertSame([
+            'measurementFamily' => 'length',
+            'unit' => 'CENTIMETER',
+            'min' => 0.0,
+            'max' => 100.0,
+        ], $result->getConfig());
+    }
+
+    public function testCreateAttributeWithoutConfigLeavesEmptyArray(): void
+    {
+        $group = $this->makeGroup();
+        $attribute = new Attribute($group);
+
+        $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid-1'])->willReturn($group);
+        $this->attributeGroupRepository->save($group)->shouldBeCalledOnce();
+        $this->attributeRepository->create($group)->willReturn($attribute);
+        $this->attributeRepository->findNextPositionInGroup($group)->willReturn(0);
+        $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
+
+        $result = ($this->createHandler())(new CreateAttributeMessage([
+            'locale' => 'en',
+            'key' => 'color',
+            'name' => 'Color',
+            'type' => 'text',
+            'description' => null,
+            'group' => 'group-uuid-1',
+        ]));
+
+        $this->assertSame([], $result->getConfig());
+    }
+
     public function testCreateAttributeSetsPositionFromData(): void
     {
         $group = $this->makeGroup();

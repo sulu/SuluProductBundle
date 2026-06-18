@@ -193,6 +193,7 @@ final class AttributeController implements SecuredControllerInterface
                 ],
                 $attribute->getOptions(),
             ),
+            'config' => $attribute->getConfig(),
         ];
     }
 }

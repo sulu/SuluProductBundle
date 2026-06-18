@@ -28,6 +28,7 @@ namespace Sulu\Product\Application\Message;
  *     options?: list<AttributeOptionMessageData>|null,
  *     group: string,
  *     position?: int|null,
+ *     config?: array<string, mixed>,
  * }
  */
 class CreateAttributeMessage
@@ -80,6 +81,14 @@ class CreateAttributeMessage
     public function getOptions(): ?array
     {
         return $this->data['options'] ?? null;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function getConfig(): array
+    {
+        return $this->data['config'] ?? [];
     }
 
     /**

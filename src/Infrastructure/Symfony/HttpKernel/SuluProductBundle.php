@@ -78,6 +78,7 @@ use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Doctrine\Repository\AttributeGroupRepository;
 use Sulu\Product\Infrastructure\Doctrine\Repository\AttributeRepository;
 use Sulu\Product\Infrastructure\Doctrine\Repository\ProductRepository;
+use Sulu\Product\Infrastructure\Measurement\MeasurementFamilyRegistry;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeGroupAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
@@ -110,6 +111,8 @@ use Sulu\Product\Infrastructure\Sulu\Trash\ProductTrashItemHandler;
 use Sulu\Product\Infrastructure\Symfony\Twig\ProductTwigExtension;
 use Sulu\Product\UserInterface\Controller\Admin\AttributeController;
 use Sulu\Product\UserInterface\Controller\Admin\AttributeGroupController;
+use Sulu\Product\UserInterface\Controller\Admin\MeasurementFamilyController;
+use Sulu\Product\UserInterface\Controller\Admin\MeasurementUnitController;
 use Sulu\Product\UserInterface\Controller\Admin\ProductContentController;
 use Sulu\Product\UserInterface\Controller\Admin\ProductDetailsController;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
@@ -363,6 +366,26 @@ final class SuluProductBundle extends AbstractBundle
                 tagged_iterator('sulu_product.attribute_type'),
                 new Reference('translator'),
             ]);
+
+        $services->set('sulu_product.measurement_family_registry')
+            ->class(MeasurementFamilyRegistry::class);
+
+        $services->set('sulu_product.admin_measurement_family_controller')
+            ->class(MeasurementFamilyController::class)
+            ->public()
+            ->args([
+                new Reference('sulu_product.measurement_family_registry'),
+                new Reference('translator'),
+            ])
+            ->tag('sulu.context', ['context' => 'admin']);
+
+        $services->set('sulu_product.admin_measurement_unit_controller')
+            ->class(MeasurementUnitController::class)
+            ->public()
+            ->args([
+                new Reference('sulu_product.measurement_family_registry'),
+            ])
+            ->tag('sulu.context', ['context' => 'admin']);
 
         $services->set('sulu_product.attribute_repository')
             ->class(AttributeRepository::class)
@@ -779,6 +802,18 @@ final class SuluProductBundle extends AbstractBundle
                                 'detail' => 'sulu_product.get_attribute_group',
                             ],
                         ],
+                        'measurement_families' => [
+                            'routes' => [
+                                'list' => 'sulu_product.get_measurement_families',
+                                'detail' => 'sulu_product.get_measurement_family',
+                            ],
+                        ],
+                        'measurement_units' => [
+                            'routes' => [
+                                'list' => 'sulu_product.get_measurement_units',
+                                'detail' => 'sulu_product.get_measurement_unit',
+                            ],
+                        ],
                     ],
                     'field_type_options' => [
                         'selection' => [
@@ -837,6 +872,31 @@ final class SuluProductBundle extends AbstractBundle
                                         'empty_text' => 'sulu_product.no_attribute_group_selected',
                                         'icon' => 'su-tag',
                                         'overlay_title' => 'sulu_product.attribute_groups',
+                                    ],
+                                ],
+                            ],
+                            'single_measurement_family_selection' => [
+                                'default_type' => 'single_select',
+                                'resource_key' => 'measurement_families',
+                                'types' => [
+                                    'single_select' => [
+                                        'display_property' => 'title',
+                                        'id_property' => 'id',
+                                        'overlay_title' => 'sulu_product.measurement_family',
+                                    ],
+                                ],
+                            ],
+                            'single_measurement_unit_selection' => [
+                                'default_type' => 'list_overlay',
+                                'resource_key' => 'measurement_units',
+                                'types' => [
+                                    'list_overlay' => [
+                                        'adapter' => 'table',
+                                        'list_key' => 'measurement_units',
+                                        'display_properties' => ['title'],
+                                        'empty_text' => 'sulu_product.no_unit_selected',
+                                        'icon' => 'su-search',
+                                        'overlay_title' => 'sulu_product.select_unit',
                                     ],
                                 ],
                             ],
