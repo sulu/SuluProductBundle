@@ -15,10 +15,15 @@ namespace Sulu\Product\Application\AttributeType;
 
 use Sulu\Product\Domain\Model\AttributeInterface;
 
-final class JsonAttributeType implements AttributeTypeInterface
+final class JsonAttributeType extends AbstractAttributeType
 {
     public function getKey(): string
     {
         return AttributeInterface::TYPE_JSON;
+    }
+
+    public function getFormKey(): string
+    {
+        return 'product_attribute_json';
     }
 }

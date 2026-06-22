@@ -56,6 +56,35 @@ class ProductFamilyControllerTest extends SuluTestCase
         $this->assertIsArray($data);
     }
 
+    public function testGetSerializesEmptyAttributesAsObject(): void
+    {
+        self::purgeDatabase();
+
+        $this->client->request(
+            'POST',
+            '/admin/api/product-families.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode(['locale' => 'en', 'name' => 'Empty']) ?: null,
+        );
+        $created = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($created);
+        $id = $created['id'];
+        $this->assertIsString($id);
+
+        $this->client->request('GET', '/admin/api/product-families/' . $id . '.json?locale=en');
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(200, $response);
+
+        // `attributes` must serialize as a JSON object ({}), never an empty array ([]); otherwise
+        // the form store's json-pointer write of `attributes/<key>/enabled` makes mobx throw
+        // "[mobx.array] Index out of bounds" when the first attribute toggle is changed.
+        $content = (string) $response->getContent();
+        $this->assertStringContainsString('"attributes":{}', $content);
+        $this->assertStringNotContainsString('"attributes":[]', $content);
+    }
+
     public function testPost(): string
     {
         $this->client->request(
@@ -168,7 +197,8 @@ class ProductFamilyControllerTest extends SuluTestCase
     {
         self::purgeDatabase();
 
-        $attributeId = $this->createAttribute('color', 'Color');
+        $attributeKey = 'color';
+        $this->createAttribute($attributeKey, 'Color');
 
         $this->client->request(
             'POST',
@@ -181,7 +211,7 @@ class ProductFamilyControllerTest extends SuluTestCase
                 'name' => 'Apparel',
                 'description' => null,
                 'attributes' => [
-                    $attributeId => ['enabled' => true, 'required' => true],
+                    $attributeKey => ['enabled' => true, 'required' => true],
                 ],
             ]) ?: null,
         );
@@ -198,7 +228,7 @@ class ProductFamilyControllerTest extends SuluTestCase
         $this->assertIsArray($data);
         $this->assertIsArray($data['attributes']);
         $this->assertSame(
-            [(string) $attributeId => ['enabled' => true, 'required' => true]],
+            [$attributeKey => ['enabled' => true, 'required' => true]],
             $data['attributes'],
         );
     }

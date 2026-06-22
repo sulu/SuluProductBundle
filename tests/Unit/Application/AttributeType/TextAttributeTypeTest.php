@@ -15,26 +15,43 @@ namespace Sulu\Product\Tests\Unit\Application\AttributeType;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
-use Sulu\Product\Application\AttributeType\AttributeTypeInterface;
 use Sulu\Product\Application\AttributeType\TextAttributeType;
+use Sulu\Product\Domain\Model\Attribute;
+use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
+use Sulu\Product\Domain\Model\Product;
+use Sulu\Product\Domain\Model\ProductAttributeValue;
+use Sulu\Product\Domain\Model\ProductFamily;
 
 #[CoversClass(TextAttributeType::class)]
 class TextAttributeTypeTest extends TestCase
 {
-    public function testImplementsAttributeTypeInterface(): void
-    {
-        $interfaces = \class_implements(TextAttributeType::class);
-
-        $this->assertIsArray($interfaces);
-        $this->assertContains(AttributeTypeInterface::class, $interfaces);
-    }
-
-    public function testGetKey(): void
+    public function testKeyAndFormKey(): void
     {
         $type = new TextAttributeType();
+        self::assertSame(AttributeInterface::TYPE_TEXT, $type->getKey());
+        self::assertSame('product_attribute_text', $type->getFormKey());
+    }
 
-        $this->assertSame(AttributeInterface::TYPE_TEXT, $type->getKey());
-        $this->assertSame('text', $type->getKey());
+    public function testValueRoundTripUsesTextColumn(): void
+    {
+        $type = new TextAttributeType();
+        $value = new ProductAttributeValue(new Product(new ProductFamily()), new Attribute(new AttributeGroup()), 'k');
+
+        $type->writeValue($value, 'hello');
+
+        self::assertSame('hello', $value->getText());
+        self::assertSame('hello', $type->readValue($value));
+    }
+
+    public function testWriteNullClearsText(): void
+    {
+        $type = new TextAttributeType();
+        $value = new ProductAttributeValue(new Product(new ProductFamily()), new Attribute(new AttributeGroup()), 'k');
+        $type->writeValue($value, 'world');
+
+        $type->writeValue($value, null);
+
+        self::assertNull($value->getText());
     }
 }

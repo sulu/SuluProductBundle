@@ -21,6 +21,7 @@ namespace Sulu\Product\Application\Message;
  *     locale: string,
  *     code?: string,
  *     productFamily?: string,
+ *     attributes?: array<int, mixed>,
  * }
  */
 class ModifyProductMessage
@@ -51,6 +52,14 @@ class ModifyProductMessage
     public function getProductFamily(): ?string
     {
         return $this->data['productFamily'] ?? null;
+    }
+
+    /**
+     * @return array<int, mixed>
+     */
+    public function getAttributes(): array
+    {
+        return $this->data['attributes'] ?? [];
     }
 
     /**

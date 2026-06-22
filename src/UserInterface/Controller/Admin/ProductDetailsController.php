@@ -21,11 +21,13 @@ use Sulu\Component\Rest\ListBuilder\PaginatedRepresentation;
 use Sulu\Component\Rest\RestHelperInterface;
 use Sulu\Component\Security\SecuredControllerInterface;
 use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushStamp;
+use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
 use Sulu\Product\Application\Message\CreateProductMessage;
 use Sulu\Product\Application\Message\ModifyProductMessage;
 use Sulu\Product\Application\Message\RemoveProductMessage;
 use Sulu\Product\Application\Message\RemoveProductTranslationMessage;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
+use Sulu\Product\Domain\Exception\RequiredProductAttributeMissingException;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
@@ -36,6 +38,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\HandleTrait;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Webmozart\Assert\InvalidArgumentException;
 
 /**
  * @internal
@@ -52,6 +55,7 @@ final class ProductDetailsController implements SecuredControllerInterface
         private FieldDescriptorFactoryInterface $fieldDescriptorFactory,
         private DoctrineListBuilderFactoryInterface $listBuilderFactory,
         private RestHelperInterface $restHelper,
+        private AttributeTypeRegistry $attributeTypeRegistry,
     ) {
         $this->messageBus = $messageBus;
     }
@@ -109,6 +113,10 @@ final class ProductDetailsController implements SecuredControllerInterface
             $this->handle(new Envelope($message, [new EnableFlushStamp()]));
         } catch (ProductNotFoundException $e) {
             throw new NotFoundHttpException($e->getMessage(), $e);
+        } catch (RequiredProductAttributeMissingException $e) {
+            return new JsonResponse(['detail' => $e->getMessage()], 422);
+        } catch (InvalidArgumentException $e) {
+            return new JsonResponse(['detail' => 'Invalid attribute value provided.'], 400);
         }
 
         $product = $this->productRepository->findOneBy(['uuid' => $id]);
@@ -173,6 +181,36 @@ final class ProductDetailsController implements SecuredControllerInterface
             'code' => $product->getCode(),
             'externalIdentifier' => $product->getExternalIdentifier(),
             'productFamily' => $product->getProductFamily()->getUuid(),
+            'attributes' => $this->serializeAttributeValues($product),
         ];
+    }
+
+    /**
+     * @return array<int, mixed>
+     */
+    private function serializeAttributeValues(ProductInterface $product): array
+    {
+        $attributes = [];
+
+        foreach ($product->getProductFamily()->getFamilyAttributes() as $familyAttribute) {
+            $attribute = $familyAttribute->getAttribute();
+            if (!$this->attributeTypeRegistry->has($attribute->getType())) {
+                continue;
+            }
+
+            $attributes[$attribute->getId()] = null;
+        }
+
+        foreach ($product->getAttributes() as $value) {
+            $attribute = $value->getAttribute();
+            if (!$this->attributeTypeRegistry->has($attribute->getType())) {
+                continue;
+            }
+
+            $type = $this->attributeTypeRegistry->get($attribute->getType());
+            $attributes[$attribute->getId()] = $type->readValue($value);
+        }
+
+        return $attributes;
     }
 }

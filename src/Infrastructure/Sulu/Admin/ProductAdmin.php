@@ -164,6 +164,17 @@ class ProductAdmin extends Admin
                 ->setParent(static::EDIT_TABS_VIEW),
         );
 
+        $viewCollection->add(
+            $this->viewBuilderFactory->createFormViewBuilder(static::EDIT_TABS_VIEW . '.attributes', '/attributes')
+                ->setResourceKey(ProductInterface::RESOURCE_KEY)
+                ->setFormKey('product_attributes')
+                ->setTabTitle('sulu_product.attributes')
+                ->setTabOrder(20)
+                ->addRouterAttributesToFormMetadata(['id'])
+                ->addToolbarActions([new ToolbarAction('sulu_admin.save')])
+                ->setParent(static::EDIT_TABS_VIEW),
+        );
+
         // Activity tab (added by activityViewBuilderFactory if it has permission)
         $insightsViewName = static::EDIT_TABS_VIEW . '.insights';
         if ($viewCollection->has($insightsViewName) && $this->activityViewBuilderFactory->hasActivityListPermission()) {

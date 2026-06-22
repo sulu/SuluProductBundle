@@ -15,26 +15,43 @@ namespace Sulu\Product\Tests\Unit\Application\AttributeType;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
-use Sulu\Product\Application\AttributeType\AttributeTypeInterface;
 use Sulu\Product\Application\AttributeType\JsonAttributeType;
+use Sulu\Product\Domain\Model\Attribute;
+use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
+use Sulu\Product\Domain\Model\Product;
+use Sulu\Product\Domain\Model\ProductAttributeValue;
+use Sulu\Product\Domain\Model\ProductFamily;
 
 #[CoversClass(JsonAttributeType::class)]
 class JsonAttributeTypeTest extends TestCase
 {
-    public function testImplementsAttributeTypeInterface(): void
-    {
-        $interfaces = \class_implements(JsonAttributeType::class);
-
-        $this->assertIsArray($interfaces);
-        $this->assertContains(AttributeTypeInterface::class, $interfaces);
-    }
-
-    public function testGetKey(): void
+    public function testKeyAndFormKey(): void
     {
         $type = new JsonAttributeType();
+        self::assertSame(AttributeInterface::TYPE_JSON, $type->getKey());
+        self::assertSame('product_attribute_json', $type->getFormKey());
+    }
 
-        $this->assertSame(AttributeInterface::TYPE_JSON, $type->getKey());
-        $this->assertSame('json', $type->getKey());
+    public function testValueRoundTripUsesJsonColumn(): void
+    {
+        $type = new JsonAttributeType();
+        $value = new ProductAttributeValue(new Product(new ProductFamily()), new Attribute(new AttributeGroup()), 'k');
+
+        $type->writeValue($value, ['a' => 1]);
+
+        self::assertSame(['a' => 1], $value->getJson());
+        self::assertSame(['a' => 1], $type->readValue($value));
+    }
+
+    public function testWriteNullClearsJson(): void
+    {
+        $type = new JsonAttributeType();
+        $value = new ProductAttributeValue(new Product(new ProductFamily()), new Attribute(new AttributeGroup()), 'k');
+        $type->writeValue($value, ['x' => 2]);
+
+        $type->writeValue($value, null);
+
+        self::assertNull($value->getJson());
     }
 }

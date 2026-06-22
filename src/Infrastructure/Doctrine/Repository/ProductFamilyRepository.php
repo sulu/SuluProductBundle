@@ -16,8 +16,10 @@ namespace Sulu\Product\Infrastructure\Doctrine\Repository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\NoResultException;
+use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use Sulu\Product\Domain\Exception\ProductFamilyNotFoundException;
+use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
@@ -94,6 +96,14 @@ final class ProductFamilyRepository implements ProductFamilyRepositoryInterface
             Assert::string($externalIdentifier); // @phpstan-ignore staticMethod.alreadyNarrowedType
             $queryBuilder->andWhere('productFamily.externalIdentifier = :externalIdentifier')
                 ->setParameter('externalIdentifier', $externalIdentifier);
+        }
+
+        $productUuid = $filters['productUuid'] ?? null;
+        if (null !== $productUuid) {
+            Assert::string($productUuid); // @phpstan-ignore staticMethod.alreadyNarrowedType
+            $queryBuilder->innerJoin(Product::class, 'product', Join::WITH, 'product.productFamily = productFamily')
+                ->andWhere('product.uuid = :productUuid')
+                ->setParameter('productUuid', $productUuid);
         }
 
         return $queryBuilder;

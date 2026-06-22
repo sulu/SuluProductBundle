@@ -59,4 +59,18 @@ class CreateProductMessageTest extends TestCase
 
         $this->assertSame('family-uuid', $message->getProductFamily());
     }
+
+    public function testGetAttributes(): void
+    {
+        $message = new CreateProductMessage(['locale' => 'en', 'productFamily' => 'fam-1', 'attributes' => [7 => 42.0]]);
+
+        $this->assertSame([7 => 42.0], $message->getAttributes());
+    }
+
+    public function testGetAttributesDefaultsToEmpty(): void
+    {
+        $message = new CreateProductMessage(['locale' => 'en', 'productFamily' => 'fam-1']);
+
+        $this->assertSame([], $message->getAttributes());
+    }
 }
