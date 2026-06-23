@@ -32,6 +32,7 @@ use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
+use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Route\ProductRouteDefaultsProvider;
@@ -81,7 +82,7 @@ class ProductRouteDefaultsProviderTest extends TestCase
         $locale = 'en';
         $slug = '/test-product';
 
-        $product = new Product('123-123-123');
+        $product = new Product(new ProductFamily(), '123-123-123');
         $resolvedDimensionContent = new ProductDimensionContent($product);
         $resolvedDimensionContent->setLocale($locale);
         $resolvedDimensionContent->setTemplateKey('default');
@@ -145,7 +146,7 @@ class ProductRouteDefaultsProviderTest extends TestCase
         $contentLocale = 'en';
         $slug = '/deutsches-produkt';
 
-        $product = new Product('123-123-123');
+        $product = new Product(new ProductFamily(), '123-123-123');
         $resolvedDimensionContent = new ProductDimensionContent($product);
         $resolvedDimensionContent->setLocale($contentLocale);
         $resolvedDimensionContent->setTemplateKey('default');
@@ -199,7 +200,7 @@ class ProductRouteDefaultsProviderTest extends TestCase
     {
         $provider = $this->getProductRouteDefaultsProviderInstance();
 
-        $product = new Product('123-123-123');
+        $product = new Product(new ProductFamily(), '123-123-123');
 
         $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
         $this->contentAggregator->aggregate($product, Argument::type('array'))
@@ -214,7 +215,7 @@ class ProductRouteDefaultsProviderTest extends TestCase
     {
         $provider = $this->getProductRouteDefaultsProviderInstance();
 
-        $product = new Product('123-123-123');
+        $product = new Product(new ProductFamily(), '123-123-123');
         $dimensionContent = new ProductDimensionContent($product);
         // locale is not set, so getLocale() returns null
 
@@ -231,7 +232,7 @@ class ProductRouteDefaultsProviderTest extends TestCase
     {
         $provider = $this->getProductRouteDefaultsProviderInstance();
 
-        $product = new Product('123-123-123');
+        $product = new Product(new ProductFamily(), '123-123-123');
         $dimensionContent = new ProductDimensionContent($product);
         $dimensionContent->setLocale('en');
         // template key is not set
@@ -249,7 +250,7 @@ class ProductRouteDefaultsProviderTest extends TestCase
     {
         $provider = $this->getProductRouteDefaultsProviderInstance();
 
-        $product = new Product('123-123-123');
+        $product = new Product(new ProductFamily(), '123-123-123');
         $dimensionContent = new ProductDimensionContent($product);
         $dimensionContent->setLocale('en');
         $dimensionContent->setTemplateKey('default');
@@ -272,7 +273,7 @@ class ProductRouteDefaultsProviderTest extends TestCase
     {
         $provider = $this->getProductRouteDefaultsProviderInstance();
 
-        $product = new Product('123-123-123');
+        $product = new Product(new ProductFamily(), '123-123-123');
         $dimensionContent = new ProductDimensionContent($product);
         $dimensionContent->setLocale('en');
         $dimensionContent->setTemplateKey('nonexistent');
@@ -295,7 +296,7 @@ class ProductRouteDefaultsProviderTest extends TestCase
     {
         $provider = $this->getProductRouteDefaultsProviderInstance();
 
-        $product = new Product('123-123-123');
+        $product = new Product(new ProductFamily(), '123-123-123');
         $dimensionContent = new ProductDimensionContent($product);
         $dimensionContent->setLocale('en');
         $dimensionContent->setTemplateKey('default');
@@ -326,7 +327,7 @@ class ProductRouteDefaultsProviderTest extends TestCase
         $locale = 'en';
         $slug = '/test-product';
 
-        $product = new Product('123-123-123');
+        $product = new Product(new ProductFamily(), '123-123-123');
         $resolvedDimensionContent = new ProductDimensionContent($product);
         $resolvedDimensionContent->setLocale($locale);
         $resolvedDimensionContent->setTemplateKey('default');
@@ -364,7 +365,7 @@ class ProductRouteDefaultsProviderTest extends TestCase
         $locale = 'en';
         $slug = '/test-product';
 
-        $product = new Product('123-123-123');
+        $product = new Product(new ProductFamily(), '123-123-123');
         $resolvedDimensionContent = new ProductDimensionContent($product);
         $resolvedDimensionContent->setLocale($locale);
         $resolvedDimensionContent->setTemplateKey('default');

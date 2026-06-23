@@ -180,8 +180,9 @@ class ProductFamilyControllerTest extends SuluTestCase
                 'locale' => 'en',
                 'name' => 'Apparel',
                 'description' => null,
-                'attribute_' . $attributeId . '_enabled' => true,
-                'attribute_' . $attributeId . '_required' => true,
+                'attributes' => [
+                    $attributeId => ['enabled' => true, 'required' => true],
+                ],
             ]) ?: null,
         );
 
@@ -195,8 +196,11 @@ class ProductFamilyControllerTest extends SuluTestCase
         $this->assertHttpStatusCode(200, $this->client->getResponse());
         $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
         $this->assertIsArray($data);
-        $this->assertTrue($data['attribute_' . $attributeId . '_enabled']);
-        $this->assertTrue($data['attribute_' . $attributeId . '_required']);
+        $this->assertIsArray($data['attributes']);
+        $this->assertSame(
+            [(string) $attributeId => ['enabled' => true, 'required' => true]],
+            $data['attributes'],
+        );
     }
 
     private function createAttribute(string $key, string $name): int

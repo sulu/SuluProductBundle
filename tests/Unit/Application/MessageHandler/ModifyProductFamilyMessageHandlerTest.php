@@ -16,6 +16,7 @@ namespace Sulu\Product\Tests\Unit\Application\MessageHandler;
 use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
+use Sulu\Product\Application\Mapper\ProductFamilyMapper;
 use Sulu\Product\Application\Message\ModifyProductFamilyMessage;
 use Sulu\Product\Application\MessageHandler\ModifyProductFamilyMessageHandler;
 use Sulu\Product\Domain\Exception\ProductFamilyNotFoundException;
@@ -47,21 +48,21 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
     {
         return new ModifyProductFamilyMessageHandler(
             $this->familyRepository->reveal(),
-            $this->attributeRepository->reveal(),
+            new ProductFamilyMapper($this->attributeRepository->reveal()),
         );
     }
 
     /**
-     * @param list<array{attribute: int, required: bool}> $familyAttributes
+     * @param array<int, array{enabled: bool, required: bool}> $attributes
      */
-    private function message(string $uuid, string $name, ?string $description = null, array $familyAttributes = []): ModifyProductFamilyMessage
+    private function message(string $uuid, string $name, ?string $description = null, array $attributes = []): ModifyProductFamilyMessage
     {
         $data = ['locale' => 'en', 'name' => $name];
         if (null !== $description) {
             $data['description'] = $description;
         }
-        if ([] !== $familyAttributes) {
-            $data['familyAttributes'] = $familyAttributes;
+        if ([] !== $attributes) {
+            $data['attributes'] = $attributes;
         }
 
         return new ModifyProductFamilyMessage(['uuid' => $uuid], $data);
@@ -123,7 +124,7 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
         $this->familyRepository->save($family)->shouldBeCalledOnce();
         $this->attributeRepository->findOneBy(['id' => 7])->willReturn($attribute);
 
-        ($this->createHandler())($this->message('f', 'Name', null, [['attribute' => 7, 'required' => true]]));
+        ($this->createHandler())($this->message('f', 'Name', null, [7 => ['enabled' => true, 'required' => true]]));
 
         $familyAttributes = $family->getFamilyAttributes();
         $this->assertCount(1, $familyAttributes);
@@ -143,7 +144,7 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
         $this->familyRepository->save($family)->shouldBeCalledOnce();
         $this->attributeRepository->findOneBy(['id' => 7])->shouldNotBeCalled();
 
-        ($this->createHandler())($this->message('f', 'Name', null, [['attribute' => 7, 'required' => true]]));
+        ($this->createHandler())($this->message('f', 'Name', null, [7 => ['enabled' => true, 'required' => true]]));
 
         $this->assertCount(1, $family->getFamilyAttributes());
         $this->assertTrue($existing->isRequired());
@@ -159,11 +160,26 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
         $this->familyRepository->getOneBy(['uuid' => 'f'])->willReturn($family);
         $this->familyRepository->save($family)->shouldBeCalledOnce();
 
-        ($this->createHandler())($this->message('f', 'Name', null, [['attribute' => 1, 'required' => false]]));
+        ($this->createHandler())($this->message('f', 'Name', null, [1 => ['enabled' => true, 'required' => false]]));
 
         $familyAttributes = $family->getFamilyAttributes();
         $this->assertCount(1, $familyAttributes);
         $this->assertSame(1, $familyAttributes[0]->getAttribute()->getId());
+    }
+
+    public function testRemovesFamilyAttributeWhenSubmittedAsDisabled(): void
+    {
+        $family = new ProductFamily();
+        $existing = new ProductFamilyAttribute($family, $this->attributeWithId(3));
+        $family->addFamilyAttribute($existing);
+
+        $this->familyRepository->getOneBy(['uuid' => 'f'])->willReturn($family);
+        $this->familyRepository->save($family)->shouldBeCalledOnce();
+        $this->attributeRepository->findOneBy(['id' => 3])->shouldNotBeCalled();
+
+        ($this->createHandler())($this->message('f', 'Name', null, [3 => ['enabled' => false, 'required' => false]]));
+
+        $this->assertCount(0, $family->getFamilyAttributes());
     }
 
     public function testSkipsMissingAttributeOnAdd(): void
@@ -173,7 +189,7 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
         $this->familyRepository->save($family)->shouldBeCalledOnce();
         $this->attributeRepository->findOneBy(['id' => 99])->willReturn(null);
 
-        ($this->createHandler())($this->message('f', 'Name', null, [['attribute' => 99, 'required' => false]]));
+        ($this->createHandler())($this->message('f', 'Name', null, [99 => ['enabled' => true, 'required' => false]]));
 
         $this->assertCount(0, $family->getFamilyAttributes());
     }

@@ -25,6 +25,7 @@ use Sulu\Product\Application\MessageHandler\ApplyWorkflowTransitionProductMessag
 use Sulu\Product\Domain\Event\ProductWorkflowTransitionAppliedEvent;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
+use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 
 class ApplyWorkflowTransitionProductMessageHandlerTest extends TestCase
@@ -57,7 +58,7 @@ class ApplyWorkflowTransitionProductMessageHandlerTest extends TestCase
 
     public function testApplyWorkflowTransition(): void
     {
-        $product = new Product('prod-uuid');
+        $product = new Product(new ProductFamily(), 'prod-uuid');
 
         $dimensionContent = new ProductDimensionContent($product);
         $dimensionContent->setLocale('en');

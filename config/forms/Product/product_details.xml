@@ -26,6 +26,12 @@
             </params>
         </property>
 
+        <property name="productFamily" type="single_product_family_selection" mandatory="true" colspan="6">
+            <meta>
+                <title>sulu_product.product_family</title>
+            </meta>
+        </property>
+
         <property name="externalIdentifier" type="text_line"
                   visibleCondition="!!externalIdentifier"
                   disabledCondition="true">

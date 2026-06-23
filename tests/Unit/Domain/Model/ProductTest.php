@@ -29,7 +29,7 @@ class ProductTest extends TestCase
 {
     public function testConstructorGeneratesUuidWhenNoneProvided(): void
     {
-        $product = new Product();
+        $product = new Product(new ProductFamily());
 
         $this->assertTrue(Uuid::isValid($product->getUuid()));
         $this->assertSame($product->getUuid(), $product->getId());
@@ -38,15 +38,23 @@ class ProductTest extends TestCase
     public function testConstructorAcceptsProvidedUuid(): void
     {
         $uuid = Uuid::v7()->toRfc4122();
-        $product = new Product($uuid);
+        $product = new Product(new ProductFamily(), $uuid);
 
         $this->assertSame($uuid, $product->getUuid());
         $this->assertSame($uuid, $product->getId());
     }
 
+    public function testConstructorStoresProductFamily(): void
+    {
+        $family = new ProductFamily();
+        $product = new Product($family);
+
+        $this->assertSame($family, $product->getProductFamily());
+    }
+
     public function testConstructorInitializesCollectionsAndDefaults(): void
     {
-        $product = new Product();
+        $product = new Product(new ProductFamily());
 
         $this->assertNull($product->getCode());
         $this->assertCount(0, $product->getAttributes());
@@ -55,7 +63,7 @@ class ProductTest extends TestCase
 
     public function testSetCodeIsFluentAndStores(): void
     {
-        $product = new Product();
+        $product = new Product(new ProductFamily());
 
         $this->assertSame($product, $product->setCode('SKU-1'));
         $this->assertSame('SKU-1', $product->getCode());
@@ -66,7 +74,7 @@ class ProductTest extends TestCase
 
     public function testSetExternalIdentifierIsFluentAndStores(): void
     {
-        $product = new Product();
+        $product = new Product(new ProductFamily());
         $this->assertSame($product, $product->setExternalIdentifier('ext-789'));
         $this->assertSame('ext-789', $product->getExternalIdentifier());
         $product->setExternalIdentifier(null);
@@ -75,7 +83,7 @@ class ProductTest extends TestCase
 
     public function testGetTranslationByExplicitLocale(): void
     {
-        $product = new Product();
+        $product = new Product(new ProductFamily());
         $en = new ProductTranslation($product, 'en', 'Product');
         $de = new ProductTranslation($product, 'de', 'Produkt');
         $product->addTranslation($en);
@@ -88,7 +96,7 @@ class ProductTest extends TestCase
 
     public function testAddTranslationIsFluentAndDeduplicates(): void
     {
-        $product = new Product();
+        $product = new Product(new ProductFamily());
         $translation = new ProductTranslation($product, 'en', 'Product');
 
         $this->assertSame($product, $product->addTranslation($translation));
@@ -99,7 +107,7 @@ class ProductTest extends TestCase
 
     public function testRemoveTranslationIsFluent(): void
     {
-        $product = new Product();
+        $product = new Product(new ProductFamily());
         $translation = new ProductTranslation($product, 'en', 'Product');
         $product->addTranslation($translation);
 
@@ -109,7 +117,7 @@ class ProductTest extends TestCase
 
     public function testGetAttributesReturnsCollection(): void
     {
-        $product = new Product();
+        $product = new Product(new ProductFamily());
         $attr = new Attribute(new AttributeGroup());
         $productAttribute = new ProductAttributeValue($product, $attr, 'color');
 
@@ -121,7 +129,7 @@ class ProductTest extends TestCase
 
     public function testAddAttributeIsFluentAndDeduplicates(): void
     {
-        $product = new Product();
+        $product = new Product(new ProductFamily());
         $attr = new Attribute(new AttributeGroup());
         $productAttribute = new ProductAttributeValue($product, $attr, 'color');
 
@@ -133,7 +141,7 @@ class ProductTest extends TestCase
 
     public function testRemoveAttributeIsFluent(): void
     {
-        $product = new Product();
+        $product = new Product(new ProductFamily());
         $attr = new Attribute(new AttributeGroup());
         $productAttribute = new ProductAttributeValue($product, $attr, 'color');
         $product->addAttribute($productAttribute);
@@ -144,23 +152,19 @@ class ProductTest extends TestCase
 
     public function testCreateDimensionContentReturnsBoundInstance(): void
     {
-        $product = new Product();
+        $product = new Product(new ProductFamily());
         $dimensionContent = $product->createDimensionContent();
 
         $this->assertInstanceOf(ProductDimensionContent::class, $dimensionContent);
         $this->assertSame($product, $dimensionContent->getResource());
     }
 
-    public function testSetProductFamilyIsNullableAndFluent(): void
+    public function testSetProductFamilyIsFluentAndStores(): void
     {
-        $product = new Product();
-        $this->assertNull($product->getProductFamily());
+        $product = new Product(new ProductFamily());
 
         $family = new ProductFamily();
         $this->assertSame($product, $product->setProductFamily($family));
         $this->assertSame($family, $product->getProductFamily());
-
-        $product->setProductFamily(null);
-        $this->assertNull($product->getProductFamily());
     }
 }

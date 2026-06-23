@@ -35,7 +35,7 @@ class Product implements ProductInterface
 
     protected ?string $externalIdentifier = null;
 
-    protected ?ProductFamilyInterface $productFamily = null;
+    protected ProductFamilyInterface $productFamily;
 
     /** @var Collection<int, ProductTranslationInterface> */
     protected Collection $translations;
@@ -43,8 +43,9 @@ class Product implements ProductInterface
     /** @var Collection<int, ProductAttributeValueInterface> */
     protected Collection $attributes;
 
-    public function __construct(?string $uuid = null)
+    public function __construct(ProductFamilyInterface $productFamily, ?string $uuid = null)
     {
+        $this->productFamily = $productFamily;
         $this->uuid = $uuid ?: Uuid::v7()->toRfc4122();
         $this->initializeDimensionContents();
         $this->translations = new ArrayCollection();
@@ -85,12 +86,12 @@ class Product implements ProductInterface
         return $this;
     }
 
-    public function getProductFamily(): ?ProductFamilyInterface
+    public function getProductFamily(): ProductFamilyInterface
     {
         return $this->productFamily;
     }
 
-    public function setProductFamily(?ProductFamilyInterface $productFamily): self
+    public function setProductFamily(ProductFamilyInterface $productFamily): self
     {
         $this->productFamily = $productFamily;
 

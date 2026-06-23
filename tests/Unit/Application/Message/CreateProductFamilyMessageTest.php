@@ -26,14 +26,14 @@ class CreateProductFamilyMessageTest extends TestCase
             'locale' => 'en',
             'name' => 'My Family',
             'description' => 'desc',
-            'familyAttributes' => [['attribute' => 5, 'required' => true]],
+            'attributes' => [5 => ['enabled' => true, 'required' => true]],
         ];
         $message = new CreateProductFamilyMessage($data);
 
         $this->assertSame('en', $message->getLocale());
         $this->assertSame('My Family', $message->getName());
         $this->assertSame('desc', $message->getDescription());
-        $this->assertSame([['attribute' => 5, 'required' => true]], $message->getFamilyAttributes());
+        $this->assertSame([5 => ['enabled' => true, 'required' => true]], $message->getAttributes());
         $this->assertSame($data, $message->getData());
     }
 
@@ -41,6 +41,6 @@ class CreateProductFamilyMessageTest extends TestCase
     {
         $message = new CreateProductFamilyMessage(['locale' => 'en', 'name' => 'X']);
         $this->assertNull($message->getDescription());
-        $this->assertSame([], $message->getFamilyAttributes());
+        $this->assertSame([], $message->getAttributes());
     }
 }

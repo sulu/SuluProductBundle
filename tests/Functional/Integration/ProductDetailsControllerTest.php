@@ -13,9 +13,11 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Tests\Functional\Integration;
 
+use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Depends;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
+use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\UserInterface\Controller\Admin\ProductDetailsController;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 
@@ -36,6 +38,25 @@ class ProductDetailsControllerTest extends SuluTestCase
     {
         parent::tearDown();
         \restore_exception_handler();
+    }
+
+    private function createProductFamily(): string
+    {
+        $container = self::getContainer();
+
+        /** @var ProductFamilyRepositoryInterface $familyRepository */
+        $familyRepository = $container->get(ProductFamilyRepositoryInterface::class);
+        /** @var EntityManagerInterface $entityManager */
+        $entityManager = $container->get('doctrine.orm.entity_manager');
+
+        $family = $familyRepository->create();
+        $familyRepository->save($family);
+        $entityManager->flush();
+
+        $uuid = $family->getUuid();
+        self::assertNotNull($uuid);
+
+        return $uuid;
     }
 
     public function testGetEmptyList(): void
@@ -67,6 +88,7 @@ class ProductDetailsControllerTest extends SuluTestCase
             \json_encode([
                 'locale' => 'en',
                 'template' => 'product',
+                'productFamily' => $this->createProductFamily(),
             ]) ?: null,
         );
 
@@ -86,6 +108,8 @@ class ProductDetailsControllerTest extends SuluTestCase
 
     public function testPost(): string
     {
+        $familyId = $this->createProductFamily();
+
         $this->client->request(
             'POST',
             '/admin/api/products.json?locale=en',
@@ -95,6 +119,7 @@ class ProductDetailsControllerTest extends SuluTestCase
             \json_encode([
                 'locale' => 'en',
                 'template' => 'product',
+                'productFamily' => $familyId,
             ]) ?: null,
         );
 
@@ -107,6 +132,7 @@ class ProductDetailsControllerTest extends SuluTestCase
         $id = $data['id'];
         $this->assertIsString($id);
         $this->assertNotEmpty($id);
+        $this->assertSame($familyId, $data['productFamily']);
 
         return $id;
     }

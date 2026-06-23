@@ -13,18 +13,16 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Application\MessageHandler;
 
+use Sulu\Product\Application\Mapper\ProductFamilyMapperInterface;
 use Sulu\Product\Application\Message\CreateProductFamilyMessage;
-use Sulu\Product\Domain\Model\ProductFamilyAttribute;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
-use Sulu\Product\Domain\Model\ProductFamilyTranslation;
-use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 
 final class CreateProductFamilyMessageHandler
 {
     public function __construct(
         private ProductFamilyRepositoryInterface $productFamilyRepository,
-        private AttributeRepositoryInterface $attributeRepository,
+        private ProductFamilyMapperInterface $productFamilyMapper,
     ) {
     }
 
@@ -32,22 +30,7 @@ final class CreateProductFamilyMessageHandler
     {
         $family = $this->productFamilyRepository->create();
 
-        $translation = new ProductFamilyTranslation($family, $message->getLocale(), $message->getName());
-        if (null !== $message->getDescription()) {
-            $translation->setDescription($message->getDescription());
-        }
-        $family->addTranslation($translation);
-
-        foreach ($message->getFamilyAttributes() as $entry) {
-            $attribute = $this->attributeRepository->findOneBy(['id' => $entry['attribute']]);
-            if (null === $attribute) {
-                continue;
-            }
-
-            $familyAttribute = new ProductFamilyAttribute($family, $attribute);
-            $familyAttribute->setRequired($entry['required']);
-            $family->addFamilyAttribute($familyAttribute);
-        }
+        $this->productFamilyMapper->mapProductFamilyData($family, $message);
 
         $this->productFamilyRepository->save($family);
 

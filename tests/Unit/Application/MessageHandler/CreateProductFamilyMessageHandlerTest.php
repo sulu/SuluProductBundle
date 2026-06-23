@@ -16,6 +16,7 @@ namespace Sulu\Product\Tests\Unit\Application\MessageHandler;
 use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
+use Sulu\Product\Application\Mapper\ProductFamilyMapper;
 use Sulu\Product\Application\Message\CreateProductFamilyMessage;
 use Sulu\Product\Application\MessageHandler\CreateProductFamilyMessageHandler;
 use Sulu\Product\Domain\Model\Attribute;
@@ -44,7 +45,7 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
     {
         return new CreateProductFamilyMessageHandler(
             $this->familyRepository->reveal(),
-            $this->attributeRepository->reveal(),
+            new ProductFamilyMapper($this->attributeRepository->reveal()),
         );
     }
 
@@ -62,7 +63,7 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
             'locale' => 'en',
             'name' => 'My Family',
             'description' => 'desc',
-            'familyAttributes' => [['attribute' => 5, 'required' => true]],
+            'attributes' => [5 => ['enabled' => true, 'required' => true]],
         ]));
 
         $this->assertSame($family, $result);
@@ -88,7 +89,7 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
         ($handler)(new CreateProductFamilyMessage([
             'locale' => 'en',
             'name' => 'My Family',
-            'familyAttributes' => [['attribute' => 99, 'required' => false]],
+            'attributes' => [99 => ['enabled' => true, 'required' => false]],
         ]));
 
         $this->assertCount(0, $family->getFamilyAttributes());

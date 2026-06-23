@@ -57,7 +57,7 @@ interface ProductInterface extends AuditableInterface, ContentRichEntityInterfac
 
     public function removeAttribute(ProductAttributeValueInterface $attribute): self;
 
-    public function getProductFamily(): ?ProductFamilyInterface;
+    public function getProductFamily(): ProductFamilyInterface;
 
-    public function setProductFamily(?ProductFamilyInterface $productFamily): self;
+    public function setProductFamily(ProductFamilyInterface $productFamily): self;
 }

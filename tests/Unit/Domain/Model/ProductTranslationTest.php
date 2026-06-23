@@ -16,6 +16,7 @@ namespace Sulu\Product\Tests\Unit\Domain\Model;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Product\Domain\Model\Product;
+use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductTranslation;
 
 #[CoversClass(ProductTranslation::class)]
@@ -23,7 +24,7 @@ class ProductTranslationTest extends TestCase
 {
     public function testConstructorAssignsValues(): void
     {
-        $product = new Product();
+        $product = new Product(new ProductFamily());
         $translation = new ProductTranslation($product, 'en', 'Product');
 
         $this->assertSame($product, $translation->getProduct());
@@ -33,7 +34,7 @@ class ProductTranslationTest extends TestCase
 
     public function testSetLocaleIsFluentAndStores(): void
     {
-        $translation = new ProductTranslation(new Product(), 'en', 'Product');
+        $translation = new ProductTranslation(new Product(new ProductFamily()), 'en', 'Product');
 
         $this->assertSame($translation, $translation->setLocale('de'));
         $this->assertSame('de', $translation->getLocale());
@@ -41,7 +42,7 @@ class ProductTranslationTest extends TestCase
 
     public function testSetNameIsFluentAndStores(): void
     {
-        $translation = new ProductTranslation(new Product(), 'en', 'Product');
+        $translation = new ProductTranslation(new Product(new ProductFamily()), 'en', 'Product');
 
         $this->assertSame($translation, $translation->setName('Produkt'));
         $this->assertSame('Produkt', $translation->getName());
@@ -49,7 +50,7 @@ class ProductTranslationTest extends TestCase
 
     public function testGetIdReturnsDoctrineGeneratedId(): void
     {
-        $model = new ProductTranslation(new Product(), 'en', 'Product');
+        $model = new ProductTranslation(new Product(new ProductFamily()), 'en', 'Product');
         $ref = new \ReflectionProperty(ProductTranslation::class, 'id');
         $ref->setValue($model, 42);
         $this->assertSame(42, $model->getId());

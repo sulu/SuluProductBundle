@@ -46,4 +46,21 @@ class ModifyProductMessageTest extends TestCase
 
         $this->assertSame('en', $message->getLocale());
     }
+
+    public function testGetProductFamilyIsNullByDefault(): void
+    {
+        $message = new ModifyProductMessage(['uuid' => 'product-123'], ['locale' => 'en']);
+
+        $this->assertNull($message->getProductFamily());
+    }
+
+    public function testGetProductFamilyWhenProvided(): void
+    {
+        $message = new ModifyProductMessage(
+            ['uuid' => 'product-123'],
+            ['locale' => 'en', 'productFamily' => 'family-uuid'],
+        );
+
+        $this->assertSame('family-uuid', $message->getProductFamily());
+    }
 }

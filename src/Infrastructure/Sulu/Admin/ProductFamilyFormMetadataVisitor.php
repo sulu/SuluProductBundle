@@ -52,18 +52,18 @@ class ProductFamilyFormMetadataVisitor implements FormMetadataVisitorInterface
                 $attributeId = $attribute->getId();
                 $attributeName = $attribute->getTranslation($locale)?->getName() ?? $attribute->getKey();
 
-                $enabledField = new FieldMetadata('attribute_' . $attributeId . '_enabled');
+                $enabledField = new FieldMetadata('attributes/' . $attributeId . '/enabled');
                 $enabledField->setType('checkbox');
                 $enabledField->setLabel($this->translator->trans('sulu_product.attribute_enabled', ['%attributeName%' => $attributeName], 'admin', $locale), $locale);
                 $enabledField->setColSpan(6);
                 $enabledField->addOption($this->createTogglerOption());
                 $section->addItem($enabledField);
 
-                $requiredField = new FieldMetadata('attribute_' . $attributeId . '_required');
+                $requiredField = new FieldMetadata('attributes/' . $attributeId . '/required');
                 $requiredField->setType('checkbox');
                 $requiredField->setLabel($this->translator->trans('sulu_product.attribute_required', ['%attributeName%' => $attributeName], 'admin', $locale), $locale);
                 $requiredField->setColSpan(6);
-                $requiredField->setDisabledCondition('!attribute_' . $attributeId . '_enabled');
+                $requiredField->setDisabledCondition('!attributes["' . $attributeId . '"].enabled');
                 $requiredField->addOption($this->createTogglerOption());
                 $section->addItem($requiredField);
             }

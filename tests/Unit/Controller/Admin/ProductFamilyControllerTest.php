@@ -21,14 +21,18 @@ use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Component\Rest\ListBuilder\Doctrine\DoctrineListBuilderFactoryInterface;
 use Sulu\Component\Rest\ListBuilder\Metadata\FieldDescriptorFactoryInterface;
 use Sulu\Component\Rest\RestHelperInterface;
+use Sulu\Product\Application\Message\CreateProductFamilyMessage;
 use Sulu\Product\Application\Message\RemoveProductFamilyMessage;
+use Sulu\Product\Domain\Exception\ProductFamilyHasProductsException;
 use Sulu\Product\Domain\Exception\ProductFamilyNotFoundException;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
+use Sulu\Product\Domain\Model\AttributeGroupAttribute;
 use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductFamilyAttribute;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Model\ProductFamilyTranslation;
+use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\UserInterface\Controller\Admin\ProductFamilyController;
 use Symfony\Component\HttpFoundation\Request;
@@ -55,6 +59,9 @@ class ProductFamilyControllerTest extends TestCase
     /** @var ObjectProphecy<RestHelperInterface> */
     private ObjectProphecy $restHelper;
 
+    /** @var ObjectProphecy<AttributeGroupRepositoryInterface> */
+    private ObjectProphecy $attributeGroupRepository;
+
     protected function setUp(): void
     {
         $this->productFamilyRepository = $this->prophesize(ProductFamilyRepositoryInterface::class);
@@ -62,6 +69,7 @@ class ProductFamilyControllerTest extends TestCase
         $this->fieldDescriptorFactory = $this->prophesize(FieldDescriptorFactoryInterface::class);
         $this->listBuilderFactory = $this->prophesize(DoctrineListBuilderFactoryInterface::class);
         $this->restHelper = $this->prophesize(RestHelperInterface::class);
+        $this->attributeGroupRepository = $this->prophesize(AttributeGroupRepositoryInterface::class);
     }
 
     private function createController(): ProductFamilyController
@@ -72,7 +80,18 @@ class ProductFamilyControllerTest extends TestCase
             $this->fieldDescriptorFactory->reveal(),
             $this->listBuilderFactory->reveal(),
             $this->restHelper->reveal(),
+            $this->attributeGroupRepository->reveal(),
         );
+    }
+
+    private function createAttributeGroup(Attribute ...$attributes): AttributeGroup
+    {
+        $group = new AttributeGroup();
+        foreach ($attributes as $attribute) {
+            $group->addGroupAttribute(new AttributeGroupAttribute($group, $attribute));
+        }
+
+        return $group;
     }
 
     private function attributeWithId(int $id, string $key): Attribute
@@ -120,6 +139,8 @@ class ProductFamilyControllerTest extends TestCase
             ->shouldBeCalledOnce()
             ->willReturn($family);
 
+        $this->attributeGroupRepository->findAll()->willReturn([]);
+
         $response = $this->createController()->getAction(new Request(['locale' => 'en']), 'family-uuid-1');
 
         $this->assertSame(200, $response->getStatusCode());
@@ -138,13 +159,19 @@ class ProductFamilyControllerTest extends TestCase
         $translation->setDescription('Clothing family');
         $family->addTranslation($translation);
 
-        $familyAttribute = new ProductFamilyAttribute($family, $this->attributeWithId(9, 'size'));
+        $attrSize = $this->attributeWithId(9, 'size');
+        $attrColor = $this->attributeWithId(12, 'color');
+
+        $familyAttribute = new ProductFamilyAttribute($family, $attrSize);
         $familyAttribute->setRequired(true);
         $family->addFamilyAttribute($familyAttribute);
 
         $this->productFamilyRepository->findOneBy(['uuid' => 'family-uuid-2'])
             ->shouldBeCalledOnce()
             ->willReturn($family);
+
+        $this->attributeGroupRepository->findAll()
+            ->willReturn([$this->createAttributeGroup($attrSize, $attrColor)]);
 
         $response = $this->createController()->getAction(new Request(['locale' => 'en']), 'family-uuid-2');
 
@@ -153,31 +180,72 @@ class ProductFamilyControllerTest extends TestCase
         $this->assertIsArray($data);
         $this->assertSame('Apparel', $data['name']);
         $this->assertSame('Clothing family', $data['description']);
-        $this->assertTrue($data['attribute_9_enabled']);
-        $this->assertTrue($data['attribute_9_required']);
+        $this->assertSame([
+            '9' => ['enabled' => true, 'required' => true],
+            '12' => ['enabled' => false, 'required' => false],
+        ], $data['attributes']);
     }
 
-    public function testPostActionReturns201AndExtractsFamilyAttributes(): void
+    public function testGetActionIncludesAllAttributesWithDisabledDefaults(): void
+    {
+        $family = new ProductFamily();
+        $family->setUuid('family-uuid-3');
+
+        $attrA = $this->attributeWithId(1, 'weight');
+        $attrB = $this->attributeWithId(2, 'color');
+
+        $this->productFamilyRepository->findOneBy(['uuid' => 'family-uuid-3'])
+            ->shouldBeCalledOnce()
+            ->willReturn($family);
+
+        $this->attributeGroupRepository->findAll()
+            ->willReturn([$this->createAttributeGroup($attrA, $attrB)]);
+
+        $response = $this->createController()->getAction(new Request(['locale' => 'en']), 'family-uuid-3');
+
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertSame([
+            '1' => ['enabled' => false, 'required' => false],
+            '2' => ['enabled' => false, 'required' => false],
+        ], $data['attributes']);
+    }
+
+    public function testPostActionReturns201AndExtractsAttributes(): void
     {
         $family = new ProductFamily();
         $family->setUuid('created-uuid');
 
-        $this->messageBus->dispatch(Argument::any(), Argument::any())
+        $this->messageBus->dispatch(
+            Argument::that(function(Envelope $envelope): bool {
+                $message = $envelope->getMessage();
+
+                // Nested attributes map is read straight from the request; non-array entries are ignored.
+                return $message instanceof CreateProductFamilyMessage
+                    && [
+                        5 => ['enabled' => true, 'required' => false],
+                        6 => ['enabled' => false, 'required' => false],
+                    ] === $message->getAttributes();
+            }),
+            Argument::any(),
+        )
             ->shouldBeCalledOnce()
             ->willReturn($this->handledEnvelope($family));
 
-        // 'attribute_5_enabled' => true (kept), 'attribute_6_enabled' => false (skipped),
-        // plus non-matching keys (name/description) exercise the regex-skip branch.
         $request = new Request(
             ['locale' => 'en'],
             [
                 'name' => 'New Family',
                 'description' => null,
-                'attribute_5_enabled' => true,
-                'attribute_5_required' => false,
-                'attribute_6_enabled' => false,
+                'attributes' => [
+                    5 => ['enabled' => true, 'required' => false],
+                    6 => ['enabled' => false],
+                    7 => 'not-an-array',
+                ],
             ],
         );
+
+        $this->attributeGroupRepository->findAll()->willReturn([]);
 
         $response = $this->createController()->postAction($request);
 
@@ -209,6 +277,8 @@ class ProductFamilyControllerTest extends TestCase
         $this->messageBus->dispatch(Argument::any(), Argument::any())
             ->shouldBeCalledOnce()
             ->willReturn($this->handledEnvelope($family));
+
+        $this->attributeGroupRepository->findAll()->willReturn([]);
 
         $response = $this->createController()->putAction(new Request(['locale' => 'en'], ['name' => 'Y']), 'put-uuid');
 
@@ -273,6 +343,24 @@ class ProductFamilyControllerTest extends TestCase
         $response = $this->createController()->deleteAction(new Request(['locale' => 'en']), 'missing');
 
         $this->assertSame(404, $response->getStatusCode());
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertArrayHasKey('detail', $data);
+    }
+
+    public function testDeleteActionReturns409WhenProductsStillAssigned(): void
+    {
+        $exception = new ProductFamilyHasProductsException('in-use-uuid');
+
+        $this->messageBus->dispatch(Argument::any(), Argument::any())
+            ->shouldBeCalledOnce()
+            ->will(function() use ($exception): never {
+                throw $exception;
+            });
+
+        $response = $this->createController()->deleteAction(new Request(['locale' => 'en']), 'in-use-uuid');
+
+        $this->assertSame(409, $response->getStatusCode());
         $data = \json_decode((string) $response->getContent(), true);
         $this->assertIsArray($data);
         $this->assertArrayHasKey('detail', $data);

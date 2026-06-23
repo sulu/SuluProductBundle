@@ -16,7 +16,7 @@
         <many-to-one field="productFamily"
                      target-entity="Sulu\Product\Domain\Model\ProductFamilyInterface">
             <join-column name="idProductFamilies" referenced-column-name="id"
-                         nullable="true" on-delete="SET NULL"/>
+                         nullable="false" on-delete="RESTRICT"/>
         </many-to-one>
 
         <one-to-many field="dimensionContents" target-entity="Sulu\Product\Domain\Model\ProductDimensionContentInterface" mapped-by="product">

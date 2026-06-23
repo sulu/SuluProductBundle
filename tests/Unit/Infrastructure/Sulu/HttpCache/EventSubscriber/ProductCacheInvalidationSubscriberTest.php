@@ -31,6 +31,7 @@ use Sulu\Product\Domain\Event\ProductRemovedEvent;
 use Sulu\Product\Domain\Event\ProductWorkflowTransitionAppliedEvent;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
+use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\HttpCache\EventSubscriber\ProductCacheInvalidationSubscriber;
 use Sulu\Route\Application\Routing\Generator\RouteGeneratorInterface;
@@ -89,7 +90,7 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
 
     public function testInvalidateTagOnPublish(): void
     {
-        $product = new Product('product-uuid-123');
+        $product = new Product(new ProductFamily(), 'product-uuid-123');
 
         $event = new ProductWorkflowTransitionAppliedEvent(
             $product,
@@ -116,7 +117,7 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
 
     public function testInvalidatePathsOnPublish(): void
     {
-        $product = new Product('product-uuid-123');
+        $product = new Product(new ProductFamily(), 'product-uuid-123');
 
         $event = new ProductWorkflowTransitionAppliedEvent(
             $product,
@@ -187,7 +188,7 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
 
     public function testDoesNotInvalidateOnNonPublishTransition(): void
     {
-        $product = new Product('product-uuid-999');
+        $product = new Product(new ProductFamily(), 'product-uuid-999');
 
         $event = new ProductWorkflowTransitionAppliedEvent(
             $product,
@@ -218,7 +219,7 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
 
     public function testInvalidateOnUnpublish(): void
     {
-        $product = new Product('product-uuid-789');
+        $product = new Product(new ProductFamily(), 'product-uuid-789');
 
         $event = new ProductWorkflowTransitionAppliedEvent(
             $product,
@@ -245,7 +246,7 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
 
     public function testInvalidateExcerptTagsOnPublish(): void
     {
-        $product = new Product('product-uuid-with-tags');
+        $product = new Product(new ProductFamily(), 'product-uuid-with-tags');
 
         $tag1 = (new Tag())->setName('Technology');
         $tag2 = (new Tag())->setName('CMS');
@@ -282,7 +283,7 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
 
     public function testInvalidateExcerptCategoriesOnPublish(): void
     {
-        $product = new Product('product-uuid-with-categories');
+        $product = new Product(new ProductFamily(), 'product-uuid-with-categories');
 
         $dimensionContent = new ProductDimensionContent($product);
         $dimensionContent->setExcerptCategories([
@@ -327,7 +328,7 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
             $this->webspaceManager->reveal()
         );
 
-        $product = new Product('product-uuid-123');
+        $product = new Product(new ProductFamily(), 'product-uuid-123');
         $event = new ProductWorkflowTransitionAppliedEvent(
             $product,
             WorkflowInterface::WORKFLOW_TRANSITION_PUBLISH,
@@ -366,7 +367,7 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
 
     public function testInvalidatePathsSkipsWhenLocaleIsNull(): void
     {
-        $product = new Product('product-uuid-123');
+        $product = new Product(new ProductFamily(), 'product-uuid-123');
 
         /** @var \Prophecy\Prophecy\ObjectProphecy<ProductWorkflowTransitionAppliedEvent> $eventProphecy */
         $eventProphecy = $this->prophesize(ProductWorkflowTransitionAppliedEvent::class);
@@ -386,7 +387,7 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
 
     public function testInvalidateExcerptSkipsWhenLocaleIsNull(): void
     {
-        $product = new Product('product-uuid-123');
+        $product = new Product(new ProductFamily(), 'product-uuid-123');
 
         /** @var \Prophecy\Prophecy\ObjectProphecy<ProductWorkflowTransitionAppliedEvent> $eventProphecy */
         $eventProphecy = $this->prophesize(ProductWorkflowTransitionAppliedEvent::class);

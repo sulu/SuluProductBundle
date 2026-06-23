@@ -20,6 +20,7 @@ use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
+use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Webmozart\Assert\Assert;
@@ -85,11 +86,11 @@ final class ProductRepository implements ProductRepositoryInterface
         $this->productDimensionContentClassName = $this->entityDimensionContentRepository->getClassName();
     }
 
-    public function createNew(?string $uuid = null): ProductInterface
+    public function createNew(ProductFamilyInterface $productFamily, ?string $uuid = null): ProductInterface
     {
         $className = $this->productClassName;
 
-        return new $className($uuid);
+        return new $className($productFamily, $uuid);
     }
 
     public function getOneBy(array $filters, array $selects = []): ProductInterface
@@ -129,6 +130,13 @@ final class ProductRepository implements ProductRepositoryInterface
         if (null !== $code) {
             $queryBuilder->andWhere('product.code = :code')
                 ->setParameter('code', $code);
+        }
+
+        $productFamilyUuid = $filters['productFamilyUuid'] ?? null;
+        if (null !== $productFamilyUuid) {
+            $queryBuilder->innerJoin('product.productFamily', 'productFamily')
+                ->andWhere('productFamily.uuid = :productFamilyUuid')
+                ->setParameter('productFamilyUuid', $productFamilyUuid);
         }
 
         return (int) $queryBuilder->getQuery()->getSingleScalarResult() > 0;

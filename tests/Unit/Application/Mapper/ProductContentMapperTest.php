@@ -21,6 +21,7 @@ use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Content\Application\ContentPersister\ContentPersisterInterface;
 use Sulu\Product\Application\Mapper\ProductContentMapper;
 use Sulu\Product\Domain\Model\Product;
+use Sulu\Product\Domain\Model\ProductFamily;
 
 #[CoversClass(ProductContentMapper::class)]
 class ProductContentMapperTest extends TestCase
@@ -43,7 +44,7 @@ class ProductContentMapperTest extends TestCase
 
     public function testMapProductDataPersistsContentWhenTemplateGiven(): void
     {
-        $product = new Product();
+        $product = new Product(new ProductFamily());
         $data = [
             'template' => 'default',
             'locale' => 'en',
@@ -61,7 +62,7 @@ class ProductContentMapperTest extends TestCase
 
     public function testMapProductDataDoesNothingWhenTemplateMissing(): void
     {
-        $product = new Product();
+        $product = new Product(new ProductFamily());
 
         $this->contentPersister->persist(Argument::cetera())->shouldNotBeCalled();
 
@@ -73,7 +74,7 @@ class ProductContentMapperTest extends TestCase
 
     public function testMapProductDataThrowsWhenLocaleIsNotAString(): void
     {
-        $product = new Product();
+        $product = new Product(new ProductFamily());
 
         $this->contentPersister->persist(Argument::cetera())->shouldNotBeCalled();
 
@@ -87,7 +88,7 @@ class ProductContentMapperTest extends TestCase
 
     public function testMapProductDataThrowsWhenLocaleIsMissing(): void
     {
-        $product = new Product();
+        $product = new Product(new ProductFamily());
 
         $this->contentPersister->persist(Argument::cetera())->shouldNotBeCalled();
 

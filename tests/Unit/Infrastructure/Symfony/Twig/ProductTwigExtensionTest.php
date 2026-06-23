@@ -31,6 +31,7 @@ use Sulu\Product\Domain\Model\AttributeOptionTranslation;
 use Sulu\Product\Domain\Model\AttributeTranslation;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
+use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Symfony\Twig\ProductTwigExtension;
@@ -97,7 +98,7 @@ class ProductTwigExtensionTest extends TestCase
 
     public function testLoadProductReturnsResolvedContent(): void
     {
-        $product = new Product('uuid-1');
+        $product = new Product(new ProductFamily(), 'uuid-1');
 
         $dimensionContent = $this->prophesize(\Sulu\Product\Domain\Model\ProductDimensionContentInterface::class);
 
@@ -118,7 +119,7 @@ class ProductTwigExtensionTest extends TestCase
 
     public function testLoadProductUsesRequestLocaleWhenNotProvided(): void
     {
-        $product = new Product('uuid-1');
+        $product = new Product(new ProductFamily(), 'uuid-1');
 
         $dimensionContent = $this->prophesize(\Sulu\Product\Domain\Model\ProductDimensionContentInterface::class);
 
@@ -145,7 +146,7 @@ class ProductTwigExtensionTest extends TestCase
 
     public function testLoadProductFormatsAttributes(): void
     {
-        $product = new Product('uuid-1');
+        $product = new Product(new ProductFamily(), 'uuid-1');
 
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setKey('color');
@@ -188,7 +189,7 @@ class ProductTwigExtensionTest extends TestCase
 
     public function testLoadProductFormatsOptionsAttribute(): void
     {
-        $product = new Product('uuid-1');
+        $product = new Product(new ProductFamily(), 'uuid-1');
 
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setKey('color');
@@ -225,7 +226,7 @@ class ProductTwigExtensionTest extends TestCase
 
     public function testLoadProductFormatsNumberAttribute(): void
     {
-        $product = new Product('uuid-1');
+        $product = new Product(new ProductFamily(), 'uuid-1');
 
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setKey('weight');
@@ -255,7 +256,7 @@ class ProductTwigExtensionTest extends TestCase
 
     public function testLoadProductFormatsJsonAttribute(): void
     {
-        $product = new Product('uuid-1');
+        $product = new Product(new ProductFamily(), 'uuid-1');
 
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setKey('meta');
@@ -285,7 +286,7 @@ class ProductTwigExtensionTest extends TestCase
 
     public function testLoadProductFormatsDefaultAttribute(): void
     {
-        $product = new Product('uuid-1');
+        $product = new Product(new ProductFamily(), 'uuid-1');
 
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setKey('custom');

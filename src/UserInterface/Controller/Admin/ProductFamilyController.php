@@ -25,8 +25,10 @@ use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushS
 use Sulu\Product\Application\Message\CreateProductFamilyMessage;
 use Sulu\Product\Application\Message\ModifyProductFamilyMessage;
 use Sulu\Product\Application\Message\RemoveProductFamilyMessage;
+use Sulu\Product\Domain\Exception\ProductFamilyHasProductsException;
 use Sulu\Product\Domain\Exception\ProductFamilyNotFoundException;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
+use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -50,6 +52,7 @@ final class ProductFamilyController implements SecuredControllerInterface
         private FieldDescriptorFactoryInterface $fieldDescriptorFactory,
         private DoctrineListBuilderFactoryInterface $listBuilderFactory,
         private RestHelperInterface $restHelper,
+        private AttributeGroupRepositoryInterface $attributeGroupRepository,
     ) {
         $this->messageBus = $messageBus;
     }
@@ -124,6 +127,8 @@ final class ProductFamilyController implements SecuredControllerInterface
             $this->handle(new Envelope(new RemoveProductFamilyMessage($id), [new EnableFlushStamp()]));
         } catch (ProductFamilyNotFoundException $e) {
             return new JsonResponse(['detail' => $e->getMessage()], 404);
+        } catch (ProductFamilyHasProductsException $e) {
+            return new JsonResponse(['detail' => $e->getMessage()], 409);
         }
 
         return new Response('', 204);
@@ -144,7 +149,7 @@ final class ProductFamilyController implements SecuredControllerInterface
      *   locale: string,
      *   name: string,
      *   description: string|null,
-     *   familyAttributes: list<array{attribute: int, required: bool}>,
+     *   attributes: array<int, array{enabled: bool, required: bool}>,
      * }
      */
     private function getData(Request $request): array
@@ -155,38 +160,35 @@ final class ProductFamilyController implements SecuredControllerInterface
         return [
             'name' => (string) $request->request->get('name', ''),
             'description' => $description,
-            'familyAttributes' => $this->extractFamilyAttributes($request),
+            'attributes' => $this->extractAttributes($request),
             'locale' => $this->getLocale($request),
         ];
     }
 
     /**
-     * Reshapes the visitor's flat dynamic fields (attribute_<id>_enabled / _required)
-     * into the sealed familyAttributes list. Only enabled attributes are kept.
+     * Reads the nested `attributes/<id>/enabled` and `attributes/<id>/required` fields
+     * produced by the form into a map keyed by attribute id.
      *
-     * @return list<array{attribute: int, required: bool}>
+     * @return array<int, array{enabled: bool, required: bool}>
      */
-    private function extractFamilyAttributes(Request $request): array
+    private function extractAttributes(Request $request): array
     {
-        $familyAttributes = [];
+        $attributes = [];
 
-        foreach ($request->request->all() as $key => $value) {
-            if (1 !== \preg_match('/^attribute_(\d+)_enabled$/', $key, $matches)) {
+        /** @var array<int|string, mixed> $submitted */
+        $submitted = $request->request->all('attributes');
+        foreach ($submitted as $attributeId => $entry) {
+            if (!\is_array($entry)) {
                 continue;
             }
 
-            if (!$value) {
-                continue;
-            }
-
-            $attributeId = (int) $matches[1];
-            $familyAttributes[] = [
-                'attribute' => $attributeId,
-                'required' => (bool) $request->request->get('attribute_' . $attributeId . '_required', false),
+            $attributes[(int) $attributeId] = [
+                'enabled' => (bool) ($entry['enabled'] ?? false),
+                'required' => (bool) ($entry['required'] ?? false),
             ];
         }
 
-        return $familyAttributes;
+        return $attributes;
     }
 
     /** @return array<string, mixed> */
@@ -194,19 +196,29 @@ final class ProductFamilyController implements SecuredControllerInterface
     {
         $translation = $family->getTranslation($locale);
 
-        $data = [
+        $attributes = [];
+        foreach ($this->attributeGroupRepository->findAll() as $group) {
+            foreach ($group->getGroupAttributes() as $groupAttribute) {
+                $attributes[$groupAttribute->getAttribute()->getId()] = [
+                    'enabled' => false,
+                    'required' => false,
+                ];
+            }
+        }
+
+        foreach ($family->getFamilyAttributes() as $familyAttribute) {
+            $attributes[$familyAttribute->getAttribute()->getId()] = [
+                'enabled' => true,
+                'required' => $familyAttribute->isRequired(),
+            ];
+        }
+
+        return [
             'id' => $family->getUuid() ?? '',
             'name' => $translation?->getName() ?? '',
             'description' => $translation?->getDescription(),
             'externalIdentifier' => $family->getExternalIdentifier(),
+            'attributes' => $attributes,
         ];
-
-        foreach ($family->getFamilyAttributes() as $familyAttribute) {
-            $attributeId = $familyAttribute->getAttribute()->getId();
-            $data['attribute_' . $attributeId . '_enabled'] = true;
-            $data['attribute_' . $attributeId . '_required'] = $familyAttribute->isRequired();
-        }
-
-        return $data;
     }
 }

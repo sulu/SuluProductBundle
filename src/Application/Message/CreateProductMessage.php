@@ -16,6 +16,7 @@ namespace Sulu\Product\Application\Message;
 /**
  * @phpstan-type CreateProductMessageData array{
  *     locale: string,
+ *     productFamily: string,
  *     uuid?: string,
  *     code?: string,
  *     author?: int|null,
@@ -34,6 +35,11 @@ class CreateProductMessage
     public function getLocale(): string
     {
         return $this->data['locale'];
+    }
+
+    public function getProductFamily(): string
+    {
+        return $this->data['productFamily'];
     }
 
     public function getUuid(): ?string

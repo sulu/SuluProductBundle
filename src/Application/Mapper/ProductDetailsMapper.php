@@ -15,17 +15,31 @@ namespace Sulu\Product\Application\Mapper;
 
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Model\ProductTranslation;
+use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 
 final class ProductDetailsMapper implements ProductMapperInterface
 {
+    public function __construct(
+        private ProductFamilyRepositoryInterface $productFamilyRepository,
+    ) {
+    }
+
     public function mapProductData(ProductInterface $product, array $data): void
     {
         /** @var string|null $code */
         $code = $data['code'] ?? null;
         /** @var string|null $locale */
         $locale = $data['locale'] ?? null;
+        /** @var string|null $productFamily */
+        $productFamily = $data['productFamily'] ?? null;
 
         $product->setCode($code);
+
+        if (null !== $productFamily) {
+            $product->setProductFamily(
+                $this->productFamilyRepository->getOneBy(['uuid' => $productFamily]),
+            );
+        }
 
         if (null !== $locale && \array_key_exists('name', $data)) {
             $translation = $product->getTranslation($locale);

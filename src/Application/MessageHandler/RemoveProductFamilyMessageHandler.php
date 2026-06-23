@@ -14,13 +14,16 @@ declare(strict_types=1);
 namespace Sulu\Product\Application\MessageHandler;
 
 use Sulu\Product\Application\Message\RemoveProductFamilyMessage;
+use Sulu\Product\Domain\Exception\ProductFamilyHasProductsException;
 use Sulu\Product\Domain\Exception\ProductFamilyNotFoundException;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
+use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 
 final class RemoveProductFamilyMessageHandler
 {
     public function __construct(
         private ProductFamilyRepositoryInterface $productFamilyRepository,
+        private ProductRepositoryInterface $productRepository,
     ) {
     }
 
@@ -30,6 +33,10 @@ final class RemoveProductFamilyMessageHandler
 
         if (null === $family) {
             throw new ProductFamilyNotFoundException(['uuid' => $message->getUuid()]);
+        }
+
+        if ($this->productRepository->existBy(['productFamilyUuid' => $message->getUuid()])) {
+            throw new ProductFamilyHasProductsException($message->getUuid());
         }
 
         $this->productFamilyRepository->remove($family);

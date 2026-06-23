@@ -112,18 +112,19 @@ class ProductFamilyFormMetadataVisitorTest extends TestCase
         $this->assertSame('Dimensions', $section->getLabel('en'));
 
         $sectionItems = $section->getItems();
-        $this->assertArrayHasKey('attribute_7_enabled', $sectionItems);
-        $this->assertArrayHasKey('attribute_7_required', $sectionItems);
+        $this->assertArrayHasKey('attributes/7/enabled', $sectionItems);
+        $this->assertArrayHasKey('attributes/7/required', $sectionItems);
 
-        $enabled = $sectionItems['attribute_7_enabled'];
+        $enabled = $sectionItems['attributes/7/enabled'];
         $this->assertInstanceOf(FieldMetadata::class, $enabled);
         $this->assertSame('checkbox', $enabled->getType());
         $this->assertSame('Width', $enabled->getLabel('en'));
         $this->assertTogglerOption($enabled);
 
-        $required = $sectionItems['attribute_7_required'];
+        $required = $sectionItems['attributes/7/required'];
         $this->assertInstanceOf(FieldMetadata::class, $required);
         $this->assertSame('checkbox', $required->getType());
+        $this->assertSame('!attributes["7"].enabled', $required->getDisabledCondition());
         $this->assertTogglerOption($required);
 
         $this->assertFalse($formMetadata->isCacheable());
@@ -148,7 +149,7 @@ class ProductFamilyFormMetadataVisitorTest extends TestCase
         $section = $formMetadata->getItems()['attribute_group_1'];
         $this->assertInstanceOf(SectionMetadata::class, $section);
         $this->assertSame('', $section->getLabel('en'));
-        $this->assertSame('depth', $section->getItems()['attribute_4_enabled']->getLabel('en'));
+        $this->assertSame('depth', $section->getItems()['attributes/4/enabled']->getLabel('en'));
     }
 
     private function assertTogglerOption(FieldMetadata $field): void

@@ -17,6 +17,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Product\Domain\Event\ProductOrderedEvent;
 use Sulu\Product\Domain\Model\Product;
+use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 
@@ -33,7 +34,7 @@ class ProductOrderedEventTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->product = new Product('uuid-ordered');
+        $this->product = new Product(new ProductFamily(), 'uuid-ordered');
         $this->event = new ProductOrderedEvent($this->product, $this->locale, $this->targetPosition);
     }
 

@@ -24,6 +24,7 @@ use Sulu\Product\Application\MessageHandler\ModifyProductMessageHandler;
 use Sulu\Product\Domain\Event\ProductModifiedEvent;
 use Sulu\Product\Domain\Exception\ProductCodeNotUniqueException;
 use Sulu\Product\Domain\Model\Product;
+use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 
 class ModifyProductMessageHandlerTest extends TestCase
@@ -56,7 +57,7 @@ class ModifyProductMessageHandlerTest extends TestCase
 
     public function testModifyProduct(): void
     {
-        $product = new Product('prod-uuid');
+        $product = new Product(new ProductFamily(), 'prod-uuid');
         $data = ['locale' => 'en', 'code' => 'PROD-001'];
 
         $this->productRepository->getOneBy(
@@ -84,7 +85,7 @@ class ModifyProductMessageHandlerTest extends TestCase
 
     public function testModifyProductThrowsOnDuplicateCode(): void
     {
-        $product = new Product('prod-uuid');
+        $product = new Product(new ProductFamily(), 'prod-uuid');
         $data = ['locale' => 'en', 'code' => 'TAKEN-CODE'];
 
         $this->productRepository->getOneBy(

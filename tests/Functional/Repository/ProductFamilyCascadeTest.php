@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Tests\Functional\Repository;
 
+use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Product\Domain\Model\AttributeInterface;
@@ -102,8 +103,7 @@ class ProductFamilyCascadeTest extends SuluTestCase
         $family->addFamilyAttribute($familyAttribute);
         $this->familyRepository->save($family);
 
-        $product = $this->productRepository->createNew();
-        $product->setProductFamily($family);
+        $product = $this->productRepository->createNew($family);
 
         $value = new ProductAttributeValue($product, $attribute, 'color');
         $value->setText('red');
@@ -130,20 +130,18 @@ class ProductFamilyCascadeTest extends SuluTestCase
         $this->assertSame(0, $this->countProductValues());
     }
 
-    public function testRemovingFamilyNullsProductReferenceAndRemovesValues(): void
+    public function testRemovingFamilyWithProductsIsRejectedByForeignKey(): void
     {
         $fixture = $this->createFixture();
         $uuid = $fixture['family']->getUuid();
         $this->assertNotNull($uuid);
         $this->assertSame(1, $this->countProductValues());
 
+        // The product family FK is NOT NULL with on-delete RESTRICT, so the database
+        // must refuse to remove a family while products are still assigned to it.
+        $this->expectException(ForeignKeyConstraintViolationException::class);
+
         $this->familyRepository->remove($fixture['family']);
         $this->entityManager->flush();
-        $this->entityManager->clear();
-
-        $this->assertSame(0, $this->countProductValues());
-
-        $this->assertSame(0, $this->fetchCount('SELECT COUNT(*) FROM pr_products WHERE idProductFamilies IS NOT NULL'));
-        $this->assertSame(1, $this->fetchCount('SELECT COUNT(*) FROM pr_products'));
     }
 }

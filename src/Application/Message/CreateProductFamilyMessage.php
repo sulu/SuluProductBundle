@@ -15,14 +15,14 @@ namespace Sulu\Product\Application\Message;
 
 /**
  * @phpstan-type ProductFamilyAttributeMessageData array{
- *     attribute: int,
+ *     enabled: bool,
  *     required: bool,
  * }
  * @phpstan-type CreateProductFamilyMessageData array{
  *     locale: string,
  *     name: string,
  *     description?: string|null,
- *     familyAttributes?: list<ProductFamilyAttributeMessageData>|null,
+ *     attributes?: array<int, ProductFamilyAttributeMessageData>|null,
  * }
  */
 class CreateProductFamilyMessage
@@ -50,11 +50,11 @@ class CreateProductFamilyMessage
     }
 
     /**
-     * @return list<ProductFamilyAttributeMessageData>
+     * @return array<int, ProductFamilyAttributeMessageData>
      */
-    public function getFamilyAttributes(): array
+    public function getAttributes(): array
     {
-        return $this->data['familyAttributes'] ?? [];
+        return $this->data['attributes'] ?? [];
     }
 
     /**

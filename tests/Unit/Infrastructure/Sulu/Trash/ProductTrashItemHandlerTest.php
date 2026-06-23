@@ -32,7 +32,9 @@ use Sulu\Product\Domain\Event\ProductTranslationRestoredEvent;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
+use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductInterface;
+use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 use Sulu\Product\Infrastructure\Sulu\Trash\ProductTrashItemHandler;
@@ -47,6 +49,9 @@ class ProductTrashItemHandlerTest extends TestCase
 
     /** @var ObjectProphecy<ProductRepositoryInterface> */
     private ObjectProphecy $productRepository;
+
+    /** @var ObjectProphecy<ProductFamilyRepositoryInterface> */
+    private ObjectProphecy $productFamilyRepository;
 
     /** @var ObjectProphecy<ContentNormalizerInterface> */
     private ObjectProphecy $contentNormalizer;
@@ -66,6 +71,7 @@ class ProductTrashItemHandlerTest extends TestCase
     {
         $this->trashItemRepository = $this->prophesize(TrashItemRepositoryInterface::class);
         $this->productRepository = $this->prophesize(ProductRepositoryInterface::class);
+        $this->productFamilyRepository = $this->prophesize(ProductFamilyRepositoryInterface::class);
         $this->contentNormalizer = $this->prophesize(ContentNormalizerInterface::class);
         $this->contentMerger = $this->prophesize(ContentMergerInterface::class);
         $this->domainEventCollector = $this->prophesize(DomainEventCollectorInterface::class);
@@ -74,6 +80,7 @@ class ProductTrashItemHandlerTest extends TestCase
         $this->handler = new ProductTrashItemHandler(
             $this->trashItemRepository->reveal(),
             $this->productRepository->reveal(),
+            $this->productFamilyRepository->reveal(),
             $this->contentNormalizer->reveal(),
             $this->contentMerger->reveal(),
             [$this->productMapper->reveal()],
@@ -96,10 +103,12 @@ class ProductTrashItemHandlerTest extends TestCase
 
     public function testRestoreCreatesProductWhenNotFound(): void
     {
-        $product = new Product('uuid-restore');
+        $family = new ProductFamily();
+        $product = new Product($family, 'uuid-restore');
 
         $trashItem = $this->prophesize(TrashItemInterface::class);
         $trashItem->getRestoreData()->willReturn([
+            'productFamily' => 'family-uuid',
             'dimensionContents' => [
                 ['locale' => 'en', 'title' => 'Title'],
             ],
@@ -108,7 +117,8 @@ class ProductTrashItemHandlerTest extends TestCase
         $trashItem->getRestoreType()->willReturn(null);
 
         $this->productRepository->findOneBy(['uuid' => 'uuid-restore'])->willReturn(null);
-        $this->productRepository->createNew('uuid-restore')->willReturn($product);
+        $this->productFamilyRepository->getOneBy(['uuid' => 'family-uuid'])->willReturn($family);
+        $this->productRepository->createNew($family, 'uuid-restore')->willReturn($product);
         $this->productRepository->add($product)->shouldBeCalled();
         $this->productMapper->mapProductData($product, Argument::type('array'))->shouldBeCalled();
 
@@ -122,7 +132,7 @@ class ProductTrashItemHandlerTest extends TestCase
 
     public function testRestoreUsesExistingProductWhenFound(): void
     {
-        $product = new Product('uuid-restore');
+        $product = new Product(new ProductFamily(), 'uuid-restore');
 
         $trashItem = $this->prophesize(TrashItemInterface::class);
         $trashItem->getRestoreData()->willReturn(['dimensionContents' => []]);
@@ -130,7 +140,7 @@ class ProductTrashItemHandlerTest extends TestCase
         $trashItem->getRestoreType()->willReturn(null);
 
         $this->productRepository->findOneBy(['uuid' => 'uuid-restore'])->willReturn($product);
-        $this->productRepository->createNew(Argument::any())->shouldNotBeCalled();
+        $this->productRepository->createNew(Argument::cetera())->shouldNotBeCalled();
         $this->productRepository->add(Argument::any())->shouldNotBeCalled();
         $this->domainEventCollector->collect(Argument::type(ProductRestoredEvent::class))->shouldBeCalled();
 
@@ -141,7 +151,7 @@ class ProductTrashItemHandlerTest extends TestCase
 
     public function testRestoreEmitsTranslationEventWhenRestoreTypeIsTranslation(): void
     {
-        $product = new Product('uuid-restore');
+        $product = new Product(new ProductFamily(), 'uuid-restore');
 
         $trashItem = $this->prophesize(TrashItemInterface::class);
         $trashItem->getRestoreData()->willReturn([
@@ -166,7 +176,7 @@ class ProductTrashItemHandlerTest extends TestCase
 
     public function testStoreCreatesTrashItemForProduct(): void
     {
-        $product = new Product('store-uuid');
+        $product = new Product(new ProductFamily(), 'store-uuid');
 
         $unlocalizedContent = new ProductDimensionContent($product);
         $unlocalizedContent->setStage(DimensionContentInterface::STAGE_DRAFT);
@@ -204,7 +214,7 @@ class ProductTrashItemHandlerTest extends TestCase
 
     public function testStoreSkipsNonDraftDimensionContents(): void
     {
-        $product = new Product('store-uuid-2');
+        $product = new Product(new ProductFamily(), 'store-uuid-2');
 
         $unlocalizedContent = new ProductDimensionContent($product);
         $unlocalizedContent->setStage(DimensionContentInterface::STAGE_DRAFT);
@@ -256,7 +266,7 @@ class ProductTrashItemHandlerTest extends TestCase
 
     public function testStoreCreatesTrashItemForTranslation(): void
     {
-        $product = new Product('store-uuid-3');
+        $product = new Product(new ProductFamily(), 'store-uuid-3');
 
         $unlocalizedContent = new ProductDimensionContent($product);
         $unlocalizedContent->setStage(DimensionContentInterface::STAGE_DRAFT);
@@ -301,7 +311,7 @@ class ProductTrashItemHandlerTest extends TestCase
 
     public function testStoreIncludesTitlesWhenPresent(): void
     {
-        $product = new Product('store-uuid-4');
+        $product = new Product(new ProductFamily(), 'store-uuid-4');
 
         $unlocalizedContent = new ProductDimensionContent($product);
         $unlocalizedContent->setStage(DimensionContentInterface::STAGE_DRAFT);

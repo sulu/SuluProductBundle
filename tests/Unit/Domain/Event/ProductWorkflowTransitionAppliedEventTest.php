@@ -17,6 +17,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Product\Domain\Event\ProductWorkflowTransitionAppliedEvent;
 use Sulu\Product\Domain\Model\Product;
+use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 
@@ -29,7 +30,7 @@ class ProductWorkflowTransitionAppliedEventTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->product = new Product('uuid-workflow');
+        $this->product = new Product(new ProductFamily(), 'uuid-workflow');
         $this->event = new ProductWorkflowTransitionAppliedEvent($this->product, 'publish', 'en');
     }
 
