@@ -96,7 +96,7 @@ class ProductAttributeValueMapperTest extends TestCase
             static fn (ProductAttributeValueInterface $v): bool => 42.0 === $v->getNumber()
         ))->shouldBeCalled()->willReturn($product->reveal());
 
-        $this->mapper()->mapProductData($product->reveal(), ['attributes' => ['attr-7' => 42.0]]);
+        $this->mapper()->mapProductData($product->reveal(), ['attributes' => [7 => 42.0]]);
     }
 
     public function testRequiredMissingThrows(): void
@@ -108,7 +108,7 @@ class ProductAttributeValueMapperTest extends TestCase
         $this->expectException(RequiredProductAttributeMissingException::class);
         $this->expectExceptionMessage('attr-7');
 
-        $this->mapper()->mapProductData($product->reveal(), ['attributes' => ['attr-7' => null]]);
+        $this->mapper()->mapProductData($product->reveal(), ['attributes' => [7 => null]]);
     }
 
     public function testUpdatesExistingValueInPlace(): void
@@ -141,7 +141,7 @@ class ProductAttributeValueMapperTest extends TestCase
         // addAttribute must NOT be called (we update in place, not duplicate)
         $product->addAttribute(Argument::cetera())->shouldNotBeCalled();
 
-        $this->mapper()->mapProductData($product->reveal(), ['attributes' => ['attr-7' => 99.0]]);
+        $this->mapper()->mapProductData($product->reveal(), ['attributes' => [7 => 99.0]]);
 
         $this->assertSame(99.0, $existingValue->getNumber());
     }
@@ -175,7 +175,7 @@ class ProductAttributeValueMapperTest extends TestCase
         $product->getAttributes()->willReturn(new ArrayCollection([$existingValue]));
         $product->removeAttribute($existingValue)->shouldBeCalled()->willReturn($product->reveal());
 
-        $this->mapper()->mapProductData($product->reveal(), ['attributes' => ['attr-7' => null]]);
+        $this->mapper()->mapProductData($product->reveal(), ['attributes' => [7 => null]]);
     }
 
     public function testSkipUnenrolledAttributeId(): void
@@ -186,7 +186,7 @@ class ProductAttributeValueMapperTest extends TestCase
         $product->addAttribute(Argument::cetera())->shouldNotBeCalled();
         $product->removeAttribute(Argument::cetera())->shouldNotBeCalled();
 
-        $this->mapper()->mapProductData($product->reveal(), ['attributes' => ['attr-99' => 42.0]]);
+        $this->mapper()->mapProductData($product->reveal(), ['attributes' => [99 => 42.0]]);
     }
 
     public function testRequiredWithValuePasses(): void
@@ -198,7 +198,7 @@ class ProductAttributeValueMapperTest extends TestCase
         ))->shouldBeCalled()->willReturn($product->reveal());
 
         // Must not throw
-        $this->mapper()->mapProductData($product->reveal(), ['attributes' => ['attr-7' => 10.0]]);
+        $this->mapper()->mapProductData($product->reveal(), ['attributes' => [7 => 10.0]]);
 
         $this->addToAssertionCount(1);
     }

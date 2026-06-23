@@ -235,6 +235,9 @@ final class SuluProductBundle extends AbstractBundle
         $builder->registerForAutoconfiguration(AttributeMapperInterface::class)
             ->addTag('sulu_product.attribute_mapper');
 
+        $builder->registerForAutoconfiguration(ProductFamilyMapperInterface::class)
+            ->addTag('sulu_product.product_family_mapper');
+
         // Built-in attribute types
         $services->set('sulu_product.attribute_type_number')
             ->class(NumberAttributeType::class)
@@ -494,15 +497,14 @@ final class SuluProductBundle extends AbstractBundle
             ->class(ProductFamilyMapper::class)
             ->args([
                 new Reference('sulu_product.attribute_repository'),
-            ]);
-
-        $services->alias(ProductFamilyMapperInterface::class, 'sulu_product.product_family_mapper');
+            ])
+            ->tag('sulu_product.product_family_mapper');
 
         $services->set('sulu_product.create_product_family_handler')
             ->class(CreateProductFamilyMessageHandler::class)
             ->args([
                 new Reference('sulu_product.product_family_repository'),
-                new Reference('sulu_product.product_family_mapper'),
+                tagged_iterator('sulu_product.product_family_mapper'),
             ])
             ->tag('messenger.message_handler');
 
@@ -510,7 +512,7 @@ final class SuluProductBundle extends AbstractBundle
             ->class(ModifyProductFamilyMessageHandler::class)
             ->args([
                 new Reference('sulu_product.product_family_repository'),
-                new Reference('sulu_product.product_family_mapper'),
+                tagged_iterator('sulu_product.product_family_mapper'),
             ])
             ->tag('messenger.message_handler');
 
@@ -592,6 +594,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.product_family_repository'),
                 new Reference('sulu_product.attribute_type_registry'),
                 new Reference('sulu_admin.xml_form_metadata_loader'),
+                new Reference('sulu_admin.property_metadata_mapper_registry'),
             ])
             ->tag('sulu_admin.form_metadata_visitor');
 

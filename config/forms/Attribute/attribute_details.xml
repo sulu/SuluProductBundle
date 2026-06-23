@@ -86,7 +86,7 @@
             </meta>
         </property>
 
-        <property name="description" type="text_editor">
+        <property name="description" type="text_area">
             <meta>
                 <title>sulu_admin.description</title>
             </meta>

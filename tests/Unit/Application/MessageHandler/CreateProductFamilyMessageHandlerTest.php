@@ -45,7 +45,7 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
     {
         return new CreateProductFamilyMessageHandler(
             $this->familyRepository->reveal(),
-            new ProductFamilyMapper($this->attributeRepository->reveal()),
+            [new ProductFamilyMapper($this->attributeRepository->reveal())],
         );
     }
 
@@ -56,14 +56,14 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
         $this->familyRepository->save($family)->shouldBeCalledOnce();
 
         $attribute = new Attribute(new AttributeGroup());
-        $this->attributeRepository->findOneBy(['key' => 'weight'])->willReturn($attribute);
+        $this->attributeRepository->findOneBy(['id' => 7])->willReturn($attribute);
 
         $handler = $this->createHandler();
         $result = ($handler)(new CreateProductFamilyMessage([
             'locale' => 'en',
             'name' => 'My Family',
             'description' => 'desc',
-            'attributes' => ['weight' => ['enabled' => true, 'required' => true]],
+            'attributes' => [7 => ['enabled' => true, 'required' => true]],
         ]));
 
         $this->assertSame($family, $result);
@@ -83,13 +83,13 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
         $family = new ProductFamily();
         $this->familyRepository->create()->willReturn($family);
         $this->familyRepository->save($family)->shouldBeCalledOnce();
-        $this->attributeRepository->findOneBy(['key' => 'missing'])->willReturn(null);
+        $this->attributeRepository->findOneBy(['id' => 99])->willReturn(null);
 
         $handler = $this->createHandler();
         ($handler)(new CreateProductFamilyMessage([
             'locale' => 'en',
             'name' => 'My Family',
-            'attributes' => ['missing' => ['enabled' => true, 'required' => false]],
+            'attributes' => [99 => ['enabled' => true, 'required' => false]],
         ]));
 
         $this->assertCount(0, $family->getFamilyAttributes());

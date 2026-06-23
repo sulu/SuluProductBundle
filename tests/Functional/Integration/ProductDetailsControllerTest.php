@@ -18,10 +18,12 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Depends;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Product\Domain\Model\AttributeInterface;
+use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductFamilyAttribute;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
+use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\UserInterface\Controller\Admin\ProductDetailsController;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 
@@ -64,7 +66,7 @@ class ProductDetailsControllerTest extends SuluTestCase
     }
 
     /**
-     * @return array{family: string, attribute: string}
+     * @return array{family: string, attribute: int}
      */
     private function createFamilyWithRequiredNumberAttribute(): array
     {
@@ -98,7 +100,7 @@ class ProductDetailsControllerTest extends SuluTestCase
         $uuid = $family->getUuid();
         self::assertNotNull($uuid);
 
-        return ['family' => $uuid, 'attribute' => $attribute->getKey()];
+        return ['family' => $uuid, 'attribute' => $attribute->getId()];
     }
 
     private function createProductInFamily(string $familyId): string
@@ -164,24 +166,54 @@ class ProductDetailsControllerTest extends SuluTestCase
         $this->assertSame(7.5, $getData['attributes'][$fixture['attribute']]);
     }
 
-    public function testGetSerializesEmptyAttributesAsObject(): void
+    public function testGetOmitsAttributesWithUnregisteredType(): void
     {
         self::purgeDatabase();
 
-        $familyId = $this->createProductFamily();
-        $id = $this->createProductInFamily($familyId);
+        $container = self::getContainer();
+        /** @var AttributeGroupRepositoryInterface $groupRepository */
+        $groupRepository = $container->get(AttributeGroupRepositoryInterface::class);
+        /** @var AttributeRepositoryInterface $attributeRepository */
+        $attributeRepository = $container->get(AttributeRepositoryInterface::class);
+        /** @var ProductFamilyRepositoryInterface $familyRepository */
+        $familyRepository = $container->get(ProductFamilyRepositoryInterface::class);
+        /** @var ProductRepositoryInterface $productRepository */
+        $productRepository = $container->get(ProductRepositoryInterface::class);
+        /** @var EntityManagerInterface $entityManager */
+        $entityManager = $container->get('doctrine.orm.entity_manager');
 
-        $this->client->request('GET', '/admin/api/products/' . $id . '.json?locale=en');
+        $group = $groupRepository->create();
+        $groupRepository->save($group);
+
+        // an attribute whose type has no registered AttributeType handler
+        $attribute = $attributeRepository->create($group);
+        $attribute->setKey('legacy');
+        $attribute->setType('unregistered_type');
+        $attributeRepository->save($attribute);
+
+        $family = $familyRepository->create();
+        $familyAttribute = new ProductFamilyAttribute($family, $attribute);
+        $family->addFamilyAttribute($familyAttribute);
+        $familyRepository->save($family);
+
+        $product = $productRepository->createNew($family);
+        $value = new ProductAttributeValue($product, $attribute, 'legacy');
+        $value->setProductFamilyAttribute($familyAttribute);
+        $product->addAttribute($value);
+        $productRepository->add($product);
+        $entityManager->flush();
+
+        $uuid = $product->getUuid();
+
+        $this->client->request('GET', '/admin/api/products/' . $uuid . '.json?locale=en');
         $response = $this->client->getResponse();
         $this->assertHttpStatusCode(200, $response);
 
-        // `attributes` must serialize as a JSON object ({}), never an empty array ([]).
-        // The admin form store writes field values via json-pointer; with an array parent a
-        // numeric leaf (the attribute id) becomes an array index and mobx throws
-        // "[mobx.array] Index out of bounds" when the user enters a value.
-        $content = (string) $response->getContent();
-        $this->assertStringContainsString('"attributes":{}', $content);
-        $this->assertStringNotContainsString('"attributes":[]', $content);
+        // attributes with an unregistered type are skipped in both the family-preseed loop and the
+        // stored-value loop, so the attribute never appears in the serialized response
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertSame([], $data['attributes']);
     }
 
     public function testGetPreseedsEnabledAttributeKeysWithNull(): void

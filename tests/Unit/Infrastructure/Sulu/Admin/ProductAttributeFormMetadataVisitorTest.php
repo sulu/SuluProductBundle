@@ -21,6 +21,8 @@ use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataLoaderInterface;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\OptionMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadataMapper\NumberPropertyMetadataMapper;
+use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadataMapperRegistry;
 use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
 use Sulu\Product\Application\AttributeType\NumberAttributeType;
 use Sulu\Product\Domain\Exception\ProductFamilyNotFoundException;
@@ -30,6 +32,7 @@ use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAttributeFormMetadataVisitor;
+use Symfony\Component\DependencyInjection\Container;
 
 #[CoversClass(ProductAttributeFormMetadataVisitor::class)]
 class ProductAttributeFormMetadataVisitorTest extends TestCase
@@ -50,10 +53,14 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
 
     private function visitor(): ProductAttributeFormMetadataVisitor
     {
+        $mapperContainer = new Container();
+        $mapperContainer->set('number', new NumberPropertyMetadataMapper());
+
         return new ProductAttributeFormMetadataVisitor(
             $this->productFamilyRepository->reveal(),
             new AttributeTypeRegistry([new NumberAttributeType()]),
             $this->formMetadataLoader->reveal(),
+            new PropertyMetadataMapperRegistry($mapperContainer),
         );
     }
 
@@ -128,6 +135,51 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         self::assertSame('Weight in kilograms', $field->getDescription('en'));
         self::assertTrue($field->isRequired());
         self::assertFalse($form->isCacheable());
+    }
+
+    public function testInjectsValidationSchemaForAttributes(): void
+    {
+        $translation = $this->prophesize(AttributeTranslationInterface::class);
+        $translation->getName()->willReturn('Weight');
+        $translation->getDescription()->willReturn(null);
+
+        $attribute = $this->prophesize(AttributeInterface::class);
+        $attribute->getId()->willReturn(7);
+        $attribute->getKey()->willReturn('weight');
+        $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
+        $attribute->getConfig()->willReturn(['min' => 0, 'max' => 10]);
+        $attribute->getTranslation('en')->willReturn($translation->reveal());
+
+        $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
+        $familyAttribute->getAttribute()->willReturn($attribute->reveal());
+        $familyAttribute->isRequired()->willReturn(true);
+
+        $family = $this->prophesize(ProductFamilyInterface::class);
+        $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
+
+        $this->productFamilyRepository->getOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
+        $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
+            ->willReturn($this->fragmentWithValueField());
+
+        $form = new FormMetadata();
+        $form->setKey('product_attributes');
+
+        $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'uuid-1']);
+
+        $schema = $form->getSchema()->toJsonSchema();
+
+        self::assertSame([
+            'allOf' => [
+                ['type' => ['number', 'string', 'boolean', 'object', 'array', 'null']],
+                [
+                    'type' => 'object',
+                    'properties' => [
+                        'attributes/7' => ['type' => 'number', 'minimum' => 0.0, 'maximum' => 10.0],
+                    ],
+                    'required' => ['attributes/7'],
+                ],
+            ],
+        ], $schema);
     }
 
     public function testDoesNotSetDescriptionWhenAttributeHasNone(): void

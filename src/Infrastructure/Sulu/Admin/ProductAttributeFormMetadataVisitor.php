@@ -17,6 +17,9 @@ use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataLoaderInterface;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataVisitorInterface;
+use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadataMapperRegistry;
+use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\SchemaMetadata;
 use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 
@@ -31,6 +34,7 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
         private readonly ProductFamilyRepositoryInterface $productFamilyRepository,
         private readonly AttributeTypeRegistry $attributeTypeRegistry,
         private readonly FormMetadataLoaderInterface $formMetadataLoader,
+        private readonly PropertyMetadataMapperRegistry $propertyMetadataMapperRegistry,
     ) {
     }
 
@@ -47,6 +51,9 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
 
         $family = $this->productFamilyRepository->getOneBy(['productUuid' => $id]);
         $items = $formMetadata->getItems();
+
+        /** @var PropertyMetadata[] $schemaProperties */
+        $schemaProperties = [];
 
         foreach ($family->getFamilyAttributes() as $familyAttribute) {
             $attribute = $familyAttribute->getAttribute();
@@ -77,9 +84,18 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
             $type->configureField($field, $attribute, $locale);
 
             $items[$field->getName()] = $field;
+
+            $schemaProperties[] = $this->propertyMetadataMapperRegistry->has($field->getType())
+                ? $this->propertyMetadataMapperRegistry->get($field->getType())->mapPropertyMetadata($field)
+                : new PropertyMetadata($field->getName(), $field->isRequired());
         }
 
         $formMetadata->setItems($items);
+
+        if ([] !== $schemaProperties) {
+            $formMetadata->setSchema($formMetadata->getSchema()->merge(new SchemaMetadata($schemaProperties)));
+        }
+
         $formMetadata->setCacheable(false);
     }
 

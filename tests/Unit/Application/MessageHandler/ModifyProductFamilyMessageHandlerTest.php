@@ -48,7 +48,7 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
     {
         return new ModifyProductFamilyMessageHandler(
             $this->familyRepository->reveal(),
-            new ProductFamilyMapper($this->attributeRepository->reveal()),
+            [new ProductFamilyMapper($this->attributeRepository->reveal())],
         );
     }
 
@@ -123,9 +123,9 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
 
         $this->familyRepository->getOneBy(['uuid' => 'f'])->willReturn($family);
         $this->familyRepository->save($family)->shouldBeCalledOnce();
-        $this->attributeRepository->findOneBy(['key' => 'attr-7'])->willReturn($attribute);
+        $this->attributeRepository->findOneBy(['id' => 7])->willReturn($attribute);
 
-        ($this->createHandler())($this->message('f', 'Name', null, ['attr-7' => ['enabled' => true, 'required' => true]]));
+        ($this->createHandler())($this->message('f', 'Name', null, [7 => ['enabled' => true, 'required' => true]]));
 
         $familyAttributes = $family->getFamilyAttributes();
         $this->assertCount(1, $familyAttributes);
@@ -143,9 +143,9 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
 
         $this->familyRepository->getOneBy(['uuid' => 'f'])->willReturn($family);
         $this->familyRepository->save($family)->shouldBeCalledOnce();
-        $this->attributeRepository->findOneBy(['key' => 'attr-7'])->shouldNotBeCalled();
+        $this->attributeRepository->findOneBy(['id' => 7])->shouldNotBeCalled();
 
-        ($this->createHandler())($this->message('f', 'Name', null, ['attr-7' => ['enabled' => true, 'required' => true]]));
+        ($this->createHandler())($this->message('f', 'Name', null, [7 => ['enabled' => true, 'required' => true]]));
 
         $this->assertCount(1, $family->getFamilyAttributes());
         $this->assertTrue($existing->isRequired());
@@ -161,7 +161,7 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
         $this->familyRepository->getOneBy(['uuid' => 'f'])->willReturn($family);
         $this->familyRepository->save($family)->shouldBeCalledOnce();
 
-        ($this->createHandler())($this->message('f', 'Name', null, ['attr-1' => ['enabled' => true, 'required' => false]]));
+        ($this->createHandler())($this->message('f', 'Name', null, [1 => ['enabled' => true, 'required' => false]]));
 
         $familyAttributes = $family->getFamilyAttributes();
         $this->assertCount(1, $familyAttributes);
@@ -176,9 +176,9 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
 
         $this->familyRepository->getOneBy(['uuid' => 'f'])->willReturn($family);
         $this->familyRepository->save($family)->shouldBeCalledOnce();
-        $this->attributeRepository->findOneBy(['key' => 'attr-3'])->shouldNotBeCalled();
+        $this->attributeRepository->findOneBy(['id' => 3])->shouldNotBeCalled();
 
-        ($this->createHandler())($this->message('f', 'Name', null, ['attr-3' => ['enabled' => false, 'required' => false]]));
+        ($this->createHandler())($this->message('f', 'Name', null, [3 => ['enabled' => false, 'required' => false]]));
 
         $this->assertCount(0, $family->getFamilyAttributes());
     }
@@ -188,9 +188,9 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
         $family = new ProductFamily();
         $this->familyRepository->getOneBy(['uuid' => 'f'])->willReturn($family);
         $this->familyRepository->save($family)->shouldBeCalledOnce();
-        $this->attributeRepository->findOneBy(['key' => 'missing'])->willReturn(null);
+        $this->attributeRepository->findOneBy(['id' => 99])->willReturn(null);
 
-        ($this->createHandler())($this->message('f', 'Name', null, ['missing' => ['enabled' => true, 'required' => false]]));
+        ($this->createHandler())($this->message('f', 'Name', null, [99 => ['enabled' => true, 'required' => false]]));
 
         $this->assertCount(0, $family->getFamilyAttributes());
     }
