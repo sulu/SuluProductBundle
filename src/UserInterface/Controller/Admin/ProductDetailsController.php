@@ -21,7 +21,6 @@ use Sulu\Component\Rest\ListBuilder\PaginatedRepresentation;
 use Sulu\Component\Rest\RestHelperInterface;
 use Sulu\Component\Security\SecuredControllerInterface;
 use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushStamp;
-use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
 use Sulu\Product\Application\Message\CreateProductMessage;
 use Sulu\Product\Application\Message\ModifyProductMessage;
 use Sulu\Product\Application\Message\RemoveProductMessage;
@@ -38,6 +37,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\HandleTrait;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Webmozart\Assert\InvalidArgumentException;
 
 /**
@@ -55,7 +55,7 @@ final class ProductDetailsController implements SecuredControllerInterface
         private FieldDescriptorFactoryInterface $fieldDescriptorFactory,
         private DoctrineListBuilderFactoryInterface $listBuilderFactory,
         private RestHelperInterface $restHelper,
-        private AttributeTypeRegistry $attributeTypeRegistry,
+        private NormalizerInterface $normalizer,
     ) {
         $this->messageBus = $messageBus;
     }
@@ -91,7 +91,10 @@ final class ProductDetailsController implements SecuredControllerInterface
             return new JsonResponse(['detail' => 'Product not found.'], 404);
         }
 
-        return new JsonResponse($this->serializeProduct($product, $locale));
+        /** @var array<string, mixed> $normalized */
+        $normalized = $this->normalizer->normalize($product, null, ['locale' => $locale]);
+
+        return new JsonResponse($normalized);
     }
 
     public function postAction(Request $request): Response
@@ -101,7 +104,11 @@ final class ProductDetailsController implements SecuredControllerInterface
         /** @var ProductInterface $product */
         $product = $this->handle(new Envelope($message, [new EnableFlushStamp()]));
 
-        return new JsonResponse($this->serializeProduct($product, $this->getLocale($request)), 201);
+        $locale = $this->getLocale($request);
+        /** @var array<string, mixed> $normalized */
+        $normalized = $this->normalizer->normalize($product, null, ['locale' => $locale]);
+
+        return new JsonResponse($normalized, 201);
     }
 
     public function putAction(Request $request, string $id): Response
@@ -120,8 +127,15 @@ final class ProductDetailsController implements SecuredControllerInterface
         }
 
         $product = $this->productRepository->findOneBy(['uuid' => $id]);
+        if (null === $product) {
+            return new JsonResponse(['detail' => 'Product not found.'], 404); // @codeCoverageIgnore
+        }
 
-        return new JsonResponse($this->serializeProduct($product, $this->getLocale($request)));
+        $locale = $this->getLocale($request);
+        /** @var array<string, mixed> $normalized */
+        $normalized = $this->normalizer->normalize($product, null, ['locale' => $locale]);
+
+        return new JsonResponse($normalized);
     }
 
     public function deleteAction(Request $request, string $id): Response
@@ -162,55 +176,5 @@ final class ProductDetailsController implements SecuredControllerInterface
         );
 
         return $data;
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function serializeProduct(?ProductInterface $product, string $locale): array
-    {
-        if (null === $product) {
-            return []; // @codeCoverageIgnore
-        }
-
-        $translation = $product->getTranslation($locale);
-
-        return [
-            'id' => $product->getUuid(),
-            'name' => $translation?->getName() ?? '',
-            'code' => $product->getCode(),
-            'externalIdentifier' => $product->getExternalIdentifier(),
-            'productFamily' => $product->getProductFamily()->getUuid(),
-            'attributes' => $this->serializeAttributeValues($product),
-        ];
-    }
-
-    /**
-     * @return array<int, mixed>
-     */
-    private function serializeAttributeValues(ProductInterface $product): array
-    {
-        $attributes = [];
-
-        foreach ($product->getProductFamily()->getFamilyAttributes() as $familyAttribute) {
-            $attribute = $familyAttribute->getAttribute();
-            if (!$this->attributeTypeRegistry->has($attribute->getType())) {
-                continue;
-            }
-
-            $attributes[$attribute->getId()] = null;
-        }
-
-        foreach ($product->getAttributes() as $value) {
-            $attribute = $value->getAttribute();
-            if (!$this->attributeTypeRegistry->has($attribute->getType())) {
-                continue;
-            }
-
-            $type = $this->attributeTypeRegistry->get($attribute->getType());
-            $attributes[$attribute->getId()] = $type->readValue($value);
-        }
-
-        return $attributes;
     }
 }

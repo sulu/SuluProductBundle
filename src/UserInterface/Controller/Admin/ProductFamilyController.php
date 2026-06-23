@@ -28,7 +28,6 @@ use Sulu\Product\Application\Message\RemoveProductFamilyMessage;
 use Sulu\Product\Domain\Exception\ProductFamilyHasProductsException;
 use Sulu\Product\Domain\Exception\ProductFamilyNotFoundException;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
-use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -36,6 +35,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\HandleTrait;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 /**
  * @internal
@@ -52,7 +52,7 @@ final class ProductFamilyController implements SecuredControllerInterface
         private FieldDescriptorFactoryInterface $fieldDescriptorFactory,
         private DoctrineListBuilderFactoryInterface $listBuilderFactory,
         private RestHelperInterface $restHelper,
-        private AttributeGroupRepositoryInterface $attributeGroupRepository,
+        private NormalizerInterface $normalizer,
     ) {
         $this->messageBus = $messageBus;
     }
@@ -88,7 +88,10 @@ final class ProductFamilyController implements SecuredControllerInterface
             return new JsonResponse(['detail' => 'ProductFamily not found.'], 404);
         }
 
-        return new JsonResponse($this->serializeProductFamily($family, $locale));
+        /** @var array<string, mixed> $data */
+        $data = $this->normalizer->normalize($family, null, ['locale' => $locale]);
+
+        return new JsonResponse($data);
     }
 
     public function postAction(Request $request): Response
@@ -102,7 +105,11 @@ final class ProductFamilyController implements SecuredControllerInterface
             return new JsonResponse(['detail' => 'ProductFamily already exists.'], 409);
         }
 
-        return new JsonResponse($this->serializeProductFamily($family, $this->getLocale($request)), 201);
+        $locale = $this->getLocale($request);
+        /** @var array<string, mixed> $data */
+        $data = $this->normalizer->normalize($family, null, ['locale' => $locale]);
+
+        return new JsonResponse($data, 201);
     }
 
     public function putAction(Request $request, string $id): Response
@@ -118,7 +125,11 @@ final class ProductFamilyController implements SecuredControllerInterface
             return new JsonResponse(['detail' => $e->getMessage()], 404);
         }
 
-        return new JsonResponse($this->serializeProductFamily($family, $this->getLocale($request)));
+        $locale = $this->getLocale($request);
+        /** @var array<string, mixed> $data */
+        $data = $this->normalizer->normalize($family, null, ['locale' => $locale]);
+
+        return new JsonResponse($data);
     }
 
     public function deleteAction(Request $request, string $id): Response
@@ -189,36 +200,5 @@ final class ProductFamilyController implements SecuredControllerInterface
         }
 
         return $attributes;
-    }
-
-    /** @return array<string, mixed> */
-    private function serializeProductFamily(ProductFamilyInterface $family, string $locale): array
-    {
-        $translation = $family->getTranslation($locale);
-
-        $attributes = [];
-        foreach ($this->attributeGroupRepository->findAll() as $group) {
-            foreach ($group->getGroupAttributes() as $groupAttribute) {
-                $attributes[$groupAttribute->getAttribute()->getId()] = [
-                    'enabled' => false,
-                    'required' => false,
-                ];
-            }
-        }
-
-        foreach ($family->getFamilyAttributes() as $familyAttribute) {
-            $attributes[$familyAttribute->getAttribute()->getId()] = [
-                'enabled' => true,
-                'required' => $familyAttribute->isRequired(),
-            ];
-        }
-
-        return [
-            'id' => $family->getUuid() ?? '',
-            'name' => $translation?->getName() ?? '',
-            'description' => $translation?->getDescription(),
-            'externalIdentifier' => $family->getExternalIdentifier(),
-            'attributes' => $attributes,
-        ];
     }
 }

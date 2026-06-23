@@ -222,6 +222,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
     {
         $attribute = $this->prophesize(AttributeInterface::class);
         $attribute->getType()->willReturn('unknown_type');
+        $attribute->getConfig()->willReturn([]);
 
         $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
         $familyAttribute->getAttribute()->willReturn($attribute->reveal());

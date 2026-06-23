@@ -126,6 +126,8 @@ use Sulu\Product\Infrastructure\Sulu\Search\WebsiteProductIndexListener;
 use Sulu\Product\Infrastructure\Sulu\Search\WebsiteProductReindexProvider;
 use Sulu\Product\Infrastructure\Sulu\Sitemap\ProductsSitemapProvider;
 use Sulu\Product\Infrastructure\Sulu\Trash\ProductTrashItemHandler;
+use Sulu\Product\Infrastructure\Symfony\Serializer\Normalizer\ProductFamilyNormalizer;
+use Sulu\Product\Infrastructure\Symfony\Serializer\Normalizer\ProductNormalizer;
 use Sulu\Product\Infrastructure\Symfony\Twig\ProductTwigExtension;
 use Sulu\Product\UserInterface\Controller\Admin\AttributeController;
 use Sulu\Product\UserInterface\Controller\Admin\AttributeGroupController;
@@ -493,6 +495,20 @@ final class SuluProductBundle extends AbstractBundle
 
         $services->alias(ProductFamilyRepositoryInterface::class, 'sulu_product.product_family_repository');
 
+        $services->set('sulu_product.product_family_normalizer')
+            ->class(ProductFamilyNormalizer::class)
+            ->args([
+                new Reference('sulu_product.attribute_group_repository'),
+            ])
+            ->tag('serializer.normalizer');
+
+        $services->set('sulu_product.product_normalizer')
+            ->class(ProductNormalizer::class)
+            ->args([
+                new Reference('sulu_product.attribute_type_registry'),
+            ])
+            ->tag('serializer.normalizer');
+
         $services->set('sulu_product.product_family_mapper')
             ->class(ProductFamilyMapper::class)
             ->args([
@@ -607,7 +623,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_core.list_builder.field_descriptor_factory'),
                 new Reference('sulu_core.doctrine_list_builder_factory'),
                 new Reference('sulu_core.doctrine_rest_helper'),
-                new Reference('sulu_product.attribute_group_repository'),
+                new Reference('serializer'),
             ])
             ->tag('sulu.context', ['context' => 'admin']);
 
@@ -651,7 +667,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_core.list_builder.field_descriptor_factory'),
                 new Reference('sulu_core.doctrine_list_builder_factory'),
                 new Reference('sulu_core.doctrine_rest_helper'),
-                new Reference('sulu_product.attribute_type_registry'),
+                new Reference('serializer'),
             ])
             ->tag('sulu.context', ['context' => 'admin']);
 
