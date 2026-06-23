@@ -89,7 +89,24 @@ final class AttributeGroupRepository implements AttributeGroupRepositoryInterfac
                 ->setParameter('uuid', $uuid);
         }
 
+        $externalIdentifier = $filters['externalIdentifier'] ?? null;
+        if (null !== $externalIdentifier) {
+            Assert::string($externalIdentifier); // @phpstan-ignore staticMethod.alreadyNarrowedType
+            $queryBuilder->andWhere('attributeGroup.externalIdentifier = :externalIdentifier')
+                ->setParameter('externalIdentifier', $externalIdentifier);
+        }
+
         return $queryBuilder;
+    }
+
+    public function findAll(): array
+    {
+        /** @var list<AttributeGroupInterface> $groups */
+        $groups = $this->entityRepository->createQueryBuilder('attributeGroup')
+            ->getQuery()
+            ->getResult();
+
+        return $groups;
     }
 
     public function save(AttributeGroupInterface $group): void

@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Domain\Model;
 
-class ProductAttribute implements ProductAttributeInterface
+class ProductAttributeValue implements ProductAttributeValueInterface
 {
     protected int $id;
 
@@ -32,6 +32,8 @@ class ProductAttribute implements ProductAttributeInterface
     protected AttributeInterface $attribute;
 
     protected ?AttributeOptionInterface $attributeOption = null;
+
+    protected ?ProductFamilyAttributeInterface $productFamilyAttribute = null;
 
     public function __construct(
         ProductInterface $product,
@@ -127,6 +129,18 @@ class ProductAttribute implements ProductAttributeInterface
     public function setAttributeOption(?AttributeOptionInterface $option): self
     {
         $this->attributeOption = $option;
+
+        return $this;
+    }
+
+    public function getProductFamilyAttribute(): ?ProductFamilyAttributeInterface
+    {
+        return $this->productFamilyAttribute;
+    }
+
+    public function setProductFamilyAttribute(?ProductFamilyAttributeInterface $productFamilyAttribute): self
+    {
+        $this->productFamilyAttribute = $productFamilyAttribute;
 
         return $this;
     }

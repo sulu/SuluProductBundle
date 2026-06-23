@@ -17,6 +17,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Product\Domain\Event\ProductRestoredEvent;
 use Sulu\Product\Domain\Model\Product;
+use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 
@@ -37,7 +38,7 @@ class ProductRestoredEventTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->product = new Product('uuid-restored');
+        $this->product = new Product(new ProductFamily(), 'uuid-restored');
         $this->event = new ProductRestoredEvent($this->product, $this->productTitle, $this->context, $this->payload);
     }
 

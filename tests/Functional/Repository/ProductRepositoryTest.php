@@ -19,7 +19,9 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
+use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
+use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Doctrine\Repository\ProductRepository;
 
@@ -29,6 +31,8 @@ class ProductRepositoryTest extends SuluTestCase
     private ProductRepositoryInterface $repository;
 
     private ProductRepository $doctrineRepository;
+
+    private ProductFamilyRepositoryInterface $productFamilyRepository;
 
     private EntityManagerInterface $entityManager;
 
@@ -45,11 +49,24 @@ class ProductRepositoryTest extends SuluTestCase
         }
         $this->doctrineRepository = $repository;
 
+        /** @var ProductFamilyRepositoryInterface $productFamilyRepository */
+        $productFamilyRepository = $container->get(ProductFamilyRepositoryInterface::class);
+        $this->productFamilyRepository = $productFamilyRepository;
+
         /** @var EntityManagerInterface $entityManager */
         $entityManager = $container->get('doctrine.orm.entity_manager');
         $this->entityManager = $entityManager;
 
         self::purgeDatabase();
+    }
+
+    private function createFamily(): ProductFamilyInterface
+    {
+        $family = $this->productFamilyRepository->create();
+        $this->productFamilyRepository->save($family);
+        $this->entityManager->flush();
+
+        return $family;
     }
 
     protected function tearDown(): void
@@ -60,7 +77,7 @@ class ProductRepositoryTest extends SuluTestCase
 
     private function createAndPersistProduct(?string $code = null): ProductInterface
     {
-        $product = $this->repository->createNew();
+        $product = $this->repository->createNew($this->createFamily());
         if (null !== $code) {
             $product->setCode($code);
         }
@@ -73,7 +90,7 @@ class ProductRepositoryTest extends SuluTestCase
 
     public function testCreateNewReturnsFreshProductWithUuid(): void
     {
-        $product = $this->repository->createNew();
+        $product = $this->repository->createNew($this->createFamily());
 
         $this->assertNotSame('', $product->getUuid());
     }
@@ -82,22 +99,22 @@ class ProductRepositoryTest extends SuluTestCase
     {
         $uuid = '11111111-1111-1111-1111-111111111111';
 
-        $product = $this->repository->createNew($uuid);
+        $product = $this->repository->createNew($this->createFamily(), $uuid);
 
         $this->assertSame($uuid, $product->getUuid());
     }
 
     public function testCreateNewWithoutUuidReturnsUniqueUuids(): void
     {
-        $a = $this->repository->createNew();
-        $b = $this->repository->createNew();
+        $a = $this->repository->createNew($this->createFamily());
+        $b = $this->repository->createNew($this->createFamily());
 
         $this->assertNotSame($a->getUuid(), $b->getUuid());
     }
 
     public function testAddPersistsProductAndItCanBeReloaded(): void
     {
-        $product = $this->repository->createNew();
+        $product = $this->repository->createNew($this->createFamily());
         $product->setCode('PROD-ADD');
 
         $this->repository->add($product);
@@ -182,6 +199,22 @@ class ProductRepositoryTest extends SuluTestCase
     {
         $this->assertFalse($this->repository->existBy(['code' => 'ANY']));
         $this->assertFalse($this->repository->existBy([]));
+    }
+
+    public function testExistByProductFamilyUuidMatchesAssignedProducts(): void
+    {
+        $family = $this->createFamily();
+
+        $product = $this->repository->createNew($family);
+        $this->repository->add($product);
+        $this->entityManager->flush();
+
+        $familyUuid = $family->getUuid();
+        self::assertNotNull($familyUuid);
+        $this->entityManager->clear();
+
+        $this->assertTrue($this->repository->existBy(['productFamilyUuid' => $familyUuid]));
+        $this->assertFalse($this->repository->existBy(['productFamilyUuid' => '00000000-0000-0000-0000-000000000000']));
     }
 
     public function testCountByReturnsTotalCount(): void
@@ -425,7 +458,7 @@ class ProductRepositoryTest extends SuluTestCase
 
     public function testRemoveDimensionContentDeletesAttachedDimensionContent(): void
     {
-        $product = $this->repository->createNew();
+        $product = $this->repository->createNew($this->createFamily());
         $product->setCode('WITH-DIM');
 
         $dimensionContent = $product->createDimensionContent();
@@ -480,7 +513,7 @@ class ProductRepositoryTest extends SuluTestCase
 
     public function testCreateQueryBuilderWithAdminGroupSelectIncludesDimensionContents(): void
     {
-        $product = $this->repository->createNew();
+        $product = $this->repository->createNew($this->createFamily());
         $product->setCode('ADMIN-GRP');
 
         $dimensionContent = $product->createDimensionContent();
@@ -561,7 +594,7 @@ class ProductRepositoryTest extends SuluTestCase
      */
     public function testCreateQueryBuilderWithWebsiteGroupSelectIncludesDimensionContents(): void
     {
-        $product = $this->repository->createNew();
+        $product = $this->repository->createNew($this->createFamily());
         $product->setCode('WEBSITE-GRP');
 
         $dimensionContent = $product->createDimensionContent();
@@ -594,7 +627,7 @@ class ProductRepositoryTest extends SuluTestCase
      */
     public function testCreateQueryBuilderWithExplicitDimensionAttributes(): void
     {
-        $product = $this->repository->createNew();
+        $product = $this->repository->createNew($this->createFamily());
         $product->setCode('DIM-ATTR');
 
         $dimensionContent = $product->createDimensionContent();
@@ -639,7 +672,7 @@ class ProductRepositoryTest extends SuluTestCase
      */
     public function testCreateQueryBuilderWithSelectProductContentWithoutDimensionAttributes(): void
     {
-        $product = $this->repository->createNew();
+        $product = $this->repository->createNew($this->createFamily());
         $product->setCode('CONTENT-NO-DIM');
 
         $dimensionContent = $product->createDimensionContent();

@@ -13,9 +13,11 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Tests\Functional\Integration;
 
+use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Depends;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
+use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\UserInterface\Controller\Admin\ProductContentController;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 
@@ -38,6 +40,25 @@ class ProductContentControllerTest extends SuluTestCase
         \restore_exception_handler();
     }
 
+    private function createProductFamily(): string
+    {
+        $container = self::getContainer();
+
+        /** @var ProductFamilyRepositoryInterface $familyRepository */
+        $familyRepository = $container->get(ProductFamilyRepositoryInterface::class);
+        /** @var EntityManagerInterface $entityManager */
+        $entityManager = $container->get('doctrine.orm.entity_manager');
+
+        $family = $familyRepository->create();
+        $familyRepository->save($family);
+        $entityManager->flush();
+
+        $uuid = $family->getUuid();
+        self::assertNotNull($uuid);
+
+        return $uuid;
+    }
+
     public function testPostProductForFollowingTests(): string
     {
         self::purgeDatabase();
@@ -51,6 +72,7 @@ class ProductContentControllerTest extends SuluTestCase
             \json_encode([
                 'locale' => 'en',
                 'template' => 'product',
+                'productFamily' => $this->createProductFamily(),
             ]) ?: null,
         );
 
@@ -212,7 +234,7 @@ class ProductContentControllerTest extends SuluTestCase
             [],
             [],
             [],
-            \json_encode(['locale' => 'en']) ?: null,
+            \json_encode(['locale' => 'en', 'productFamily' => $this->createProductFamily()]) ?: null,
         );
         $response = $this->client->getResponse();
         $this->assertHttpStatusCode(201, $response);

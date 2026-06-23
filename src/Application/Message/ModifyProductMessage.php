@@ -20,6 +20,7 @@ namespace Sulu\Product\Application\Message;
  * @phpstan-type ModifyProductMessageData array{
  *     locale: string,
  *     code?: string,
+ *     productFamily?: string,
  * }
  */
 class ModifyProductMessage
@@ -45,6 +46,11 @@ class ModifyProductMessage
     public function getLocale(): string
     {
         return $this->data['locale'];
+    }
+
+    public function getProductFamily(): ?string
+    {
+        return $this->data['productFamily'] ?? null;
     }
 
     /**

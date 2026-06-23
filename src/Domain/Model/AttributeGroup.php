@@ -15,6 +15,7 @@ namespace Sulu\Product\Domain\Model;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\Criteria;
 
 class AttributeGroup implements AttributeGroupInterface
 {
@@ -23,8 +24,6 @@ class AttributeGroup implements AttributeGroupInterface
     protected ?string $uuid = null;
 
     protected ?string $externalIdentifier = null;
-
-    protected ?string $currentLocale = null;
 
     /** @var Collection<int, AttributeGroupTranslationInterface> */
     protected Collection $translations;
@@ -67,24 +66,15 @@ class AttributeGroup implements AttributeGroupInterface
         return $this;
     }
 
-    public function setCurrentLocale(string $locale): self
+    public function getTranslation(string $locale): ?AttributeGroupTranslationInterface
     {
-        $this->currentLocale = $locale;
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq('locale', $locale));
 
-        return $this;
-    }
+        /** @var AttributeGroupTranslationInterface|false $translation */
+        $translation = $this->translations->matching($criteria)->first();
 
-    public function getTranslation(?string $locale = null): ?AttributeGroupTranslationInterface
-    {
-        $locale ??= $this->currentLocale;
-
-        foreach ($this->translations as $translation) {
-            if ($translation->getLocale() === $locale) {
-                return $translation;
-            }
-        }
-
-        return null;
+        return $translation ?: null;
     }
 
     public function addTranslation(AttributeGroupTranslationInterface $translation): self

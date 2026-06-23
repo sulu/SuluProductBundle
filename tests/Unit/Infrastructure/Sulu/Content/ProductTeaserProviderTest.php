@@ -25,6 +25,7 @@ use Sulu\Content\Application\ContentEnhancer\ContentEnhancerInterface;
 use Sulu\Content\Domain\Exception\ContentNotFoundException;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
+use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\ProductTeaserProvider;
@@ -86,7 +87,7 @@ class ProductTeaserProviderTest extends TestCase
 
     public function testFindReturnsTeaserForProduct(): void
     {
-        $product = new Product('uuid-1');
+        $product = new Product(new ProductFamily(), 'uuid-1');
         $dimensionContent = $this->createDimensionContent($product);
         $dimensionContent->getRoute()->willReturn($this->makeRoute('/products/test'));
         $dimensionContent->getExcerptTitle()->willReturn('Excerpt Title');
@@ -122,7 +123,7 @@ class ProductTeaserProviderTest extends TestCase
 
     public function testFindFallsBackToTitleWhenNoExcerptTitle(): void
     {
-        $product = new Product('uuid-1');
+        $product = new Product(new ProductFamily(), 'uuid-1');
         $dimensionContent = $this->createDimensionContent($product);
         $dimensionContent->getRoute()->willReturn($this->makeRoute('/p'));
         $dimensionContent->getExcerptTitle()->willReturn(null);
@@ -157,7 +158,7 @@ class ProductTeaserProviderTest extends TestCase
 
     public function testFindReturnsEmptyWhenContentNotFound(): void
     {
-        $product = new Product('uuid-1');
+        $product = new Product(new ProductFamily(), 'uuid-1');
 
         $this->productRepository->findBy(Argument::cetera())
             ->willReturn((static function() use ($product) {
@@ -172,7 +173,7 @@ class ProductTeaserProviderTest extends TestCase
 
     public function testFindSkipsProductWithoutRoute(): void
     {
-        $product = new Product('uuid-1');
+        $product = new Product(new ProductFamily(), 'uuid-1');
         $dimensionContent = $this->createDimensionContent($product);
         $dimensionContent->getRoute()->willReturn(null);
         $revealed = $dimensionContent->reveal();
@@ -192,7 +193,7 @@ class ProductTeaserProviderTest extends TestCase
 
     public function testFindUsesTaggedDescriptionFallback(): void
     {
-        $product = new Product('uuid-1');
+        $product = new Product(new ProductFamily(), 'uuid-1');
         $dimensionContent = $this->createDimensionContent($product);
         $dimensionContent->getRoute()->willReturn($this->makeRoute('/p'));
         $dimensionContent->getExcerptTitle()->willReturn(null);

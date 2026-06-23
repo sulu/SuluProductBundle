@@ -18,13 +18,14 @@ use PHPUnit\Framework\TestCase;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductDimensionContentAdditionalWebspace;
+use Sulu\Product\Domain\Model\ProductFamily;
 
 #[CoversClass(ProductDimensionContentAdditionalWebspace::class)]
 class ProductDimensionContentAdditionalWebspaceTest extends TestCase
 {
     public function testConstructorAssignsValues(): void
     {
-        $dimensionContent = new ProductDimensionContent(new Product());
+        $dimensionContent = new ProductDimensionContent(new Product(new ProductFamily()));
         $additionalWebspace = new ProductDimensionContentAdditionalWebspace('sulu-io', $dimensionContent);
 
         $this->assertSame('sulu-io', $additionalWebspace->getAdditionalWebspace());
@@ -33,7 +34,7 @@ class ProductDimensionContentAdditionalWebspaceTest extends TestCase
 
     public function testGetIdReturnsDoctrineGeneratedId(): void
     {
-        $model = new ProductDimensionContentAdditionalWebspace('sulu-io', new ProductDimensionContent(new Product()));
+        $model = new ProductDimensionContentAdditionalWebspace('sulu-io', new ProductDimensionContent(new Product(new ProductFamily())));
         $ref = new \ReflectionProperty(ProductDimensionContentAdditionalWebspace::class, 'id');
         $ref->setValue($model, 42);
         $this->assertSame(42, $model->getId());

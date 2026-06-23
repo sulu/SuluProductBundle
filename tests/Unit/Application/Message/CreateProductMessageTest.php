@@ -22,7 +22,7 @@ class CreateProductMessageTest extends TestCase
 {
     public function testGetDataWithoutUuid(): void
     {
-        $data = ['locale' => 'en'];
+        $data = ['locale' => 'en', 'productFamily' => 'family-uuid'];
 
         $message = new CreateProductMessage($data);
 
@@ -31,14 +31,14 @@ class CreateProductMessageTest extends TestCase
 
     public function testGetUuidIsNullByDefault(): void
     {
-        $message = new CreateProductMessage(['locale' => 'en']);
+        $message = new CreateProductMessage(['locale' => 'en', 'productFamily' => 'family-uuid']);
 
         $this->assertNull($message->getUuid());
     }
 
     public function testGetUuidWhenProvided(): void
     {
-        $data = ['locale' => 'en', 'uuid' => 'product-123'];
+        $data = ['locale' => 'en', 'productFamily' => 'family-uuid', 'uuid' => 'product-123'];
 
         $message = new CreateProductMessage($data);
 
@@ -48,8 +48,15 @@ class CreateProductMessageTest extends TestCase
 
     public function testGetLocale(): void
     {
-        $message = new CreateProductMessage(['locale' => 'en']);
+        $message = new CreateProductMessage(['locale' => 'en', 'productFamily' => 'family-uuid']);
 
         $this->assertSame('en', $message->getLocale());
+    }
+
+    public function testGetProductFamily(): void
+    {
+        $message = new CreateProductMessage(['locale' => 'en', 'productFamily' => 'family-uuid']);
+
+        $this->assertSame('family-uuid', $message->getProductFamily());
     }
 }

@@ -21,6 +21,8 @@ use Sulu\Product\Domain\Model\AttributeInterface;
  * @phpstan-type AttributeRepositoryFilters array{
  *     uuid?: string,
  *     key?: string,
+ *     id?: int,
+ *     externalIdentifier?: string,
  * }
  */
 interface AttributeRepositoryInterface

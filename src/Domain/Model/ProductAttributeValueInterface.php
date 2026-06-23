@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Domain\Model;
 
-interface ProductAttributeInterface
+interface ProductAttributeValueInterface
 {
     public function getId(): int;
 
@@ -44,4 +44,8 @@ interface ProductAttributeInterface
     public function getAttributeOption(): ?AttributeOptionInterface;
 
     public function setAttributeOption(?AttributeOptionInterface $option): self;
+
+    public function getProductFamilyAttribute(): ?ProductFamilyAttributeInterface;
+
+    public function setProductFamilyAttribute(?ProductFamilyAttributeInterface $productFamilyAttribute): self;
 }

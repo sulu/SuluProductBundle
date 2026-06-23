@@ -50,8 +50,9 @@ class ProductAdmin extends Admin
         $hasProducts = $this->securityChecker->hasPermission(static::SECURITY_CONTEXT, PermissionTypes::EDIT);
         $hasAttributes = $this->securityChecker->hasPermission(AttributeAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT);
         $hasAttributeGroups = $this->securityChecker->hasPermission(AttributeGroupAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT);
+        $hasProductFamilies = $this->securityChecker->hasPermission(ProductFamilyAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT);
 
-        if (!$hasProducts && !$hasAttributes && !$hasAttributeGroups) {
+        if (!$hasProducts && !$hasAttributes && !$hasAttributeGroups && !$hasProductFamilies) {
             return;
         }
 
@@ -75,6 +76,12 @@ class ProductAdmin extends Admin
             $attributeGroupsItem = new NavigationItem('sulu_product.attribute_groups');
             $attributeGroupsItem->setView(AttributeGroupAdmin::LIST_VIEW);
             $parent->addChild($attributeGroupsItem);
+        }
+
+        if ($hasProductFamilies) {
+            $productFamiliesItem = new NavigationItem('sulu_product.product_families');
+            $productFamiliesItem->setView(ProductFamilyAdmin::LIST_VIEW);
+            $parent->addChild($productFamiliesItem);
         }
 
         $navigationItemCollection->add($parent);

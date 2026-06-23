@@ -35,6 +35,7 @@ final class AttributeMapper implements AttributeMapperInterface
         $this->mapTranslation($attribute, $message);
         $this->mapOptions($attribute, $message);
 
+        // Todo: Move to Doctrine listener.
         if ($message instanceof CreateAttributeMessage) {
             $attribute->setType($message->getType());
             $this->mapCreatePosition($attribute, $message);

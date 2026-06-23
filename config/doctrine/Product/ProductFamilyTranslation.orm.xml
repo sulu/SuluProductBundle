@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <entity name="Sulu\Product\Domain\Model\ProductFamilyTranslation" table="pr_product_family_translations">
+        <id name="id" type="integer" column="id">
+            <generator strategy="AUTO"/>
+        </id>
+
+        <field name="locale" type="string" length="5" nullable="false"/>
+        <field name="name" type="string" length="255" nullable="false"/>
+        <field name="description" type="text" nullable="true"/>
+
+        <many-to-one field="family"
+                     target-entity="Sulu\Product\Domain\Model\ProductFamilyInterface"
+                     inversed-by="translations">
+            <join-column name="idProductFamilies" referenced-column-name="id"
+                         nullable="false" on-delete="CASCADE"/>
+        </many-to-one>
+
+        <indexes>
+            <index name="IDX_pr_product_family_translations_locale" columns="locale"/>
+        </indexes>
+    </entity>
+</doctrine-mapping>

@@ -26,6 +26,9 @@ use Sulu\Product\Application\MessageHandler\CreateProductMessageHandler;
 use Sulu\Product\Domain\Event\ProductCreatedEvent;
 use Sulu\Product\Domain\Exception\ProductCodeNotUniqueException;
 use Sulu\Product\Domain\Model\Product;
+use Sulu\Product\Domain\Model\ProductFamily;
+use Sulu\Product\Domain\Model\ProductFamilyInterface;
+use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
@@ -37,24 +40,47 @@ class CreateProductMessageHandlerTest extends TestCase
     /** @var ObjectProphecy<ProductRepositoryInterface> */
     private ObjectProphecy $productRepository;
 
+    /** @var ObjectProphecy<ProductFamilyRepositoryInterface> */
+    private ObjectProphecy $productFamilyRepository;
+
     /** @var ObjectProphecy<ProductMapperInterface> */
     private ObjectProphecy $productMapper;
 
     /** @var ObjectProphecy<DomainEventCollectorInterface> */
     private ObjectProphecy $domainEventCollector;
 
+    private ProductFamilyInterface $productFamily;
+
     protected function setUp(): void
     {
         $this->productRepository = $this->prophesize(ProductRepositoryInterface::class);
+        $this->productFamilyRepository = $this->prophesize(ProductFamilyRepositoryInterface::class);
         $this->productMapper = $this->prophesize(ProductMapperInterface::class);
         $this->domainEventCollector = $this->prophesize(DomainEventCollectorInterface::class);
+
+        $this->productFamily = new ProductFamily();
+        $this->productFamilyRepository->getOneBy(['uuid' => 'family-uuid'])
+            ->willReturn($this->productFamily);
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     *
+     * @return array{locale: string, productFamily: string, code?: string, author?: int|null}
+     */
+    private function createData(array $data = []): array
+    {
+        /** @var array{locale: string, productFamily: string, code?: string, author?: int|null} $data */
+        $data = \array_replace(['locale' => 'en', 'productFamily' => 'family-uuid'], $data);
+
+        return $data;
     }
 
     public function testCreateProduct(): void
     {
-        $product = new Product();
+        $product = new Product($this->productFamily);
 
-        $this->productRepository->createNew(null)
+        $this->productRepository->createNew($this->productFamily, null)
             ->shouldBeCalledOnce()
             ->willReturn($product);
 
@@ -69,12 +95,13 @@ class CreateProductMessageHandlerTest extends TestCase
 
         $handler = new CreateProductMessageHandler(
             $this->productRepository->reveal(),
+            $this->productFamilyRepository->reveal(),
             [$this->productMapper->reveal()],
             $this->domainEventCollector->reveal(),
             null,
         );
 
-        $message = new CreateProductMessage(['locale' => 'en']);
+        $message = new CreateProductMessage($this->createData());
 
         $result = ($handler)($message);
 
@@ -83,12 +110,12 @@ class CreateProductMessageHandlerTest extends TestCase
 
     public function testCreateProductWithMapper(): void
     {
-        $product = new Product();
+        $product = new Product($this->productFamily);
 
         /** @var ObjectProphecy<ProductMapperInterface> $secondMapper */
         $secondMapper = $this->prophesize(ProductMapperInterface::class);
 
-        $this->productRepository->createNew(null)
+        $this->productRepository->createNew($this->productFamily, null)
             ->willReturn($product);
 
         $this->productMapper->mapProductData($product, Argument::type('array'))
@@ -104,12 +131,13 @@ class CreateProductMessageHandlerTest extends TestCase
 
         $handler = new CreateProductMessageHandler(
             $this->productRepository->reveal(),
+            $this->productFamilyRepository->reveal(),
             [$this->productMapper->reveal(), $secondMapper->reveal()],
             $this->domainEventCollector->reveal(),
             null,
         );
 
-        $message = new CreateProductMessage(['locale' => 'en']);
+        $message = new CreateProductMessage($this->createData());
 
         $result = ($handler)($message);
 
@@ -118,21 +146,22 @@ class CreateProductMessageHandlerTest extends TestCase
 
     public function testCreateProductWithoutTokenStorage(): void
     {
-        $product = new Product();
+        $product = new Product($this->productFamily);
 
-        $this->productRepository->createNew(null)->willReturn($product);
+        $this->productRepository->createNew($this->productFamily, null)->willReturn($product);
         $this->productMapper->mapProductData($product, Argument::type('array'))->shouldBeCalled();
         $this->productRepository->add($product)->shouldBeCalled();
         $this->domainEventCollector->collect(Argument::type(ProductCreatedEvent::class))->shouldBeCalled();
 
         $handler = new CreateProductMessageHandler(
             $this->productRepository->reveal(),
+            $this->productFamilyRepository->reveal(),
             [$this->productMapper->reveal()],
             $this->domainEventCollector->reveal(),
             null,
         );
 
-        $message = new CreateProductMessage(['locale' => 'en']);
+        $message = new CreateProductMessage($this->createData());
 
         $result = ($handler)($message);
 
@@ -141,9 +170,9 @@ class CreateProductMessageHandlerTest extends TestCase
 
     public function testCreateDoesNotOverwriteExistingAuthor(): void
     {
-        $product = new Product();
+        $product = new Product($this->productFamily);
 
-        $this->productRepository->createNew(null)->willReturn($product);
+        $this->productRepository->createNew($this->productFamily, null)->willReturn($product);
 
         $this->productMapper->mapProductData(
             $product,
@@ -157,12 +186,13 @@ class CreateProductMessageHandlerTest extends TestCase
 
         $handler = new CreateProductMessageHandler(
             $this->productRepository->reveal(),
+            $this->productFamilyRepository->reveal(),
             [$this->productMapper->reveal()],
             $this->domainEventCollector->reveal(),
             null,
         );
 
-        $message = new CreateProductMessage(['locale' => 'en', 'author' => 42]);
+        $message = new CreateProductMessage($this->createData(['author' => 42]));
 
         $result = ($handler)($message);
 
@@ -171,7 +201,7 @@ class CreateProductMessageHandlerTest extends TestCase
 
     public function testCreateProductSetsAuthorFromToken(): void
     {
-        $product = new Product();
+        $product = new Product($this->productFamily);
 
         /** @var ObjectProphecy<ContactInterface> $contact */
         $contact = $this->prophesize(ContactInterface::class);
@@ -188,7 +218,7 @@ class CreateProductMessageHandlerTest extends TestCase
         $tokenStorage = $this->prophesize(TokenStorageInterface::class);
         $tokenStorage->getToken()->willReturn($token->reveal());
 
-        $this->productRepository->createNew(null)
+        $this->productRepository->createNew($this->productFamily, null)
             ->shouldBeCalledOnce()
             ->willReturn($product);
 
@@ -204,12 +234,13 @@ class CreateProductMessageHandlerTest extends TestCase
 
         $handler = new CreateProductMessageHandler(
             $this->productRepository->reveal(),
+            $this->productFamilyRepository->reveal(),
             [$this->productMapper->reveal()],
             $this->domainEventCollector->reveal(),
             $tokenStorage->reveal(),
         );
 
-        $message = new CreateProductMessage(['locale' => 'en']);
+        $message = new CreateProductMessage($this->createData());
 
         $result = ($handler)($message);
 
@@ -223,12 +254,13 @@ class CreateProductMessageHandlerTest extends TestCase
 
         $handler = new CreateProductMessageHandler(
             $this->productRepository->reveal(),
+            $this->productFamilyRepository->reveal(),
             [$this->productMapper->reveal()],
             $this->domainEventCollector->reveal(),
             null,
         );
 
-        $message = new CreateProductMessage(['locale' => 'en', 'code' => 'DUPLICATE-CODE']);
+        $message = new CreateProductMessage($this->createData(['code' => 'DUPLICATE-CODE']));
 
         $this->expectException(ProductCodeNotUniqueException::class);
 

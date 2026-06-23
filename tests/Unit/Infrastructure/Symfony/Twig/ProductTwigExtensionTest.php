@@ -30,7 +30,8 @@ use Sulu\Product\Domain\Model\AttributeOption;
 use Sulu\Product\Domain\Model\AttributeOptionTranslation;
 use Sulu\Product\Domain\Model\AttributeTranslation;
 use Sulu\Product\Domain\Model\Product;
-use Sulu\Product\Domain\Model\ProductAttribute;
+use Sulu\Product\Domain\Model\ProductAttributeValue;
+use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Symfony\Twig\ProductTwigExtension;
@@ -97,7 +98,7 @@ class ProductTwigExtensionTest extends TestCase
 
     public function testLoadProductReturnsResolvedContent(): void
     {
-        $product = new Product('uuid-1');
+        $product = new Product(new ProductFamily(), 'uuid-1');
 
         $dimensionContent = $this->prophesize(\Sulu\Product\Domain\Model\ProductDimensionContentInterface::class);
 
@@ -118,7 +119,7 @@ class ProductTwigExtensionTest extends TestCase
 
     public function testLoadProductUsesRequestLocaleWhenNotProvided(): void
     {
-        $product = new Product('uuid-1');
+        $product = new Product(new ProductFamily(), 'uuid-1');
 
         $dimensionContent = $this->prophesize(\Sulu\Product\Domain\Model\ProductDimensionContentInterface::class);
 
@@ -145,7 +146,7 @@ class ProductTwigExtensionTest extends TestCase
 
     public function testLoadProductFormatsAttributes(): void
     {
-        $product = new Product('uuid-1');
+        $product = new Product(new ProductFamily(), 'uuid-1');
 
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setKey('color');
@@ -153,7 +154,7 @@ class ProductTwigExtensionTest extends TestCase
         $translation = new AttributeTranslation($attribute, 'en', 'Color');
         $attribute->addTranslation($translation);
 
-        $productAttribute = new ProductAttribute($product, $attribute, 'color');
+        $productAttribute = new ProductAttributeValue($product, $attribute, 'color');
         $productAttribute->setText('Red');
 
         $product->addAttribute($productAttribute);
@@ -188,7 +189,7 @@ class ProductTwigExtensionTest extends TestCase
 
     public function testLoadProductFormatsOptionsAttribute(): void
     {
-        $product = new Product('uuid-1');
+        $product = new Product(new ProductFamily(), 'uuid-1');
 
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setKey('color');
@@ -200,7 +201,7 @@ class ProductTwigExtensionTest extends TestCase
         $optionTranslation = new AttributeOptionTranslation($option, 'en', 'Red');
         $option->addTranslation($optionTranslation);
 
-        $productAttribute = new ProductAttribute($product, $attribute, 'color');
+        $productAttribute = new ProductAttributeValue($product, $attribute, 'color');
         $productAttribute->setAttributeOptionKey('red');
         $productAttribute->setAttributeOption($option);
 
@@ -225,13 +226,13 @@ class ProductTwigExtensionTest extends TestCase
 
     public function testLoadProductFormatsNumberAttribute(): void
     {
-        $product = new Product('uuid-1');
+        $product = new Product(new ProductFamily(), 'uuid-1');
 
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setKey('weight');
         $attribute->setType(AttributeInterface::TYPE_NUMBER);
 
-        $productAttribute = new ProductAttribute($product, $attribute, 'weight');
+        $productAttribute = new ProductAttributeValue($product, $attribute, 'weight');
         $productAttribute->setNumber(42.5);
 
         $product->addAttribute($productAttribute);
@@ -255,13 +256,13 @@ class ProductTwigExtensionTest extends TestCase
 
     public function testLoadProductFormatsJsonAttribute(): void
     {
-        $product = new Product('uuid-1');
+        $product = new Product(new ProductFamily(), 'uuid-1');
 
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setKey('meta');
         $attribute->setType(AttributeInterface::TYPE_JSON);
 
-        $productAttribute = new ProductAttribute($product, $attribute, 'meta');
+        $productAttribute = new ProductAttributeValue($product, $attribute, 'meta');
         $productAttribute->setJson(['foo' => 'bar']);
 
         $product->addAttribute($productAttribute);
@@ -285,13 +286,13 @@ class ProductTwigExtensionTest extends TestCase
 
     public function testLoadProductFormatsDefaultAttribute(): void
     {
-        $product = new Product('uuid-1');
+        $product = new Product(new ProductFamily(), 'uuid-1');
 
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setKey('custom');
         $attribute->setType('unknown_type');
 
-        $productAttribute = new ProductAttribute($product, $attribute, 'custom');
+        $productAttribute = new ProductAttributeValue($product, $attribute, 'custom');
         $productAttribute->setText('some-value');
 
         $product->addAttribute($productAttribute);

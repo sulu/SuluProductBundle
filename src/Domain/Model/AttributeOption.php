@@ -29,8 +29,6 @@ class AttributeOption implements AttributeOptionInterface
 
     protected AttributeInterface $attribute;
 
-    protected ?string $currentLocale = null;
-
     /** @var Collection<int, AttributeOptionTranslationInterface> */
     protected Collection $translations;
 
@@ -80,10 +78,8 @@ class AttributeOption implements AttributeOptionInterface
         return $this->attribute;
     }
 
-    public function getTranslation(?string $locale = null): ?AttributeOptionTranslationInterface
+    public function getTranslation(string $locale): ?AttributeOptionTranslationInterface
     {
-        $locale ??= $this->currentLocale;
-
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('locale', $locale));
 

@@ -15,26 +15,34 @@ namespace Sulu\Product\Tests\Unit\Application\Mapper;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
+use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Product\Application\Mapper\ProductDetailsMapper;
 use Sulu\Product\Domain\Model\Product;
+use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductTranslation;
+use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 
 #[CoversClass(ProductDetailsMapper::class)]
 class ProductDetailsMapperTest extends TestCase
 {
     use ProphecyTrait;
 
+    /** @var ObjectProphecy<ProductFamilyRepositoryInterface> */
+    private ObjectProphecy $productFamilyRepository;
+
     private ProductDetailsMapper $mapper;
 
     protected function setUp(): void
     {
-        $this->mapper = new ProductDetailsMapper();
+        $this->productFamilyRepository = $this->prophesize(ProductFamilyRepositoryInterface::class);
+        $this->mapper = new ProductDetailsMapper($this->productFamilyRepository->reveal());
     }
 
     public function testMapProductDataSetsCode(): void
     {
-        $product = new Product();
+        $product = new Product(new ProductFamily());
 
         $this->mapper->mapProductData($product, ['code' => 'PROD-1']);
 
@@ -44,7 +52,7 @@ class ProductDetailsMapperTest extends TestCase
 
     public function testMapProductDataResetsCodeWhenMissing(): void
     {
-        $product = new Product();
+        $product = new Product(new ProductFamily());
         $product->setCode('PRE-EXISTING');
 
         $this->mapper->mapProductData($product, []);
@@ -54,7 +62,7 @@ class ProductDetailsMapperTest extends TestCase
 
     public function testMapProductDataCreatesTranslationWhenNoneExists(): void
     {
-        $product = new Product();
+        $product = new Product(new ProductFamily());
 
         $this->mapper->mapProductData($product, [
             'code' => 'PROD-2',
@@ -71,7 +79,7 @@ class ProductDetailsMapperTest extends TestCase
 
     public function testMapProductDataUpdatesExistingTranslation(): void
     {
-        $product = new Product();
+        $product = new Product(new ProductFamily());
         $product->addTranslation(new ProductTranslation($product, 'en', 'Old Name'));
 
         $this->mapper->mapProductData($product, [
@@ -86,7 +94,7 @@ class ProductDetailsMapperTest extends TestCase
 
     public function testMapProductDataIgnoresTranslationWhenNameMissing(): void
     {
-        $product = new Product();
+        $product = new Product(new ProductFamily());
 
         $this->mapper->mapProductData($product, [
             'locale' => 'en',
@@ -97,7 +105,7 @@ class ProductDetailsMapperTest extends TestCase
 
     public function testMapProductDataIgnoresTranslationWhenLocaleMissing(): void
     {
-        $product = new Product();
+        $product = new Product(new ProductFamily());
 
         $this->mapper->mapProductData($product, [
             'name' => 'Orphan',
@@ -117,7 +125,7 @@ class ProductDetailsMapperTest extends TestCase
 
     public function testMapProductDataDefaultsNameToEmptyStringWhenNull(): void
     {
-        $product = new Product();
+        $product = new Product(new ProductFamily());
 
         $this->mapper->mapProductData($product, [
             'locale' => 'en',
@@ -129,5 +137,34 @@ class ProductDetailsMapperTest extends TestCase
         $translation = $product->getTranslation('en');
         $this->assertNotNull($translation);
         $this->assertSame('', $translation->getName());
+    }
+
+    public function testMapProductDataSetsProductFamilyWhenProvided(): void
+    {
+        $product = new Product(new ProductFamily());
+        $newFamily = new ProductFamily();
+
+        $this->productFamilyRepository->getOneBy(['uuid' => 'family-uuid'])
+            ->shouldBeCalledOnce()
+            ->willReturn($newFamily);
+
+        $this->mapper->mapProductData($product, [
+            'productFamily' => 'family-uuid',
+        ]);
+
+        $this->assertSame($newFamily, $product->getProductFamily());
+    }
+
+    public function testMapProductDataKeepsProductFamilyWhenMissing(): void
+    {
+        $family = new ProductFamily();
+        $product = new Product($family);
+
+        $this->productFamilyRepository->getOneBy(Argument::any())
+            ->shouldNotBeCalled();
+
+        $this->mapper->mapProductData($product, []);
+
+        $this->assertSame($family, $product->getProductFamily());
     }
 }

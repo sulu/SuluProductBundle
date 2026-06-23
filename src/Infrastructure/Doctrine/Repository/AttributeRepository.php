@@ -97,6 +97,20 @@ final class AttributeRepository implements AttributeRepositoryInterface
                 ->setParameter('key', $key);
         }
 
+        $id = $filters['id'] ?? null;
+        if (null !== $id) {
+            Assert::integer($id); // @phpstan-ignore staticMethod.alreadyNarrowedType
+            $queryBuilder->andWhere('attribute.id = :id')
+                ->setParameter('id', $id);
+        }
+
+        $externalIdentifier = $filters['externalIdentifier'] ?? null;
+        if (null !== $externalIdentifier) {
+            Assert::string($externalIdentifier); // @phpstan-ignore staticMethod.alreadyNarrowedType
+            $queryBuilder->andWhere('attribute.externalIdentifier = :externalIdentifier')
+                ->setParameter('externalIdentifier', $externalIdentifier);
+        }
+
         return $queryBuilder;
     }
 

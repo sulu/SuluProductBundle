@@ -25,6 +25,7 @@ use Sulu\Product\Domain\Event\ProductRestoredEvent;
 use Sulu\Product\Domain\Event\ProductTranslationAddedEvent;
 use Sulu\Product\Domain\Event\ProductTranslationRemovedEvent;
 use Sulu\Product\Domain\Model\Product;
+use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Search\AdminProductIndexListener;
 use Symfony\Component\Messenger\Envelope;
@@ -47,7 +48,7 @@ class AdminProductIndexListenerTest extends TestCase
 
     public function testOnProductChangedWithProductCreatedEvent(): void
     {
-        $product = new Product('123');
+        $product = new Product(new ProductFamily(), '123');
         $event = new ProductCreatedEvent($product, 'en', []);
         $expectedConfig = ReindexConfig::create()->withIndex('admin')->withIdentifiers([ProductInterface::RESOURCE_KEY . '__123__en']);
         $this->messageBus->dispatch($expectedConfig)->willReturn(new Envelope($expectedConfig))->shouldBeCalledOnce();
@@ -56,7 +57,7 @@ class AdminProductIndexListenerTest extends TestCase
 
     public function testOnProductChangedWithProductModifiedEvent(): void
     {
-        $product = new Product('456');
+        $product = new Product(new ProductFamily(), '456');
         $event = new ProductModifiedEvent($product, 'en', []);
         $expectedConfig = ReindexConfig::create()->withIndex('admin')->withIdentifiers([ProductInterface::RESOURCE_KEY . '__456__en']);
         $this->messageBus->dispatch($expectedConfig)->willReturn(new Envelope($expectedConfig))->shouldBeCalledOnce();
@@ -65,7 +66,7 @@ class AdminProductIndexListenerTest extends TestCase
 
     public function testOnProductChangedWithProductRemovedEvent(): void
     {
-        $product = new Product('789');
+        $product = new Product(new ProductFamily(), '789');
         $event = new ProductRemovedEvent($product->getUuid(), 'Uncool product', ['locales' => ['en', 'de']]);
         $expectedConfig = ReindexConfig::create()->withIndex('admin')->withIdentifiers([ProductInterface::RESOURCE_KEY . '__789__en', ProductInterface::RESOURCE_KEY . '__789__de']);
         $this->messageBus->dispatch($expectedConfig)->willReturn(new Envelope($expectedConfig))->shouldBeCalledOnce();
@@ -74,7 +75,7 @@ class AdminProductIndexListenerTest extends TestCase
 
     public function testOnProductChangedWithProductRestoredEvent(): void
     {
-        $product = new Product('222');
+        $product = new Product(new ProductFamily(), '222');
         $event = new ProductRestoredEvent($product, 'test product', ['locales' => ['de']], []);
         $expectedConfig = ReindexConfig::create()->withIndex('admin')->withIdentifiers([ProductInterface::RESOURCE_KEY . '__222__de']);
         $this->messageBus->dispatch($expectedConfig)->willReturn(new Envelope($expectedConfig))->shouldBeCalledOnce();
@@ -83,7 +84,7 @@ class AdminProductIndexListenerTest extends TestCase
 
     public function testOnProductChangedWithProductTranslationAddedEvent(): void
     {
-        $product = new Product('333');
+        $product = new Product(new ProductFamily(), '333');
         $event = new ProductTranslationAddedEvent($product, 'de', []);
         $expectedConfig = ReindexConfig::create()->withIndex('admin')->withIdentifiers([ProductInterface::RESOURCE_KEY . '__333__de']);
         $this->messageBus->dispatch($expectedConfig)->willReturn(new Envelope($expectedConfig))->shouldBeCalledOnce();
@@ -92,7 +93,7 @@ class AdminProductIndexListenerTest extends TestCase
 
     public function testOnProductChangedWithProductTranslationRemovedEvent(): void
     {
-        $product = new Product('444');
+        $product = new Product(new ProductFamily(), '444');
         $event = new ProductTranslationRemovedEvent($product, 'de');
         $expectedConfig = ReindexConfig::create()->withIndex('admin')->withIdentifiers([ProductInterface::RESOURCE_KEY . '__444__de']);
         $this->messageBus->dispatch($expectedConfig)->willReturn(new Envelope($expectedConfig))->shouldBeCalledOnce();
@@ -101,7 +102,7 @@ class AdminProductIndexListenerTest extends TestCase
 
     public function testOnProductChangedWithRemovedEventWithoutLocalesDoesNotDispatch(): void
     {
-        $product = new Product('789');
+        $product = new Product(new ProductFamily(), '789');
         $event = new ProductRemovedEvent($product->getUuid(), 'Uncool product', []);
         $this->messageBus->dispatch(\Prophecy\Argument::any())->shouldNotBeCalled();
         $this->listener->onProductChanged($event);
@@ -109,7 +110,7 @@ class AdminProductIndexListenerTest extends TestCase
 
     public function testOnProductChangedWithoutLocaleDoesNotDispatch(): void
     {
-        $product = new Product('123');
+        $product = new Product(new ProductFamily(), '123');
         $event = new ProductCreatedEvent($product, '', []);
         $this->messageBus->dispatch(\Prophecy\Argument::any())->shouldNotBeCalled();
         $this->listener->onProductChanged($event);

@@ -74,6 +74,19 @@ class AttributeGroupRepositoryTest extends SuluTestCase
         $this->assertNotSame($a->getUuid(), $b->getUuid());
     }
 
+    public function testFindAllReturnsAllGroups(): void
+    {
+        $this->assertSame([], $this->repository->findAll());
+
+        $a = $this->repository->create();
+        $b = $this->repository->create();
+        $this->repository->save($a);
+        $this->repository->save($b);
+        $this->entityManager->flush();
+
+        $this->assertCount(2, $this->repository->findAll());
+    }
+
     public function testSavePersistsAndCanBeFoundByUuid(): void
     {
         $group = $this->repository->create();
@@ -87,6 +100,19 @@ class AttributeGroupRepositoryTest extends SuluTestCase
         $loaded = $this->repository->findOneBy(['uuid' => $uuid]);
         $this->assertInstanceOf(AttributeGroupInterface::class, $loaded);
         $this->assertSame($uuid, $loaded->getUuid());
+    }
+
+    public function testFindOneByExternalIdentifierReturnsGroup(): void
+    {
+        $group = $this->repository->create();
+        $group->setExternalIdentifier('ext-group-1');
+        $this->repository->save($group);
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        $loaded = $this->repository->findOneBy(['externalIdentifier' => 'ext-group-1']);
+        $this->assertInstanceOf(AttributeGroupInterface::class, $loaded);
+        $this->assertSame('ext-group-1', $loaded->getExternalIdentifier());
     }
 
     public function testFindOneByReturnsNullForUnknownUuid(): void
@@ -109,9 +135,7 @@ class AttributeGroupRepositoryTest extends SuluTestCase
 
         $loaded = $this->repository->findOneBy(['uuid' => $uuid]);
         $this->assertNotNull($loaded);
-        $loaded->setCurrentLocale('en');
-
-        $t = $loaded->getTranslation();
+        $t = $loaded->getTranslation('en');
         $this->assertNotNull($t);
         $this->assertSame('My Group', $t->getName());
         $this->assertSame('A description', $t->getDescription());

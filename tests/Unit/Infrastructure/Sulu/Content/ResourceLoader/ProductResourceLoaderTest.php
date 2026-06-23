@@ -18,6 +18,7 @@ use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Model\Product;
+use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\ResourceLoader\ProductResourceLoader;
 
@@ -66,6 +67,6 @@ class ProductResourceLoaderTest extends TestCase
 
     private static function createProduct(string $uuid): Product
     {
-        return new Product($uuid);
+        return new Product(new ProductFamily(), $uuid);
     }
 }

@@ -31,6 +31,7 @@ use Sulu\Product\Domain\Event\ProductTranslationRestoredEvent;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
+use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 use Webmozart\Assert\Assert;
@@ -49,6 +50,7 @@ final class ProductTrashItemHandler implements
     public function __construct(
         private TrashItemRepositoryInterface $trashItemRepository,
         private ProductRepositoryInterface $productRepository,
+        private ProductFamilyRepositoryInterface $productFamilyRepository,
         private ContentNormalizerInterface $contentNormalizer,
         private ContentMergerInterface $contentMerger,
         private iterable $productMappers,
@@ -68,6 +70,7 @@ final class ProductTrashItemHandler implements
         $product = $resource;
 
         $data = [
+            'productFamily' => $product->getProductFamily()->getUuid(),
             'dimensionContents' => [],
         ];
 
@@ -160,7 +163,11 @@ final class ProductTrashItemHandler implements
 
         $product = $this->productRepository->findOneBy(['uuid' => $productUuid]);
         if (!$product) {
-            $product = $this->productRepository->createNew($productUuid);
+            $productFamilyUuid = $restoreData['productFamily'] ?? null;
+            Assert::string($productFamilyUuid, 'Expected to find a product family uuid in the restore data.');
+            $productFamily = $this->productFamilyRepository->getOneBy(['uuid' => $productFamilyUuid]);
+
+            $product = $this->productRepository->createNew($productFamily, $productUuid);
             $this->productRepository->add($product);
         }
 

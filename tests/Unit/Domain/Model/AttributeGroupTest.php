@@ -47,15 +47,6 @@ class AttributeGroupTest extends TestCase
         $this->assertNull($group->getExternalIdentifier());
     }
 
-    public function testSetCurrentLocaleUsedByGetTranslation(): void
-    {
-        $group = new AttributeGroup();
-        $this->assertSame($group, $group->setCurrentLocale('de'));
-        $t = new AttributeGroupTranslation($group, 'de', 'Gruppe');
-        $group->addTranslation($t);
-        $this->assertSame($t, $group->getTranslation());
-    }
-
     public function testGetTranslationByExplicitLocale(): void
     {
         $group = new AttributeGroup();

@@ -68,6 +68,24 @@ class AttributeRepositoryTest extends SuluTestCase
         return $group;
     }
 
+    public function testFindOneByIdReturnsAttribute(): void
+    {
+        $group = $this->createGroup();
+        $attribute = $this->repository->create($group);
+        $attribute->setKey('id-filter');
+        $attribute->setType(AttributeInterface::TYPE_TEXT);
+        $this->repository->save($attribute);
+        $this->entityManager->flush();
+
+        $id = $attribute->getId();
+        $this->entityManager->clear();
+
+        $loaded = $this->repository->findOneBy(['id' => $id]);
+        $this->assertNotNull($loaded);
+        $this->assertSame($id, $loaded->getId());
+        $this->assertNull($this->repository->findOneBy(['id' => 0]));
+    }
+
     public function testCreateReturnsFreshAttributeWithUuid(): void
     {
         $attribute = $this->repository->create($this->createGroup());
@@ -121,6 +139,24 @@ class AttributeRepositoryTest extends SuluTestCase
 
         $this->assertInstanceOf(AttributeInterface::class, $loaded);
         $this->assertSame('size', $loaded->getKey());
+    }
+
+    public function testFindOneByExternalIdentifierReturnsAttribute(): void
+    {
+        $attribute = $this->repository->create($this->createGroup());
+        $attribute->setKey('weight');
+        $attribute->setType(AttributeInterface::TYPE_NUMBER);
+        $attribute->setExternalIdentifier('ext-attribute-1');
+
+        $this->repository->save($attribute);
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        $loaded = $this->repository->findOneBy(['externalIdentifier' => 'ext-attribute-1']);
+
+        $this->assertInstanceOf(AttributeInterface::class, $loaded);
+        $this->assertSame('weight', $loaded->getKey());
+        $this->assertSame('ext-attribute-1', $loaded->getExternalIdentifier());
     }
 
     public function testFindOneByIgnoresUnsupportedFilters(): void

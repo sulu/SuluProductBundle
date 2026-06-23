@@ -17,6 +17,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Product\Domain\Event\ProductTranslationCopiedEvent;
 use Sulu\Product\Domain\Model\Product;
+use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 
@@ -36,7 +37,7 @@ class ProductTranslationCopiedEventTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->product = new Product('uuid-translation-copied');
+        $this->product = new Product(new ProductFamily(), 'uuid-translation-copied');
         $this->event = new ProductTranslationCopiedEvent(
             $this->product,
             $this->locale,

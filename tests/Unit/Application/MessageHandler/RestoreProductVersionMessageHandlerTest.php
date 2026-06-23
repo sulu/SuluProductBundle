@@ -26,6 +26,7 @@ use Sulu\Product\Application\MessageHandler\RestoreProductVersionMessageHandler;
 use Sulu\Product\Domain\Event\ProductVersionRestoredEvent;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
+use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 
 #[CoversClass(RestoreProductVersionMessageHandler::class)]
@@ -59,7 +60,7 @@ class RestoreProductVersionMessageHandlerTest extends TestCase
 
     public function testRestoreVersionUsesDefaultDraftStage(): void
     {
-        $product = new Product('prod-uuid');
+        $product = new Product(new ProductFamily(), 'prod-uuid');
 
         $resultDimensionContent = new ProductDimensionContent($product);
         $resultDimensionContent->setLocale('en');
@@ -126,7 +127,7 @@ class RestoreProductVersionMessageHandlerTest extends TestCase
 
     public function testRestoreVersionHonorsCustomStageFromOptions(): void
     {
-        $product = new Product('prod-uuid');
+        $product = new Product(new ProductFamily(), 'prod-uuid');
 
         $resultDimensionContent = new ProductDimensionContent($product);
         $resultDimensionContent->setLocale('de');

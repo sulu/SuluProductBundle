@@ -13,6 +13,12 @@
         <field name="code" type="string" nullable="true" unique="true" length="255"/>
         <field name="externalIdentifier" type="string" length="255" nullable="true" column="external_identifier"/>
 
+        <many-to-one field="productFamily"
+                     target-entity="Sulu\Product\Domain\Model\ProductFamilyInterface">
+            <join-column name="idProductFamilies" referenced-column-name="id"
+                         nullable="false" on-delete="RESTRICT"/>
+        </many-to-one>
+
         <one-to-many field="dimensionContents" target-entity="Sulu\Product\Domain\Model\ProductDimensionContentInterface" mapped-by="product">
             <cascade>
                 <cascade-persist/>
@@ -26,7 +32,7 @@
             </cascade>
         </one-to-many>
 
-        <one-to-many field="attributes" target-entity="Sulu\Product\Domain\Model\ProductAttributeInterface" mapped-by="product"
+        <one-to-many field="attributes" target-entity="Sulu\Product\Domain\Model\ProductAttributeValueInterface" mapped-by="product"
                      orphan-removal="true">
             <cascade>
                 <cascade-persist/>
