@@ -153,6 +153,23 @@ class ProductNormalizerTest extends TestCase
         $this->assertSame([], $result['attributes']);
     }
 
+    public function testNormalizeIncludesUnitKeyWhenAttributeHasMeasurementFamilyAndUnit(): void
+    {
+        $family = new ProductFamily();
+        $attr7 = $this->attributeWithId(7, 'weight');
+        $attr7->setConfig(['measurementFamily' => 'weight', 'unit' => 'KILOGRAM']);
+        $familyAttribute = new ProductFamilyAttribute($family, $attr7);
+        $family->addFamilyAttribute($familyAttribute);
+
+        $product = new Product($family, 'product-uuid');
+
+        $result = $this->normalizer()->normalize($product, null, ['locale' => 'en']);
+        \assert(\is_array($result['attributes']));
+
+        $this->assertArrayHasKey('7_unit', $result['attributes']);
+        $this->assertSame('KILOGRAM', $result['attributes']['7_unit']);
+    }
+
     public function testNormalizeWithMissingLocaleUsesEmptyString(): void
     {
         $family = new ProductFamily();

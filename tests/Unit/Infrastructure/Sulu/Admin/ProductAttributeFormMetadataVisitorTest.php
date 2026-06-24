@@ -31,8 +31,10 @@ use Sulu\Product\Domain\Model\AttributeTranslationInterface;
 use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
+use Sulu\Product\Infrastructure\Measurement\MeasurementFamilyRegistry;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAttributeFormMetadataVisitor;
 use Symfony\Component\DependencyInjection\Container;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[CoversClass(ProductAttributeFormMetadataVisitor::class)]
 class ProductAttributeFormMetadataVisitorTest extends TestCase
@@ -56,11 +58,16 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $mapperContainer = new Container();
         $mapperContainer->set('number', new NumberPropertyMetadataMapper());
 
+        $translator = $this->createStub(TranslatorInterface::class);
+        $translator->method('trans')->willReturn('Unit');
+
         return new ProductAttributeFormMetadataVisitor(
             $this->productFamilyRepository->reveal(),
             new AttributeTypeRegistry([new NumberAttributeType()]),
             $this->formMetadataLoader->reveal(),
             new PropertyMetadataMapperRegistry($mapperContainer),
+            new MeasurementFamilyRegistry(),
+            $translator,
         );
     }
 
@@ -339,6 +346,93 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'uuid-1']);
 
         self::assertSame([], $form->getItems());
+    }
+
+    public function testInjectsUnitFieldWhenAttributeHasMeasurementFamilyAndUnit(): void
+    {
+        $translation = $this->prophesize(AttributeTranslationInterface::class);
+        $translation->getName()->willReturn('Weight');
+        $translation->getDescription()->willReturn(null);
+
+        $attribute = $this->prophesize(AttributeInterface::class);
+        $attribute->getId()->willReturn(7);
+        $attribute->getKey()->willReturn('weight');
+        $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
+        $attribute->getConfig()->willReturn(['measurementFamily' => 'weight', 'unit' => 'KILOGRAM']);
+        $attribute->getTranslation('en')->willReturn($translation->reveal());
+
+        $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
+        $familyAttribute->getAttribute()->willReturn($attribute->reveal());
+        $familyAttribute->isRequired()->willReturn(false);
+
+        $family = $this->prophesize(ProductFamilyInterface::class);
+        $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
+
+        $this->productFamilyRepository->getOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
+        $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
+            ->willReturn($this->fragmentWithValueField());
+
+        $form = new FormMetadata();
+        $form->setKey('product_attributes');
+
+        $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'uuid-1']);
+
+        $items = $form->getItems();
+
+        $valueField = $items['attributes/7'];
+        self::assertInstanceOf(FieldMetadata::class, $valueField);
+        self::assertSame(8, $valueField->getColSpan());
+
+        self::assertArrayHasKey('attributes/7_unit', $items);
+        $unitField = $items['attributes/7_unit'];
+        self::assertInstanceOf(FieldMetadata::class, $unitField);
+        self::assertSame('single_select', $unitField->getType());
+        self::assertSame(4, $unitField->getColSpan());
+        self::assertSame('true', $unitField->getDisabledCondition());
+        self::assertSame('Unit', $unitField->getLabel('en'));
+
+        $valuesOption = $unitField->getOptions()['values'];
+        /** @var OptionMetadata[] $valueOptions */
+        $valueOptions = $valuesOption->getValue();
+        self::assertCount(1, $valueOptions);
+        self::assertSame('KILOGRAM', $valueOptions[0]->getName());
+        self::assertSame('KILOGRAM', $valueOptions[0]->getValue());
+        self::assertSame('kg', $valueOptions[0]->getTitle('en'));
+    }
+
+    public function testDoesNotInjectUnitFieldWhenUnitOrFamilyMissing(): void
+    {
+        $translation = $this->prophesize(AttributeTranslationInterface::class);
+        $translation->getName()->willReturn('Weight');
+        $translation->getDescription()->willReturn(null);
+
+        $attribute = $this->prophesize(AttributeInterface::class);
+        $attribute->getId()->willReturn(7);
+        $attribute->getKey()->willReturn('weight');
+        $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
+        $attribute->getConfig()->willReturn(['measurementFamily' => 'weight']); // unit missing
+        $attribute->getTranslation('en')->willReturn($translation->reveal());
+
+        $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
+        $familyAttribute->getAttribute()->willReturn($attribute->reveal());
+        $familyAttribute->isRequired()->willReturn(false);
+
+        $family = $this->prophesize(ProductFamilyInterface::class);
+        $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
+
+        $this->productFamilyRepository->getOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
+        $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
+            ->willReturn($this->fragmentWithValueField());
+
+        $form = new FormMetadata();
+        $form->setKey('product_attributes');
+
+        $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'uuid-1']);
+
+        $items = $form->getItems();
+        self::assertArrayHasKey('attributes/7', $items);
+        self::assertArrayNotHasKey('attributes/7_unit', $items);
+        self::assertSame(12, $items['attributes/7']->getColSpan());
     }
 
     public function testThrowsWhenNoFamilyFound(): void

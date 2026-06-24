@@ -611,6 +611,8 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.attribute_type_registry'),
                 new Reference('sulu_admin.xml_form_metadata_loader'),
                 new Reference('sulu_admin.property_metadata_mapper_registry'),
+                new Reference('sulu_product.measurement_family_registry'),
+                new Reference('translator'),
             ])
             ->tag('sulu_admin.form_metadata_visitor');
 

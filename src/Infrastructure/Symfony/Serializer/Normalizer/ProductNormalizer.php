@@ -47,6 +47,15 @@ final class ProductNormalizer implements NormalizerInterface
             }
 
             $attributes[$attribute->getId()] = null;
+
+            $config = $attribute->getConfig();
+            /** @var string|null $measurementFamily */
+            $measurementFamily = $config['measurementFamily'] ?? null;
+            /** @var string|null $unit */
+            $unit = $config['unit'] ?? null;
+            if ($measurementFamily && $unit) {
+                $attributes[$attribute->getId() . '_unit'] = $unit;
+            }
         }
 
         foreach ($data->getAttributes() as $value) {

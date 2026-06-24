@@ -55,6 +55,7 @@ final class ProductAttributeValueMapper implements ProductMapperInterface
         foreach ($submitted as $attributeId => $raw) {
             $attributeId = (int) $attributeId;
             $familyAttribute = $familyAttributes[$attributeId] ?? null;
+
             if (null === $familyAttribute) {
                 continue;
             }
