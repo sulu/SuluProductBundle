@@ -83,7 +83,7 @@ class ProductNormalizerTest extends TestCase
         $result = $this->normalizer()->normalize($product, null, ['locale' => 'en']);
 
         $this->assertSame('product-uuid', $result['id']);
-        $this->assertSame('', $result['name']);
+        $this->assertSame('', $result['title']);
         $this->assertSame('PROD-001', $result['code']);
         $this->assertNull($result['externalIdentifier']);
         $this->assertSame('family-uuid', $result['productFamily']);
@@ -99,7 +99,7 @@ class ProductNormalizerTest extends TestCase
 
         $result = $this->normalizer()->normalize($product, null, ['locale' => 'en']);
 
-        $this->assertSame('My Product', $result['name']);
+        $this->assertSame('My Product', $result['title']);
     }
 
     public function testNormalizePreseedsEnabledFamilyAttributesWithNull(): void
@@ -179,6 +179,6 @@ class ProductNormalizerTest extends TestCase
 
         $result = $this->normalizer()->normalize($product, null, []);
 
-        $this->assertSame('', $result['name']);
+        $this->assertSame('', $result['title']);
     }
 }

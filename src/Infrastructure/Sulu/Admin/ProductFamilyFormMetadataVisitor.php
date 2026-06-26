@@ -42,7 +42,9 @@ class ProductFamilyFormMetadataVisitor implements FormMetadataVisitorInterface
         $items = $formMetadata->getItems();
 
         foreach ($this->attributeGroupRepository->findAll() as $group) {
-            $groupName = $group->getTranslation($locale)?->getName() ?? '';
+            $groupTranslation = $group->getTranslation($locale)
+                ?? (($dl = $group->getDefaultLocale()) !== null ? $group->getTranslation($dl) : null);
+            $groupName = $groupTranslation?->getName() ?? '';
 
             $section = new SectionMetadata('attribute_group_' . $group->getId());
             $section->setLabel($groupName, $locale);
@@ -50,7 +52,9 @@ class ProductFamilyFormMetadataVisitor implements FormMetadataVisitorInterface
             foreach ($group->getGroupAttributes() as $groupAttribute) {
                 $attribute = $groupAttribute->getAttribute();
                 $attributeId = $attribute->getId();
-                $attributeName = $attribute->getTranslation($locale)?->getName() ?? $attribute->getKey();
+                $attributeTranslation = $attribute->getTranslation($locale)
+                    ?? (($dl = $attribute->getDefaultLocale()) !== null ? $attribute->getTranslation($dl) : null);
+                $attributeName = $attributeTranslation?->getName() ?? $attribute->getKey();
 
                 $enabledField = new FieldMetadata('attributes/' . $attributeId . '/enabled');
                 $enabledField->setType('checkbox');

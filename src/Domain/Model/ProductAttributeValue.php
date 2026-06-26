@@ -27,7 +27,7 @@ class ProductAttributeValue implements ProductAttributeValueInterface
 
     protected mixed $json = null;
 
-    protected ProductInterface $product;
+    protected ProductDimensionContentInterface $productDimensionContent;
 
     protected AttributeInterface $attribute;
 
@@ -36,11 +36,11 @@ class ProductAttributeValue implements ProductAttributeValueInterface
     protected ?ProductFamilyAttributeInterface $productFamilyAttribute = null;
 
     public function __construct(
-        ProductInterface $product,
+        ProductDimensionContentInterface $productDimensionContent,
         AttributeInterface $attribute,
         string $attributeKey,
     ) {
-        $this->product = $product;
+        $this->productDimensionContent = $productDimensionContent;
         $this->attribute = $attribute;
         $this->attributeKey = $attributeKey;
     }
@@ -111,9 +111,9 @@ class ProductAttributeValue implements ProductAttributeValueInterface
             ?? $this->json;
     }
 
-    public function getProduct(): ProductInterface
+    public function getProductDimensionContent(): ProductDimensionContentInterface
     {
-        return $this->product;
+        return $this->productDimensionContent;
     }
 
     public function getAttribute(): AttributeInterface

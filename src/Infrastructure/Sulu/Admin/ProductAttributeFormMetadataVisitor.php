@@ -18,6 +18,7 @@ use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataLoaderInterface;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataVisitorInterface;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\OptionMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\SectionMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadataMapperRegistry;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\SchemaMetadata;
@@ -31,7 +32,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  */
 class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterface
 {
-    private const FORM_KEY = 'product_attributes';
+    private const FORM_KEY = 'product_details';
 
     public function __construct(
         private readonly ProductFamilyRepositoryInterface $productFamilyRepository,
@@ -54,11 +55,19 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
             return;
         }
 
-        $family = $this->productFamilyRepository->getOneBy(['productUuid' => $id]);
+        $family = $this->productFamilyRepository->findOneBy(['productUuid' => $id]);
+
+        if (null === $family) {
+            return;
+        }
+
         $items = $formMetadata->getItems();
 
         /** @var PropertyMetadata[] $schemaProperties */
         $schemaProperties = [];
+
+        $section = new SectionMetadata('attributes');
+        $section->setLabel($this->translator->trans('sulu_product.attributes', [], 'admin', $locale), $locale);
 
         foreach ($family->getFamilyAttributes() as $familyAttribute) {
             $attribute = $familyAttribute->getAttribute();
@@ -79,7 +88,8 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
                 continue;
             }
 
-            $translation = $attribute->getTranslation($locale);
+            $translation = $attribute->getTranslation($locale)
+                ?? (($dl = $attribute->getDefaultLocale()) !== null ? $attribute->getTranslation($dl) : null);
 
             $field = $this->cloneFieldWithName($template, 'attributes/' . $attribute->getId());
             $field->setLabel($translation?->getName() ?? $attribute->getKey(), $locale);
@@ -96,11 +106,11 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
 
             $type->configureField($field, $attribute, $locale);
 
-            $items[$field->getName()] = $field;
+            $section->addItem($field);
 
             if ($hasUnit) {
                 $unitField = $this->buildUnitField($attribute->getId(), $measurementFamily, $unit, $locale);
-                $items[$unitField->getName()] = $unitField;
+                $section->addItem($unitField);
             }
 
             $schemaProperties[] = $this->propertyMetadataMapperRegistry->has($field->getType())
@@ -108,7 +118,10 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
                 : new PropertyMetadata($field->getName(), $field->isRequired());
         }
 
-        $formMetadata->setItems($items);
+        if ([] !== $section->getItems()) {
+            $items[$section->getName()] = $section;
+            $formMetadata->setItems($items);
+        }
 
         if ([] !== $schemaProperties) {
             $formMetadata->setSchema($formMetadata->getSchema()->merge(new SchemaMetadata($schemaProperties)));

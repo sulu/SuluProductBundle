@@ -129,6 +129,25 @@ class AttributeMapperTest extends TestCase
         $this->assertSame('Green', $options[1]->getTranslation('en')?->getName());
     }
 
+    public function testMapAttributeDataWithLocalizedFlag(): void
+    {
+        $group = new AttributeGroup();
+        $attribute = new Attribute($group);
+
+        $this->attributeRepository->findNextPositionInGroup($group)->willReturn(0);
+
+        $this->mapper->mapAttributeData($attribute, new CreateAttributeMessage([
+            'locale' => 'en',
+            'key' => 'weight',
+            'type' => 'number',
+            'name' => 'Weight',
+            'localized' => true,
+            'group' => 'group-uuid',
+        ]));
+
+        $this->assertTrue($attribute->isLocalized());
+    }
+
     public function testMapModifyAttributeMessageLeavesMissingOptionalFieldsUnchanged(): void
     {
         $group = new AttributeGroup();

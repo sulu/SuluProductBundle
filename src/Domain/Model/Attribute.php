@@ -45,6 +45,10 @@ class Attribute implements AttributeInterface
     /** @var array<string, mixed> */
     protected array $config = [];
 
+    protected bool $localized = false;
+
+    protected ?string $defaultLocale = null;
+
     public function __construct(AttributeGroupInterface $group)
     {
         $this->translations = new ArrayCollection();
@@ -205,6 +209,30 @@ class Attribute implements AttributeInterface
     public function setConfig(array $config): self
     {
         $this->config = $config;
+
+        return $this;
+    }
+
+    public function isLocalized(): bool
+    {
+        return $this->localized;
+    }
+
+    public function setLocalized(bool $localized): self
+    {
+        $this->localized = $localized;
+
+        return $this;
+    }
+
+    public function getDefaultLocale(): ?string
+    {
+        return $this->defaultLocale;
+    }
+
+    public function setDefaultLocale(string $defaultLocale): self
+    {
+        $this->defaultLocale = $defaultLocale;
 
         return $this;
     }

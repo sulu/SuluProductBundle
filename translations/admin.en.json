@@ -4,8 +4,8 @@
     "sulu_product.attributes": "Attributes",
     "sulu_product.attribute_group": "Attribute group",
     "sulu_product.attribute_groups": "Attribute groups",
-    "sulu_product.attribute_enabled": "\"%attributeName%\" aktiviert",
-    "sulu_product.attribute_required": "\"%attributeName%\" erforderlich",
+    "sulu_product.attribute_enabled": "\"%attributeName%\" enabled",
+    "sulu_product.attribute_required": "\"%attributeName%\" required",
     "sulu_product.product_family": "Product family",
     "sulu_product.product_families": "Product families",
     "sulu_product.no_product_family_selected": "No product family selected",
@@ -85,5 +85,6 @@
     "sulu_product.measurement_family_volume": "Volume",
     "sulu_product.measurement_family_weight": "Weight",
     "sulu_product.min": "Min",
-    "sulu_product.max": "Max"
+    "sulu_product.max": "Max",
+    "sulu_product.localized": "Localized"
 }

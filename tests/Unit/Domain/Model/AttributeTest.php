@@ -189,4 +189,19 @@ class AttributeTest extends TestCase
         // @phpstan-ignore method.alreadyNarrowedType
         $this->assertInstanceOf(AuditableInterface::class, $attribute);
     }
+
+    public function testIsLocalizedDefaultsFalse(): void
+    {
+        $attribute = new Attribute(new AttributeGroup());
+        $this->assertFalse($attribute->isLocalized());
+    }
+
+    public function testSetLocalizedIsFluentAndStores(): void
+    {
+        $attribute = new Attribute(new AttributeGroup());
+        $this->assertSame($attribute, $attribute->setLocalized(true));
+        $this->assertTrue($attribute->isLocalized());
+        $attribute->setLocalized(false);
+        $this->assertFalse($attribute->isLocalized());
+    }
 }

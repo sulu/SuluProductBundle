@@ -21,6 +21,12 @@
 
         <field name="config" type="json" nullable="false"/>
 
+        <field name="defaultLocale" type="string" length="5" nullable="true" column="default_locale"/>
+
+        <field name="localized" type="boolean" nullable="false">
+            <options><option name="default">false</option></options>
+        </field>
+
         <one-to-many field="translations"
                      target-entity="Sulu\Product\Domain\Model\AttributeTranslationInterface"
                      mapped-by="attribute"

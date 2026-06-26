@@ -94,4 +94,14 @@ class ProductFamilyTest extends TestCase
         // @phpstan-ignore method.alreadyNarrowedType
         $this->assertInstanceOf(AuditableInterface::class, $family);
     }
+
+    public function testGetTranslationsReturnsAllTranslations(): void
+    {
+        $family = new ProductFamily();
+        $en = new ProductFamilyTranslation($family, 'en', 'Family');
+        $de = new ProductFamilyTranslation($family, 'de', 'Familie');
+        $family->addTranslation($en)->addTranslation($de);
+        $translations = \iterator_to_array($family->getTranslations());
+        $this->assertCount(2, $translations);
+    }
 }

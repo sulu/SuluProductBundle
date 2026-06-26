@@ -28,6 +28,8 @@ class ProductFamily implements ProductFamilyInterface
 
     protected ?string $externalIdentifier = null;
 
+    protected ?string $defaultLocale = null;
+
     /** @var Collection<int, ProductFamilyTranslationInterface> */
     protected Collection $translations;
 
@@ -69,6 +71,18 @@ class ProductFamily implements ProductFamilyInterface
         return $this;
     }
 
+    public function getDefaultLocale(): ?string
+    {
+        return $this->defaultLocale;
+    }
+
+    public function setDefaultLocale(string $defaultLocale): self
+    {
+        $this->defaultLocale = $defaultLocale;
+
+        return $this;
+    }
+
     public function getTranslation(string $locale): ?ProductFamilyTranslationInterface
     {
         $criteria = Criteria::create()
@@ -78,6 +92,11 @@ class ProductFamily implements ProductFamilyInterface
         $translation = $this->translations->matching($criteria)->first();
 
         return $translation ?: null;
+    }
+
+    public function getTranslations(): iterable
+    {
+        return $this->translations;
     }
 
     public function addTranslation(ProductFamilyTranslationInterface $translation): self

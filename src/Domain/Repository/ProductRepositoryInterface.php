@@ -13,7 +13,6 @@ namespace Sulu\Product\Domain\Repository;
 
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
-use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 
 /**
@@ -37,7 +36,7 @@ interface ProductRepositoryInterface
      */
     public const SELECT_PRODUCT_CONTENT = 'with-product-content';
 
-    public function createNew(ProductFamilyInterface $productFamily, ?string $uuid = null): ProductInterface;
+    public function createNew(?string $uuid = null): ProductInterface;
 
     /**
      * @param array{
@@ -77,6 +76,8 @@ interface ProductRepositoryInterface
      *     code?: string,
      *     productFamilyUuid?: string,
      * } $filters
+     *
+     * Note: the `code` filter queries via dimension content (locale IS NULL), not a direct product column
      */
     public function existBy(array $filters): bool;
 

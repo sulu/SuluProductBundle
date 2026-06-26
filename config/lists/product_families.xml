@@ -10,6 +10,14 @@
             <condition>translation.locale = :locale</condition>
         </join>
     </joins>
+    <joins name="defaultTranslation">
+        <join>
+            <entity-name>translationDefault</entity-name>
+            <field-name>Sulu\Product\Domain\Model\ProductFamilyInterface.translations</field-name>
+            <method>LEFT</method>
+            <condition>translationDefault.locale = Sulu\Product\Domain\Model\ProductFamilyInterface.defaultLocale</condition>
+        </join>
+    </joins>
 
     <joins name="creator">
         <join>
@@ -39,11 +47,23 @@
             <entity-name>Sulu\Product\Domain\Model\ProductFamilyInterface</entity-name>
         </property>
 
-        <property name="name" translation="sulu_admin.name" visibility="always" searchability="yes">
-            <field-name>name</field-name>
-            <entity-name>translation</entity-name>
-            <joins ref="translation"/>
+        <property name="defaultLocale" visibility="no">
+            <field-name>defaultLocale</field-name>
+            <entity-name>Sulu\Product\Domain\Model\ProductFamilyInterface</entity-name>
         </property>
+
+        <case-property name="name" translation="sulu_admin.name" visibility="always" searchability="yes">
+            <field>
+                <field-name>name</field-name>
+                <entity-name>translation</entity-name>
+                <joins ref="translation"/>
+            </field>
+            <field>
+                <field-name>name</field-name>
+                <entity-name>translationDefault</entity-name>
+                <joins ref="defaultTranslation"/>
+            </field>
+        </case-property>
 
         <property name="created" translation="sulu_admin.created" visibility="no">
             <field-name>created</field-name>

@@ -18,7 +18,9 @@ use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
+use Sulu\Component\Rest\ListBuilder\Doctrine\DoctrineListBuilder;
 use Sulu\Component\Rest\ListBuilder\Doctrine\DoctrineListBuilderFactoryInterface;
+use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescriptorInterface;
 use Sulu\Component\Rest\ListBuilder\Metadata\FieldDescriptorFactoryInterface;
 use Sulu\Component\Rest\RestHelperInterface;
 use Sulu\Product\Application\Message\CreateProductFamilyMessage;
@@ -27,6 +29,7 @@ use Sulu\Product\Domain\Exception\ProductFamilyHasProductsException;
 use Sulu\Product\Domain\Exception\ProductFamilyNotFoundException;
 use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
+use Sulu\Product\Domain\Model\ProductFamilyTranslation;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\UserInterface\Controller\Admin\ProductFamilyController;
 use Symfony\Component\HttpFoundation\Request;
@@ -299,5 +302,67 @@ class ProductFamilyControllerTest extends TestCase
         $request->setLocale('fr');
 
         $this->assertSame('fr', $this->createController()->getLocale($request));
+    }
+
+    /**
+     * @return array{ObjectProphecy<DoctrineListBuilder>, ObjectProphecy<DoctrineFieldDescriptorInterface>}
+     */
+    private function makeListBuilder(): array
+    {
+        /** @var ObjectProphecy<DoctrineFieldDescriptorInterface> $idDescriptor */
+        $idDescriptor = $this->prophesize(DoctrineFieldDescriptorInterface::class);
+
+        /** @var ObjectProphecy<DoctrineListBuilder> $listBuilder */
+        $listBuilder = $this->prophesize(DoctrineListBuilder::class);
+        $listBuilder->setIdField($idDescriptor->reveal())->shouldBeCalled();
+        $listBuilder->setParameter('locale', 'en')->shouldBeCalled();
+        $listBuilder->getCurrentPage()->willReturn(1);
+        $listBuilder->getLimit()->willReturn(10);
+        $listBuilder->count()->willReturn(1);
+
+        $this->fieldDescriptorFactory->getFieldDescriptors('product_families')
+            ->willReturn(['id' => $idDescriptor->reveal()]);
+        $this->listBuilderFactory->create(ProductFamilyInterface::class)
+            ->willReturn($listBuilder->reveal());
+        $this->restHelper->initializeListBuilder($listBuilder->reveal(), ['id' => $idDescriptor->reveal()])->shouldBeCalled();
+
+        return [$listBuilder, $idDescriptor];
+    }
+
+    public function testCgetActionSkipsRowsWithNonStringId(): void
+    {
+        [$listBuilder] = $this->makeListBuilder();
+        $listBuilder->execute()->willReturn([
+            ['id' => 123, 'name' => null],
+        ]);
+
+        $this->productFamilyRepository->findOneBy(Argument::any())->shouldNotBeCalled();
+
+        $response = $this->createController()->cgetAction(new Request(['locale' => 'en']));
+
+        $this->assertSame(200, $response->getStatusCode());
+    }
+
+    public function testCgetActionSkipsRowsWhenFamilyNotFound(): void
+    {
+        [$listBuilder] = $this->makeListBuilder();
+        $listBuilder->execute()->willReturn([
+            ['id' => 'missing-uuid', 'name' => null],
+        ]);
+
+        $this->productFamilyRepository->findOneBy(['uuid' => 'missing-uuid'])->willReturn(null);
+
+        $response = $this->createController()->cgetAction(new Request(['locale' => 'en']));
+
+        $this->assertSame(200, $response->getStatusCode());
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
+        $embedded = $data['_embedded'];
+        $this->assertIsArray($embedded);
+        $families = $embedded['product_families'];
+        $this->assertIsArray($families);
+        $first = $families[0];
+        $this->assertIsArray($first);
+        $this->assertNull($first['name']);
     }
 }

@@ -29,5 +29,30 @@
                 <cascade-persist/>
             </cascade>
         </one-to-many>
+
+        <field name="code" type="string" length="255" nullable="true">
+            <options>
+                <option name="unique">true</option>
+            </options>
+        </field>
+        <field name="externalIdentifier" type="string" length="255" nullable="true" column="external_identifier"/>
+
+        <many-to-one field="productFamily"
+                     target-entity="Sulu\Product\Domain\Model\ProductFamilyInterface">
+            <join-columns>
+                <join-column name="idProductFamilies" referenced-column-name="id"
+                             nullable="true" on-delete="RESTRICT"/>
+            </join-columns>
+        </many-to-one>
+
+        <one-to-many field="attributes"
+                     target-entity="Sulu\Product\Domain\Model\ProductAttributeValueInterface"
+                     mapped-by="productDimensionContent"
+                     orphan-removal="true">
+            <cascade>
+                <cascade-persist/>
+            </cascade>
+        </one-to-many>
+
     </mapped-superclass>
 </doctrine-mapping>

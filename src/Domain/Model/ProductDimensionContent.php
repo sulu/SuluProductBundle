@@ -57,10 +57,22 @@ class ProductDimensionContent implements ProductDimensionContentInterface
      */
     protected Collection $additionalWebspaces;
 
+    protected ?string $code = null;
+
+    protected ?string $externalIdentifier = null;
+
+    protected ?ProductFamilyInterface $productFamily = null;
+
+    /**
+     * @var Collection<int, ProductAttributeValueInterface>
+     */
+    protected Collection $attributes;
+
     public function __construct(ProductInterface $product)
     {
         $this->product = $product;
         $this->additionalWebspaces = new ArrayCollection();
+        $this->attributes = new ArrayCollection();
         $this->created = new \DateTimeImmutable();
         $this->changed = new \DateTimeImmutable();
     }
@@ -76,6 +88,13 @@ class ProductDimensionContent implements ProductDimensionContentInterface
     public function getTitle(): ?string
     {
         return $this->title;
+    }
+
+    public function setTitle(?string $title): static
+    {
+        $this->title = $title;
+
+        return $this;
     }
 
     public function setTemplateData(array $templateData): void
@@ -172,5 +191,65 @@ class ProductDimensionContent implements ProductDimensionContentInterface
             $additionalWebspace,
             $this,
         );
+    }
+
+    public function getCode(): ?string
+    {
+        return $this->code;
+    }
+
+    public function setCode(?string $code): static
+    {
+        $this->code = $code;
+
+        return $this;
+    }
+
+    public function getExternalIdentifier(): ?string
+    {
+        return $this->externalIdentifier;
+    }
+
+    public function setExternalIdentifier(?string $externalIdentifier): static
+    {
+        $this->externalIdentifier = $externalIdentifier;
+
+        return $this;
+    }
+
+    public function getProductFamily(): ?ProductFamilyInterface
+    {
+        return $this->productFamily;
+    }
+
+    public function setProductFamily(ProductFamilyInterface $productFamily): static
+    {
+        $this->productFamily = $productFamily;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, ProductAttributeValueInterface>
+     */
+    public function getAttributes(): Collection
+    {
+        return $this->attributes;
+    }
+
+    public function addAttribute(ProductAttributeValueInterface $attribute): static
+    {
+        if (!$this->attributes->contains($attribute)) {
+            $this->attributes->add($attribute);
+        }
+
+        return $this;
+    }
+
+    public function removeAttribute(ProductAttributeValueInterface $attribute): static
+    {
+        $this->attributes->removeElement($attribute);
+
+        return $this;
     }
 }

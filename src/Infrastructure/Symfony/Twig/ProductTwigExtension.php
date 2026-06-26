@@ -91,7 +91,7 @@ class ProductTwigExtension extends AbstractExtension
         );
 
         $resolvedContent = $this->contentResolver->resolve($dimensionContent, $properties);
-        $resolvedContent['attributes'] = $this->formatAttributes($product, $locale);
+        $resolvedContent['attributes'] = $this->formatAttributes($dimensionContent, $locale);
 
         $this->referenceStore->add($product->getUuid(), ProductInterface::RESOURCE_KEY);
 
@@ -101,11 +101,11 @@ class ProductTwigExtension extends AbstractExtension
     /**
      * @return list<array{key: string, label: string, type: string, value: mixed}>
      */
-    private function formatAttributes(ProductInterface $product, string $locale): array
+    private function formatAttributes(ProductDimensionContentInterface $dimensionContent, string $locale): array
     {
         $result = [];
 
-        foreach ($product->getAttributes() as $productAttribute) {
+        foreach ($dimensionContent->getAttributes() as $productAttribute) {
             $attribute = $productAttribute->getAttribute();
 
             $value = match ($attribute->getType()) {

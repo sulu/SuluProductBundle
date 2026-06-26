@@ -42,6 +42,15 @@ class ProductContentMapperTest extends TestCase
         );
     }
 
+    public function testMapProductDataSkipsWhenNoTemplate(): void
+    {
+        $product = new Product(new ProductFamily());
+
+        $this->contentPersister->persist(Argument::cetera())->shouldNotBeCalled();
+
+        $this->mapper->mapProductData($product, ['locale' => 'en', 'title' => 'Foo']);
+    }
+
     public function testMapProductDataPersistsContentWhenTemplateGiven(): void
     {
         $product = new Product(new ProductFamily());
@@ -60,18 +69,6 @@ class ProductContentMapperTest extends TestCase
         $this->mapper->mapProductData($product, $data);
     }
 
-    public function testMapProductDataDoesNothingWhenTemplateMissing(): void
-    {
-        $product = new Product(new ProductFamily());
-
-        $this->contentPersister->persist(Argument::cetera())->shouldNotBeCalled();
-
-        $this->mapper->mapProductData($product, [
-            'locale' => 'en',
-            'title' => 'Foo',
-        ]);
-    }
-
     public function testMapProductDataThrowsWhenLocaleIsNotAString(): void
     {
         $product = new Product(new ProductFamily());
@@ -81,7 +78,7 @@ class ProductContentMapperTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
 
         $this->mapper->mapProductData($product, [
-            'template' => 'default',
+            'template' => 'product',
             'locale' => 123,
         ]);
     }
@@ -94,8 +91,6 @@ class ProductContentMapperTest extends TestCase
 
         $this->expectException(\InvalidArgumentException::class);
 
-        $this->mapper->mapProductData($product, [
-            'template' => 'default',
-        ]);
+        $this->mapper->mapProductData($product, ['template' => 'product']);
     }
 }

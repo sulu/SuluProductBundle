@@ -67,7 +67,7 @@ class ProductDetailsMapperTest extends TestCase
         $this->mapper->mapProductData($product, [
             'code' => 'PROD-2',
             'locale' => 'en',
-            'name' => 'Hello',
+            'title' => 'Hello',
         ]);
 
         $translation = $product->getTranslation('en');
@@ -84,7 +84,7 @@ class ProductDetailsMapperTest extends TestCase
 
         $this->mapper->mapProductData($product, [
             'locale' => 'en',
-            'name' => 'New Name',
+            'title' => 'New Name',
         ]);
 
         $translation = $product->getTranslation('en');
@@ -92,7 +92,7 @@ class ProductDetailsMapperTest extends TestCase
         $this->assertSame('New Name', $translation->getName());
     }
 
-    public function testMapProductDataIgnoresTranslationWhenNameMissing(): void
+    public function testMapProductDataIgnoresTranslationWhenTitleMissing(): void
     {
         $product = new Product(new ProductFamily());
 
@@ -108,7 +108,7 @@ class ProductDetailsMapperTest extends TestCase
         $product = new Product(new ProductFamily());
 
         $this->mapper->mapProductData($product, [
-            'name' => 'Orphan',
+            'title' => 'Orphan',
         ]);
 
         // No translation should be created without a locale.
@@ -123,17 +123,16 @@ class ProductDetailsMapperTest extends TestCase
         })()));
     }
 
-    public function testMapProductDataDefaultsNameToEmptyStringWhenNull(): void
+    public function testMapProductDataDefaultsTitleToEmptyStringWhenNull(): void
     {
         $product = new Product(new ProductFamily());
 
         $this->mapper->mapProductData($product, [
             'locale' => 'en',
-            'name' => null,
+            'title' => null,
         ]);
 
-        // 'name' key exists but is null -> existing branch creates new translation
-        // with empty string fallback.
+        // 'title' key exists but is null -> creates new translation with empty string fallback.
         $translation = $product->getTranslation('en');
         $this->assertNotNull($translation);
         $this->assertSame('', $translation->getName());

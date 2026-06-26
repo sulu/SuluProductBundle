@@ -39,6 +39,10 @@ final class ProductFamilyMapper implements ProductFamilyMapperInterface
         ProductFamilyInterface $family,
         CreateProductFamilyMessage|ModifyProductFamilyMessage $message,
     ): void {
+        if (null === $family->getDefaultLocale()) {
+            $family->setDefaultLocale($message->getLocale());
+        }
+
         $translation = $family->getTranslation($message->getLocale());
 
         if (null === $translation) {

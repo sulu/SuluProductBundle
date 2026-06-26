@@ -202,4 +202,16 @@ class ProductAttributeValueMapperTest extends TestCase
 
         $this->addToAssertionCount(1);
     }
+
+    public function testSkipsWhenProductFamilyIsNull(): void
+    {
+        /** @var ObjectProphecy<ProductInterface> $product */
+        $product = $this->prophesize(ProductInterface::class);
+        $product->getProductFamily()->willReturn(null);
+        $product->addAttribute(Argument::cetera())->shouldNotBeCalled();
+
+        $this->mapper()->mapProductData($product->reveal(), ['attributes' => [7 => 42.0]]);
+
+        $this->addToAssertionCount(1);
+    }
 }

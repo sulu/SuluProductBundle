@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of Sulu.
  *
@@ -13,26 +15,23 @@ namespace Sulu\Product\Application\MessageHandler;
 
 use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
 use Sulu\Bundle\SecurityBundle\Entity\User;
-use Sulu\Product\Application\Mapper\ProductMapperInterface;
+use Sulu\Content\Application\ContentPersister\ContentPersisterInterface;
+use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Application\Message\CreateProductMessage;
 use Sulu\Product\Domain\Event\ProductCreatedEvent;
 use Sulu\Product\Domain\Exception\ProductCodeNotUniqueException;
 use Sulu\Product\Domain\Model\ProductInterface;
-use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 /**
- * @internal This class should not be instantiated by a project.
- *           Create a ProductMapper to extend this Handler.
+ * @internal
  */
 final class CreateProductMessageHandler
 {
     public function __construct(
         private ProductRepositoryInterface $productRepository,
-        private ProductFamilyRepositoryInterface $productFamilyRepository,
-        /** @var iterable<ProductMapperInterface> */
-        private iterable $productMappers,
+        private ContentPersisterInterface $contentPersister,
         private DomainEventCollectorInterface $domainEventCollector,
         private ?TokenStorageInterface $tokenStorage = null,
     ) {
@@ -61,15 +60,18 @@ final class CreateProductMessageHandler
             throw new ProductCodeNotUniqueException($code);
         }
 
-        $productFamily = $this->productFamilyRepository->getOneBy(['uuid' => $message->getProductFamily()]);
-
-        $product = $this->productRepository->createNew($productFamily, $message->getUuid());
-
-        foreach ($this->productMappers as $productMapper) {
-            $productMapper->mapProductData($product, $data);
-        }
+        $product = $this->productRepository->createNew($message->getUuid());
 
         $this->productRepository->add($product);
+
+        if (!\array_key_exists('template', $data)) {
+            $data['template'] = ProductInterface::TEMPLATE_TYPE;
+        }
+
+        $this->contentPersister->persist($product, $data, [
+            'locale' => $message->getLocale(),
+            'stage' => DimensionContentInterface::STAGE_DRAFT,
+        ]);
 
         $this->domainEventCollector->collect(new ProductCreatedEvent($product, $message->getLocale(), $data));
 

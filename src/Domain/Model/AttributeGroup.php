@@ -28,6 +28,8 @@ class AttributeGroup implements AttributeGroupInterface
 
     protected ?string $externalIdentifier = null;
 
+    protected ?string $defaultLocale = null;
+
     /** @var Collection<int, AttributeGroupTranslationInterface> */
     protected Collection $translations;
 
@@ -65,6 +67,18 @@ class AttributeGroup implements AttributeGroupInterface
     public function setExternalIdentifier(?string $externalIdentifier): self
     {
         $this->externalIdentifier = $externalIdentifier;
+
+        return $this;
+    }
+
+    public function getDefaultLocale(): ?string
+    {
+        return $this->defaultLocale;
+    }
+
+    public function setDefaultLocale(string $defaultLocale): self
+    {
+        $this->defaultLocale = $defaultLocale;
 
         return $this;
     }

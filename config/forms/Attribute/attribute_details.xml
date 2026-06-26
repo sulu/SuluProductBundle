@@ -30,7 +30,7 @@
             </meta>
         </property>
 
-        <property name="type" type="single_select" mandatory="true" colspan="6" disabledCondition="!!id">
+        <property name="type" type="single_select" mandatory="true" colspan="4" disabledCondition="!!id">
             <meta>
                 <title>sulu_product.type</title>
             </meta>
@@ -38,6 +38,14 @@
                 <param name="values" type="expression"
                     value="service('sulu_product.attribute_type_select_service').getValues(locale)"/>
             </params>
+        </property>
+
+        <property name="localized" type="checkbox" colspan="2"
+                  visibleCondition='type == "text" || type == "json"'
+                  disabledCondition="!!id">
+            <meta>
+                <title>sulu_product.localized</title>
+            </meta>
         </property>
 
         <property name="group" type="single_attribute_group_selection" mandatory="true" colspan="9">

@@ -6,9 +6,9 @@
     <key>product_details</key>
 
     <properties>
-        <property name="name" type="text_line" mandatory="true" colspan="9">
+        <property name="title" type="text_line" mandatory="true" colspan="9">
             <meta>
-                <title>sulu_admin.name</title>
+                <title>sulu_admin.title</title>
             </meta>
 
             <params>

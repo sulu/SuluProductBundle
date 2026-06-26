@@ -19,9 +19,10 @@ use Doctrine\ORM\NoResultException;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use Sulu\Product\Domain\Exception\ProductFamilyNotFoundException;
-use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
+use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
+use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Symfony\Component\Uid\Uuid;
 use Webmozart\Assert\Assert;
@@ -101,8 +102,15 @@ final class ProductFamilyRepository implements ProductFamilyRepositoryInterface
         $productUuid = $filters['productUuid'] ?? null;
         if (null !== $productUuid) {
             Assert::string($productUuid); // @phpstan-ignore staticMethod.alreadyNarrowedType
-            $queryBuilder->innerJoin(Product::class, 'product', Join::WITH, 'product.productFamily = productFamily')
-                ->andWhere('product.uuid = :productUuid')
+            $queryBuilder
+                ->innerJoin(
+                    ProductDimensionContentInterface::class,
+                    'pdc',
+                    Join::WITH,
+                    'pdc.productFamily = productFamily',
+                )
+                ->andWhere('pdc.locale IS NULL')
+                ->andWhere('IDENTITY(pdc.product) = :productUuid')
                 ->setParameter('productUuid', $productUuid);
         }
 

@@ -31,6 +31,10 @@ interface AttributeGroupInterface extends AuditableInterface
 
     public function setExternalIdentifier(?string $externalIdentifier): self;
 
+    public function getDefaultLocale(): ?string;
+
+    public function setDefaultLocale(string $defaultLocale): self;
+
     public function getTranslation(string $locale): ?AttributeGroupTranslationInterface;
 
     public function addTranslation(AttributeGroupTranslationInterface $translation): self;

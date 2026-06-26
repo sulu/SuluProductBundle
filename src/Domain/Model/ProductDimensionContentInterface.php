@@ -11,6 +11,7 @@
 
 namespace Sulu\Product\Domain\Model;
 
+use Doctrine\Common\Collections\Collection;
 use Sulu\Content\Domain\Model\AuditableInterface;
 use Sulu\Content\Domain\Model\AuthorInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
@@ -32,6 +33,8 @@ interface ProductDimensionContentInterface extends DimensionContentInterface, Ex
 
     public function getTitle(): ?string;
 
+    public function setTitle(?string $title): static;
+
     public function getCustomizeWebspaceSettings(): bool;
 
     public function setCustomizeWebspaceSettings(bool $customizeWebspaceSettings): static;
@@ -49,4 +52,25 @@ interface ProductDimensionContentInterface extends DimensionContentInterface, Ex
     public function addAdditionalWebspace(string $additionalWebspace): static;
 
     public function hasAdditionalWebspace(string $additionalWebspace): bool;
+
+    public function getCode(): ?string;
+
+    public function setCode(?string $code): static;
+
+    public function getExternalIdentifier(): ?string;
+
+    public function setExternalIdentifier(?string $externalIdentifier): static;
+
+    public function getProductFamily(): ?ProductFamilyInterface;
+
+    public function setProductFamily(ProductFamilyInterface $productFamily): static;
+
+    /**
+     * @return Collection<int, ProductAttributeValueInterface>
+     */
+    public function getAttributes(): Collection;
+
+    public function addAttribute(ProductAttributeValueInterface $attribute): static;
+
+    public function removeAttribute(ProductAttributeValueInterface $attribute): static;
 }

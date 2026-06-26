@@ -25,12 +25,8 @@ use Sulu\Product\Application\AttributeType\OptionsAttributeType;
 use Sulu\Product\Application\AttributeType\TextAttributeType;
 use Sulu\Product\Application\Mapper\AttributeMapper;
 use Sulu\Product\Application\Mapper\AttributeMapperInterface;
-use Sulu\Product\Application\Mapper\ProductAttributeValueMapper;
-use Sulu\Product\Application\Mapper\ProductContentMapper;
-use Sulu\Product\Application\Mapper\ProductDetailsMapper;
 use Sulu\Product\Application\Mapper\ProductFamilyMapper;
 use Sulu\Product\Application\Mapper\ProductFamilyMapperInterface;
-use Sulu\Product\Application\Mapper\ProductMapperInterface;
 use Sulu\Product\Application\MessageHandler\ApplyWorkflowTransitionProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\CopyLocaleProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\CreateAttributeGroupMessageHandler;
@@ -83,8 +79,6 @@ use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Model\ProductFamilyTranslation;
 use Sulu\Product\Domain\Model\ProductFamilyTranslationInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
-use Sulu\Product\Domain\Model\ProductTranslation;
-use Sulu\Product\Domain\Model\ProductTranslationInterface;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
@@ -99,10 +93,17 @@ use Sulu\Product\Infrastructure\Sulu\Admin\AttributeGroupAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAttributeFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductContentAdmin;
+use Sulu\Product\Infrastructure\Sulu\Admin\ProductContentFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductFamilyAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductFamilyFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\AdditionalWebspacesDataMapper;
+use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductAttributesDataMapper;
+use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductDetailsDataMapper;
 use Sulu\Product\Infrastructure\Sulu\Content\Merger\AdditionalWebspacesMerger;
+use Sulu\Product\Infrastructure\Sulu\Content\Merger\ProductAttributesMerger;
+use Sulu\Product\Infrastructure\Sulu\Content\Merger\ProductDetailsMerger;
+use Sulu\Product\Infrastructure\Sulu\Content\Normalizer\ProductAttributesNormalizer;
+use Sulu\Product\Infrastructure\Sulu\Content\Normalizer\ProductDetailsNormalizer;
 use Sulu\Product\Infrastructure\Sulu\Content\PageTreeProductSmartContentProvider;
 use Sulu\Product\Infrastructure\Sulu\Content\ProductLinkProvider;
 use Sulu\Product\Infrastructure\Sulu\Content\ProductSmartContentProvider;
@@ -133,8 +134,7 @@ use Sulu\Product\UserInterface\Controller\Admin\AttributeController;
 use Sulu\Product\UserInterface\Controller\Admin\AttributeGroupController;
 use Sulu\Product\UserInterface\Controller\Admin\MeasurementFamilyController;
 use Sulu\Product\UserInterface\Controller\Admin\MeasurementUnitController;
-use Sulu\Product\UserInterface\Controller\Admin\ProductContentController;
-use Sulu\Product\UserInterface\Controller\Admin\ProductDetailsController;
+use Sulu\Product\UserInterface\Controller\Admin\ProductController;
 use Sulu\Product\UserInterface\Controller\Admin\ProductFamilyController;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -231,9 +231,6 @@ final class SuluProductBundle extends AbstractBundle
         $builder->registerForAutoconfiguration(AttributeTypeInterface::class)
             ->addTag('sulu_product.attribute_type');
 
-        $builder->registerForAutoconfiguration(ProductMapperInterface::class)
-            ->addTag('sulu_product.product_mapper');
-
         $builder->registerForAutoconfiguration(AttributeMapperInterface::class)
             ->addTag('sulu_product.attribute_mapper');
 
@@ -262,8 +259,7 @@ final class SuluProductBundle extends AbstractBundle
             ->class(CreateProductMessageHandler::class)
             ->args([
                 new Reference('sulu_product.product_repository'),
-                new Reference('sulu_product.product_family_repository'),
-                tagged_iterator('sulu_product.product_mapper'),
+                new Reference('sulu_content.content_persister'),
                 new Reference('sulu_activity.domain_event_collector'),
                 new Reference('security.token_storage', ContainerInterface::NULL_ON_INVALID_REFERENCE),
             ])
@@ -273,7 +269,7 @@ final class SuluProductBundle extends AbstractBundle
             ->class(ModifyProductMessageHandler::class)
             ->args([
                 new Reference('sulu_product.product_repository'),
-                tagged_iterator('sulu_product.product_mapper'),
+                new Reference('sulu_content.content_persister'),
                 new Reference('sulu_activity.domain_event_collector'),
             ])
             ->tag('messenger.message_handler');
@@ -323,27 +319,6 @@ final class SuluProductBundle extends AbstractBundle
             ])
             ->tag('messenger.message_handler');
 
-        $services->set('sulu_product.product_content_mapper')
-            ->class(ProductContentMapper::class)
-            ->args([
-                new Reference('sulu_content.content_persister'),
-            ])
-            ->tag('sulu_product.product_mapper');
-
-        $services->set('sulu_product.product_details_mapper')
-            ->class(ProductDetailsMapper::class)
-            ->args([
-                new Reference('sulu_product.product_family_repository'),
-            ])
-            ->tag('sulu_product.product_mapper');
-
-        $services->set('sulu_product.product_attribute_value_mapper')
-            ->class(ProductAttributeValueMapper::class)
-            ->args([
-                new Reference('sulu_product.attribute_type_registry'),
-            ])
-            ->tag('sulu_product.product_mapper');
-
         $services->set('sulu_product.additional_webspaces_data_mapper')
             ->class(AdditionalWebspacesDataMapper::class)
             ->args([
@@ -355,6 +330,40 @@ final class SuluProductBundle extends AbstractBundle
         $services->set('sulu_product.additional_webspaces_merger')
             ->class(AdditionalWebspacesMerger::class)
             ->tag('sulu_content.merger', ['priority' => 12]);
+
+        $services->set('sulu_product.product_details_data_mapper')
+            ->class(ProductDetailsDataMapper::class)
+            ->args([
+                new Reference('sulu_product.product_family_repository'),
+                new Reference('sulu_product.product_repository'),
+            ])
+            ->tag('sulu_content.data_mapper');
+
+        $services->set('sulu_product.product_attributes_data_mapper')
+            ->class(ProductAttributesDataMapper::class)
+            ->args([
+                new Reference('sulu_product.attribute_type_registry'),
+            ])
+            ->tag('sulu_content.data_mapper');
+
+        $services->set('sulu_product.product_details_merger')
+            ->class(ProductDetailsMerger::class)
+            ->tag('sulu_content.merger');
+
+        $services->set('sulu_product.product_attributes_merger')
+            ->class(ProductAttributesMerger::class)
+            ->tag('sulu_content.merger');
+
+        $services->set('sulu_product.product_details_normalizer')
+            ->class(ProductDetailsNormalizer::class)
+            ->tag('sulu_content.normalizer');
+
+        $services->set('sulu_product.product_attributes_normalizer')
+            ->class(ProductAttributesNormalizer::class)
+            ->args([
+                new Reference('sulu_product.attribute_type_registry'),
+            ])
+            ->tag('sulu_content.normalizer');
 
         $services->set('sulu_product.webspace_settings_configuration_resolver')
             ->class(WebspaceSettingsConfigurationResolver::class)
@@ -505,10 +514,8 @@ final class SuluProductBundle extends AbstractBundle
 
         $services->set('sulu_product.product_normalizer')
             ->class(ProductNormalizer::class)
-            ->args([
-                new Reference('sulu_product.attribute_type_registry'),
-            ])
             ->tag('serializer.normalizer');
+
 
         $services->set('sulu_product.product_family_mapper')
             ->class(ProductFamilyMapper::class)
@@ -618,6 +625,10 @@ final class SuluProductBundle extends AbstractBundle
             ])
             ->tag('sulu_admin.form_metadata_visitor');
 
+        $services->set('sulu_product.product_content_form_metadata_visitor')
+            ->class(ProductContentFormMetadataVisitor::class)
+            ->tag('sulu_admin.typed_form_metadata_visitor');
+
         $services->set('sulu_product.admin_product_family_controller')
             ->class(ProductFamilyController::class)
             ->public()
@@ -648,8 +659,8 @@ final class SuluProductBundle extends AbstractBundle
         $services->alias(ProductRepositoryInterface::class, 'sulu_product.product_repository');
         $services->alias(ProductRepository::class, 'sulu_product.product_repository');
 
-        $services->set('sulu_product.admin_product_content_controller')
-            ->class(ProductContentController::class)
+        $services->set('sulu_product.admin_product_controller')
+            ->class(ProductController::class)
             ->public()
             ->args([
                 new Reference('sulu_product.product_repository'),
@@ -662,18 +673,6 @@ final class SuluProductBundle extends AbstractBundle
             ])
             ->tag('sulu.context', ['context' => 'admin']);
 
-        $services->set('sulu_product.admin_product_details_controller')
-            ->class(ProductDetailsController::class)
-            ->public()
-            ->args([
-                new Reference('sulu_product.product_repository'),
-                new Reference('sulu_message_bus'),
-                new Reference('sulu_core.list_builder.field_descriptor_factory'),
-                new Reference('sulu_core.doctrine_list_builder_factory'),
-                new Reference('sulu_core.doctrine_rest_helper'),
-                new Reference('serializer'),
-            ])
-            ->tag('sulu.context', ['context' => 'admin']);
 
         $services->set('sulu_product.single_product_selection_property_resolver')
             ->class(SingleProductSelectionPropertyResolver::class)
@@ -805,10 +804,9 @@ final class SuluProductBundle extends AbstractBundle
                 ->args([
                     new Reference('sulu_trash.trash_item_repository'),
                     new Reference('sulu_product.product_repository'),
-                    new Reference('sulu_product.product_family_repository'),
                     new Reference('sulu_content.content_normalizer'),
                     new Reference('sulu_content.content_merger'),
-                    tagged_iterator('sulu_product.product_mapper'),
+                    new Reference('sulu_content.content_persister'),
                     new Reference('sulu_activity.domain_event_collector'),
                 ])
                 ->tag('sulu_trash.store_trash_item_handler')
@@ -908,6 +906,7 @@ final class SuluProductBundle extends AbstractBundle
                     ],
                     'templates' => [
                         ProductInterface::TEMPLATE_TYPE => [
+                            'default_type' => 'product',
                             'directories' => [
                                 'app' => '%kernel.project_dir%/config/templates/products',
                             ],
@@ -922,7 +921,7 @@ final class SuluProductBundle extends AbstractBundle
                         ],
                         ProductDimensionContentInterface::RESOURCE_KEY => [
                             'routes' => [
-                                'detail' => 'sulu_product.get_product_content',
+                                'detail' => 'sulu_product.get_product',
                             ],
                         ],
                         'products_versions' => [
@@ -1147,7 +1146,6 @@ final class SuluProductBundle extends AbstractBundle
         $this->buildPersistence([
             ProductInterface::class => 'sulu.model.product.class',
             ProductDimensionContentInterface::class => 'sulu.model.product_content.class',
-            ProductTranslationInterface::class => ProductTranslation::class,
             ProductAttributeValueInterface::class => ProductAttributeValue::class,
             AttributeInterface::class => Attribute::class,
             AttributeTranslationInterface::class => AttributeTranslation::class,
