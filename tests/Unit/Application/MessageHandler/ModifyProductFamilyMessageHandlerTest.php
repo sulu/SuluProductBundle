@@ -48,7 +48,7 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
     {
         return new ModifyProductFamilyMessageHandler(
             $this->familyRepository->reveal(),
-            new ProductFamilyMapper($this->attributeRepository->reveal()),
+            [new ProductFamilyMapper($this->attributeRepository->reveal())],
         );
     }
 
@@ -72,6 +72,7 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
     {
         $attribute = new Attribute(new AttributeGroup());
         (new \ReflectionProperty(Attribute::class, 'id'))->setValue($attribute, $id);
+        $attribute->setKey('attr-' . $id);
 
         return $attribute;
     }

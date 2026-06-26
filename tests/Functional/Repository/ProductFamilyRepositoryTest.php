@@ -20,12 +20,15 @@ use Sulu\Product\Domain\Exception\ProductFamilyNotFoundException;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Model\ProductFamilyTranslation;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
+use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Doctrine\Repository\ProductFamilyRepository;
 
 #[CoversClass(ProductFamilyRepository::class)]
 class ProductFamilyRepositoryTest extends SuluTestCase
 {
     private ProductFamilyRepositoryInterface $repository;
+
+    private ProductRepositoryInterface $productRepository;
 
     private EntityManagerInterface $entityManager;
 
@@ -37,6 +40,10 @@ class ProductFamilyRepositoryTest extends SuluTestCase
         /** @var ProductFamilyRepositoryInterface $repository */
         $repository = $container->get(ProductFamilyRepositoryInterface::class);
         $this->repository = $repository;
+
+        /** @var ProductRepositoryInterface $productRepository */
+        $productRepository = $container->get(ProductRepositoryInterface::class);
+        $this->productRepository = $productRepository;
 
         /** @var EntityManagerInterface $entityManager */
         $entityManager = $container->get('doctrine.orm.entity_manager');
@@ -87,6 +94,25 @@ class ProductFamilyRepositoryTest extends SuluTestCase
         $loaded = $this->repository->findOneBy(['externalIdentifier' => 'ext-family-1']);
         $this->assertInstanceOf(ProductFamilyInterface::class, $loaded);
         $this->assertSame('ext-family-1', $loaded->getExternalIdentifier());
+    }
+
+    public function testFindOneByProductUuidReturnsOwningFamily(): void
+    {
+        $family = $this->repository->create();
+        $this->repository->save($family);
+
+        $product = $this->productRepository->createNew($family);
+        $this->productRepository->add($product);
+        $this->entityManager->flush();
+
+        $familyUuid = $family->getUuid();
+        $productUuid = $product->getUuid();
+        $this->assertNotNull($familyUuid);
+        $this->entityManager->clear();
+
+        $loaded = $this->repository->findOneBy(['productUuid' => $productUuid]);
+        $this->assertInstanceOf(ProductFamilyInterface::class, $loaded);
+        $this->assertSame($familyUuid, $loaded->getUuid());
     }
 
     public function testFindOneByReturnsNullForUnknownUuid(): void

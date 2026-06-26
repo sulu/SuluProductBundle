@@ -45,7 +45,7 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
     {
         return new CreateProductFamilyMessageHandler(
             $this->familyRepository->reveal(),
-            new ProductFamilyMapper($this->attributeRepository->reveal()),
+            [new ProductFamilyMapper($this->attributeRepository->reveal())],
         );
     }
 
@@ -56,14 +56,14 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
         $this->familyRepository->save($family)->shouldBeCalledOnce();
 
         $attribute = new Attribute(new AttributeGroup());
-        $this->attributeRepository->findOneBy(['id' => 5])->willReturn($attribute);
+        $this->attributeRepository->findOneBy(['id' => 7])->willReturn($attribute);
 
         $handler = $this->createHandler();
         $result = ($handler)(new CreateProductFamilyMessage([
             'locale' => 'en',
             'name' => 'My Family',
             'description' => 'desc',
-            'attributes' => [5 => ['enabled' => true, 'required' => true]],
+            'attributes' => [7 => ['enabled' => true, 'required' => true]],
         ]));
 
         $this->assertSame($family, $result);

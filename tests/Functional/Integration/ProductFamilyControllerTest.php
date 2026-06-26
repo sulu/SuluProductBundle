@@ -198,7 +198,7 @@ class ProductFamilyControllerTest extends SuluTestCase
         $this->assertIsArray($data);
         $this->assertIsArray($data['attributes']);
         $this->assertSame(
-            [(string) $attributeId => ['enabled' => true, 'required' => true]],
+            [$attributeId => ['enabled' => true, 'required' => true]],
             $data['attributes'],
         );
     }

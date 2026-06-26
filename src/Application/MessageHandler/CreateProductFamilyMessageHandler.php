@@ -18,11 +18,16 @@ use Sulu\Product\Application\Message\CreateProductFamilyMessage;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 
+/**
+ * @internal This class should not be instantiated by a project.
+ *           Create a ProductFamilyMapper to extend this Handler.
+ */
 final class CreateProductFamilyMessageHandler
 {
     public function __construct(
         private ProductFamilyRepositoryInterface $productFamilyRepository,
-        private ProductFamilyMapperInterface $productFamilyMapper,
+        /** @var iterable<ProductFamilyMapperInterface> */
+        private iterable $productFamilyMappers,
     ) {
     }
 
@@ -30,7 +35,9 @@ final class CreateProductFamilyMessageHandler
     {
         $family = $this->productFamilyRepository->create();
 
-        $this->productFamilyMapper->mapProductFamilyData($family, $message);
+        foreach ($this->productFamilyMappers as $productFamilyMapper) {
+            $productFamilyMapper->mapProductFamilyData($family, $message);
+        }
 
         $this->productFamilyRepository->save($family);
 

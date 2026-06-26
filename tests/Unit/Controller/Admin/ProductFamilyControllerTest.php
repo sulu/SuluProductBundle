@@ -25,20 +25,15 @@ use Sulu\Product\Application\Message\CreateProductFamilyMessage;
 use Sulu\Product\Application\Message\RemoveProductFamilyMessage;
 use Sulu\Product\Domain\Exception\ProductFamilyHasProductsException;
 use Sulu\Product\Domain\Exception\ProductFamilyNotFoundException;
-use Sulu\Product\Domain\Model\Attribute;
-use Sulu\Product\Domain\Model\AttributeGroup;
-use Sulu\Product\Domain\Model\AttributeGroupAttribute;
 use Sulu\Product\Domain\Model\ProductFamily;
-use Sulu\Product\Domain\Model\ProductFamilyAttribute;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
-use Sulu\Product\Domain\Model\ProductFamilyTranslation;
-use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\UserInterface\Controller\Admin\ProductFamilyController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
+use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 class ProductFamilyControllerTest extends TestCase
 {
@@ -59,8 +54,8 @@ class ProductFamilyControllerTest extends TestCase
     /** @var ObjectProphecy<RestHelperInterface> */
     private ObjectProphecy $restHelper;
 
-    /** @var ObjectProphecy<AttributeGroupRepositoryInterface> */
-    private ObjectProphecy $attributeGroupRepository;
+    /** @var ObjectProphecy<NormalizerInterface> */
+    private ObjectProphecy $normalizer;
 
     protected function setUp(): void
     {
@@ -69,7 +64,7 @@ class ProductFamilyControllerTest extends TestCase
         $this->fieldDescriptorFactory = $this->prophesize(FieldDescriptorFactoryInterface::class);
         $this->listBuilderFactory = $this->prophesize(DoctrineListBuilderFactoryInterface::class);
         $this->restHelper = $this->prophesize(RestHelperInterface::class);
-        $this->attributeGroupRepository = $this->prophesize(AttributeGroupRepositoryInterface::class);
+        $this->normalizer = $this->prophesize(NormalizerInterface::class);
     }
 
     private function createController(): ProductFamilyController
@@ -80,27 +75,8 @@ class ProductFamilyControllerTest extends TestCase
             $this->fieldDescriptorFactory->reveal(),
             $this->listBuilderFactory->reveal(),
             $this->restHelper->reveal(),
-            $this->attributeGroupRepository->reveal(),
+            $this->normalizer->reveal(),
         );
-    }
-
-    private function createAttributeGroup(Attribute ...$attributes): AttributeGroup
-    {
-        $group = new AttributeGroup();
-        foreach ($attributes as $attribute) {
-            $group->addGroupAttribute(new AttributeGroupAttribute($group, $attribute));
-        }
-
-        return $group;
-    }
-
-    private function attributeWithId(int $id, string $key): Attribute
-    {
-        $attribute = new Attribute(new AttributeGroup());
-        (new \ReflectionProperty(Attribute::class, 'id'))->setValue($attribute, $id);
-        $attribute->setKey($key);
-
-        return $attribute;
     }
 
     /**
@@ -130,7 +106,7 @@ class ProductFamilyControllerTest extends TestCase
         $this->assertArrayHasKey('detail', $data);
     }
 
-    public function testGetActionSerializesFamilyWithoutTranslation(): void
+    public function testGetActionReturnsNormalizedFamily(): void
     {
         $family = new ProductFamily();
         $family->setUuid('family-uuid-1');
@@ -139,7 +115,9 @@ class ProductFamilyControllerTest extends TestCase
             ->shouldBeCalledOnce()
             ->willReturn($family);
 
-        $this->attributeGroupRepository->findAll()->willReturn([]);
+        $this->normalizer->normalize($family, null, ['locale' => 'en'])
+            ->shouldBeCalledOnce()
+            ->willReturn(['id' => 'family-uuid-1', 'name' => '', 'description' => null, 'attributes' => []]);
 
         $response = $this->createController()->getAction(new Request(['locale' => 'en']), 'family-uuid-1');
 
@@ -149,66 +127,6 @@ class ProductFamilyControllerTest extends TestCase
         $this->assertSame('family-uuid-1', $data['id']);
         $this->assertSame('', $data['name']);
         $this->assertNull($data['description']);
-    }
-
-    public function testGetActionSerializesFamilyWithTranslationAndAttributes(): void
-    {
-        $family = new ProductFamily();
-        $family->setUuid('family-uuid-2');
-        $translation = new ProductFamilyTranslation($family, 'en', 'Apparel');
-        $translation->setDescription('Clothing family');
-        $family->addTranslation($translation);
-
-        $attrSize = $this->attributeWithId(9, 'size');
-        $attrColor = $this->attributeWithId(12, 'color');
-
-        $familyAttribute = new ProductFamilyAttribute($family, $attrSize);
-        $familyAttribute->setRequired(true);
-        $family->addFamilyAttribute($familyAttribute);
-
-        $this->productFamilyRepository->findOneBy(['uuid' => 'family-uuid-2'])
-            ->shouldBeCalledOnce()
-            ->willReturn($family);
-
-        $this->attributeGroupRepository->findAll()
-            ->willReturn([$this->createAttributeGroup($attrSize, $attrColor)]);
-
-        $response = $this->createController()->getAction(new Request(['locale' => 'en']), 'family-uuid-2');
-
-        $this->assertSame(200, $response->getStatusCode());
-        $data = \json_decode((string) $response->getContent(), true);
-        $this->assertIsArray($data);
-        $this->assertSame('Apparel', $data['name']);
-        $this->assertSame('Clothing family', $data['description']);
-        $this->assertSame([
-            '9' => ['enabled' => true, 'required' => true],
-            '12' => ['enabled' => false, 'required' => false],
-        ], $data['attributes']);
-    }
-
-    public function testGetActionIncludesAllAttributesWithDisabledDefaults(): void
-    {
-        $family = new ProductFamily();
-        $family->setUuid('family-uuid-3');
-
-        $attrA = $this->attributeWithId(1, 'weight');
-        $attrB = $this->attributeWithId(2, 'color');
-
-        $this->productFamilyRepository->findOneBy(['uuid' => 'family-uuid-3'])
-            ->shouldBeCalledOnce()
-            ->willReturn($family);
-
-        $this->attributeGroupRepository->findAll()
-            ->willReturn([$this->createAttributeGroup($attrA, $attrB)]);
-
-        $response = $this->createController()->getAction(new Request(['locale' => 'en']), 'family-uuid-3');
-
-        $data = \json_decode((string) $response->getContent(), true);
-        $this->assertIsArray($data);
-        $this->assertSame([
-            '1' => ['enabled' => false, 'required' => false],
-            '2' => ['enabled' => false, 'required' => false],
-        ], $data['attributes']);
     }
 
     public function testPostActionReturns201AndExtractsAttributes(): void
@@ -223,8 +141,8 @@ class ProductFamilyControllerTest extends TestCase
                 // Nested attributes map is read straight from the request; non-array entries are ignored.
                 return $message instanceof CreateProductFamilyMessage
                     && [
-                        5 => ['enabled' => true, 'required' => false],
-                        6 => ['enabled' => false, 'required' => false],
+                        9 => ['enabled' => true, 'required' => false],
+                        10 => ['enabled' => false, 'required' => false],
                     ] === $message->getAttributes();
             }),
             Argument::any(),
@@ -232,20 +150,22 @@ class ProductFamilyControllerTest extends TestCase
             ->shouldBeCalledOnce()
             ->willReturn($this->handledEnvelope($family));
 
+        $this->normalizer->normalize($family, null, ['locale' => 'en'])
+            ->shouldBeCalledOnce()
+            ->willReturn(['id' => 'created-uuid', 'name' => 'New Family', 'attributes' => []]);
+
         $request = new Request(
             ['locale' => 'en'],
             [
                 'name' => 'New Family',
                 'description' => null,
                 'attributes' => [
-                    5 => ['enabled' => true, 'required' => false],
-                    6 => ['enabled' => false],
-                    7 => 'not-an-array',
+                    9 => ['enabled' => true, 'required' => false],
+                    10 => ['enabled' => false],
+                    11 => 'not-an-array',
                 ],
             ],
         );
-
-        $this->attributeGroupRepository->findAll()->willReturn([]);
 
         $response = $this->createController()->postAction($request);
 
@@ -278,7 +198,9 @@ class ProductFamilyControllerTest extends TestCase
             ->shouldBeCalledOnce()
             ->willReturn($this->handledEnvelope($family));
 
-        $this->attributeGroupRepository->findAll()->willReturn([]);
+        $this->normalizer->normalize($family, null, ['locale' => 'en'])
+            ->shouldBeCalledOnce()
+            ->willReturn(['id' => 'put-uuid', 'name' => 'Y', 'attributes' => []]);
 
         $response = $this->createController()->putAction(new Request(['locale' => 'en'], ['name' => 'Y']), 'put-uuid');
 

@@ -15,26 +15,98 @@ namespace Sulu\Product\Tests\Unit\Application\AttributeType;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
-use Sulu\Product\Application\AttributeType\AttributeTypeInterface;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Product\Application\AttributeType\NumberAttributeType;
+use Sulu\Product\Domain\Model\Attribute;
+use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
+use Sulu\Product\Domain\Model\Product;
+use Sulu\Product\Domain\Model\ProductAttributeValue;
+use Sulu\Product\Domain\Model\ProductFamily;
 
 #[CoversClass(NumberAttributeType::class)]
 class NumberAttributeTypeTest extends TestCase
 {
-    public function testImplementsAttributeTypeInterface(): void
-    {
-        $interfaces = \class_implements(NumberAttributeType::class);
-
-        $this->assertIsArray($interfaces);
-        $this->assertContains(AttributeTypeInterface::class, $interfaces);
-    }
-
-    public function testGetKey(): void
+    public function testKeyAndFormKey(): void
     {
         $type = new NumberAttributeType();
+        self::assertSame(AttributeInterface::TYPE_NUMBER, $type->getKey());
+        self::assertSame('product_attribute_number', $type->getFormKey());
+    }
 
-        $this->assertSame(AttributeInterface::TYPE_NUMBER, $type->getKey());
-        $this->assertSame('number', $type->getKey());
+    public function testValueRoundTripUsesNumberColumn(): void
+    {
+        $type = new NumberAttributeType();
+        $value = new ProductAttributeValue(new Product(new ProductFamily()), new Attribute(new AttributeGroup()), 'k');
+
+        $type->writeValue($value, 42.5);
+
+        self::assertSame(42.5, $value->getNumber());
+        self::assertSame(42.5, $type->readValue($value));
+    }
+
+    public function testWriteNullClearsNumber(): void
+    {
+        $type = new NumberAttributeType();
+        $value = new ProductAttributeValue(new Product(new ProductFamily()), new Attribute(new AttributeGroup()), 'k');
+        $type->writeValue($value, 1.0);
+
+        $type->writeValue($value, null);
+
+        self::assertNull($value->getNumber());
+    }
+
+    public function testWriteCoercesNumericStringFromForm(): void
+    {
+        $type = new NumberAttributeType();
+        $value = new ProductAttributeValue(new Product(new ProductFamily()), new Attribute(new AttributeGroup()), 'k');
+
+        $type->writeValue($value, '42.5');
+
+        self::assertSame(42.5, $value->getNumber());
+    }
+
+    public function testWriteEmptyStringClearsNumber(): void
+    {
+        $type = new NumberAttributeType();
+        $value = new ProductAttributeValue(new Product(new ProductFamily()), new Attribute(new AttributeGroup()), 'k');
+        $type->writeValue($value, 1.0);
+
+        $type->writeValue($value, '');
+
+        self::assertNull($value->getNumber());
+    }
+
+    public function testConfigureFieldAddsMinMaxStepFromConfig(): void
+    {
+        $type = new NumberAttributeType();
+        $attribute = new Attribute(new AttributeGroup());
+        $attribute->setConfig(['min' => 0, 'max' => 100, 'step' => 0.5]);
+
+        $field = new FieldMetadata('attributes/1');
+        $type->configureField($field, $attribute, 'en');
+
+        $options = $field->getOptions();
+        self::assertArrayHasKey('min', $options);
+        self::assertArrayHasKey('max', $options);
+        self::assertArrayHasKey('step', $options);
+        self::assertSame('0', $options['min']->getValue());
+        self::assertSame('100', $options['max']->getValue());
+        self::assertSame('0.5', $options['step']->getValue());
+    }
+
+    public function testConfigureFieldSkipsMissingConfigKeys(): void
+    {
+        $type = new NumberAttributeType();
+        $attribute = new Attribute(new AttributeGroup());
+        $attribute->setConfig(['min' => 0]);
+
+        $field = new FieldMetadata('attributes/1');
+        $type->configureField($field, $attribute, 'en');
+
+        $options = $field->getOptions();
+        self::assertArrayHasKey('min', $options);
+        self::assertArrayNotHasKey('max', $options);
+        self::assertArrayNotHasKey('step', $options);
     }
 }

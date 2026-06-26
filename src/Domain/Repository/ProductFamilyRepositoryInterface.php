@@ -20,6 +20,7 @@ use Sulu\Product\Domain\Model\ProductFamilyInterface;
  * @phpstan-type ProductFamilyRepositoryFilters array{
  *     uuid?: string,
  *     externalIdentifier?: string,
+ *     productUuid?: string,
  * }
  */
 interface ProductFamilyRepositoryInterface

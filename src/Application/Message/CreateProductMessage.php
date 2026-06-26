@@ -21,6 +21,7 @@ namespace Sulu\Product\Application\Message;
  *     code?: string,
  *     author?: int|null,
  *     authored?: string,
+ *     attributes?: array<int, mixed>,
  * }
  */
 class CreateProductMessage
@@ -45,6 +46,14 @@ class CreateProductMessage
     public function getUuid(): ?string
     {
         return $this->data['uuid'] ?? null;
+    }
+
+    /**
+     * @return array<int, mixed>
+     */
+    public function getAttributes(): array
+    {
+        return $this->data['attributes'] ?? [];
     }
 
     /**

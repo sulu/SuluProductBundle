@@ -26,6 +26,7 @@ use Sulu\Product\Application\Message\ModifyProductMessage;
 use Sulu\Product\Application\Message\RemoveProductMessage;
 use Sulu\Product\Application\Message\RemoveProductTranslationMessage;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
+use Sulu\Product\Domain\Exception\RequiredProductAttributeMissingException;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
@@ -36,6 +37,8 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\HandleTrait;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
+use Webmozart\Assert\InvalidArgumentException;
 
 /**
  * @internal
@@ -52,6 +55,7 @@ final class ProductDetailsController implements SecuredControllerInterface
         private FieldDescriptorFactoryInterface $fieldDescriptorFactory,
         private DoctrineListBuilderFactoryInterface $listBuilderFactory,
         private RestHelperInterface $restHelper,
+        private NormalizerInterface $normalizer,
     ) {
         $this->messageBus = $messageBus;
     }
@@ -87,7 +91,10 @@ final class ProductDetailsController implements SecuredControllerInterface
             return new JsonResponse(['detail' => 'Product not found.'], 404);
         }
 
-        return new JsonResponse($this->serializeProduct($product, $locale));
+        /** @var array<string, mixed> $normalized */
+        $normalized = $this->normalizer->normalize($product, null, ['locale' => $locale]);
+
+        return new JsonResponse($normalized);
     }
 
     public function postAction(Request $request): Response
@@ -97,7 +104,11 @@ final class ProductDetailsController implements SecuredControllerInterface
         /** @var ProductInterface $product */
         $product = $this->handle(new Envelope($message, [new EnableFlushStamp()]));
 
-        return new JsonResponse($this->serializeProduct($product, $this->getLocale($request)), 201);
+        $locale = $this->getLocale($request);
+        /** @var array<string, mixed> $normalized */
+        $normalized = $this->normalizer->normalize($product, null, ['locale' => $locale]);
+
+        return new JsonResponse($normalized, 201);
     }
 
     public function putAction(Request $request, string $id): Response
@@ -109,11 +120,22 @@ final class ProductDetailsController implements SecuredControllerInterface
             $this->handle(new Envelope($message, [new EnableFlushStamp()]));
         } catch (ProductNotFoundException $e) {
             throw new NotFoundHttpException($e->getMessage(), $e);
+        } catch (RequiredProductAttributeMissingException $e) {
+            return new JsonResponse(['detail' => $e->getMessage()], 422);
+        } catch (InvalidArgumentException $e) {
+            return new JsonResponse(['detail' => 'Invalid attribute value provided.'], 400);
         }
 
         $product = $this->productRepository->findOneBy(['uuid' => $id]);
+        if (null === $product) {
+            return new JsonResponse(['detail' => 'Product not found.'], 404); // @codeCoverageIgnore
+        }
 
-        return new JsonResponse($this->serializeProduct($product, $this->getLocale($request)));
+        $locale = $this->getLocale($request);
+        /** @var array<string, mixed> $normalized */
+        $normalized = $this->normalizer->normalize($product, null, ['locale' => $locale]);
+
+        return new JsonResponse($normalized);
     }
 
     public function deleteAction(Request $request, string $id): Response
@@ -154,25 +176,5 @@ final class ProductDetailsController implements SecuredControllerInterface
         );
 
         return $data;
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function serializeProduct(?ProductInterface $product, string $locale): array
-    {
-        if (null === $product) {
-            return []; // @codeCoverageIgnore
-        }
-
-        $translation = $product->getTranslation($locale);
-
-        return [
-            'id' => $product->getUuid(),
-            'name' => $translation?->getName() ?? '',
-            'code' => $product->getCode(),
-            'externalIdentifier' => $product->getExternalIdentifier(),
-            'productFamily' => $product->getProductFamily()->getUuid(),
-        ];
     }
 }
