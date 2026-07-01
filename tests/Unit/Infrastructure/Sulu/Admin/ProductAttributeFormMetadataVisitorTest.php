@@ -454,4 +454,42 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
 
         self::assertSame([], $form->getItems());
     }
+
+    public function testUsesDefaultLocaleTranslationWhenLocaleTranslationMissing(): void
+    {
+        $fallbackTranslation = $this->prophesize(AttributeTranslationInterface::class);
+        $fallbackTranslation->getName()->willReturn('Gewicht');
+        $fallbackTranslation->getDescription()->willReturn(null);
+
+        $attribute = $this->prophesize(AttributeInterface::class);
+        $attribute->getId()->willReturn(7);
+        $attribute->getKey()->willReturn('weight');
+        $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
+        $attribute->getConfig()->willReturn([]);
+        $attribute->getTranslation('en')->willReturn(null);
+        $attribute->getDefaultLocale()->willReturn('de');
+        $attribute->getTranslation('de')->willReturn($fallbackTranslation->reveal());
+
+        $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
+        $familyAttribute->getAttribute()->willReturn($attribute->reveal());
+        $familyAttribute->isRequired()->willReturn(false);
+
+        $family = $this->prophesize(ProductFamilyInterface::class);
+        $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
+
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
+        $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
+            ->willReturn($this->fragmentWithValueField());
+
+        $form = new FormMetadata();
+        $form->setKey('product_details');
+
+        $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'uuid-1']);
+
+        $section = $form->getItems()['attributes'];
+        self::assertInstanceOf(SectionMetadata::class, $section);
+        $field = $section->getItems()['attributes/7'];
+        self::assertInstanceOf(FieldMetadata::class, $field);
+        self::assertSame('Gewicht', $field->getLabel('en'));
+    }
 }

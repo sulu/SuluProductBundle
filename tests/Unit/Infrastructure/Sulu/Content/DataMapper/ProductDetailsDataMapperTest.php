@@ -18,11 +18,13 @@ use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Product\Domain\Exception\ProductCodeNotUniqueException;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
+use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductDetailsDataMapper;
 
 #[CoversClass(ProductDetailsDataMapper::class)]
@@ -33,17 +35,25 @@ class ProductDetailsDataMapperTest extends TestCase
     /** @var ObjectProphecy<ProductFamilyRepositoryInterface> */
     private ObjectProphecy $productFamilyRepository;
 
+    /** @var ObjectProphecy<ProductRepositoryInterface> */
+    private ObjectProphecy $productRepository;
+
     private ProductDetailsDataMapper $mapper;
 
     protected function setUp(): void
     {
         $this->productFamilyRepository = $this->prophesize(ProductFamilyRepositoryInterface::class);
-        $this->mapper = new ProductDetailsDataMapper($this->productFamilyRepository->reveal());
+        $this->productRepository = $this->prophesize(ProductRepositoryInterface::class);
+        $this->productRepository->existBy(\Prophecy\Argument::any())->willReturn(false);
+        $this->mapper = new ProductDetailsDataMapper(
+            $this->productFamilyRepository->reveal(),
+            $this->productRepository->reveal(),
+        );
     }
 
-    private function makeDimensionContent(): ProductDimensionContent
+    private function makeDimensionContent(?string $uuid = null): ProductDimensionContent
     {
-        return new ProductDimensionContent(new Product(new ProductFamily()));
+        return new ProductDimensionContent(new Product($uuid));
     }
 
     public function testEarlyReturnWhenNotProductDimensionContent(): void
@@ -146,5 +156,29 @@ class ProductDetailsDataMapperTest extends TestCase
         $this->mapper->map($unloc, $locOther->reveal(), ['title' => 'X', 'code' => 'SKU-2']);
 
         $this->assertSame('SKU-2', $unloc->getCode());
+    }
+
+    public function testThrowsWhenCodeIsNotUnique(): void
+    {
+        $this->productRepository->existBy(['code' => 'SKU-TAKEN', 'excludeUuid' => 'product-1'])->willReturn(true);
+
+        $unloc = $this->makeDimensionContent('product-1');
+        $loc = $this->makeDimensionContent('product-1');
+
+        $this->expectException(ProductCodeNotUniqueException::class);
+
+        $this->mapper->map($unloc, $loc, ['code' => 'SKU-TAKEN']);
+    }
+
+    public function testAllowsCodeOwnedBySameProduct(): void
+    {
+        $this->productRepository->existBy(['code' => 'SKU-OWN', 'excludeUuid' => 'product-1'])->willReturn(false);
+
+        $unloc = $this->makeDimensionContent('product-1');
+        $loc = $this->makeDimensionContent('product-1');
+
+        $this->mapper->map($unloc, $loc, ['code' => 'SKU-OWN']);
+
+        $this->assertSame('SKU-OWN', $unloc->getCode());
     }
 }

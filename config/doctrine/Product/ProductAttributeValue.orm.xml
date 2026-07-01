@@ -14,7 +14,8 @@
         <field name="json" type="json" nullable="true"/>
 
         <many-to-one field="productDimensionContent"
-                     target-entity="Sulu\Product\Domain\Model\ProductDimensionContentInterface">
+                     target-entity="Sulu\Product\Domain\Model\ProductDimensionContentInterface"
+                     inversed-by="attributes">
             <join-columns>
                 <join-column name="productDimensionContentId" referenced-column-name="id"
                              nullable="false" on-delete="CASCADE"/>

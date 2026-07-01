@@ -65,6 +65,9 @@ class ProductAttributesDataMapper implements DataMapperInterface
         foreach ($unlocalizedDimensionContent->getAttributes() as $value) {
             $allExisting[$value->getAttribute()->getId()] = $value;
         }
+        foreach ($localizedDimensionContent->getAttributes() as $value) {
+            $allExisting[$value->getAttribute()->getId()] = $value;
+        }
 
         foreach ($submitted as $attributeId => $raw) {
             if (!\is_int($attributeId) && !\ctype_digit((string) $attributeId)) {
@@ -79,12 +82,15 @@ class ProductAttributesDataMapper implements DataMapperInterface
             }
 
             $attribute = $familyAttribute->getAttribute();
+            $targetDimensionContent = $attribute->isLocalized()
+                ? $localizedDimensionContent
+                : $unlocalizedDimensionContent;
             $type = $this->attributeTypeRegistry->get($attribute->getType());
             $existing = $allExisting[$attributeId] ?? null;
 
             if ($this->isEmpty($raw)) {
                 if (null !== $existing) {
-                    $unlocalizedDimensionContent->removeAttribute($existing);
+                    $targetDimensionContent->removeAttribute($existing);
                     unset($allExisting[$attributeId]);
                 }
 
@@ -93,14 +99,14 @@ class ProductAttributesDataMapper implements DataMapperInterface
 
             $isNew = null === $existing;
             if (null === $existing) {
-                $existing = new ProductAttributeValue($unlocalizedDimensionContent, $attribute, $attribute->getKey());
+                $existing = new ProductAttributeValue($targetDimensionContent, $attribute, $attribute->getKey());
                 $existing->setProductFamilyAttribute($familyAttribute);
             }
 
             $type->writeValue($existing, $raw);
 
             if ($isNew) {
-                $unlocalizedDimensionContent->addAttribute($existing);
+                $targetDimensionContent->addAttribute($existing);
                 $allExisting[$attributeId] = $existing;
             }
         }

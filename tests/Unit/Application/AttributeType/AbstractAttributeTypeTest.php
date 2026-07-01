@@ -21,7 +21,7 @@ use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
-use Sulu\Product\Domain\Model\ProductFamily;
+use Sulu\Product\Domain\Model\ProductDimensionContent;
 
 #[CoversClass(AbstractAttributeType::class)]
 class AbstractAttributeTypeTest extends TestCase
@@ -43,7 +43,7 @@ class AbstractAttributeTypeTest extends TestCase
 
     public function testWriteAndReadValueUseJsonColumnByDefault(): void
     {
-        $value = new ProductAttributeValue(new Product(new ProductFamily()), new Attribute(new AttributeGroup()), 'k');
+        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
 
         $this->type()->writeValue($value, ['a' => 1]);
 

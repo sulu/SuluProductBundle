@@ -516,7 +516,6 @@ final class SuluProductBundle extends AbstractBundle
             ->class(ProductNormalizer::class)
             ->tag('serializer.normalizer');
 
-
         $services->set('sulu_product.product_family_mapper')
             ->class(ProductFamilyMapper::class)
             ->args([
@@ -672,7 +671,6 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_core.doctrine_rest_helper'),
             ])
             ->tag('sulu.context', ['context' => 'admin']);
-
 
         $services->set('sulu_product.single_product_selection_property_resolver')
             ->class(SingleProductSelectionPropertyResolver::class)

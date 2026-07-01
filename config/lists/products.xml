@@ -20,6 +20,15 @@
         </join>
     </joins>
 
+    <joins name="ghostDimensionContent" ref="unlocalizedDimensionContent">
+        <join>
+            <entity-name>ghostDimensionContent</entity-name>
+            <field-name>Sulu\Product\Domain\Model\ProductInterface.dimensionContents</field-name>
+            <method>LEFT</method>
+            <condition>ghostDimensionContent.locale = unlocalizedDimensionContent.ghostLocale AND ghostDimensionContent.stage = 'draft' AND dimensionContent IS NULL AND ghostDimensionContent.version = 0</condition>
+        </join>
+    </joins>
+
     <joins name="creator" ref="dimensionContent">
         <join>
             <entity-name>%sulu.model.user.class%</entity-name>
@@ -48,11 +57,23 @@
             <entity-name>Sulu\Product\Domain\Model\ProductInterface</entity-name>
         </property>
 
-        <property name="name" translation="sulu_admin.name" visibility="always" searchability="yes">
-            <field-name>title</field-name>
-            <entity-name>dimensionContent</entity-name>
-            <joins ref="dimensionContent"/>
-        </property>
+        <case-property name="name" translation="sulu_admin.name" visibility="always" searchability="yes">
+            <field>
+                <field-name>title</field-name>
+                <entity-name>dimensionContent</entity-name>
+
+                <joins ref="dimensionContent"/>
+            </field>
+
+            <field>
+                <field-name>title</field-name>
+                <entity-name>ghostDimensionContent</entity-name>
+
+                <joins ref="ghostDimensionContent"/>
+            </field>
+
+            <transformer type="title"/>
+        </case-property>
 
         <property name="code" translation="sulu_product.code" visibility="yes">
             <field-name>code</field-name>
@@ -99,5 +120,15 @@
                 <joins ref="changer"/>
             </field>
         </concatenation-property>
+
+        <property name="locale" translation="sulu_admin.locale" visibility="never">
+            <field-name>locale</field-name>
+            <entity-name>dimensionContent</entity-name>
+        </property>
+
+        <property name="ghostLocale" translation="sulu_admin.ghost_locale" visibility="never">
+            <field-name>locale</field-name>
+            <entity-name>ghostDimensionContent</entity-name>
+        </property>
     </properties>
 </list>

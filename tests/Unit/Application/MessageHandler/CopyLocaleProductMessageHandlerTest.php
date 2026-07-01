@@ -25,7 +25,6 @@ use Sulu\Product\Application\MessageHandler\CopyLocaleProductMessageHandler;
 use Sulu\Product\Domain\Event\ProductTranslationCopiedEvent;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
-use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 
 class CopyLocaleProductMessageHandlerTest extends TestCase
@@ -58,7 +57,7 @@ class CopyLocaleProductMessageHandlerTest extends TestCase
 
     public function testCopyLocale(): void
     {
-        $product = new Product(new ProductFamily(), 'prod-uuid');
+        $product = new Product('prod-uuid');
 
         $targetDimensionContent = new ProductDimensionContent($product);
         $targetDimensionContent->setLocale('de');

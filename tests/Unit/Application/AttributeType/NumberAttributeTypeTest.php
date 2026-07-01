@@ -22,7 +22,7 @@ use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
-use Sulu\Product\Domain\Model\ProductFamily;
+use Sulu\Product\Domain\Model\ProductDimensionContent;
 
 #[CoversClass(NumberAttributeType::class)]
 class NumberAttributeTypeTest extends TestCase
@@ -37,7 +37,7 @@ class NumberAttributeTypeTest extends TestCase
     public function testValueRoundTripUsesNumberColumn(): void
     {
         $type = new NumberAttributeType();
-        $value = new ProductAttributeValue(new Product(new ProductFamily()), new Attribute(new AttributeGroup()), 'k');
+        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
 
         $type->writeValue($value, 42.5);
 
@@ -48,7 +48,7 @@ class NumberAttributeTypeTest extends TestCase
     public function testWriteNullClearsNumber(): void
     {
         $type = new NumberAttributeType();
-        $value = new ProductAttributeValue(new Product(new ProductFamily()), new Attribute(new AttributeGroup()), 'k');
+        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
         $type->writeValue($value, 1.0);
 
         $type->writeValue($value, null);
@@ -59,7 +59,7 @@ class NumberAttributeTypeTest extends TestCase
     public function testWriteCoercesNumericStringFromForm(): void
     {
         $type = new NumberAttributeType();
-        $value = new ProductAttributeValue(new Product(new ProductFamily()), new Attribute(new AttributeGroup()), 'k');
+        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
 
         $type->writeValue($value, '42.5');
 
@@ -69,7 +69,7 @@ class NumberAttributeTypeTest extends TestCase
     public function testWriteEmptyStringClearsNumber(): void
     {
         $type = new NumberAttributeType();
-        $value = new ProductAttributeValue(new Product(new ProductFamily()), new Attribute(new AttributeGroup()), 'k');
+        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
         $type->writeValue($value, 1.0);
 
         $type->writeValue($value, '');

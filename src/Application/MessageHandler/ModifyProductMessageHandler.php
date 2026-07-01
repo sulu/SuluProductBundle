@@ -16,7 +16,6 @@ use Sulu\Content\Application\ContentPersister\ContentPersisterInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Application\Message\ModifyProductMessage;
 use Sulu\Product\Domain\Event\ProductModifiedEvent;
-use Sulu\Product\Domain\Exception\ProductNotFoundException;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 

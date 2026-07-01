@@ -216,12 +216,13 @@ class ProductAdminTest extends TestCase
         $viewCollection = new ViewCollection();
         $this->admin->configureViews($viewCollection);
 
-        $this->assertCount(5, $viewCollection->all());
+        $this->assertCount(6, $viewCollection->all());
         $this->assertTrue($viewCollection->has(ProductAdmin::LIST_VIEW));
         $this->assertTrue($viewCollection->has(ProductAdmin::ADD_TABS_VIEW));
         $this->assertTrue($viewCollection->has(ProductAdmin::EDIT_TABS_VIEW));
         $this->assertTrue($viewCollection->has(ProductAdmin::ADD_TABS_VIEW . '.details'));
         $this->assertTrue($viewCollection->has(ProductAdmin::EDIT_TABS_VIEW . '.details'));
+        $this->assertTrue($viewCollection->has(ProductAdmin::EDIT_TABS_VIEW . '.attributes'));
     }
 
     public function testConfigureViewsRegistersAttributesTabForEditOnly(): void
@@ -236,7 +237,7 @@ class ProductAdminTest extends TestCase
         $viewCollection = new ViewCollection();
         $this->admin->configureViews($viewCollection);
 
-        self::assertFalse($viewCollection->has(ProductAdmin::EDIT_TABS_VIEW . '.attributes'));
+        self::assertTrue($viewCollection->has(ProductAdmin::EDIT_TABS_VIEW . '.attributes'));
         self::assertFalse($viewCollection->has(ProductAdmin::ADD_TABS_VIEW . '.attributes'));
     }
 

@@ -18,13 +18,11 @@ use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
-use Sulu\Product\Application\Mapper\ProductMapperInterface;
+use Sulu\Content\Application\ContentPersister\ContentPersisterInterface;
 use Sulu\Product\Application\Message\ModifyProductMessage;
 use Sulu\Product\Application\MessageHandler\ModifyProductMessageHandler;
 use Sulu\Product\Domain\Event\ProductModifiedEvent;
-use Sulu\Product\Domain\Exception\ProductCodeNotUniqueException;
 use Sulu\Product\Domain\Model\Product;
-use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 
 class ModifyProductMessageHandlerTest extends TestCase
@@ -34,8 +32,8 @@ class ModifyProductMessageHandlerTest extends TestCase
     /** @var ObjectProphecy<ProductRepositoryInterface> */
     private ObjectProphecy $productRepository;
 
-    /** @var ObjectProphecy<ProductMapperInterface> */
-    private ObjectProphecy $productMapper;
+    /** @var ObjectProphecy<ContentPersisterInterface> */
+    private ObjectProphecy $contentPersister;
 
     /** @var ObjectProphecy<DomainEventCollectorInterface> */
     private ObjectProphecy $domainEventCollector;
@@ -45,32 +43,29 @@ class ModifyProductMessageHandlerTest extends TestCase
     protected function setUp(): void
     {
         $this->productRepository = $this->prophesize(ProductRepositoryInterface::class);
-        $this->productMapper = $this->prophesize(ProductMapperInterface::class);
+        $this->contentPersister = $this->prophesize(ContentPersisterInterface::class);
         $this->domainEventCollector = $this->prophesize(DomainEventCollectorInterface::class);
 
         $this->handler = new ModifyProductMessageHandler(
             $this->productRepository->reveal(),
-            [$this->productMapper->reveal()],
+            $this->contentPersister->reveal(),
             $this->domainEventCollector->reveal(),
         );
     }
 
     public function testModifyProduct(): void
     {
-        $product = new Product(new ProductFamily(), 'prod-uuid');
+        $product = new Product('prod-uuid');
         $data = ['locale' => 'en', 'code' => 'PROD-001'];
 
         $this->productRepository->getOneBy(
-            Argument::that(fn (array $filters) => isset($filters['locale']) && 'en' === $filters['locale']),
+            Argument::that(fn (array $filters) => isset($filters['uuid']) && 'prod-uuid' === $filters['uuid']),
             Argument::type('array')
         )
             ->shouldBeCalledOnce()
             ->willReturn($product);
 
-        $this->productRepository->existBy(['code' => 'PROD-001'])
-            ->willReturn(false);
-
-        $this->productMapper->mapProductData($product, $data)
+        $this->contentPersister->persist($product, Argument::type('array'), Argument::type('array'))
             ->shouldBeCalledOnce();
 
         $this->domainEventCollector->collect(Argument::type(ProductModifiedEvent::class))
@@ -81,27 +76,5 @@ class ModifyProductMessageHandlerTest extends TestCase
         $result = ($this->handler)($message);
 
         $this->assertSame($product, $result);
-    }
-
-    public function testModifyProductThrowsOnDuplicateCode(): void
-    {
-        $product = new Product(new ProductFamily(), 'prod-uuid');
-        $data = ['locale' => 'en', 'code' => 'TAKEN-CODE'];
-
-        $this->productRepository->getOneBy(
-            Argument::that(fn (array $filters) => isset($filters['locale']) && 'en' === $filters['locale']),
-            Argument::type('array')
-        )
-            ->shouldBeCalledOnce()
-            ->willReturn($product);
-
-        $this->productRepository->existBy(['code' => 'TAKEN-CODE'])
-            ->willReturn(true);
-
-        $message = new ModifyProductMessage(['uuid' => 'prod-uuid'], $data);
-
-        $this->expectException(ProductCodeNotUniqueException::class);
-
-        ($this->handler)($message);
     }
 }

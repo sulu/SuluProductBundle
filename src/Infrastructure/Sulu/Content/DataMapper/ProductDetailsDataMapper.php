@@ -48,9 +48,11 @@ class ProductDetailsDataMapper implements DataMapperInterface
         if (\array_key_exists('code', $data)) {
             /** @var string|null $code */
             $code = \is_string($data['code']) ? $data['code'] : null;
-            $currentCode = $unlocalizedDimensionContent->getCode();
-            if (null !== $code && $code !== $currentCode && $this->productRepository->existBy(['code' => $code])) {
-                throw new ProductCodeNotUniqueException($code);
+            if (null !== $code) {
+                $excludeUuid = $unlocalizedDimensionContent->getResource()->getUuid();
+                if ($this->productRepository->existBy(['code' => $code, 'excludeUuid' => $excludeUuid])) {
+                    throw new ProductCodeNotUniqueException($code);
+                }
             }
             $unlocalizedDimensionContent->setCode($code);
         }
@@ -67,6 +69,5 @@ class ProductDetailsDataMapper implements DataMapperInterface
             $productFamily = $this->productFamilyRepository->getOneBy(['uuid' => $productFamilyUuid]);
             $unlocalizedDimensionContent->setProductFamily($productFamily);
         }
-
     }
 }

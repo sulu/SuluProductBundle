@@ -31,7 +31,6 @@ use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
-use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Reference\ProductReferenceRefresher;
 
@@ -157,7 +156,7 @@ class ProductReferenceRefresherTest extends TestCase
 
     public function testRefreshWithSingleProductYieldsOnce(): void
     {
-        $product = new Product(new ProductFamily(), 'product-uuid-1');
+        $product = new Product('product-uuid-1');
         $dimensionContent = new ProductDimensionContent($product);
         $dimensionContent->setLocale('en');
         $dimensionContent->setStage('live');
@@ -182,12 +181,12 @@ class ProductReferenceRefresherTest extends TestCase
 
     public function testRefreshWithTwoProductsProcessesGroupChange(): void
     {
-        $product1 = new Product(new ProductFamily(), 'uuid-1');
+        $product1 = new Product('uuid-1');
         $dc1 = new ProductDimensionContent($product1);
         $dc1->setLocale('en');
         $dc1->setStage('live');
 
-        $product2 = new Product(new ProductFamily(), 'uuid-2');
+        $product2 = new Product('uuid-2');
         $dc2 = new ProductDimensionContent($product2);
         $dc2->setLocale('en');
         $dc2->setStage('live');
@@ -215,7 +214,7 @@ class ProductReferenceRefresherTest extends TestCase
 
     public function testRefreshWithMultipleStagesResetsUnlocalizedContent(): void
     {
-        $product = new Product(new ProductFamily(), 'uuid-multi-stage');
+        $product = new Product('uuid-multi-stage');
 
         $unlocalizedDraft = new ProductDimensionContent($product);
         // locale stays null (unlocalized)
@@ -251,7 +250,7 @@ class ProductReferenceRefresherTest extends TestCase
 
     public function testRefreshWithContentViewsAddsReferences(): void
     {
-        $product = new Product(new ProductFamily(), 'product-uuid-ref');
+        $product = new Product('product-uuid-ref');
         $dimensionContent = new ProductDimensionContent($product);
         $dimensionContent->setLocale('en');
         $dimensionContent->setStage('live');

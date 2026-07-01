@@ -75,6 +75,7 @@ interface ProductRepositoryInterface
      * @param array{
      *     code?: string,
      *     productFamilyUuid?: string,
+     *     excludeUuid?: string,
      * } $filters
      *
      * Note: the `code` filter queries via dimension content (locale IS NULL), not a direct product column

@@ -144,6 +144,13 @@ final class ProductRepository implements ProductRepositoryInterface
                 ->setParameter('productFamilyUuid', $productFamilyUuid);
         }
 
+        $excludeUuid = $filters['excludeUuid'] ?? null;
+        if (null !== $excludeUuid) {
+            $queryBuilder
+                ->andWhere('product.uuid != :excludeUuid')
+                ->setParameter('excludeUuid', $excludeUuid);
+        }
+
         return (int) $queryBuilder->getQuery()->getSingleScalarResult() > 0;
     }
 

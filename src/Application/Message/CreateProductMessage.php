@@ -20,6 +20,7 @@ namespace Sulu\Product\Application\Message;
  *     uuid?: string,
  *     title?: string,
  *     code?: string,
+ *     template?: string,
  *     author?: int|null,
  *     authored?: string,
  *     attributes?: array<int, mixed>,

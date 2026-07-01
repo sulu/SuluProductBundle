@@ -21,6 +21,7 @@ namespace Sulu\Product\Application\Message;
  *     locale: string,
  *     title?: string,
  *     code?: string,
+ *     template?: string,
  *     productFamily?: string,
  *     attributes?: array<int, mixed>,
  * }

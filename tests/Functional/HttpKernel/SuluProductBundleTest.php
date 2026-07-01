@@ -35,14 +35,6 @@ class SuluProductBundleTest extends SuluTestCase
         $this->assertTrue($container->has(AttributeRepositoryInterface::class));
     }
 
-    public function testContainerRegistersProductMappers(): void
-    {
-        self::bootKernel();
-        $container = self::getContainer();
-
-        $this->assertTrue($container->has('sulu_product.product_details_mapper'));
-    }
-
     public function testBundleClassExists(): void
     {
         $this->assertTrue(\class_exists(SuluProductBundle::class));

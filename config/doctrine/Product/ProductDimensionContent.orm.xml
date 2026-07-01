@@ -30,11 +30,7 @@
             </cascade>
         </one-to-many>
 
-        <field name="code" type="string" length="255" nullable="true">
-            <options>
-                <option name="unique">true</option>
-            </options>
-        </field>
+        <field name="code" type="string" length="255" nullable="true"/>
         <field name="externalIdentifier" type="string" length="255" nullable="true" column="external_identifier"/>
 
         <many-to-one field="productFamily"

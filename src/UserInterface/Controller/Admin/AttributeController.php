@@ -197,7 +197,7 @@ final class AttributeController implements SecuredControllerInterface
             'name' => $translation?->getName() ?? '',
             'description' => $translation?->getDescription(),
             'options' => \array_map(
-                function (AttributeOptionInterface $option) use ($locale, $attribute) {
+                function(AttributeOptionInterface $option) use ($locale, $attribute) {
                     $optionTranslation = $option->getTranslation($locale);
                     if (null === $optionTranslation) {
                         $defaultLocale = $attribute->getDefaultLocale();

@@ -17,7 +17,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Product\Domain\Event\ProductTranslationAddedEvent;
 use Sulu\Product\Domain\Model\Product;
-use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 
@@ -35,7 +34,7 @@ class ProductTranslationAddedEventTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->product = new Product(new ProductFamily(), 'uuid-translation-added');
+        $this->product = new Product('uuid-translation-added');
         $this->event = new ProductTranslationAddedEvent($this->product, $this->locale, $this->payload);
     }
 

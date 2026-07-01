@@ -416,4 +416,49 @@ class AttributeControllerTest extends SuluTestCase
         $this->assertIsString($detail);
         $this->assertStringContainsString('put-dup-first', $detail);
     }
+
+    public function testGetFallsBackToDefaultLocaleForTranslation(): void
+    {
+        self::purgeDatabase();
+        $groupId = $this->createGroup();
+
+        $this->client->request(
+            'POST',
+            '/admin/api/attributes.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'key' => 'weight',
+                'name' => 'Weight',
+                'type' => 'options',
+                'group' => $groupId,
+                'options' => [
+                    ['key' => 'heavy', 'name' => 'Heavy'],
+                ],
+            ]) ?: null,
+        );
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+        $postData = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($postData);
+        $id = $postData['id'];
+        $this->assertIsString($id);
+
+        // Fetch in a locale with no translation → falls back to defaultLocale ('en')
+        $this->client->request('GET', '/admin/api/attributes/' . $id . '.json?locale=fr');
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(200, $response);
+
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
+        // Attribute name falls back to English
+        $this->assertSame('Weight', $data['name']);
+        // Option name also falls back to English
+        $options = $data['options'];
+        $this->assertIsArray($options);
+        $this->assertCount(1, $options);
+        $this->assertIsArray($options[0]);
+        $this->assertSame('Heavy', $options[0]['name']);
+    }
 }

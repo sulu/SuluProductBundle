@@ -20,7 +20,6 @@ use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
-use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\Merger\ProductDetailsMerger;
 
@@ -38,7 +37,7 @@ class ProductDetailsMergerTest extends TestCase
 
     private function makeDimensionContent(): ProductDimensionContent
     {
-        return new ProductDimensionContent(new Product(new ProductFamily()));
+        return new ProductDimensionContent(new Product());
     }
 
     public function testEarlyReturnWhenTargetNotProductDimensionContent(): void

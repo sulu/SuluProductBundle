@@ -24,7 +24,6 @@ use Sulu\Product\Application\MessageHandler\RemoveProductTranslationMessageHandl
 use Sulu\Product\Domain\Event\ProductTranslationRemovedEvent;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
-use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 
 class RemoveProductTranslationMessageHandlerTest extends TestCase
@@ -53,7 +52,7 @@ class RemoveProductTranslationMessageHandlerTest extends TestCase
 
     public function testRemoveDirectLocaleMatch(): void
     {
-        $product = new Product(new ProductFamily(), 'prod-uuid');
+        $product = new Product('prod-uuid');
 
         $dc = new ProductDimensionContent($product);
         $dc->setLocale('en');
@@ -80,7 +79,7 @@ class RemoveProductTranslationMessageHandlerTest extends TestCase
 
     public function testRemoveGhostLocaleMatchNoRemainingLocales(): void
     {
-        $product = new Product(new ProductFamily(), 'prod-uuid');
+        $product = new Product('prod-uuid');
 
         $dc = new ProductDimensionContent($product);
         $dc->setLocale(null);
@@ -108,7 +107,7 @@ class RemoveProductTranslationMessageHandlerTest extends TestCase
 
     public function testUpdateGhostLocaleWhenRemainingLocales(): void
     {
-        $product = new Product(new ProductFamily(), 'prod-uuid');
+        $product = new Product('prod-uuid');
 
         $dc = new ProductDimensionContent($product);
         $dc->setLocale(null);
@@ -139,7 +138,7 @@ class RemoveProductTranslationMessageHandlerTest extends TestCase
 
     public function testRemoveUpdatesAvailableLocalesOnUnlocalizedContent(): void
     {
-        $product = new Product(new ProductFamily(), 'prod-uuid');
+        $product = new Product('prod-uuid');
 
         $dc = new ProductDimensionContent($product);
         $dc->setLocale(null);

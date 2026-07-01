@@ -25,10 +25,8 @@ use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
-use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
-use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\Normalizer\ProductAttributesNormalizer;
 
 #[CoversClass(ProductAttributesNormalizer::class)]
@@ -47,7 +45,7 @@ class ProductAttributesNormalizerTest extends TestCase
 
     private function makeDimensionContent(): ProductDimensionContent
     {
-        return new ProductDimensionContent(new Product(new ProductFamily()));
+        return new ProductDimensionContent(new Product());
     }
 
     public function testGetIgnoredAttributesForNonProductDimensionContent(): void
@@ -77,14 +75,9 @@ class ProductAttributesNormalizerTest extends TestCase
 
     public function testEnhanceWithNoFamilyYieldsEmptyAttributes(): void
     {
-        /** @var ObjectProphecy<ProductInterface> $product */
-        $product = $this->prophesize(ProductInterface::class);
-        $product->getProductFamily()->willReturn(null);
-        $product->getAttributes()->willReturn(new ArrayCollection());
-
         /** @var ObjectProphecy<ProductDimensionContentInterface> $dc */
         $dc = $this->prophesize(ProductDimensionContentInterface::class);
-        $dc->getResource()->willReturn($product->reveal());
+        $dc->getProductFamily()->willReturn(null);
         $dc->getAttributes()->willReturn(new ArrayCollection());
 
         $result = $this->normalizer->enhance($dc->reveal(), []);
@@ -97,6 +90,7 @@ class ProductAttributesNormalizerTest extends TestCase
         /** @var ObjectProphecy<AttributeInterface> $attribute */
         $attribute = $this->prophesize(AttributeInterface::class);
         $attribute->getId()->willReturn(42);
+        $attribute->getConfig()->willReturn([]);
 
         /** @var ObjectProphecy<ProductFamilyAttributeInterface> $familyAttribute */
         $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
@@ -106,14 +100,9 @@ class ProductAttributesNormalizerTest extends TestCase
         $family = $this->prophesize(ProductFamilyInterface::class);
         $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
 
-        /** @var ObjectProphecy<ProductInterface> $product */
-        $product = $this->prophesize(ProductInterface::class);
-        $product->getProductFamily()->willReturn($family->reveal());
-        $product->getAttributes()->willReturn(new ArrayCollection());
-
         /** @var ObjectProphecy<ProductDimensionContentInterface> $dc */
         $dc = $this->prophesize(ProductDimensionContentInterface::class);
-        $dc->getResource()->willReturn($product->reveal());
+        $dc->getProductFamily()->willReturn($family->reveal());
         $dc->getAttributes()->willReturn(new ArrayCollection());
 
         $result = $this->normalizer->enhance($dc->reveal(), []);
@@ -124,30 +113,51 @@ class ProductAttributesNormalizerTest extends TestCase
         $this->assertNull($attributes[42]);
     }
 
+    public function testEnhancePrePopulatesUnitKeyForMeasurementFamilyAttribute(): void
+    {
+        /** @var ObjectProphecy<AttributeInterface> $attribute */
+        $attribute = $this->prophesize(AttributeInterface::class);
+        $attribute->getId()->willReturn(42);
+        $attribute->getConfig()->willReturn(['measurementFamily' => 'length', 'unit' => 'meter']);
+
+        /** @var ObjectProphecy<ProductFamilyAttributeInterface> $familyAttribute */
+        $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
+        $familyAttribute->getAttribute()->willReturn($attribute->reveal());
+
+        /** @var ObjectProphecy<ProductFamilyInterface> $family */
+        $family = $this->prophesize(ProductFamilyInterface::class);
+        $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
+
+        /** @var ObjectProphecy<ProductDimensionContentInterface> $dc */
+        $dc = $this->prophesize(ProductDimensionContentInterface::class);
+        $dc->getProductFamily()->willReturn($family->reveal());
+        $dc->getAttributes()->willReturn(new ArrayCollection());
+
+        $result = $this->normalizer->enhance($dc->reveal(), []);
+
+        $this->assertIsArray($result['attributes']);
+        $this->assertSame('meter', $result['attributes']['42_unit']);
+    }
+
     public function testEnhanceWithAttributeValueSetsValue(): void
     {
-        $productFamily = new ProductFamily();
-        $product = new Product($productFamily);
+        $pdc = new ProductDimensionContent(new Product());
 
         /** @var ObjectProphecy<AttributeInterface> $attribute */
         $attribute = $this->prophesize(AttributeInterface::class);
         $attribute->getId()->willReturn(7);
         $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
 
-        $attrValue = new ProductAttributeValue($product, $attribute->reveal(), 'attr-7');
+        $attrValue = new ProductAttributeValue($pdc, $attribute->reveal(), 'attr-7');
         $attrValue->setNumber(3.14);
 
         /** @var ObjectProphecy<ProductFamilyInterface> $family */
         $family = $this->prophesize(ProductFamilyInterface::class);
         $family->getFamilyAttributes()->willReturn([]);
 
-        /** @var ObjectProphecy<ProductInterface> $productMock */
-        $productMock = $this->prophesize(ProductInterface::class);
-        $productMock->getProductFamily()->willReturn($family->reveal());
-
         /** @var ObjectProphecy<ProductDimensionContentInterface> $dc */
         $dc = $this->prophesize(ProductDimensionContentInterface::class);
-        $dc->getResource()->willReturn($productMock->reveal());
+        $dc->getProductFamily()->willReturn($family->reveal());
         $dc->getAttributes()->willReturn(new ArrayCollection([$attrValue]));
 
         $result = $this->normalizer->enhance($dc->reveal(), []);

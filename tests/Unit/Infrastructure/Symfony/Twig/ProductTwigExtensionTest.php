@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Tests\Unit\Infrastructure\Symfony\Twig;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
@@ -31,7 +32,7 @@ use Sulu\Product\Domain\Model\AttributeOptionTranslation;
 use Sulu\Product\Domain\Model\AttributeTranslation;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
-use Sulu\Product\Domain\Model\ProductFamily;
+use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Symfony\Twig\ProductTwigExtension;
@@ -98,9 +99,11 @@ class ProductTwigExtensionTest extends TestCase
 
     public function testLoadProductReturnsResolvedContent(): void
     {
-        $product = new Product(new ProductFamily(), 'uuid-1');
+        $product = new Product('uuid-1');
 
         $dimensionContent = $this->prophesize(\Sulu\Product\Domain\Model\ProductDimensionContentInterface::class);
+
+        $dimensionContent->getAttributes()->willReturn(new ArrayCollection());
 
         $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
         $this->contentAggregator->aggregate($product, Argument::type('array'))
@@ -119,13 +122,15 @@ class ProductTwigExtensionTest extends TestCase
 
     public function testLoadProductUsesRequestLocaleWhenNotProvided(): void
     {
-        $product = new Product(new ProductFamily(), 'uuid-1');
+        $product = new Product('uuid-1');
 
         $dimensionContent = $this->prophesize(\Sulu\Product\Domain\Model\ProductDimensionContentInterface::class);
 
         $localization = new Localization();
         $localization->setLanguage('de');
         $this->requestAnalyzer->getCurrentLocalization()->willReturn($localization);
+
+        $dimensionContent->getAttributes()->willReturn(new ArrayCollection());
 
         $this->productRepository->findOneBy(
             Argument::that(fn (array $criteria) => 'de' === $criteria['locale']),
@@ -146,7 +151,8 @@ class ProductTwigExtensionTest extends TestCase
 
     public function testLoadProductFormatsAttributes(): void
     {
-        $product = new Product(new ProductFamily(), 'uuid-1');
+        $product = new Product('uuid-1');
+        $pdc = new ProductDimensionContent($product);
 
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setKey('color');
@@ -154,17 +160,15 @@ class ProductTwigExtensionTest extends TestCase
         $translation = new AttributeTranslation($attribute, 'en', 'Color');
         $attribute->addTranslation($translation);
 
-        $productAttribute = new ProductAttributeValue($product, $attribute, 'color');
+        $productAttribute = new ProductAttributeValue($pdc, $attribute, 'color');
         $productAttribute->setText('Red');
 
-        $product->addAttribute($productAttribute);
-
-        $dimensionContent = $this->prophesize(\Sulu\Product\Domain\Model\ProductDimensionContentInterface::class);
+        $pdc->addAttribute($productAttribute);
 
         $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
         $this->contentAggregator->aggregate($product, Argument::type('array'))
-            ->willReturn($dimensionContent->reveal());
-        $this->contentResolver->resolve($dimensionContent->reveal(), [])->willReturn([]);
+            ->willReturn($pdc);
+        $this->contentResolver->resolve($pdc, [])->willReturn([]);
         $this->referenceStore->add('uuid-1', ProductInterface::RESOURCE_KEY)->shouldBeCalled();
 
         $result = $this->extension->loadProduct('uuid-1', [], 'en');
@@ -189,7 +193,8 @@ class ProductTwigExtensionTest extends TestCase
 
     public function testLoadProductFormatsOptionsAttribute(): void
     {
-        $product = new Product(new ProductFamily(), 'uuid-1');
+        $product = new Product('uuid-1');
+        $pdc = new ProductDimensionContent($product);
 
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setKey('color');
@@ -201,18 +206,16 @@ class ProductTwigExtensionTest extends TestCase
         $optionTranslation = new AttributeOptionTranslation($option, 'en', 'Red');
         $option->addTranslation($optionTranslation);
 
-        $productAttribute = new ProductAttributeValue($product, $attribute, 'color');
+        $productAttribute = new ProductAttributeValue($pdc, $attribute, 'color');
         $productAttribute->setAttributeOptionKey('red');
         $productAttribute->setAttributeOption($option);
 
-        $product->addAttribute($productAttribute);
-
-        $dimensionContent = $this->prophesize(\Sulu\Product\Domain\Model\ProductDimensionContentInterface::class);
+        $pdc->addAttribute($productAttribute);
 
         $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
         $this->contentAggregator->aggregate($product, Argument::type('array'))
-            ->willReturn($dimensionContent->reveal());
-        $this->contentResolver->resolve($dimensionContent->reveal(), [])->willReturn([]);
+            ->willReturn($pdc);
+        $this->contentResolver->resolve($pdc, [])->willReturn([]);
         $this->referenceStore->add('uuid-1', ProductInterface::RESOURCE_KEY)->shouldBeCalled();
 
         $result = $this->extension->loadProduct('uuid-1', [], 'en');
@@ -226,23 +229,22 @@ class ProductTwigExtensionTest extends TestCase
 
     public function testLoadProductFormatsNumberAttribute(): void
     {
-        $product = new Product(new ProductFamily(), 'uuid-1');
+        $product = new Product('uuid-1');
+        $pdc = new ProductDimensionContent($product);
 
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setKey('weight');
         $attribute->setType(AttributeInterface::TYPE_NUMBER);
 
-        $productAttribute = new ProductAttributeValue($product, $attribute, 'weight');
+        $productAttribute = new ProductAttributeValue($pdc, $attribute, 'weight');
         $productAttribute->setNumber(42.5);
 
-        $product->addAttribute($productAttribute);
-
-        $dimensionContent = $this->prophesize(\Sulu\Product\Domain\Model\ProductDimensionContentInterface::class);
+        $pdc->addAttribute($productAttribute);
 
         $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
         $this->contentAggregator->aggregate($product, Argument::type('array'))
-            ->willReturn($dimensionContent->reveal());
-        $this->contentResolver->resolve($dimensionContent->reveal(), [])->willReturn([]);
+            ->willReturn($pdc);
+        $this->contentResolver->resolve($pdc, [])->willReturn([]);
         $this->referenceStore->add('uuid-1', ProductInterface::RESOURCE_KEY)->shouldBeCalled();
 
         $result = $this->extension->loadProduct('uuid-1', [], 'en');
@@ -256,23 +258,22 @@ class ProductTwigExtensionTest extends TestCase
 
     public function testLoadProductFormatsJsonAttribute(): void
     {
-        $product = new Product(new ProductFamily(), 'uuid-1');
+        $product = new Product('uuid-1');
+        $pdc = new ProductDimensionContent($product);
 
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setKey('meta');
         $attribute->setType(AttributeInterface::TYPE_JSON);
 
-        $productAttribute = new ProductAttributeValue($product, $attribute, 'meta');
+        $productAttribute = new ProductAttributeValue($pdc, $attribute, 'meta');
         $productAttribute->setJson(['foo' => 'bar']);
 
-        $product->addAttribute($productAttribute);
-
-        $dimensionContent = $this->prophesize(\Sulu\Product\Domain\Model\ProductDimensionContentInterface::class);
+        $pdc->addAttribute($productAttribute);
 
         $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
         $this->contentAggregator->aggregate($product, Argument::type('array'))
-            ->willReturn($dimensionContent->reveal());
-        $this->contentResolver->resolve($dimensionContent->reveal(), [])->willReturn([]);
+            ->willReturn($pdc);
+        $this->contentResolver->resolve($pdc, [])->willReturn([]);
         $this->referenceStore->add('uuid-1', ProductInterface::RESOURCE_KEY)->shouldBeCalled();
 
         $result = $this->extension->loadProduct('uuid-1', [], 'en');
@@ -286,23 +287,22 @@ class ProductTwigExtensionTest extends TestCase
 
     public function testLoadProductFormatsDefaultAttribute(): void
     {
-        $product = new Product(new ProductFamily(), 'uuid-1');
+        $product = new Product('uuid-1');
+        $pdc = new ProductDimensionContent($product);
 
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setKey('custom');
         $attribute->setType('unknown_type');
 
-        $productAttribute = new ProductAttributeValue($product, $attribute, 'custom');
+        $productAttribute = new ProductAttributeValue($pdc, $attribute, 'custom');
         $productAttribute->setText('some-value');
 
-        $product->addAttribute($productAttribute);
-
-        $dimensionContent = $this->prophesize(\Sulu\Product\Domain\Model\ProductDimensionContentInterface::class);
+        $pdc->addAttribute($productAttribute);
 
         $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
         $this->contentAggregator->aggregate($product, Argument::type('array'))
-            ->willReturn($dimensionContent->reveal());
-        $this->contentResolver->resolve($dimensionContent->reveal(), [])->willReturn([]);
+            ->willReturn($pdc);
+        $this->contentResolver->resolve($pdc, [])->willReturn([]);
         $this->referenceStore->add('uuid-1', ProductInterface::RESOURCE_KEY)->shouldBeCalled();
 
         $result = $this->extension->loadProduct('uuid-1', [], 'en');

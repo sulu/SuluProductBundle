@@ -27,11 +27,10 @@ use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
+use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
-use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
-use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductAttributesDataMapper;
 
 #[CoversClass(ProductAttributesDataMapper::class)]
@@ -83,19 +82,15 @@ class ProductAttributesDataMapperTest extends TestCase
 
     public function testNoOpWhenProductFamilyIsNull(): void
     {
-        /** @var ObjectProphecy<ProductInterface> $product */
-        $product = $this->prophesize(ProductInterface::class);
-        $product->getProductFamily()->willReturn(null);
-
         /** @var ObjectProphecy<ProductDimensionContentInterface> $unloc */
         $unloc = $this->prophesize(ProductDimensionContentInterface::class);
-        $unloc->getResource()->willReturn($product->reveal());
+        $unloc->getProductFamily()->willReturn(null);
         /** @var ObjectProphecy<ProductDimensionContentInterface> $loc */
         $loc = $this->prophesize(ProductDimensionContentInterface::class);
 
         $this->mapper->map($unloc->reveal(), $loc->reveal(), ['attributes' => [1 => 5.0]]);
 
-        $product->getAttributes()->shouldNotHaveBeenCalled();
+        $unloc->getAttributes()->shouldNotHaveBeenCalled();
         $this->addToAssertionCount(1);
     }
 
@@ -105,7 +100,7 @@ class ProductAttributesDataMapperTest extends TestCase
 
         $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [99 => 5.0]]);
 
-        $fixture['product']->addAttribute(Argument::cetera())->shouldNotHaveBeenCalled();
+        $fixture['unloc_prophecy']->addAttribute(Argument::cetera())->shouldNotHaveBeenCalled();
         $this->addToAssertionCount(1);
     }
 
@@ -116,7 +111,7 @@ class ProductAttributesDataMapperTest extends TestCase
         // "1_unit" is submitted alongside a number attribute value (unit selector); it must be ignored
         $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [1 => 7.5, '1_unit' => 'KILOGRAM']]);
 
-        $fixture['product']->addAttribute(Argument::that(
+        $fixture['unloc_prophecy']->addAttribute(Argument::that(
             static fn ($v): bool => $v instanceof ProductAttributeValueInterface && 7.5 === $v->getNumber()
         ))->shouldHaveBeenCalledOnce();
     }
@@ -124,25 +119,25 @@ class ProductAttributesDataMapperTest extends TestCase
     public function testCreatesNewAttributeValue(): void
     {
         $fixture = $this->makeProductFixture(1, false);
-        $fixture['product']->addAttribute(Argument::that(
+        $fixture['unloc_prophecy']->addAttribute(Argument::that(
             static fn ($v): bool => $v instanceof ProductAttributeValueInterface && 7.5 === $v->getNumber()
-        ))->shouldBeCalled()->willReturn($fixture['product']->reveal());
+        ))->shouldBeCalled()->willReturn($fixture['unloc_prophecy']->reveal());
 
         $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [1 => 7.5]]);
     }
 
     public function testRemovesValueWhenNull(): void
     {
-        $productFamily = new ProductFamily();
-        $concreteProduct = new Product($productFamily);
+        $concretePdc = new ProductDimensionContent(new Product());
 
         /** @var ObjectProphecy<AttributeInterface> $attribute */
         $attribute = $this->prophesize(AttributeInterface::class);
         $attribute->getId()->willReturn(1);
         $attribute->getKey()->willReturn('attr-1');
         $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
+        $attribute->isLocalized()->willReturn(false);
 
-        $existingValue = new ProductAttributeValue($concreteProduct, $attribute->reveal(), 'attr-1');
+        $existingValue = new ProductAttributeValue($concretePdc, $attribute->reveal(), 'attr-1');
         $existingValue->setNumber(5.0);
 
         /** @var ObjectProphecy<ProductFamilyAttributeInterface> $familyAttribute */
@@ -154,34 +149,31 @@ class ProductAttributesDataMapperTest extends TestCase
         $family = $this->prophesize(ProductFamilyInterface::class);
         $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
 
-        /** @var ObjectProphecy<ProductInterface> $product */
-        $product = $this->prophesize(ProductInterface::class);
-        $product->getProductFamily()->willReturn($family->reveal());
-        $product->getAttributes()->willReturn(new ArrayCollection([$existingValue]));
-        $product->removeAttribute($existingValue)->shouldBeCalled()->willReturn($product->reveal());
-        $product->addAttribute(Argument::cetera())->shouldNotBeCalled();
-
         /** @var ObjectProphecy<ProductDimensionContentInterface> $unloc */
         $unloc = $this->prophesize(ProductDimensionContentInterface::class);
-        $unloc->getResource()->willReturn($product->reveal());
+        $unloc->getProductFamily()->willReturn($family->reveal());
+        $unloc->getAttributes()->willReturn(new ArrayCollection([$existingValue]));
+        $unloc->removeAttribute($existingValue)->shouldBeCalled()->willReturn($unloc->reveal());
+        $unloc->addAttribute(Argument::cetera())->shouldNotBeCalled();
         /** @var ObjectProphecy<ProductDimensionContentInterface> $loc */
         $loc = $this->prophesize(ProductDimensionContentInterface::class);
+        $loc->getAttributes()->willReturn(new ArrayCollection());
 
         $this->mapper->map($unloc->reveal(), $loc->reveal(), ['attributes' => [1 => null]]);
     }
 
     public function testIsEmptyForEmptyString(): void
     {
-        $productFamily = new ProductFamily();
-        $concreteProduct = new Product($productFamily);
+        $concretePdc = new ProductDimensionContent(new Product());
 
         /** @var ObjectProphecy<AttributeInterface> $attribute */
         $attribute = $this->prophesize(AttributeInterface::class);
         $attribute->getId()->willReturn(1);
         $attribute->getKey()->willReturn('attr-1');
         $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
+        $attribute->isLocalized()->willReturn(false);
 
-        $existingValue = new ProductAttributeValue($concreteProduct, $attribute->reveal(), 'attr-1');
+        $existingValue = new ProductAttributeValue($concretePdc, $attribute->reveal(), 'attr-1');
         $existingValue->setNumber(3.0);
 
         /** @var ObjectProphecy<ProductFamilyAttributeInterface> $familyAttribute */
@@ -193,17 +185,14 @@ class ProductAttributesDataMapperTest extends TestCase
         $family = $this->prophesize(ProductFamilyInterface::class);
         $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
 
-        /** @var ObjectProphecy<ProductInterface> $product */
-        $product = $this->prophesize(ProductInterface::class);
-        $product->getProductFamily()->willReturn($family->reveal());
-        $product->getAttributes()->willReturn(new ArrayCollection([$existingValue]));
-        $product->removeAttribute($existingValue)->shouldBeCalled()->willReturn($product->reveal());
-
         /** @var ObjectProphecy<ProductDimensionContentInterface> $unloc */
         $unloc = $this->prophesize(ProductDimensionContentInterface::class);
-        $unloc->getResource()->willReturn($product->reveal());
+        $unloc->getProductFamily()->willReturn($family->reveal());
+        $unloc->getAttributes()->willReturn(new ArrayCollection([$existingValue]));
+        $unloc->removeAttribute($existingValue)->shouldBeCalled()->willReturn($unloc->reveal());
         /** @var ObjectProphecy<ProductDimensionContentInterface> $loc */
         $loc = $this->prophesize(ProductDimensionContentInterface::class);
+        $loc->getAttributes()->willReturn(new ArrayCollection());
 
         $this->mapper->map($unloc->reveal(), $loc->reveal(), ['attributes' => [1 => '']]);
     }
@@ -211,7 +200,7 @@ class ProductAttributesDataMapperTest extends TestCase
     public function testRequiredMissingThrows(): void
     {
         $fixture = $this->makeProductFixture(1, true);
-        $fixture['product']->addAttribute(Argument::cetera())->shouldNotBeCalled();
+        $fixture['unloc_prophecy']->addAttribute(Argument::cetera())->shouldNotBeCalled();
 
         $this->expectException(RequiredProductAttributeMissingException::class);
         $this->expectExceptionMessage('attr-1');
@@ -222,9 +211,9 @@ class ProductAttributesDataMapperTest extends TestCase
     public function testRequiredWithValuePasses(): void
     {
         $fixture = $this->makeProductFixture(1, true);
-        $fixture['product']->addAttribute(Argument::that(
+        $fixture['unloc_prophecy']->addAttribute(Argument::that(
             static fn ($v): bool => $v instanceof ProductAttributeValueInterface && 10.0 === $v->getNumber()
-        ))->shouldBeCalled()->willReturn($fixture['product']->reveal());
+        ))->shouldBeCalled()->willReturn($fixture['unloc_prophecy']->reveal());
 
         $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [1 => 10.0]]);
 
@@ -233,16 +222,16 @@ class ProductAttributesDataMapperTest extends TestCase
 
     public function testUpdatesExistingValueInPlace(): void
     {
-        $productFamily = new ProductFamily();
-        $concreteProduct = new Product($productFamily);
+        $concretePdc = new ProductDimensionContent(new Product());
 
         /** @var ObjectProphecy<AttributeInterface> $attribute */
         $attribute = $this->prophesize(AttributeInterface::class);
         $attribute->getId()->willReturn(1);
         $attribute->getKey()->willReturn('attr-1');
         $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
+        $attribute->isLocalized()->willReturn(false);
 
-        $existingValue = new ProductAttributeValue($concreteProduct, $attribute->reveal(), 'attr-1');
+        $existingValue = new ProductAttributeValue($concretePdc, $attribute->reveal(), 'attr-1');
         $existingValue->setNumber(1.0);
 
         /** @var ObjectProphecy<ProductFamilyAttributeInterface> $familyAttribute */
@@ -254,39 +243,87 @@ class ProductAttributesDataMapperTest extends TestCase
         $family = $this->prophesize(ProductFamilyInterface::class);
         $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
 
-        /** @var ObjectProphecy<ProductInterface> $product */
-        $product = $this->prophesize(ProductInterface::class);
-        $product->getProductFamily()->willReturn($family->reveal());
-        $product->getAttributes()->willReturn(new ArrayCollection([$existingValue]));
-        $product->addAttribute(Argument::cetera())->shouldNotBeCalled();
-
         /** @var ObjectProphecy<ProductDimensionContentInterface> $unloc */
         $unloc = $this->prophesize(ProductDimensionContentInterface::class);
-        $unloc->getResource()->willReturn($product->reveal());
+        $unloc->getProductFamily()->willReturn($family->reveal());
+        $unloc->getAttributes()->willReturn(new ArrayCollection([$existingValue]));
+        $unloc->addAttribute(Argument::cetera())->shouldNotBeCalled();
         /** @var ObjectProphecy<ProductDimensionContentInterface> $loc */
         $loc = $this->prophesize(ProductDimensionContentInterface::class);
+        $loc->getAttributes()->willReturn(new ArrayCollection());
 
         $this->mapper->map($unloc->reveal(), $loc->reveal(), ['attributes' => [1 => 99.0]]);
 
         $this->assertSame(99.0, $existingValue->getNumber());
     }
 
+    public function testCreatesLocalizedAttributeOnLocalizedDimensionContent(): void
+    {
+        $fixture = $this->makeProductFixture(1, false, true);
+
+        $fixture['loc_prophecy']->addAttribute(Argument::that(
+            static fn ($v): bool => $v instanceof ProductAttributeValueInterface && 7.5 === $v->getNumber()
+        ))->shouldBeCalledOnce()->willReturn($fixture['loc_prophecy']->reveal());
+
+        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [1 => 7.5]]);
+
+        $fixture['unloc_prophecy']->addAttribute(Argument::cetera())->shouldNotHaveBeenCalled();
+    }
+
+    public function testRemovesLocalizedValueFromLocalizedDimensionContent(): void
+    {
+        $concretePdc = new ProductDimensionContent(new Product());
+
+        /** @var ObjectProphecy<AttributeInterface> $attribute */
+        $attribute = $this->prophesize(AttributeInterface::class);
+        $attribute->getId()->willReturn(1);
+        $attribute->getKey()->willReturn('attr-1');
+        $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
+        $attribute->isLocalized()->willReturn(true);
+
+        $existingValue = new ProductAttributeValue($concretePdc, $attribute->reveal(), 'attr-1');
+        $existingValue->setNumber(5.0);
+
+        /** @var ObjectProphecy<ProductFamilyAttributeInterface> $familyAttribute */
+        $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
+        $familyAttribute->getAttribute()->willReturn($attribute->reveal());
+        $familyAttribute->isRequired()->willReturn(false);
+
+        /** @var ObjectProphecy<ProductFamilyInterface> $family */
+        $family = $this->prophesize(ProductFamilyInterface::class);
+        $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
+
+        /** @var ObjectProphecy<ProductDimensionContentInterface> $unloc */
+        $unloc = $this->prophesize(ProductDimensionContentInterface::class);
+        $unloc->getProductFamily()->willReturn($family->reveal());
+        $unloc->getAttributes()->willReturn(new ArrayCollection());
+        $unloc->removeAttribute(Argument::cetera())->shouldNotBeCalled();
+        /** @var ObjectProphecy<ProductDimensionContentInterface> $loc */
+        $loc = $this->prophesize(ProductDimensionContentInterface::class);
+        $loc->getAttributes()->willReturn(new ArrayCollection([$existingValue]));
+        $loc->removeAttribute($existingValue)->shouldBeCalled()->willReturn($loc->reveal());
+
+        $this->mapper->map($unloc->reveal(), $loc->reveal(), ['attributes' => [1 => null]]);
+    }
+
     /**
      * @return array{
-     *     product: ObjectProphecy<ProductInterface>,
+     *     unloc_prophecy: ObjectProphecy<ProductDimensionContentInterface>,
+     *     loc_prophecy: ObjectProphecy<ProductDimensionContentInterface>,
      *     unloc: ProductDimensionContentInterface,
      *     loc: ProductDimensionContentInterface,
      *     attribute: AttributeInterface,
      *     familyAttribute: ProductFamilyAttributeInterface,
      * }
      */
-    private function makeProductFixture(int $attributeId, bool $required): array
+    private function makeProductFixture(int $attributeId, bool $required, bool $localized = false): array
     {
         /** @var ObjectProphecy<AttributeInterface> $attribute */
         $attribute = $this->prophesize(AttributeInterface::class);
         $attribute->getId()->willReturn($attributeId);
         $attribute->getKey()->willReturn('attr-' . $attributeId);
         $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
+        $attribute->isLocalized()->willReturn($localized);
 
         /** @var ObjectProphecy<ProductFamilyAttributeInterface> $familyAttribute */
         $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
@@ -297,21 +334,21 @@ class ProductAttributesDataMapperTest extends TestCase
         $family = $this->prophesize(ProductFamilyInterface::class);
         $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
 
-        /** @var ObjectProphecy<ProductInterface> $product */
-        $product = $this->prophesize(ProductInterface::class);
-        $product->getProductFamily()->willReturn($family->reveal());
-        $product->getAttributes()->willReturn(new ArrayCollection());
-        $product->addAttribute(Argument::cetera())->willReturn($product->reveal());
-        $product->removeAttribute(Argument::cetera())->willReturn($product->reveal());
-
         /** @var ObjectProphecy<ProductDimensionContentInterface> $unloc */
         $unloc = $this->prophesize(ProductDimensionContentInterface::class);
-        $unloc->getResource()->willReturn($product->reveal());
+        $unloc->getProductFamily()->willReturn($family->reveal());
+        $unloc->getAttributes()->willReturn(new ArrayCollection());
+        $unloc->addAttribute(Argument::cetera())->willReturn($unloc->reveal());
+        $unloc->removeAttribute(Argument::cetera())->willReturn($unloc->reveal());
         /** @var ObjectProphecy<ProductDimensionContentInterface> $loc */
         $loc = $this->prophesize(ProductDimensionContentInterface::class);
+        $loc->getAttributes()->willReturn(new ArrayCollection());
+        $loc->addAttribute(Argument::cetera())->willReturn($loc->reveal());
+        $loc->removeAttribute(Argument::cetera())->willReturn($loc->reveal());
 
         return [
-            'product' => $product,
+            'unloc_prophecy' => $unloc,
+            'loc_prophecy' => $loc,
             'unloc' => $unloc->reveal(),
             'loc' => $loc->reveal(),
             'attribute' => $attribute->reveal(),
