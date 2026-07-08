@@ -6,7 +6,7 @@
     <key>product_details</key>
 
     <properties>
-        <property name="title" type="text_line" mandatory="true" colspan="9" disabledCondition="!!id">
+        <property name="title" type="text_line" mandatory="true" colspan="9">
             <meta>
                 <title>sulu_admin.title</title>
             </meta>
@@ -16,7 +16,7 @@
             </params>
         </property>
 
-        <property name="code" type="text_line" colspan="3" disabledCondition="!!id">
+        <property name="code" type="text_line" colspan="3">
             <meta>
                 <title>sulu_product.code</title>
             </meta>

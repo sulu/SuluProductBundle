@@ -190,18 +190,6 @@ class ProductAdmin extends Admin
                 ->setParent(static::EDIT_TABS_VIEW),
         );
 
-        // Attributes form — edit mode only (form fields are driven by ProductAttributeFormMetadataVisitor)
-        $viewCollection->add(
-            $this->viewBuilderFactory->createFormViewBuilder(static::EDIT_TABS_VIEW . '.attributes', '/attributes')
-                ->setResourceKey(ProductInterface::RESOURCE_KEY)
-                ->setFormKey(ProductInterface::ATTRIBUTES_FORM_KEY)
-                ->setTabTitle('sulu_product.attributes')
-                ->setTabOrder(20)
-                ->addRouterAttributesToFormMetadata(['id'])
-                ->addToolbarActions($editToolbarActions)
-                ->setParent(static::EDIT_TABS_VIEW),
-        );
-
         // Activity tab (added by activityViewBuilderFactory if it has permission)
         $insightsViewName = static::EDIT_TABS_VIEW . '.insights';
         if ($viewCollection->has($insightsViewName) && $this->activityViewBuilderFactory->hasActivityListPermission()) {

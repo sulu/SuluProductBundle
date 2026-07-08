@@ -350,6 +350,7 @@ class ProductFamilyControllerTest extends TestCase
         ]);
 
         $this->productFamilyRepository->findOneBy(['uuid' => 'missing-uuid'])->willReturn(null);
+        $this->normalizer->normalize(Argument::any(), 'json')->willReturnArgument(0);
 
         $response = $this->createController()->cgetAction(new Request(['locale' => 'en']));
 

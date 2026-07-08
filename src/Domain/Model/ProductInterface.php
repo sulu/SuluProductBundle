@@ -24,7 +24,6 @@ interface ProductInterface extends AuditableInterface, ContentRichEntityInterfac
     public const TEMPLATE_TYPE = 'product';
     public const RESOURCE_KEY = 'products';
     public const FORM_KEY = 'product_details';
-    public const ATTRIBUTES_FORM_KEY = 'product_attributes';
     public const LIST_KEY = 'products';
 
     /**
