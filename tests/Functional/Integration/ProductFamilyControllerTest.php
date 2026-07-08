@@ -56,6 +56,33 @@ class ProductFamilyControllerTest extends SuluTestCase
         $this->assertIsArray($data);
     }
 
+    public function testGetListIncludesAuditFields(): void
+    {
+        self::purgeDatabase();
+
+        $this->client->request(
+            'POST',
+            '/admin/api/product-families.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode(['locale' => 'en', 'name' => 'Shoes', 'description' => null]) ?: null,
+        );
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+
+        $this->client->request('GET', '/admin/api/product-families.json?locale=en');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        /** @var array{_embedded: array{product_families: list<array<string, mixed>>}} $data */
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $item = $data['_embedded']['product_families'][0];
+
+        $this->assertArrayHasKey('created', $item);
+        $this->assertNotNull($item['created']);
+        $this->assertArrayHasKey('changed', $item);
+        $this->assertNotNull($item['changed']);
+    }
+
     public function testPost(): string
     {
         $this->client->request(

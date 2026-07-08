@@ -76,7 +76,10 @@ final class ProductFamilyController implements SecuredControllerInterface
             $listBuilder->count(),
         );
 
-        return new JsonResponse($listRepresentation->toArray());
+        return new JsonResponse($this->normalizer->normalize(
+            $listRepresentation->toArray(),
+            'json',
+        ));
     }
 
     public function getAction(Request $request, string $id): Response

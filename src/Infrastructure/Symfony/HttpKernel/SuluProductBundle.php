@@ -476,6 +476,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_core.list_builder.field_descriptor_factory'),
                 new Reference('sulu_core.doctrine_list_builder_factory'),
                 new Reference('sulu_core.doctrine_rest_helper'),
+                new Reference('serializer'),
             ])
             ->tag('sulu.context', ['context' => 'admin']);
 
@@ -583,6 +584,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_core.list_builder.field_descriptor_factory'),
                 new Reference('sulu_core.doctrine_list_builder_factory'),
                 new Reference('sulu_core.doctrine_rest_helper'),
+                new Reference('serializer'),
             ])
             ->tag('sulu.context', ['context' => 'admin']);
 

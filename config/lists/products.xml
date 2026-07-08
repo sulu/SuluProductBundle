@@ -11,6 +11,28 @@
         </join>
     </joins>
 
+    <joins name="creator">
+        <join>
+            <entity-name>%sulu.model.user.class%</entity-name>
+            <field-name>Sulu\Product\Domain\Model\ProductInterface.creator</field-name>
+        </join>
+        <join>
+            <entity-name>%sulu.model.contact.class%</entity-name>
+            <field-name>%sulu.model.user.class%.contact</field-name>
+        </join>
+    </joins>
+
+    <joins name="changer">
+        <join>
+            <entity-name>%sulu.model.user.class%</entity-name>
+            <field-name>Sulu\Product\Domain\Model\ProductInterface.changer</field-name>
+        </join>
+        <join>
+            <entity-name>%sulu.model.contact.class%</entity-name>
+            <field-name>%sulu.model.user.class%.contact</field-name>
+        </join>
+    </joins>
+
     <properties>
         <property name="id" translation="sulu_admin.id" visibility="no">
             <field-name>uuid</field-name>
@@ -27,5 +49,43 @@
             <field-name>code</field-name>
             <entity-name>Sulu\Product\Domain\Model\ProductInterface</entity-name>
         </property>
+
+        <property name="created" translation="sulu_admin.created" visibility="no">
+            <field-name>created</field-name>
+            <entity-name>Sulu\Product\Domain\Model\ProductInterface</entity-name>
+            <transformer type="datetime"/>
+        </property>
+
+        <property name="changed" translation="sulu_admin.changed" visibility="no">
+            <field-name>changed</field-name>
+            <entity-name>Sulu\Product\Domain\Model\ProductInterface</entity-name>
+            <transformer type="datetime"/>
+        </property>
+
+        <concatenation-property name="creator" visibility="no" glue=" " translation="sulu_admin.creator" sortable="false">
+            <field>
+                <field-name>firstName</field-name>
+                <entity-name>%sulu.model.contact.class%</entity-name>
+                <joins ref="creator"/>
+            </field>
+            <field>
+                <field-name>lastName</field-name>
+                <entity-name>%sulu.model.contact.class%</entity-name>
+                <joins ref="creator"/>
+            </field>
+        </concatenation-property>
+
+        <concatenation-property name="changer" visibility="no" glue=" " translation="sulu_admin.changer" sortable="false">
+            <field>
+                <field-name>firstName</field-name>
+                <entity-name>%sulu.model.contact.class%</entity-name>
+                <joins ref="changer"/>
+            </field>
+            <field>
+                <field-name>lastName</field-name>
+                <entity-name>%sulu.model.contact.class%</entity-name>
+                <joins ref="changer"/>
+            </field>
+        </concatenation-property>
     </properties>
 </list>

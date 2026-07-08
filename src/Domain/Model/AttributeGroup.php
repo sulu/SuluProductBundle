@@ -16,9 +16,12 @@ namespace Sulu\Product\Domain\Model;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
+use Sulu\Component\Persistence\Model\AuditableTrait;
 
 class AttributeGroup implements AttributeGroupInterface
 {
+    use AuditableTrait;
+
     protected int $id;
 
     protected ?string $uuid = null;

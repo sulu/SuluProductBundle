@@ -70,6 +70,34 @@ class AttributeControllerTest extends SuluTestCase
         $this->assertIsArray($data);
     }
 
+    public function testGetListIncludesAuditFields(): void
+    {
+        self::purgeDatabase();
+        $groupId = $this->createGroup();
+
+        $this->client->request(
+            'POST',
+            '/admin/api/attributes.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode(['locale' => 'en', 'key' => 'color', 'name' => 'Color', 'type' => 'text', 'group' => $groupId]) ?: null,
+        );
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+
+        $this->client->request('GET', '/admin/api/attributes.json?locale=en');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        /** @var array{_embedded: array{attributes: list<array<string, mixed>>}} $data */
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $item = $data['_embedded']['attributes'][0];
+
+        $this->assertArrayHasKey('created', $item);
+        $this->assertNotNull($item['created']);
+        $this->assertArrayHasKey('changed', $item);
+        $this->assertNotNull($item['changed']);
+    }
+
     public function testGetListFiltersByAttributeGroup(): void
     {
         self::purgeDatabase();
