@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Domain\Model;
 
-interface AttributeInterface
+use Sulu\Component\Persistence\Model\AuditableInterface;
+
+interface AttributeInterface extends AuditableInterface
 {
     public const TYPE_NUMBER = 'number';
     public const TYPE_TEXT = 'text';

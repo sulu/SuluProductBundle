@@ -33,6 +33,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
+use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 class AttributeGroupControllerTest extends TestCase
 {
@@ -53,6 +54,9 @@ class AttributeGroupControllerTest extends TestCase
     /** @var ObjectProphecy<RestHelperInterface> */
     private ObjectProphecy $restHelper;
 
+    /** @var ObjectProphecy<NormalizerInterface> */
+    private ObjectProphecy $normalizer;
+
     protected function setUp(): void
     {
         $this->attributeGroupRepository = $this->prophesize(AttributeGroupRepositoryInterface::class);
@@ -60,6 +64,7 @@ class AttributeGroupControllerTest extends TestCase
         $this->fieldDescriptorFactory = $this->prophesize(FieldDescriptorFactoryInterface::class);
         $this->listBuilderFactory = $this->prophesize(DoctrineListBuilderFactoryInterface::class);
         $this->restHelper = $this->prophesize(RestHelperInterface::class);
+        $this->normalizer = $this->prophesize(NormalizerInterface::class);
     }
 
     private function createController(): AttributeGroupController
@@ -70,6 +75,7 @@ class AttributeGroupControllerTest extends TestCase
             $this->fieldDescriptorFactory->reveal(),
             $this->listBuilderFactory->reveal(),
             $this->restHelper->reveal(),
+            $this->normalizer->reveal(),
         );
     }
 

@@ -36,6 +36,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\HandleTrait;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 /**
  * @phpstan-import-type CreateAttributeMessageData from CreateAttributeMessage
@@ -52,6 +53,7 @@ final class AttributeController implements SecuredControllerInterface
         private FieldDescriptorFactoryInterface $fieldDescriptorFactory,
         private DoctrineListBuilderFactoryInterface $listBuilderFactory,
         private RestHelperInterface $restHelper,
+        private NormalizerInterface $normalizer,
     ) {
         $this->messageBus = $messageBus;
     }
@@ -83,7 +85,10 @@ final class AttributeController implements SecuredControllerInterface
             $listBuilder->count(),
         );
 
-        return new JsonResponse($listRepresentation->toArray());
+        return new JsonResponse($this->normalizer->normalize(
+            $listRepresentation->toArray(),
+            'json',
+        ));
     }
 
     public function getAction(Request $request, string $id): Response
@@ -167,7 +172,9 @@ final class AttributeController implements SecuredControllerInterface
         return $data;
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     */
     private function serializeAttribute(?AttributeInterface $attribute, string $locale): array
     {
         if (null === $attribute) {

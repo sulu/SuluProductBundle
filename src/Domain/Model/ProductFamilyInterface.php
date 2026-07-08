@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Domain\Model;
 
-interface ProductFamilyInterface
+use Sulu\Component\Persistence\Model\AuditableInterface;
+
+interface ProductFamilyInterface extends AuditableInterface
 {
     public const RESOURCE_KEY = 'product_families';
     public const FORM_KEY = 'product_family_details';

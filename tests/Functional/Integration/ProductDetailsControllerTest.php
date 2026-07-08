@@ -302,6 +302,34 @@ class ProductDetailsControllerTest extends SuluTestCase
         $this->assertSame([], $embedded['products']);
     }
 
+    public function testGetListIncludesAuditFields(): void
+    {
+        self::purgeDatabase();
+        $familyId = $this->createProductFamily();
+
+        $this->client->request(
+            'POST',
+            '/admin/api/products.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode(['locale' => 'en', 'template' => 'product', 'productFamily' => $familyId]) ?: null,
+        );
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+
+        $this->client->request('GET', '/admin/api/products.json?locale=en');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        /** @var array{_embedded: array{products: list<array<string, mixed>>}} $data */
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $item = $data['_embedded']['products'][0];
+
+        $this->assertArrayHasKey('created', $item);
+        $this->assertNotNull($item['created']);
+        $this->assertArrayHasKey('changed', $item);
+        $this->assertNotNull($item['changed']);
+    }
+
     public function testDeleteLocale(): void
     {
         self::purgeDatabase();

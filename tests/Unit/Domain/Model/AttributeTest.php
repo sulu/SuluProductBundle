@@ -15,6 +15,7 @@ namespace Sulu\Product\Tests\Unit\Domain\Model;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Sulu\Component\Persistence\Model\AuditableInterface;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
@@ -180,5 +181,12 @@ class AttributeTest extends TestCase
         $ref = new \ReflectionProperty(Attribute::class, 'id');
         $ref->setValue($model, 42);
         $this->assertSame(42, $model->getId());
+    }
+
+    public function testImplementsAuditableInterface(): void
+    {
+        $attribute = new Attribute(new AttributeGroup());
+        // @phpstan-ignore method.alreadyNarrowedType
+        $this->assertInstanceOf(AuditableInterface::class, $attribute);
     }
 }

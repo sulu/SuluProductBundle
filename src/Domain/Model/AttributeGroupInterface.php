@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Domain\Model;
 
-interface AttributeGroupInterface
+use Sulu\Component\Persistence\Model\AuditableInterface;
+
+interface AttributeGroupInterface extends AuditableInterface
 {
     public const RESOURCE_KEY = 'attribute_groups';
     public const FORM_KEY = 'attribute_group_details';
