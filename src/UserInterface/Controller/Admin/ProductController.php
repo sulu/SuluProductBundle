@@ -141,10 +141,10 @@ final class ProductController implements SecuredControllerInterface
         /** @var ProductInterface $product */
         $product = $this->handle(new Envelope($message, [new EnableFlushStamp()]));
 
-        return new JsonResponse(
-            $this->normalizer->normalize($product, 'json', ['locale' => $this->getLocale($request)]),
-            201,
-        );
+        $response = $this->getAction($request, $product->getUuid());
+        $response->setStatusCode(201);
+
+        return $response;
     }
 
     public function putAction(Request $request, string $id): Response

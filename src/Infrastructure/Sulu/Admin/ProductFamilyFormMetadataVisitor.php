@@ -43,7 +43,7 @@ class ProductFamilyFormMetadataVisitor implements FormMetadataVisitorInterface
 
         foreach ($this->attributeGroupRepository->findAll() as $group) {
             $groupTranslation = $group->getTranslation($locale)
-                ?? (($dl = $group->getDefaultLocale()) !== null ? $group->getTranslation($dl) : null);
+                ?? (($defaultLocale = $group->getDefaultLocale()) !== null ? $group->getTranslation($defaultLocale) : null);
             $groupName = $groupTranslation?->getName() ?? '';
 
             $section = new SectionMetadata('attribute_group_' . $group->getId());
@@ -53,7 +53,7 @@ class ProductFamilyFormMetadataVisitor implements FormMetadataVisitorInterface
                 $attribute = $groupAttribute->getAttribute();
                 $attributeId = $attribute->getId();
                 $attributeTranslation = $attribute->getTranslation($locale)
-                    ?? (($dl = $attribute->getDefaultLocale()) !== null ? $attribute->getTranslation($dl) : null);
+                    ?? (($defaultLocale = $attribute->getDefaultLocale()) !== null ? $attribute->getTranslation($defaultLocale) : null);
                 $attributeName = $attributeTranslation?->getName() ?? $attribute->getKey();
 
                 $enabledField = new FieldMetadata('attributes/' . $attributeId . '/enabled');

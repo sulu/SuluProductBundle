@@ -6,6 +6,10 @@
         name="Sulu\Product\Domain\Model\ProductDimensionContent"
         table="pr_product_dimension_contents"
     >
+        <unique-constraints>
+            <unique-constraint name="uniq_pr_product_code" columns="code,stage,version"/>
+        </unique-constraints>
+
         <id name="id" type="integer" column="id">
             <generator strategy="AUTO"/>
         </id>

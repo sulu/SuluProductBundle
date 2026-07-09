@@ -25,8 +25,10 @@ use Sulu\Product\Application\AttributeType\OptionsAttributeType;
 use Sulu\Product\Application\AttributeType\TextAttributeType;
 use Sulu\Product\Application\Mapper\AttributeMapper;
 use Sulu\Product\Application\Mapper\AttributeMapperInterface;
+use Sulu\Product\Application\Mapper\ProductContentMapper;
 use Sulu\Product\Application\Mapper\ProductFamilyMapper;
 use Sulu\Product\Application\Mapper\ProductFamilyMapperInterface;
+use Sulu\Product\Application\Mapper\ProductMapperInterface;
 use Sulu\Product\Application\MessageHandler\ApplyWorkflowTransitionProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\CopyLocaleProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\CreateAttributeGroupMessageHandler;
@@ -237,6 +239,9 @@ final class SuluProductBundle extends AbstractBundle
         $builder->registerForAutoconfiguration(ProductFamilyMapperInterface::class)
             ->addTag('sulu_product.product_family_mapper');
 
+        $builder->registerForAutoconfiguration(ProductMapperInterface::class)
+            ->addTag('sulu_product.product_mapper');
+
         // Built-in attribute types
         $services->set('sulu_product.attribute_type_number')
             ->class(NumberAttributeType::class)
@@ -254,12 +259,20 @@ final class SuluProductBundle extends AbstractBundle
             ->class(OptionsAttributeType::class)
             ->tag('sulu_product.attribute_type');
 
+        // Product mappers
+        $services->set('sulu_product.product_content_mapper')
+            ->class(ProductContentMapper::class)
+            ->args([
+                new Reference('sulu_content.content_persister'),
+            ])
+            ->tag('sulu_product.product_mapper');
+
         // Message Handler services
         $services->set('sulu_product.create_product_handler')
             ->class(CreateProductMessageHandler::class)
             ->args([
                 new Reference('sulu_product.product_repository'),
-                new Reference('sulu_content.content_persister'),
+                tagged_iterator('sulu_product.product_mapper'),
                 new Reference('sulu_activity.domain_event_collector'),
                 new Reference('security.token_storage', ContainerInterface::NULL_ON_INVALID_REFERENCE),
             ])
@@ -269,7 +282,7 @@ final class SuluProductBundle extends AbstractBundle
             ->class(ModifyProductMessageHandler::class)
             ->args([
                 new Reference('sulu_product.product_repository'),
-                new Reference('sulu_content.content_persister'),
+                tagged_iterator('sulu_product.product_mapper'),
                 new Reference('sulu_activity.domain_event_collector'),
             ])
             ->tag('messenger.message_handler');
@@ -337,14 +350,15 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.product_family_repository'),
                 new Reference('sulu_product.product_repository'),
             ])
-            ->tag('sulu_content.data_mapper');
+            ->tag('sulu_content.data_mapper', ['priority' => 10]);
 
+        // Must run after the details mapper, which assigns the product family the attribute values depend on.
         $services->set('sulu_product.product_attributes_data_mapper')
             ->class(ProductAttributesDataMapper::class)
             ->args([
                 new Reference('sulu_product.attribute_type_registry'),
             ])
-            ->tag('sulu_content.data_mapper');
+            ->tag('sulu_content.data_mapper', ['priority' => -10]);
 
         $services->set('sulu_product.product_details_merger')
             ->class(ProductDetailsMerger::class)
@@ -925,7 +939,7 @@ final class SuluProductBundle extends AbstractBundle
                         'products_versions' => [
                             'routes' => [
                                 'list' => 'sulu_product.get_product_versions',
-                                'detail' => 'sulu_product.get_product_content',
+                                'detail' => 'sulu_product.get_product',
                             ],
                         ],
                         'attributes' => [

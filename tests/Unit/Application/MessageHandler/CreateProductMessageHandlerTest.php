@@ -21,6 +21,7 @@ use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterfa
 use Sulu\Bundle\ContactBundle\Entity\ContactInterface;
 use Sulu\Bundle\SecurityBundle\Entity\User;
 use Sulu\Content\Application\ContentPersister\ContentPersisterInterface;
+use Sulu\Product\Application\Mapper\ProductContentMapper;
 use Sulu\Product\Application\Message\CreateProductMessage;
 use Sulu\Product\Application\MessageHandler\CreateProductMessageHandler;
 use Sulu\Product\Domain\Event\ProductCreatedEvent;
@@ -67,7 +68,7 @@ class CreateProductMessageHandlerTest extends TestCase
     {
         return new CreateProductMessageHandler(
             $this->productRepository->reveal(),
-            $this->contentPersister->reveal(),
+            [new ProductContentMapper($this->contentPersister->reveal())],
             $this->domainEventCollector->reveal(),
             $tokenStorage,
         );

@@ -191,6 +191,7 @@ final class AttributeController implements SecuredControllerInterface
             'id' => $attribute->getUuid(),
             'key' => $attribute->getKey(),
             'type' => $attribute->getType(),
+            'localized' => $attribute->isLocalized(),
             'position' => $attribute->getPosition(),
             'externalIdentifier' => $attribute->getExternalIdentifier(),
             'group' => $attribute->getGroup()->getUuid(),

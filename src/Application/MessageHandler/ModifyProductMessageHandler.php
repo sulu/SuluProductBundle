@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of Sulu.
  *
@@ -12,21 +14,25 @@
 namespace Sulu\Product\Application\MessageHandler;
 
 use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
-use Sulu\Content\Application\ContentPersister\ContentPersisterInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Product\Application\Mapper\ProductMapperInterface;
 use Sulu\Product\Application\Message\ModifyProductMessage;
 use Sulu\Product\Domain\Event\ProductModifiedEvent;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 
 /**
- * @internal
+ * @internal This class should not be instantiated by a project.
+ *           Create a ProductMapper to extend this Handler.
  */
 final class ModifyProductMessageHandler
 {
+    /**
+     * @param iterable<ProductMapperInterface> $productMappers
+     */
     public function __construct(
         private ProductRepositoryInterface $productRepository,
-        private ContentPersisterInterface $contentPersister,
+        private iterable $productMappers,
         private DomainEventCollectorInterface $domainEventCollector,
     ) {
     }
@@ -52,10 +58,9 @@ final class ModifyProductMessageHandler
             $data['template'] = ProductInterface::TEMPLATE_TYPE;
         }
 
-        $this->contentPersister->persist($product, $data, [
-            'locale' => $locale,
-            'stage' => DimensionContentInterface::STAGE_DRAFT,
-        ]);
+        foreach ($this->productMappers as $productMapper) {
+            $productMapper->mapProductData($product, $data);
+        }
 
         $this->domainEventCollector->collect(new ProductModifiedEvent($product, $locale, $data));
 

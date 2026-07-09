@@ -19,6 +19,7 @@ use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
 use Sulu\Content\Application\ContentPersister\ContentPersisterInterface;
+use Sulu\Product\Application\Mapper\ProductContentMapper;
 use Sulu\Product\Application\Message\ModifyProductMessage;
 use Sulu\Product\Application\MessageHandler\ModifyProductMessageHandler;
 use Sulu\Product\Domain\Event\ProductModifiedEvent;
@@ -48,7 +49,7 @@ class ModifyProductMessageHandlerTest extends TestCase
 
         $this->handler = new ModifyProductMessageHandler(
             $this->productRepository->reveal(),
-            $this->contentPersister->reveal(),
+            [new ProductContentMapper($this->contentPersister->reveal())],
             $this->domainEventCollector->reveal(),
         );
     }

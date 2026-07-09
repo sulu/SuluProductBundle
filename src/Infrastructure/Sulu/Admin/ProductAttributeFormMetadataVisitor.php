@@ -89,7 +89,7 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
             }
 
             $translation = $attribute->getTranslation($locale)
-                ?? (($dl = $attribute->getDefaultLocale()) !== null ? $attribute->getTranslation($dl) : null);
+                ?? (($defaultLocale = $attribute->getDefaultLocale()) !== null ? $attribute->getTranslation($defaultLocale) : null);
 
             $field = $this->cloneFieldWithName($template, 'attributes/' . $attribute->getId());
             $field->setLabel($translation?->getName() ?? $attribute->getKey(), $locale);

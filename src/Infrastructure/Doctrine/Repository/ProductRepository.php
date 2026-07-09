@@ -131,7 +131,11 @@ final class ProductRepository implements ProductRepositoryInterface
                 ->innerJoin('product.dimensionContents', 'pdcCode')
                 ->andWhere('pdcCode.code = :code')
                 ->andWhere('pdcCode.locale IS NULL')
-                ->setParameter('code', $code);
+                ->andWhere('pdcCode.stage = :stage')
+                ->andWhere('pdcCode.version = :version')
+                ->setParameter('code', $code)
+                ->setParameter('stage', DimensionContentInterface::STAGE_DRAFT)
+                ->setParameter('version', DimensionContentInterface::CURRENT_VERSION);
         }
 
         $productFamilyUuid = $filters['productFamilyUuid'] ?? null;

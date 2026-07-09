@@ -18,6 +18,7 @@ use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\NoResultException;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
+use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Exception\ProductFamilyNotFoundException;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductFamily;
@@ -104,12 +105,16 @@ final class ProductFamilyRepository implements ProductFamilyRepositoryInterface
             $queryBuilder
                 ->innerJoin(
                     ProductDimensionContentInterface::class,
-                    'pdc',
+                    'productDimensionContent',
                     Join::WITH,
-                    'pdc.productFamily = productFamily',
+                    'productDimensionContent.productFamily = productFamily',
                 )
-                ->andWhere('pdc.locale IS NULL')
-                ->andWhere('IDENTITY(pdc.product) = :productUuid')
+                ->andWhere('productDimensionContent.locale IS NULL')
+                ->andWhere('productDimensionContent.stage = :stage')
+                ->andWhere('productDimensionContent.version = :version')
+                ->andWhere('IDENTITY(productDimensionContent.product) = :productUuid')
+                ->setParameter('stage', DimensionContentInterface::STAGE_DRAFT)
+                ->setParameter('version', DimensionContentInterface::CURRENT_VERSION)
                 ->setParameter('productUuid', $productUuid);
         }
 
