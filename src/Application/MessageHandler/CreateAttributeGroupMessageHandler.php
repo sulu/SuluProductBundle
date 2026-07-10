@@ -31,6 +31,7 @@ final class CreateAttributeGroupMessageHandler
     public function __invoke(CreateAttributeGroupMessage $message): AttributeGroupInterface
     {
         $group = $this->attributeGroupRepository->create();
+        $group->setDefaultLocale($message->getLocale());
 
         $translation = new AttributeGroupTranslation($group, $message->getLocale(), $message->getName());
 

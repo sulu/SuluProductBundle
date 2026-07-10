@@ -26,7 +26,7 @@ use Sulu\Product\Domain\Model\AttributeOptionInterface;
 use Sulu\Product\Domain\Model\AttributeOptionTranslationInterface;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
-use Sulu\Product\Domain\Model\ProductFamily;
+use Sulu\Product\Domain\Model\ProductDimensionContent;
 
 #[CoversClass(OptionsAttributeType::class)]
 class OptionsAttributeTypeTest extends TestCase
@@ -43,7 +43,7 @@ class OptionsAttributeTypeTest extends TestCase
     public function testValueRoundTripUsesOptionKeyColumn(): void
     {
         $type = new OptionsAttributeType();
-        $value = new ProductAttributeValue(new Product(new ProductFamily()), new Attribute(new AttributeGroup()), 'k');
+        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
 
         $type->writeValue($value, 'red');
 
@@ -54,7 +54,7 @@ class OptionsAttributeTypeTest extends TestCase
     public function testWriteEmptyValueClearsOptionKey(): void
     {
         $type = new OptionsAttributeType();
-        $value = new ProductAttributeValue(new Product(new ProductFamily()), new Attribute(new AttributeGroup()), 'k');
+        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
         $type->writeValue($value, 'red');
 
         $type->writeValue($value, null);

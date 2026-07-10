@@ -37,7 +37,7 @@ interface ProductAttributeValueInterface
 
     public function getValue(): mixed;
 
-    public function getProduct(): ProductInterface;
+    public function getProductDimensionContent(): ProductDimensionContentInterface;
 
     public function getAttribute(): AttributeInterface;
 

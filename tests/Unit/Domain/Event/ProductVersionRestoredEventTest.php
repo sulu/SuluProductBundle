@@ -17,7 +17,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Product\Domain\Event\ProductVersionRestoredEvent;
 use Sulu\Product\Domain\Model\Product;
-use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 
@@ -30,7 +29,7 @@ class ProductVersionRestoredEventTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->product = new Product(new ProductFamily(), 'uuid-version');
+        $this->product = new Product('uuid-version');
         $this->event = new ProductVersionRestoredEvent($this->product, 'en', 7);
     }
 

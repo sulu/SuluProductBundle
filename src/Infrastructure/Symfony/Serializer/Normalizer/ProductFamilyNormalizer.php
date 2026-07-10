@@ -37,6 +37,12 @@ final class ProductFamilyNormalizer implements NormalizerInterface
     {
         $locale = \is_string($context['locale'] ?? null) ? $context['locale'] : '';
         $translation = $data->getTranslation($locale);
+        if (null === $translation) {
+            $defaultLocale = $data->getDefaultLocale();
+            if (null !== $defaultLocale) {
+                $translation = $data->getTranslation($defaultLocale);
+            }
+        }
 
         $attributes = [];
         foreach ($this->attributeGroupRepository->findAll() as $group) {

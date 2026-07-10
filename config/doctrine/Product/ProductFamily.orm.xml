@@ -9,6 +9,7 @@
 
         <field name="uuid" type="guid" nullable="true" unique="true"/>
         <field name="externalIdentifier" type="string" length="255" nullable="true" column="external_identifier"/>
+        <field name="defaultLocale" type="string" length="5" nullable="true" column="default_locale"/>
 
         <one-to-many field="translations"
                      target-entity="Sulu\Product\Domain\Model\ProductFamilyTranslationInterface"

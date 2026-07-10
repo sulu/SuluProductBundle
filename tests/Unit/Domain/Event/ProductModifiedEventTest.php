@@ -17,7 +17,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Product\Domain\Event\ProductModifiedEvent;
 use Sulu\Product\Domain\Model\Product;
-use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 
@@ -35,7 +34,7 @@ class ProductModifiedEventTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->product = new Product(new ProductFamily(), 'uuid-modified');
+        $this->product = new Product('uuid-modified');
         $this->event = new ProductModifiedEvent($this->product, $this->locale, $this->payload);
     }
 

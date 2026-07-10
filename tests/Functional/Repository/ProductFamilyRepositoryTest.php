@@ -101,8 +101,12 @@ class ProductFamilyRepositoryTest extends SuluTestCase
         $family = $this->repository->create();
         $this->repository->save($family);
 
-        $product = $this->productRepository->createNew($family);
+        $product = $this->productRepository->createNew();
+        $pdc = $product->createDimensionContent();
+        $pdc->setProductFamily($family);
+        $product->addDimensionContent($pdc);
         $this->productRepository->add($product);
+        $this->entityManager->persist($pdc);
         $this->entityManager->flush();
 
         $familyUuid = $family->getUuid();

@@ -29,6 +29,7 @@ namespace Sulu\Product\Application\Message;
  *     options?: list<AttributeOptionMessageData>|null,
  *     position?: int|null,
  *     config?: array<string, mixed>,
+ *     localized?: bool|null,
  * }
  */
 class ModifyAttributeMessage

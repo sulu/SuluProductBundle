@@ -21,7 +21,7 @@ use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
-use Sulu\Product\Domain\Model\ProductFamily;
+use Sulu\Product\Domain\Model\ProductDimensionContent;
 
 #[CoversClass(TextAttributeType::class)]
 class TextAttributeTypeTest extends TestCase
@@ -36,7 +36,7 @@ class TextAttributeTypeTest extends TestCase
     public function testValueRoundTripUsesTextColumn(): void
     {
         $type = new TextAttributeType();
-        $value = new ProductAttributeValue(new Product(new ProductFamily()), new Attribute(new AttributeGroup()), 'k');
+        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
 
         $type->writeValue($value, 'hello');
 
@@ -47,7 +47,7 @@ class TextAttributeTypeTest extends TestCase
     public function testWriteNullClearsText(): void
     {
         $type = new TextAttributeType();
-        $value = new ProductAttributeValue(new Product(new ProductFamily()), new Attribute(new AttributeGroup()), 'k');
+        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
         $type->writeValue($value, 'world');
 
         $type->writeValue($value, null);

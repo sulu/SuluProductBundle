@@ -17,6 +17,7 @@ use Sulu\Bundle\ActivityBundle\Infrastructure\Sulu\Admin\View\ActivityViewBuilde
 use Sulu\Bundle\AdminBundle\Admin\Admin;
 use Sulu\Bundle\AdminBundle\Admin\Navigation\NavigationItem;
 use Sulu\Bundle\AdminBundle\Admin\Navigation\NavigationItemCollection;
+use Sulu\Bundle\AdminBundle\Admin\View\DropdownToolbarAction;
 use Sulu\Bundle\AdminBundle\Admin\View\ToolbarAction;
 use Sulu\Bundle\AdminBundle\Admin\View\ViewBuilderFactoryInterface;
 use Sulu\Bundle\AdminBundle\Admin\View\ViewCollection;
@@ -150,9 +151,33 @@ class ProductAdmin extends Admin
         );
 
         // Details form — edit mode
-        $editToolbarActions = [new ToolbarAction('sulu_admin.save')];
+        $editToolbarActions = [
+            new ToolbarAction(
+                'sulu_admin.save_with_publishing',
+                [
+                    'publish_visible_condition' => '(!_permissions || _permissions.live)',
+                    'save_visible_condition' => '(!_permissions || _permissions.edit)',
+                ]
+            ),
+        ];
         if ($this->securityChecker->hasPermission(static::SECURITY_CONTEXT, PermissionTypes::DELETE)) {
             $editToolbarActions[] = new ToolbarAction('sulu_admin.delete');
+        }
+        if ($this->securityChecker->hasPermission(static::SECURITY_CONTEXT, PermissionTypes::LIVE)) {
+            $editToolbarActions[] = new DropdownToolbarAction(
+                'sulu_admin.edit',
+                'su-pen',
+                [
+                    new ToolbarAction(
+                        'sulu_admin.delete_draft',
+                        ['visible_condition' => '(!_permissions || _permissions.live)']
+                    ),
+                    new ToolbarAction(
+                        'sulu_admin.set_unpublished',
+                        ['visible_condition' => '(!_permissions || _permissions.live)']
+                    ),
+                ]
+            );
         }
         $viewCollection->add(
             $this->viewBuilderFactory->createFormViewBuilder(static::EDIT_TABS_VIEW . '.details', '/details')
@@ -160,18 +185,8 @@ class ProductAdmin extends Admin
                 ->setFormKey(ProductInterface::FORM_KEY)
                 ->setTabTitle('sulu_admin.details')
                 ->setTabOrder(10)
-                ->addToolbarActions($editToolbarActions)
-                ->setParent(static::EDIT_TABS_VIEW),
-        );
-
-        $viewCollection->add(
-            $this->viewBuilderFactory->createFormViewBuilder(static::EDIT_TABS_VIEW . '.attributes', '/attributes')
-                ->setResourceKey(ProductInterface::RESOURCE_KEY)
-                ->setFormKey('product_attributes')
-                ->setTabTitle('sulu_product.attributes')
-                ->setTabOrder(20)
                 ->addRouterAttributesToFormMetadata(['id'])
-                ->addToolbarActions([new ToolbarAction('sulu_admin.save')])
+                ->addToolbarActions($editToolbarActions)
                 ->setParent(static::EDIT_TABS_VIEW),
         );
 

@@ -18,7 +18,9 @@ namespace Sulu\Product\Application\Message;
  *     locale: string,
  *     productFamily: string,
  *     uuid?: string,
+ *     title?: string,
  *     code?: string,
+ *     template?: string,
  *     author?: int|null,
  *     authored?: string,
  *     attributes?: array<int, mixed>,
@@ -38,14 +40,14 @@ class CreateProductMessage
         return $this->data['locale'];
     }
 
-    public function getProductFamily(): string
-    {
-        return $this->data['productFamily'];
-    }
-
     public function getUuid(): ?string
     {
         return $this->data['uuid'] ?? null;
+    }
+
+    public function getProductFamily(): string
+    {
+        return $this->data['productFamily'];
     }
 
     /**

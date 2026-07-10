@@ -103,14 +103,18 @@ class ProductFamilyCascadeTest extends SuluTestCase
         $family->addFamilyAttribute($familyAttribute);
         $this->familyRepository->save($family);
 
-        $product = $this->productRepository->createNew($family);
+        $product = $this->productRepository->createNew();
+        $pdc = $product->createDimensionContent();
+        $pdc->setProductFamily($family);
+        $product->addDimensionContent($pdc);
 
-        $value = new ProductAttributeValue($product, $attribute, 'color');
+        $value = new ProductAttributeValue($pdc, $attribute, 'color');
         $value->setText('red');
         $value->setProductFamilyAttribute($familyAttribute);
-        $product->addAttribute($value);
+        $pdc->addAttribute($value);
 
         $this->productRepository->add($product);
+        $this->entityManager->persist($pdc);
         $this->entityManager->flush();
 
         return ['family' => $family, 'familyAttribute' => $familyAttribute];

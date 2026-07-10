@@ -17,7 +17,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Product\Domain\Event\ProductTranslationRemovedEvent;
 use Sulu\Product\Domain\Model\Product;
-use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 
@@ -32,7 +31,7 @@ class ProductTranslationRemovedEventTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->product = new Product(new ProductFamily(), 'uuid-translation-removed');
+        $this->product = new Product('uuid-translation-removed');
         $this->event = new ProductTranslationRemovedEvent($this->product, $this->locale);
     }
 

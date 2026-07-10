@@ -162,4 +162,19 @@ class ProductFamilyNormalizerTest extends TestCase
 
         $this->assertSame('', $result['name']);
     }
+
+    public function testNormalizeUseFallbackTranslationWhenLocaleNotFound(): void
+    {
+        $family = new ProductFamily();
+        $family->setUuid('test-uuid');
+        $family->setDefaultLocale('de');
+        $de = new ProductFamilyTranslation($family, 'de', 'Fallback Name');
+        $family->addTranslation($de);
+
+        $this->attributeGroupRepository->findAll()->willReturn([]);
+
+        $result = $this->normalizer()->normalize($family, null, ['locale' => 'en']);
+
+        $this->assertSame('Fallback Name', $result['name']);
+    }
 }

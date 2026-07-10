@@ -10,7 +10,7 @@ with this source code in the file LICENSE.
 EOF;
 
 $finder = PhpCsFixer\Finder::create()
-    ->exclude(['var/cache', 'tests/Application/var', 'node_modules'])
+    ->exclude(['var/cache', 'tests/Application/var', 'tests/reports', 'node_modules'])
     ->in(__DIR__);
 
 $config = new PhpCsFixer\Config();

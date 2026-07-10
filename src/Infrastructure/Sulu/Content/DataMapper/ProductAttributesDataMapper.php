@@ -11,48 +11,69 @@ declare(strict_types=1);
  * with this source code in the file LICENSE.
  */
 
-namespace Sulu\Product\Application\Mapper;
+namespace Sulu\Product\Infrastructure\Sulu\Content\DataMapper;
 
+use Sulu\Content\Application\ContentDataMapper\DataMapper\DataMapperInterface;
+use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
 use Sulu\Product\Domain\Exception\RequiredProductAttributeMissingException;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
+use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
-use Sulu\Product\Domain\Model\ProductInterface;
 
-final class ProductAttributeValueMapper implements ProductMapperInterface
+class ProductAttributesDataMapper implements DataMapperInterface
 {
     public function __construct(
         private readonly AttributeTypeRegistry $attributeTypeRegistry,
     ) {
     }
 
-    /**
-     * @param array<string, mixed> $data
-     */
-    public function mapProductData(ProductInterface $product, array $data): void
-    {
+    public function map(
+        DimensionContentInterface $unlocalizedDimensionContent,
+        DimensionContentInterface $localizedDimensionContent,
+        array $data,
+    ): void {
+        if (!$unlocalizedDimensionContent instanceof ProductDimensionContentInterface) {
+            return;
+        }
+
+        if (!$localizedDimensionContent instanceof ProductDimensionContentInterface) {
+            return;
+        }
+
         if (!\array_key_exists('attributes', $data)) {
+            return;
+        }
+
+        $productFamily = $unlocalizedDimensionContent->getProductFamily();
+        if (null === $productFamily) {
             return;
         }
 
         /** @var array<int|string, mixed> $submitted */
         $submitted = $data['attributes'] ?? [];
-        $family = $product->getProductFamily();
 
         /** @var array<int, ProductFamilyAttributeInterface> $familyAttributes */
         $familyAttributes = [];
-        foreach ($family->getFamilyAttributes() as $familyAttribute) {
+        foreach ($productFamily->getFamilyAttributes() as $familyAttribute) {
             $familyAttributes[$familyAttribute->getAttribute()->getId()] = $familyAttribute;
         }
 
-        /** @var array<int, ProductAttributeValueInterface> $existing */
-        $existing = [];
-        foreach ($product->getAttributes() as $value) {
-            $existing[$value->getAttribute()->getId()] = $value;
+        /** @var array<int, ProductAttributeValueInterface> $allExisting */
+        $allExisting = [];
+        foreach ($unlocalizedDimensionContent->getAttributes() as $value) {
+            $allExisting[$value->getAttribute()->getId()] = $value;
+        }
+        foreach ($localizedDimensionContent->getAttributes() as $value) {
+            $allExisting[$value->getAttribute()->getId()] = $value;
         }
 
         foreach ($submitted as $attributeId => $raw) {
+            if (!\is_int($attributeId) && !\ctype_digit((string) $attributeId)) {
+                continue;
+            }
+
             $attributeId = (int) $attributeId;
             $familyAttribute = $familyAttributes[$attributeId] ?? null;
 
@@ -61,33 +82,36 @@ final class ProductAttributeValueMapper implements ProductMapperInterface
             }
 
             $attribute = $familyAttribute->getAttribute();
+            $targetDimensionContent = $attribute->isLocalized()
+                ? $localizedDimensionContent
+                : $unlocalizedDimensionContent;
             $type = $this->attributeTypeRegistry->get($attribute->getType());
-            $value = $existing[$attributeId] ?? null;
+            $existing = $allExisting[$attributeId] ?? null;
 
             if ($this->isEmpty($raw)) {
-                if (null !== $value) {
-                    $product->removeAttribute($value);
-                    unset($existing[$attributeId]);
+                if (null !== $existing) {
+                    $targetDimensionContent->removeAttribute($existing);
+                    unset($allExisting[$attributeId]);
                 }
 
                 continue;
             }
 
-            $isNew = null === $value;
-            if (null === $value) {
-                $value = new ProductAttributeValue($product, $attribute, $attribute->getKey());
-                $value->setProductFamilyAttribute($familyAttribute);
+            $isNew = null === $existing;
+            if (null === $existing) {
+                $existing = new ProductAttributeValue($targetDimensionContent, $attribute, $attribute->getKey());
+                $existing->setProductFamilyAttribute($familyAttribute);
             }
 
-            $type->writeValue($value, $raw);
+            $type->writeValue($existing, $raw);
 
             if ($isNew) {
-                $product->addAttribute($value);
-                $existing[$attributeId] = $value;
+                $targetDimensionContent->addAttribute($existing);
+                $allExisting[$attributeId] = $existing;
             }
         }
 
-        $this->assertRequiredSatisfied($familyAttributes, $existing);
+        $this->assertRequiredSatisfied($familyAttributes, $allExisting);
     }
 
     /**

@@ -32,6 +32,16 @@ final class AttributeMapper implements AttributeMapperInterface
     {
         $attribute->setKey($message->getKey());
         $attribute->setConfig($message->getConfig());
+
+        $data = $message->getData();
+        if (\array_key_exists('localized', $data)) {
+            $attribute->setLocalized((bool) $data['localized']);
+        }
+
+        if (null === $attribute->getDefaultLocale()) {
+            $attribute->setDefaultLocale($message->getLocale());
+        }
+
         $this->mapTranslation($attribute, $message);
         $this->mapOptions($attribute, $message);
 

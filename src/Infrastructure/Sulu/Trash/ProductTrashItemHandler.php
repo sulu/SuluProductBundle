@@ -23,15 +23,14 @@ use Sulu\Bundle\TrashBundle\Domain\Model\TrashItemInterface;
 use Sulu\Bundle\TrashBundle\Domain\Repository\TrashItemRepositoryInterface;
 use Sulu\Content\Application\ContentMerger\ContentMergerInterface;
 use Sulu\Content\Application\ContentNormalizer\ContentNormalizerInterface;
+use Sulu\Content\Application\ContentPersister\ContentPersisterInterface;
 use Sulu\Content\Domain\Model\DimensionContentCollection;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
-use Sulu\Product\Application\Mapper\ProductMapperInterface;
 use Sulu\Product\Domain\Event\ProductRestoredEvent;
 use Sulu\Product\Domain\Event\ProductTranslationRestoredEvent;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
-use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 use Webmozart\Assert\Assert;
@@ -44,16 +43,12 @@ final class ProductTrashItemHandler implements
     RestoreTrashItemHandlerInterface,
     RestoreConfigurationProviderInterface
 {
-    /**
-     * @param iterable<ProductMapperInterface> $productMappers
-     */
     public function __construct(
         private TrashItemRepositoryInterface $trashItemRepository,
         private ProductRepositoryInterface $productRepository,
-        private ProductFamilyRepositoryInterface $productFamilyRepository,
         private ContentNormalizerInterface $contentNormalizer,
         private ContentMergerInterface $contentMerger,
-        private iterable $productMappers,
+        private ContentPersisterInterface $contentPersister,
         private DomainEventCollectorInterface $domainEventCollector,
     ) {
     }
@@ -70,7 +65,6 @@ final class ProductTrashItemHandler implements
         $product = $resource;
 
         $data = [
-            'productFamily' => $product->getProductFamily()->getUuid(),
             'dimensionContents' => [],
         ];
 
@@ -103,6 +97,8 @@ final class ProductTrashItemHandler implements
 
         Assert::notNull($unlocalizedDimensionContent, 'Expected to find an unlocalized dimension content for the product.');
         Assert::notEmpty($localizedDimensionContents, 'Expected to find at least one localized dimension content for the product.');
+
+        $data['productFamily'] = $unlocalizedDimensionContent->getProductFamily()?->getUuid();
 
         // Reorder localized dimension contents to match the order defined in availableLocales.
         $availableLocales = $unlocalizedDimensionContent->getAvailableLocales();
@@ -163,11 +159,7 @@ final class ProductTrashItemHandler implements
 
         $product = $this->productRepository->findOneBy(['uuid' => $productUuid]);
         if (!$product) {
-            $productFamilyUuid = $restoreData['productFamily'] ?? null;
-            Assert::string($productFamilyUuid, 'Expected to find a product family uuid in the restore data.');
-            $productFamily = $this->productFamilyRepository->getOneBy(['uuid' => $productFamilyUuid]);
-
-            $product = $this->productRepository->createNew($productFamily, $productUuid);
+            $product = $this->productRepository->createNew($productUuid);
             $this->productRepository->add($product);
         }
 
@@ -185,13 +177,13 @@ final class ProductTrashItemHandler implements
                 $productTitle = $dimensionContentData['title'];
             }
 
-            if (\array_key_exists('locale', $dimensionContentData) && $dimensionContentData['locale']) {
-                Assert::string($dimensionContentData['locale']);
-                $allLocales[] = $dimensionContentData['locale'];
-            }
-
-            foreach ($this->productMappers as $productMapper) {
-                $productMapper->mapProductData($product, $dimensionContentData);
+            $locale = $dimensionContentData['locale'] ?? null;
+            if (\is_string($locale)) {
+                $allLocales[] = $locale;
+                $this->contentPersister->persist($product, $dimensionContentData, [
+                    'locale' => $locale,
+                    'stage' => DimensionContentInterface::STAGE_DRAFT,
+                ]);
             }
         }
 

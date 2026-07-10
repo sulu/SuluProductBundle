@@ -20,15 +20,13 @@ use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
 use Sulu\Bundle\ContactBundle\Entity\ContactInterface;
 use Sulu\Bundle\SecurityBundle\Entity\User;
-use Sulu\Product\Application\Mapper\ProductMapperInterface;
+use Sulu\Content\Application\ContentPersister\ContentPersisterInterface;
+use Sulu\Product\Application\Mapper\ProductContentMapper;
 use Sulu\Product\Application\Message\CreateProductMessage;
 use Sulu\Product\Application\MessageHandler\CreateProductMessageHandler;
 use Sulu\Product\Domain\Event\ProductCreatedEvent;
 use Sulu\Product\Domain\Exception\ProductCodeNotUniqueException;
 use Sulu\Product\Domain\Model\Product;
-use Sulu\Product\Domain\Model\ProductFamily;
-use Sulu\Product\Domain\Model\ProductFamilyInterface;
-use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
@@ -40,27 +38,17 @@ class CreateProductMessageHandlerTest extends TestCase
     /** @var ObjectProphecy<ProductRepositoryInterface> */
     private ObjectProphecy $productRepository;
 
-    /** @var ObjectProphecy<ProductFamilyRepositoryInterface> */
-    private ObjectProphecy $productFamilyRepository;
-
-    /** @var ObjectProphecy<ProductMapperInterface> */
-    private ObjectProphecy $productMapper;
+    /** @var ObjectProphecy<ContentPersisterInterface> */
+    private ObjectProphecy $contentPersister;
 
     /** @var ObjectProphecy<DomainEventCollectorInterface> */
     private ObjectProphecy $domainEventCollector;
 
-    private ProductFamilyInterface $productFamily;
-
     protected function setUp(): void
     {
         $this->productRepository = $this->prophesize(ProductRepositoryInterface::class);
-        $this->productFamilyRepository = $this->prophesize(ProductFamilyRepositoryInterface::class);
-        $this->productMapper = $this->prophesize(ProductMapperInterface::class);
+        $this->contentPersister = $this->prophesize(ContentPersisterInterface::class);
         $this->domainEventCollector = $this->prophesize(DomainEventCollectorInterface::class);
-
-        $this->productFamily = new ProductFamily();
-        $this->productFamilyRepository->getOneBy(['uuid' => 'family-uuid'])
-            ->willReturn($this->productFamily);
     }
 
     /**
@@ -76,132 +64,82 @@ class CreateProductMessageHandlerTest extends TestCase
         return $data;
     }
 
+    private function createHandler(?TokenStorageInterface $tokenStorage = null): CreateProductMessageHandler
+    {
+        return new CreateProductMessageHandler(
+            $this->productRepository->reveal(),
+            [new ProductContentMapper($this->contentPersister->reveal())],
+            $this->domainEventCollector->reveal(),
+            $tokenStorage,
+        );
+    }
+
     public function testCreateProduct(): void
     {
-        $product = new Product($this->productFamily);
+        $product = new Product();
 
-        $this->productRepository->createNew($this->productFamily, null)
+        $this->productRepository->createNew(null)
             ->shouldBeCalledOnce()
             ->willReturn($product);
-
-        $this->productMapper->mapProductData($product, Argument::type('array'))
-            ->shouldBeCalledOnce();
 
         $this->productRepository->add($product)
             ->shouldBeCalledOnce();
 
-        $this->domainEventCollector->collect(Argument::type(ProductCreatedEvent::class))
+        $this->contentPersister->persist($product, Argument::type('array'), Argument::type('array'))
             ->shouldBeCalledOnce();
-
-        $handler = new CreateProductMessageHandler(
-            $this->productRepository->reveal(),
-            $this->productFamilyRepository->reveal(),
-            [$this->productMapper->reveal()],
-            $this->domainEventCollector->reveal(),
-            null,
-        );
-
-        $message = new CreateProductMessage($this->createData());
-
-        $result = ($handler)($message);
-
-        $this->assertSame($product, $result);
-    }
-
-    public function testCreateProductWithMapper(): void
-    {
-        $product = new Product($this->productFamily);
-
-        /** @var ObjectProphecy<ProductMapperInterface> $secondMapper */
-        $secondMapper = $this->prophesize(ProductMapperInterface::class);
-
-        $this->productRepository->createNew($this->productFamily, null)
-            ->willReturn($product);
-
-        $this->productMapper->mapProductData($product, Argument::type('array'))
-            ->shouldBeCalledOnce();
-
-        $secondMapper->mapProductData($product, Argument::type('array'))
-            ->shouldBeCalledOnce();
-
-        $this->productRepository->add($product)->shouldBeCalledOnce();
 
         $this->domainEventCollector->collect(Argument::type(ProductCreatedEvent::class))
             ->shouldBeCalledOnce();
 
-        $handler = new CreateProductMessageHandler(
-            $this->productRepository->reveal(),
-            $this->productFamilyRepository->reveal(),
-            [$this->productMapper->reveal(), $secondMapper->reveal()],
-            $this->domainEventCollector->reveal(),
-            null,
-        );
-
         $message = new CreateProductMessage($this->createData());
 
-        $result = ($handler)($message);
+        $result = ($this->createHandler())($message);
 
         $this->assertSame($product, $result);
     }
 
     public function testCreateProductWithoutTokenStorage(): void
     {
-        $product = new Product($this->productFamily);
+        $product = new Product();
 
-        $this->productRepository->createNew($this->productFamily, null)->willReturn($product);
-        $this->productMapper->mapProductData($product, Argument::type('array'))->shouldBeCalled();
+        $this->productRepository->createNew(null)->willReturn($product);
         $this->productRepository->add($product)->shouldBeCalled();
+        $this->contentPersister->persist(Argument::cetera())->shouldBeCalled();
         $this->domainEventCollector->collect(Argument::type(ProductCreatedEvent::class))->shouldBeCalled();
-
-        $handler = new CreateProductMessageHandler(
-            $this->productRepository->reveal(),
-            $this->productFamilyRepository->reveal(),
-            [$this->productMapper->reveal()],
-            $this->domainEventCollector->reveal(),
-            null,
-        );
 
         $message = new CreateProductMessage($this->createData());
 
-        $result = ($handler)($message);
+        $result = ($this->createHandler(null))($message);
 
         $this->assertSame($product, $result);
     }
 
     public function testCreateDoesNotOverwriteExistingAuthor(): void
     {
-        $product = new Product($this->productFamily);
+        $product = new Product();
 
-        $this->productRepository->createNew($this->productFamily, null)->willReturn($product);
-
-        $this->productMapper->mapProductData(
-            $product,
-            Argument::that(fn (array $data) => isset($data['author']) && 42 === $data['author'])
-        )->shouldBeCalledOnce();
-
+        $this->productRepository->createNew(null)->willReturn($product);
         $this->productRepository->add($product)->shouldBeCalledOnce();
+
+        $this->contentPersister->persist(
+            $product,
+            Argument::that(fn (array $data) => isset($data['author']) && 42 === $data['author']),
+            Argument::type('array')
+        )->shouldBeCalledOnce();
 
         $this->domainEventCollector->collect(Argument::type(ProductCreatedEvent::class))
             ->shouldBeCalledOnce();
 
-        $handler = new CreateProductMessageHandler(
-            $this->productRepository->reveal(),
-            $this->productFamilyRepository->reveal(),
-            [$this->productMapper->reveal()],
-            $this->domainEventCollector->reveal(),
-            null,
-        );
-
         $message = new CreateProductMessage($this->createData(['author' => 42]));
 
-        $result = ($handler)($message);
+        $result = ($this->createHandler())($message);
 
         $this->assertSame($product, $result);
     }
 
     public function testCreateProductSetsAuthorFromToken(): void
     {
-        $product = new Product($this->productFamily);
+        $product = new Product();
 
         /** @var ObjectProphecy<ContactInterface> $contact */
         $contact = $this->prophesize(ContactInterface::class);
@@ -218,31 +156,24 @@ class CreateProductMessageHandlerTest extends TestCase
         $tokenStorage = $this->prophesize(TokenStorageInterface::class);
         $tokenStorage->getToken()->willReturn($token->reveal());
 
-        $this->productRepository->createNew($this->productFamily, null)
+        $this->productRepository->createNew(null)
             ->shouldBeCalledOnce()
             ->willReturn($product);
 
-        $this->productMapper->mapProductData(
-            $product,
-            Argument::that(fn (array $data) => 5 === $data['author'])
-        )->shouldBeCalledOnce();
-
         $this->productRepository->add($product)->shouldBeCalledOnce();
+
+        $this->contentPersister->persist(
+            $product,
+            Argument::that(fn (array $data) => 5 === $data['author']),
+            Argument::type('array')
+        )->shouldBeCalledOnce();
 
         $this->domainEventCollector->collect(Argument::type(ProductCreatedEvent::class))
             ->shouldBeCalledOnce();
 
-        $handler = new CreateProductMessageHandler(
-            $this->productRepository->reveal(),
-            $this->productFamilyRepository->reveal(),
-            [$this->productMapper->reveal()],
-            $this->domainEventCollector->reveal(),
-            $tokenStorage->reveal(),
-        );
-
         $message = new CreateProductMessage($this->createData());
 
-        $result = ($handler)($message);
+        $result = ($this->createHandler($tokenStorage->reveal()))($message);
 
         $this->assertSame($product, $result);
     }
@@ -252,18 +183,10 @@ class CreateProductMessageHandlerTest extends TestCase
         $this->productRepository->existBy(['code' => 'DUPLICATE-CODE'])
             ->willReturn(true);
 
-        $handler = new CreateProductMessageHandler(
-            $this->productRepository->reveal(),
-            $this->productFamilyRepository->reveal(),
-            [$this->productMapper->reveal()],
-            $this->domainEventCollector->reveal(),
-            null,
-        );
-
         $message = new CreateProductMessage($this->createData(['code' => 'DUPLICATE-CODE']));
 
         $this->expectException(ProductCodeNotUniqueException::class);
 
-        ($handler)($message);
+        ($this->createHandler())($message);
     }
 }

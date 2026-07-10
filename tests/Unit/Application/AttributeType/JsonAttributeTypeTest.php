@@ -21,7 +21,7 @@ use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
-use Sulu\Product\Domain\Model\ProductFamily;
+use Sulu\Product\Domain\Model\ProductDimensionContent;
 
 #[CoversClass(JsonAttributeType::class)]
 class JsonAttributeTypeTest extends TestCase
@@ -36,7 +36,7 @@ class JsonAttributeTypeTest extends TestCase
     public function testValueRoundTripUsesJsonColumn(): void
     {
         $type = new JsonAttributeType();
-        $value = new ProductAttributeValue(new Product(new ProductFamily()), new Attribute(new AttributeGroup()), 'k');
+        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
 
         $type->writeValue($value, ['a' => 1]);
 
@@ -47,7 +47,7 @@ class JsonAttributeTypeTest extends TestCase
     public function testWriteNullClearsJson(): void
     {
         $type = new JsonAttributeType();
-        $value = new ProductAttributeValue(new Product(new ProductFamily()), new Attribute(new AttributeGroup()), 'k');
+        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
         $type->writeValue($value, ['x' => 2]);
 
         $type->writeValue($value, null);

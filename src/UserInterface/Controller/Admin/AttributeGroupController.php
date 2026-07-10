@@ -183,6 +183,10 @@ final class AttributeGroupController implements SecuredControllerInterface
     private function serializeAttributeGroup(AttributeGroupInterface $group, string $locale): array
     {
         $translation = $group->getTranslation($locale);
+        if (null === $translation) {
+            $defaultLocale = $group->getDefaultLocale();
+            $translation = null !== $defaultLocale ? $group->getTranslation($defaultLocale) : null;
+        }
 
         return [
             'id' => $group->getUuid() ?? '',

@@ -28,26 +28,33 @@ use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
 use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushStamp;
 use Sulu\Product\Application\Message\ApplyWorkflowTransitionProductMessage;
 use Sulu\Product\Application\Message\CopyLocaleProductMessage;
+use Sulu\Product\Application\Message\CreateProductMessage;
 use Sulu\Product\Application\Message\ModifyProductMessage;
+use Sulu\Product\Application\Message\RemoveProductMessage;
+use Sulu\Product\Application\Message\RemoveProductTranslationMessage;
 use Sulu\Product\Application\Message\RestoreProductVersionMessage;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
+use Sulu\Product\Domain\Exception\RequiredProductAttributeMissingException;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\HandleTrait;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
+use Webmozart\Assert\InvalidArgumentException;
 
 /**
  * @internal
  *
+ * @phpstan-import-type CreateProductMessageData from CreateProductMessage
  * @phpstan-import-type ModifyProductMessageData from ModifyProductMessage
  */
-final class ProductContentController implements SecuredControllerInterface
+final class ProductController implements SecuredControllerInterface
 {
     use HandleTrait;
 
@@ -63,38 +70,36 @@ final class ProductContentController implements SecuredControllerInterface
         $this->messageBus = $messageBus;
     }
 
-    public function getVersionsAction(Request $request, string $id): JsonResponse
+    public function cgetAction(Request $request): Response
     {
-        $locale = $this->getLocale($request);
-
         /** @var DoctrineFieldDescriptorInterface[] $fieldDescriptors */
-        $fieldDescriptors = $this->fieldDescriptorFactory->getFieldDescriptors('products_versions');
+        $fieldDescriptors = $this->fieldDescriptorFactory->getFieldDescriptors(ProductInterface::RESOURCE_KEY);
+
         /** @var DoctrineListBuilder $listBuilder */
         $listBuilder = $this->listBuilderFactory->create(ProductInterface::class);
-        $listBuilder->setParameter('locale', $locale);
-        $listBuilder->setParameter('id', $id);
         $listBuilder->setIdField($fieldDescriptors['id']);
-        $listBuilder->sort($fieldDescriptors['version'], 'DESC');
         $this->restHelper->initializeListBuilder($listBuilder, $fieldDescriptors);
+        $listBuilder->setParameter('locale', $this->getLocale($request));
 
-        $result = $listBuilder->execute();
         $listRepresentation = new PaginatedRepresentation(
-            $result,
-            'products_versions',
-            $listBuilder->getCurrentPage(),
+            $listBuilder->execute(),
+            ProductInterface::RESOURCE_KEY,
+            (int) $listBuilder->getCurrentPage(),
             (int) $listBuilder->getLimit(),
             $listBuilder->count(),
         );
 
-        return new JsonResponse(
-            $this->normalizer->normalize($listRepresentation->toArray(), 'json'),
-        );
+        return new JsonResponse($this->normalizer->normalize(
+            $listRepresentation->toArray(),
+            'json',
+        ));
     }
 
     public function getAction(Request $request, string $id): Response
     {
+        $locale = $this->getLocale($request);
         $dimensionAttributes = [
-            'locale' => $request->query->getString('locale', $request->getLocale()),
+            'locale' => $locale,
             'stage' => DimensionContentInterface::STAGE_DRAFT,
         ];
 
@@ -129,13 +134,52 @@ final class ProductContentController implements SecuredControllerInterface
         ));
     }
 
+    public function postAction(Request $request): Response
+    {
+        $data = $this->getCreateData($request);
+        $message = new CreateProductMessage($data);
+        /** @var ProductInterface $product */
+        $product = $this->handle(new Envelope($message, [new EnableFlushStamp()]));
+
+        $response = $this->getAction($request, $product->getUuid());
+        $response->setStatusCode(201);
+
+        return $response;
+    }
+
     public function putAction(Request $request, string $id): Response
     {
-        $message = new ModifyProductMessage(['uuid' => $id], $this->getData($request));
-        $this->handle(new Envelope($message, [new EnableFlushStamp()]));
+        $message = new ModifyProductMessage(['uuid' => $id], $this->getModifyData($request));
+
+        try {
+            $this->handle(new Envelope($message, [new EnableFlushStamp()]));
+        } catch (ProductNotFoundException $e) {
+            throw new NotFoundHttpException($e->getMessage(), $e);
+        } catch (RequiredProductAttributeMissingException $e) {
+            return new JsonResponse(['detail' => $e->getMessage()], 422);
+        } catch (InvalidArgumentException $e) {
+            return new JsonResponse(['detail' => 'Invalid attribute value provided.'], 400);
+        }
+
         $this->handleAction($request, $id);
 
         return $this->getAction($request, $id);
+    }
+
+    public function deleteAction(Request $request, string $id): Response
+    {
+        $deleteLocale = $request->query->getBoolean('deleteLocale', false);
+        $locale = $this->getLocale($request);
+
+        if ($deleteLocale) {
+            $message = new RemoveProductTranslationMessage(['uuid' => $id], $locale);
+            $this->handle(new Envelope($message, [new EnableFlushStamp()]));
+        } else {
+            $message = new RemoveProductMessage(['uuid' => $id], $locale);
+            $this->handle(new Envelope($message, [new EnableFlushStamp()]));
+        }
+
+        return new Response('', 204);
     }
 
     public function postTriggerAction(Request $request, string $id): Response
@@ -143,6 +187,34 @@ final class ProductContentController implements SecuredControllerInterface
         $this->handleAction($request, $id);
 
         return $this->getAction($request, $id);
+    }
+
+    public function getVersionsAction(Request $request, string $id): JsonResponse
+    {
+        $locale = $this->getLocale($request);
+
+        /** @var DoctrineFieldDescriptorInterface[] $fieldDescriptors */
+        $fieldDescriptors = $this->fieldDescriptorFactory->getFieldDescriptors('products_versions');
+        /** @var DoctrineListBuilder $listBuilder */
+        $listBuilder = $this->listBuilderFactory->create(ProductInterface::class);
+        $listBuilder->setParameter('locale', $locale);
+        $listBuilder->setParameter('id', $id);
+        $listBuilder->setIdField($fieldDescriptors['id']);
+        $listBuilder->sort($fieldDescriptors['version'], 'DESC');
+        $this->restHelper->initializeListBuilder($listBuilder, $fieldDescriptors);
+
+        $result = $listBuilder->execute();
+        $listRepresentation = new PaginatedRepresentation(
+            $result,
+            'products_versions',
+            $listBuilder->getCurrentPage(),
+            (int) $listBuilder->getLimit(),
+            $listBuilder->count(),
+        );
+
+        return new JsonResponse(
+            $this->normalizer->normalize($listRepresentation->toArray(), 'json'),
+        );
     }
 
     public function getSecurityContext(): string
@@ -156,9 +228,23 @@ final class ProductContentController implements SecuredControllerInterface
     }
 
     /**
+     * @return CreateProductMessageData
+     */
+    private function getCreateData(Request $request): array
+    {
+        /** @var CreateProductMessageData $data */
+        $data = \array_replace(
+            $request->request->all(),
+            ['locale' => $this->getLocale($request)],
+        );
+
+        return $data;
+    }
+
+    /**
      * @return ModifyProductMessageData
      */
-    private function getData(Request $request): array
+    private function getModifyData(Request $request): array
     {
         /** @var ModifyProductMessageData $data */
         $data = \array_replace(

@@ -182,22 +182,35 @@ final class AttributeController implements SecuredControllerInterface
         }
 
         $translation = $attribute->getTranslation($locale);
+        if (null === $translation) {
+            $defaultLocale = $attribute->getDefaultLocale();
+            $translation = null !== $defaultLocale ? $attribute->getTranslation($defaultLocale) : null;
+        }
 
         return [
             'id' => $attribute->getUuid(),
             'key' => $attribute->getKey(),
             'type' => $attribute->getType(),
+            'localized' => $attribute->isLocalized(),
             'position' => $attribute->getPosition(),
             'externalIdentifier' => $attribute->getExternalIdentifier(),
             'group' => $attribute->getGroup()->getUuid(),
             'name' => $translation?->getName() ?? '',
             'description' => $translation?->getDescription(),
             'options' => \array_map(
-                fn (AttributeOptionInterface $option) => [
-                    'type' => 'option',
-                    'key' => $option->getKey(),
-                    'name' => $option->getTranslation($locale)?->getName() ?? '',
-                ],
+                function(AttributeOptionInterface $option) use ($locale, $attribute) {
+                    $optionTranslation = $option->getTranslation($locale);
+                    if (null === $optionTranslation) {
+                        $defaultLocale = $attribute->getDefaultLocale();
+                        $optionTranslation = null !== $defaultLocale ? $option->getTranslation($defaultLocale) : null;
+                    }
+
+                    return [
+                        'type' => 'option',
+                        'key' => $option->getKey(),
+                        'name' => $optionTranslation?->getName() ?? '',
+                    ];
+                },
                 $attribute->getOptions(),
             ),
             'config' => $attribute->getConfig(),

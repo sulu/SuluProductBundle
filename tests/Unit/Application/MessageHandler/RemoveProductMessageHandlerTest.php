@@ -24,7 +24,6 @@ use Sulu\Product\Application\MessageHandler\RemoveProductMessageHandler;
 use Sulu\Product\Domain\Event\ProductRemovedEvent;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
-use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 
@@ -46,7 +45,7 @@ class RemoveProductMessageHandlerTest extends TestCase
 
     public function testRemoveProduct(): void
     {
-        $product = new Product(new ProductFamily(), 'prod-uuid');
+        $product = new Product('prod-uuid');
 
         $this->productRepository->getOneBy(['uuid' => 'prod-uuid'])
             ->shouldBeCalledOnce()
@@ -71,7 +70,7 @@ class RemoveProductMessageHandlerTest extends TestCase
 
     public function testRemoveProductFallsBackToAvailableLocaleForTitle(): void
     {
-        $product = new Product(new ProductFamily(), 'prod-uuid-fallback');
+        $product = new Product('prod-uuid-fallback');
 
         // Unlocalized draft content with availableLocales set
         $unlocalizedContent = new ProductDimensionContent($product);
@@ -114,7 +113,7 @@ class RemoveProductMessageHandlerTest extends TestCase
 
     public function testRemoveProductWithTrashManager(): void
     {
-        $product = new Product(new ProductFamily(), 'prod-uuid');
+        $product = new Product('prod-uuid');
 
         /** @var ObjectProphecy<TrashManagerInterface> $trashManager */
         $trashManager = $this->prophesize(TrashManagerInterface::class);

@@ -13,17 +13,15 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Tests\Unit\Application\Mapper;
 
-use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Content\Application\ContentPersister\ContentPersisterInterface;
+use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Application\Mapper\ProductContentMapper;
 use Sulu\Product\Domain\Model\Product;
-use Sulu\Product\Domain\Model\ProductFamily;
 
-#[CoversClass(ProductContentMapper::class)]
 class ProductContentMapperTest extends TestCase
 {
     use ProphecyTrait;
@@ -36,66 +34,37 @@ class ProductContentMapperTest extends TestCase
     protected function setUp(): void
     {
         $this->contentPersister = $this->prophesize(ContentPersisterInterface::class);
-
-        $this->mapper = new ProductContentMapper(
-            $this->contentPersister->reveal(),
-        );
+        $this->mapper = new ProductContentMapper($this->contentPersister->reveal());
     }
 
-    public function testMapProductDataPersistsContentWhenTemplateGiven(): void
+    public function testMapProductDataPersistsDraftForLocale(): void
     {
-        $product = new Product(new ProductFamily());
-        $data = [
-            'template' => 'default',
-            'locale' => 'en',
-            'title' => 'Foo',
-        ];
+        $product = new Product('prod-uuid');
 
         $this->contentPersister->persist(
             $product,
-            $data,
-            ['locale' => 'en'],
+            Argument::that(fn (array $data): bool => 'PROD-001' === ($data['code'] ?? null)),
+            [
+                'locale' => 'en',
+                'stage' => DimensionContentInterface::STAGE_DRAFT,
+            ],
         )->shouldBeCalledOnce();
-
-        $this->mapper->mapProductData($product, $data);
-    }
-
-    public function testMapProductDataDoesNothingWhenTemplateMissing(): void
-    {
-        $product = new Product(new ProductFamily());
-
-        $this->contentPersister->persist(Argument::cetera())->shouldNotBeCalled();
 
         $this->mapper->mapProductData($product, [
             'locale' => 'en',
-            'title' => 'Foo',
+            'code' => 'PROD-001',
+            'template' => 'product',
         ]);
     }
 
-    public function testMapProductDataThrowsWhenLocaleIsNotAString(): void
+    public function testMapProductDataRequiresStringLocale(): void
     {
-        $product = new Product(new ProductFamily());
+        $product = new Product('prod-uuid');
 
         $this->contentPersister->persist(Argument::cetera())->shouldNotBeCalled();
 
         $this->expectException(\InvalidArgumentException::class);
 
-        $this->mapper->mapProductData($product, [
-            'template' => 'default',
-            'locale' => 123,
-        ]);
-    }
-
-    public function testMapProductDataThrowsWhenLocaleIsMissing(): void
-    {
-        $product = new Product(new ProductFamily());
-
-        $this->contentPersister->persist(Argument::cetera())->shouldNotBeCalled();
-
-        $this->expectException(\InvalidArgumentException::class);
-
-        $this->mapper->mapProductData($product, [
-            'template' => 'default',
-        ]);
+        $this->mapper->mapProductData($product, ['template' => 'product']);
     }
 }

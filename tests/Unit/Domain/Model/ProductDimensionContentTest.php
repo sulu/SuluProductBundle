@@ -15,7 +15,11 @@ namespace Sulu\Product\Tests\Unit\Domain\Model;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Prophecy\PhpUnit\ProphecyTrait;
+use Prophecy\Prophecy\ObjectProphecy;
+use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\Product;
+use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductFamily;
@@ -24,9 +28,11 @@ use Sulu\Product\Domain\Model\ProductInterface;
 #[CoversClass(ProductDimensionContent::class)]
 class ProductDimensionContentTest extends TestCase
 {
+    use ProphecyTrait;
+
     public function testConstructorAssignsResourceAndDefaults(): void
     {
-        $product = new Product(new ProductFamily());
+        $product = new Product();
         $dimensionContent = new ProductDimensionContent($product);
 
         $this->assertSame($product, $dimensionContent->getResource());
@@ -50,7 +56,7 @@ class ProductDimensionContentTest extends TestCase
 
     public function testSetTemplateDataExtractsTitle(): void
     {
-        $dimensionContent = new ProductDimensionContent(new Product(new ProductFamily()));
+        $dimensionContent = new ProductDimensionContent(new Product());
 
         $dimensionContent->setTemplateData(['title' => 'My Product']);
 
@@ -59,7 +65,7 @@ class ProductDimensionContentTest extends TestCase
 
     public function testSetTemplateDataIgnoresMissingTitle(): void
     {
-        $dimensionContent = new ProductDimensionContent(new Product(new ProductFamily()));
+        $dimensionContent = new ProductDimensionContent(new Product());
 
         $dimensionContent->setTemplateData(['other' => 'value']);
 
@@ -68,7 +74,7 @@ class ProductDimensionContentTest extends TestCase
 
     public function testSetTemplateDataIgnoresNonStringTitle(): void
     {
-        $dimensionContent = new ProductDimensionContent(new Product(new ProductFamily()));
+        $dimensionContent = new ProductDimensionContent(new Product());
 
         $dimensionContent->setTemplateData(['title' => 123]);
 
@@ -77,7 +83,7 @@ class ProductDimensionContentTest extends TestCase
 
     public function testSetCustomizeWebspaceSettingsIsFluentAndStores(): void
     {
-        $dimensionContent = new ProductDimensionContent(new Product(new ProductFamily()));
+        $dimensionContent = new ProductDimensionContent(new Product());
 
         $this->assertSame($dimensionContent, $dimensionContent->setCustomizeWebspaceSettings(true));
         $this->assertTrue($dimensionContent->getCustomizeWebspaceSettings());
@@ -88,7 +94,7 @@ class ProductDimensionContentTest extends TestCase
 
     public function testAddAdditionalWebspaceStoresAndDeduplicates(): void
     {
-        $dimensionContent = new ProductDimensionContent(new Product(new ProductFamily()));
+        $dimensionContent = new ProductDimensionContent(new Product());
 
         $this->assertSame($dimensionContent, $dimensionContent->addAdditionalWebspace('sulu-io'));
         $dimensionContent->addAdditionalWebspace('sulu-io');
@@ -99,7 +105,7 @@ class ProductDimensionContentTest extends TestCase
 
     public function testHasAdditionalWebspace(): void
     {
-        $dimensionContent = new ProductDimensionContent(new Product(new ProductFamily()));
+        $dimensionContent = new ProductDimensionContent(new Product());
 
         $this->assertFalse($dimensionContent->hasAdditionalWebspace('sulu-io'));
         $dimensionContent->addAdditionalWebspace('sulu-io');
@@ -109,7 +115,7 @@ class ProductDimensionContentTest extends TestCase
 
     public function testSetAdditionalWebspacesAddsNewOnes(): void
     {
-        $dimensionContent = new ProductDimensionContent(new Product(new ProductFamily()));
+        $dimensionContent = new ProductDimensionContent(new Product());
 
         $this->assertSame($dimensionContent, $dimensionContent->setAdditionalWebspaces(['sulu-io', 'blog']));
         $this->assertSame(['sulu-io', 'blog'], $dimensionContent->getAdditionalWebspaces());
@@ -117,7 +123,7 @@ class ProductDimensionContentTest extends TestCase
 
     public function testSetAdditionalWebspacesRemovesMissingOnes(): void
     {
-        $dimensionContent = new ProductDimensionContent(new Product(new ProductFamily()));
+        $dimensionContent = new ProductDimensionContent(new Product());
         $dimensionContent->addAdditionalWebspace('sulu-io');
         $dimensionContent->addAdditionalWebspace('blog');
 
@@ -128,7 +134,7 @@ class ProductDimensionContentTest extends TestCase
 
     public function testSetAdditionalWebspacesPreservesExistingAndAddsNew(): void
     {
-        $dimensionContent = new ProductDimensionContent(new Product(new ProductFamily()));
+        $dimensionContent = new ProductDimensionContent(new Product());
         $dimensionContent->addAdditionalWebspace('sulu-io');
 
         $dimensionContent->setAdditionalWebspaces(['sulu-io', 'blog']);
@@ -138,12 +144,93 @@ class ProductDimensionContentTest extends TestCase
 
     public function testSetAdditionalWebspacesWithEmptyArrayRemovesAll(): void
     {
-        $dimensionContent = new ProductDimensionContent(new Product(new ProductFamily()));
+        $dimensionContent = new ProductDimensionContent(new Product());
         $dimensionContent->addAdditionalWebspace('sulu-io');
         $dimensionContent->addAdditionalWebspace('blog');
 
         $dimensionContent->setAdditionalWebspaces([]);
 
         $this->assertSame([], $dimensionContent->getAdditionalWebspaces());
+    }
+
+    public function testSetTitleIsFluentAndStores(): void
+    {
+        $dc = new ProductDimensionContent(new Product());
+        $this->assertSame($dc, $dc->setTitle('Hello'));
+        $this->assertSame('Hello', $dc->getTitle());
+    }
+
+    public function testSetCodeAndGetCode(): void
+    {
+        $dc = new ProductDimensionContent(new Product());
+        $this->assertNull($dc->getCode());
+        $dc->setCode('SKU-1');
+        $this->assertSame('SKU-1', $dc->getCode());
+    }
+
+    public function testSetCodeIsFluent(): void
+    {
+        $dc = new ProductDimensionContent(new Product());
+        $this->assertSame($dc, $dc->setCode('SKU-2'));
+        $this->assertSame('SKU-2', $dc->getCode());
+    }
+
+    public function testSetExternalIdentifierAndGet(): void
+    {
+        $dc = new ProductDimensionContent(new Product());
+        $this->assertNull($dc->getExternalIdentifier());
+        $dc->setExternalIdentifier('EXT-X');
+        $this->assertSame('EXT-X', $dc->getExternalIdentifier());
+    }
+
+    public function testSetExternalIdentifierIsFluent(): void
+    {
+        $dc = new ProductDimensionContent(new Product());
+        $this->assertSame($dc, $dc->setExternalIdentifier('EXT-Y'));
+        $this->assertSame('EXT-Y', $dc->getExternalIdentifier());
+    }
+
+    public function testSetProductFamilyAndGet(): void
+    {
+        $family = new ProductFamily();
+        $dc = new ProductDimensionContent(new Product());
+        $this->assertNull($dc->getProductFamily());
+        $dc->setProductFamily($family);
+        $this->assertSame($family, $dc->getProductFamily());
+    }
+
+    public function testSetProductFamilyIsFluent(): void
+    {
+        $dc = new ProductDimensionContent(new Product());
+        $family = new ProductFamily();
+        $this->assertSame($dc, $dc->setProductFamily($family));
+        $this->assertSame($family, $dc->getProductFamily());
+    }
+
+    public function testGetAttributesReturnsEmptyCollectionInitially(): void
+    {
+        $dc = new ProductDimensionContent(new Product());
+        $this->assertSame([], $dc->getAttributes()->toArray());
+    }
+
+    public function testAddAttributeIsFluentAndStores(): void
+    {
+        $dc = new ProductDimensionContent(new Product());
+        /** @var ObjectProphecy<AttributeInterface> $attrInterface */
+        $attrInterface = $this->prophesize(AttributeInterface::class);
+        $attr = new ProductAttributeValue($dc, $attrInterface->reveal(), 'k');
+        $this->assertSame($dc, $dc->addAttribute($attr));
+        $this->assertTrue($dc->getAttributes()->contains($attr));
+    }
+
+    public function testRemoveAttributeIsFluentAndRemoves(): void
+    {
+        $dc = new ProductDimensionContent(new Product());
+        /** @var ObjectProphecy<AttributeInterface> $attrInterface */
+        $attrInterface = $this->prophesize(AttributeInterface::class);
+        $attr = new ProductAttributeValue($dc, $attrInterface->reveal(), 'k');
+        $dc->addAttribute($attr);
+        $this->assertSame($dc, $dc->removeAttribute($attr));
+        $this->assertFalse($dc->getAttributes()->contains($attr));
     }
 }

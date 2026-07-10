@@ -59,7 +59,7 @@ final class CopyLocaleProductMessageHandler
                 'locale' => $message->getTargetLocale(),
             ],
             [
-                'ignoredAttributes' => ['mainWebspace', 'additionalWebspaces'],
+                'ignoredAttributes' => ['mainWebspace', 'additionalWebspaces', 'url'],
             ]
         );
 

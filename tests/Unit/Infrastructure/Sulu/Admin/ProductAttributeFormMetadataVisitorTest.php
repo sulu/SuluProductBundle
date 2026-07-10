@@ -21,11 +21,11 @@ use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataLoaderInterface;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\OptionMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\SectionMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadataMapper\NumberPropertyMetadataMapper;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadataMapperRegistry;
 use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
 use Sulu\Product\Application\AttributeType\NumberAttributeType;
-use Sulu\Product\Domain\Exception\ProductFamilyNotFoundException;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeTranslationInterface;
 use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
@@ -87,7 +87,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
     public function testIgnoresOtherForms(): void
     {
         $form = new FormMetadata();
-        $form->setKey('product_details');
+        $form->setKey('product_family_details');  // not product_details
 
         $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'uuid-1']);
 
@@ -97,7 +97,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
     public function testNoIdInjectsNothing(): void
     {
         $form = new FormMetadata();
-        $form->setKey('product_attributes');
+        $form->setKey('product_details');
 
         $this->visitor()->visitFormMetadata($form, 'en', []);
 
@@ -124,18 +124,22 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $family = $this->prophesize(ProductFamilyInterface::class);
         $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
 
-        $this->productFamilyRepository->getOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
             ->willReturn($this->fragmentWithValueField());
 
         $form = new FormMetadata();
-        $form->setKey('product_attributes');
+        $form->setKey('product_details');
 
         $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'uuid-1']);
 
         $items = $form->getItems();
-        self::assertArrayHasKey('attributes/7', $items);
-        $field = $items['attributes/7'];
+        self::assertArrayHasKey('attributes', $items);
+        $section = $items['attributes'];
+        self::assertInstanceOf(SectionMetadata::class, $section);
+        $sectionItems = $section->getItems();
+        self::assertArrayHasKey('attributes/7', $sectionItems);
+        $field = $sectionItems['attributes/7'];
         self::assertInstanceOf(FieldMetadata::class, $field);
         self::assertSame('number', $field->getType());
         self::assertSame('Weight', $field->getLabel('en'));
@@ -164,12 +168,12 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $family = $this->prophesize(ProductFamilyInterface::class);
         $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
 
-        $this->productFamilyRepository->getOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
             ->willReturn($this->fragmentWithValueField());
 
         $form = new FormMetadata();
-        $form->setKey('product_attributes');
+        $form->setKey('product_details');
 
         $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'uuid-1']);
 
@@ -209,18 +213,18 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $family = $this->prophesize(ProductFamilyInterface::class);
         $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
 
-        $this->productFamilyRepository->getOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
             ->willReturn($this->fragmentWithValueField());
 
         $form = new FormMetadata();
-        $form->setKey('product_attributes');
+        $form->setKey('product_details');
 
         $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'uuid-1']);
 
-        $items = $form->getItems();
-        self::assertArrayHasKey('attributes/7', $items);
-        $field = $items['attributes/7'];
+        $section = $form->getItems()['attributes'];
+        self::assertInstanceOf(SectionMetadata::class, $section);
+        $field = $section->getItems()['attributes/7'];
         self::assertInstanceOf(FieldMetadata::class, $field);
         self::assertNull($field->getDescription('en'));
     }
@@ -237,10 +241,10 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $family = $this->prophesize(ProductFamilyInterface::class);
         $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
 
-        $this->productFamilyRepository->getOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
 
         $form = new FormMetadata();
-        $form->setKey('product_attributes');
+        $form->setKey('product_details');
 
         $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'uuid-1']);
 
@@ -259,11 +263,11 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $family = $this->prophesize(ProductFamilyInterface::class);
         $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
 
-        $this->productFamilyRepository->getOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])->willReturn(null);
 
         $form = new FormMetadata();
-        $form->setKey('product_attributes');
+        $form->setKey('product_details');
 
         $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'uuid-1']);
 
@@ -290,7 +294,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $family = $this->prophesize(ProductFamilyInterface::class);
         $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
 
-        $this->productFamilyRepository->getOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
 
         $field = new FieldMetadata('value');
         $field->setType('single_select');
@@ -307,13 +311,13 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])->willReturn($fragment);
 
         $form = new FormMetadata();
-        $form->setKey('product_attributes');
+        $form->setKey('product_details');
 
         $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'uuid-1']);
 
-        $items = $form->getItems();
-        self::assertArrayHasKey('attributes/7', $items);
-        $injected = $items['attributes/7'];
+        $section = $form->getItems()['attributes'];
+        self::assertInstanceOf(SectionMetadata::class, $section);
+        $injected = $section->getItems()['attributes/7'];
         self::assertInstanceOf(FieldMetadata::class, $injected);
         self::assertArrayHasKey('opt', $injected->getOptions());
         self::assertCount(1, $injected->getTypes());
@@ -331,7 +335,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $family = $this->prophesize(ProductFamilyInterface::class);
         $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
 
-        $this->productFamilyRepository->getOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
 
         $fragment = new FormMetadata();
         $fragment->setKey('product_attribute_number');
@@ -341,7 +345,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])->willReturn($fragment);
 
         $form = new FormMetadata();
-        $form->setKey('product_attributes');
+        $form->setKey('product_details');
 
         $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'uuid-1']);
 
@@ -368,23 +372,25 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $family = $this->prophesize(ProductFamilyInterface::class);
         $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
 
-        $this->productFamilyRepository->getOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
             ->willReturn($this->fragmentWithValueField());
 
         $form = new FormMetadata();
-        $form->setKey('product_attributes');
+        $form->setKey('product_details');
 
         $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'uuid-1']);
 
-        $items = $form->getItems();
+        $section = $form->getItems()['attributes'];
+        self::assertInstanceOf(SectionMetadata::class, $section);
+        $sectionItems = $section->getItems();
 
-        $valueField = $items['attributes/7'];
+        $valueField = $sectionItems['attributes/7'];
         self::assertInstanceOf(FieldMetadata::class, $valueField);
         self::assertSame(8, $valueField->getColSpan());
 
-        self::assertArrayHasKey('attributes/7_unit', $items);
-        $unitField = $items['attributes/7_unit'];
+        self::assertArrayHasKey('attributes/7_unit', $sectionItems);
+        $unitField = $sectionItems['attributes/7_unit'];
         self::assertInstanceOf(FieldMetadata::class, $unitField);
         self::assertSame('single_select', $unitField->getType());
         self::assertSame(4, $unitField->getColSpan());
@@ -420,31 +426,70 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $family = $this->prophesize(ProductFamilyInterface::class);
         $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
 
-        $this->productFamilyRepository->getOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
             ->willReturn($this->fragmentWithValueField());
 
         $form = new FormMetadata();
-        $form->setKey('product_attributes');
+        $form->setKey('product_details');
 
         $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'uuid-1']);
 
-        $items = $form->getItems();
-        self::assertArrayHasKey('attributes/7', $items);
-        self::assertArrayNotHasKey('attributes/7_unit', $items);
-        self::assertSame(12, $items['attributes/7']->getColSpan());
+        $section = $form->getItems()['attributes'];
+        self::assertInstanceOf(SectionMetadata::class, $section);
+        $sectionItems = $section->getItems();
+        self::assertArrayHasKey('attributes/7', $sectionItems);
+        self::assertArrayNotHasKey('attributes/7_unit', $sectionItems);
+        self::assertSame(12, $sectionItems['attributes/7']->getColSpan());
     }
 
-    public function testThrowsWhenNoFamilyFound(): void
+    public function testInjectsNothingWhenNoFamilyFound(): void
     {
-        $this->productFamilyRepository->getOneBy(['productUuid' => 'missing'])
-            ->willThrow(new ProductFamilyNotFoundException(['productUuid' => 'missing']));
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'missing'])->willReturn(null);
 
         $form = new FormMetadata();
-        $form->setKey('product_attributes');
-
-        $this->expectException(ProductFamilyNotFoundException::class);
+        $form->setKey('product_details');
 
         $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'missing']);
+
+        self::assertSame([], $form->getItems());
+    }
+
+    public function testUsesDefaultLocaleTranslationWhenLocaleTranslationMissing(): void
+    {
+        $fallbackTranslation = $this->prophesize(AttributeTranslationInterface::class);
+        $fallbackTranslation->getName()->willReturn('Gewicht');
+        $fallbackTranslation->getDescription()->willReturn(null);
+
+        $attribute = $this->prophesize(AttributeInterface::class);
+        $attribute->getId()->willReturn(7);
+        $attribute->getKey()->willReturn('weight');
+        $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
+        $attribute->getConfig()->willReturn([]);
+        $attribute->getTranslation('en')->willReturn(null);
+        $attribute->getDefaultLocale()->willReturn('de');
+        $attribute->getTranslation('de')->willReturn($fallbackTranslation->reveal());
+
+        $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
+        $familyAttribute->getAttribute()->willReturn($attribute->reveal());
+        $familyAttribute->isRequired()->willReturn(false);
+
+        $family = $this->prophesize(ProductFamilyInterface::class);
+        $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
+
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
+        $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
+            ->willReturn($this->fragmentWithValueField());
+
+        $form = new FormMetadata();
+        $form->setKey('product_details');
+
+        $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'uuid-1']);
+
+        $section = $form->getItems()['attributes'];
+        self::assertInstanceOf(SectionMetadata::class, $section);
+        $field = $section->getItems()['attributes/7'];
+        self::assertInstanceOf(FieldMetadata::class, $field);
+        self::assertSame('Gewicht', $field->getLabel('en'));
     }
 }

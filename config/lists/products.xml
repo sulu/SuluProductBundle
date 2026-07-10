@@ -2,19 +2,37 @@
 <list xmlns="http://schemas.sulu.io/list-builder/list">
     <key>products</key>
 
-    <joins name="translation">
+    <joins name="dimensionContent">
         <join>
-            <entity-name>translation</entity-name>
-            <field-name>Sulu\Product\Domain\Model\ProductInterface.translations</field-name>
+            <entity-name>dimensionContent</entity-name>
+            <field-name>Sulu\Product\Domain\Model\ProductInterface.dimensionContents</field-name>
             <method>LEFT</method>
-            <condition>translation.locale = :locale</condition>
+            <condition>dimensionContent.locale = :locale AND dimensionContent.stage = 'draft' AND dimensionContent.version = 0</condition>
         </join>
     </joins>
 
-    <joins name="creator">
+    <joins name="unlocalizedDimensionContent">
+        <join>
+            <entity-name>unlocalizedDimensionContent</entity-name>
+            <field-name>Sulu\Product\Domain\Model\ProductInterface.dimensionContents</field-name>
+            <method>LEFT</method>
+            <condition>unlocalizedDimensionContent.locale IS NULL AND unlocalizedDimensionContent.stage = 'draft' AND unlocalizedDimensionContent.version = 0</condition>
+        </join>
+    </joins>
+
+    <joins name="ghostDimensionContent" ref="unlocalizedDimensionContent">
+        <join>
+            <entity-name>ghostDimensionContent</entity-name>
+            <field-name>Sulu\Product\Domain\Model\ProductInterface.dimensionContents</field-name>
+            <method>LEFT</method>
+            <condition>ghostDimensionContent.locale = unlocalizedDimensionContent.ghostLocale AND ghostDimensionContent.stage = 'draft' AND dimensionContent IS NULL AND ghostDimensionContent.version = 0</condition>
+        </join>
+    </joins>
+
+    <joins name="creator" ref="dimensionContent">
         <join>
             <entity-name>%sulu.model.user.class%</entity-name>
-            <field-name>Sulu\Product\Domain\Model\ProductInterface.creator</field-name>
+            <field-name>dimensionContent.creator</field-name>
         </join>
         <join>
             <entity-name>%sulu.model.contact.class%</entity-name>
@@ -22,10 +40,10 @@
         </join>
     </joins>
 
-    <joins name="changer">
+    <joins name="changer" ref="dimensionContent">
         <join>
             <entity-name>%sulu.model.user.class%</entity-name>
-            <field-name>Sulu\Product\Domain\Model\ProductInterface.changer</field-name>
+            <field-name>dimensionContent.changer</field-name>
         </join>
         <join>
             <entity-name>%sulu.model.contact.class%</entity-name>
@@ -39,26 +57,41 @@
             <entity-name>Sulu\Product\Domain\Model\ProductInterface</entity-name>
         </property>
 
-        <property name="name" translation="sulu_admin.name" visibility="always" searchability="yes">
-            <field-name>name</field-name>
-            <entity-name>translation</entity-name>
-            <joins ref="translation"/>
-        </property>
+        <case-property name="name" translation="sulu_admin.name" visibility="always" searchability="yes">
+            <field>
+                <field-name>title</field-name>
+                <entity-name>dimensionContent</entity-name>
+
+                <joins ref="dimensionContent"/>
+            </field>
+
+            <field>
+                <field-name>title</field-name>
+                <entity-name>ghostDimensionContent</entity-name>
+
+                <joins ref="ghostDimensionContent"/>
+            </field>
+
+            <transformer type="title"/>
+        </case-property>
 
         <property name="code" translation="sulu_product.code" visibility="yes">
             <field-name>code</field-name>
-            <entity-name>Sulu\Product\Domain\Model\ProductInterface</entity-name>
+            <entity-name>unlocalizedDimensionContent</entity-name>
+            <joins ref="unlocalizedDimensionContent"/>
         </property>
 
         <property name="created" translation="sulu_admin.created" visibility="no">
             <field-name>created</field-name>
-            <entity-name>Sulu\Product\Domain\Model\ProductInterface</entity-name>
+            <entity-name>dimensionContent</entity-name>
+            <joins ref="dimensionContent"/>
             <transformer type="datetime"/>
         </property>
 
         <property name="changed" translation="sulu_admin.changed" visibility="no">
             <field-name>changed</field-name>
-            <entity-name>Sulu\Product\Domain\Model\ProductInterface</entity-name>
+            <entity-name>dimensionContent</entity-name>
+            <joins ref="dimensionContent"/>
             <transformer type="datetime"/>
         </property>
 
@@ -87,5 +120,15 @@
                 <joins ref="changer"/>
             </field>
         </concatenation-property>
+
+        <property name="locale" translation="sulu_admin.locale" visibility="never">
+            <field-name>locale</field-name>
+            <entity-name>dimensionContent</entity-name>
+        </property>
+
+        <property name="ghostLocale" translation="sulu_admin.ghost_locale" visibility="never">
+            <field-name>locale</field-name>
+            <entity-name>ghostDimensionContent</entity-name>
+        </property>
     </properties>
 </list>

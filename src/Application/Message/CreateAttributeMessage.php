@@ -29,6 +29,7 @@ namespace Sulu\Product\Application\Message;
  *     group: string,
  *     position?: int|null,
  *     config?: array<string, mixed>,
+ *     localized?: bool|null,
  * }
  */
 class CreateAttributeMessage

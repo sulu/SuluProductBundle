@@ -23,7 +23,6 @@ use Sulu\Product\Domain\Event\ProductRemovedEvent;
 use Sulu\Product\Domain\Event\ProductTranslationRemovedEvent;
 use Sulu\Product\Domain\Event\ProductWorkflowTransitionAppliedEvent;
 use Sulu\Product\Domain\Model\Product;
-use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Search\WebsiteProductIndexListener;
 use Symfony\Component\Messenger\Envelope;
@@ -46,7 +45,7 @@ class WebsiteProductIndexListenerTest extends TestCase
 
     public function testOnProductChangedWithProductWorkflowTransitionAppliedEvent(): void
     {
-        $product = new Product(new ProductFamily(), '123');
+        $product = new Product('123');
         $event = new ProductWorkflowTransitionAppliedEvent($product, DimensionContentInterface::STAGE_LIVE, 'en');
         $expectedConfig = ReindexConfig::create()->withIndex('website')->withIdentifiers([ProductInterface::RESOURCE_KEY . '__123__en']);
         $this->messageBus->dispatch($expectedConfig)->willReturn(new Envelope($expectedConfig))->shouldBeCalledOnce();
@@ -55,7 +54,7 @@ class WebsiteProductIndexListenerTest extends TestCase
 
     public function testOnProductChangedWithProductRemovedEvent(): void
     {
-        $product = new Product(new ProductFamily(), '789');
+        $product = new Product('789');
         $event = new ProductRemovedEvent($product->getUuid(), 'Uncool product', ['locales' => ['en', 'de']]);
         $expectedConfig = ReindexConfig::create()->withIndex('website')->withIdentifiers([ProductInterface::RESOURCE_KEY . '__789__en', ProductInterface::RESOURCE_KEY . '__789__de']);
         $this->messageBus->dispatch($expectedConfig)->willReturn(new Envelope($expectedConfig))->shouldBeCalledOnce();
@@ -64,7 +63,7 @@ class WebsiteProductIndexListenerTest extends TestCase
 
     public function testOnProductChangedWithProductTranslationRemovedEvent(): void
     {
-        $product = new Product(new ProductFamily(), '444');
+        $product = new Product('444');
         $event = new ProductTranslationRemovedEvent($product, 'de');
         $expectedConfig = ReindexConfig::create()->withIndex('website')->withIdentifiers([ProductInterface::RESOURCE_KEY . '__444__de']);
         $this->messageBus->dispatch($expectedConfig)->willReturn(new Envelope($expectedConfig))->shouldBeCalledOnce();
@@ -73,7 +72,7 @@ class WebsiteProductIndexListenerTest extends TestCase
 
     public function testOnProductChangedWithoutLocaleDoesNotDispatch(): void
     {
-        $product = new Product(new ProductFamily(), '123');
+        $product = new Product('123');
         $event = new ProductWorkflowTransitionAppliedEvent($product, DimensionContentInterface::STAGE_LIVE, '');
         $this->messageBus->dispatch(\Prophecy\Argument::any())->shouldNotBeCalled();
         $this->listener->onProductChanged($event);

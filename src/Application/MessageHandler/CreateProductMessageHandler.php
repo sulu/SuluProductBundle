@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of Sulu.
  *
@@ -18,7 +20,6 @@ use Sulu\Product\Application\Message\CreateProductMessage;
 use Sulu\Product\Domain\Event\ProductCreatedEvent;
 use Sulu\Product\Domain\Exception\ProductCodeNotUniqueException;
 use Sulu\Product\Domain\Model\ProductInterface;
-use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
@@ -28,10 +29,11 @@ use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInt
  */
 final class CreateProductMessageHandler
 {
+    /**
+     * @param iterable<ProductMapperInterface> $productMappers
+     */
     public function __construct(
         private ProductRepositoryInterface $productRepository,
-        private ProductFamilyRepositoryInterface $productFamilyRepository,
-        /** @var iterable<ProductMapperInterface> */
         private iterable $productMappers,
         private DomainEventCollectorInterface $domainEventCollector,
         private ?TokenStorageInterface $tokenStorage = null,
@@ -61,9 +63,11 @@ final class CreateProductMessageHandler
             throw new ProductCodeNotUniqueException($code);
         }
 
-        $productFamily = $this->productFamilyRepository->getOneBy(['uuid' => $message->getProductFamily()]);
+        if (!\array_key_exists('template', $data)) {
+            $data['template'] = ProductInterface::TEMPLATE_TYPE;
+        }
 
-        $product = $this->productRepository->createNew($productFamily, $message->getUuid());
+        $product = $this->productRepository->createNew($message->getUuid());
 
         foreach ($this->productMappers as $productMapper) {
             $productMapper->mapProductData($product, $data);

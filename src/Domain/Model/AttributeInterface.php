@@ -76,4 +76,12 @@ interface AttributeInterface extends AuditableInterface
      * @param array<string, mixed> $config
      */
     public function setConfig(array $config): self;
+
+    public function isLocalized(): bool;
+
+    public function setLocalized(bool $localized): self;
+
+    public function getDefaultLocale(): ?string;
+
+    public function setDefaultLocale(string $defaultLocale): self;
 }

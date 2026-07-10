@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of Sulu.
  *
@@ -13,11 +15,9 @@ namespace Sulu\Product\Application\MessageHandler;
 
 use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
-use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
 use Sulu\Product\Application\Mapper\ProductMapperInterface;
 use Sulu\Product\Application\Message\ModifyProductMessage;
 use Sulu\Product\Domain\Event\ProductModifiedEvent;
-use Sulu\Product\Domain\Exception\ProductCodeNotUniqueException;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 
@@ -27,11 +27,13 @@ use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
  */
 final class ModifyProductMessageHandler
 {
+    /**
+     * @param iterable<ProductMapperInterface> $productMappers
+     */
     public function __construct(
         private ProductRepositoryInterface $productRepository,
-        /** @var iterable<ProductMapperInterface> */
         private iterable $productMappers,
-        private DomainEventCollectorInterface $domainEventCollector
+        private DomainEventCollectorInterface $domainEventCollector,
     ) {
     }
 
@@ -41,27 +43,19 @@ final class ModifyProductMessageHandler
         $data = $message->getData();
         $locale = $message->getLocale();
 
-        /** @var string|null $code */
-        $code = $data['code'] ?? null;
-
         $product = $this->productRepository->getOneBy(
-            [
-                ...$identifier,
-                'locale' => $locale,
-            ],
-            [
-                ProductRepositoryInterface::SELECT_PRODUCT_CONTENT => [
-                    'selects' => [DimensionContentQueryEnhancer::GROUP_SELECT_CONTENT_ADMIN => true],
-                    'dimensionAttributes' => [
-                        'locale' => $locale,
-                        'stage' => [DimensionContentInterface::STAGE_DRAFT, DimensionContentInterface::STAGE_LIVE],
-                    ],
+            $identifier,
+            [ProductRepositoryInterface::SELECT_PRODUCT_CONTENT => [
+                'selects' => [],
+                'dimensionAttributes' => [
+                    'locale' => $locale,
+                    'stage' => [DimensionContentInterface::STAGE_DRAFT, DimensionContentInterface::STAGE_LIVE],
                 ],
-            ]
+            ]],
         );
 
-        if (null !== $code && $code !== $product->getCode() && $this->productRepository->existBy(['code' => $code])) {
-            throw new ProductCodeNotUniqueException($code);
+        if (!\array_key_exists('template', $data)) {
+            $data['template'] = ProductInterface::TEMPLATE_TYPE;
         }
 
         foreach ($this->productMappers as $productMapper) {
