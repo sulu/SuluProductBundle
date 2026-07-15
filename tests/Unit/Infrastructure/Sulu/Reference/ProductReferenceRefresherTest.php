@@ -293,4 +293,55 @@ class ProductReferenceRefresherTest extends TestCase
         $this->referenceRepository->add(Argument::type(ReferenceInterface::class))
             ->shouldHaveBeenCalledOnce();
     }
+
+    public function testRefreshRegistersDetailsMediaReferences(): void
+    {
+        $product = new Product('product-uuid-media');
+        $dimensionContent = new ProductDimensionContent($product);
+        $dimensionContent->setLocale('en');
+        $dimensionContent->setStage('live');
+        $dimensionContent->setImage(42);
+        $dimensionContent->setDocuments([7, 9]);
+
+        $query = $this->stubQueryBuilderNoFilter();
+        $query->toIterable()->willReturn(new \ArrayIterator([$dimensionContent]));
+
+        $this->contentMerger->merge(Argument::type(DimensionContentCollection::class))
+            ->willReturn($dimensionContent);
+
+        // No template content references — only the Details media fields.
+        $this->contentViewResolver->getContentViews(Argument::any())
+            ->willReturn([]);
+
+        /** @var ObjectProphecy<ReferenceInterface> $referenceModel */
+        $referenceModel = $this->prophesize(ReferenceInterface::class);
+        $referenceModel->equals(Argument::any())->willReturn(false);
+
+        $this->referenceRepository->create(
+            Argument::type('string'),
+            Argument::type('string'),
+            Argument::type('string'),
+            Argument::type('string'),
+            Argument::type('string'),
+            Argument::type('string'),
+            Argument::type('string'),
+            Argument::type('string'),
+            Argument::type('array'),
+        )->willReturn($referenceModel->reveal());
+
+        $this->referenceRepository->removeBy(Argument::cetera());
+        $this->referenceRepository->add(Argument::type(ReferenceInterface::class));
+
+        \iterator_to_array($this->refresher->refresh());
+
+        // The image and both documents are registered as `media` references.
+        $this->referenceRepository->create('media', '42', Argument::cetera())
+            ->shouldHaveBeenCalledOnce();
+        $this->referenceRepository->create('media', '7', Argument::cetera())
+            ->shouldHaveBeenCalledOnce();
+        $this->referenceRepository->create('media', '9', Argument::cetera())
+            ->shouldHaveBeenCalledOnce();
+        $this->referenceRepository->add(Argument::type(ReferenceInterface::class))
+            ->shouldHaveBeenCalledTimes(3);
+    }
 }

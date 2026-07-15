@@ -68,6 +68,13 @@ class ProductDimensionContent implements ProductDimensionContentInterface
      */
     protected Collection $attributes;
 
+    protected ?string $status = null;
+
+    /**
+     * @var array<string, mixed>
+     */
+    protected array $detailsData = [];
+
     public function __construct(ProductInterface $product)
     {
         $this->product = $product;
@@ -256,5 +263,79 @@ class ProductDimensionContent implements ProductDimensionContentInterface
         $this->attributes->removeElement($attribute);
 
         return $this;
+    }
+
+    public function getStatus(): ?string
+    {
+        return $this->status;
+    }
+
+    public function setStatus(?string $status): static
+    {
+        $this->status = $status;
+
+        return $this;
+    }
+
+    public function getShortDescription(): ?string
+    {
+        $value = $this->detailsData['shortDescription'] ?? null;
+
+        return \is_string($value) ? $value : null;
+    }
+
+    public function setShortDescription(?string $shortDescription): static
+    {
+        $this->setDetailsValue('shortDescription', $shortDescription);
+
+        return $this;
+    }
+
+    public function getImage(): ?int
+    {
+        $value = $this->detailsData['image'] ?? null;
+
+        return \is_int($value) ? $value : null;
+    }
+
+    public function setImage(?int $image): static
+    {
+        $this->setDetailsValue('image', $image);
+
+        return $this;
+    }
+
+    /**
+     * @return array<int, int>|null
+     */
+    public function getDocuments(): ?array
+    {
+        $value = $this->detailsData['documents'] ?? null;
+        if (!\is_array($value)) {
+            return null;
+        }
+
+        return \array_values(\array_filter($value, \is_int(...)));
+    }
+
+    /**
+     * @param array<int, int>|null $documents
+     */
+    public function setDocuments(?array $documents): static
+    {
+        $this->setDetailsValue('documents', $documents);
+
+        return $this;
+    }
+
+    private function setDetailsValue(string $key, mixed $value): void
+    {
+        if (null === $value) {
+            unset($this->detailsData[$key]);
+
+            return;
+        }
+
+        $this->detailsData[$key] = $value;
     }
 }

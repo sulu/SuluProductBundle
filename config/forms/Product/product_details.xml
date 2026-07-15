@@ -26,18 +26,50 @@
             </params>
         </property>
 
-        <property name="productFamily" type="single_product_family_selection" mandatory="true" colspan="6" disabledCondition="!!id">
-            <meta>
-                <title>sulu_product.product_family</title>
-            </meta>
-        </property>
-
         <property name="externalIdentifier" type="text_line"
                   visibleCondition="!!externalIdentifier"
                   disabledCondition="true">
             <meta>
                 <title>sulu_product.external_identifier</title>
             </meta>
+        </property>
+
+        <property name="productFamily" type="single_product_family_selection" mandatory="true" colspan="6" disabledCondition="!!id">
+            <meta>
+                <title>sulu_product.product_family</title>
+            </meta>
+        </property>
+
+        <property name="status" type="single_select" colspan="6">
+            <meta>
+                <title>sulu_product.status</title>
+            </meta>
+        </property>
+
+        <property name="shortDescription" type="text_editor" colspan="12">
+            <meta>
+                <title>sulu_product.short_description</title>
+            </meta>
+        </property>
+
+        <property name="image" type="single_media_selection" colspan="6">
+            <meta>
+                <title>sulu_product.image</title>
+            </meta>
+
+            <params>
+                <param name="types" value="image"/>
+            </params>
+        </property>
+
+        <property name="documents" type="media_selection" colspan="6">
+            <meta>
+                <title>sulu_product.documents</title>
+            </meta>
+
+            <params>
+                <param name="types" value="document"/>
+            </params>
         </property>
     </properties>
 </form>

@@ -86,5 +86,13 @@
     "sulu_product.measurement_family_weight": "Weight",
     "sulu_product.min": "Min",
     "sulu_product.max": "Max",
-    "sulu_product.localized": "Localized"
+    "sulu_product.localized": "Localized",
+    "sulu_product.status": "Status",
+    "sulu_product.short_description": "Short description",
+    "sulu_product.image": "Product image",
+    "sulu_product.documents": "Product documents",
+    "sulu_product.product_status.announced": "Announced",
+    "sulu_product.product_status.available": "Available",
+    "sulu_product.product_status.discontinued": "Discontinued",
+    "sulu_product.invalid_status": "The status \"{status}\" is not a valid product status."
 }

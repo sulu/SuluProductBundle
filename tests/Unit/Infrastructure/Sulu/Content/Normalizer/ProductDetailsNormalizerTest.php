@@ -19,6 +19,7 @@ use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
+use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\Normalizer\ProductDetailsNormalizer;
 
@@ -91,5 +92,47 @@ class ProductDetailsNormalizerTest extends TestCase
         $result = $this->normalizer->enhance($dc, []);
 
         $this->assertNull($result['productFamily']);
+    }
+
+    public function testEnhanceEmitsNewFields(): void
+    {
+        /** @var ObjectProphecy<ProductDimensionContentInterface> $object */
+        $object = $this->prophesize(ProductDimensionContentInterface::class);
+        $object->getTitle()->willReturn('T');
+        $object->getCode()->willReturn('C');
+        $object->getExternalIdentifier()->willReturn(null);
+        $object->getProductFamily()->willReturn(null);
+        $object->getStatus()->willReturn('available');
+        $object->getShortDescription()->willReturn('<p>x</p>');
+        $object->getImage()->willReturn(5);
+        $object->getDocuments()->willReturn([3, 7]);
+
+        $result = $this->normalizer->enhance($object->reveal(), []);
+
+        $this->assertSame('available', $result['status']);
+        $this->assertSame('<p>x</p>', $result['shortDescription']);
+        // Media fields are wrapped to the admin field contract.
+        $this->assertSame(['id' => 5], $result['image']);
+        $this->assertSame(['ids' => [3, 7]], $result['documents']);
+    }
+
+    public function testEnhanceEmitsEmptyMediaShapesWhenUnset(): void
+    {
+        /** @var ObjectProphecy<ProductDimensionContentInterface> $object */
+        $object = $this->prophesize(ProductDimensionContentInterface::class);
+        $object->getTitle()->willReturn('T');
+        $object->getCode()->willReturn('C');
+        $object->getExternalIdentifier()->willReturn(null);
+        $object->getProductFamily()->willReturn(null);
+        $object->getStatus()->willReturn(null);
+        $object->getShortDescription()->willReturn(null);
+        $object->getImage()->willReturn(null);
+        $object->getDocuments()->willReturn(null);
+
+        $result = $this->normalizer->enhance($object->reveal(), []);
+
+        // Empty single media => null (renders as an empty picker); empty multi media => {ids: []}.
+        $this->assertNull($result['image']);
+        $this->assertSame(['ids' => []], $result['documents']);
     }
 }

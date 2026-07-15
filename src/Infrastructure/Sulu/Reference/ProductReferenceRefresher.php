@@ -15,6 +15,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query\Expr\Join;
+use Sulu\Bundle\MediaBundle\Entity\MediaInterface;
 use Sulu\Bundle\ReferenceBundle\Application\Collector\ReferenceCollector;
 use Sulu\Bundle\ReferenceBundle\Application\Refresh\ReferenceRefresherInterface;
 use Sulu\Bundle\ReferenceBundle\Domain\Repository\ReferenceRepositoryInterface;
@@ -124,6 +125,23 @@ class ProductReferenceRefresher implements ReferenceRefresherInterface
                     $reference->getPath()
                 );
             }
+        }
+
+        $image = $productDimensionContent->getImage();
+        if (null !== $image) {
+            $referenceCollector->addReference(
+                MediaInterface::RESOURCE_KEY,
+                (string) $image,
+                'image',
+            );
+        }
+
+        foreach ($productDimensionContent->getDocuments() ?? [] as $index => $mediaId) {
+            $referenceCollector->addReference(
+                MediaInterface::RESOURCE_KEY,
+                (string) $mediaId,
+                'documents/' . $index,
+            );
         }
 
         $referenceCollector->persistReferences();

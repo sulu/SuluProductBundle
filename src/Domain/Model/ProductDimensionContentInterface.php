@@ -73,4 +73,26 @@ interface ProductDimensionContentInterface extends DimensionContentInterface, Ex
     public function addAttribute(ProductAttributeValueInterface $attribute): static;
 
     public function removeAttribute(ProductAttributeValueInterface $attribute): static;
+
+    public function getStatus(): ?string;
+
+    public function setStatus(?string $status): static;
+
+    public function getShortDescription(): ?string;
+
+    public function setShortDescription(?string $shortDescription): static;
+
+    public function getImage(): ?int;
+
+    public function setImage(?int $image): static;
+
+    /**
+     * @return array<int, int>|null
+     */
+    public function getDocuments(): ?array;
+
+    /**
+     * @param array<int, int>|null $documents
+     */
+    public function setDocuments(?array $documents): static;
 }

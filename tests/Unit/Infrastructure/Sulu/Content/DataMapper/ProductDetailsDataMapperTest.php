@@ -18,6 +18,7 @@ use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Product\Domain\Exception\InvalidProductStatusException;
 use Sulu\Product\Domain\Exception\ProductCodeNotUniqueException;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
@@ -40,6 +41,9 @@ class ProductDetailsDataMapperTest extends TestCase
 
     private ProductDetailsDataMapper $mapper;
 
+    /** @var array<int, string> */
+    private array $allowedStatuses = ['announced', 'available', 'discontinued'];
+
     protected function setUp(): void
     {
         $this->productFamilyRepository = $this->prophesize(ProductFamilyRepositoryInterface::class);
@@ -48,6 +52,7 @@ class ProductDetailsDataMapperTest extends TestCase
         $this->mapper = new ProductDetailsDataMapper(
             $this->productFamilyRepository->reveal(),
             $this->productRepository->reveal(),
+            $this->allowedStatuses,
         );
     }
 
@@ -180,5 +185,117 @@ class ProductDetailsDataMapperTest extends TestCase
         $this->mapper->map($unloc, $loc, ['code' => 'SKU-OWN']);
 
         $this->assertSame('SKU-OWN', $unloc->getCode());
+    }
+
+    public function testMapsValidStatusOntoUnlocalizedRow(): void
+    {
+        $unloc = $this->makeDimensionContent();
+        $loc = $this->makeDimensionContent();
+
+        $this->mapper->map($unloc, $loc, ['status' => 'available']);
+
+        $this->assertSame('available', $unloc->getStatus());
+    }
+
+    public function testThrowsOnUnknownStatus(): void
+    {
+        $unloc = $this->makeDimensionContent();
+        $loc = $this->makeDimensionContent();
+
+        $this->expectException(InvalidProductStatusException::class);
+
+        $this->mapper->map($unloc, $loc, ['status' => 'sold_out']);
+    }
+
+    public function testMapsShortDescriptionOntoLocalizedRow(): void
+    {
+        $unloc = $this->makeDimensionContent();
+        $loc = $this->makeDimensionContent();
+
+        $this->mapper->map($unloc, $loc, ['shortDescription' => '<p>hi</p>']);
+
+        $this->assertSame('<p>hi</p>', $loc->getShortDescription());
+        $this->assertNull($unloc->getShortDescription());
+    }
+
+    public function testExtractsImageId(): void
+    {
+        $unloc = $this->makeDimensionContent();
+        $loc = $this->makeDimensionContent();
+
+        $this->mapper->map($unloc, $loc, ['image' => 5]);
+
+        $this->assertSame(5, $unloc->getImage());
+    }
+
+    public function testExtractsProductDocumentIds(): void
+    {
+        $unloc = $this->makeDimensionContent();
+        $loc = $this->makeDimensionContent();
+
+        $this->mapper->map($unloc, $loc, ['documents' => ['ids' => [3, 7]]]);
+
+        $this->assertSame([3, 7], $unloc->getDocuments());
+    }
+
+    public function testExtractsImageIdFromWrapper(): void
+    {
+        $unloc = $this->makeDimensionContent();
+        $loc = $this->makeDimensionContent();
+
+        $this->mapper->map($unloc, $loc, ['image' => ['id' => 5]]);
+
+        $this->assertSame(5, $unloc->getImage());
+    }
+
+    public function testExtractsImageIdFromNumericString(): void
+    {
+        $unloc = $this->makeDimensionContent();
+        $loc = $this->makeDimensionContent();
+
+        $this->mapper->map($unloc, $loc, ['image' => '5']);
+
+        $this->assertSame(5, $unloc->getImage());
+    }
+
+    public function testClearsImageOnNull(): void
+    {
+        $unloc = $this->makeDimensionContent();
+        $loc = $this->makeDimensionContent();
+        $unloc->setImage(99);
+
+        $this->mapper->map($unloc, $loc, ['image' => null]);
+
+        $this->assertNull($unloc->getImage());
+    }
+
+    public function testExtractsProductDocumentIdsFromFlatArray(): void
+    {
+        $unloc = $this->makeDimensionContent();
+        $loc = $this->makeDimensionContent();
+
+        $this->mapper->map($unloc, $loc, ['documents' => [3, 7]]);
+
+        $this->assertSame([3, 7], $unloc->getDocuments());
+    }
+
+    public function testExtractsProductDocumentIdsFromNumericStrings(): void
+    {
+        $unloc = $this->makeDimensionContent();
+        $loc = $this->makeDimensionContent();
+
+        $this->mapper->map($unloc, $loc, ['documents' => ['ids' => ['3', '7']]]);
+
+        $this->assertSame([3, 7], $unloc->getDocuments());
+    }
+
+    public function testDropsNonNumericProductDocumentEntries(): void
+    {
+        $unloc = $this->makeDimensionContent();
+        $loc = $this->makeDimensionContent();
+
+        $this->mapper->map($unloc, $loc, ['documents' => ['ids' => [3, 'abc', 7]]]);
+
+        $this->assertSame([3, 7], $unloc->getDocuments());
     }
 }

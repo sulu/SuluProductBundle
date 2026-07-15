@@ -128,6 +128,94 @@ class ProductDetailsMergerTest extends TestCase
         $this->assertSame('EXT-KEEP', $target->getExternalIdentifier());
     }
 
+    public function testMergesStatus(): void
+    {
+        $source = $this->makeDimensionContent();
+        $source->setStatus('available');
+        $target = $this->makeDimensionContent();
+
+        $this->merger->merge($target, $source);
+
+        $this->assertSame('available', $target->getStatus());
+    }
+
+    public function testSkipsStatusWhenSourceNull(): void
+    {
+        $source = $this->makeDimensionContent();
+        $target = $this->makeDimensionContent();
+        $target->setStatus('unavailable');
+
+        $this->merger->merge($target, $source);
+
+        $this->assertSame('unavailable', $target->getStatus());
+    }
+
+    public function testMergesShortDescription(): void
+    {
+        $source = $this->makeDimensionContent();
+        $source->setShortDescription('<p>hi</p>');
+        $target = $this->makeDimensionContent();
+
+        $this->merger->merge($target, $source);
+
+        $this->assertSame('<p>hi</p>', $target->getShortDescription());
+    }
+
+    public function testSkipsShortDescriptionWhenSourceNull(): void
+    {
+        $source = $this->makeDimensionContent();
+        $target = $this->makeDimensionContent();
+        $target->setShortDescription('<p>keep</p>');
+
+        $this->merger->merge($target, $source);
+
+        $this->assertSame('<p>keep</p>', $target->getShortDescription());
+    }
+
+    public function testMergesImage(): void
+    {
+        $source = $this->makeDimensionContent();
+        $source->setImage(5);
+        $target = $this->makeDimensionContent();
+
+        $this->merger->merge($target, $source);
+
+        $this->assertSame(5, $target->getImage());
+    }
+
+    public function testSkipsImageWhenSourceNull(): void
+    {
+        $source = $this->makeDimensionContent();
+        $target = $this->makeDimensionContent();
+        $target->setImage(9);
+
+        $this->merger->merge($target, $source);
+
+        $this->assertSame(9, $target->getImage());
+    }
+
+    public function testMergesDocuments(): void
+    {
+        $source = $this->makeDimensionContent();
+        $source->setDocuments([3, 7]);
+        $target = $this->makeDimensionContent();
+
+        $this->merger->merge($target, $source);
+
+        $this->assertSame([3, 7], $target->getDocuments());
+    }
+
+    public function testSkipsDocumentsWhenSourceNull(): void
+    {
+        $source = $this->makeDimensionContent();
+        $target = $this->makeDimensionContent();
+        $target->setDocuments([1, 2]);
+
+        $this->merger->merge($target, $source);
+
+        $this->assertSame([1, 2], $target->getDocuments());
+    }
+
     public function testMergesProductFamily(): void
     {
         /** @var ObjectProphecy<ProductFamilyInterface> $family */
@@ -139,6 +227,10 @@ class ProductDetailsMergerTest extends TestCase
         $source->getCode()->willReturn(null);
         $source->getExternalIdentifier()->willReturn(null);
         $source->getProductFamily()->willReturn($family->reveal());
+        $source->getStatus()->willReturn(null);
+        $source->getShortDescription()->willReturn(null);
+        $source->getImage()->willReturn(null);
+        $source->getDocuments()->willReturn(null);
 
         $target = $this->makeDimensionContent();
 
@@ -155,6 +247,10 @@ class ProductDetailsMergerTest extends TestCase
         $source->getCode()->willReturn(null);
         $source->getExternalIdentifier()->willReturn(null);
         $source->getProductFamily()->willReturn(null);
+        $source->getStatus()->willReturn(null);
+        $source->getShortDescription()->willReturn(null);
+        $source->getImage()->willReturn(null);
+        $source->getDocuments()->willReturn(null);
 
         /** @var ObjectProphecy<ProductFamilyInterface> $keepFamily */
         $keepFamily = $this->prophesize(ProductFamilyInterface::class);

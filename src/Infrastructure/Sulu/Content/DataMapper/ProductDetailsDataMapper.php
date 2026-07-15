@@ -15,6 +15,7 @@ namespace Sulu\Product\Infrastructure\Sulu\Content\DataMapper;
 
 use Sulu\Content\Application\ContentDataMapper\DataMapper\DataMapperInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Product\Domain\Exception\InvalidProductStatusException;
 use Sulu\Product\Domain\Exception\ProductCodeNotUniqueException;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
@@ -22,9 +23,13 @@ use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 
 class ProductDetailsDataMapper implements DataMapperInterface
 {
+    /**
+     * @param array<int, string> $allowedStatuses
+     */
     public function __construct(
         private readonly ProductFamilyRepositoryInterface $productFamilyRepository,
         private readonly ProductRepositoryInterface $productRepository,
+        private readonly array $allowedStatuses,
     ) {
     }
 
@@ -68,6 +73,52 @@ class ProductDetailsDataMapper implements DataMapperInterface
             $productFamilyUuid = $data['productFamily'];
             $productFamily = $this->productFamilyRepository->getOneBy(['uuid' => $productFamilyUuid]);
             $unlocalizedDimensionContent->setProductFamily($productFamily);
+        }
+
+        if (\array_key_exists('status', $data)) {
+            $status = \is_string($data['status']) ? $data['status'] : null;
+            if (null !== $status && !\in_array($status, $this->allowedStatuses, true)) {
+                throw new InvalidProductStatusException($status, $this->allowedStatuses);
+            }
+            $unlocalizedDimensionContent->setStatus($status);
+        }
+
+        if (\array_key_exists('shortDescription', $data)
+            && $localizedDimensionContent instanceof ProductDimensionContentInterface
+        ) {
+            $shortDescription = \is_string($data['shortDescription']) ? $data['shortDescription'] : null;
+            $localizedDimensionContent->setShortDescription($shortDescription);
+        }
+
+        if (\array_key_exists('image', $data)) {
+            $value = $data['image'];
+            if (\is_array($value)) {
+                $value = $value['id'] ?? null;
+            }
+            $mediaId = null;
+            if (\is_int($value)) {
+                $mediaId = $value;
+            } elseif (\is_string($value) && \is_numeric($value)) {
+                $mediaId = (int) $value;
+            }
+            $unlocalizedDimensionContent->setImage($mediaId);
+        }
+
+        if (\array_key_exists('documents', $data)) {
+            $value = $data['documents'];
+            $ids = null;
+            if (\is_array($value)) {
+                $rawIds = (\array_key_exists('ids', $value) && \is_array($value['ids'])) ? $value['ids'] : $value;
+                $ids = [];
+                foreach ($rawIds as $rawId) {
+                    if (\is_int($rawId)) {
+                        $ids[] = $rawId;
+                    } elseif (\is_string($rawId) && \is_numeric($rawId)) {
+                        $ids[] = (int) $rawId;
+                    }
+                }
+            }
+            $unlocalizedDimensionContent->setDocuments($ids);
         }
     }
 }
