@@ -54,6 +54,11 @@ class ProductDimensionContentTest extends TestCase
         );
     }
 
+    public function testIsRouteMandatoryReturnsFalse(): void
+    {
+        $this->assertFalse(ProductDimensionContent::isRouteMandatory());
+    }
+
     public function testSetTemplateDataExtractsTitle(): void
     {
         $dimensionContent = new ProductDimensionContent(new Product());

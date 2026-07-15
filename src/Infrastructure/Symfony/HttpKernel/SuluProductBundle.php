@@ -55,6 +55,7 @@ use Sulu\Product\Domain\Event\ProductTranslationCopiedEvent;
 use Sulu\Product\Domain\Event\ProductTranslationRemovedEvent;
 use Sulu\Product\Domain\Event\ProductTranslationRestoredEvent;
 use Sulu\Product\Domain\Event\ProductWorkflowTransitionAppliedEvent;
+use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeGroupAttribute;
@@ -89,7 +90,6 @@ use Sulu\Product\Infrastructure\Doctrine\Repository\AttributeGroupRepository;
 use Sulu\Product\Infrastructure\Doctrine\Repository\AttributeRepository;
 use Sulu\Product\Infrastructure\Doctrine\Repository\ProductFamilyRepository;
 use Sulu\Product\Infrastructure\Doctrine\Repository\ProductRepository;
-use Sulu\Product\Infrastructure\Measurement\MeasurementFamilyRegistry;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeGroupAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
@@ -139,6 +139,7 @@ use Sulu\Product\UserInterface\Controller\Admin\MeasurementUnitController;
 use Sulu\Product\UserInterface\Controller\Admin\ProductController;
 use Sulu\Product\UserInterface\Controller\Admin\ProductFamilyController;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
@@ -189,6 +190,22 @@ final class SuluProductBundle extends AbstractBundle
                     ->prototype('array')->useAttributeAsKey('locale')->prototype('scalar')->end()->end()
                     ->defaultValue([])
                 ->end()
+                ->arrayNode('measurements')
+                    ->info('Whitelist of enabled measurement families and units. Omit the whole section to enable all built-in families/units.')
+                    ->useAttributeAsKey('family')
+                    ->arrayPrototype()
+                        ->beforeNormalization()
+                            ->ifNull()
+                            ->then(fn () => ['units' => []])
+                        ->end()
+                        ->children()
+                            ->arrayNode('units')
+                                ->scalarPrototype()->end()
+                                ->defaultValue([])
+                            ->end()
+                        ->end()
+                    ->end()
+                ->end()
                 ->arrayNode('objects')
                     ->addDefaultsIfNotSet()
                     ->children()
@@ -210,6 +227,45 @@ final class SuluProductBundle extends AbstractBundle
     }
 
     /**
+     * @param array<string, array{units?: array<string>}> $measurements
+     *
+     * @return array<string, list<string>>|null
+     */
+    private function resolveMeasurementsEnabledMap(array $measurements): ?array
+    {
+        if ([] === $measurements) {
+            return null;
+        }
+
+        $enabledMap = [];
+        foreach ($measurements as $family => $familyConfig) {
+            if (!\array_key_exists($family, MeasurementRegistry::DATA)) {
+                throw new InvalidConfigurationException(\sprintf(
+                    'Unknown measurement family "%s" configured under "sulu_product.measurements". Known families: %s.',
+                    $family,
+                    \implode(', ', \array_keys(MeasurementRegistry::DATA)),
+                ));
+            }
+
+            $units = $familyConfig['units'] ?? [];
+            foreach ($units as $unit) {
+                if (!\array_key_exists($unit, MeasurementRegistry::DATA[$family])) {
+                    throw new InvalidConfigurationException(\sprintf(
+                        'Unknown measurement unit "%s" configured for family "%s" under "sulu_product.measurements". Known units: %s.',
+                        $unit,
+                        $family,
+                        \implode(', ', \array_keys(MeasurementRegistry::DATA[$family])),
+                    ));
+                }
+            }
+
+            $enabledMap[$family] = \array_values($units);
+        }
+
+        return $enabledMap;
+    }
+
+    /**
      * @param array<string, mixed> $config
      *
      * @internal this method is not part of the public API and should only be called by the Symfony framework classes
@@ -226,6 +282,10 @@ final class SuluProductBundle extends AbstractBundle
         $defaultAdditionalWebspaces = $config['default_additional_webspaces'] ?? [];
         $builder->setParameter('sulu_product.default_main_webspace', $defaultMainWebspace);
         $builder->setParameter('sulu_product.default_additional_webspaces', $defaultAdditionalWebspaces);
+
+        /** @var array<string, array{units: array<string>}> $measurements */
+        $measurements = $config['measurements'] ?? [];
+        $builder->setParameter('sulu_product.measurements', $this->resolveMeasurementsEnabledMap($measurements));
 
         $services = $container->services();
 
@@ -431,14 +491,17 @@ final class SuluProductBundle extends AbstractBundle
                 tagged_iterator('sulu_product.attribute_type'),
             ]);
 
-        $services->set('sulu_product.measurement_family_registry')
-            ->class(MeasurementFamilyRegistry::class);
+        $services->set('sulu_product.measurement_registry')
+            ->class(MeasurementRegistry::class)
+            ->args([
+                '%sulu_product.measurements%',
+            ]);
 
         $services->set('sulu_product.admin_measurement_family_controller')
             ->class(MeasurementFamilyController::class)
             ->public()
             ->args([
-                new Reference('sulu_product.measurement_family_registry'),
+                new Reference('sulu_product.measurement_registry'),
                 new Reference('translator'),
             ])
             ->tag('sulu.context', ['context' => 'admin']);
@@ -447,7 +510,7 @@ final class SuluProductBundle extends AbstractBundle
             ->class(MeasurementUnitController::class)
             ->public()
             ->args([
-                new Reference('sulu_product.measurement_family_registry'),
+                new Reference('sulu_product.measurement_registry'),
             ])
             ->tag('sulu.context', ['context' => 'admin']);
 
@@ -500,6 +563,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_core.doctrine_list_builder_factory'),
                 new Reference('sulu_core.doctrine_rest_helper'),
                 new Reference('serializer'),
+                new Reference('sulu_product.measurement_registry'),
             ])
             ->tag('sulu.context', ['context' => 'admin']);
 
@@ -633,7 +697,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.attribute_type_registry'),
                 new Reference('sulu_admin.xml_form_metadata_loader'),
                 new Reference('sulu_admin.property_metadata_mapper_registry'),
-                new Reference('sulu_product.measurement_family_registry'),
+                new Reference('sulu_product.measurement_registry'),
                 new Reference('translator'),
             ])
             ->tag('sulu_admin.form_metadata_visitor');

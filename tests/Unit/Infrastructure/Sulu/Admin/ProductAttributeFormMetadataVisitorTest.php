@@ -26,12 +26,12 @@ use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadataMapper\Numbe
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadataMapperRegistry;
 use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
 use Sulu\Product\Application\AttributeType\NumberAttributeType;
+use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeTranslationInterface;
 use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
-use Sulu\Product\Infrastructure\Measurement\MeasurementFamilyRegistry;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAttributeFormMetadataVisitor;
 use Symfony\Component\DependencyInjection\Container;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -66,7 +66,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
             new AttributeTypeRegistry([new NumberAttributeType()]),
             $this->formMetadataLoader->reveal(),
             new PropertyMetadataMapperRegistry($mapperContainer),
-            new MeasurementFamilyRegistry(),
+            new MeasurementRegistry(),
             $translator,
         );
     }
@@ -352,7 +352,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         self::assertSame([], $form->getItems());
     }
 
-    public function testInjectsUnitFieldWhenAttributeHasMeasurementFamilyAndUnit(): void
+    public function testInjectsUnitFieldDerivedFromStoredUnit(): void
     {
         $translation = $this->prophesize(AttributeTranslationInterface::class);
         $translation->getName()->willReturn('Weight');
@@ -362,7 +362,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $attribute->getId()->willReturn(7);
         $attribute->getKey()->willReturn('weight');
         $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
-        $attribute->getConfig()->willReturn(['measurementFamily' => 'weight', 'unit' => 'KILOGRAM']);
+        $attribute->getConfig()->willReturn(['unit' => 'KILOGRAM']);
         $attribute->getTranslation('en')->willReturn($translation->reveal());
 
         $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
@@ -406,7 +406,20 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         self::assertSame('kg', $valueOptions[0]->getTitle('en'));
     }
 
-    public function testDoesNotInjectUnitFieldWhenUnitOrFamilyMissing(): void
+    public function testDoesNotInjectUnitFieldWhenUnitMissing(): void
+    {
+        $this->assertNoUnitFieldForConfig([]);
+    }
+
+    public function testDoesNotInjectUnitFieldWhenUnitUnknown(): void
+    {
+        $this->assertNoUnitFieldForConfig(['unit' => 'NON_EXISTENT_UNIT']);
+    }
+
+    /**
+     * @param array<string, mixed> $config
+     */
+    private function assertNoUnitFieldForConfig(array $config): void
     {
         $translation = $this->prophesize(AttributeTranslationInterface::class);
         $translation->getName()->willReturn('Weight');
@@ -416,7 +429,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $attribute->getId()->willReturn(7);
         $attribute->getKey()->willReturn('weight');
         $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
-        $attribute->getConfig()->willReturn(['measurementFamily' => 'weight']); // unit missing
+        $attribute->getConfig()->willReturn($config);
         $attribute->getTranslation('en')->willReturn($translation->reveal());
 
         $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);

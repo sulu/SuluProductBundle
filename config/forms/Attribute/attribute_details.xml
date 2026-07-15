@@ -60,7 +60,7 @@
             </meta>
         </property>
 
-        <property name="config/measurementFamily" type="single_measurement_family_selection" colspan="6"
+        <property name="measurementFamily" type="single_measurement_family_selection" colspan="6"
                   visibleCondition='type == "number"'>
             <meta>
                 <title>sulu_product.measurement_family</title>
@@ -69,13 +69,13 @@
 
         <property name="config/unit" type="single_measurement_unit_selection" colspan="6"
                   visibleCondition='type == "number"'
-                  disabledCondition="!config.measurementFamily">
+                  disabledCondition="!measurementFamily">
             <meta>
                 <title>sulu_product.unit</title>
             </meta>
             <params>
                 <param name="resource_store_properties_to_request" type="collection">
-                    <param name="measurementFamily" value="config/measurementFamily"/>
+                    <param name="measurementFamily" value="measurementFamily"/>
                 </param>
             </params>
         </property>

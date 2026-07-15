@@ -148,6 +148,25 @@ class AttributeMapperTest extends TestCase
         $this->assertTrue($attribute->isLocalized());
     }
 
+    public function testMapPersistsUnitInConfig(): void
+    {
+        $group = new AttributeGroup();
+        $attribute = new Attribute($group);
+
+        $this->attributeRepository->findNextPositionInGroup($group)->willReturn(0);
+
+        $this->mapper->mapAttributeData($attribute, new CreateAttributeMessage([
+            'locale' => 'en',
+            'key' => 'weight',
+            'type' => 'number',
+            'name' => 'Weight',
+            'config' => ['unit' => 'KILOGRAM', 'min' => 0],
+            'group' => 'group-uuid',
+        ]));
+
+        $this->assertSame(['unit' => 'KILOGRAM', 'min' => 0], $attribute->getConfig());
+    }
+
     public function testMapModifyAttributeMessageLeavesMissingOptionalFieldsUnchanged(): void
     {
         $group = new AttributeGroup();

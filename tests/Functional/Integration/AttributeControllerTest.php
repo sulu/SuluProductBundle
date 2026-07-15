@@ -267,6 +267,83 @@ class AttributeControllerTest extends SuluTestCase
         $this->assertSame('Small', $data['options'][0]['name']);
     }
 
+    public function testDerivesMeasurementFamilyFromStoredUnitAndDoesNotPersistIt(): void
+    {
+        self::purgeDatabase();
+        $groupId = $this->createGroup();
+
+        $this->client->request(
+            'POST',
+            '/admin/api/attributes.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'key' => 'weight',
+                'name' => 'Weight',
+                'type' => 'number',
+                'group' => $groupId,
+                'measurementFamily' => 'weight',
+                'config' => ['unit' => 'KILOGRAM'],
+            ]) ?: null,
+        );
+        $postResponse = $this->client->getResponse();
+        $this->assertHttpStatusCode(201, $postResponse);
+        $postData = \json_decode((string) $postResponse->getContent(), true);
+        $this->assertIsArray($postData);
+        $id = $postData['id'];
+        $this->assertIsString($id);
+
+        $this->client->request('GET', '/admin/api/attributes/' . $id . '.json?locale=en');
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(200, $response);
+
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
+
+        $this->assertSame('weight', $data['measurementFamily']);
+
+        $config = $data['config'];
+        $this->assertIsArray($config);
+        $this->assertSame('KILOGRAM', $config['unit']);
+        $this->assertArrayNotHasKey('measurementFamily', $config);
+    }
+
+    public function testMeasurementFamilyIsNullWhenNoUnitStored(): void
+    {
+        self::purgeDatabase();
+        $groupId = $this->createGroup();
+
+        $this->client->request(
+            'POST',
+            '/admin/api/attributes.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'key' => 'note',
+                'name' => 'Note',
+                'type' => 'text',
+                'group' => $groupId,
+            ]) ?: null,
+        );
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+        $postData = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($postData);
+        $id = $postData['id'];
+        $this->assertIsString($id);
+
+        $this->client->request('GET', '/admin/api/attributes/' . $id . '.json?locale=en');
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(200, $response);
+
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertNull($data['measurementFamily']);
+    }
+
     public function testGetNotFound(): void
     {
         $this->client->request('GET', '/admin/api/attributes/non-existent-uuid.json?locale=en');
