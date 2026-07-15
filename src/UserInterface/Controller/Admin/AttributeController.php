@@ -26,6 +26,7 @@ use Sulu\Product\Application\Message\CreateAttributeMessage;
 use Sulu\Product\Application\Message\ModifyAttributeMessage;
 use Sulu\Product\Application\Message\RemoveAttributeMessage;
 use Sulu\Product\Domain\Exception\AttributeNotFoundException;
+use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeOptionInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
@@ -54,6 +55,7 @@ final class AttributeController implements SecuredControllerInterface
         private DoctrineListBuilderFactoryInterface $listBuilderFactory,
         private RestHelperInterface $restHelper,
         private NormalizerInterface $normalizer,
+        private MeasurementRegistry $measurementRegistry,
     ) {
         $this->messageBus = $messageBus;
     }
@@ -187,9 +189,17 @@ final class AttributeController implements SecuredControllerInterface
             $translation = null !== $defaultLocale ? $attribute->getTranslation($defaultLocale) : null;
         }
 
+        $config = $attribute->getConfig();
+
+        $unitKey = $config['unit'] ?? null;
+        $measurementFamily = \is_string($unitKey)
+            ? $this->measurementRegistry->findUnit($unitKey)?->getMeasurementFamily()->getKey()
+            : null;
+
         return [
             'id' => $attribute->getUuid(),
             'key' => $attribute->getKey(),
+            'measurementFamily' => $measurementFamily,
             'type' => $attribute->getType(),
             'localized' => $attribute->isLocalized(),
             'position' => $attribute->getPosition(),
@@ -213,7 +223,7 @@ final class AttributeController implements SecuredControllerInterface
                 },
                 $attribute->getOptions(),
             ),
-            'config' => $attribute->getConfig(),
+            'config' => $config,
         ];
     }
 }

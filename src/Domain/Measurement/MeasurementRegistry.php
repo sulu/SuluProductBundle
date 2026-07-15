@@ -11,12 +11,12 @@ declare(strict_types=1);
  * with this source code in the file LICENSE.
  */
 
-namespace Sulu\Product\Infrastructure\Measurement;
+namespace Sulu\Product\Domain\Measurement;
 
-final class MeasurementFamilyRegistry
+final class MeasurementRegistry
 {
     /** @var array<string, array<string, string>> */
-    private const DATA = [
+    public const DATA = [
         'area' => [
             'SQUARE_MILLIMETER' => 'mm²',
             'SQUARE_CENTIMETER' => 'cm²',
@@ -148,15 +148,99 @@ final class MeasurementFamilyRegistry
         ],
     ];
 
-    /** @return string[] */
-    public function getFamilies(): array
+    /**
+     * @var array<string, list<string>>|null
+     */
+    private readonly ?array $enabledMap;
+
+    /**
+     * @param array<string, list<string>>|null $enabledMap
+     */
+    public function __construct(?array $enabledMap = null)
     {
-        return \array_keys(self::DATA);
+        $this->enabledMap = ([] === $enabledMap) ? null : $enabledMap;
     }
 
-    /** @return array<string, string> */
-    public function getUnits(string $family): array
+    /**
+     * @return MeasurementFamily[] enabled families only
+     */
+    public function getFamilies(): array
     {
-        return self::DATA[$family] ?? [];
+        $families = [];
+        foreach (self::DATA as $familyKey => $units) {
+            if ($this->isFamilyEnabled($familyKey)) {
+                $families[] = new MeasurementFamily($familyKey);
+            }
+        }
+
+        return $families;
+    }
+
+    /**
+     * @return Unit[] enabled units of the given family
+     */
+    public function getUnits(MeasurementFamily|string $family): array
+    {
+        $familyKey = $family instanceof MeasurementFamily ? $family->getKey() : $family;
+
+        if (!$this->isFamilyEnabled($familyKey)) {
+            return [];
+        }
+
+        $familyObject = new MeasurementFamily($familyKey);
+
+        $units = [];
+        foreach (self::DATA[$familyKey] ?? [] as $unitKey => $symbol) {
+            if ($this->isUnitEnabled($familyKey, $unitKey)) {
+                $units[] = new Unit($unitKey, $symbol, $familyObject);
+            }
+        }
+
+        return $units;
+    }
+
+    public function findUnit(string $key): ?Unit
+    {
+        foreach (self::DATA as $familyKey => $units) {
+            if (!\array_key_exists($key, $units)) {
+                continue;
+            }
+
+            if (!$this->isUnitEnabled($familyKey, $key)) {
+                return null;
+            }
+
+            return new Unit($key, $units[$key], new MeasurementFamily($familyKey));
+        }
+
+        return null;
+    }
+
+    private function isFamilyEnabled(string $family): bool
+    {
+        if (!\array_key_exists($family, self::DATA)) {
+            return false;
+        }
+
+        if (null === $this->enabledMap) {
+            return true;
+        }
+
+        return \array_key_exists($family, $this->enabledMap);
+    }
+
+    private function isUnitEnabled(string $family, string $unit): bool
+    {
+        if (!$this->isFamilyEnabled($family)) {
+            return false;
+        }
+
+        if (null === $this->enabledMap) {
+            return true;
+        }
+
+        $enabledUnits = $this->enabledMap[$family];
+
+        return [] === $enabledUnits || \in_array($unit, $enabledUnits, true);
     }
 }

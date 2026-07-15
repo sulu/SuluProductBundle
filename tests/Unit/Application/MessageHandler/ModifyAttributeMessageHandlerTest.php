@@ -237,7 +237,6 @@ class ModifyAttributeMessageHandlerTest extends TestCase
             'name' => 'Weight',
             'position' => 0,
             'config' => [
-                'measurementFamily' => 'weight',
                 'unit' => 'KILOGRAM',
                 'min' => 1.0,
                 'max' => 50.0,
@@ -245,7 +244,6 @@ class ModifyAttributeMessageHandlerTest extends TestCase
         ]));
 
         $this->assertSame([
-            'measurementFamily' => 'weight',
             'unit' => 'KILOGRAM',
             'min' => 1.0,
             'max' => 50.0,

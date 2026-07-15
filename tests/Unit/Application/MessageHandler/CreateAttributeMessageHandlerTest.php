@@ -140,7 +140,6 @@ class CreateAttributeMessageHandlerTest extends TestCase
             'description' => null,
             'group' => 'group-uuid-1',
             'config' => [
-                'measurementFamily' => 'length',
                 'unit' => 'CENTIMETER',
                 'min' => 0.0,
                 'max' => 100.0,
@@ -148,7 +147,6 @@ class CreateAttributeMessageHandlerTest extends TestCase
         ]));
 
         $this->assertSame([
-            'measurementFamily' => 'length',
             'unit' => 'CENTIMETER',
             'min' => 0.0,
             'max' => 100.0,

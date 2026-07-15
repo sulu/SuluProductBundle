@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Sulu\Product\Tests\Unit\Controller\Admin;
 
 use PHPUnit\Framework\TestCase;
-use Sulu\Product\Infrastructure\Measurement\MeasurementFamilyRegistry;
+use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\UserInterface\Controller\Admin\MeasurementUnitController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -23,7 +23,7 @@ class MeasurementUnitControllerTest extends TestCase
 {
     private function createController(): MeasurementUnitController
     {
-        return new MeasurementUnitController(new MeasurementFamilyRegistry());
+        return new MeasurementUnitController(new MeasurementRegistry());
     }
 
     /**

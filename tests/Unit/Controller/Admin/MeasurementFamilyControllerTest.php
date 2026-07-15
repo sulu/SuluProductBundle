@@ -17,7 +17,7 @@ use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
-use Sulu\Product\Infrastructure\Measurement\MeasurementFamilyRegistry;
+use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\UserInterface\Controller\Admin\MeasurementFamilyController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -40,7 +40,7 @@ class MeasurementFamilyControllerTest extends TestCase
 
     private function createController(): MeasurementFamilyController
     {
-        return new MeasurementFamilyController(new MeasurementFamilyRegistry(), $this->translator->reveal());
+        return new MeasurementFamilyController(new MeasurementRegistry(), $this->translator->reveal());
     }
 
     /**

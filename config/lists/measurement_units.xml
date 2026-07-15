@@ -5,12 +5,12 @@
     <properties>
         <property name="id" translation="sulu_admin.id" visibility="no">
             <field-name>id</field-name>
-            <entity-name>Sulu\Product\Infrastructure\Measurement\MeasurementFamilyRegistry</entity-name>
+            <entity-name>Sulu\Product\Domain\Measurement\MeasurementRegistry</entity-name>
         </property>
 
         <property name="title" translation="sulu_product.unit" visibility="always" searchability="yes">
             <field-name>title</field-name>
-            <entity-name>Sulu\Product\Infrastructure\Measurement\MeasurementFamilyRegistry</entity-name>
+            <entity-name>Sulu\Product\Domain\Measurement\MeasurementRegistry</entity-name>
         </property>
     </properties>
 </list>

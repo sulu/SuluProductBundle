@@ -23,8 +23,9 @@ use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadataMapperRegistry;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\SchemaMetadata;
 use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
+use Sulu\Product\Domain\Measurement\MeasurementRegistry;
+use Sulu\Product\Domain\Measurement\Unit;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
-use Sulu\Product\Infrastructure\Measurement\MeasurementFamilyRegistry;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
@@ -39,7 +40,7 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
         private readonly AttributeTypeRegistry $attributeTypeRegistry,
         private readonly FormMetadataLoaderInterface $formMetadataLoader,
         private readonly PropertyMetadataMapperRegistry $propertyMetadataMapperRegistry,
-        private readonly MeasurementFamilyRegistry $measurementFamilyRegistry,
+        private readonly MeasurementRegistry $measurementRegistry,
         private readonly TranslatorInterface $translator,
     ) {
     }
@@ -72,9 +73,9 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
         foreach ($family->getFamilyAttributes() as $familyAttribute) {
             $attribute = $familyAttribute->getAttribute();
             $attributeConfig = $attribute->getConfig();
-            $measurementFamily = $attributeConfig['measurementFamily'] ?? null;
-            $unit = $attributeConfig['unit'] ?? null;
-            $hasUnit = \is_string($measurementFamily) && \is_string($unit);
+            $unitKey = $attributeConfig['unit'] ?? null;
+            $unit = \is_string($unitKey) ? $this->measurementRegistry->findUnit($unitKey) : null;
+            $hasUnit = $unit instanceof Unit;
 
             if (!$this->attributeTypeRegistry->has($attribute->getType())) {
                 continue;
@@ -109,7 +110,7 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
             $section->addItem($field);
 
             if ($hasUnit) {
-                $unitField = $this->buildUnitField($attribute->getId(), $measurementFamily, $unit, $locale);
+                $unitField = $this->buildUnitField($attribute->getId(), $unit, $locale);
                 $section->addItem($unitField);
             }
 
@@ -130,7 +131,7 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
         $formMetadata->setCacheable(false);
     }
 
-    private function buildUnitField(int $attributeId, string $measurementFamily, string $unit, string $locale): FieldMetadata
+    private function buildUnitField(int $attributeId, Unit $unit, string $locale): FieldMetadata
     {
         $field = new FieldMetadata('attributes/' . $attributeId . '_unit');
         $field->setType('single_select');
@@ -138,16 +139,16 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
         $field->setDisabledCondition('true');
         $field->setLabel($this->translator->trans('sulu_product.unit', [], 'admin', $locale), $locale);
 
-        $symbol = $this->measurementFamilyRegistry->getUnits($measurementFamily)[$unit] ?? $unit;
+        $unitKey = $unit->getKey();
 
         $values = new OptionMetadata();
         $values->setName('values');
         $values->setType(OptionMetadata::TYPE_COLLECTION);
 
         $valueOption = new OptionMetadata();
-        $valueOption->setName($unit);
-        $valueOption->setValue($unit);
-        $valueOption->setTitle($symbol, $locale);
+        $valueOption->setName($unitKey);
+        $valueOption->setValue($unitKey);
+        $valueOption->setTitle($unit->getSymbol(), $locale);
         $values->addValueOption($valueOption);
 
         $field->addOption($values);

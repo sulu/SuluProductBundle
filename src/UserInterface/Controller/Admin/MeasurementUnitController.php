@@ -15,7 +15,7 @@ namespace Sulu\Product\UserInterface\Controller\Admin;
 
 use Sulu\Component\Rest\ListBuilder\PaginatedRepresentation;
 use Sulu\Component\Security\SecuredControllerInterface;
-use Sulu\Product\Infrastructure\Measurement\MeasurementFamilyRegistry;
+use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeAdmin;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -27,7 +27,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  */
 final class MeasurementUnitController implements SecuredControllerInterface
 {
-    public function __construct(private MeasurementFamilyRegistry $registry)
+    public function __construct(private MeasurementRegistry $registry)
     {
     }
 
@@ -36,15 +36,18 @@ final class MeasurementUnitController implements SecuredControllerInterface
         $measurementFamily = $request->query->getString('measurementFamily', '');
         $search = \strtolower($request->query->getString('search', ''));
 
-        $families = '' !== $measurementFamily ? [$measurementFamily] : $this->registry->getFamilies();
+        $families = '' !== $measurementFamily
+            ? [$measurementFamily]
+            : \array_map(static fn ($family): string => $family->getKey(), $this->registry->getFamilies());
 
         $items = [];
         foreach ($families as $family) {
-            foreach ($this->registry->getUnits($family) as $key => $symbol) {
+            foreach ($this->registry->getUnits($family) as $unit) {
+                $symbol = $unit->getSymbol();
                 if ('' !== $search && !\str_contains(\strtolower($symbol), $search)) {
                     continue;
                 }
-                $items[] = ['id' => $key, 'title' => $symbol];
+                $items[] = ['id' => $unit->getKey(), 'title' => $symbol];
             }
         }
 
@@ -56,11 +59,9 @@ final class MeasurementUnitController implements SecuredControllerInterface
 
     public function getAction(Request $request, string $id): Response
     {
-        foreach ($this->registry->getFamilies() as $family) {
-            $units = $this->registry->getUnits($family);
-            if (\array_key_exists($id, $units)) {
-                return new JsonResponse(['id' => $id, 'title' => $units[$id]]);
-            }
+        $unit = $this->registry->findUnit($id);
+        if (null !== $unit) {
+            return new JsonResponse(['id' => $unit->getKey(), 'title' => $unit->getSymbol()]);
         }
 
         throw new NotFoundHttpException(\sprintf('Measurement unit "%s" not found.', $id));

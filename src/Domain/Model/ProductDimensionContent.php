@@ -113,6 +113,11 @@ class ProductDimensionContent implements ProductDimensionContentInterface
         return ProductInterface::TEMPLATE_TYPE;
     }
 
+    public static function isRouteMandatory(): bool
+    {
+        return false;
+    }
+
     public static function getResourceKey(): string
     {
         return ProductDimensionContentInterface::RESOURCE_KEY;

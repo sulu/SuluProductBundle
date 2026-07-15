@@ -15,7 +15,7 @@ namespace Sulu\Product\UserInterface\Controller\Admin;
 
 use Sulu\Component\Rest\ListBuilder\PaginatedRepresentation;
 use Sulu\Component\Security\SecuredControllerInterface;
-use Sulu\Product\Infrastructure\Measurement\MeasurementFamilyRegistry;
+use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeAdmin;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -29,7 +29,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 final class MeasurementFamilyController implements SecuredControllerInterface
 {
     public function __construct(
-        private MeasurementFamilyRegistry $registry,
+        private MeasurementRegistry $registry,
         private TranslatorInterface $translator,
     ) {
     }
@@ -41,11 +41,12 @@ final class MeasurementFamilyController implements SecuredControllerInterface
 
         $items = [];
         foreach ($this->registry->getFamilies() as $family) {
-            $title = $this->translator->trans('sulu_product.measurement_family_' . $family, [], 'admin', $locale);
+            $familyKey = $family->getKey();
+            $title = $this->translator->trans('sulu_product.measurement_family_' . $familyKey, [], 'admin', $locale);
             if ('' !== $search && !\str_contains(\strtolower($title), $search)) {
                 continue;
             }
-            $items[] = ['id' => $family, 'title' => $title];
+            $items[] = ['id' => $familyKey, 'title' => $title];
         }
 
         $total = \count($items);
@@ -58,7 +59,12 @@ final class MeasurementFamilyController implements SecuredControllerInterface
     {
         $locale = $this->getLocale($request);
 
-        if (!\in_array($id, $this->registry->getFamilies(), true)) {
+        $enabledFamilyKeys = \array_map(
+            static fn ($family): string => $family->getKey(),
+            $this->registry->getFamilies(),
+        );
+
+        if (!\in_array($id, $enabledFamilyKeys, true)) {
             throw new NotFoundHttpException(\sprintf('Measurement family "%s" not found.', $id));
         }
 
