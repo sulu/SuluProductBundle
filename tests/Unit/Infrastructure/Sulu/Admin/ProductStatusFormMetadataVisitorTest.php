@@ -48,6 +48,30 @@ class ProductStatusFormMetadataVisitorTest extends TestCase
         self::assertCount(2, $valueOptions);
     }
 
+    public function testInjectsConfiguredStatusOptionsForVariantOverlay(): void
+    {
+        $translator = $this->prophesize(TranslatorInterface::class);
+        $translator->trans(\Prophecy\Argument::type('string'), [], 'admin', 'en')
+            ->willReturn('Label');
+
+        $statusField = new FieldMetadata('status');
+        $statusField->setType('single_select');
+
+        $form = new FormMetadata();
+        $form->setKey('product_variant');
+        $form->addItem($statusField);
+
+        $visitor = new ProductStatusFormMetadataVisitor(['announced', 'available'], $translator->reveal());
+        $visitor->visitFormMetadata($form, 'en', []);
+
+        $options = $statusField->getOptions();
+        self::assertArrayHasKey('values', $options);
+
+        $valueOptions = $options['values']->getValue();
+        self::assertIsArray($valueOptions);
+        self::assertCount(2, $valueOptions);
+    }
+
     public function testIgnoresOtherForms(): void
     {
         $form = new FormMetadata();

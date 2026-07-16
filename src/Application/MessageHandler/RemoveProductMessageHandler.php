@@ -37,6 +37,17 @@ final class RemoveProductMessageHandler
     {
         $product = $this->productRepository->getOneBy($message->getIdentifier());
 
+        if ($product->isVariantProduct()) {
+            foreach ($this->productRepository->findBy(['parent' => $product->getUuid()]) as $variant) {
+                /** @var string $variantResourceKey */
+                $variantResourceKey = $variant::RESOURCE_KEY;
+
+                // Store (not remove) — the parent's ON DELETE CASCADE removes the variant row once
+                // $this->productRepository->remove($product) below is flushed.
+                $this->trashManager?->store($variantResourceKey, $variant);
+            }
+        }
+
         $this->productRepository->remove($product);
 
         /** @var string $resourceKey */

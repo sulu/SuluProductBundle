@@ -14,11 +14,13 @@ declare(strict_types=1);
 namespace Sulu\Product\Tests\Unit\Application\MessageHandler;
 
 use PHPUnit\Framework\TestCase;
+use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Product\Application\Mapper\ProductFamilyMapper;
 use Sulu\Product\Application\Message\CreateProductFamilyMessage;
 use Sulu\Product\Application\MessageHandler\CreateProductFamilyMessageHandler;
+use Sulu\Product\Domain\Exception\InvalidVariantAttributeException;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\ProductFamily;
@@ -63,7 +65,7 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
             'locale' => 'en',
             'name' => 'My Family',
             'description' => 'desc',
-            'attributes' => [7 => ['enabled' => true, 'required' => true]],
+            'attributes' => [7 => ['enabled' => true, 'required' => true, 'variant' => false]],
         ]));
 
         $this->assertSame($family, $result);
@@ -89,9 +91,45 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
         ($handler)(new CreateProductFamilyMessage([
             'locale' => 'en',
             'name' => 'My Family',
-            'attributes' => [99 => ['enabled' => true, 'required' => false]],
+            'attributes' => [99 => ['enabled' => true, 'required' => false, 'variant' => false]],
         ]));
 
         $this->assertCount(0, $family->getFamilyAttributes());
+    }
+
+    public function testCreateFamilyPersistsVariantFlag(): void
+    {
+        $family = new ProductFamily();
+        $this->familyRepository->create()->willReturn($family);
+        $this->familyRepository->save($family)->shouldBeCalledOnce();
+
+        $attribute = new Attribute(new AttributeGroup());
+        $this->attributeRepository->findOneBy(['id' => 7])->willReturn($attribute);
+
+        $handler = $this->createHandler();
+        ($handler)(new CreateProductFamilyMessage([
+            'locale' => 'en',
+            'name' => 'My Family',
+            'attributes' => [7 => ['enabled' => true, 'required' => false, 'variant' => true]],
+        ]));
+
+        $familyAttributes = $family->getFamilyAttributes();
+        $this->assertCount(1, $familyAttributes);
+        $this->assertTrue($familyAttributes[0]->isVariant());
+    }
+
+    public function testCreateThrowsWhenVariantAttributeIsNotEnabled(): void
+    {
+        $this->familyRepository->create()->willReturn(new ProductFamily());
+        $this->familyRepository->save(Argument::any())->shouldNotBeCalled();
+
+        $this->expectException(InvalidVariantAttributeException::class);
+
+        $handler = $this->createHandler();
+        ($handler)(new CreateProductFamilyMessage([
+            'locale' => 'en',
+            'name' => 'My Family',
+            'attributes' => [7 => ['enabled' => false, 'required' => false, 'variant' => true]],
+        ]));
     }
 }

@@ -21,6 +21,7 @@ use Sulu\Product\Domain\Model\AttributeTranslation;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
+use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\UserInterface\Controller\Admin\ProductController;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 
@@ -568,6 +569,53 @@ class ProductControllerTest extends SuluTestCase
         $this->assertIsArray($data);
     }
 
+    /**
+     * A variant child is only ever created through the nested
+     * `/products/{parentId}/variants` endpoint (`ProductVariantController`), which is the
+     * only place `parent` may legitimately be set — the main `/products` endpoint strips a
+     * client-submitted `parent` from its own request body (see `testClientSubmittedParentIsStrippedOnPut`
+     * below), so it can no longer be used to create a variant child directly.
+     */
+    public function testGetListExcludesVariantChildren(): void
+    {
+        self::purgeDatabase();
+        $familyId = $this->createProductFamily();
+        $topLevelId = $this->createProduct($familyId, 'Top Level Product');
+        $parentId = $this->createProduct($familyId, 'Variant Parent Product');
+
+        $this->client->request(
+            'POST',
+            '/admin/api/products/' . $parentId . '/variants.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'code' => 'VARIANT-CHILD',
+                'title' => 'Variant Child Product',
+            ]) ?: null,
+        );
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($data);
+        $childId = $data['id'];
+        $this->assertIsString($childId);
+
+        $this->client->request('GET', '/admin/api/products.json?locale=en');
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(200, $response);
+
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertIsArray($data['_embedded']);
+        $this->assertIsArray($data['_embedded']['products']);
+        $ids = \array_column($data['_embedded']['products'], 'id');
+
+        $this->assertContains($topLevelId, $ids);
+        $this->assertContains($parentId, $ids);
+        $this->assertNotContains($childId, $ids);
+    }
+
     public function testGetReturnsTemplateOnlyWhenContentMissing(): void
     {
         self::purgeDatabase();
@@ -670,5 +718,50 @@ class ProductControllerTest extends SuluTestCase
 
         $data = \json_decode((string) $response->getContent(), true);
         $this->assertIsArray($data);
+    }
+
+    /**
+     * The main `/products` endpoint has no `parent` field on its own form (only the nested
+     * variants endpoint legitimately sets it), so a client-submitted `parent` in the raw
+     * request body must be silently stripped — never re-parenting the product via
+     * `ProductParentMapper`. Otherwise the product would vanish from the main list (which
+     * filters `where(parent, null)`) and reappear under another product's Variants tab.
+     */
+    public function testClientSubmittedParentIsStrippedOnPut(): void
+    {
+        self::purgeDatabase();
+        $familyId = $this->createProductFamily();
+        $potentialParentId = $this->createProduct($familyId, 'Potential Parent');
+        $id = $this->createProduct($familyId, 'My Product');
+
+        $this->client->request(
+            'PUT',
+            '/admin/api/products/' . $id . '.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'title' => 'My Product',
+                'parent' => $potentialParentId,
+            ]) ?: null,
+        );
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        $container = self::getContainer();
+        /** @var ProductRepositoryInterface $productRepository */
+        $productRepository = $container->get(ProductRepositoryInterface::class);
+        $product = $productRepository->getOneBy(['uuid' => $id]);
+        $this->assertNull($product->getParent());
+
+        // ... and it must still show up in the main list (not hidden as if it were a variant).
+        $this->client->request('GET', '/admin/api/products.json?locale=en');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+        $listData = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($listData);
+        $this->assertIsArray($listData['_embedded']);
+        $this->assertIsArray($listData['_embedded']['products']);
+        $ids = \array_column($listData['_embedded']['products'], 'id');
+        $this->assertContains($id, $ids);
     }
 }

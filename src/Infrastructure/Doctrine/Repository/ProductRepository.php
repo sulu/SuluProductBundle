@@ -240,6 +240,8 @@ final class ProductRepository implements ProductRepositoryInterface
      *     loadGhost?: bool,
      *     associationTargetUuid?: string,
      *     associationType?: string,
+     *     parent?: string,
+     *     parentIsNull?: bool,
      *     page?: int,
      *     limit?: int,
      * } $filters
@@ -280,6 +282,17 @@ final class ProductRepository implements ProductRepositoryInterface
             Assert::isArray($uuids); // @phpstan-ignore staticMethod.alreadyNarrowedType
             $queryBuilder->andWhere('product.uuid IN(:uuids)')
                 ->setParameter('uuids', $uuids);
+        }
+
+        $parent = $filters['parent'] ?? null;
+        if (null !== $parent) {
+            Assert::string($parent); // @phpstan-ignore staticMethod.alreadyNarrowedType
+            $queryBuilder->andWhere('product.parent = :parent')
+                ->setParameter('parent', $parent);
+        }
+
+        if (true === ($filters['parentIsNull'] ?? null)) {
+            $queryBuilder->andWhere('product.parent IS NULL');
         }
 
         $limit = $filters['limit'] ?? null;

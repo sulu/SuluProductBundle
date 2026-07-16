@@ -344,6 +344,62 @@ class ProductRepositoryTest extends SuluTestCase
         $this->assertSame($expected, $uuids);
     }
 
+    public function testFindByParentFilterReturnsOnlyChildrenOfGivenParent(): void
+    {
+        $parent = $this->createAndPersistProduct('PARENT-VARIANTS');
+
+        $child1 = $this->repository->createNew();
+        $child1->setParent($parent);
+        $pdc1 = $child1->createDimensionContent();
+        $child1->addDimensionContent($pdc1);
+        $this->repository->add($child1);
+        $this->entityManager->persist($pdc1);
+
+        $child2 = $this->repository->createNew();
+        $child2->setParent($parent);
+        $pdc2 = $child2->createDimensionContent();
+        $child2->addDimensionContent($pdc2);
+        $this->repository->add($child2);
+        $this->entityManager->persist($pdc2);
+
+        // an unrelated top-level product should not be picked up by the parent filter
+        $this->createAndPersistProduct('UNRELATED');
+
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        $products = \iterator_to_array($this->repository->findBy(['parent' => $parent->getUuid()]), false);
+
+        $uuids = \array_map(static fn (ProductInterface $p) => $p->getUuid(), $products);
+        \sort($uuids);
+        $expected = [$child1->getUuid(), $child2->getUuid()];
+        \sort($expected);
+
+        $this->assertCount(2, $products);
+        $this->assertSame($expected, $uuids);
+    }
+
+    public function testFindByParentIsNullExcludesVariants(): void
+    {
+        $parent = $this->createAndPersistProduct('PARENT-TOPLEVEL');
+
+        $child = $this->repository->createNew();
+        $child->setParent($parent);
+        $pdc = $child->createDimensionContent();
+        $child->addDimensionContent($pdc);
+        $this->repository->add($child);
+        $this->entityManager->persist($pdc);
+
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        $products = \iterator_to_array($this->repository->findBy(['parentIsNull' => true]), false);
+        $uuids = \array_map(static fn (ProductInterface $p) => $p->getUuid(), $products);
+
+        $this->assertContains($parent->getUuid(), $uuids);
+        $this->assertNotContains($child->getUuid(), $uuids);
+    }
+
     public function testFindByPaginationLimit(): void
     {
         $this->createAndPersistProduct('P1');

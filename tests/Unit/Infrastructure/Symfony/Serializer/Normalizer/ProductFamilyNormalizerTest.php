@@ -119,8 +119,8 @@ class ProductFamilyNormalizerTest extends TestCase
         $result = $this->normalizer()->normalize($family, null, ['locale' => 'en']);
 
         $this->assertSame([
-            9 => ['enabled' => false, 'required' => false],
-            10 => ['enabled' => false, 'required' => false],
+            9 => ['enabled' => false, 'required' => false, 'variant' => false],
+            10 => ['enabled' => false, 'required' => false, 'variant' => false],
         ], $result['attributes']);
     }
 
@@ -144,8 +144,30 @@ class ProductFamilyNormalizerTest extends TestCase
         $result = $this->normalizer()->normalize($family, null, ['locale' => 'en']);
 
         $this->assertSame([
-            9 => ['enabled' => true, 'required' => true],
-            10 => ['enabled' => false, 'required' => false],
+            9 => ['enabled' => true, 'required' => true, 'variant' => false],
+            10 => ['enabled' => false, 'required' => false, 'variant' => false],
+        ], $result['attributes']);
+    }
+
+    public function testNormalizeExposesVariantFlag(): void
+    {
+        $family = new ProductFamily();
+        $family->setUuid('test-uuid');
+
+        $group = new AttributeGroup();
+        $attr9 = $this->attributeWithId(9, 'color');
+        $group->addGroupAttribute(new AttributeGroupAttribute($group, $attr9));
+
+        $familyAttribute = new ProductFamilyAttribute($family, $attr9);
+        $familyAttribute->setVariant(true);
+        $family->addFamilyAttribute($familyAttribute);
+
+        $this->attributeGroupRepository->findAll()->willReturn([$group]);
+
+        $result = $this->normalizer()->normalize($family, null, ['locale' => 'en']);
+
+        $this->assertSame([
+            9 => ['enabled' => true, 'required' => false, 'variant' => true],
         ], $result['attributes']);
     }
 

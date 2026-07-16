@@ -111,7 +111,13 @@ class ProductAttributesDataMapper implements DataMapperInterface
             }
         }
 
-        $this->assertRequiredSatisfied($familyAttributes, $allExisting);
+        $resource = $unlocalizedDimensionContent->getResource();
+        // On create, ProductParentMapper hasn't set the parent on $resource yet at this point in
+        // the ContentPersister pipeline, so `isVariant()` alone isn't reliable — fall back to `$data['parent']`.
+        $isVariant = $resource->isVariant()
+            || (\is_string($data['parent'] ?? null) && '' !== $data['parent']);
+
+        $this->assertRequiredSatisfied($familyAttributes, $allExisting, $isVariant);
     }
 
     /**
@@ -120,10 +126,15 @@ class ProductAttributesDataMapper implements DataMapperInterface
      *
      * @throws RequiredProductAttributeMissingException
      */
-    private function assertRequiredSatisfied(array $familyAttributes, array $values): void
+    private function assertRequiredSatisfied(array $familyAttributes, array $values, bool $isVariant): void
     {
         foreach ($familyAttributes as $attributeId => $familyAttribute) {
             if (!$familyAttribute->isRequired()) {
+                continue;
+            }
+
+            if ($isVariant && !$familyAttribute->isVariant()) {
+                // Shared attributes are inherited from (and required on) the parent, not the variant.
                 continue;
             }
 

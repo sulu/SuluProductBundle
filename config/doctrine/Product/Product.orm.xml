@@ -10,11 +10,23 @@
             <generator strategy="NONE"/>
         </id>
 
+        <field name="type" type="string" column="type" length="16">
+            <options>
+                <option name="default">simple</option>
+            </options>
+        </field>
+
         <one-to-many field="dimensionContents" target-entity="Sulu\Product\Domain\Model\ProductDimensionContentInterface" mapped-by="product">
             <cascade>
                 <cascade-persist/>
             </cascade>
         </one-to-many>
+
+        <many-to-one field="parent" target-entity="Sulu\Product\Domain\Model\ProductInterface" inversed-by="variants">
+            <join-column name="parent_uuid" referenced-column-name="uuid" nullable="true" on-delete="CASCADE"/>
+        </many-to-one>
+
+        <one-to-many field="variants" target-entity="Sulu\Product\Domain\Model\ProductInterface" mapped-by="parent"/>
 
     </mapped-superclass>
 </doctrine-mapping>

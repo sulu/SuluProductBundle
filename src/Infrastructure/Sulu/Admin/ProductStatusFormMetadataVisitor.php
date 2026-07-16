@@ -24,7 +24,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  */
 class ProductStatusFormMetadataVisitor implements FormMetadataVisitorInterface
 {
-    private const FORM_KEY = 'product_details';
+    private const FORM_KEYS = ['product_details', 'product_variant'];
 
     /**
      * @param array<int, string> $productStatuses
@@ -37,7 +37,7 @@ class ProductStatusFormMetadataVisitor implements FormMetadataVisitorInterface
 
     public function visitFormMetadata(FormMetadata $formMetadata, string $locale, array $metadataOptions = []): void
     {
-        if (self::FORM_KEY !== $formMetadata->getKey()) {
+        if (!\in_array($formMetadata->getKey(), self::FORM_KEYS, true)) {
             return;
         }
 

@@ -225,9 +225,34 @@ class ProductFamilyControllerTest extends SuluTestCase
         $this->assertIsArray($data);
         $this->assertIsArray($data['attributes']);
         $this->assertSame(
-            [$attributeId => ['enabled' => true, 'required' => true]],
+            [$attributeId => ['enabled' => true, 'required' => true, 'variant' => false]],
             $data['attributes'],
         );
+    }
+
+    public function testPostWithVariantAttributeNotEnabledReturns422(): void
+    {
+        self::purgeDatabase();
+
+        $attributeId = $this->createAttribute('size', 'Size');
+
+        $this->client->request(
+            'POST',
+            '/admin/api/product-families.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'name' => 'Apparel',
+                'description' => null,
+                'attributes' => [
+                    $attributeId => ['enabled' => false, 'required' => false, 'variant' => true],
+                ],
+            ]) ?: null,
+        );
+
+        $this->assertHttpStatusCode(422, $this->client->getResponse());
     }
 
     private function createAttribute(string $key, string $name): int

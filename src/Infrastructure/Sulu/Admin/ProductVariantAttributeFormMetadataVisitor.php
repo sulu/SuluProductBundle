@@ -20,22 +20,23 @@ use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadataMapperRegistry;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\SchemaMetadata;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
-use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
+ * Injects the parent product family's `variant=true` (axis) attributes into the variant overlay
+ * form (`product_variant`); non-variant (shared) attributes are never injected.
+ *
  * @internal
  */
-class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterface
+class ProductVariantAttributeFormMetadataVisitor implements FormMetadataVisitorInterface
 {
-    private const FORM_KEY = 'product_details';
+    private const FORM_KEY = 'product_variant';
 
     public function __construct(
         private readonly ProductFamilyRepositoryInterface $productFamilyRepository,
         private readonly AttributeFieldFactory $attributeFieldFactory,
         private readonly PropertyMetadataMapperRegistry $propertyMetadataMapperRegistry,
         private readonly TranslatorInterface $translator,
-        private readonly ProductRepositoryInterface $productRepository,
     ) {
     }
 
@@ -45,19 +46,16 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
             return;
         }
 
-        $id = $metadataOptions['id'] ?? null;
-        if (!\is_string($id)) {
+        $parentId = $metadataOptions['parentId'] ?? null;
+        if (!\is_string($parentId)) {
             return;
         }
 
-        $family = $this->productFamilyRepository->findOneBy(['productUuid' => $id]);
+        $family = $this->productFamilyRepository->findOneBy(['productUuid' => $parentId]);
 
         if (null === $family) {
             return;
         }
-
-        $product = $this->productRepository->findOneBy(['uuid' => $id]);
-        $isVariantProduct = null !== $product && $product->isVariantProduct();
 
         $items = $formMetadata->getItems();
 
@@ -68,7 +66,7 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
         $section->setLabel($this->translator->trans('sulu_product.attributes', [], 'admin', $locale), $locale);
 
         foreach ($family->getFamilyAttributes() as $familyAttribute) {
-            if ($isVariantProduct && $familyAttribute->isVariant()) {
+            if (!$familyAttribute->isVariant()) {
                 continue;
             }
 

@@ -40,6 +40,36 @@ sulu_product.get_product_versions:
     controller: sulu_product.admin_product_controller::getVersionsAction
     format: json
 
+sulu_product.get_product_variants:
+    path: /products/{parentId}/variants.{_format}
+    methods: GET
+    controller: sulu_product.admin_product_variant_controller::cgetAction
+    format: json
+
+sulu_product.get_product_variant:
+    path: /products/{parentId}/variants/{id}.{_format}
+    methods: GET
+    controller: sulu_product.admin_product_variant_controller::getAction
+    format: json
+
+sulu_product.post_product_variant:
+    path: /products/{parentId}/variants.{_format}
+    methods: POST
+    controller: sulu_product.admin_product_variant_controller::postAction
+    format: json
+
+sulu_product.put_product_variant:
+    path: /products/{parentId}/variants/{id}.{_format}
+    methods: PUT
+    controller: sulu_product.admin_product_variant_controller::putAction
+    format: json
+
+sulu_product.delete_product_variant:
+    path: /products/{parentId}/variants/{id}.{_format}
+    methods: DELETE
+    controller: sulu_product.admin_product_variant_controller::deleteAction
+    format: json
+
 sulu_product.get_measurement_families:
     path: /measurement-families.{_format}
     methods: GET

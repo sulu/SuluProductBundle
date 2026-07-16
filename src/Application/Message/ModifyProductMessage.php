@@ -26,6 +26,8 @@ namespace Sulu\Product\Application\Message;
  *     attributes?: array<int, mixed>,
  *     status?: string,
  *     details?: array<string, mixed>,
+ *     type?: string,
+ *     parent?: string,
  * }
  */
 class ModifyProductMessage
@@ -64,6 +66,16 @@ class ModifyProductMessage
     public function getAttributes(): array
     {
         return $this->data['attributes'] ?? [];
+    }
+
+    public function getType(): ?string
+    {
+        return $this->data['type'] ?? null;
+    }
+
+    public function getParent(): ?string
+    {
+        return $this->data['parent'] ?? null;
     }
 
     /**

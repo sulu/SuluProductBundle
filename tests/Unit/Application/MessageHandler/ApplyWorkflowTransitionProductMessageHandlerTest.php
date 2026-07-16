@@ -22,6 +22,7 @@ use Sulu\Content\Application\ContentWorkflow\ContentWorkflowInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Application\Message\ApplyWorkflowTransitionProductMessage;
 use Sulu\Product\Application\MessageHandler\ApplyWorkflowTransitionProductMessageHandler;
+use Sulu\Product\Application\Workflow\VariantWorkflowCascader;
 use Sulu\Product\Domain\Event\ProductWorkflowTransitionAppliedEvent;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
@@ -48,10 +49,18 @@ class ApplyWorkflowTransitionProductMessageHandlerTest extends TestCase
         $this->contentWorkflow = $this->prophesize(ContentWorkflowInterface::class);
         $this->domainEventCollector = $this->prophesize(DomainEventCollectorInterface::class);
 
+        // VariantWorkflowCascader is final (cannot be prophesized); its own dependencies are
+        // never exercised here since the test product is a plain (non-variant-parent) product.
+        $variantWorkflowCascader = new VariantWorkflowCascader(
+            $this->prophesize(ProductRepositoryInterface::class)->reveal(),
+            $this->prophesize(ContentWorkflowInterface::class)->reveal(),
+        );
+
         $this->handler = new ApplyWorkflowTransitionProductMessageHandler(
             $this->productRepository->reveal(),
             $this->contentWorkflow->reveal(),
             $this->domainEventCollector->reveal(),
+            $variantWorkflowCascader,
         );
     }
 

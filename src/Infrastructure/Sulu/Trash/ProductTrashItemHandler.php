@@ -98,7 +98,8 @@ final class ProductTrashItemHandler implements
         Assert::notNull($unlocalizedDimensionContent, 'Expected to find an unlocalized dimension content for the product.');
         Assert::notEmpty($localizedDimensionContents, 'Expected to find at least one localized dimension content for the product.');
 
-        $data['productFamily'] = $unlocalizedDimensionContent->getProductFamily()?->getUuid();
+        $data['type'] = $product->getType();
+        $data['parent'] = $product->getParent()?->getUuid();
 
         // Reorder localized dimension contents to match the order defined in availableLocales.
         $availableLocales = $unlocalizedDimensionContent->getAvailableLocales();
@@ -161,6 +162,18 @@ final class ProductTrashItemHandler implements
         if (!$product) {
             $product = $this->productRepository->createNew($productUuid);
             $this->productRepository->add($product);
+        }
+
+        $parentUuid = $restoreData['parent'] ?? null;
+        if (\is_string($parentUuid)) {
+            $parent = $this->productRepository->findOneBy(['uuid' => $parentUuid]);
+            if (null !== $parent) {
+                $product->setParent($parent);
+            }
+        }
+
+        if (\is_string($restoreData['type'] ?? null)) {
+            $product->setType($restoreData['type']);
         }
 
         $dimensionContents = $restoreData['dimensionContents'] ?? [];

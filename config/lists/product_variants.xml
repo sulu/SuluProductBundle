@@ -1,0 +1,43 @@
+<?xml version="1.0" ?>
+<list xmlns="http://schemas.sulu.io/list-builder/list">
+    <key>product_variants</key>
+
+    <joins name="unlocalizedDimensionContent">
+        <join>
+            <entity-name>unlocalizedDimensionContent</entity-name>
+            <field-name>Sulu\Product\Domain\Model\ProductInterface.dimensionContents</field-name>
+            <method>LEFT</method>
+            <condition>unlocalizedDimensionContent.locale IS NULL AND unlocalizedDimensionContent.stage = 'draft' AND unlocalizedDimensionContent.version = 0</condition>
+        </join>
+    </joins>
+
+    <properties>
+        <property name="id" translation="sulu_admin.id" visibility="no">
+            <field-name>uuid</field-name>
+            <entity-name>Sulu\Product\Domain\Model\ProductInterface</entity-name>
+        </property>
+
+        <property name="code" translation="sulu_product.code" visibility="yes">
+            <field-name>code</field-name>
+            <entity-name>unlocalizedDimensionContent</entity-name>
+            <joins ref="unlocalizedDimensionContent"/>
+        </property>
+
+        <property name="status" translation="sulu_product.status" visibility="yes">
+            <field-name>status</field-name>
+            <entity-name>unlocalizedDimensionContent</entity-name>
+            <joins ref="unlocalizedDimensionContent"/>
+        </property>
+
+        <!--
+            No <field-name>/<entity-name>: DoctrineListBuilder excludes non-Doctrine descriptors
+            from its SELECT, so ProductVariantController populates this column after execute().
+        -->
+        <property name="variantTitle" translation="sulu_product.variant_title" visibility="always" sortable="false"/>
+
+        <property name="parent" visibility="never">
+            <field-name>parent</field-name>
+            <entity-name>Sulu\Product\Domain\Model\ProductInterface</entity-name>
+        </property>
+    </properties>
+</list>

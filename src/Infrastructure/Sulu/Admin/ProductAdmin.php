@@ -192,6 +192,28 @@ class ProductAdmin extends Admin
                 ->setParent(static::EDIT_TABS_VIEW),
         );
 
+        // Variants tab
+        $variantsToolbarActions = [];
+        if ($this->securityChecker->hasPermission(static::SECURITY_CONTEXT, PermissionTypes::ADD)) {
+            $variantsToolbarActions[] = new ToolbarAction('sulu_admin.add');
+        }
+        $viewCollection->add(
+            $this->viewBuilderFactory
+                ->createFormOverlayListViewBuilder(static::EDIT_TABS_VIEW . '.variants', '/variants')
+                ->setResourceKey(ProductInterface::LIST_KEY_VARIANTS)
+                ->setListKey(ProductInterface::LIST_KEY_VARIANTS)
+                ->setFormKey(ProductInterface::FORM_KEY_VARIANT)
+                ->addListAdapters(['table'])
+                ->setTabTitle('sulu_product.variants')
+                ->setTabOrder(20)
+                ->setTabCondition("type == 'variant'")
+                ->addRouterAttributesToListRequest(['id' => 'parentId'])
+                ->addRouterAttributesToFormRequest(['id' => 'parentId'])
+                ->addRouterAttributesToFormMetadata(['id' => 'parentId'])
+                ->addToolbarActions($variantsToolbarActions)
+                ->setParent(static::EDIT_TABS_VIEW),
+        );
+
         // Associations form — edit mode only
         if ([] !== $this->associationTypeRegistry->getTypes()) {
             $viewCollection->add(
@@ -199,7 +221,7 @@ class ProductAdmin extends Admin
                     ->setResourceKey(ProductInterface::RESOURCE_KEY)
                     ->setFormKey('product_associations')
                     ->setTabTitle('sulu_product.associations')
-                    ->setTabOrder(20)
+                    ->setTabOrder(30)
                     ->addRouterAttributesToFormMetadata(['id'])
                     ->addToolbarActions($editToolbarActions)
                     ->setParent(static::EDIT_TABS_VIEW),

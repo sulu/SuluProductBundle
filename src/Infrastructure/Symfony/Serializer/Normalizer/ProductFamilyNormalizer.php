@@ -50,6 +50,7 @@ final class ProductFamilyNormalizer implements NormalizerInterface
                 $attributes[$groupAttribute->getAttribute()->getId()] = [
                     'enabled' => false,
                     'required' => false,
+                    'variant' => false,
                 ];
             }
         }
@@ -58,6 +59,7 @@ final class ProductFamilyNormalizer implements NormalizerInterface
             $attributes[$familyAttribute->getAttribute()->getId()] = [
                 'enabled' => true,
                 'required' => $familyAttribute->isRequired(),
+                'variant' => $familyAttribute->isVariant(),
             ];
         }
 

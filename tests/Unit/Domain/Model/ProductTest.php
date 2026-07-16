@@ -17,6 +17,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
+use Sulu\Product\Domain\Model\ProductInterface;
 use Symfony\Component\Uid\Uuid;
 
 #[CoversClass(Product::class)]
@@ -46,5 +47,37 @@ class ProductTest extends TestCase
 
         $this->assertInstanceOf(ProductDimensionContent::class, $dimensionContent);
         $this->assertSame($product, $dimensionContent->getResource());
+    }
+
+    public function testDefaultsToSimple(): void
+    {
+        $product = new Product();
+
+        self::assertSame(ProductInterface::TYPE_SIMPLE, $product->getType());
+        self::assertFalse($product->isVariantProduct());
+        self::assertFalse($product->isVariant());
+        self::assertNull($product->getParent());
+        self::assertCount(0, $product->getVariants());
+    }
+
+    public function testVariantProductType(): void
+    {
+        $product = new Product();
+        $product->setType(ProductInterface::TYPE_VARIANT);
+
+        self::assertTrue($product->isVariantProduct());
+        self::assertFalse($product->isVariant());
+    }
+
+    public function testParentChildLink(): void
+    {
+        $parent = new Product();
+        $parent->setType(ProductInterface::TYPE_VARIANT);
+
+        $variant = new Product();
+        $variant->setParent($parent);
+
+        self::assertSame($parent, $variant->getParent());
+        self::assertTrue($variant->isVariant());
     }
 }

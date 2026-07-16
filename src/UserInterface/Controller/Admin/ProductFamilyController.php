@@ -25,6 +25,7 @@ use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushS
 use Sulu\Product\Application\Message\CreateProductFamilyMessage;
 use Sulu\Product\Application\Message\ModifyProductFamilyMessage;
 use Sulu\Product\Application\Message\RemoveProductFamilyMessage;
+use Sulu\Product\Domain\Exception\InvalidVariantAttributeException;
 use Sulu\Product\Domain\Exception\ProductFamilyHasProductsException;
 use Sulu\Product\Domain\Exception\ProductFamilyNotFoundException;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
@@ -106,6 +107,8 @@ final class ProductFamilyController implements SecuredControllerInterface
             $family = $this->handle(new Envelope($message, [new EnableFlushStamp()]));
         } catch (UniqueConstraintViolationException) {
             return new JsonResponse(['detail' => 'ProductFamily already exists.'], 409);
+        } catch (InvalidVariantAttributeException $e) {
+            return new JsonResponse(['detail' => $e->getMessage()], 422);
         }
 
         $locale = $this->getLocale($request);
@@ -126,6 +129,8 @@ final class ProductFamilyController implements SecuredControllerInterface
             return new JsonResponse(['detail' => 'ProductFamily already exists.'], 409);
         } catch (ProductFamilyNotFoundException $e) {
             return new JsonResponse(['detail' => $e->getMessage()], 404);
+        } catch (InvalidVariantAttributeException $e) {
+            return new JsonResponse(['detail' => $e->getMessage()], 422);
         }
 
         $locale = $this->getLocale($request);
@@ -163,7 +168,7 @@ final class ProductFamilyController implements SecuredControllerInterface
      *   locale: string,
      *   name: string,
      *   description: string|null,
-     *   attributes: array<int, array{enabled: bool, required: bool}>,
+     *   attributes: array<int, array{enabled: bool, required: bool, variant: bool}>,
      * }
      */
     private function getData(Request $request): array
@@ -180,10 +185,10 @@ final class ProductFamilyController implements SecuredControllerInterface
     }
 
     /**
-     * Reads the nested `attributes/<id>/enabled` and `attributes/<id>/required` fields
-     * produced by the form into a map keyed by attribute id.
+     * Reads the nested `attributes/<id>/enabled`, `attributes/<id>/required` and
+     * `attributes/<id>/variant` fields produced by the form into a map keyed by attribute id.
      *
-     * @return array<int, array{enabled: bool, required: bool}>
+     * @return array<int, array{enabled: bool, required: bool, variant: bool}>
      */
     private function extractAttributes(Request $request): array
     {
@@ -199,6 +204,7 @@ final class ProductFamilyController implements SecuredControllerInterface
             $attributes[(int) $attributeId] = [
                 'enabled' => (bool) ($entry['enabled'] ?? false),
                 'required' => (bool) ($entry['required'] ?? false),
+                'variant' => (bool) ($entry['variant'] ?? false),
             ];
         }
 

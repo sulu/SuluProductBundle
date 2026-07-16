@@ -80,6 +80,8 @@ final class ProductController implements SecuredControllerInterface
         $listBuilder->setIdField($fieldDescriptors['id']);
         $this->restHelper->initializeListBuilder($listBuilder, $fieldDescriptors);
         $listBuilder->setParameter('locale', $this->getLocale($request));
+        // Variants are children of another product and must not show up in the main list.
+        $listBuilder->where($fieldDescriptors['parent'], null);
 
         $listRepresentation = new PaginatedRepresentation(
             $listBuilder->execute(),
@@ -234,7 +236,7 @@ final class ProductController implements SecuredControllerInterface
     {
         /** @var CreateProductMessageData $data */
         $data = \array_replace(
-            $request->request->all(),
+            $this->stripClientSubmittedParent($request),
             ['locale' => $this->getLocale($request)],
         );
 
@@ -248,9 +250,24 @@ final class ProductController implements SecuredControllerInterface
     {
         /** @var ModifyProductMessageData $data */
         $data = \array_replace(
-            $request->request->all(),
+            $this->stripClientSubmittedParent($request),
             ['locale' => $this->getLocale($request)],
         );
+
+        return $data;
+    }
+
+    /**
+     * `parent` is only ever set via the nested `ProductVariantController` endpoint; a client
+     * submitting it here would silently re-parent the product. `type` is legitimately
+     * submitted here (this is where a product becomes a variant-parent) and stays.
+     *
+     * @return array<string, mixed>
+     */
+    private function stripClientSubmittedParent(Request $request): array
+    {
+        $data = $request->request->all();
+        unset($data['parent']);
 
         return $data;
     }
