@@ -1,0 +1,116 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of Sulu.
+ *
+ * (c) Sulu GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
+namespace Sulu\Product\Tests\Functional\Content;
+
+use Doctrine\ORM\EntityManagerInterface;
+use Sulu\Bundle\MediaBundle\Infrastructure\Sulu\Content\ResourceLoader\MediaResourceLoader;
+use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
+use Sulu\Content\Application\ContentResolver\ContentResolverInterface;
+use Sulu\Content\Application\ContentResolver\Value\ResolvableResource;
+use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+
+class ProductDetailsResolverTest extends SuluTestCase
+{
+    private ContentResolverInterface $contentResolver;
+
+    private EntityManagerInterface $entityManager;
+
+    private ProductRepositoryInterface $productRepository;
+
+    protected function setUp(): void
+    {
+        self::bootKernel();
+        $container = self::getContainer();
+
+        /** @var ContentResolverInterface $contentResolver */
+        $contentResolver = $container->get('sulu_content.content_resolver');
+        $this->contentResolver = $contentResolver;
+
+        /** @var EntityManagerInterface $entityManager */
+        $entityManager = $container->get('doctrine.orm.entity_manager');
+        $this->entityManager = $entityManager;
+
+        /** @var ProductRepositoryInterface $productRepository */
+        $productRepository = $container->get('sulu_product.product_repository');
+        $this->productRepository = $productRepository;
+
+        self::purgeDatabase();
+    }
+
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+        \restore_exception_handler();
+    }
+
+    public function testProductDetailsAppearUnderExtensionProduct(): void
+    {
+        $product = $this->productRepository->createNew();
+
+        $dimensionContent = $product->createDimensionContent();
+        $dimensionContent->setLocale('en');
+        $dimensionContent->setStage('draft');
+        // ContentResolver's TemplateResolver requires a registered template key
+        // to resolve the (unrelated) template content section; "product" is the
+        // template registered for the frontend product template type in the test app.
+        $dimensionContent->setTemplateKey('product');
+        $dimensionContent->setCode('SKU-FE');
+        $dimensionContent->setStatus('available');
+        $dimensionContent->setDetailsData(['shortDescription' => '<p>hi</p>']);
+        $product->addDimensionContent($dimensionContent);
+
+        $this->productRepository->add($product);
+        $this->entityManager->persist($dimensionContent);
+        $this->entityManager->flush();
+
+        $result = $this->contentResolver->resolve($dimensionContent);
+
+        self::assertArrayHasKey('product', $result['extension']);
+        $productData = $result['extension']['product'];
+        self::assertSame('SKU-FE', $productData['code']);
+        self::assertSame('available', $productData['status']);
+        // resolved through the real property resolver registry, driven by the XML `type`
+        self::assertSame('<p>hi</p>', $productData['shortDescription']);
+        // No media set → graceful empty shapes (missing media resolves the same way).
+        self::assertNull($productData['image']);
+        self::assertSame([], $productData['documents']);
+    }
+
+    public function testDetailsMediaResolvesThroughItsPropertyResolver(): void
+    {
+        $product = $this->productRepository->createNew();
+
+        $dimensionContent = $product->createDimensionContent();
+        $dimensionContent->setLocale('en');
+        $dimensionContent->setStage('draft');
+        $dimensionContent->setTemplateKey('product');
+        // the admin wire-shape, stored verbatim — the regression this whole change fixes
+        $dimensionContent->setDetailsData(['image' => ['id' => 1]]);
+        $product->addDimensionContent($dimensionContent);
+
+        $this->productRepository->add($product);
+        $this->entityManager->persist($dimensionContent);
+        $this->entityManager->flush();
+
+        $result = $this->contentResolver->resolve($dimensionContent);
+        $productData = $result['extension']['product'];
+
+        // a bare int made SingleMediaSelectionPropertyResolver bail and emit id: null; storing
+        // the wire-shape verbatim means the id now survives through to the media resource loader
+        $image = $productData['image'];
+        self::assertInstanceOf(ResolvableResource::class, $image);
+        self::assertSame(1, $image->getId());
+        self::assertSame(MediaResourceLoader::getKey(), $image->getResourceLoaderKey());
+    }
+}
