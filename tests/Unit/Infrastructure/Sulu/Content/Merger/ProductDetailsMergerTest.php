@@ -150,70 +150,51 @@ class ProductDetailsMergerTest extends TestCase
         $this->assertSame('unavailable', $target->getStatus());
     }
 
-    public function testMergesShortDescription(): void
+    public function testMergesDetailsBucketPerKeyLocalizedWins(): void
     {
-        $source = $this->makeDimensionContent();
-        $source->setShortDescription('<p>hi</p>');
         $target = $this->makeDimensionContent();
+        $target->setDetailsData(['image' => ['id' => 5], 'shortDescription' => 'old']);
+
+        $source = $this->makeDimensionContent();
+        $source->setDetailsData(['shortDescription' => 'new']);
 
         $this->merger->merge($target, $source);
 
-        $this->assertSame('<p>hi</p>', $target->getShortDescription());
+        // unlocalized merges first, localized second — so the localized half wins per key
+        // while the unlocalized half it does not carry survives untouched
+        $this->assertSame(
+            ['image' => ['id' => 5], 'shortDescription' => 'new'],
+            $target->getDetailsData(),
+        );
     }
 
-    public function testSkipsShortDescriptionWhenSourceNull(): void
+    public function testMergesDetailsHalvesIntoOneBucket(): void
     {
-        $source = $this->makeDimensionContent();
+        // the mapper splits the bucket per multilingual; the merger reunites the halves
         $target = $this->makeDimensionContent();
-        $target->setShortDescription('<p>keep</p>');
+        $target->setDetailsData(['image' => ['id' => 5], 'documents' => ['ids' => [1, 2]]]);
+
+        $source = $this->makeDimensionContent();
+        $source->setDetailsData(['shortDescription' => '<p>hi</p>']);
 
         $this->merger->merge($target, $source);
 
-        $this->assertSame('<p>keep</p>', $target->getShortDescription());
+        $this->assertSame(
+            ['image' => ['id' => 5], 'documents' => ['ids' => [1, 2]], 'shortDescription' => '<p>hi</p>'],
+            $target->getDetailsData(),
+        );
     }
 
-    public function testMergesImage(): void
+    public function testKeepsTargetDetailsWhenSourceBucketEmpty(): void
     {
-        $source = $this->makeDimensionContent();
-        $source->setImage(5);
         $target = $this->makeDimensionContent();
+        $target->setDetailsData(['shortDescription' => '<p>keep</p>']);
+
+        $source = $this->makeDimensionContent();
 
         $this->merger->merge($target, $source);
 
-        $this->assertSame(5, $target->getImage());
-    }
-
-    public function testSkipsImageWhenSourceNull(): void
-    {
-        $source = $this->makeDimensionContent();
-        $target = $this->makeDimensionContent();
-        $target->setImage(9);
-
-        $this->merger->merge($target, $source);
-
-        $this->assertSame(9, $target->getImage());
-    }
-
-    public function testMergesDocuments(): void
-    {
-        $source = $this->makeDimensionContent();
-        $source->setDocuments([3, 7]);
-        $target = $this->makeDimensionContent();
-
-        $this->merger->merge($target, $source);
-
-        $this->assertSame([3, 7], $target->getDocuments());
-    }
-
-    public function testSkipsDocumentsWhenSourceNull(): void
-    {
-        $source = $this->makeDimensionContent();
-        $target = $this->makeDimensionContent();
-        $target->setDocuments([1, 2]);
-
-        $this->merger->merge($target, $source);
-
-        $this->assertSame([1, 2], $target->getDocuments());
+        $this->assertSame(['shortDescription' => '<p>keep</p>'], $target->getDetailsData());
     }
 
     public function testMergesProductFamily(): void
@@ -228,9 +209,7 @@ class ProductDetailsMergerTest extends TestCase
         $source->getExternalIdentifier()->willReturn(null);
         $source->getProductFamily()->willReturn($family->reveal());
         $source->getStatus()->willReturn(null);
-        $source->getShortDescription()->willReturn(null);
-        $source->getImage()->willReturn(null);
-        $source->getDocuments()->willReturn(null);
+        $source->getDetailsData()->willReturn([]);
 
         $target = $this->makeDimensionContent();
 
@@ -248,9 +227,7 @@ class ProductDetailsMergerTest extends TestCase
         $source->getExternalIdentifier()->willReturn(null);
         $source->getProductFamily()->willReturn(null);
         $source->getStatus()->willReturn(null);
-        $source->getShortDescription()->willReturn(null);
-        $source->getImage()->willReturn(null);
-        $source->getDocuments()->willReturn(null);
+        $source->getDetailsData()->willReturn([]);
 
         /** @var ObjectProphecy<ProductFamilyInterface> $keepFamily */
         $keepFamily = $this->prophesize(ProductFamilyInterface::class);

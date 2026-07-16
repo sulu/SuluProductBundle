@@ -227,108 +227,35 @@ class ProductDimensionContentTest extends TestCase
         $this->assertSame('announced', $dc->getStatus());
     }
 
-    public function testSetShortDescriptionAndGet(): void
+    public function testDetailsDataRoundTripsVerbatim(): void
     {
         $dc = new ProductDimensionContent(new Product());
-        $this->assertNull($dc->getShortDescription());
-        $dc->setShortDescription('<p>hi</p>');
-        $this->assertSame('<p>hi</p>', $dc->getShortDescription());
+
+        $details = [
+            'shortDescription' => '<p>Hello</p>',
+            'image' => ['id' => 5],
+            'documents' => ['ids' => [1, 2]],
+            'custom' => ['anything' => true],
+        ];
+
+        $dc->setDetailsData($details);
+
+        // stored verbatim — no coercion, unknown keys preserved
+        $this->assertSame($details, $dc->getDetailsData());
     }
 
-    public function testSetShortDescriptionIsFluent(): void
+    public function testDetailsDataDefaultsToEmptyArray(): void
     {
         $dc = new ProductDimensionContent(new Product());
-        $this->assertSame($dc, $dc->setShortDescription('<p>x</p>'));
-        $this->assertSame('<p>x</p>', $dc->getShortDescription());
+
+        $this->assertSame([], $dc->getDetailsData());
     }
 
-    public function testSetImageAndGet(): void
-    {
-        $dc = new ProductDimensionContent(new Product());
-        $this->assertNull($dc->getImage());
-        $dc->setImage(5);
-        $this->assertSame(5, $dc->getImage());
-    }
-
-    public function testSetImageIsFluent(): void
-    {
-        $dc = new ProductDimensionContent(new Product());
-        $this->assertSame($dc, $dc->setImage(7));
-        $this->assertSame(7, $dc->getImage());
-    }
-
-    public function testSetDocumentsAndGet(): void
-    {
-        $dc = new ProductDimensionContent(new Product());
-        $this->assertNull($dc->getDocuments());
-        $dc->setDocuments([3, 7]);
-        $this->assertSame([3, 7], $dc->getDocuments());
-    }
-
-    public function testSetDocumentsIsFluent(): void
-    {
-        $dc = new ProductDimensionContent(new Product());
-        $this->assertSame($dc, $dc->setDocuments([1, 2]));
-        $this->assertSame([1, 2], $dc->getDocuments());
-    }
-
-    public function testDetailFieldsCoexistInSharedStorage(): void
-    {
-        $dc = new ProductDimensionContent(new Product());
-        $dc->setShortDescription('<p>hi</p>');
-        $dc->setImage(5);
-        $dc->setDocuments([3, 7]);
-
-        // all three non-queried fields share the details_data json column without clobbering
-        $this->assertSame('<p>hi</p>', $dc->getShortDescription());
-        $this->assertSame(5, $dc->getImage());
-        $this->assertSame([3, 7], $dc->getDocuments());
-    }
-
-    public function testSetImageNullPrunesAndRoundTrips(): void
-    {
-        $dc = new ProductDimensionContent(new Product());
-        $dc->setImage(5);
-        $dc->setImage(null);
-
-        $this->assertNull($dc->getImage());
-    }
-
-    public function testSetShortDescriptionNullRoundTrips(): void
-    {
-        $dc = new ProductDimensionContent(new Product());
-        $dc->setShortDescription('<p>hi</p>');
-        $dc->setShortDescription(null);
-
-        $this->assertNull($dc->getShortDescription());
-    }
-
-    public function testSetDocumentsEmptyArrayRoundTrips(): void
-    {
-        $dc = new ProductDimensionContent(new Product());
-        $dc->setDocuments([]);
-
-        $this->assertSame([], $dc->getDocuments());
-    }
-
-    public function testSetDocumentsNullRoundTrips(): void
-    {
-        $dc = new ProductDimensionContent(new Product());
-        $dc->setDocuments([1, 2]);
-        $dc->setDocuments(null);
-
-        $this->assertNull($dc->getDocuments());
-    }
-
-    public function testGetDocumentsFiltersNonIntValuesFromJson(): void
+    public function testSetDetailsDataIsFluent(): void
     {
         $dc = new ProductDimensionContent(new Product());
 
-        // simulate Doctrine json hydration of an untyped details_data payload
-        $property = new \ReflectionProperty(ProductDimensionContent::class, 'detailsData');
-        $property->setValue($dc, ['documents' => [3, 'foo', 7, null]]);
-
-        $this->assertSame([3, 7], $dc->getDocuments());
+        $this->assertSame($dc, $dc->setDetailsData(['shortDescription' => '<p>x</p>']));
     }
 
     public function testGetAttributesReturnsEmptyCollectionInitially(): void

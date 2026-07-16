@@ -46,10 +46,7 @@ class ProductDetailsNormalizer implements NormalizerInterface
         $normalizedData['externalIdentifier'] = $object->getExternalIdentifier();
         $normalizedData['productFamily'] = $object->getProductFamily()?->getUuid();
         $normalizedData['status'] = $object->getStatus();
-        $normalizedData['shortDescription'] = $object->getShortDescription();
-        $image = $object->getImage();
-        $normalizedData['image'] = null === $image ? null : ['id' => $image];
-        $normalizedData['documents'] = ['ids' => $object->getDocuments() ?? []];
+        $normalizedData['details'] = $object->getDetailsData();
 
         return $normalizedData;
     }

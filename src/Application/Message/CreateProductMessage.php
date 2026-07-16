@@ -25,9 +25,7 @@ namespace Sulu\Product\Application\Message;
  *     authored?: string,
  *     attributes?: array<int, mixed>,
  *     status?: string|null,
- *     shortDescription?: string|null,
- *     image?: int|array<string, mixed>|null,
- *     documents?: array<mixed>|null,
+ *     details?: array<string, mixed>,
  * }
  */
 class CreateProductMessage

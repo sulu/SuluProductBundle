@@ -216,6 +216,77 @@ class ProductControllerTest extends SuluTestCase
         $this->assertHttpStatusCode(404, $response);
     }
 
+    public function testDetailsBucketRoundTripsThroughTheApi(): void
+    {
+        self::purgeDatabase();
+        $familyId = $this->createProductFamily();
+        $id = $this->createProduct($familyId);
+
+        $this->client->request(
+            'PUT',
+            '/admin/api/products/' . $id . '.json?locale=en&action=draft',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'title' => 'My Product',
+                'productFamily' => $familyId,
+                'details' => [
+                    'shortDescription' => '<p>Round trip</p>',
+                    'image' => ['id' => 1],
+                    'documents' => ['ids' => [2, 3]],
+                ],
+            ]) ?: null,
+        );
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        $this->client->request('GET', '/admin/api/products/' . $id . '.json?locale=en');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($data);
+
+        // regression: the admin wire-shape must survive storage untouched. Coercing
+        // {"id": 1} down to 1 made single_media_selection resolve to id: null.
+        // key order is not asserted — the merger emits the unlocalized half first.
+        $this->assertEquals([
+            'shortDescription' => '<p>Round trip</p>',
+            'image' => ['id' => 1],
+            'documents' => ['ids' => [2, 3]],
+        ], $data['details']);
+    }
+
+    public function testDetailsBucketAcceptsAProjectDefinedField(): void
+    {
+        self::purgeDatabase();
+        $familyId = $this->createProductFamily();
+        $id = $this->createProduct($familyId);
+
+        $this->client->request(
+            'PUT',
+            '/admin/api/products/' . $id . '.json?locale=en&action=draft',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'title' => 'My Product',
+                'productFamily' => $familyId,
+                'details' => ['unknownProjectField' => 'kept'],
+            ]) ?: null,
+        );
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        $this->client->request('GET', '/admin/api/products/' . $id . '.json?locale=en');
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertIsArray($data['details']);
+
+        // no form property declares it, so the bundle must not persist it
+        $this->assertArrayNotHasKey('unknownProjectField', $data['details']);
+    }
+
     public function testGetWithUnknownLocaleReturnsTemplateOnly(): void
     {
         self::purgeDatabase();

@@ -103,36 +103,48 @@ class ProductDetailsNormalizerTest extends TestCase
         $object->getExternalIdentifier()->willReturn(null);
         $object->getProductFamily()->willReturn(null);
         $object->getStatus()->willReturn('available');
-        $object->getShortDescription()->willReturn('<p>x</p>');
-        $object->getImage()->willReturn(5);
-        $object->getDocuments()->willReturn([3, 7]);
+        $object->getDetailsData()->willReturn([]);
 
         $result = $this->normalizer->enhance($object->reveal(), []);
 
         $this->assertSame('available', $result['status']);
-        $this->assertSame('<p>x</p>', $result['shortDescription']);
-        // Media fields are wrapped to the admin field contract.
-        $this->assertSame(['id' => 5], $result['image']);
-        $this->assertSame(['ids' => [3, 7]], $result['documents']);
     }
 
-    public function testEnhanceEmitsEmptyMediaShapesWhenUnset(): void
+    public function testEnhanceEmitsDetailsBucketUnchanged(): void
     {
-        /** @var ObjectProphecy<ProductDimensionContentInterface> $object */
-        $object = $this->prophesize(ProductDimensionContentInterface::class);
-        $object->getTitle()->willReturn('T');
-        $object->getCode()->willReturn('C');
-        $object->getExternalIdentifier()->willReturn(null);
-        $object->getProductFamily()->willReturn(null);
-        $object->getStatus()->willReturn(null);
-        $object->getShortDescription()->willReturn(null);
-        $object->getImage()->willReturn(null);
-        $object->getDocuments()->willReturn(null);
+        $dc = $this->makeDimensionContent();
+        $dc->setDetailsData([
+            'shortDescription' => '<p>Hi</p>',
+            'image' => ['id' => 5],
+            'documents' => ['ids' => [1, 2]],
+        ]);
 
-        $result = $this->normalizer->enhance($object->reveal(), []);
+        $result = $this->normalizer->enhance($dc, []);
 
-        // Empty single media => null (renders as an empty picker); empty multi media => {ids: []}.
-        $this->assertNull($result['image']);
-        $this->assertSame(['ids' => []], $result['documents']);
+        // the stored value already carries the admin wire-shape — no reshaping here
+        $this->assertSame([
+            'shortDescription' => '<p>Hi</p>',
+            'image' => ['id' => 5],
+            'documents' => ['ids' => [1, 2]],
+        ], $result['details']);
+    }
+
+    public function testEnhanceEmitsEmptyDetailsBucket(): void
+    {
+        $dc = $this->makeDimensionContent();
+
+        $result = $this->normalizer->enhance($dc, []);
+
+        $this->assertSame([], $result['details']);
+    }
+
+    public function testEnhanceEmitsUnknownProjectFieldUntouched(): void
+    {
+        $dc = $this->makeDimensionContent();
+        $dc->setDetailsData(['datasheet' => ['id' => 9]]);
+
+        $result = $this->normalizer->enhance($dc, []);
+
+        $this->assertSame(['datasheet' => ['id' => 9]], $result['details']);
     }
 }

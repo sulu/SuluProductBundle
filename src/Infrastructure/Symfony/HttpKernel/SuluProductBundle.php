@@ -416,6 +416,7 @@ final class SuluProductBundle extends AbstractBundle
         $services->set('sulu_product.product_details_data_mapper')
             ->class(ProductDetailsDataMapper::class)
             ->args([
+                new Reference('sulu_admin.xml_form_metadata_loader'),
                 new Reference('sulu_product.product_family_repository'),
                 new Reference('sulu_product.product_repository'),
                 '%sulu_product.product_statuses%',
@@ -862,6 +863,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_reference.reference_repository'),
                 new Reference('sulu_content.content_view_resolver'),
                 new Reference('sulu_content.content_merger'),
+                new Reference('sulu_admin.xml_form_metadata_loader'),
             ])
             ->tag('sulu_reference.refresher');
 

@@ -78,21 +78,13 @@ interface ProductDimensionContentInterface extends DimensionContentInterface, Ex
 
     public function setStatus(?string $status): static;
 
-    public function getShortDescription(): ?string;
-
-    public function setShortDescription(?string $shortDescription): static;
-
-    public function getImage(): ?int;
-
-    public function setImage(?int $image): static;
+    /**
+     * @return array<string, mixed>
+     */
+    public function getDetailsData(): array;
 
     /**
-     * @return array<int, int>|null
+     * @param array<string, mixed> $detailsData
      */
-    public function getDocuments(): ?array;
-
-    /**
-     * @param array<int, int>|null $documents
-     */
-    public function setDocuments(?array $documents): static;
+    public function setDetailsData(array $detailsData): static;
 }

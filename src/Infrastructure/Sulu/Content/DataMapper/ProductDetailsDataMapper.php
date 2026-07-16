@@ -13,11 +13,14 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Infrastructure\Sulu\Content\DataMapper;
 
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataLoaderInterface;
 use Sulu\Content\Application\ContentDataMapper\DataMapper\DataMapperInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Exception\InvalidProductStatusException;
 use Sulu\Product\Domain\Exception\ProductCodeNotUniqueException;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
+use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 
@@ -27,6 +30,7 @@ class ProductDetailsDataMapper implements DataMapperInterface
      * @param array<int, string> $allowedStatuses
      */
     public function __construct(
+        private readonly FormMetadataLoaderInterface $formMetadataLoader,
         private readonly ProductFamilyRepositoryInterface $productFamilyRepository,
         private readonly ProductRepositoryInterface $productRepository,
         private readonly array $allowedStatuses,
@@ -83,42 +87,67 @@ class ProductDetailsDataMapper implements DataMapperInterface
             $unlocalizedDimensionContent->setStatus($status);
         }
 
-        if (\array_key_exists('shortDescription', $data)
-            && $localizedDimensionContent instanceof ProductDimensionContentInterface
-        ) {
-            $shortDescription = \is_string($data['shortDescription']) ? $data['shortDescription'] : null;
-            $localizedDimensionContent->setShortDescription($shortDescription);
+        $this->mapDetailsData($unlocalizedDimensionContent, $localizedDimensionContent, $data);
+    }
+
+    /**
+     * @template T of DimensionContentInterface
+     *
+     * @param T $localizedDimensionContent
+     * @param array<string, mixed> $data
+     */
+    private function mapDetailsData(
+        ProductDimensionContentInterface $unlocalizedDimensionContent,
+        DimensionContentInterface $localizedDimensionContent,
+        array $data,
+    ): void {
+        if (!\array_key_exists('details', $data)) {
+            return;
         }
 
-        if (\array_key_exists('image', $data)) {
-            $value = $data['image'];
-            if (\is_array($value)) {
-                $value = $value['id'] ?? null;
-            }
-            $mediaId = null;
-            if (\is_int($value)) {
-                $mediaId = $value;
-            } elseif (\is_string($value) && \is_numeric($value)) {
-                $mediaId = (int) $value;
-            }
-            $unlocalizedDimensionContent->setImage($mediaId);
+        $details = \is_array($data['details']) ? $data['details'] : [];
+
+        $locale = $localizedDimensionContent instanceof ProductDimensionContentInterface
+            ? $localizedDimensionContent->getLocale()
+            : null;
+
+        if (!\is_string($locale)) {
+            return;
         }
 
-        if (\array_key_exists('documents', $data)) {
-            $value = $data['documents'];
-            $ids = null;
-            if (\is_array($value)) {
-                $rawIds = (\array_key_exists('ids', $value) && \is_array($value['ids'])) ? $value['ids'] : $value;
-                $ids = [];
-                foreach ($rawIds as $rawId) {
-                    if (\is_int($rawId)) {
-                        $ids[] = $rawId;
-                    } elseif (\is_string($rawId) && \is_numeric($rawId)) {
-                        $ids[] = (int) $rawId;
-                    }
-                }
-            }
-            $unlocalizedDimensionContent->setDocuments($ids);
+        $formMetadata = $this->formMetadataLoader->getMetadata(ProductInterface::FORM_KEY, $locale, []);
+
+        if (!$formMetadata instanceof FormMetadata) {
+            return;
         }
+
+        $localizedDetails = [];
+        $unlocalizedDetails = [];
+
+        foreach ($formMetadata->getFlatFieldMetadata() as $property) {
+            $parts = \explode('/', $property->getName(), 2);
+            if ('details' !== $parts[0] || !isset($parts[1])) {
+                continue;
+            }
+
+            $field = $parts[1];
+            if (!\array_key_exists($field, $details)) {
+                continue;
+            }
+
+            if ($property->isMultilingual()) {
+                $localizedDetails[$field] = $details[$field];
+
+                continue;
+            }
+
+            $unlocalizedDetails[$field] = $details[$field];
+        }
+
+        if ($localizedDimensionContent instanceof ProductDimensionContentInterface) {
+            $localizedDimensionContent->setDetailsData($localizedDetails);
+        }
+
+        $unlocalizedDimensionContent->setDetailsData($unlocalizedDetails);
     }
 }

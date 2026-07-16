@@ -48,16 +48,9 @@ class ProductDetailsMerger implements MergerInterface
             $targetObject->setStatus($sourceObject->getStatus());
         }
 
-        if (null !== $sourceObject->getShortDescription()) {
-            $targetObject->setShortDescription($sourceObject->getShortDescription());
-        }
-
-        if (null !== $sourceObject->getImage()) {
-            $targetObject->setImage($sourceObject->getImage());
-        }
-
-        if (null !== $sourceObject->getDocuments()) {
-            $targetObject->setDocuments($sourceObject->getDocuments());
-        }
+        $targetObject->setDetailsData(\array_merge(
+            $targetObject->getDetailsData(),
+            $sourceObject->getDetailsData(),
+        ));
     }
 }

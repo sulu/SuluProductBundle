@@ -46,13 +46,13 @@
             </meta>
         </property>
 
-        <property name="shortDescription" type="text_editor" colspan="12">
+        <property name="details/shortDescription" type="text_editor" colspan="12">
             <meta>
                 <title>sulu_product.short_description</title>
             </meta>
         </property>
 
-        <property name="image" type="single_media_selection" colspan="6">
+        <property name="details/image" type="single_media_selection" multilingual="false">
             <meta>
                 <title>sulu_product.image</title>
             </meta>
@@ -62,7 +62,7 @@
             </params>
         </property>
 
-        <property name="documents" type="media_selection" colspan="6">
+        <property name="details/documents" type="media_selection" multilingual="false">
             <meta>
                 <title>sulu_product.documents</title>
             </meta>

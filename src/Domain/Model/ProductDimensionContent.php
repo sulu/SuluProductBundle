@@ -277,65 +277,21 @@ class ProductDimensionContent implements ProductDimensionContentInterface
         return $this;
     }
 
-    public function getShortDescription(): ?string
+    /**
+     * @return array<string, mixed>
+     */
+    public function getDetailsData(): array
     {
-        $value = $this->detailsData['shortDescription'] ?? null;
-
-        return \is_string($value) ? $value : null;
-    }
-
-    public function setShortDescription(?string $shortDescription): static
-    {
-        $this->setDetailsValue('shortDescription', $shortDescription);
-
-        return $this;
-    }
-
-    public function getImage(): ?int
-    {
-        $value = $this->detailsData['image'] ?? null;
-
-        return \is_int($value) ? $value : null;
-    }
-
-    public function setImage(?int $image): static
-    {
-        $this->setDetailsValue('image', $image);
-
-        return $this;
+        return $this->detailsData;
     }
 
     /**
-     * @return array<int, int>|null
+     * @param array<string, mixed> $detailsData
      */
-    public function getDocuments(): ?array
+    public function setDetailsData(array $detailsData): static
     {
-        $value = $this->detailsData['documents'] ?? null;
-        if (!\is_array($value)) {
-            return null;
-        }
-
-        return \array_values(\array_filter($value, \is_int(...)));
-    }
-
-    /**
-     * @param array<int, int>|null $documents
-     */
-    public function setDocuments(?array $documents): static
-    {
-        $this->setDetailsValue('documents', $documents);
+        $this->detailsData = $detailsData;
 
         return $this;
-    }
-
-    private function setDetailsValue(string $key, mixed $value): void
-    {
-        if (null === $value) {
-            unset($this->detailsData[$key]);
-
-            return;
-        }
-
-        $this->detailsData[$key] = $value;
     }
 }
