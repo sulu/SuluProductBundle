@@ -13,18 +13,27 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Infrastructure\Sulu\Content\DataMapper;
 
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataLoaderInterface;
 use Sulu\Content\Application\ContentDataMapper\DataMapper\DataMapperInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Product\Domain\Exception\InvalidProductStatusException;
 use Sulu\Product\Domain\Exception\ProductCodeNotUniqueException;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
+use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 
 class ProductDetailsDataMapper implements DataMapperInterface
 {
+    /**
+     * @param array<int, string> $allowedStatuses
+     */
     public function __construct(
+        private readonly FormMetadataLoaderInterface $formMetadataLoader,
         private readonly ProductFamilyRepositoryInterface $productFamilyRepository,
         private readonly ProductRepositoryInterface $productRepository,
+        private readonly array $allowedStatuses,
     ) {
     }
 
@@ -69,5 +78,76 @@ class ProductDetailsDataMapper implements DataMapperInterface
             $productFamily = $this->productFamilyRepository->getOneBy(['uuid' => $productFamilyUuid]);
             $unlocalizedDimensionContent->setProductFamily($productFamily);
         }
+
+        if (\array_key_exists('status', $data) && \is_string($data['status'])) {
+            $status = $data['status'];
+            if (!\in_array($status, $this->allowedStatuses, true)) {
+                throw new InvalidProductStatusException($status, $this->allowedStatuses);
+            }
+            $unlocalizedDimensionContent->setStatus($status);
+        }
+
+        $this->mapDetailsData($unlocalizedDimensionContent, $localizedDimensionContent, $data);
+    }
+
+    /**
+     * @template T of DimensionContentInterface
+     *
+     * @param T $localizedDimensionContent
+     * @param array<string, mixed> $data
+     */
+    private function mapDetailsData(
+        ProductDimensionContentInterface $unlocalizedDimensionContent,
+        DimensionContentInterface $localizedDimensionContent,
+        array $data,
+    ): void {
+        if (!\array_key_exists('details', $data)) {
+            return;
+        }
+
+        $details = \is_array($data['details']) ? $data['details'] : [];
+
+        $locale = $localizedDimensionContent instanceof ProductDimensionContentInterface
+            ? $localizedDimensionContent->getLocale()
+            : null;
+
+        if (!\is_string($locale)) {
+            return;
+        }
+
+        $formMetadata = $this->formMetadataLoader->getMetadata(ProductInterface::FORM_KEY, $locale, []);
+
+        if (!$formMetadata instanceof FormMetadata) {
+            return;
+        }
+
+        $localizedDetails = [];
+        $unlocalizedDetails = [];
+
+        foreach ($formMetadata->getFlatFieldMetadata() as $property) {
+            $parts = \explode('/', $property->getName(), 2);
+            if ('details' !== $parts[0] || !isset($parts[1])) {
+                continue;
+            }
+
+            $field = $parts[1];
+            if (!\array_key_exists($field, $details)) {
+                continue;
+            }
+
+            if ($property->isMultilingual()) {
+                $localizedDetails[$field] = $details[$field];
+
+                continue;
+            }
+
+            $unlocalizedDetails[$field] = $details[$field];
+        }
+
+        if ($localizedDimensionContent instanceof ProductDimensionContentInterface) {
+            $localizedDimensionContent->setDetailsData($localizedDetails);
+        }
+
+        $unlocalizedDimensionContent->setDetailsData($unlocalizedDetails);
     }
 }

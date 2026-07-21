@@ -98,6 +98,7 @@ use Sulu\Product\Infrastructure\Sulu\Admin\ProductContentAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductContentFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductFamilyAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductFamilyFormMetadataVisitor;
+use Sulu\Product\Infrastructure\Sulu\Admin\ProductStatusFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\AdditionalWebspacesDataMapper;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductAttributesDataMapper;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductDetailsDataMapper;
@@ -206,6 +207,10 @@ final class SuluProductBundle extends AbstractBundle
                         ->end()
                     ->end()
                 ->end()
+                ->arrayNode('product_statuses')
+                    ->scalarPrototype()->end()
+                    ->defaultValue(['announced', 'available', 'discontinued'])
+                ->end()
                 ->arrayNode('objects')
                     ->addDefaultsIfNotSet()
                     ->children()
@@ -286,6 +291,10 @@ final class SuluProductBundle extends AbstractBundle
         /** @var array<string, array{units: array<string>}> $measurements */
         $measurements = $config['measurements'] ?? [];
         $builder->setParameter('sulu_product.measurements', $this->resolveMeasurementsEnabledMap($measurements));
+
+        /** @var array<int, string> $productStatuses */
+        $productStatuses = $config['product_statuses'] ?? [];
+        $builder->setParameter('sulu_product.product_statuses', $productStatuses);
 
         $services = $container->services();
 
@@ -407,8 +416,10 @@ final class SuluProductBundle extends AbstractBundle
         $services->set('sulu_product.product_details_data_mapper')
             ->class(ProductDetailsDataMapper::class)
             ->args([
+                new Reference('sulu_admin.xml_form_metadata_loader'),
                 new Reference('sulu_product.product_family_repository'),
                 new Reference('sulu_product.product_repository'),
+                '%sulu_product.product_statuses%',
             ])
             ->tag('sulu_content.data_mapper', ['priority' => 10]);
 
@@ -706,6 +717,14 @@ final class SuluProductBundle extends AbstractBundle
             ->class(ProductContentFormMetadataVisitor::class)
             ->tag('sulu_admin.typed_form_metadata_visitor');
 
+        $services->set('sulu_product.product_status_form_metadata_visitor')
+            ->class(ProductStatusFormMetadataVisitor::class)
+            ->args([
+                '%sulu_product.product_statuses%',
+                new Reference('translator'),
+            ])
+            ->tag('sulu_admin.form_metadata_visitor');
+
         $services->set('sulu_product.admin_product_family_controller')
             ->class(ProductFamilyController::class)
             ->public()
@@ -844,6 +863,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_reference.reference_repository'),
                 new Reference('sulu_content.content_view_resolver'),
                 new Reference('sulu_content.content_merger'),
+                new Reference('sulu_admin.xml_form_metadata_loader'),
             ])
             ->tag('sulu_reference.refresher');
 

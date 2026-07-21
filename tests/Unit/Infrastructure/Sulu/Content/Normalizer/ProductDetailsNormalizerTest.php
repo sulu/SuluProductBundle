@@ -19,6 +19,7 @@ use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
+use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\Normalizer\ProductDetailsNormalizer;
 
@@ -91,5 +92,59 @@ class ProductDetailsNormalizerTest extends TestCase
         $result = $this->normalizer->enhance($dc, []);
 
         $this->assertNull($result['productFamily']);
+    }
+
+    public function testEnhanceEmitsNewFields(): void
+    {
+        /** @var ObjectProphecy<ProductDimensionContentInterface> $object */
+        $object = $this->prophesize(ProductDimensionContentInterface::class);
+        $object->getTitle()->willReturn('T');
+        $object->getCode()->willReturn('C');
+        $object->getExternalIdentifier()->willReturn(null);
+        $object->getProductFamily()->willReturn(null);
+        $object->getStatus()->willReturn('available');
+        $object->getDetailsData()->willReturn([]);
+
+        $result = $this->normalizer->enhance($object->reveal(), []);
+
+        $this->assertSame('available', $result['status']);
+    }
+
+    public function testEnhanceEmitsDetailsBucketUnchanged(): void
+    {
+        $dc = $this->makeDimensionContent();
+        $dc->setDetailsData([
+            'shortDescription' => '<p>Hi</p>',
+            'image' => ['id' => 5],
+            'documents' => ['ids' => [1, 2]],
+        ]);
+
+        $result = $this->normalizer->enhance($dc, []);
+
+        // the stored value already carries the admin wire-shape — no reshaping here
+        $this->assertSame([
+            'shortDescription' => '<p>Hi</p>',
+            'image' => ['id' => 5],
+            'documents' => ['ids' => [1, 2]],
+        ], $result['details']);
+    }
+
+    public function testEnhanceEmitsEmptyDetailsBucket(): void
+    {
+        $dc = $this->makeDimensionContent();
+
+        $result = $this->normalizer->enhance($dc, []);
+
+        $this->assertSame([], $result['details']);
+    }
+
+    public function testEnhanceEmitsUnknownProjectFieldUntouched(): void
+    {
+        $dc = $this->makeDimensionContent();
+        $dc->setDetailsData(['datasheet' => ['id' => 9]]);
+
+        $result = $this->normalizer->enhance($dc, []);
+
+        $this->assertSame(['datasheet' => ['id' => 9]], $result['details']);
     }
 }

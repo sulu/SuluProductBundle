@@ -15,6 +15,9 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query\Expr\Join;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataLoaderInterface;
+use Sulu\Bundle\MediaBundle\Entity\MediaInterface;
 use Sulu\Bundle\ReferenceBundle\Application\Collector\ReferenceCollector;
 use Sulu\Bundle\ReferenceBundle\Application\Refresh\ReferenceRefresherInterface;
 use Sulu\Bundle\ReferenceBundle\Domain\Repository\ReferenceRepositoryInterface;
@@ -40,11 +43,18 @@ class ProductReferenceRefresher implements ReferenceRefresherInterface
      */
     private EntityRepository $productDimensionContentRepository;
 
+    /**
+     * Details media fields are stored as plain data and bypass the content-view resolve
+     * pipeline that normally feeds the reference index, so they are registered explicitly.
+     */
+    private const MEDIA_FIELD_TYPES = ['single_media_selection', 'media_selection'];
+
     public function __construct(
         private EntityManagerInterface $entityManager,
         private ReferenceRepositoryInterface $referenceRepository,
         private ContentViewResolverInterface $contentViewResolver,
         private ContentMergerInterface $contentMerger,
+        private FormMetadataLoaderInterface $formMetadataLoader,
     ) {
         /** @var EntityRepository<ProductDimensionContentInterface> $repository */
         $repository = $this->entityManager->getRepository(ProductDimensionContentInterface::class);
@@ -126,7 +136,77 @@ class ProductReferenceRefresher implements ReferenceRefresherInterface
             }
         }
 
+        $this->addDetailsMediaReferences($productDimensionContent, $referenceCollector);
+
         $referenceCollector->persistReferences();
+    }
+
+    /**
+     * Registers a reference for every media-typed `details/<field>` declared on the product
+     * details form, so a project's own media field is indexed without any bundle change.
+     */
+    private function addDetailsMediaReferences(
+        ProductDimensionContentInterface $productDimensionContent,
+        ReferenceCollector $referenceCollector,
+    ): void {
+        $detailsData = $productDimensionContent->getDetailsData();
+        if ([] === $detailsData) {
+            return;
+        }
+
+        $locale = $productDimensionContent->getLocale() ?? '';
+
+        $formMetadata = $this->formMetadataLoader->getMetadata(ProductInterface::FORM_KEY, $locale, []);
+        if (!$formMetadata instanceof FormMetadata) {
+            return;
+        }
+
+        foreach ($formMetadata->getFlatFieldMetadata() as $property) {
+            if (!\in_array($property->getType(), self::MEDIA_FIELD_TYPES, true)) {
+                continue;
+            }
+
+            $parts = \explode('/', $property->getName(), 2);
+            if ('details' !== $parts[0] || !isset($parts[1])) {
+                continue;
+            }
+
+            $field = $parts[1];
+            $value = $detailsData[$field] ?? null;
+            if (!\is_array($value)) {
+                continue;
+            }
+
+            if ('single_media_selection' === $property->getType()) {
+                $id = $value['id'] ?? null;
+                if (\is_int($id) || (\is_string($id) && \is_numeric($id))) {
+                    $referenceCollector->addReference(
+                        MediaInterface::RESOURCE_KEY,
+                        (string) $id,
+                        $field,
+                    );
+                }
+
+                continue;
+            }
+
+            $ids = $value['ids'] ?? null;
+            if (!\is_array($ids)) {
+                continue;
+            }
+
+            foreach ($ids as $index => $mediaId) {
+                if (!\is_int($mediaId) && !(\is_string($mediaId) && \is_numeric($mediaId))) {
+                    continue;
+                }
+
+                $referenceCollector->addReference(
+                    MediaInterface::RESOURCE_KEY,
+                    (string) $mediaId,
+                    $field . '/' . $index,
+                );
+            }
+        }
     }
 
     /**

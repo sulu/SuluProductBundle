@@ -212,6 +212,52 @@ class ProductDimensionContentTest extends TestCase
         $this->assertSame($family, $dc->getProductFamily());
     }
 
+    public function testSetStatusAndGet(): void
+    {
+        $dc = new ProductDimensionContent(new Product());
+        $this->assertSame('available', $dc->getStatus());
+        $dc->setStatus('announced');
+        $this->assertSame('announced', $dc->getStatus());
+    }
+
+    public function testSetStatusIsFluent(): void
+    {
+        $dc = new ProductDimensionContent(new Product());
+        $this->assertSame($dc, $dc->setStatus('announced'));
+        $this->assertSame('announced', $dc->getStatus());
+    }
+
+    public function testDetailsDataRoundTripsVerbatim(): void
+    {
+        $dc = new ProductDimensionContent(new Product());
+
+        $details = [
+            'shortDescription' => '<p>Hello</p>',
+            'image' => ['id' => 5],
+            'documents' => ['ids' => [1, 2]],
+            'custom' => ['anything' => true],
+        ];
+
+        $dc->setDetailsData($details);
+
+        // stored verbatim — no coercion, unknown keys preserved
+        $this->assertSame($details, $dc->getDetailsData());
+    }
+
+    public function testDetailsDataDefaultsToEmptyArray(): void
+    {
+        $dc = new ProductDimensionContent(new Product());
+
+        $this->assertSame([], $dc->getDetailsData());
+    }
+
+    public function testSetDetailsDataIsFluent(): void
+    {
+        $dc = new ProductDimensionContent(new Product());
+
+        $this->assertSame($dc, $dc->setDetailsData(['shortDescription' => '<p>x</p>']));
+    }
+
     public function testGetAttributesReturnsEmptyCollectionInitially(): void
     {
         $dc = new ProductDimensionContent(new Product());

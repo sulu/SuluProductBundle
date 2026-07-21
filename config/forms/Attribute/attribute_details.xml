@@ -41,11 +41,14 @@
         </property>
 
         <property name="localized" type="checkbox" colspan="2"
-                  visibleCondition='type == "text" || type == "json"'
-                  disabledCondition="!!id">
+                  disabledCondition='type != "text" || !!id'>
             <meta>
                 <title>sulu_product.localized</title>
             </meta>
+
+            <params>
+                <param name="type" value="toggler"/>
+            </params>
         </property>
 
         <property name="group" type="single_attribute_group_selection" mandatory="true" colspan="9">

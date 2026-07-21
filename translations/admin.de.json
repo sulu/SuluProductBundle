@@ -86,5 +86,13 @@
     "sulu_product.measurement_family_volume": "Volumen",
     "sulu_product.measurement_family_weight": "Gewicht",
     "sulu_product.min": "Min",
-    "sulu_product.max": "Max"
+    "sulu_product.max": "Max",
+    "sulu_product.status": "Status",
+    "sulu_product.short_description": "Kurzbeschreibung",
+    "sulu_product.image": "Produktbild",
+    "sulu_product.documents": "Produktdokumente",
+    "sulu_product.product_status.announced": "Angekündigt",
+    "sulu_product.product_status.available": "Verfügbar",
+    "sulu_product.product_status.discontinued": "Eingestellt",
+    "sulu_product.invalid_status": "Der Status \"{status}\" ist kein gültiger Produktstatus."
 }

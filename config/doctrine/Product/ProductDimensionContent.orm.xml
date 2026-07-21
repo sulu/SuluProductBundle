@@ -36,6 +36,8 @@
 
         <field name="code" type="string" length="255" nullable="true"/>
         <field name="externalIdentifier" type="string" length="255" nullable="true" column="external_identifier"/>
+        <field name="status" type="string" length="255" nullable="false"/>
+        <field name="detailsData" type="json" nullable="false" column="details_data"/>
 
         <many-to-one field="productFamily"
                      target-entity="Sulu\Product\Domain\Model\ProductFamilyInterface">

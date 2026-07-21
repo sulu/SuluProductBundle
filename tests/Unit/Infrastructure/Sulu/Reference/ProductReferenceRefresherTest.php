@@ -19,6 +19,9 @@ use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataLoaderInterface;
 use Sulu\Bundle\ReferenceBundle\Domain\Model\ReferenceInterface;
 use Sulu\Bundle\ReferenceBundle\Domain\Repository\ReferenceRepositoryInterface;
 use Sulu\Bundle\TestBundle\Testing\SetGetPrivatePropertyTrait;
@@ -56,6 +59,9 @@ class ProductReferenceRefresherTest extends TestCase
     /** @var ObjectProphecy<EntityRepository<ProductDimensionContentInterface>> */
     private ObjectProphecy $productDimensionContentRepository;
 
+    /** @var ObjectProphecy<FormMetadataLoaderInterface> */
+    private ObjectProphecy $formMetadataLoader;
+
     protected function setUp(): void
     {
         $this->entityManager = $this->prophesize(EntityManagerInterface::class);
@@ -69,12 +75,36 @@ class ProductReferenceRefresherTest extends TestCase
         $this->entityManager->getRepository(ProductDimensionContentInterface::class)
             ->willReturn($this->productDimensionContentRepository->reveal());
 
+        $this->formMetadataLoader = $this->prophesize(FormMetadataLoaderInterface::class);
+        $this->formMetadataLoader->getMetadata(Argument::cetera())->willReturn(null);
+
         $this->refresher = new ProductReferenceRefresher(
             $this->entityManager->reveal(),
             $this->referenceRepository->reveal(),
             $this->contentViewResolver->reveal(),
-            $this->contentMerger->reveal()
+            $this->contentMerger->reveal(),
+            $this->formMetadataLoader->reveal()
         );
+    }
+
+    /**
+     * @param array<string, string> $fields field name => type
+     */
+    private function givenFormMetadata(array $fields): void
+    {
+        $items = [];
+        foreach ($fields as $name => $type) {
+            $field = new FieldMetadata($name);
+            $field->setType($type);
+            $items[$name] = $field;
+        }
+
+        $formMetadata = new FormMetadata();
+        $formMetadata->setKey(ProductInterface::FORM_KEY);
+        $formMetadata->setItems($items);
+
+        $this->formMetadataLoader->getMetadata(ProductInterface::FORM_KEY, Argument::type('string'), [])
+            ->willReturn($formMetadata);
     }
 
     public function testGetResourceKey(): void
@@ -291,6 +321,218 @@ class ProductReferenceRefresherTest extends TestCase
         \iterator_to_array($this->refresher->refresh());
 
         $this->referenceRepository->add(Argument::type(ReferenceInterface::class))
+            ->shouldHaveBeenCalledOnce();
+    }
+
+    public function testRefreshRegistersDetailsMediaReferences(): void
+    {
+        $this->givenFormMetadata([
+            'details/shortDescription' => 'text_editor',
+            'details/image' => 'single_media_selection',
+            'details/documents' => 'media_selection',
+        ]);
+
+        $product = new Product('product-uuid-media');
+        $dimensionContent = new ProductDimensionContent($product);
+        $dimensionContent->setLocale('en');
+        $dimensionContent->setStage('live');
+        $dimensionContent->setDetailsData([
+            'shortDescription' => '<p>not a media field</p>',
+            'image' => ['id' => 42],
+            'documents' => ['ids' => [7, 9]],
+        ]);
+
+        $query = $this->stubQueryBuilderNoFilter();
+        $query->toIterable()->willReturn(new \ArrayIterator([$dimensionContent]));
+
+        $this->contentMerger->merge(Argument::type(DimensionContentCollection::class))
+            ->willReturn($dimensionContent);
+
+        // No template content references — only the Details media fields.
+        $this->contentViewResolver->getContentViews(Argument::any())
+            ->willReturn([]);
+
+        /** @var ObjectProphecy<ReferenceInterface> $referenceModel */
+        $referenceModel = $this->prophesize(ReferenceInterface::class);
+        $referenceModel->equals(Argument::any())->willReturn(false);
+
+        $this->referenceRepository->create(
+            Argument::type('string'),
+            Argument::type('string'),
+            Argument::type('string'),
+            Argument::type('string'),
+            Argument::type('string'),
+            Argument::type('string'),
+            Argument::type('string'),
+            Argument::type('string'),
+            Argument::type('array'),
+        )->willReturn($referenceModel->reveal());
+
+        $this->referenceRepository->removeBy(Argument::cetera());
+        $this->referenceRepository->add(Argument::type(ReferenceInterface::class));
+
+        \iterator_to_array($this->refresher->refresh());
+
+        // The image and both documents are registered as `media` references.
+        $this->referenceRepository->create('media', '42', Argument::cetera())
+            ->shouldHaveBeenCalledOnce();
+        $this->referenceRepository->create('media', '7', Argument::cetera())
+            ->shouldHaveBeenCalledOnce();
+        $this->referenceRepository->create('media', '9', Argument::cetera())
+            ->shouldHaveBeenCalledOnce();
+        // the non-media details field must not produce a reference
+        $this->referenceRepository->add(Argument::type(ReferenceInterface::class))
+            ->shouldHaveBeenCalledTimes(3);
+    }
+
+    /**
+     * Drives a full refresh over a single dimension content with no template content views,
+     * so only the details-media reference registration is exercised.
+     */
+    private function runRefreshWith(ProductDimensionContent $dimensionContent): void
+    {
+        $query = $this->stubQueryBuilderNoFilter();
+        $query->toIterable()->willReturn(new \ArrayIterator([$dimensionContent]));
+
+        $this->contentMerger->merge(Argument::type(DimensionContentCollection::class))
+            ->willReturn($dimensionContent);
+
+        $this->contentViewResolver->getContentViews(Argument::any())->willReturn([]);
+
+        /** @var ObjectProphecy<ReferenceInterface> $referenceModel */
+        $referenceModel = $this->prophesize(ReferenceInterface::class);
+        $referenceModel->equals(Argument::any())->willReturn(false);
+
+        $this->referenceRepository->create(
+            Argument::type('string'),
+            Argument::type('string'),
+            Argument::type('string'),
+            Argument::type('string'),
+            Argument::type('string'),
+            Argument::type('string'),
+            Argument::type('string'),
+            Argument::type('string'),
+            Argument::type('array'),
+        )->willReturn($referenceModel->reveal());
+
+        $this->referenceRepository->removeBy(Argument::cetera());
+        $this->referenceRepository->add(Argument::type(ReferenceInterface::class));
+
+        \iterator_to_array($this->refresher->refresh());
+    }
+
+    private function makeDimensionContentWithDetails(string $uuid, mixed $details, ?string $locale = 'en'): ProductDimensionContent
+    {
+        $dimensionContent = new ProductDimensionContent(new Product($uuid));
+        $dimensionContent->setLocale($locale);
+        $dimensionContent->setStage('live');
+        /** @var array<string, mixed> $details */
+        $dimensionContent->setDetailsData($details);
+
+        return $dimensionContent;
+    }
+
+    public function testRefreshNeverProcessesTheUnlocalizedRowOnItsOwn(): void
+    {
+        $this->givenFormMetadata(['details/image' => 'single_media_selection']);
+
+        // an unlocalized row is only ever merged into a localized one, never processed alone,
+        // which is why the merged content always carries a locale
+        $this->runRefreshWith($this->makeDimensionContentWithDetails('p-no-locale', ['image' => ['id' => 1]], null));
+
+        $this->referenceRepository->add(Argument::cetera())->shouldNotHaveBeenCalled();
+    }
+
+    public function testRefreshSkipsDetailsMediaWhenFormMetadataIsMissing(): void
+    {
+        // no givenFormMetadata() — the loader returns null for an unknown form
+        $this->runRefreshWith($this->makeDimensionContentWithDetails('p-no-form', ['image' => ['id' => 1]]));
+
+        $this->referenceRepository->add(Argument::cetera())->shouldNotHaveBeenCalled();
+    }
+
+    public function testRefreshIgnoresMediaFieldOutsideTheDetailsBucket(): void
+    {
+        // a media field that is not a details/* property must not be read from the bucket
+        $this->givenFormMetadata(['image' => 'single_media_selection']);
+
+        $this->runRefreshWith($this->makeDimensionContentWithDetails('p-bare', ['image' => ['id' => 1]]));
+
+        $this->referenceRepository->add(Argument::cetera())->shouldNotHaveBeenCalled();
+    }
+
+    public function testRefreshSkipsDetailsMediaWithNonArrayValue(): void
+    {
+        $this->givenFormMetadata(['details/image' => 'single_media_selection']);
+
+        // a legacy bare-id value predates the wire-shape storage and must not crash
+        $this->runRefreshWith($this->makeDimensionContentWithDetails('p-bare-id', ['image' => 5]));
+
+        $this->referenceRepository->add(Argument::cetera())->shouldNotHaveBeenCalled();
+    }
+
+    public function testRefreshSkipsMediaSelectionWithoutIdsList(): void
+    {
+        $this->givenFormMetadata(['details/documents' => 'media_selection']);
+
+        $this->runRefreshWith($this->makeDimensionContentWithDetails('p-no-ids', ['documents' => ['ids' => 'nope']]));
+
+        $this->referenceRepository->add(Argument::cetera())->shouldNotHaveBeenCalled();
+    }
+
+    public function testRefreshDropsNonNumericMediaIds(): void
+    {
+        $this->givenFormMetadata(['details/documents' => 'media_selection']);
+
+        $this->runRefreshWith($this->makeDimensionContentWithDetails('p-mixed', ['documents' => ['ids' => [4, 'abc', null]]]));
+
+        $this->referenceRepository->create('media', '4', Argument::cetera())->shouldHaveBeenCalledOnce();
+        $this->referenceRepository->add(Argument::type(ReferenceInterface::class))->shouldHaveBeenCalledOnce();
+    }
+
+    public function testRefreshRegistersProjectDefinedDetailsMediaField(): void
+    {
+        // a field the bundle knows nothing about, declared only in a project's form fragment
+        $this->givenFormMetadata([
+            'details/datasheet' => 'single_media_selection',
+        ]);
+
+        $product = new Product('product-uuid-datasheet');
+        $dimensionContent = new ProductDimensionContent($product);
+        $dimensionContent->setLocale('en');
+        $dimensionContent->setStage('live');
+        $dimensionContent->setDetailsData(['datasheet' => ['id' => 77]]);
+
+        $query = $this->stubQueryBuilderNoFilter();
+        $query->toIterable()->willReturn(new \ArrayIterator([$dimensionContent]));
+
+        $this->contentMerger->merge(Argument::type(DimensionContentCollection::class))
+            ->willReturn($dimensionContent);
+
+        $this->contentViewResolver->getContentViews(Argument::any())->willReturn([]);
+
+        /** @var ObjectProphecy<ReferenceInterface> $referenceModel */
+        $referenceModel = $this->prophesize(ReferenceInterface::class);
+        $referenceModel->equals(Argument::any())->willReturn(false);
+
+        $this->referenceRepository->create(
+            Argument::type('string'),
+            Argument::type('string'),
+            Argument::type('string'),
+            Argument::type('string'),
+            Argument::type('string'),
+            Argument::type('string'),
+            Argument::type('string'),
+            Argument::type('string'),
+            Argument::type('array'),
+        )->willReturn($referenceModel->reveal());
+
+        $this->referenceRepository->removeBy(Argument::cetera());
+        $this->referenceRepository->add(Argument::type(ReferenceInterface::class));
+
+        \iterator_to_array($this->refresher->refresh());
+
+        $this->referenceRepository->create('media', '77', Argument::cetera())
             ->shouldHaveBeenCalledOnce();
     }
 }

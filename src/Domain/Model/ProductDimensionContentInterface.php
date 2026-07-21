@@ -31,6 +31,8 @@ interface ProductDimensionContentInterface extends DimensionContentInterface, Ex
 {
     public const RESOURCE_KEY = 'product_contents';
 
+    public const DEFAULT_STATUS = 'available';
+
     public function getTitle(): ?string;
 
     public function setTitle(?string $title): static;
@@ -73,4 +75,18 @@ interface ProductDimensionContentInterface extends DimensionContentInterface, Ex
     public function addAttribute(ProductAttributeValueInterface $attribute): static;
 
     public function removeAttribute(ProductAttributeValueInterface $attribute): static;
+
+    public function getStatus(): string;
+
+    public function setStatus(string $status): static;
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function getDetailsData(): array;
+
+    /**
+     * @param array<string, mixed> $detailsData
+     */
+    public function setDetailsData(array $detailsData): static;
 }

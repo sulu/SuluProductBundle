@@ -68,6 +68,13 @@ class ProductDimensionContent implements ProductDimensionContentInterface
      */
     protected Collection $attributes;
 
+    protected string $status = self::DEFAULT_STATUS;
+
+    /**
+     * @var array<string, mixed>
+     */
+    protected array $detailsData = [];
+
     public function __construct(ProductInterface $product)
     {
         $this->product = $product;
@@ -254,6 +261,36 @@ class ProductDimensionContent implements ProductDimensionContentInterface
     public function removeAttribute(ProductAttributeValueInterface $attribute): static
     {
         $this->attributes->removeElement($attribute);
+
+        return $this;
+    }
+
+    public function getStatus(): string
+    {
+        return $this->status;
+    }
+
+    public function setStatus(string $status): static
+    {
+        $this->status = $status;
+
+        return $this;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function getDetailsData(): array
+    {
+        return $this->detailsData;
+    }
+
+    /**
+     * @param array<string, mixed> $detailsData
+     */
+    public function setDetailsData(array $detailsData): static
+    {
+        $this->detailsData = $detailsData;
 
         return $this;
     }

@@ -81,6 +81,12 @@
             <joins ref="unlocalizedDimensionContent"/>
         </property>
 
+        <property name="status" translation="sulu_product.status" visibility="yes">
+            <field-name>status</field-name>
+            <entity-name>unlocalizedDimensionContent</entity-name>
+            <joins ref="unlocalizedDimensionContent"/>
+        </property>
+
         <property name="created" translation="sulu_admin.created" visibility="no">
             <field-name>created</field-name>
             <entity-name>dimensionContent</entity-name>
