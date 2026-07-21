@@ -185,9 +185,14 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
                 [
                     'type' => 'object',
                     'properties' => [
-                        'attributes/7' => ['type' => 'number', 'minimum' => 0.0, 'maximum' => 10.0],
+                        'attributes' => [
+                            'type' => 'object',
+                            'properties' => [
+                                7 => ['type' => 'number', 'minimum' => 0.0, 'maximum' => 10.0],
+                            ],
+                            'required' => ['7'],
+                        ],
                     ],
-                    'required' => ['attributes/7'],
                 ],
             ],
         ], $schema);

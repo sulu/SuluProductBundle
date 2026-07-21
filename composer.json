@@ -11,7 +11,7 @@
         "doctrine/dbal": "^3.9 || ^4.0",
         "doctrine/orm": "^2.17.3 || ^3.3",
         "sulu/messenger": "^1.0",
-        "sulu/sulu": "~3.0",
+        "sulu/sulu": "^3.0.8",
         "symfony/config": "^6.4 || ^7.1",
         "symfony/dependency-injection": "^6.4 || ^7.1",
         "symfony/event-dispatcher": "^6.4 || ^7.1",
