@@ -128,26 +128,28 @@ class ProductDetailsMergerTest extends TestCase
         $this->assertSame('EXT-KEEP', $target->getExternalIdentifier());
     }
 
-    public function testMergesStatus(): void
+    public function testMergesStatusFromUnlocalizedSource(): void
     {
         $source = $this->makeDimensionContent();
-        $source->setStatus('available');
+        $source->setStatus('discontinued');
         $target = $this->makeDimensionContent();
 
         $this->merger->merge($target, $source);
 
-        $this->assertSame('available', $target->getStatus());
+        $this->assertSame('discontinued', $target->getStatus());
     }
 
-    public function testSkipsStatusWhenSourceNull(): void
+    public function testSkipsStatusFromLocalizedSource(): void
     {
         $source = $this->makeDimensionContent();
+        $source->setLocale('en');
+        $source->setStatus('announced');
         $target = $this->makeDimensionContent();
-        $target->setStatus('unavailable');
+        $target->setStatus('discontinued');
 
         $this->merger->merge($target, $source);
 
-        $this->assertSame('unavailable', $target->getStatus());
+        $this->assertSame('discontinued', $target->getStatus());
     }
 
     public function testMergesDetailsBucketPerKeyLocalizedWins(): void
@@ -208,7 +210,8 @@ class ProductDetailsMergerTest extends TestCase
         $source->getCode()->willReturn(null);
         $source->getExternalIdentifier()->willReturn(null);
         $source->getProductFamily()->willReturn($family->reveal());
-        $source->getStatus()->willReturn(null);
+        $source->getLocale()->willReturn(null);
+        $source->getStatus()->willReturn('available');
         $source->getDetailsData()->willReturn([]);
 
         $target = $this->makeDimensionContent();
@@ -226,7 +229,8 @@ class ProductDetailsMergerTest extends TestCase
         $source->getCode()->willReturn(null);
         $source->getExternalIdentifier()->willReturn(null);
         $source->getProductFamily()->willReturn(null);
-        $source->getStatus()->willReturn(null);
+        $source->getLocale()->willReturn(null);
+        $source->getStatus()->willReturn('available');
         $source->getDetailsData()->willReturn([]);
 
         /** @var ObjectProphecy<ProductFamilyInterface> $keepFamily */

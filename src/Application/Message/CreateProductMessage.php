@@ -24,7 +24,7 @@ namespace Sulu\Product\Application\Message;
  *     author?: int|null,
  *     authored?: string,
  *     attributes?: array<int, mixed>,
- *     status?: string|null,
+ *     status?: string,
  *     details?: array<string, mixed>,
  * }
  */

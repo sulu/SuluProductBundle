@@ -79,9 +79,9 @@ class ProductDetailsDataMapper implements DataMapperInterface
             $unlocalizedDimensionContent->setProductFamily($productFamily);
         }
 
-        if (\array_key_exists('status', $data)) {
-            $status = \is_string($data['status']) ? $data['status'] : null;
-            if (null !== $status && !\in_array($status, $this->allowedStatuses, true)) {
+        if (\array_key_exists('status', $data) && \is_string($data['status'])) {
+            $status = $data['status'];
+            if (!\in_array($status, $this->allowedStatuses, true)) {
                 throw new InvalidProductStatusException($status, $this->allowedStatuses);
             }
             $unlocalizedDimensionContent->setStatus($status);

@@ -24,7 +24,7 @@ namespace Sulu\Product\Application\Message;
  *     template?: string,
  *     productFamily?: string,
  *     attributes?: array<int, mixed>,
- *     status?: string|null,
+ *     status?: string,
  *     details?: array<string, mixed>,
  * }
  */

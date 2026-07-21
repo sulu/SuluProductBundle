@@ -215,9 +215,9 @@ class ProductDimensionContentTest extends TestCase
     public function testSetStatusAndGet(): void
     {
         $dc = new ProductDimensionContent(new Product());
-        $this->assertNull($dc->getStatus());
-        $dc->setStatus('available');
         $this->assertSame('available', $dc->getStatus());
+        $dc->setStatus('announced');
+        $this->assertSame('announced', $dc->getStatus());
     }
 
     public function testSetStatusIsFluent(): void
