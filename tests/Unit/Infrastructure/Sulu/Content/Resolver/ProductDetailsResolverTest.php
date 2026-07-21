@@ -149,7 +149,8 @@ class ProductDetailsResolverTest extends TestCase
         self::assertNull($this->contentViewAt($dc, 'code')->getContent());
         self::assertNull($this->contentViewAt($dc, 'externalIdentifier')->getContent());
         self::assertNull($this->contentViewAt($dc, 'productFamily')->getContent());
-        self::assertNull($this->contentViewAt($dc, 'status')->getContent());
+        // status is non-nullable and defaults to "available"
+        self::assertSame('available', $this->contentViewAt($dc, 'status')->getContent());
     }
 
     public function testResolvesBucketFieldByItsXmlType(): void
