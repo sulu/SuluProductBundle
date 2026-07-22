@@ -113,6 +113,7 @@ use Sulu\Product\Infrastructure\Sulu\Content\ProductSmartContentProvider;
 use Sulu\Product\Infrastructure\Sulu\Content\ProductTeaserProvider;
 use Sulu\Product\Infrastructure\Sulu\Content\PropertyResolver\ProductSelectionPropertyResolver;
 use Sulu\Product\Infrastructure\Sulu\Content\PropertyResolver\SingleProductSelectionPropertyResolver;
+use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductDetailsResolver;
 use Sulu\Product\Infrastructure\Sulu\Content\ResourceLoader\ProductResourceLoader;
 use Sulu\Product\Infrastructure\Sulu\Content\Select\AttributeSelectService;
 use Sulu\Product\Infrastructure\Sulu\Content\Select\AttributeTypeSelectService;
@@ -777,6 +778,14 @@ final class SuluProductBundle extends AbstractBundle
             ->class(ProductSelectionPropertyResolver::class)
             ->tag('sulu_content.property_resolver');
 
+        $services->set('sulu_product.product_details_resolver')
+            ->class(ProductDetailsResolver::class)
+            ->args([
+                new Reference('sulu_admin.xml_form_metadata_loader'),
+                new Reference('sulu_content.metadata_resolver'),
+            ])
+            ->tag('sulu_content.content_resolver', ['type' => 'product']);
+
         $services->set('sulu_product.product_resource_loader')
             ->class(ProductResourceLoader::class)
             ->args([
@@ -863,7 +872,6 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_reference.reference_repository'),
                 new Reference('sulu_content.content_view_resolver'),
                 new Reference('sulu_content.content_merger'),
-                new Reference('sulu_admin.xml_form_metadata_loader'),
             ])
             ->tag('sulu_reference.refresher');
 
