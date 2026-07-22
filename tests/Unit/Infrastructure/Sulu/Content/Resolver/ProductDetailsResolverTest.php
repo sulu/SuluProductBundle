@@ -52,8 +52,7 @@ class ProductDetailsResolverTest extends TestCase
         $this->formMetadataLoader = $this->prophesize(FormMetadataLoaderInterface::class);
         $this->formMetadataLoader->getMetadata(Argument::cetera())->willReturn(null);
 
-        // the real property resolvers — the bucket is interpreted by the resolver its XML
-        // `type` selects, which is the whole point of storing the wire-shape verbatim
+        // real property resolvers, selected by each field's XML type
         $metadataResolver = new MetadataResolver(
             new PropertyResolverProvider(new \ArrayIterator([
                 'default' => new DefaultPropertyResolver(),
@@ -166,8 +165,7 @@ class ProductDetailsResolverTest extends TestCase
 
     public function testProjectDetailsFieldOverridesCollidingEntityField(): void
     {
-        // a project may reuse an entity field's bare name in the details bucket;
-        // the details field wins (array_merge — later keys override)
+        // a project's details/<field> overrides a colliding entity-field name
         $this->givenFormMetadata(['details/status' => 'text_line']);
 
         $dc = $this->makeDimensionContent(['status' => 'from-details']);
@@ -180,8 +178,7 @@ class ProductDetailsResolverTest extends TestCase
     {
         $this->givenFormMetadata(['details/image' => 'single_media_selection']);
 
-        // regression: the bucket stores {"id": 5} verbatim, so the property resolver gets the
-        // array it expects. Storing a bare 5 made it bail and emit id: null.
+        // {"id": 5} stored verbatim reaches the resolver as the array it expects
         $dc = $this->makeDimensionContent(['image' => ['id' => 5]]);
 
         $resolvable = $this->contentViewAt($dc, 'image')->getContent();
@@ -235,7 +232,6 @@ class ProductDetailsResolverTest extends TestCase
 
     public function testResolvesProjectDefinedBucketField(): void
     {
-        // a field the bundle knows nothing about, declared only in a project's form fragment
         $this->givenFormMetadata(['details/datasheet' => 'single_media_selection']);
 
         $dc = $this->makeDimensionContent(['datasheet' => ['id' => 77]]);

@@ -66,9 +66,7 @@ class ProductDetailsResolverTest extends SuluTestCase
         $dimensionContent = $product->createDimensionContent();
         $dimensionContent->setLocale('en');
         $dimensionContent->setStage('draft');
-        // ContentResolver's TemplateResolver requires a registered template key
-        // to resolve the (unrelated) template content section; "product" is the
-        // template registered for the frontend product template type in the test app.
+        // TemplateResolver needs a registered template key to resolve the template section
         $dimensionContent->setTemplateKey('product');
         $dimensionContent->setCode('SKU-FE');
         $dimensionContent->setStatus('available');
@@ -85,9 +83,8 @@ class ProductDetailsResolverTest extends SuluTestCase
         $productData = $result['extension']['product'];
         self::assertSame('SKU-FE', $productData['code']);
         self::assertSame('available', $productData['status']);
-        // resolved through the real property resolver registry, driven by the XML `type`
         self::assertSame('<p>hi</p>', $productData['shortDescription']);
-        // No media set → graceful empty shapes (missing media resolves the same way).
+        // no media set → empty shapes
         self::assertNull($productData['image']);
         self::assertSame([], $productData['documents']);
     }
@@ -104,7 +101,7 @@ class ProductDetailsResolverTest extends SuluTestCase
         $dimensionContent->setLocale('en');
         $dimensionContent->setStage('draft');
         $dimensionContent->setTemplateKey('product');
-        // the admin wire-shape, stored verbatim — the regression this whole change fixes
+        // admin wire-shape, stored verbatim
         $dimensionContent->setDetailsData(['image' => ['id' => $media->getId()]]);
         $product->addDimensionContent($dimensionContent);
 
@@ -115,9 +112,7 @@ class ProductDetailsResolverTest extends SuluTestCase
         $result = $this->contentResolver->resolve($dimensionContent);
         $productData = $result['extension']['product'];
 
-        // a bare int made SingleMediaSelectionPropertyResolver bail and emit id: null; storing
-        // the wire-shape verbatim means the id survives through to the media resource loader,
-        // which resolves it to the real media
+        // the wire-shape id survives to the resource loader and resolves to the real media
         $image = $productData['image'];
         self::assertInstanceOf(Media::class, $image);
         self::assertSame($media->getId(), $image->getId());
