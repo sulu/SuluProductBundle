@@ -23,7 +23,6 @@ use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeTranslation;
 use Sulu\Product\Domain\Model\Product;
-use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
@@ -58,7 +57,7 @@ class ProductVariantControllerTest extends SuluTestCase
         $normalized = [];
         foreach ($attributes as $attributeId => $entry) {
             $normalized[$attributeId] = [
-                'enabled' => $entry['enabled'] ?? true,
+                'enabled' => $entry['enabled'],
                 'required' => $entry['required'] ?? false,
                 'variant' => $entry['variant'] ?? false,
             ];
@@ -194,7 +193,6 @@ class ProductVariantControllerTest extends SuluTestCase
         );
 
         $dimensionContent = $contentManager->resolve($product, $dimensionAttributes);
-        $this->assertInstanceOf(ProductDimensionContentInterface::class, $dimensionContent);
 
         $ids = [];
         foreach ($dimensionContent->getAttributes() as $attributeValue) {
@@ -554,6 +552,7 @@ class ProductVariantControllerTest extends SuluTestCase
         $created = \json_decode((string) $this->client->getResponse()->getContent(), true);
         $this->assertIsArray($created);
         $childId = $created['id'];
+        $this->assertIsString($childId);
 
         $this->client->request('DELETE', '/admin/api/products/' . $parentId . '/variants/' . $childId . '.json?locale=en');
         $this->assertHttpStatusCode(204, $this->client->getResponse());

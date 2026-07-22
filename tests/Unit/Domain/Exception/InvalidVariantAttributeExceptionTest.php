@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Sulu\Product\Tests\Unit\Domain\Exception;
 
 use PHPUnit\Framework\TestCase;
-use Sulu\Component\Rest\Exception\TranslationErrorMessageExceptionInterface;
 use Sulu\Product\Domain\Exception\InvalidVariantAttributeException;
 
 class InvalidVariantAttributeExceptionTest extends TestCase
@@ -23,7 +22,6 @@ class InvalidVariantAttributeExceptionTest extends TestCase
     {
         $exception = new InvalidVariantAttributeException(7);
 
-        self::assertInstanceOf(TranslationErrorMessageExceptionInterface::class, $exception);
         self::assertSame('sulu_product.invalid_variant_attribute', $exception->getMessageTranslationKey());
         self::assertSame(['{attributeId}' => 7], $exception->getMessageTranslationParameters());
         self::assertStringContainsString('7', $exception->getMessage());
