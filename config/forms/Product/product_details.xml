@@ -22,23 +22,23 @@
             </meta>
 
             <params>
-                <param name="default_value" value="simple"/>
+                <param name="default_value" value="product"/>
                 <param name="values" type="collection">
-                    <param name="simple">
+                    <param name="product">
                         <meta>
-                            <title>sulu_product.product_type_simple</title>
+                            <title>sulu_product.product_type_product</title>
                         </meta>
                     </param>
-                    <param name="variant">
+                    <param name="product_with_variants">
                         <meta>
-                            <title>sulu_product.product_type_variant</title>
+                            <title>sulu_product.product_type_product_with_variants</title>
                         </meta>
                     </param>
                 </param>
             </params>
         </property>
 
-        <property name="code" type="text_line" colspan="3" visibleCondition="type != 'variant'">
+        <property name="code" type="text_line" colspan="3" visibleCondition="type != 'product_with_variants'">
             <meta>
                 <title>sulu_product.code</title>
             </meta>

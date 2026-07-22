@@ -85,7 +85,7 @@ class ProductVariantControllerTest extends SuluTestCase
         return $familyId;
     }
 
-    private function createProduct(string $familyId, string $title = 'My Product', string $type = ProductInterface::TYPE_SIMPLE): string
+    private function createProduct(string $familyId, string $title = 'My Product', string $type = ProductInterface::TYPE_PRODUCT): string
     {
         /** @var int $counter */
         static $counter = 0;
@@ -257,22 +257,22 @@ class ProductVariantControllerTest extends SuluTestCase
     {
         self::purgeDatabase();
         $familyId = $this->createProductFamily();
-        $variantParentId = $this->createProduct($familyId, 'Variant Parent Product', ProductInterface::TYPE_VARIANT);
-        $simpleId = $this->createProduct($familyId, 'Simple Product', ProductInterface::TYPE_SIMPLE);
+        $variantParentId = $this->createProduct($familyId, 'Variant Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $simpleId = $this->createProduct($familyId, 'Simple Product', ProductInterface::TYPE_PRODUCT);
 
         $this->client->request('GET', '/admin/api/products/' . $variantParentId . '.json?locale=en');
         $this->assertHttpStatusCode(200, $this->client->getResponse());
         $variantData = \json_decode((string) $this->client->getResponse()->getContent(), true);
         $this->assertIsArray($variantData);
         $this->assertArrayHasKey('type', $variantData);
-        $this->assertSame(ProductInterface::TYPE_VARIANT, $variantData['type']);
+        $this->assertSame(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS, $variantData['type']);
 
         $this->client->request('GET', '/admin/api/products/' . $simpleId . '.json?locale=en');
         $this->assertHttpStatusCode(200, $this->client->getResponse());
         $simpleData = \json_decode((string) $this->client->getResponse()->getContent(), true);
         $this->assertIsArray($simpleData);
         $this->assertArrayHasKey('type', $simpleData);
-        $this->assertSame(ProductInterface::TYPE_SIMPLE, $simpleData['type']);
+        $this->assertSame(ProductInterface::TYPE_PRODUCT, $simpleData['type']);
     }
 
     public function testGetNotFound(): void
@@ -493,45 +493,7 @@ class ProductVariantControllerTest extends SuluTestCase
         $this->assertIsArray($row);
         $this->assertSame('CX3-RD-L', $row['code']);
         $this->assertArrayHasKey('status', $row);
-        // No family/axis attributes on this variant, so the derived title is empty.
-        $this->assertSame('', $row['variantTitle']);
-    }
-
-    public function testCgetPayloadIncludesDerivedVariantTitle(): void
-    {
-        self::purgeDatabase();
-
-        $axisId = $this->createAttribute('size', 'Size');
-        $familyId = $this->createProductFamily([$axisId => ['enabled' => true, 'variant' => true]]);
-        $parentId = $this->createProduct($familyId, 'Parent Product');
-
-        $this->client->request(
-            'POST',
-            '/admin/api/products/' . $parentId . '/variants.json?locale=en',
-            [],
-            [],
-            [],
-            \json_encode([
-                'locale' => 'en',
-                'code' => 'CX3-RD-L',
-                'title' => 'Variant L',
-                'attributes' => [$axisId => 'L'],
-            ]) ?: null,
-        );
-        $this->assertHttpStatusCode(201, $this->client->getResponse());
-
-        $this->client->request('GET', '/admin/api/products/' . $parentId . '/variants.json?locale=en');
-        $this->assertHttpStatusCode(200, $this->client->getResponse());
-        $list = \json_decode((string) $this->client->getResponse()->getContent(), true);
-        $this->assertIsArray($list);
-        $this->assertIsArray($list['_embedded']);
-        $this->assertIsArray($list['_embedded']['product_variants']);
-        $this->assertCount(1, $list['_embedded']['product_variants']);
-
-        $row = $list['_embedded']['product_variants'][0];
-        $this->assertIsArray($row);
-        $this->assertSame('CX3-RD-L', $row['code']);
-        $this->assertSame('L', $row['variantTitle']);
+        $this->assertSame('Variant L', $row['name']);
     }
 
     public function testDelete(): void
@@ -565,7 +527,7 @@ class ProductVariantControllerTest extends SuluTestCase
     {
         self::purgeDatabase();
         $familyId = $this->createProductFamily();
-        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_VARIANT);
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
         $variantId = $this->createVariant($parentId, 'Variant L');
 
         $this->client->request('DELETE', '/admin/api/products/' . $parentId . '/variants/' . $variantId . '.json?locale=en');
@@ -609,7 +571,7 @@ class ProductVariantControllerTest extends SuluTestCase
     {
         self::purgeDatabase();
         $familyId = $this->createProductFamily();
-        $parentId = $this->createProduct($familyId, 'Variant Parent Product', ProductInterface::TYPE_VARIANT);
+        $parentId = $this->createProduct($familyId, 'Variant Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         $this->client->request('DELETE', '/admin/api/products/' . $parentId . '.json?locale=en');
         $this->assertHttpStatusCode(204, $this->client->getResponse());
@@ -645,14 +607,14 @@ class ProductVariantControllerTest extends SuluTestCase
         $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
         $this->assertIsArray($data);
         $this->assertArrayHasKey('type', $data);
-        $this->assertSame(ProductInterface::TYPE_VARIANT, $data['type']);
+        $this->assertSame(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS, $data['type']);
     }
 
     public function testDeletingParentTrashesEachVariant(): void
     {
         self::purgeDatabase();
         $familyId = $this->createProductFamily();
-        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_VARIANT);
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
         $variantId = $this->createVariant($parentId, 'Variant L');
 
         $this->client->request('DELETE', '/admin/api/products/' . $parentId . '.json?locale=en');
@@ -895,7 +857,7 @@ class ProductVariantControllerTest extends SuluTestCase
         $productRepository = $container->get(ProductRepositoryInterface::class);
         $variant = $productRepository->getOneBy(['uuid' => $childId]);
         $this->assertInstanceOf(Product::class, $variant);
-        $this->assertSame(ProductInterface::TYPE_SIMPLE, $variant->getType());
+        $this->assertSame(ProductInterface::TYPE_VARIANT, $variant->getType());
 
         // ... and a PUT attempting the same must also be ignored.
         $this->client->request(
@@ -915,14 +877,14 @@ class ProductVariantControllerTest extends SuluTestCase
 
         $variant = $productRepository->getOneBy(['uuid' => $childId]);
         $this->assertInstanceOf(Product::class, $variant);
-        $this->assertSame(ProductInterface::TYPE_SIMPLE, $variant->getType());
+        $this->assertSame(ProductInterface::TYPE_VARIANT, $variant->getType());
     }
 
     public function testPublishingParentPublishesItsVariants(): void
     {
         self::purgeDatabase();
         $familyId = $this->createProductFamily();
-        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_VARIANT);
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
         $variantId = $this->createVariant($parentId, 'Variant L');
 
         // Before publish: variant is draft-only.
@@ -943,7 +905,7 @@ class ProductVariantControllerTest extends SuluTestCase
     {
         self::purgeDatabase();
         $familyId = $this->createProductFamily();
-        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_VARIANT);
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         // Give the parent a second locale.
         $this->client->request(
@@ -1003,7 +965,7 @@ class ProductVariantControllerTest extends SuluTestCase
     {
         self::purgeDatabase();
         $familyId = $this->createProductFamily();
-        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_VARIANT);
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
         $variantId = $this->createVariant($parentId, 'Variant L');
 
         $this->client->request('POST', '/admin/api/products/' . $parentId . '.json?locale=en&action=publish');

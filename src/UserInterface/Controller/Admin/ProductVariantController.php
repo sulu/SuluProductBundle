@@ -35,7 +35,6 @@ use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
-use Sulu\Product\Infrastructure\Sulu\Admin\ProductVariantTitleBuilder;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -44,7 +43,6 @@ use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\HandleTrait;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
-use Webmozart\Assert\Assert;
 use Webmozart\Assert\InvalidArgumentException;
 
 /**
@@ -68,15 +66,10 @@ final class ProductVariantController implements SecuredControllerInterface
         private FieldDescriptorFactoryInterface $fieldDescriptorFactory,
         private DoctrineListBuilderFactoryInterface $listBuilderFactory,
         private RestHelperInterface $restHelper,
-        private ProductVariantTitleBuilder $variantTitleBuilder,
     ) {
         $this->messageBus = $messageBus;
     }
 
-    /**
-     * `variantTitle` is not a real DB field ({@see ProductVariantTitleBuilder}), so it is
-     * computed and merged into each row after the query has executed.
-     */
     public function cgetAction(Request $request, string $parentId): Response
     {
         $locale = $this->getLocale($request);
@@ -91,21 +84,8 @@ final class ProductVariantController implements SecuredControllerInterface
         $listBuilder->setParameter('locale', $locale);
         $listBuilder->where($fieldDescriptors['parent'], $parentId);
 
-        $dimensionAttributes = [
-            'locale' => $locale,
-            'stage' => DimensionContentInterface::STAGE_DRAFT,
-        ];
-
-        /** @var array<int, array<string, mixed>> $rows */
-        $rows = $listBuilder->execute();
-        foreach ($rows as $index => $row) {
-            $uuid = $row['id'];
-            Assert::string($uuid);
-            $rows[$index]['variantTitle'] = $this->resolveVariantTitle($uuid, $dimensionAttributes, $locale);
-        }
-
         $listRepresentation = new PaginatedRepresentation(
-            $rows,
+            $listBuilder->execute(),
             ProductInterface::LIST_KEY_VARIANTS,
             (int) $listBuilder->getCurrentPage(),
             (int) $listBuilder->getLimit(),
@@ -113,33 +93,6 @@ final class ProductVariantController implements SecuredControllerInterface
         );
 
         return new JsonResponse($this->normalizer->normalize($listRepresentation->toArray(), 'json'));
-    }
-
-    /**
-     * @param array{locale: string, stage: string} $dimensionAttributes
-     */
-    private function resolveVariantTitle(string $uuid, array $dimensionAttributes, string $locale): string
-    {
-        $variant = $this->productRepository->findOneBy(
-            ['uuid' => $uuid],
-            [
-                ProductRepositoryInterface::SELECT_PRODUCT_CONTENT => [
-                    'dimensionAttributes' => $dimensionAttributes,
-                    'selects' => [DimensionContentQueryEnhancer::GROUP_SELECT_CONTENT_ADMIN => true],
-                ],
-            ],
-        );
-        if (null === $variant) {
-            return '';
-        }
-
-        try {
-            $dimensionContent = $this->contentManager->resolve($variant, $dimensionAttributes);
-        } catch (ContentNotFoundException) {
-            return '';
-        }
-
-        return $this->variantTitleBuilder->build($dimensionContent, $locale);
     }
 
     public function getAction(Request $request, string $parentId, string $id): Response
@@ -307,13 +260,14 @@ final class ProductVariantController implements SecuredControllerInterface
     private function buildData(Request $request, string $parentId, ProductInterface $parent): array
     {
         $requestData = $request->request->all();
-        // `type` is never submitted for a variant — a variant child always stays `simple`.
+        // `type` is never client-controlled for a variant — the child is always a variant.
         unset($requestData['type']);
 
         $data = \array_replace(
             $requestData,
             [
                 'locale' => $this->getLocale($request),
+                'type' => ProductInterface::TYPE_VARIANT,
                 'parent' => $parentId,
                 'productFamily' => $this->resolveFamilyUuid($parent),
             ],

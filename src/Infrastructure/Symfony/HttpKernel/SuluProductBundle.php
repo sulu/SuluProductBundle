@@ -47,7 +47,7 @@ use Sulu\Product\Application\MessageHandler\RemoveProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\RemoveProductTranslationMessageHandler;
 use Sulu\Product\Application\MessageHandler\RestoreProductVersionMessageHandler;
 use Sulu\Product\Application\Webspace\WebspaceSettingsConfigurationResolver;
-use Sulu\Product\Application\Workflow\VariantParentDirtier;
+use Sulu\Product\Application\Workflow\VariantParentPublishStateUpdater;
 use Sulu\Product\Application\Workflow\VariantWorkflowCascader;
 use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
 use Sulu\Product\Domain\Event\ProductCreatedEvent;
@@ -109,7 +109,6 @@ use Sulu\Product\Infrastructure\Sulu\Admin\ProductFamilyAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductFamilyFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductStatusFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductVariantAttributeFormMetadataVisitor;
-use Sulu\Product\Infrastructure\Sulu\Admin\ProductVariantTitleBuilder;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\AdditionalWebspacesDataMapper;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductAssociationsDataMapper;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductAttributesDataMapper;
@@ -405,8 +404,8 @@ final class SuluProductBundle extends AbstractBundle
             ])
             ->tag('sulu_product.product_mapper');
 
-        $services->set('sulu_product.variant_parent_dirtier')
-            ->class(VariantParentDirtier::class)
+        $services->set('sulu_product.variant_parent_publish_state_updater')
+            ->class(VariantParentPublishStateUpdater::class)
             ->args([
                 new Reference('sulu_product.product_repository'),
                 new Reference('sulu_content.content_workflow'),
@@ -426,7 +425,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.product_repository'),
                 tagged_iterator('sulu_product.product_mapper'),
                 new Reference('sulu_activity.domain_event_collector'),
-                new Reference('sulu_product.variant_parent_dirtier'),
+                new Reference('sulu_product.variant_parent_publish_state_updater'),
                 new Reference('security.token_storage', ContainerInterface::NULL_ON_INVALID_REFERENCE),
             ])
             ->tag('messenger.message_handler');
@@ -437,7 +436,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.product_repository'),
                 tagged_iterator('sulu_product.product_mapper'),
                 new Reference('sulu_activity.domain_event_collector'),
-                new Reference('sulu_product.variant_parent_dirtier'),
+                new Reference('sulu_product.variant_parent_publish_state_updater'),
             ])
             ->tag('messenger.message_handler');
 
@@ -823,9 +822,6 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('translator'),
             ]);
 
-        $services->set('sulu_product.product_variant_title_builder')
-            ->class(ProductVariantTitleBuilder::class);
-
         $services->set('sulu_product.product_attribute_form_metadata_visitor')
             ->class(ProductAttributeFormMetadataVisitor::class)
             ->args([
@@ -931,7 +927,6 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_core.list_builder.field_descriptor_factory'),
                 new Reference('sulu_core.doctrine_list_builder_factory'),
                 new Reference('sulu_core.doctrine_rest_helper'),
-                new Reference('sulu_product.product_variant_title_builder'),
             ])
             ->tag('sulu.context', ['context' => 'admin']);
 

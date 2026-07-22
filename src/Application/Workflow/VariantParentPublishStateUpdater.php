@@ -24,8 +24,10 @@ use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 /**
  * Flags a variant's parent as having unpublished changes whenever the variant is created or
  * modified — variants never publish on their own (see ApplyWorkflowTransitionProductMessageHandler).
+ *
+ * @internal
  */
-final class VariantParentDirtier
+final class VariantParentPublishStateUpdater
 {
     public function __construct(
         private readonly ProductRepositoryInterface $productRepository,

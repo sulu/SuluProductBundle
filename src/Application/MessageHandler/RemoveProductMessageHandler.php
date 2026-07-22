@@ -37,7 +37,7 @@ final class RemoveProductMessageHandler
     {
         $product = $this->productRepository->getOneBy($message->getIdentifier());
 
-        if ($product->isVariantProduct()) {
+        if ($product->isProductWithVariants()) {
             foreach ($this->productRepository->findBy(['parent' => $product->getUuid()]) as $variant) {
                 /** @var string $variantResourceKey */
                 $variantResourceKey = $variant::RESOURCE_KEY;

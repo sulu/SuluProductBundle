@@ -30,7 +30,7 @@ class Product implements ProductInterface
 
     protected string $uuid;
 
-    protected string $type = ProductInterface::TYPE_SIMPLE;
+    protected string $type = ProductInterface::TYPE_PRODUCT;
 
     protected ?ProductInterface $parent = null;
 
@@ -74,9 +74,9 @@ class Product implements ProductInterface
         return $this;
     }
 
-    public function isVariantProduct(): bool
+    public function isProductWithVariants(): bool
     {
-        return ProductInterface::TYPE_VARIANT === $this->type;
+        return ProductInterface::TYPE_PRODUCT_WITH_VARIANTS === $this->type;
     }
 
     public function isVariant(): bool

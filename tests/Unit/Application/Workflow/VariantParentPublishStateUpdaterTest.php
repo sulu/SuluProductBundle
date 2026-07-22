@@ -21,11 +21,11 @@ use Sulu\Content\Domain\Exception\ContentNotFoundException;
 use Sulu\Content\Domain\Exception\UnavailableContentTransitionException;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Content\Domain\Model\WorkflowInterface;
-use Sulu\Product\Application\Workflow\VariantParentDirtier;
+use Sulu\Product\Application\Workflow\VariantParentPublishStateUpdater;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 
-class VariantParentDirtierTest extends TestCase
+class VariantParentPublishStateUpdaterTest extends TestCase
 {
     use ProphecyTrait;
 
@@ -35,8 +35,8 @@ class VariantParentDirtierTest extends TestCase
         $workflow = $this->prophesize(ContentWorkflowInterface::class);
         $workflow->apply(Argument::cetera())->shouldNotBeCalled();
 
-        $dirtier = new VariantParentDirtier($repository->reveal(), $workflow->reveal());
-        $dirtier->markParentAsChanged(new Product(), 'en');
+        $updater = new VariantParentPublishStateUpdater($repository->reveal(), $workflow->reveal());
+        $updater->markParentAsChanged(new Product(), 'en');
     }
 
     public function testAppliesEditToParent(): void
@@ -63,8 +63,8 @@ class VariantParentDirtierTest extends TestCase
         $workflow->apply($parentWithContent, ['locale' => 'en'], WorkflowInterface::WORKFLOW_TRANSITION_EDIT)
             ->shouldBeCalledOnce();
 
-        $dirtier = new VariantParentDirtier($repository->reveal(), $workflow->reveal());
-        $dirtier->markParentAsChanged($variant, 'en');
+        $updater = new VariantParentPublishStateUpdater($repository->reveal(), $workflow->reveal());
+        $updater->markParentAsChanged($variant, 'en');
     }
 
     public function testDoesNotPropagateWhenParentTransitionIsNotAvailable(): void
@@ -83,8 +83,8 @@ class VariantParentDirtierTest extends TestCase
             ->willThrow(new UnavailableContentTransitionException('not enabled'))
             ->shouldBeCalledOnce();
 
-        $dirtier = new VariantParentDirtier($repository->reveal(), $workflow->reveal());
-        $dirtier->markParentAsChanged($variant, 'en');
+        $updater = new VariantParentPublishStateUpdater($repository->reveal(), $workflow->reveal());
+        $updater->markParentAsChanged($variant, 'en');
     }
 
     public function testDoesNotPropagateWhenParentHasNoContentInLocale(): void
@@ -103,7 +103,7 @@ class VariantParentDirtierTest extends TestCase
             ->willThrow(new ContentNotFoundException($parentWithContent, ['locale' => 'de']))
             ->shouldBeCalledOnce();
 
-        $dirtier = new VariantParentDirtier($repository->reveal(), $workflow->reveal());
-        $dirtier->markParentAsChanged($variant, 'de');
+        $updater = new VariantParentPublishStateUpdater($repository->reveal(), $workflow->reveal());
+        $updater->markParentAsChanged($variant, 'de');
     }
 }

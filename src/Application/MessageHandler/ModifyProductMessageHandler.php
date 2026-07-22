@@ -17,7 +17,7 @@ use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterfa
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Application\Mapper\ProductMapperInterface;
 use Sulu\Product\Application\Message\ModifyProductMessage;
-use Sulu\Product\Application\Workflow\VariantParentDirtier;
+use Sulu\Product\Application\Workflow\VariantParentPublishStateUpdater;
 use Sulu\Product\Domain\Event\ProductModifiedEvent;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
@@ -35,7 +35,7 @@ final class ModifyProductMessageHandler
         private ProductRepositoryInterface $productRepository,
         private iterable $productMappers,
         private DomainEventCollectorInterface $domainEventCollector,
-        private VariantParentDirtier $variantParentDirtier,
+        private VariantParentPublishStateUpdater $variantParentPublishStateUpdater,
     ) {
     }
 
@@ -64,7 +64,7 @@ final class ModifyProductMessageHandler
             $productMapper->mapProductData($product, $data);
         }
 
-        $this->variantParentDirtier->markParentAsChanged($product, $locale);
+        $this->variantParentPublishStateUpdater->markParentAsChanged($product, $locale);
 
         $this->domainEventCollector->collect(new ProductModifiedEvent($product, $locale, $data));
 

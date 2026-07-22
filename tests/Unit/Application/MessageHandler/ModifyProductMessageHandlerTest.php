@@ -23,7 +23,7 @@ use Sulu\Content\Application\ContentWorkflow\ContentWorkflowInterface;
 use Sulu\Product\Application\Mapper\ProductContentMapper;
 use Sulu\Product\Application\Message\ModifyProductMessage;
 use Sulu\Product\Application\MessageHandler\ModifyProductMessageHandler;
-use Sulu\Product\Application\Workflow\VariantParentDirtier;
+use Sulu\Product\Application\Workflow\VariantParentPublishStateUpdater;
 use Sulu\Product\Domain\Event\ProductModifiedEvent;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
@@ -49,7 +49,7 @@ class ModifyProductMessageHandlerTest extends TestCase
         $this->contentPersister = $this->prophesize(ContentPersisterInterface::class);
         $this->domainEventCollector = $this->prophesize(DomainEventCollectorInterface::class);
 
-        $variantParentDirtier = new VariantParentDirtier(
+        $variantParentDirtier = new VariantParentPublishStateUpdater(
             $this->productRepository->reveal(),
             $this->prophesize(ContentWorkflowInterface::class)->reveal(),
         );

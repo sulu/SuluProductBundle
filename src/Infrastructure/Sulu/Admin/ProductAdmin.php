@@ -206,7 +206,7 @@ class ProductAdmin extends Admin
                 ->addListAdapters(['table'])
                 ->setTabTitle('sulu_product.variants')
                 ->setTabOrder(20)
-                ->setTabCondition("type == 'variant'")
+                ->setTabCondition("type == 'product_with_variants'")
                 ->addRouterAttributesToListRequest(['id' => 'parentId'])
                 ->addRouterAttributesToFormRequest(['id' => 'parentId'])
                 ->addRouterAttributesToFormMetadata(['id' => 'parentId'])

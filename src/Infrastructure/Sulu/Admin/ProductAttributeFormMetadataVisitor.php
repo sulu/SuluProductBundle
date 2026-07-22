@@ -57,7 +57,7 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
         }
 
         $product = $this->productRepository->findOneBy(['uuid' => $id]);
-        $isVariantProduct = null !== $product && $product->isVariantProduct();
+        $isProductWithVariants = null !== $product && $product->isProductWithVariants();
 
         $items = $formMetadata->getItems();
 
@@ -68,7 +68,7 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
         $section->setLabel($this->translator->trans('sulu_product.attributes', [], 'admin', $locale), $locale);
 
         foreach ($family->getFamilyAttributes() as $familyAttribute) {
-            if ($isVariantProduct && $familyAttribute->isVariant()) {
+            if ($isProductWithVariants && $familyAttribute->isVariant()) {
                 continue;
             }
 

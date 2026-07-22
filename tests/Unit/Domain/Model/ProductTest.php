@@ -49,32 +49,33 @@ class ProductTest extends TestCase
         $this->assertSame($product, $dimensionContent->getResource());
     }
 
-    public function testDefaultsToSimple(): void
+    public function testDefaultsToProduct(): void
     {
         $product = new Product();
 
-        self::assertSame(ProductInterface::TYPE_SIMPLE, $product->getType());
-        self::assertFalse($product->isVariantProduct());
+        self::assertSame(ProductInterface::TYPE_PRODUCT, $product->getType());
+        self::assertFalse($product->isProductWithVariants());
         self::assertFalse($product->isVariant());
         self::assertNull($product->getParent());
         self::assertCount(0, $product->getVariants());
     }
 
-    public function testVariantProductType(): void
+    public function testProductWithVariantsType(): void
     {
         $product = new Product();
-        $product->setType(ProductInterface::TYPE_VARIANT);
+        $product->setType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
-        self::assertTrue($product->isVariantProduct());
+        self::assertTrue($product->isProductWithVariants());
         self::assertFalse($product->isVariant());
     }
 
     public function testParentChildLink(): void
     {
         $parent = new Product();
-        $parent->setType(ProductInterface::TYPE_VARIANT);
+        $parent->setType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         $variant = new Product();
+        $variant->setType(ProductInterface::TYPE_VARIANT);
         $variant->setParent($parent);
 
         self::assertSame($parent, $variant->getParent());

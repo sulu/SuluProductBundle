@@ -246,7 +246,7 @@ class ProductAdminTest extends TestCase
         $this->assertSame('product_variants', $view->getOption('resourceKey'));
         $this->assertSame('product_variants', $view->getOption('listKey'));
         $this->assertSame('product_variant', $view->getOption('formKey'));
-        $this->assertSame("type == 'variant'", $view->getOption('tabCondition'));
+        $this->assertSame("type == 'product_with_variants'", $view->getOption('tabCondition'));
         $this->assertSame(['id' => 'parentId'], $view->getOption('routerAttributesToListRequest'));
         $this->assertSame(['id' => 'parentId'], $view->getOption('routerAttributesToFormRequest'));
         $this->assertSame(['id' => 'parentId'], $view->getOption('routerAttributesToFormMetadata'));

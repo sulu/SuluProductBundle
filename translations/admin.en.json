@@ -1,7 +1,6 @@
 {
     "sulu_product.products": "Products",
     "sulu_product.variants": "Variants",
-    "sulu_product.variant_title": "Variant",
     "sulu_product.attribute": "Attribute",
     "sulu_product.attributes": "Attributes",
     "sulu_product.attribute_group": "Attribute group",
@@ -28,8 +27,8 @@
     "sulu_product.option": "Option",
     "sulu_product.product": "Product",
     "sulu_product.product_type": "Type",
-    "sulu_product.product_type_simple": "Simple",
-    "sulu_product.product_type_variant": "Variant",
+    "sulu_product.product_type_product": "Product",
+    "sulu_product.product_type_product_with_variants": "Product with variants",
     "sulu_product.code": "Code",
     "sulu_product.external_identifier": "External Identifier",
     "sulu_product.options": "Options",

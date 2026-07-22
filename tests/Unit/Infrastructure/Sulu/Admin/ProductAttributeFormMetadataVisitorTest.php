@@ -554,7 +554,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
             ->willReturn($this->fragmentWithValueField());
 
         $product = $this->prophesize(Product::class);
-        $product->isVariantProduct()->willReturn(true);
+        $product->isProductWithVariants()->willReturn(true);
         $this->productRepository->findOneBy(['uuid' => 'uuid-1'])->willReturn($product->reveal());
 
         $form = new FormMetadata();

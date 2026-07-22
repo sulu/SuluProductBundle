@@ -25,6 +25,8 @@ use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
  * Cascades a parent's publish/unpublish transition to each of its variants. Re-applying `publish`
  * to an already-published variant does NOT throw (`publish` is defined `published -> published`);
  * the catch below exists for `unpublish` on a never-published variant and missing-locale content.
+ *
+ * @internal
  */
 final class VariantWorkflowCascader
 {

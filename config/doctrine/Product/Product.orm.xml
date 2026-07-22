@@ -10,9 +10,9 @@
             <generator strategy="NONE"/>
         </id>
 
-        <field name="type" type="string" column="type" length="16">
+        <field name="type" type="string" column="type" length="32">
             <options>
-                <option name="default">simple</option>
+                <option name="default">product</option>
             </options>
         </field>
 

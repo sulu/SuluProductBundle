@@ -2,6 +2,15 @@
 <list xmlns="http://schemas.sulu.io/list-builder/list">
     <key>product_variants</key>
 
+    <joins name="dimensionContent">
+        <join>
+            <entity-name>dimensionContent</entity-name>
+            <field-name>Sulu\Product\Domain\Model\ProductInterface.dimensionContents</field-name>
+            <method>LEFT</method>
+            <condition>dimensionContent.locale = :locale AND dimensionContent.stage = 'draft' AND dimensionContent.version = 0</condition>
+        </join>
+    </joins>
+
     <joins name="unlocalizedDimensionContent">
         <join>
             <entity-name>unlocalizedDimensionContent</entity-name>
@@ -11,11 +20,38 @@
         </join>
     </joins>
 
+    <joins name="ghostDimensionContent" ref="unlocalizedDimensionContent">
+        <join>
+            <entity-name>ghostDimensionContent</entity-name>
+            <field-name>Sulu\Product\Domain\Model\ProductInterface.dimensionContents</field-name>
+            <method>LEFT</method>
+            <condition>ghostDimensionContent.locale = unlocalizedDimensionContent.ghostLocale AND ghostDimensionContent.stage = 'draft' AND dimensionContent IS NULL AND ghostDimensionContent.version = 0</condition>
+        </join>
+    </joins>
+
     <properties>
         <property name="id" translation="sulu_admin.id" visibility="no">
             <field-name>uuid</field-name>
             <entity-name>Sulu\Product\Domain\Model\ProductInterface</entity-name>
         </property>
+
+        <case-property name="name" translation="sulu_admin.name" visibility="always" searchability="yes">
+            <field>
+                <field-name>title</field-name>
+                <entity-name>dimensionContent</entity-name>
+
+                <joins ref="dimensionContent"/>
+            </field>
+
+            <field>
+                <field-name>title</field-name>
+                <entity-name>ghostDimensionContent</entity-name>
+
+                <joins ref="ghostDimensionContent"/>
+            </field>
+
+            <transformer type="title"/>
+        </case-property>
 
         <property name="code" translation="sulu_product.code" visibility="yes">
             <field-name>code</field-name>
@@ -28,12 +64,6 @@
             <entity-name>unlocalizedDimensionContent</entity-name>
             <joins ref="unlocalizedDimensionContent"/>
         </property>
-
-        <!--
-            No <field-name>/<entity-name>: DoctrineListBuilder excludes non-Doctrine descriptors
-            from its SELECT, so ProductVariantController populates this column after execute().
-        -->
-        <property name="variantTitle" translation="sulu_product.variant_title" visibility="always" sortable="false"/>
 
         <property name="parent" visibility="never">
             <field-name>parent</field-name>

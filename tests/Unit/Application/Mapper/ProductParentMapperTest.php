@@ -57,7 +57,7 @@ class ProductParentMapperTest extends TestCase
         $product = new Product();
         $mapper->mapProductData($product, ['title' => 'x']);
 
-        self::assertSame(ProductInterface::TYPE_SIMPLE, $product->getType());
+        self::assertSame(ProductInterface::TYPE_PRODUCT, $product->getType());
         self::assertNull($product->getParent());
     }
 }

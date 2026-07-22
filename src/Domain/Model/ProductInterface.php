@@ -29,7 +29,8 @@ interface ProductInterface extends AuditableInterface, ContentRichEntityInterfac
     public const LIST_KEY_VARIANTS = 'product_variants';
     public const FORM_KEY_VARIANT = 'product_variant';
 
-    public const TYPE_SIMPLE = 'simple';
+    public const TYPE_PRODUCT = 'product';
+    public const TYPE_PRODUCT_WITH_VARIANTS = 'product_with_variants';
     public const TYPE_VARIANT = 'variant';
 
     /**
@@ -43,7 +44,7 @@ interface ProductInterface extends AuditableInterface, ContentRichEntityInterfac
 
     public function setType(string $type): self;
 
-    public function isVariantProduct(): bool;
+    public function isProductWithVariants(): bool;
 
     public function isVariant(): bool;
 
