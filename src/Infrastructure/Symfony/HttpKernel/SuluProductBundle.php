@@ -872,7 +872,6 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_reference.reference_repository'),
                 new Reference('sulu_content.content_view_resolver'),
                 new Reference('sulu_content.content_merger'),
-                new Reference('sulu_admin.xml_form_metadata_loader'),
             ])
             ->tag('sulu_reference.refresher');
 

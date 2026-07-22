@@ -41,13 +41,18 @@ class ProductDetailsResolver implements ResolverInterface
             return null;
         }
 
+        // entity master-data first; a project's `details/<field>` with a colliding bare
+        // name overrides it (array_merge — later keys win)
         return ContentView::create(
-            [
-                'code' => ContentView::create($dimensionContent->getCode(), []),
-                'externalIdentifier' => ContentView::create($dimensionContent->getExternalIdentifier(), []),
-                'productFamily' => ContentView::create($dimensionContent->getProductFamily()?->getUuid(), []),
-                'status' => ContentView::create($dimensionContent->getStatus(), []),
-            ] + $this->resolveDetailsData($dimensionContent),
+            \array_merge(
+                [
+                    'code' => ContentView::create($dimensionContent->getCode(), []),
+                    'externalIdentifier' => ContentView::create($dimensionContent->getExternalIdentifier(), []),
+                    'productFamily' => ContentView::create($dimensionContent->getProductFamily()?->getUuid(), []),
+                    'status' => ContentView::create($dimensionContent->getStatus(), []),
+                ],
+                $this->resolveDetailsData($dimensionContent),
+            ),
             [],
         );
     }
@@ -64,7 +69,8 @@ class ProductDetailsResolver implements ResolverInterface
     private function resolveDetailsData(ProductDimensionContentInterface $dimensionContent): array
     {
         // only merged content is resolved, and it always carries the localized row's locale
-        $locale = $dimensionContent->getLocale() ?? '';
+        /** @var string $locale */
+        $locale = $dimensionContent->getLocale();
 
         $formMetadata = $this->formMetadataLoader->getMetadata(ProductInterface::FORM_KEY, $locale, []);
         if (!$formMetadata instanceof FormMetadata) {

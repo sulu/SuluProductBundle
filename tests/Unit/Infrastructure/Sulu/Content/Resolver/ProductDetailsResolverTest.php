@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Tests\Unit\Infrastructure\Sulu\Content\Resolver;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
@@ -36,6 +37,7 @@ use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductDetailsResolver;
 
+#[CoversClass(ProductDetailsResolver::class)]
 class ProductDetailsResolverTest extends TestCase
 {
     use ProphecyTrait;
@@ -160,6 +162,18 @@ class ProductDetailsResolverTest extends TestCase
         $dc = $this->makeDimensionContent(['shortDescription' => '<p>hi</p>']);
 
         self::assertSame('<p>hi</p>', $this->contentViewAt($dc, 'shortDescription')->getContent());
+    }
+
+    public function testProjectDetailsFieldOverridesCollidingEntityField(): void
+    {
+        // a project may reuse an entity field's bare name in the details bucket;
+        // the details field wins (array_merge — later keys override)
+        $this->givenFormMetadata(['details/status' => 'text_line']);
+
+        $dc = $this->makeDimensionContent(['status' => 'from-details']);
+        $dc->setStatus('available');
+
+        self::assertSame('from-details', $this->contentViewAt($dc, 'status')->getContent());
     }
 
     public function testResolvesImageThroughSingleMediaSelectionPropertyResolver(): void

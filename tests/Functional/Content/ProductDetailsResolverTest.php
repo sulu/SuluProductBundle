@@ -14,14 +14,19 @@ declare(strict_types=1);
 namespace Sulu\Product\Tests\Functional\Content;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Sulu\Bundle\MediaBundle\Infrastructure\Sulu\Content\ResourceLoader\MediaResourceLoader;
+use PHPUnit\Framework\Attributes\CoversClass;
+use Sulu\Bundle\MediaBundle\Api\Media;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Content\Application\ContentResolver\ContentResolverInterface;
-use Sulu\Content\Application\ContentResolver\Value\ResolvableResource;
+use Sulu\Content\Tests\Functional\Traits\CreateMediaTrait;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductDetailsResolver;
 
+#[CoversClass(ProductDetailsResolver::class)]
 class ProductDetailsResolverTest extends SuluTestCase
 {
+    use CreateMediaTrait;
+
     private ContentResolverInterface $contentResolver;
 
     private EntityManagerInterface $entityManager;
@@ -89,6 +94,10 @@ class ProductDetailsResolverTest extends SuluTestCase
 
     public function testDetailsMediaResolvesThroughItsPropertyResolver(): void
     {
+        $collection = self::createCollection();
+        $media = self::createMedia($collection);
+        $this->entityManager->flush();
+
         $product = $this->productRepository->createNew();
 
         $dimensionContent = $product->createDimensionContent();
@@ -96,7 +105,7 @@ class ProductDetailsResolverTest extends SuluTestCase
         $dimensionContent->setStage('draft');
         $dimensionContent->setTemplateKey('product');
         // the admin wire-shape, stored verbatim — the regression this whole change fixes
-        $dimensionContent->setDetailsData(['image' => ['id' => 1]]);
+        $dimensionContent->setDetailsData(['image' => ['id' => $media->getId()]]);
         $product->addDimensionContent($dimensionContent);
 
         $this->productRepository->add($product);
@@ -107,10 +116,10 @@ class ProductDetailsResolverTest extends SuluTestCase
         $productData = $result['extension']['product'];
 
         // a bare int made SingleMediaSelectionPropertyResolver bail and emit id: null; storing
-        // the wire-shape verbatim means the id now survives through to the media resource loader
+        // the wire-shape verbatim means the id survives through to the media resource loader,
+        // which resolves it to the real media
         $image = $productData['image'];
-        self::assertInstanceOf(ResolvableResource::class, $image);
-        self::assertSame(1, $image->getId());
-        self::assertSame(MediaResourceLoader::getKey(), $image->getResourceLoaderKey());
+        self::assertInstanceOf(Media::class, $image);
+        self::assertSame($media->getId(), $image->getId());
     }
 }
