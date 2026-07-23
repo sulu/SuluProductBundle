@@ -208,7 +208,7 @@ class ProductVariantControllerTest extends SuluTestCase
 
         $axisId = $this->createAttribute('size', 'Size');
         $familyId = $this->createProductFamily([$axisId => ['enabled' => true, 'variant' => true]]);
-        $parentId = $this->createProduct($familyId, 'Parent Product');
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         $this->client->request(
             'POST',
@@ -253,6 +253,29 @@ class ProductVariantControllerTest extends SuluTestCase
         $this->assertNotContains($childId, $ids);
     }
 
+    public function testPostRejectsVariantUnderNonVariantParent(): void
+    {
+        self::purgeDatabase();
+
+        $familyId = $this->createProductFamily();
+        $parentId = $this->createProduct($familyId, 'Plain Product', ProductInterface::TYPE_PRODUCT);
+
+        $this->client->request(
+            'POST',
+            '/admin/api/products/' . $parentId . '/variants.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'code' => 'PLAIN-1',
+                'title' => 'Should Fail',
+            ]) ?: null,
+        );
+
+        $this->assertHttpStatusCode(409, $this->client->getResponse());
+    }
+
     public function testGetOnParentProductReturnsPersistedType(): void
     {
         self::purgeDatabase();
@@ -290,7 +313,7 @@ class ProductVariantControllerTest extends SuluTestCase
         self::purgeDatabase();
         $familyId = $this->createProductFamily();
         $parentA = $this->createProduct($familyId, 'Parent A');
-        $parentB = $this->createProduct($familyId, 'Parent B');
+        $parentB = $this->createProduct($familyId, 'Parent B', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
         $variantOfB = $this->createVariant($parentB, 'Variant of B');
 
         $this->client->request('GET', '/admin/api/products/' . $parentA . '/variants/' . $variantOfB . '.json?locale=en');
@@ -302,7 +325,7 @@ class ProductVariantControllerTest extends SuluTestCase
         self::purgeDatabase();
         $familyId = $this->createProductFamily();
         $parentA = $this->createProduct($familyId, 'Parent A');
-        $parentB = $this->createProduct($familyId, 'Parent B');
+        $parentB = $this->createProduct($familyId, 'Parent B', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
         $variantOfB = $this->createVariant($parentB, 'Variant of B');
 
         $this->client->request(
@@ -334,7 +357,7 @@ class ProductVariantControllerTest extends SuluTestCase
         self::purgeDatabase();
         $familyId = $this->createProductFamily();
         $parentA = $this->createProduct($familyId, 'Parent A');
-        $parentB = $this->createProduct($familyId, 'Parent B');
+        $parentB = $this->createProduct($familyId, 'Parent B', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
         $variantOfB = $this->createVariant($parentB, 'Variant of B');
 
         $this->client->request('DELETE', '/admin/api/products/' . $parentA . '/variants/' . $variantOfB . '.json?locale=en');
@@ -355,7 +378,7 @@ class ProductVariantControllerTest extends SuluTestCase
             $sharedId => ['enabled' => true, 'variant' => false],
             $axisId => ['enabled' => true, 'variant' => true],
         ]);
-        $parentId = $this->createProduct($familyId, 'Parent Product');
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         // The parent carries the shared (non-variant) attribute value.
         $this->client->request(
@@ -446,8 +469,8 @@ class ProductVariantControllerTest extends SuluTestCase
     {
         self::purgeDatabase();
         $familyId = $this->createProductFamily();
-        $parentId = $this->createProduct($familyId, 'Parent Product');
-        $otherParentId = $this->createProduct($familyId, 'Other Parent Product');
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $otherParentId = $this->createProduct($familyId, 'Other Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         $this->client->request(
             'POST',
@@ -500,7 +523,7 @@ class ProductVariantControllerTest extends SuluTestCase
     {
         self::purgeDatabase();
         $familyId = $this->createProductFamily();
-        $parentId = $this->createProduct($familyId);
+        $parentId = $this->createProduct($familyId, type: ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         $this->client->request(
             'POST',
@@ -672,7 +695,7 @@ class ProductVariantControllerTest extends SuluTestCase
     {
         self::purgeDatabase();
         $familyId = $this->createProductFamily();
-        $parentId = $this->createProduct($familyId);
+        $parentId = $this->createProduct($familyId, type: ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
         $variantId = $this->createVariant($parentId, 'Variant L');
 
         $this->client->request(
@@ -688,7 +711,7 @@ class ProductVariantControllerTest extends SuluTestCase
     {
         self::purgeDatabase();
         $familyId = $this->createProductFamily();
-        $parentId = $this->createProduct($familyId);
+        $parentId = $this->createProduct($familyId, type: ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
         $variantId = $this->createVariant($parentId, 'Variant L');
 
         // Even with a publish action query param, PUT only saves the draft — never publishes.
@@ -724,7 +747,7 @@ class ProductVariantControllerTest extends SuluTestCase
             $sharedId => ['enabled' => true, 'required' => true, 'variant' => false],
             $axisId => ['enabled' => true, 'variant' => true],
         ]);
-        $parentId = $this->createProduct($familyId, 'Parent Product');
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         // The parent carries the required shared (non-variant) attribute value.
         $this->client->request(
@@ -813,7 +836,7 @@ class ProductVariantControllerTest extends SuluTestCase
     {
         self::purgeDatabase();
         $familyId = $this->createProductFamily();
-        $parentId = $this->createProduct($familyId, 'Parent Product');
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         $this->client->request('POST', '/admin/api/products/' . $parentId . '.json?locale=en&action=publish');
         $this->assertHttpStatusCode(200, $this->client->getResponse());
@@ -831,7 +854,7 @@ class ProductVariantControllerTest extends SuluTestCase
     {
         self::purgeDatabase();
         $familyId = $this->createProductFamily();
-        $parentId = $this->createProduct($familyId);
+        $parentId = $this->createProduct($familyId, type: ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         $this->client->request(
             'POST',

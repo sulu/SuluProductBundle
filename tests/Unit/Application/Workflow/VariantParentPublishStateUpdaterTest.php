@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Tests\Unit\Application\Workflow;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
@@ -25,6 +26,7 @@ use Sulu\Product\Application\Workflow\VariantParentPublishStateUpdater;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 
+#[CoversClass(VariantParentPublishStateUpdater::class)]
 class VariantParentPublishStateUpdaterTest extends TestCase
 {
     use ProphecyTrait;

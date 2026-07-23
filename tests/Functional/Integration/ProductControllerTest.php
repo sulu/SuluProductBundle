@@ -19,6 +19,7 @@ use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeTranslation;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
+use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
@@ -73,7 +74,7 @@ class ProductControllerTest extends SuluTestCase
         return $familyId;
     }
 
-    private function createProduct(string $familyId, string $title = 'My Product'): string
+    private function createProduct(string $familyId, string $title = 'My Product', string $type = ProductInterface::TYPE_PRODUCT): string
     {
         /** @var int $counter */
         static $counter = 0;
@@ -90,6 +91,7 @@ class ProductControllerTest extends SuluTestCase
                 'title' => $title,
                 'url' => '/test-product-' . $counter,
                 'productFamily' => $familyId,
+                'type' => $type,
             ]) ?: null,
         );
         $this->assertHttpStatusCode(201, $this->client->getResponse());
@@ -581,7 +583,7 @@ class ProductControllerTest extends SuluTestCase
         self::purgeDatabase();
         $familyId = $this->createProductFamily();
         $topLevelId = $this->createProduct($familyId, 'Top Level Product');
-        $parentId = $this->createProduct($familyId, 'Variant Parent Product');
+        $parentId = $this->createProduct($familyId, 'Variant Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         $this->client->request(
             'POST',

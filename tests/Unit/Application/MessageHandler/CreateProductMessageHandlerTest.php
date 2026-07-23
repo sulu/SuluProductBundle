@@ -68,7 +68,7 @@ class CreateProductMessageHandlerTest extends TestCase
 
     private function createHandler(?TokenStorageInterface $tokenStorage = null): CreateProductMessageHandler
     {
-        $variantParentDirtier = new VariantParentPublishStateUpdater(
+        $updater = new VariantParentPublishStateUpdater(
             $this->productRepository->reveal(),
             $this->prophesize(ContentWorkflowInterface::class)->reveal(),
         );
@@ -77,7 +77,7 @@ class CreateProductMessageHandlerTest extends TestCase
             $this->productRepository->reveal(),
             [new ProductContentMapper($this->contentPersister->reveal())],
             $this->domainEventCollector->reveal(),
-            $variantParentDirtier,
+            $updater,
             $tokenStorage,
         );
     }

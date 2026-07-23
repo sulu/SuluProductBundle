@@ -147,6 +147,12 @@ final class ProductVariantController implements SecuredControllerInterface
     {
         $parent = $this->getParentOrFail($parentId);
 
+        if (!$parent->isProductWithVariants()) {
+            return new JsonResponse([
+                'detail' => \sprintf('Product "%s" cannot have variants.', $parentId),
+            ], 409);
+        }
+
         $data = $this->getCreateData($request, $parentId, $parent);
         $message = new CreateProductMessage($data);
         /** @var ProductInterface $variant */
@@ -260,8 +266,6 @@ final class ProductVariantController implements SecuredControllerInterface
     private function buildData(Request $request, string $parentId, ProductInterface $parent): array
     {
         $requestData = $request->request->all();
-        // `type` is never client-controlled for a variant — the child is always a variant.
-        unset($requestData['type']);
 
         $data = \array_replace(
             $requestData,

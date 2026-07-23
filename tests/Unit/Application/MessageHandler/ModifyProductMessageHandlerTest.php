@@ -49,7 +49,7 @@ class ModifyProductMessageHandlerTest extends TestCase
         $this->contentPersister = $this->prophesize(ContentPersisterInterface::class);
         $this->domainEventCollector = $this->prophesize(DomainEventCollectorInterface::class);
 
-        $variantParentDirtier = new VariantParentPublishStateUpdater(
+        $updater = new VariantParentPublishStateUpdater(
             $this->productRepository->reveal(),
             $this->prophesize(ContentWorkflowInterface::class)->reveal(),
         );
@@ -58,7 +58,7 @@ class ModifyProductMessageHandlerTest extends TestCase
             $this->productRepository->reveal(),
             [new ProductContentMapper($this->contentPersister->reveal())],
             $this->domainEventCollector->reveal(),
-            $variantParentDirtier,
+            $updater,
         );
     }
 
