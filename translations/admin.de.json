@@ -29,6 +29,7 @@
     "sulu_product.product_type": "Typ",
     "sulu_product.product_type_product": "Produkt",
     "sulu_product.product_type_product_with_variants": "Produkt mit Varianten",
+    "sulu_product.product_type_variant": "Variante",
     "sulu_product.code": "Code",
     "sulu_product.external_identifier": "External Identifier",
     "sulu_product.options": "Optionen",
