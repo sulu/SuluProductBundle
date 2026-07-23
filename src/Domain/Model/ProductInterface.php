@@ -44,9 +44,7 @@ interface ProductInterface extends AuditableInterface, ContentRichEntityInterfac
 
     public function setType(string $type): self;
 
-    public function isProductWithVariants(): bool;
-
-    public function isVariant(): bool;
+    public function isType(string $type): bool;
 
     public function getParent(): ?self;
 

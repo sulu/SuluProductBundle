@@ -362,7 +362,7 @@ class ProductAttributesDataMapperTest extends TestCase
     {
         /** @var ObjectProphecy<ProductInterface> $resource */
         $resource = $this->prophesize(ProductInterface::class);
-        $resource->isVariant()->willReturn(false);
+        $resource->isType(ProductInterface::TYPE_VARIANT)->willReturn(false);
 
         return $resource->reveal();
     }
@@ -403,7 +403,7 @@ class ProductAttributesDataMapperTest extends TestCase
 
         /** @var ObjectProphecy<ProductInterface> $resource */
         $resource = $this->prophesize(ProductInterface::class);
-        $resource->isVariant()->willReturn($isVariantResource);
+        $resource->isType(ProductInterface::TYPE_VARIANT)->willReturn($isVariantResource);
 
         /** @var ObjectProphecy<ProductDimensionContentInterface> $unloc */
         $unloc = $this->prophesize(ProductDimensionContentInterface::class);

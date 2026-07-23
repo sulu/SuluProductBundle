@@ -74,14 +74,9 @@ class Product implements ProductInterface
         return $this;
     }
 
-    public function isProductWithVariants(): bool
+    public function isType(string $type): bool
     {
-        return ProductInterface::TYPE_PRODUCT_WITH_VARIANTS === $this->type;
-    }
-
-    public function isVariant(): bool
-    {
-        return null !== $this->parent;
+        return $type === $this->type;
     }
 
     public function getParent(): ?ProductInterface

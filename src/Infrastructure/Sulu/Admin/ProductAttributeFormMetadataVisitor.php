@@ -19,6 +19,7 @@ use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\SectionMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadataMapperRegistry;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\SchemaMetadata;
+use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -57,7 +58,7 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
         }
 
         $product = $this->productRepository->findOneBy(['uuid' => $id]);
-        $isProductWithVariants = null !== $product && $product->isProductWithVariants();
+        $isProductWithVariants = null !== $product && $product->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         $items = $formMetadata->getItems();
 

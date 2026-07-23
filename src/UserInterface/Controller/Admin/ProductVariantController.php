@@ -147,7 +147,7 @@ final class ProductVariantController implements SecuredControllerInterface
     {
         $parent = $this->getParentOrFail($parentId);
 
-        if (!$parent->isProductWithVariants()) {
+        if (!$parent->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS)) {
             return new JsonResponse([
                 'detail' => \sprintf('Product "%s" cannot have variants.', $parentId),
             ], 409);

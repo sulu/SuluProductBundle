@@ -54,8 +54,8 @@ class ProductTest extends TestCase
         $product = new Product();
 
         self::assertSame(ProductInterface::TYPE_PRODUCT, $product->getType());
-        self::assertFalse($product->isProductWithVariants());
-        self::assertFalse($product->isVariant());
+        self::assertFalse($product->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS));
+        self::assertFalse($product->isType(ProductInterface::TYPE_VARIANT));
         self::assertNull($product->getParent());
         self::assertCount(0, $product->getVariants());
     }
@@ -65,8 +65,8 @@ class ProductTest extends TestCase
         $product = new Product();
         $product->setType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
-        self::assertTrue($product->isProductWithVariants());
-        self::assertFalse($product->isVariant());
+        self::assertTrue($product->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS));
+        self::assertFalse($product->isType(ProductInterface::TYPE_VARIANT));
     }
 
     public function testParentChildLink(): void
@@ -79,6 +79,6 @@ class ProductTest extends TestCase
         $variant->setParent($parent);
 
         self::assertSame($parent, $variant->getParent());
-        self::assertTrue($variant->isVariant());
+        self::assertTrue($variant->isType(ProductInterface::TYPE_VARIANT));
     }
 }

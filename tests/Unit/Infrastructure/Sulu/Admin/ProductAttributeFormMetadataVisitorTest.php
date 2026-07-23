@@ -32,6 +32,7 @@ use Sulu\Product\Domain\Model\AttributeTranslationInterface;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
+use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeFieldFactory;
@@ -554,7 +555,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
             ->willReturn($this->fragmentWithValueField());
 
         $product = $this->prophesize(Product::class);
-        $product->isProductWithVariants()->willReturn(true);
+        $product->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS)->willReturn(true);
         $this->productRepository->findOneBy(['uuid' => 'uuid-1'])->willReturn($product->reveal());
 
         $form = new FormMetadata();

@@ -56,7 +56,7 @@ final class ApplyWorkflowTransitionProductMessageHandler
             $message->getTransitionName()
         );
 
-        if ($product->isProductWithVariants()) {
+        if ($product->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS)) {
             $this->variantWorkflowCascader->cascade($product, $message->getTransitionName(), $message->getLocale());
         }
 
