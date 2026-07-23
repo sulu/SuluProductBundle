@@ -19,12 +19,13 @@ use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\SectionMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadataMapperRegistry;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\SchemaMetadata;
+use Sulu\Product\Domain\Model\AttributeGroupInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Injects the parent product family's `variant=true` (axis) attributes into the variant overlay
- * form (`product_variant`); non-variant (shared) attributes are never injected.
+ * form (`product_variant`), grouped into a section per attribute group; non-variant (shared)
+ * attributes are never injected.
  *
  * @internal
  */
@@ -36,7 +37,6 @@ class ProductVariantAttributeFormMetadataVisitor implements FormMetadataVisitorI
         private readonly ProductFamilyRepositoryInterface $productFamilyRepository,
         private readonly AttributeFieldFactory $attributeFieldFactory,
         private readonly PropertyMetadataMapperRegistry $propertyMetadataMapperRegistry,
-        private readonly TranslatorInterface $translator,
     ) {
     }
 
@@ -59,11 +59,10 @@ class ProductVariantAttributeFormMetadataVisitor implements FormMetadataVisitorI
 
         $items = $formMetadata->getItems();
 
+        /** @var array<int, SectionMetadata> $sections */
+        $sections = [];
         /** @var PropertyMetadata[] $schemaProperties */
         $schemaProperties = [];
-
-        $section = new SectionMetadata('attributes');
-        $section->setLabel($this->translator->trans('sulu_product.attributes', [], 'admin', $locale), $locale);
 
         foreach ($family->getFamilyAttributes() as $familyAttribute) {
             if (!$familyAttribute->isVariantSpecific()) {
@@ -76,6 +75,14 @@ class ProductVariantAttributeFormMetadataVisitor implements FormMetadataVisitorI
             }
             [$field, $unitField] = $result;
 
+            $group = $familyAttribute->getAttribute()->getGroup();
+            $groupId = $group->getId();
+
+            if (!isset($sections[$groupId])) {
+                $sections[$groupId] = $this->createGroupSection($group, $locale);
+            }
+            $section = $sections[$groupId];
+
             $section->addItem($field);
 
             if (null !== $unitField) {
@@ -87,8 +94,10 @@ class ProductVariantAttributeFormMetadataVisitor implements FormMetadataVisitorI
                 : new PropertyMetadata($field->getName(), $field->isRequired());
         }
 
-        if ([] !== $section->getItems()) {
-            $items[$section->getName()] = $section;
+        if ([] !== $sections) {
+            foreach ($sections as $section) {
+                $items[$section->getName()] = $section;
+            }
             $formMetadata->setItems($items);
         }
 
@@ -97,5 +106,16 @@ class ProductVariantAttributeFormMetadataVisitor implements FormMetadataVisitorI
         }
 
         $formMetadata->setCacheable(false);
+    }
+
+    private function createGroupSection(AttributeGroupInterface $group, string $locale): SectionMetadata
+    {
+        $translation = $group->getTranslation($locale)
+            ?? (($defaultLocale = $group->getDefaultLocale()) !== null ? $group->getTranslation($defaultLocale) : null);
+
+        $section = new SectionMetadata('attribute_group_' . $group->getId());
+        $section->setLabel($translation?->getName() ?? '', $locale);
+
+        return $section;
     }
 }

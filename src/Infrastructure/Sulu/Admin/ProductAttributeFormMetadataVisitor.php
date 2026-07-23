@@ -19,10 +19,10 @@ use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\SectionMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadataMapperRegistry;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\SchemaMetadata;
+use Sulu\Product\Domain\Model\AttributeGroupInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * @internal
@@ -35,7 +35,6 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
         private readonly ProductFamilyRepositoryInterface $productFamilyRepository,
         private readonly AttributeFieldFactory $attributeFieldFactory,
         private readonly PropertyMetadataMapperRegistry $propertyMetadataMapperRegistry,
-        private readonly TranslatorInterface $translator,
         private readonly ProductRepositoryInterface $productRepository,
     ) {
     }
@@ -62,11 +61,10 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
 
         $items = $formMetadata->getItems();
 
+        /** @var array<int, SectionMetadata> $sections */
+        $sections = [];
         /** @var PropertyMetadata[] $schemaProperties */
         $schemaProperties = [];
-
-        $section = new SectionMetadata('attributes');
-        $section->setLabel($this->translator->trans('sulu_product.attributes', [], 'admin', $locale), $locale);
 
         foreach ($family->getFamilyAttributes() as $familyAttribute) {
             if ($isProductWithVariants && $familyAttribute->isVariantSpecific()) {
@@ -79,6 +77,14 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
             }
             [$field, $unitField] = $result;
 
+            $group = $familyAttribute->getAttribute()->getGroup();
+            $groupId = $group->getId();
+
+            if (!isset($sections[$groupId])) {
+                $sections[$groupId] = $this->createGroupSection($group, $locale);
+            }
+            $section = $sections[$groupId];
+
             $section->addItem($field);
 
             if (null !== $unitField) {
@@ -90,8 +96,10 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
                 : new PropertyMetadata($field->getName(), $field->isRequired());
         }
 
-        if ([] !== $section->getItems()) {
-            $items[$section->getName()] = $section;
+        if ([] !== $sections) {
+            foreach ($sections as $section) {
+                $items[$section->getName()] = $section;
+            }
             $formMetadata->setItems($items);
         }
 
@@ -100,5 +108,16 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
         }
 
         $formMetadata->setCacheable(false);
+    }
+
+    private function createGroupSection(AttributeGroupInterface $group, string $locale): SectionMetadata
+    {
+        $translation = $group->getTranslation($locale)
+            ?? (($defaultLocale = $group->getDefaultLocale()) !== null ? $group->getTranslation($defaultLocale) : null);
+
+        $section = new SectionMetadata('attribute_group_' . $group->getId());
+        $section->setLabel($translation?->getName() ?? '', $locale);
+
+        return $section;
     }
 }

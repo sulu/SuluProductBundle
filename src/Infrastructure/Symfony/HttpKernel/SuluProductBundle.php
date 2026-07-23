@@ -830,7 +830,6 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.product_family_repository'),
                 new Reference('sulu_product.attribute_field_factory'),
                 new Reference('sulu_admin.property_metadata_mapper_registry'),
-                new Reference('translator'),
                 new Reference('sulu_product.product_repository'),
             ])
             ->tag('sulu_admin.form_metadata_visitor');
@@ -841,7 +840,6 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.product_family_repository'),
                 new Reference('sulu_product.attribute_field_factory'),
                 new Reference('sulu_admin.property_metadata_mapper_registry'),
-                new Reference('translator'),
             ])
             ->tag('sulu_admin.form_metadata_visitor');
 

@@ -26,6 +26,8 @@ use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadataMapperRegist
 use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
 use Sulu\Product\Application\AttributeType\NumberAttributeType;
 use Sulu\Product\Domain\Measurement\MeasurementRegistry;
+use Sulu\Product\Domain\Model\AttributeGroupInterface;
+use Sulu\Product\Domain\Model\AttributeGroupTranslationInterface;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeTranslationInterface;
 use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
@@ -70,8 +72,19 @@ class ProductVariantAttributeFormMetadataVisitorTest extends TestCase
                 $translator,
             ),
             new PropertyMetadataMapperRegistry($mapperContainer),
-            $translator,
         );
+    }
+
+    private function group(int $id = 1, string $name = 'Color'): AttributeGroupInterface
+    {
+        $translation = $this->prophesize(AttributeGroupTranslationInterface::class);
+        $translation->getName()->willReturn($name);
+
+        $group = $this->prophesize(AttributeGroupInterface::class);
+        $group->getId()->willReturn($id);
+        $group->getTranslation('en')->willReturn($translation->reveal());
+
+        return $group->reveal();
     }
 
     private function fragmentWithValueField(): FormMetadata
@@ -102,6 +115,7 @@ class ProductVariantAttributeFormMetadataVisitorTest extends TestCase
         $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
         $attribute->getConfig()->willReturn([]);
         $attribute->getTranslation('en')->willReturn($translation->reveal());
+        $attribute->getGroup()->willReturn($this->group());
 
         $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
         $familyAttribute->getAttribute()->willReturn($attribute->reveal());
@@ -164,8 +178,8 @@ class ProductVariantAttributeFormMetadataVisitorTest extends TestCase
         $this->visitor()->visitFormMetadata($form, 'en', ['parentId' => 'parent-1']);
 
         $items = $form->getItems();
-        self::assertArrayHasKey('attributes', $items);
-        $section = $items['attributes'];
+        self::assertArrayHasKey('attribute_group_1', $items);
+        $section = $items['attribute_group_1'];
         self::assertInstanceOf(SectionMetadata::class, $section);
         $sectionItems = $section->getItems();
 
@@ -201,7 +215,7 @@ class ProductVariantAttributeFormMetadataVisitorTest extends TestCase
 
         $this->visitor()->visitFormMetadata($form, 'en', ['parentId' => 'parent-1']);
 
-        self::assertArrayNotHasKey('attributes', $form->getItems());
+        self::assertArrayNotHasKey('attribute_group_1', $form->getItems());
     }
 
     public function testAddsUnitFieldForVariantAttributeWithUnit(): void
@@ -216,6 +230,7 @@ class ProductVariantAttributeFormMetadataVisitorTest extends TestCase
         $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
         $attribute->getConfig()->willReturn(['unit' => 'GRAM']);
         $attribute->getTranslation('en')->willReturn($translation->reveal());
+        $attribute->getGroup()->willReturn($this->group());
 
         $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
         $familyAttribute->getAttribute()->willReturn($attribute->reveal());
@@ -235,8 +250,8 @@ class ProductVariantAttributeFormMetadataVisitorTest extends TestCase
         $this->visitor()->visitFormMetadata($form, 'en', ['parentId' => 'parent-1']);
 
         $items = $form->getItems();
-        self::assertArrayHasKey('attributes', $items);
-        $section = $items['attributes'];
+        self::assertArrayHasKey('attribute_group_1', $items);
+        $section = $items['attribute_group_1'];
         self::assertInstanceOf(SectionMetadata::class, $section);
         $sectionItems = $section->getItems();
 
@@ -256,6 +271,7 @@ class ProductVariantAttributeFormMetadataVisitorTest extends TestCase
         $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
         $attribute->getConfig()->willReturn([]);
         $attribute->getTranslation('en')->willReturn($translation->reveal());
+        $attribute->getGroup()->willReturn($this->group());
 
         $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
         $familyAttribute->getAttribute()->willReturn($attribute->reveal());
@@ -284,10 +300,74 @@ class ProductVariantAttributeFormMetadataVisitorTest extends TestCase
         $this->visitor()->visitFormMetadata($form, 'en', ['parentId' => 'parent-1']);
 
         $items = $form->getItems();
-        self::assertArrayHasKey('attributes', $items);
-        $section = $items['attributes'];
+        self::assertArrayHasKey('attribute_group_1', $items);
+        $section = $items['attribute_group_1'];
         self::assertInstanceOf(SectionMetadata::class, $section);
         self::assertArrayHasKey('attributes/13', $section->getItems());
         self::assertFalse($form->isCacheable());
+    }
+
+    public function testGroupsVariantAttributesIntoSeparateSectionsPerGroup(): void
+    {
+        $translation7 = $this->prophesize(AttributeTranslationInterface::class);
+        $translation7->getName()->willReturn('Color');
+        $translation7->getDescription()->willReturn(null);
+
+        $attribute7 = $this->prophesize(AttributeInterface::class);
+        $attribute7->getId()->willReturn(7);
+        $attribute7->getKey()->willReturn('color');
+        $attribute7->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
+        $attribute7->getConfig()->willReturn([]);
+        $attribute7->getTranslation('en')->willReturn($translation7->reveal());
+        $attribute7->getGroup()->willReturn($this->group(1, 'Color'));
+
+        $familyAttribute7 = $this->prophesize(ProductFamilyAttributeInterface::class);
+        $familyAttribute7->getAttribute()->willReturn($attribute7->reveal());
+        $familyAttribute7->isRequired()->willReturn(false);
+        $familyAttribute7->isVariantSpecific()->willReturn(true);
+
+        $translation8 = $this->prophesize(AttributeTranslationInterface::class);
+        $translation8->getName()->willReturn('Size');
+        $translation8->getDescription()->willReturn(null);
+
+        $attribute8 = $this->prophesize(AttributeInterface::class);
+        $attribute8->getId()->willReturn(8);
+        $attribute8->getKey()->willReturn('size');
+        $attribute8->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
+        $attribute8->getConfig()->willReturn([]);
+        $attribute8->getTranslation('en')->willReturn($translation8->reveal());
+        $attribute8->getGroup()->willReturn($this->group(2, 'Size'));
+
+        $familyAttribute8 = $this->prophesize(ProductFamilyAttributeInterface::class);
+        $familyAttribute8->getAttribute()->willReturn($attribute8->reveal());
+        $familyAttribute8->isRequired()->willReturn(false);
+        $familyAttribute8->isVariantSpecific()->willReturn(true);
+
+        $family = $this->prophesize(ProductFamilyInterface::class);
+        $family->getFamilyAttributes()->willReturn([
+            $familyAttribute7->reveal(),
+            $familyAttribute8->reveal(),
+        ]);
+
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'parent-1'])->willReturn($family->reveal());
+        $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
+            ->willReturn($this->fragmentWithValueField());
+
+        $form = new FormMetadata();
+        $form->setKey('product_variant');
+
+        $this->visitor()->visitFormMetadata($form, 'en', ['parentId' => 'parent-1']);
+
+        $items = $form->getItems();
+        self::assertArrayHasKey('attribute_group_1', $items);
+        self::assertArrayHasKey('attribute_group_2', $items);
+
+        $sectionOne = $items['attribute_group_1'];
+        self::assertInstanceOf(SectionMetadata::class, $sectionOne);
+        self::assertArrayHasKey('attributes/7', $sectionOne->getItems());
+
+        $sectionTwo = $items['attribute_group_2'];
+        self::assertInstanceOf(SectionMetadata::class, $sectionTwo);
+        self::assertArrayHasKey('attributes/8', $sectionTwo->getItems());
     }
 }
