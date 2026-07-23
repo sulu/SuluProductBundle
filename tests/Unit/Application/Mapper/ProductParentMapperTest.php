@@ -15,6 +15,7 @@ namespace Sulu\Product\Tests\Unit\Application\Mapper;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Sulu\Product\Application\Mapper\ProductParentMapper;
 use Sulu\Product\Domain\Model\Product;
@@ -61,5 +62,20 @@ class ProductParentMapperTest extends TestCase
 
         self::assertSame(ProductInterface::TYPE_PRODUCT, $product->getType());
         self::assertNull($product->getParent());
+    }
+
+    public function testNoopWhenProductIsNotAConcreteProduct(): void
+    {
+        $repository = $this->prophesize(ProductRepositoryInterface::class);
+        $mapper = new ProductParentMapper($repository->reveal());
+
+        $product = $this->prophesize(ProductInterface::class);
+        $product->setType(Argument::any())->shouldNotBeCalled();
+        $product->setParent(Argument::any())->shouldNotBeCalled();
+
+        $mapper->mapProductData(
+            $product->reveal(),
+            ['type' => ProductInterface::TYPE_VARIANT, 'parent' => 'parent-uuid'],
+        );
     }
 }

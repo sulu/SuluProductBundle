@@ -178,4 +178,116 @@ class ProductVariantAttributeFormMetadataVisitorTest extends TestCase
 
         self::assertFalse($form->isCacheable());
     }
+
+    public function testSkipsVariantAttributeWhenFieldCannotBeBuilt(): void
+    {
+        $attribute = $this->prophesize(AttributeInterface::class);
+        $attribute->getId()->willReturn(9);
+        $attribute->getKey()->willReturn('mystery');
+        $attribute->getType()->willReturn('unregistered_type');
+        $attribute->getConfig()->willReturn([]);
+
+        $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
+        $familyAttribute->getAttribute()->willReturn($attribute->reveal());
+        $familyAttribute->isVariant()->willReturn(true);
+
+        $family = $this->prophesize(ProductFamilyInterface::class);
+        $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
+
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'parent-1'])->willReturn($family->reveal());
+
+        $form = new FormMetadata();
+        $form->setKey('product_variant');
+
+        $this->visitor()->visitFormMetadata($form, 'en', ['parentId' => 'parent-1']);
+
+        self::assertArrayNotHasKey('attributes', $form->getItems());
+    }
+
+    public function testAddsUnitFieldForVariantAttributeWithUnit(): void
+    {
+        $translation = $this->prophesize(AttributeTranslationInterface::class);
+        $translation->getName()->willReturn('Weight');
+        $translation->getDescription()->willReturn(null);
+
+        $attribute = $this->prophesize(AttributeInterface::class);
+        $attribute->getId()->willReturn(11);
+        $attribute->getKey()->willReturn('weight');
+        $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
+        $attribute->getConfig()->willReturn(['unit' => 'GRAM']);
+        $attribute->getTranslation('en')->willReturn($translation->reveal());
+
+        $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
+        $familyAttribute->getAttribute()->willReturn($attribute->reveal());
+        $familyAttribute->isRequired()->willReturn(false);
+        $familyAttribute->isVariant()->willReturn(true);
+
+        $family = $this->prophesize(ProductFamilyInterface::class);
+        $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
+
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'parent-1'])->willReturn($family->reveal());
+        $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
+            ->willReturn($this->fragmentWithValueField());
+
+        $form = new FormMetadata();
+        $form->setKey('product_variant');
+
+        $this->visitor()->visitFormMetadata($form, 'en', ['parentId' => 'parent-1']);
+
+        $items = $form->getItems();
+        self::assertArrayHasKey('attributes', $items);
+        $section = $items['attributes'];
+        self::assertInstanceOf(SectionMetadata::class, $section);
+        $sectionItems = $section->getItems();
+
+        self::assertArrayHasKey('attributes/11', $sectionItems);
+        self::assertArrayHasKey('attributes/11_unit', $sectionItems);
+    }
+
+    public function testUsesFallbackPropertyMetadataForUnmappedFieldType(): void
+    {
+        $translation = $this->prophesize(AttributeTranslationInterface::class);
+        $translation->getName()->willReturn('Color');
+        $translation->getDescription()->willReturn(null);
+
+        $attribute = $this->prophesize(AttributeInterface::class);
+        $attribute->getId()->willReturn(13);
+        $attribute->getKey()->willReturn('color');
+        $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
+        $attribute->getConfig()->willReturn([]);
+        $attribute->getTranslation('en')->willReturn($translation->reveal());
+
+        $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
+        $familyAttribute->getAttribute()->willReturn($attribute->reveal());
+        $familyAttribute->isRequired()->willReturn(true);
+        $familyAttribute->isVariant()->willReturn(true);
+
+        $family = $this->prophesize(ProductFamilyInterface::class);
+        $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
+
+        // A fragment whose "value" field has a type with no registered PropertyMetadataMapper
+        // ('number' is the only mapper), forcing the fallback PropertyMetadata branch.
+        $valueField = new FieldMetadata('value');
+        $valueField->setType('text_line');
+        $valueField->setColSpan(12);
+        $fragment = new FormMetadata();
+        $fragment->setKey('product_attribute_number');
+        $fragment->addItem($valueField);
+
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'parent-1'])->willReturn($family->reveal());
+        $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
+            ->willReturn($fragment);
+
+        $form = new FormMetadata();
+        $form->setKey('product_variant');
+
+        $this->visitor()->visitFormMetadata($form, 'en', ['parentId' => 'parent-1']);
+
+        $items = $form->getItems();
+        self::assertArrayHasKey('attributes', $items);
+        $section = $items['attributes'];
+        self::assertInstanceOf(SectionMetadata::class, $section);
+        self::assertArrayHasKey('attributes/13', $section->getItems());
+        self::assertFalse($form->isCacheable());
+    }
 }

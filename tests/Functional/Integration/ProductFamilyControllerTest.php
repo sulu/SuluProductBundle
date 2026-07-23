@@ -255,6 +255,53 @@ class ProductFamilyControllerTest extends SuluTestCase
         $this->assertHttpStatusCode(422, $this->client->getResponse());
     }
 
+    public function testPutWithVariantAttributeNotEnabledReturns422(): void
+    {
+        self::purgeDatabase();
+
+        $attributeId = $this->createAttribute('size', 'Size');
+
+        $this->client->request(
+            'POST',
+            '/admin/api/product-families.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'name' => 'Apparel',
+                'description' => null,
+            ]) ?: null,
+        );
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+        $created = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($created);
+        $familyId = $created['id'];
+        $this->assertIsString($familyId);
+
+        $this->client->request(
+            'PUT',
+            '/admin/api/product-families/' . $familyId . '.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'name' => 'Apparel',
+                'description' => null,
+                'attributes' => [
+                    $attributeId => ['enabled' => false, 'required' => false, 'variant' => true],
+                ],
+            ]) ?: null,
+        );
+
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(422, $response);
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertArrayHasKey('detail', $data);
+    }
+
     private function createAttribute(string $key, string $name): int
     {
         $container = self::getContainer();

@@ -31,6 +31,7 @@ use Sulu\Product\Application\Message\ModifyProductMessage;
 use Sulu\Product\Application\Message\RemoveProductMessage;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
 use Sulu\Product\Domain\Exception\RequiredProductAttributeMissingException;
+use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
@@ -173,8 +174,6 @@ final class ProductVariantController implements SecuredControllerInterface
 
         try {
             $this->handle(new Envelope($message, [new EnableFlushStamp()]));
-        } catch (ProductNotFoundException $e) {
-            throw new NotFoundHttpException($e->getMessage(), $e);
         } catch (RequiredProductAttributeMissingException $e) {
             return new JsonResponse(['detail' => $e->getMessage()], 422);
         } catch (InvalidArgumentException $e) {
@@ -265,6 +264,7 @@ final class ProductVariantController implements SecuredControllerInterface
      */
     private function buildData(Request $request, string $parentId, ProductInterface $parent): array
     {
+        $family = $this->resolveFamily($parent);
         $requestData = $request->request->all();
 
         $data = \array_replace(
@@ -273,32 +273,31 @@ final class ProductVariantController implements SecuredControllerInterface
                 'locale' => $this->getLocale($request),
                 'type' => ProductInterface::TYPE_VARIANT,
                 'parent' => $parentId,
-                'productFamily' => $this->resolveFamilyUuid($parent),
+                'productFamily' => $family->getUuid(),
             ],
         );
 
         if (isset($data['attributes']) && \is_array($data['attributes'])) {
             /** @var array<int, mixed> $attributes */
             $attributes = $data['attributes'];
-            $data['attributes'] = $this->stripInheritedAttributes($parent, $attributes);
+            $data['attributes'] = $this->stripInheritedAttributes($family, $attributes);
         }
 
         return $data;
     }
 
-    private function resolveFamilyUuid(ProductInterface $parent): string
+    private function resolveFamily(ProductInterface $parent): ProductFamilyInterface
     {
         $family = $this->productFamilyRepository->findOneBy(['productUuid' => $parent->getUuid()]);
-        $familyUuid = $family?->getUuid();
 
-        if (null === $familyUuid) {
+        if (null === $family) {
             throw new \RuntimeException(\sprintf(
                 'Parent product "%s" has no product family assigned; a variant cannot be created or modified without one.',
                 $parent->getUuid(),
             ));
         }
 
-        return $familyUuid;
+        return $family;
     }
 
     /**
@@ -309,13 +308,8 @@ final class ProductVariantController implements SecuredControllerInterface
      *
      * @return array<int, mixed>
      */
-    private function stripInheritedAttributes(ProductInterface $parent, array $attributes): array
+    private function stripInheritedAttributes(ProductFamilyInterface $family, array $attributes): array
     {
-        $family = $this->productFamilyRepository->findOneBy(['productUuid' => $parent->getUuid()]);
-        if (null === $family) {
-            return $attributes;
-        }
-
         foreach ($family->getFamilyAttributes() as $familyAttribute) {
             if (!$familyAttribute->isVariant()) {
                 unset($attributes[$familyAttribute->getAttribute()->getId()]);

@@ -23,6 +23,7 @@ use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeTranslation;
 use Sulu\Product\Domain\Model\Product;
+use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
@@ -142,7 +143,7 @@ class ProductVariantControllerTest extends SuluTestCase
         return $id;
     }
 
-    private function createAttribute(string $key, string $name): int
+    private function createAttribute(string $key, string $name, string $type = AttributeInterface::TYPE_TEXT): int
     {
         $container = self::getContainer();
 
@@ -158,7 +159,7 @@ class ProductVariantControllerTest extends SuluTestCase
 
         $attribute = $attributeRepository->create($group);
         $attribute->setKey($key);
-        $attribute->setType(AttributeInterface::TYPE_TEXT);
+        $attribute->setType($type);
         $attribute->addTranslation(new AttributeTranslation($attribute, 'en', $name));
         $attributeRepository->save($attribute);
 
@@ -1009,5 +1010,215 @@ class ProductVariantControllerTest extends SuluTestCase
         $this->assertIsBool($data['publishedState']);
 
         return $data['publishedState'];
+    }
+
+    /**
+     * A plain locale mismatch (GET with a locale the variant was never translated into) does not
+     * reach this branch — Sulu's ghost-locale fallback still resolves content via the always-present
+     * unlocalized dimension content row (see testPublishingParentInASecondLocaleSkipsAVariantWithNoContentInThatLocale).
+     * ContentNotFoundException is only raised once every dimension content row is gone, so — mirroring
+     * ProductControllerTest::testGetReturnsTemplateOnlyWhenContentMissing() — the rows are deleted directly.
+     */
+    public function testGetReturnsTemplateOnlyWhenVariantContentMissing(): void
+    {
+        self::purgeDatabase();
+        $familyId = $this->createProductFamily();
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $variantId = $this->createVariant($parentId, 'Variant L');
+
+        /** @var EntityManagerInterface $em */
+        $em = self::getContainer()->get('doctrine.orm.entity_manager');
+        $em->createQuery('DELETE FROM ' . ProductDimensionContent::class . ' pdc WHERE pdc.product = (SELECT p FROM ' . Product::class . ' p WHERE p.uuid = :uuid)')
+            ->setParameter('uuid', $variantId)
+            ->execute();
+        $em->clear();
+
+        $this->client->request('GET', '/admin/api/products/' . $parentId . '/variants/' . $variantId . '.json?locale=en');
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(200, $response);
+        $this->assertSame(
+            ['template' => ProductInterface::TEMPLATE_TYPE],
+            \json_decode((string) $response->getContent(), true),
+        );
+    }
+
+    public function testPostWithNonExistentParentReturns404(): void
+    {
+        self::purgeDatabase();
+
+        $this->client->request(
+            'POST',
+            '/admin/api/products/non-existent-uuid/variants.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode(['locale' => 'en', 'code' => 'X-1', 'title' => 'Should Fail']) ?: null,
+        );
+
+        $this->assertHttpStatusCode(404, $this->client->getResponse());
+    }
+
+    public function testPutWithNonExistentVariantIdReturns404(): void
+    {
+        self::purgeDatabase();
+        $familyId = $this->createProductFamily();
+        $parentId = $this->createProduct($familyId, type: ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+
+        $this->client->request(
+            'PUT',
+            '/admin/api/products/' . $parentId . '/variants/non-existent-uuid.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode(['locale' => 'en', 'code' => 'X-1', 'title' => 'Should Fail']) ?: null,
+        );
+
+        $this->assertHttpStatusCode(404, $this->client->getResponse());
+    }
+
+    public function testDeleteWithNonExistentVariantIdReturns404(): void
+    {
+        self::purgeDatabase();
+        $familyId = $this->createProductFamily();
+        $parentId = $this->createProduct($familyId, type: ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+
+        $this->client->request('DELETE', '/admin/api/products/' . $parentId . '/variants/non-existent-uuid.json?locale=en');
+
+        $this->assertHttpStatusCode(404, $this->client->getResponse());
+    }
+
+    public function testPutClearingRequiredVariantAttributeReturns422(): void
+    {
+        self::purgeDatabase();
+
+        $axisId = $this->createAttribute('size', 'Size');
+        $familyId = $this->createProductFamily([$axisId => ['enabled' => true, 'required' => true, 'variant' => true]]);
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+
+        $this->client->request(
+            'POST',
+            '/admin/api/products/' . $parentId . '/variants.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'code' => 'CX3-RD-L',
+                'title' => 'Variant L',
+                'attributes' => [$axisId => 'L'],
+            ]) ?: null,
+        );
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+        $created = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($created);
+        $childId = $created['id'];
+        $this->assertIsString($childId);
+
+        // Explicitly clearing the required axis attribute's value must be rejected.
+        $this->client->request(
+            'PUT',
+            '/admin/api/products/' . $parentId . '/variants/' . $childId . '.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'code' => 'CX3-RD-L',
+                'title' => 'Variant L',
+                'attributes' => [$axisId => null],
+            ]) ?: null,
+        );
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(422, $response);
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertArrayHasKey('detail', $data);
+    }
+
+    public function testPutWithInvalidAttributeValueReturns400(): void
+    {
+        self::purgeDatabase();
+
+        $axisId = $this->createAttribute('weight', 'Weight', AttributeInterface::TYPE_NUMBER);
+        $familyId = $this->createProductFamily([$axisId => ['enabled' => true, 'variant' => true]]);
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+
+        $this->client->request(
+            'POST',
+            '/admin/api/products/' . $parentId . '/variants.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'code' => 'CX3-RD-L',
+                'title' => 'Variant L',
+                'attributes' => [$axisId => '10'],
+            ]) ?: null,
+        );
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+        $created = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($created);
+        $childId = $created['id'];
+        $this->assertIsString($childId);
+
+        $this->client->request(
+            'PUT',
+            '/admin/api/products/' . $parentId . '/variants/' . $childId . '.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'code' => 'CX3-RD-L',
+                'title' => 'Variant L',
+                'attributes' => [$axisId => 'not-a-number'],
+            ]) ?: null,
+        );
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(400, $response);
+        $this->assertSame(
+            ['detail' => 'Invalid attribute value provided.'],
+            \json_decode((string) $response->getContent(), true),
+        );
+    }
+
+    /**
+     * `resolveFamily()` throws a plain `\RuntimeException` — surfaced as a 500 — when the parent
+     * was never assigned a product family (`productFamily` omitted at creation).
+     */
+    public function testPostVariantUnderParentWithNoProductFamilyReturns500(): void
+    {
+        self::purgeDatabase();
+
+        $this->client->request(
+            'POST',
+            '/admin/api/products.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'title' => 'Orphan Parent',
+                'url' => '/orphan-parent',
+                'type' => ProductInterface::TYPE_PRODUCT_WITH_VARIANTS,
+            ]) ?: null,
+        );
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($data);
+        $parentId = $data['id'];
+        $this->assertIsString($parentId);
+
+        $this->client->request(
+            'POST',
+            '/admin/api/products/' . $parentId . '/variants.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode(['locale' => 'en', 'code' => 'ORPHAN-1', 'title' => 'Should Fail']) ?: null,
+        );
+
+        $this->assertHttpStatusCode(500, $this->client->getResponse());
     }
 }

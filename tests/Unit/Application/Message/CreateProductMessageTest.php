@@ -73,4 +73,32 @@ class CreateProductMessageTest extends TestCase
 
         $this->assertSame([], $message->getAttributes());
     }
+
+    public function testGetTypeIsNullByDefault(): void
+    {
+        $message = new CreateProductMessage(['locale' => 'en', 'productFamily' => 'fam-1']);
+
+        $this->assertNull($message->getType());
+    }
+
+    public function testGetTypeWhenProvided(): void
+    {
+        $message = new CreateProductMessage(['locale' => 'en', 'productFamily' => 'fam-1', 'type' => 'variant']);
+
+        $this->assertSame('variant', $message->getType());
+    }
+
+    public function testGetParentIsNullByDefault(): void
+    {
+        $message = new CreateProductMessage(['locale' => 'en', 'productFamily' => 'fam-1']);
+
+        $this->assertNull($message->getParent());
+    }
+
+    public function testGetParentWhenProvided(): void
+    {
+        $message = new CreateProductMessage(['locale' => 'en', 'productFamily' => 'fam-1', 'parent' => 'parent-123']);
+
+        $this->assertSame('parent-123', $message->getParent());
+    }
 }
