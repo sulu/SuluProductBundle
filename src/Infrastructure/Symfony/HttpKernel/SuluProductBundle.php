@@ -96,6 +96,7 @@ use Sulu\Product\Infrastructure\Doctrine\Repository\ProductRepository;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeGroupAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
+use Sulu\Product\Infrastructure\Sulu\Admin\ProductAssociationsFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAttributeFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductContentAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductContentFormMetadataVisitor;
@@ -521,6 +522,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_security.security_checker'),
                 new Reference('sulu.core.localization_manager'),
                 new Reference('sulu_activity.activity_list_view_builder_factory'),
+                new Reference('sulu_product.association_type_registry'),
             ])
             ->tag('sulu.context', ['context' => 'admin'])
             ->tag('sulu.admin');
@@ -773,6 +775,15 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_admin.xml_form_metadata_loader'),
                 new Reference('sulu_admin.property_metadata_mapper_registry'),
                 new Reference('sulu_product.measurement_registry'),
+                new Reference('translator'),
+            ])
+            ->tag('sulu_admin.form_metadata_visitor');
+
+        $services->set('sulu_product.product_associations_form_metadata_visitor')
+            ->class(ProductAssociationsFormMetadataVisitor::class)
+            ->args([
+                new Reference('sulu_product.association_type_registry'),
+                new Reference('sulu_admin.property_metadata_mapper_registry'),
                 new Reference('translator'),
             ])
             ->tag('sulu_admin.form_metadata_visitor');

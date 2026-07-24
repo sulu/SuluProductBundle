@@ -94,5 +94,6 @@
     "sulu_product.product_status.announced": "Angekündigt",
     "sulu_product.product_status.available": "Verfügbar",
     "sulu_product.product_status.discontinued": "Eingestellt",
-    "sulu_product.invalid_status": "Der Status \"{status}\" ist kein gültiger Produktstatus."
+    "sulu_product.invalid_status": "Der Status \"{status}\" ist kein gültiger Produktstatus.",
+    "sulu_product.associations": "Verknüpfungen"
 }

@@ -24,6 +24,7 @@ use Sulu\Bundle\AdminBundle\Admin\View\ViewCollection;
 use Sulu\Component\Localization\Manager\LocalizationManagerInterface;
 use Sulu\Component\Security\Authorization\PermissionTypes;
 use Sulu\Component\Security\Authorization\SecurityCheckerInterface;
+use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
 use Sulu\Product\Domain\Model\ProductInterface;
 
 /**
@@ -43,6 +44,7 @@ class ProductAdmin extends Admin
         private SecurityCheckerInterface $securityChecker,
         private LocalizationManagerInterface $localizationManager,
         private ActivityViewBuilderFactoryInterface $activityViewBuilderFactory,
+        private ProductAssociationTypeRegistry $associationTypeRegistry,
     ) {
     }
 
@@ -189,6 +191,19 @@ class ProductAdmin extends Admin
                 ->addToolbarActions($editToolbarActions)
                 ->setParent(static::EDIT_TABS_VIEW),
         );
+
+        // Associations form — edit mode only, when at least one association type is configured
+        if ([] !== $this->associationTypeRegistry->getTypes()) {
+            $viewCollection->add(
+                $this->viewBuilderFactory->createFormViewBuilder(static::EDIT_TABS_VIEW . '.associations', '/associations')
+                    ->setResourceKey(ProductInterface::RESOURCE_KEY)
+                    ->setFormKey('product_associations')
+                    ->setTabTitle('sulu_product.associations')
+                    ->setTabOrder(20)
+                    ->addRouterAttributesToFormMetadata(['id'])
+                    ->setParent(static::EDIT_TABS_VIEW),
+            );
+        }
 
         // Activity tab (added by activityViewBuilderFactory if it has permission)
         $insightsViewName = static::EDIT_TABS_VIEW . '.insights';

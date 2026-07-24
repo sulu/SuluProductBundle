@@ -25,6 +25,7 @@ use Sulu\Bundle\AdminBundle\Admin\View\ViewCollection;
 use Sulu\Component\Localization\Manager\LocalizationManagerInterface;
 use Sulu\Component\Security\Authorization\PermissionTypes;
 use Sulu\Component\Security\Authorization\SecurityCheckerInterface;
+use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeGroupAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
@@ -63,6 +64,7 @@ class ProductAdminTest extends TestCase
             $this->securityChecker->reveal(),
             $this->localizationManager->reveal(),
             $this->activityViewBuilderFactory,
+            new ProductAssociationTypeRegistry([]),
         );
     }
 
@@ -237,6 +239,45 @@ class ProductAdminTest extends TestCase
         $this->admin->configureViews($viewCollection);
 
         $this->assertTrue($viewCollection->has(ProductAdmin::EDIT_TABS_VIEW . '.details'));
+    }
+
+    public function testConfigureViewsDoesNotRegisterAssociationsTabWithoutConfiguredTypes(): void
+    {
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(true);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::ADD)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::DELETE)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::LIVE)->willReturn(false);
+        $this->securityChecker->hasPermission(ActivityAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(false);
+
+        $viewCollection = new ViewCollection();
+        $this->admin->configureViews($viewCollection);
+
+        $this->assertFalse($viewCollection->has(ProductAdmin::EDIT_TABS_VIEW . '.associations'));
+    }
+
+    public function testConfigureViewsRegistersAssociationsTabWithConfiguredTypes(): void
+    {
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(true);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::ADD)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::DELETE)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::LIVE)->willReturn(false);
+        $this->securityChecker->hasPermission(ActivityAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(false);
+
+        $admin = new ProductAdmin(
+            $this->viewBuilderFactory,
+            $this->securityChecker->reveal(),
+            $this->localizationManager->reveal(),
+            $this->activityViewBuilderFactory,
+            new ProductAssociationTypeRegistry(['alternative' => ['label' => 'sulu_product.association_type_alternative']]),
+        );
+
+        $viewCollection = new ViewCollection();
+        $admin->configureViews($viewCollection);
+
+        $this->assertTrue($viewCollection->has(ProductAdmin::EDIT_TABS_VIEW . '.associations'));
+        $this->assertFalse($viewCollection->has(ProductAdmin::ADD_TABS_VIEW . '.associations'));
     }
 
     public function testConfigureViewsWithActivityInsightsView(): void
