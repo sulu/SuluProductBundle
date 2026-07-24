@@ -103,6 +103,7 @@ use Sulu\Product\Infrastructure\Sulu\Admin\ProductFamilyAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductFamilyFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductStatusFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\AdditionalWebspacesDataMapper;
+use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductAssociationsDataMapper;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductAttributesDataMapper;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductDetailsDataMapper;
 use Sulu\Product\Infrastructure\Sulu\Content\Merger\AdditionalWebspacesMerger;
@@ -464,6 +465,14 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.attribute_type_registry'),
             ])
             ->tag('sulu_content.data_mapper', ['priority' => -10]);
+
+        $services->set('sulu_product.product_associations_data_mapper')
+            ->class(ProductAssociationsDataMapper::class)
+            ->args([
+                new Reference('sulu_product.association_type_registry'),
+                new Reference('sulu_product.product_repository'),
+            ])
+            ->tag('sulu_content.data_mapper');
 
         $services->set('sulu_product.product_details_merger')
             ->class(ProductDetailsMerger::class)

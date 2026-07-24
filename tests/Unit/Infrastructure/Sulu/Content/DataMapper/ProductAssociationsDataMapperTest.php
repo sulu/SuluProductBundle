@@ -1,0 +1,208 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of Sulu.
+ *
+ * (c) Sulu GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
+namespace Sulu\Product\Tests\Unit\Infrastructure\Sulu\Content\DataMapper;
+
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\TestCase;
+use Prophecy\Argument;
+use Prophecy\PhpUnit\ProphecyTrait;
+use Prophecy\Prophecy\ObjectProphecy;
+use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
+use Sulu\Product\Domain\Model\Product;
+use Sulu\Product\Domain\Model\ProductAssociation;
+use Sulu\Product\Domain\Model\ProductDimensionContent;
+use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
+use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductAssociationsDataMapper;
+
+#[CoversClass(ProductAssociationsDataMapper::class)]
+final class ProductAssociationsDataMapperTest extends TestCase
+{
+    use ProphecyTrait;
+
+    /** @var ObjectProphecy<ProductRepositoryInterface> */
+    private ObjectProphecy $productRepository;
+
+    private ProductAssociationsDataMapper $mapper;
+
+    protected function setUp(): void
+    {
+        $this->productRepository = $this->prophesize(ProductRepositoryInterface::class);
+
+        $this->mapper = new ProductAssociationsDataMapper(
+            new ProductAssociationTypeRegistry(['alternative' => ['label' => 'Alternative']]),
+            $this->productRepository->reveal(),
+        );
+    }
+
+    public function testEarlyReturnWhenUnlocalizedNotProductDimensionContent(): void
+    {
+        $other = $this->prophesize(DimensionContentInterface::class);
+
+        $this->mapper->map($other->reveal(), $other->reveal(), ['associations' => ['alternative' => ['uuid-b']]]);
+
+        $this->productRepository->findBy(Argument::cetera())->shouldNotHaveBeenCalled();
+        $this->addToAssertionCount(1);
+    }
+
+    public function testEarlyReturnWhenLocalizedNotProductDimensionContent(): void
+    {
+        /** @var ObjectProphecy<ProductDimensionContentInterface> $unloc */
+        $unloc = $this->prophesize(ProductDimensionContentInterface::class);
+        $locOther = $this->prophesize(DimensionContentInterface::class);
+
+        $this->mapper->map($unloc->reveal(), $locOther->reveal(), ['associations' => ['alternative' => ['uuid-b']]]);
+
+        $this->productRepository->findBy(Argument::cetera())->shouldNotHaveBeenCalled();
+        $this->addToAssertionCount(1);
+    }
+
+    public function testIgnoresWhenNoAssociationsKey(): void
+    {
+        $source = new Product('uuid-source');
+        $loc = new ProductDimensionContent($source);
+        $unloc = new ProductDimensionContent($source);
+
+        $this->mapper->map($unloc, $loc, ['locale' => 'en']);
+
+        $this->productRepository->findBy(Argument::cetera())->shouldNotHaveBeenCalled();
+        self::assertSame([], $loc->getAssociations());
+    }
+
+    public function testMapsSubmittedAssociations(): void
+    {
+        $source = new Product('uuid-source');
+        $loc = new ProductDimensionContent($source);
+        $unloc = new ProductDimensionContent($source);
+
+        $productB = new Product('uuid-b');
+        $productC = new Product('uuid-c');
+
+        $this->productRepository->findBy(['uuids' => ['uuid-b', 'uuid-c']])
+            ->willReturn([$productB, $productC]);
+
+        $this->mapper->map($unloc, $loc, [
+            'associations' => ['alternative' => ['uuid-b', 'uuid-c']],
+        ]);
+
+        $result = $loc->getAssociationsByType('alternative');
+        self::assertCount(2, $result);
+        self::assertSame('uuid-b', $result[0]->getTarget()->getUuid());
+        self::assertSame(0, $result[0]->getPosition());
+        self::assertSame('uuid-c', $result[1]->getTarget()->getUuid());
+        self::assertSame(1, $result[1]->getPosition());
+    }
+
+    public function testRemovesDroppedTargets(): void
+    {
+        $source = new Product('uuid-source');
+        $loc = new ProductDimensionContent($source);
+        $unloc = new ProductDimensionContent($source);
+
+        $productB = new Product('uuid-b');
+        $productC = new Product('uuid-c');
+        $loc->addAssociation(new ProductAssociation($loc, $productB, 'alternative', 0));
+        $loc->addAssociation(new ProductAssociation($loc, $productC, 'alternative', 1));
+
+        $this->productRepository->findBy(['uuids' => ['uuid-b']])
+            ->willReturn([$productB]);
+
+        $this->mapper->map($unloc, $loc, [
+            'associations' => ['alternative' => ['uuid-b']],
+        ]);
+
+        $result = $loc->getAssociationsByType('alternative');
+        self::assertCount(1, $result);
+        self::assertSame('uuid-b', $result[0]->getTarget()->getUuid());
+    }
+
+    public function testReordersByIndex(): void
+    {
+        $source = new Product('uuid-source');
+        $loc = new ProductDimensionContent($source);
+        $unloc = new ProductDimensionContent($source);
+
+        $productB = new Product('uuid-b');
+        $productC = new Product('uuid-c');
+        $associationB = new ProductAssociation($loc, $productB, 'alternative', 0);
+        $associationC = new ProductAssociation($loc, $productC, 'alternative', 1);
+        $loc->addAssociation($associationB);
+        $loc->addAssociation($associationC);
+
+        $this->productRepository->findBy(['uuids' => ['uuid-c', 'uuid-b']])
+            ->willReturn([$productC, $productB]);
+
+        $this->mapper->map($unloc, $loc, [
+            'associations' => ['alternative' => ['uuid-c', 'uuid-b']],
+        ]);
+
+        self::assertSame(0, $associationC->getPosition());
+        self::assertSame(1, $associationB->getPosition());
+
+        $result = $loc->getAssociationsByType('alternative');
+        self::assertSame($associationC, $result[0]);
+        self::assertSame($associationB, $result[1]);
+    }
+
+    public function testSkipsUnknownType(): void
+    {
+        $source = new Product('uuid-source');
+        $loc = new ProductDimensionContent($source);
+        $unloc = new ProductDimensionContent($source);
+
+        $this->mapper->map($unloc, $loc, [
+            'associations' => ['nope' => ['uuid-b']],
+        ]);
+
+        $this->productRepository->findBy(Argument::cetera())->shouldNotHaveBeenCalled();
+        self::assertSame([], $loc->getAssociations());
+    }
+
+    public function testSkipsMissingTarget(): void
+    {
+        $source = new Product('uuid-source');
+        $loc = new ProductDimensionContent($source);
+        $unloc = new ProductDimensionContent($source);
+
+        $productB = new Product('uuid-b');
+
+        $this->productRepository->findBy(['uuids' => ['uuid-b', 'uuid-missing']])
+            ->willReturn([$productB]);
+
+        $this->mapper->map($unloc, $loc, [
+            'associations' => ['alternative' => ['uuid-b', 'uuid-missing']],
+        ]);
+
+        $result = $loc->getAssociationsByType('alternative');
+        self::assertCount(1, $result);
+        self::assertSame('uuid-b', $result[0]->getTarget()->getUuid());
+    }
+
+    public function testRejectsSelfReference(): void
+    {
+        $source = new Product('uuid-source');
+        $loc = new ProductDimensionContent($source);
+        $unloc = new ProductDimensionContent($source);
+
+        $this->productRepository->findBy(['uuids' => ['uuid-source']])
+            ->willReturn([]);
+
+        $this->mapper->map($unloc, $loc, [
+            'associations' => ['alternative' => ['uuid-source']],
+        ]);
+
+        self::assertSame([], $loc->getAssociations());
+    }
+}
