@@ -238,6 +238,8 @@ final class ProductRepository implements ProductRepositoryInterface
      *     tagOperator?: 'AND'|'OR',
      *     templateKeys?: string[],
      *     loadGhost?: bool,
+     *     associationTargetUuid?: string,
+     *     associationType?: string,
      *     page?: int,
      *     limit?: int,
      * } $filters
@@ -306,6 +308,26 @@ final class ProductRepository implements ProductRepositoryInterface
                 $filters,
                 $sortBy,
             );
+        }
+
+        $associationTargetUuid = $filters['associationTargetUuid'] ?? null;
+        if (null !== $associationTargetUuid) {
+            Assert::string($associationTargetUuid); // @phpstan-ignore staticMethod.alreadyNarrowedType
+            // inbound association query requires the dimension-content alias, which only exists when locale+stage are provided
+            if (!\array_key_exists('locale', $filters) || !\array_key_exists('stage', $filters)) {
+                throw new \InvalidArgumentException('Filtering by "associationTargetUuid" requires both "locale" and "stage" filters.');
+            }
+            $queryBuilder
+                ->innerJoin('filterDimensionContent.associations', 'productAssociation')
+                ->andWhere('IDENTITY(productAssociation.target) = :associationTargetUuid')
+                ->setParameter('associationTargetUuid', $associationTargetUuid);
+
+            $associationType = $filters['associationType'] ?? null;
+            if (null !== $associationType) {
+                Assert::string($associationType); // @phpstan-ignore staticMethod.alreadyNarrowedType
+                $queryBuilder->andWhere('productAssociation.type = :associationType')
+                    ->setParameter('associationType', $associationType);
+            }
         }
 
         if ([] !== $sortBy) {

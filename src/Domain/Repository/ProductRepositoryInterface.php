@@ -45,6 +45,8 @@ interface ProductRepositoryInterface
      *     locale?: string,
      *     stage?: string,
      *     load_ghost_content?: bool,
+     *     associationTargetUuid?: string,
+     *     associationType?: string,
      * } $filters
      * @param array{
      *     product_admin?: bool,
@@ -62,6 +64,8 @@ interface ProductRepositoryInterface
      *     uuids?: string[],
      *     locale?: string,
      *     stage?: string,
+     *     associationTargetUuid?: string,
+     *     associationType?: string,
      * } $filters
      * @param array{
      *     product_admin?: bool,
@@ -95,6 +99,8 @@ interface ProductRepositoryInterface
      *     tagNames?: string[],
      *     tagOperator?: 'AND'|'OR',
      *     templateKeys?: string[],
+     *     associationTargetUuid?: string,
+     *     associationType?: string,
      *     page?: int,
      *     limit?: int,
      * } $filters
@@ -125,6 +131,8 @@ interface ProductRepositoryInterface
      *     tagNames?: string[],
      *     tagOperator?: 'AND'|'OR',
      *     templateKeys?: string[],
+     *     associationTargetUuid?: string,
+     *     associationType?: string,
      *     page?: int,
      *     limit?: int,
      * } $filters
@@ -150,6 +158,8 @@ interface ProductRepositoryInterface
      *     tagNames?: string[],
      *     tagOperator?: 'AND'|'OR',
      *     templateKeys?: string[],
+     *     associationTargetUuid?: string,
+     *     associationType?: string,
      * } $filters
      */
     public function countBy(array $filters = []): int;
