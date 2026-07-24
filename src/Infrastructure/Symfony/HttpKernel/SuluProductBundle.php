@@ -967,6 +967,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_content.content_aggregator'),
                 new Reference('sulu_route.route_generator'),
                 new Reference('sulu_core.webspace.webspace_manager'),
+                new Reference('sulu_product.product_repository'),
             ])
             ->tag('kernel.event_subscriber');
 

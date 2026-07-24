@@ -24,6 +24,7 @@ use Sulu\Product\Domain\Event\ProductRemovedEvent;
 use Sulu\Product\Domain\Event\ProductWorkflowTransitionAppliedEvent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
+use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Route\Application\Routing\Generator\RouteGeneratorInterface;
 use Sulu\Route\Domain\Repository\RouteRepositoryInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -40,7 +41,8 @@ class ProductCacheInvalidationSubscriber implements EventSubscriberInterface
         private RouteRepositoryInterface $routeRepository,
         private ContentAggregatorInterface $contentAggregator,
         private RouteGeneratorInterface $routeGenerator,
-        private WebspaceManagerInterface $webspaceManager
+        private WebspaceManagerInterface $webspaceManager,
+        private ProductRepositoryInterface $productRepository
     ) {
     }
 
@@ -71,6 +73,7 @@ class ProductCacheInvalidationSubscriber implements EventSubscriberInterface
 
         if (!$this->cacheManager->supportsTags()) {
             $this->invalidateProductPaths($product, $event->getResourceLocale());
+            $this->invalidateReferringProductPaths($product, $event->getResourceLocale());
         }
 
         $this->invalidateProductExcerpt($product, $event->getResourceLocale());
@@ -115,6 +118,23 @@ class ProductCacheInvalidationSubscriber implements EventSubscriberInterface
 
                 $this->cacheManager->invalidatePath($url);
             }
+        }
+    }
+
+    private function invalidateReferringProductPaths(ProductInterface $product, ?string $locale): void
+    {
+        if (!$locale || !$this->cacheManager) {
+            return;
+        }
+
+        $referrers = $this->productRepository->findBy([
+            'associationTargetUuid' => $product->getUuid(),
+            'locale' => $locale,
+            'stage' => DimensionContentInterface::STAGE_LIVE,
+        ]);
+
+        foreach ($referrers as $referrer) {
+            $this->invalidateProductPaths($referrer, $locale);
         }
     }
 
