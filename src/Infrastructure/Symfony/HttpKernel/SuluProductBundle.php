@@ -126,6 +126,7 @@ use Sulu\Product\Infrastructure\Sulu\Content\ResourceLoader\ProductResourceLoade
 use Sulu\Product\Infrastructure\Sulu\Content\Select\AttributeSelectService;
 use Sulu\Product\Infrastructure\Sulu\Content\Select\AttributeTypeSelectService;
 use Sulu\Product\Infrastructure\Sulu\HttpCache\EventSubscriber\ProductCacheInvalidationSubscriber;
+use Sulu\Product\Infrastructure\Sulu\Reference\ProductAssociationReferenceCleanupSubscriber;
 use Sulu\Product\Infrastructure\Sulu\Reference\ProductReferenceRefresher;
 use Sulu\Product\Infrastructure\Sulu\Route\ProductRouteDefaultsProvider;
 use Sulu\Product\Infrastructure\Sulu\Search\AdminProductIndexListener;
@@ -957,6 +958,15 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_content.content_merger'),
             ])
             ->tag('sulu_reference.refresher');
+
+        $services->set('sulu_product.product_association_reference_cleanup_subscriber')
+            ->class(ProductAssociationReferenceCleanupSubscriber::class)
+            ->args([
+                new Reference('sulu_reference.reference_repository'),
+                new Reference('sulu_product.product_reference_refresher'),
+                new Reference('doctrine.orm.entity_manager'),
+            ])
+            ->tag('kernel.event_subscriber');
 
         // Cache Invalidation
         $services->set('sulu_product.product_cache_invalidation_subscriber')
