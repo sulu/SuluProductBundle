@@ -113,8 +113,7 @@ class ProductTwigExtension extends AbstractExtension
                     ?? $productAttribute->getAttributeOptionKey(),
                 AttributeInterface::TYPE_TEXT => $productAttribute->getText(),
                 AttributeInterface::TYPE_NUMBER => $productAttribute->getNumber(),
-                AttributeInterface::TYPE_JSON => $productAttribute->getJson(),
-                AttributeInterface::TYPE_DATE => $productAttribute->getDate(),
+                AttributeInterface::TYPE_DATE => $this->resolveDate($productAttribute->getNumber()),
                 default => $productAttribute->getValue(),
             };
 
@@ -127,5 +126,14 @@ class ProductTwigExtension extends AbstractExtension
         }
 
         return $result;
+    }
+
+    private function resolveDate(?float $timestamp): ?string
+    {
+        if (null === $timestamp) {
+            return null;
+        }
+
+        return (new \DateTimeImmutable('@' . (int) $timestamp))->format('Y-m-d');
     }
 }

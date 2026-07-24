@@ -20,7 +20,6 @@
     "sulu_product.type": "Type",
     "sulu_product.type_number": "Number",
     "sulu_product.type_text": "Text",
-    "sulu_product.type_json": "JSON",
     "sulu_product.type_options": "Options",
     "sulu_product.type_date": "Date",
     "sulu_product.option": "Option",

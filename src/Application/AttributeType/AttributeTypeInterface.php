@@ -23,8 +23,6 @@ interface AttributeTypeInterface
 
     public function getFormKey(): string;
 
-    public function isAvailableInAdmin(): bool;
-
     public function configureField(FieldMetadata $field, AttributeInterface $attribute, string $locale): void;
 
     public function readValue(ProductAttributeValueInterface $value): mixed;

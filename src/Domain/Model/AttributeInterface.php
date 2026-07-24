@@ -19,7 +19,6 @@ interface AttributeInterface extends AuditableInterface
 {
     public const TYPE_NUMBER = 'number';
     public const TYPE_TEXT = 'text';
-    public const TYPE_JSON = 'json';
     public const TYPE_OPTIONS = 'options';
     public const TYPE_DATE = 'date';
 

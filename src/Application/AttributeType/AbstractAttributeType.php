@@ -15,26 +15,10 @@ namespace Sulu\Product\Application\AttributeType;
 
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Product\Domain\Model\AttributeInterface;
-use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 
 abstract class AbstractAttributeType implements AttributeTypeInterface
 {
-    public function isAvailableInAdmin(): bool
-    {
-        return true;
-    }
-
     public function configureField(FieldMetadata $field, AttributeInterface $attribute, string $locale): void
     {
-    }
-
-    public function readValue(ProductAttributeValueInterface $value): mixed
-    {
-        return $value->getJson();
-    }
-
-    public function writeValue(ProductAttributeValueInterface $value, mixed $raw): void
-    {
-        $value->setJson($raw);
     }
 }

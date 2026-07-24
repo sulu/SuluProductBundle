@@ -33,21 +33,19 @@ class DateAttributeTypeTest extends TestCase
         self::assertSame('product_attribute_date', $type->getFormKey());
     }
 
-    public function testValueRoundTripUsesDateColumn(): void
+    public function testValueRoundTripStoresUnixTimestamp(): void
     {
         $type = new DateAttributeType();
         $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
 
         $type->writeValue($value, '2026-07-24');
 
-        $date = $value->getDate();
-        self::assertInstanceOf(\DateTimeImmutable::class, $date);
-        self::assertSame('2026-07-24', $date->format('Y-m-d'));
-        self::assertSame('00:00:00', $date->format('H:i:s'));
+        $expected = (float) (new \DateTimeImmutable('2026-07-24 00:00:00', new \DateTimeZone('UTC')))->getTimestamp();
+        self::assertSame($expected, $value->getNumber());
         self::assertSame('2026-07-24', $type->readValue($value));
     }
 
-    public function testWriteNullClearsDate(): void
+    public function testWriteNullClearsNumber(): void
     {
         $type = new DateAttributeType();
         $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
@@ -55,11 +53,11 @@ class DateAttributeTypeTest extends TestCase
 
         $type->writeValue($value, null);
 
-        self::assertNull($value->getDate());
+        self::assertNull($value->getNumber());
         self::assertNull($type->readValue($value));
     }
 
-    public function testWriteEmptyStringClearsDate(): void
+    public function testWriteEmptyStringClearsNumber(): void
     {
         $type = new DateAttributeType();
         $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
@@ -67,7 +65,7 @@ class DateAttributeTypeTest extends TestCase
 
         $type->writeValue($value, '');
 
-        self::assertNull($value->getDate());
+        self::assertNull($value->getNumber());
     }
 
     public function testWriteInvalidFormatThrows(): void
@@ -80,7 +78,17 @@ class DateAttributeTypeTest extends TestCase
         $type->writeValue($value, 'not-a-date');
     }
 
-    public function testReadValueReturnsNullWhenNoDate(): void
+    public function testWriteOverflowDateThrows(): void
+    {
+        $type = new DateAttributeType();
+        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        $type->writeValue($value, '2026-02-31');
+    }
+
+    public function testReadValueReturnsNullWhenNoNumber(): void
     {
         $type = new DateAttributeType();
         $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');

@@ -25,10 +25,6 @@ class ProductAttributeValue implements ProductAttributeValueInterface
 
     protected ?string $text = null;
 
-    protected mixed $json = null;
-
-    protected ?\DateTimeImmutable $date = null;
-
     protected ProductDimensionContentInterface $productDimensionContent;
 
     protected AttributeInterface $attribute;
@@ -93,37 +89,11 @@ class ProductAttributeValue implements ProductAttributeValueInterface
         return $this;
     }
 
-    public function getJson(): mixed
-    {
-        return $this->json;
-    }
-
-    public function setJson(mixed $json): self
-    {
-        $this->json = $json;
-
-        return $this;
-    }
-
-    public function getDate(): ?\DateTimeImmutable
-    {
-        return $this->date;
-    }
-
-    public function setDate(?\DateTimeImmutable $date): self
-    {
-        $this->date = $date;
-
-        return $this;
-    }
-
     public function getValue(): mixed
     {
         return $this->attributeOptionKey
             ?? $this->number
-            ?? $this->text
-            ?? $this->json
-            ?? $this->date;
+            ?? $this->text;
     }
 
     public function getProductDimensionContent(): ProductDimensionContentInterface

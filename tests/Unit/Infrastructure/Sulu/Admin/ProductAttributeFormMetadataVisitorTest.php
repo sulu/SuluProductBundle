@@ -25,7 +25,6 @@ use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\SectionMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadataMapper\NumberPropertyMetadataMapper;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadataMapperRegistry;
 use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
-use Sulu\Product\Application\AttributeType\JsonAttributeType;
 use Sulu\Product\Application\AttributeType\NumberAttributeType;
 use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Model\AttributeInterface;
@@ -233,64 +232,6 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $field = $section->getItems()['attributes/7'];
         self::assertInstanceOf(FieldMetadata::class, $field);
         self::assertNull($field->getDescription('en'));
-    }
-
-    public function testSkipsAttributeWhoseTypeIsNotAvailableInAdmin(): void
-    {
-        $jsonAttribute = $this->prophesize(AttributeInterface::class);
-        $jsonAttribute->getType()->willReturn(AttributeInterface::TYPE_JSON);
-        $jsonAttribute->getConfig()->willReturn([]);
-
-        $jsonFamilyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
-        $jsonFamilyAttribute->getAttribute()->willReturn($jsonAttribute->reveal());
-
-        $numberTranslation = $this->prophesize(AttributeTranslationInterface::class);
-        $numberTranslation->getName()->willReturn('Weight');
-        $numberTranslation->getDescription()->willReturn(null);
-
-        $numberAttribute = $this->prophesize(AttributeInterface::class);
-        $numberAttribute->getId()->willReturn(7);
-        $numberAttribute->getKey()->willReturn('weight');
-        $numberAttribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
-        $numberAttribute->getConfig()->willReturn([]);
-        $numberAttribute->getTranslation('en')->willReturn($numberTranslation->reveal());
-
-        $numberFamilyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
-        $numberFamilyAttribute->getAttribute()->willReturn($numberAttribute->reveal());
-        $numberFamilyAttribute->isRequired()->willReturn(false);
-
-        $family = $this->prophesize(ProductFamilyInterface::class);
-        $family->getFamilyAttributes()->willReturn([$jsonFamilyAttribute->reveal(), $numberFamilyAttribute->reveal()]);
-
-        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
-        $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
-            ->willReturn($this->fragmentWithValueField());
-
-        $mapperContainer = new Container();
-        $mapperContainer->set('number', new NumberPropertyMetadataMapper());
-
-        $translator = $this->createStub(TranslatorInterface::class);
-        $translator->method('trans')->willReturn('Unit');
-
-        $visitor = new ProductAttributeFormMetadataVisitor(
-            $this->productFamilyRepository->reveal(),
-            new AttributeTypeRegistry([new NumberAttributeType(), new JsonAttributeType()]),
-            $this->formMetadataLoader->reveal(),
-            new PropertyMetadataMapperRegistry($mapperContainer),
-            new MeasurementRegistry(),
-            $translator,
-        );
-
-        $form = new FormMetadata();
-        $form->setKey('product_details');
-
-        $visitor->visitFormMetadata($form, 'en', ['id' => 'uuid-1']);
-
-        $section = $form->getItems()['attributes'];
-        self::assertInstanceOf(SectionMetadata::class, $section);
-        $sectionItems = $section->getItems();
-        self::assertArrayHasKey('attributes/7', $sectionItems);
-        self::assertArrayNotHasKey('attributes/9', $sectionItems);
     }
 
     public function testSkipsAttributeWithUnknownType(): void

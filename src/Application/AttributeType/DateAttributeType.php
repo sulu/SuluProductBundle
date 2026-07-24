@@ -33,13 +33,19 @@ final class DateAttributeType extends AbstractAttributeType
 
     public function readValue(ProductAttributeValueInterface $value): mixed
     {
-        return $value->getDate()?->format(self::FORMAT);
+        $timestamp = $value->getNumber();
+
+        if (null === $timestamp) {
+            return null;
+        }
+
+        return (new \DateTimeImmutable('@' . (int) $timestamp))->format(self::FORMAT);
     }
 
     public function writeValue(ProductAttributeValueInterface $value, mixed $raw): void
     {
         if (null === $raw || '' === $raw) {
-            $value->setDate(null);
+            $value->setNumber(null);
 
             return;
         }
@@ -49,7 +55,8 @@ final class DateAttributeType extends AbstractAttributeType
         $date = \DateTimeImmutable::createFromFormat('!' . self::FORMAT, $raw, new \DateTimeZone('UTC'));
 
         Assert::isInstanceOf($date, \DateTimeImmutable::class, \sprintf('Expected a date in format "%s", got "%s".', self::FORMAT, $raw));
+        Assert::same($date->format(self::FORMAT), $raw, \sprintf('Expected a valid date in format "%s", got "%s".', self::FORMAT, $raw));
 
-        $value->setDate($date);
+        $value->setNumber((float) $date->getTimestamp());
     }
 }

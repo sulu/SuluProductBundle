@@ -11,8 +11,6 @@
         <field name="attributeOptionKey" column="attributeOptionKey" type="string" length="255" nullable="true"/>
         <field name="number" type="float" nullable="true"/>
         <field name="text" type="string" length="255" nullable="true"/>
-        <field name="json" type="json" nullable="true"/>
-        <field name="date" column="dateValue" type="date_immutable" nullable="true"/>
 
         <many-to-one field="productDimensionContent"
                      target-entity="Sulu\Product\Domain\Model\ProductDimensionContentInterface"
