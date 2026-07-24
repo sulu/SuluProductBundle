@@ -72,6 +72,8 @@ use Sulu\Product\Domain\Model\AttributeOptionTranslationInterface;
 use Sulu\Product\Domain\Model\AttributeTranslation;
 use Sulu\Product\Domain\Model\AttributeTranslationInterface;
 use Sulu\Product\Domain\Model\Product;
+use Sulu\Product\Domain\Model\ProductAssociation;
+use Sulu\Product\Domain\Model\ProductAssociationInterface;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
@@ -1290,6 +1292,7 @@ final class SuluProductBundle extends AbstractBundle
             ProductInterface::class => 'sulu.model.product.class',
             ProductDimensionContentInterface::class => 'sulu.model.product_content.class',
             ProductAttributeValueInterface::class => ProductAttributeValue::class,
+            ProductAssociationInterface::class => ProductAssociation::class,
             AttributeInterface::class => Attribute::class,
             AttributeTranslationInterface::class => AttributeTranslation::class,
             AttributeOptionInterface::class => AttributeOption::class,

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <entity name="Sulu\Product\Domain\Model\ProductAssociation" table="pr_product_associations">
+        <id name="id" type="integer" column="id">
+            <generator strategy="AUTO"/>
+        </id>
+
+        <field name="type" column="type" type="string" length="255" nullable="false"/>
+        <field name="position" type="integer" nullable="false">
+            <options>
+                <option name="default">0</option>
+            </options>
+        </field>
+
+        <many-to-one field="productDimensionContent"
+                     target-entity="Sulu\Product\Domain\Model\ProductDimensionContentInterface"
+                     inversed-by="associations">
+            <join-columns>
+                <join-column name="productDimensionContentId" referenced-column-name="id"
+                             nullable="false" on-delete="CASCADE"/>
+            </join-columns>
+        </many-to-one>
+
+        <many-to-one field="target"
+                     target-entity="Sulu\Product\Domain\Model\ProductInterface">
+            <join-columns>
+                <join-column name="targetProductUuid" referenced-column-name="uuid"
+                             nullable="false" on-delete="CASCADE"/>
+            </join-columns>
+        </many-to-one>
+
+        <unique-constraints>
+            <unique-constraint columns="productDimensionContentId,type,targetProductUuid"
+                               name="UNIQ_pr_product_associations"/>
+        </unique-constraints>
+
+        <indexes>
+            <index name="IDX_pr_product_associations_target_type" columns="targetProductUuid,type"/>
+        </indexes>
+    </entity>
+</doctrine-mapping>
