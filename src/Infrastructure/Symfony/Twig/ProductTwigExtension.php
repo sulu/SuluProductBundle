@@ -114,6 +114,7 @@ class ProductTwigExtension extends AbstractExtension
                 AttributeInterface::TYPE_TEXT => $productAttribute->getText(),
                 AttributeInterface::TYPE_NUMBER => $productAttribute->getNumber(),
                 AttributeInterface::TYPE_JSON => $productAttribute->getJson(),
+                AttributeInterface::TYPE_DATE => $productAttribute->getDate(),
                 default => $productAttribute->getValue(),
             };
 

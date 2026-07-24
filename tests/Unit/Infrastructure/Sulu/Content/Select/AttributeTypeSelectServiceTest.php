@@ -57,9 +57,11 @@ class AttributeTypeSelectServiceTest extends TestCase
     {
         $textType = $this->prophesize(AttributeTypeInterface::class);
         $textType->getKey()->willReturn('text');
+        $textType->isAvailableInAdmin()->willReturn(true);
 
         $numberType = $this->prophesize(AttributeTypeInterface::class);
         $numberType->getKey()->willReturn('number');
+        $numberType->isAvailableInAdmin()->willReturn(true);
 
         $service = new AttributeTypeSelectService(
             [$textType->reveal(), $numberType->reveal()],
@@ -76,12 +78,33 @@ class AttributeTypeSelectServiceTest extends TestCase
     {
         $textType = $this->prophesize(AttributeTypeInterface::class);
         $textType->getKey()->willReturn('text');
+        $textType->isAvailableInAdmin()->willReturn(true);
 
         $generator = (static function() use ($textType) {
             yield $textType->reveal();
         })();
 
         $service = new AttributeTypeSelectService($generator, $this->translator->reveal());
+
+        $this->assertSame([
+            ['name' => 'text', 'title' => 'Text'],
+        ], $service->getValues('en'));
+    }
+
+    public function testGetValuesExcludesTypeNotAvailableInAdmin(): void
+    {
+        $textType = $this->prophesize(AttributeTypeInterface::class);
+        $textType->getKey()->willReturn('text');
+        $textType->isAvailableInAdmin()->willReturn(true);
+
+        $jsonType = $this->prophesize(AttributeTypeInterface::class);
+        $jsonType->getKey()->willReturn('json');
+        $jsonType->isAvailableInAdmin()->willReturn(false);
+
+        $service = new AttributeTypeSelectService(
+            [$textType->reveal(), $jsonType->reveal()],
+            $this->translator->reveal()
+        );
 
         $this->assertSame([
             ['name' => 'text', 'title' => 'Text'],

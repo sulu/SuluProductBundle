@@ -35,6 +35,10 @@ final class AttributeTypeSelectService
         $values = [];
 
         foreach ($this->attributeTypes as $type) {
+            if (!$type->isAvailableInAdmin()) {
+                continue;
+            }
+
             $key = $type->getKey();
             $values[] = [
                 'name' => $key,

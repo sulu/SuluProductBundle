@@ -35,6 +35,10 @@ interface ProductAttributeValueInterface
 
     public function setJson(mixed $json): self;
 
+    public function getDate(): ?\DateTimeImmutable;
+
+    public function setDate(?\DateTimeImmutable $date): self;
+
     public function getValue(): mixed;
 
     public function getProductDimensionContent(): ProductDimensionContentInterface;

@@ -256,17 +256,47 @@ class ProductTwigExtensionTest extends TestCase
         $this->assertSame(42.5, $result['attributes'][0]['value']);
     }
 
+    public function testLoadProductFormatsDateAttribute(): void
+    {
+        $product = new Product('uuid-1');
+        $pdc = new ProductDimensionContent($product);
+
+        $attribute = new Attribute(new AttributeGroup());
+        $attribute->setKey('released_at');
+        $attribute->setType(AttributeInterface::TYPE_DATE);
+
+        $date = new \DateTimeImmutable('2026-07-24');
+        $productAttribute = new ProductAttributeValue($pdc, $attribute, 'released_at');
+        $productAttribute->setDate($date);
+
+        $pdc->addAttribute($productAttribute);
+
+        $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
+        $this->contentAggregator->aggregate($product, Argument::type('array'))
+            ->willReturn($pdc);
+        $this->contentResolver->resolve($pdc, [])->willReturn([]);
+        $this->referenceStore->add('uuid-1', ProductInterface::RESOURCE_KEY)->shouldBeCalled();
+
+        $result = $this->extension->loadProduct('uuid-1', [], 'en');
+
+        $this->assertIsArray($result);
+        /** @var array{attributes: list<array{key: string, label: string, type: string, value: mixed}>} $result */
+        $this->assertCount(1, $result['attributes']);
+        $this->assertSame(AttributeInterface::TYPE_DATE, $result['attributes'][0]['type']);
+        $this->assertSame($date, $result['attributes'][0]['value']);
+    }
+
     public function testLoadProductFormatsJsonAttribute(): void
     {
         $product = new Product('uuid-1');
         $pdc = new ProductDimensionContent($product);
 
         $attribute = new Attribute(new AttributeGroup());
-        $attribute->setKey('meta');
+        $attribute->setKey('metadata');
         $attribute->setType(AttributeInterface::TYPE_JSON);
 
-        $productAttribute = new ProductAttributeValue($pdc, $attribute, 'meta');
-        $productAttribute->setJson(['foo' => 'bar']);
+        $productAttribute = new ProductAttributeValue($pdc, $attribute, 'metadata');
+        $productAttribute->setJson(['a' => 1]);
 
         $pdc->addAttribute($productAttribute);
 
@@ -282,7 +312,7 @@ class ProductTwigExtensionTest extends TestCase
         /** @var array{attributes: list<array{key: string, label: string, type: string, value: mixed}>} $result */
         $this->assertCount(1, $result['attributes']);
         $this->assertSame(AttributeInterface::TYPE_JSON, $result['attributes'][0]['type']);
-        $this->assertSame(['foo' => 'bar'], $result['attributes'][0]['value']);
+        $this->assertSame(['a' => 1], $result['attributes'][0]['value']);
     }
 
     public function testLoadProductFormatsDefaultAttribute(): void

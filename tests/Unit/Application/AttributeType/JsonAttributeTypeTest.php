@@ -33,6 +33,11 @@ class JsonAttributeTypeTest extends TestCase
         self::assertSame('product_attribute_json', $type->getFormKey());
     }
 
+    public function testIsNotAvailableInAdmin(): void
+    {
+        self::assertFalse((new JsonAttributeType())->isAvailableInAdmin());
+    }
+
     public function testValueRoundTripUsesJsonColumn(): void
     {
         $type = new JsonAttributeType();

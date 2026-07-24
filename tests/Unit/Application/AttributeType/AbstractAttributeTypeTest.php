@@ -51,6 +51,11 @@ class AbstractAttributeTypeTest extends TestCase
         self::assertSame(['a' => 1], $this->type()->readValue($value));
     }
 
+    public function testIsAvailableInAdminByDefault(): void
+    {
+        self::assertTrue($this->type()->isAvailableInAdmin());
+    }
+
     public function testConfigureFieldIsNoOp(): void
     {
         $field = new FieldMetadata('attributes/1');

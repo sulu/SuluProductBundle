@@ -19,6 +19,7 @@ use Sulu\Bundle\PersistenceBundle\PersistenceBundleTrait;
 use Sulu\Content\Infrastructure\Sulu\Preview\ContentObjectProvider;
 use Sulu\Product\Application\AttributeType\AttributeTypeInterface;
 use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
+use Sulu\Product\Application\AttributeType\DateAttributeType;
 use Sulu\Product\Application\AttributeType\JsonAttributeType;
 use Sulu\Product\Application\AttributeType\NumberAttributeType;
 use Sulu\Product\Application\AttributeType\OptionsAttributeType;
@@ -319,6 +320,10 @@ final class SuluProductBundle extends AbstractBundle
 
         $services->set('sulu_product.attribute_type_text')
             ->class(TextAttributeType::class)
+            ->tag('sulu_product.attribute_type');
+
+        $services->set('sulu_product.attribute_type_date')
+            ->class(DateAttributeType::class)
             ->tag('sulu_product.attribute_type');
 
         $services->set('sulu_product.attribute_type_json')

@@ -19,6 +19,11 @@ use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 
 abstract class AbstractAttributeType implements AttributeTypeInterface
 {
+    public function isAvailableInAdmin(): bool
+    {
+        return true;
+    }
+
     public function configureField(FieldMetadata $field, AttributeInterface $attribute, string $locale): void
     {
     }

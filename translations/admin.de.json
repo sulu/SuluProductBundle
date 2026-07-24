@@ -87,6 +87,7 @@
     "sulu_product.measurement_family_weight": "Gewicht",
     "sulu_product.min": "Min",
     "sulu_product.max": "Max",
+    "sulu_product.step": "Schritt",
     "sulu_product.status": "Status",
     "sulu_product.short_description": "Kurzbeschreibung",
     "sulu_product.image": "Produktbild",

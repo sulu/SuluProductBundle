@@ -26,4 +26,9 @@ final class JsonAttributeType extends AbstractAttributeType
     {
         return 'product_attribute_json';
     }
+
+    public function isAvailableInAdmin(): bool
+    {
+        return false;
+    }
 }

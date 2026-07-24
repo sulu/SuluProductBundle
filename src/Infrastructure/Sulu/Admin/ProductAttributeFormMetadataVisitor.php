@@ -83,6 +83,10 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
 
             $type = $this->attributeTypeRegistry->get($attribute->getType());
 
+            if (!$type->isAvailableInAdmin()) {
+                continue;
+            }
+
             $template = $this->resolveTemplateField($type->getFormKey(), $locale);
 
             if (null === $template) {
