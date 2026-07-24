@@ -205,4 +205,34 @@ final class ProductAssociationsDataMapperTest extends TestCase
 
         self::assertSame([], $loc->getAssociations());
     }
+
+    public function testDedupesDuplicateSubmittedTargets(): void
+    {
+        $source = new Product('uuid-source');
+        $loc = new ProductDimensionContent($source);
+        $unloc = new ProductDimensionContent($source);
+
+        $productB = new Product('uuid-b');
+
+        $this->productRepository->findBy(['uuids' => ['uuid-b']])
+            ->willReturn([$productB]);
+
+        $this->mapper->map($unloc, $loc, [
+            'associations' => ['alternative' => ['uuid-b', 'uuid-b']],
+        ]);
+
+        $result = $loc->getAssociationsByType('alternative');
+        self::assertCount(1, $result);
+        self::assertSame('uuid-b', $result[0]->getTarget()->getUuid());
+        self::assertSame(0, $result[0]->getPosition());
+
+        $this->mapper->map($unloc, $loc, [
+            'associations' => ['alternative' => ['uuid-b']],
+        ]);
+
+        $result = $loc->getAssociationsByType('alternative');
+        self::assertCount(1, $result);
+        self::assertSame('uuid-b', $result[0]->getTarget()->getUuid());
+        self::assertSame(0, $result[0]->getPosition());
+    }
 }

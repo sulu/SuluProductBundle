@@ -60,6 +60,8 @@ class ProductAssociationsDataMapper implements DataMapperInterface
                 continue;
             }
 
+            $targetUuids = \array_values(\array_unique($targetUuids));
+
             $validByType[$type] = $targetUuids;
             foreach ($targetUuids as $targetUuid) {
                 $uuids[] = $targetUuid;
@@ -120,6 +122,7 @@ class ProductAssociationsDataMapper implements DataMapperInterface
         }
 
         foreach ($submittedUuids as $position => $uuid) {
+            // $position is the index into the filtered (deduped, resolved, non-self-ref) list, not the raw submitted index.
             $existing = $existingByUuid[$uuid] ?? null;
             if (null === $existing) {
                 $localizedDimensionContent->addAssociation(
