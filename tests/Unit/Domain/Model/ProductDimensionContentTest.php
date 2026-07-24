@@ -19,6 +19,7 @@ use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\Product;
+use Sulu\Product\Domain\Model\ProductAssociationInterface;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
@@ -283,5 +284,65 @@ class ProductDimensionContentTest extends TestCase
         $dc->addAttribute($attr);
         $this->assertSame($dc, $dc->removeAttribute($attr));
         $this->assertFalse($dc->getAttributes()->contains($attr));
+    }
+
+    public function testGetAssociationsReturnsEmptyArrayInitially(): void
+    {
+        $dc = new ProductDimensionContent(new Product());
+        $this->assertSame([], $dc->getAssociations());
+    }
+
+    public function testAddAssociationStoresAndDeduplicates(): void
+    {
+        $dc = new ProductDimensionContent(new Product());
+        /** @var ObjectProphecy<ProductAssociationInterface> $associationProphecy */
+        $associationProphecy = $this->prophesize(ProductAssociationInterface::class);
+        $association = $associationProphecy->reveal();
+
+        $dc->addAssociation($association);
+        $dc->addAssociation($association);
+
+        $this->assertSame([$association], $dc->getAssociations());
+    }
+
+    public function testRemoveAssociationRemoves(): void
+    {
+        $dc = new ProductDimensionContent(new Product());
+        /** @var ObjectProphecy<ProductAssociationInterface> $associationProphecy */
+        $associationProphecy = $this->prophesize(ProductAssociationInterface::class);
+        $association = $associationProphecy->reveal();
+
+        $dc->addAssociation($association);
+        $dc->removeAssociation($association);
+
+        $this->assertSame([], $dc->getAssociations());
+    }
+
+    public function testGetAssociationsByTypeFiltersAndSortsByPosition(): void
+    {
+        $dc = new ProductDimensionContent(new Product());
+
+        $alternative2 = $this->prophesize(ProductAssociationInterface::class);
+        $alternative2->getType()->willReturn('alternative');
+        $alternative2->getPosition()->willReturn(2);
+
+        $alternative1 = $this->prophesize(ProductAssociationInterface::class);
+        $alternative1->getType()->willReturn('alternative');
+        $alternative1->getPosition()->willReturn(1);
+
+        $suitable = $this->prophesize(ProductAssociationInterface::class);
+        $suitable->getType()->willReturn('suitable');
+        $suitable->getPosition()->willReturn(0);
+
+        $dc->addAssociation($alternative2->reveal());
+        $dc->addAssociation($alternative1->reveal());
+        $dc->addAssociation($suitable->reveal());
+
+        $this->assertSame(
+            [$alternative1->reveal(), $alternative2->reveal()],
+            $dc->getAssociationsByType('alternative'),
+        );
+        $this->assertSame([$suitable->reveal()], $dc->getAssociationsByType('suitable'));
+        $this->assertSame([], $dc->getAssociationsByType('unknown'));
     }
 }
