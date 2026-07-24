@@ -278,6 +278,9 @@ class ProductAdminTest extends TestCase
 
         $this->assertTrue($viewCollection->has(ProductAdmin::EDIT_TABS_VIEW . '.associations'));
         $this->assertFalse($viewCollection->has(ProductAdmin::ADD_TABS_VIEW . '.associations'));
+
+        $toolbarActions = $viewCollection->get(ProductAdmin::EDIT_TABS_VIEW . '.associations')->getView()->getOption('toolbarActions');
+        $this->assertNotEmpty($toolbarActions);
     }
 
     public function testConfigureViewsWithActivityInsightsView(): void

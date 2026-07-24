@@ -201,6 +201,7 @@ class ProductAdmin extends Admin
                     ->setTabTitle('sulu_product.associations')
                     ->setTabOrder(20)
                     ->addRouterAttributesToFormMetadata(['id'])
+                    ->addToolbarActions($editToolbarActions)
                     ->setParent(static::EDIT_TABS_VIEW),
             );
         }

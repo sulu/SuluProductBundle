@@ -15,7 +15,6 @@ namespace Sulu\Product\Tests\Unit\Infrastructure\Sulu\Admin;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
-use Prophecy\PhpUnit\ProphecyTrait;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\SectionMetadata;
@@ -30,8 +29,6 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 #[CoversClass(ProductAssociationsFormMetadataVisitor::class)]
 final class ProductAssociationsFormMetadataVisitorTest extends TestCase
 {
-    use ProphecyTrait;
-
     private function visitor(ProductAssociationTypeRegistry $registry): ProductAssociationsFormMetadataVisitor
     {
         $mapperContainer = new Container();
