@@ -120,6 +120,7 @@ use Sulu\Product\Infrastructure\Sulu\Content\ProductSmartContentProvider;
 use Sulu\Product\Infrastructure\Sulu\Content\ProductTeaserProvider;
 use Sulu\Product\Infrastructure\Sulu\Content\PropertyResolver\ProductSelectionPropertyResolver;
 use Sulu\Product\Infrastructure\Sulu\Content\PropertyResolver\SingleProductSelectionPropertyResolver;
+use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductAssociationsResolver;
 use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductDetailsResolver;
 use Sulu\Product\Infrastructure\Sulu\Content\ResourceLoader\ProductResourceLoader;
 use Sulu\Product\Infrastructure\Sulu\Content\Select\AttributeSelectService;
@@ -859,6 +860,14 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_content.metadata_resolver'),
             ])
             ->tag('sulu_content.content_resolver', ['type' => 'product']);
+
+        $services->set('sulu_product.product_associations_resolver')
+            ->class(ProductAssociationsResolver::class)
+            ->args([
+                new Reference('sulu_product.association_type_registry'),
+                new Reference('sulu_product.product_selection_property_resolver'),
+            ])
+            ->tag('sulu_content.content_resolver', ['type' => 'associations']);
 
         $services->set('sulu_product.product_resource_loader')
             ->class(ProductResourceLoader::class)
