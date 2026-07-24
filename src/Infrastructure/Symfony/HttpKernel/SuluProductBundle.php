@@ -46,6 +46,7 @@ use Sulu\Product\Application\MessageHandler\RemoveProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\RemoveProductTranslationMessageHandler;
 use Sulu\Product\Application\MessageHandler\RestoreProductVersionMessageHandler;
 use Sulu\Product\Application\Webspace\WebspaceSettingsConfigurationResolver;
+use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
 use Sulu\Product\Domain\Event\ProductCreatedEvent;
 use Sulu\Product\Domain\Event\ProductModifiedEvent;
 use Sulu\Product\Domain\Event\ProductRemovedEvent;
@@ -208,6 +209,15 @@ final class SuluProductBundle extends AbstractBundle
                         ->end()
                     ->end()
                 ->end()
+                ->arrayNode('association_types')
+                    ->info('Custom product association types (e.g. "alternative", "suitable"). Omit the whole section to disable association types.')
+                    ->useAttributeAsKey('key')
+                    ->arrayPrototype()
+                        ->children()
+                            ->scalarNode('label')->defaultNull()->end()
+                        ->end()
+                    ->end()
+                ->end()
                 ->arrayNode('product_statuses')
                     ->scalarPrototype()->end()
                     ->defaultValue(['announced', 'available', 'discontinued'])
@@ -272,6 +282,23 @@ final class SuluProductBundle extends AbstractBundle
     }
 
     /**
+     * @param array<string, array{label?: string|null}> $associationTypes
+     *
+     * @return array<string, array{label: string}>
+     */
+    private function resolveAssociationTypesMap(array $associationTypes): array
+    {
+        $resolvedMap = [];
+        foreach ($associationTypes as $key => $associationType) {
+            $resolvedMap[$key] = [
+                'label' => $associationType['label'] ?? \sprintf('sulu_product.association_type_%s', $key),
+            ];
+        }
+
+        return $resolvedMap;
+    }
+
+    /**
      * @param array<string, mixed> $config
      *
      * @internal this method is not part of the public API and should only be called by the Symfony framework classes
@@ -292,6 +319,10 @@ final class SuluProductBundle extends AbstractBundle
         /** @var array<string, array{units: array<string>}> $measurements */
         $measurements = $config['measurements'] ?? [];
         $builder->setParameter('sulu_product.measurements', $this->resolveMeasurementsEnabledMap($measurements));
+
+        /** @var array<string, array{label?: string|null}> $associationTypes */
+        $associationTypes = $config['association_types'] ?? [];
+        $builder->setParameter('sulu_product.association_types', $this->resolveAssociationTypesMap($associationTypes));
 
         /** @var array<int, string> $productStatuses */
         $productStatuses = $config['product_statuses'] ?? [];
@@ -508,6 +539,14 @@ final class SuluProductBundle extends AbstractBundle
             ->args([
                 '%sulu_product.measurements%',
             ]);
+
+        $services->set('sulu_product.association_type_registry')
+            ->class(ProductAssociationTypeRegistry::class)
+            ->args([
+                '%sulu_product.association_types%',
+            ]);
+
+        $services->alias(ProductAssociationTypeRegistry::class, 'sulu_product.association_type_registry');
 
         $services->set('sulu_product.admin_measurement_family_controller')
             ->class(MeasurementFamilyController::class)

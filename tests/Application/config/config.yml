@@ -11,3 +11,6 @@ twig:
 
 sulu_product:
     default_main_webspace: 'sulu-io'
+    association_types:
+        alternative: ~
+        suitable: ~
