@@ -107,6 +107,7 @@ use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductAssociationsDataM
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductAttributesDataMapper;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductDetailsDataMapper;
 use Sulu\Product\Infrastructure\Sulu\Content\Merger\AdditionalWebspacesMerger;
+use Sulu\Product\Infrastructure\Sulu\Content\Merger\ProductAssociationsMerger;
 use Sulu\Product\Infrastructure\Sulu\Content\Merger\ProductAttributesMerger;
 use Sulu\Product\Infrastructure\Sulu\Content\Merger\ProductDetailsMerger;
 use Sulu\Product\Infrastructure\Sulu\Content\Normalizer\ProductAssociationsNormalizer;
@@ -481,6 +482,10 @@ final class SuluProductBundle extends AbstractBundle
 
         $services->set('sulu_product.product_attributes_merger')
             ->class(ProductAttributesMerger::class)
+            ->tag('sulu_content.merger');
+
+        $services->set('sulu_product.product_associations_merger')
+            ->class(ProductAssociationsMerger::class)
             ->tag('sulu_content.merger');
 
         $services->set('sulu_product.product_details_normalizer')
