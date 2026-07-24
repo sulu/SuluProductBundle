@@ -89,7 +89,6 @@ class ProductAssociationsResolverTest extends SuluTestCase
 
         self::assertArrayHasKey('associations', $result['extension']);
         $associationsData = $result['extension']['associations'];
-        self::assertIsArray($associationsData);
 
         self::assertArrayHasKey('alternative', $associationsData);
         self::assertArrayHasKey('suitable', $associationsData);
