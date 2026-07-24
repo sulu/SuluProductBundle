@@ -51,13 +51,6 @@ class ProductAssociationReferenceCleanupSubscriber implements EventSubscriberInt
 
     public function onProductRemoved(ProductRemovedEvent $event): void
     {
-        // The removed product's own dimension content rows are deleted via a database-level
-        // cascade rather than Doctrine's own object-level cascade, so Doctrine's identity map
-        // can still hold managed entities pointing at the now-removed product. Clearing avoids
-        // a false "new entity" validation failure when this listener's own flush() below
-        // recomputes changesets for the referrer.
-        $this->entityManager->clear();
-
         $removedProductId = $event->getResourceId();
 
         /**
@@ -73,19 +66,31 @@ class ProductAssociationReferenceCleanupSubscriber implements EventSubscriberInt
             distinct: true,
         );
 
-        $hasRefreshedReferrer = false;
+        $referrersToRefresh = [];
         foreach ($referrers as $referrer) {
             if ($removedProductId === $referrer['referenceResourceId']) {
                 continue;
             }
 
-            $this->refreshReferrer($referrer['referenceResourceId'], $referrer['referenceLocale'], $referrer['referenceContext']);
-            $hasRefreshedReferrer = true;
+            $referrersToRefresh[] = $referrer;
         }
 
-        if ($hasRefreshedReferrer) {
-            $this->referenceRepository->flush();
+        if ([] === $referrersToRefresh) {
+            return;
         }
+
+        // refresh() re-enters flush() during the removal's postFlush; the identity map still holds
+        // entities orphaned by the DB-cascaded dimension-content deletes, which would crash
+        // change-set computation. clear() resets the whole unit of work - safe only because product
+        // removal runs in isolation (no sibling ProductRemovedEvent listener retains managed
+        // entities). Do not reuse this listener in a flush cycle shared with other entity work.
+        $this->entityManager->clear();
+
+        foreach ($referrersToRefresh as $referrer) {
+            $this->refreshReferrer($referrer['referenceResourceId'], $referrer['referenceLocale'], $referrer['referenceContext']);
+        }
+
+        $this->referenceRepository->flush();
     }
 
     private function refreshReferrer(string $resourceId, string $locale, string $stage): void

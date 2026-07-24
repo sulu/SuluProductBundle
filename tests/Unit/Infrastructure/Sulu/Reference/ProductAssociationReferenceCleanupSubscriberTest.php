@@ -135,6 +135,7 @@ final class ProductAssociationReferenceCleanupSubscriberTest extends TestCase
 
         $this->referenceRefresher->refresh(Argument::any())->shouldNotHaveBeenCalled();
         $this->referenceRepository->flush()->shouldNotHaveBeenCalled();
+        $this->entityManager->clear()->shouldNotHaveBeenCalled();
     }
 
     public function testOnProductRemovedIsNoopWithoutInboundReferences(): void
@@ -145,6 +146,7 @@ final class ProductAssociationReferenceCleanupSubscriberTest extends TestCase
 
         $this->referenceRefresher->refresh(Argument::any())->shouldNotHaveBeenCalled();
         $this->referenceRepository->flush()->shouldNotHaveBeenCalled();
+        $this->entityManager->clear()->shouldNotHaveBeenCalled();
     }
 
     private function emptyGenerator(): \Generator
