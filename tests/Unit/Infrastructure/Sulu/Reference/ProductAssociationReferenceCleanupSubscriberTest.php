@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Tests\Unit\Infrastructure\Sulu\Reference;
 
-use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
@@ -41,23 +40,16 @@ final class ProductAssociationReferenceCleanupSubscriberTest extends TestCase
      */
     private ObjectProphecy $referenceRefresher;
 
-    /**
-     * @var ObjectProphecy<EntityManagerInterface>
-     */
-    private ObjectProphecy $entityManager;
-
     private ProductAssociationReferenceCleanupSubscriber $subscriber;
 
     protected function setUp(): void
     {
         $this->referenceRepository = $this->prophesize(ReferenceRepositoryInterface::class);
         $this->referenceRefresher = $this->prophesize(ProductReferenceRefresher::class);
-        $this->entityManager = $this->prophesize(EntityManagerInterface::class);
 
         $this->subscriber = new ProductAssociationReferenceCleanupSubscriber(
             $this->referenceRepository->reveal(),
             $this->referenceRefresher->reveal(),
-            $this->entityManager->reveal(),
         );
     }
 
@@ -120,7 +112,6 @@ final class ProductAssociationReferenceCleanupSubscriberTest extends TestCase
         ])->shouldHaveBeenCalledOnce();
 
         $this->referenceRepository->flush()->shouldHaveBeenCalledOnce();
-        $this->entityManager->clear()->shouldHaveBeenCalledOnce();
     }
 
     public function testOnProductRemovedSkipsTheRemovedProductItself(): void
@@ -135,7 +126,6 @@ final class ProductAssociationReferenceCleanupSubscriberTest extends TestCase
 
         $this->referenceRefresher->refresh(Argument::any())->shouldNotHaveBeenCalled();
         $this->referenceRepository->flush()->shouldNotHaveBeenCalled();
-        $this->entityManager->clear()->shouldNotHaveBeenCalled();
     }
 
     public function testOnProductRemovedIsNoopWithoutInboundReferences(): void
@@ -146,7 +136,6 @@ final class ProductAssociationReferenceCleanupSubscriberTest extends TestCase
 
         $this->referenceRefresher->refresh(Argument::any())->shouldNotHaveBeenCalled();
         $this->referenceRepository->flush()->shouldNotHaveBeenCalled();
-        $this->entityManager->clear()->shouldNotHaveBeenCalled();
     }
 
     private function emptyGenerator(): \Generator

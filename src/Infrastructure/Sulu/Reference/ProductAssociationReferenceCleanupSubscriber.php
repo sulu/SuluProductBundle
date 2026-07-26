@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Infrastructure\Sulu\Reference;
 
-use Doctrine\ORM\EntityManagerInterface;
 use Sulu\Bundle\ReferenceBundle\Domain\Repository\ReferenceRepositoryInterface;
 use Sulu\Product\Domain\Event\ProductRemovedEvent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
@@ -38,7 +37,6 @@ class ProductAssociationReferenceCleanupSubscriber implements EventSubscriberInt
     public function __construct(
         private readonly ReferenceRepositoryInterface $referenceRepository,
         private readonly ProductReferenceRefresher $referenceRefresher,
-        private readonly EntityManagerInterface $entityManager,
     ) {
     }
 
@@ -78,13 +76,6 @@ class ProductAssociationReferenceCleanupSubscriber implements EventSubscriberInt
         if ([] === $referrersToRefresh) {
             return;
         }
-
-        // refresh() re-enters flush() during the removal's postFlush; the identity map still holds
-        // entities orphaned by the DB-cascaded dimension-content deletes, which would crash
-        // change-set computation. clear() resets the whole unit of work - safe only because product
-        // removal runs in isolation (no sibling ProductRemovedEvent listener retains managed
-        // entities). Do not reuse this listener in a flush cycle shared with other entity work.
-        $this->entityManager->clear();
 
         foreach ($referrersToRefresh as $referrer) {
             $this->refreshReferrer($referrer['referenceResourceId'], $referrer['referenceLocale'], $referrer['referenceContext']);

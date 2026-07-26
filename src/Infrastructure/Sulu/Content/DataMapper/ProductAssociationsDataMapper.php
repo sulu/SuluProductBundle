@@ -15,7 +15,6 @@ namespace Sulu\Product\Infrastructure\Sulu\Content\DataMapper;
 
 use Sulu\Content\Application\ContentDataMapper\DataMapper\DataMapperInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
-use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
 use Sulu\Product\Domain\Model\ProductAssociation;
 use Sulu\Product\Domain\Model\ProductAssociationInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
@@ -25,7 +24,6 @@ use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 class ProductAssociationsDataMapper implements DataMapperInterface
 {
     public function __construct(
-        private readonly ProductAssociationTypeRegistry $associationTypeRegistry,
         private readonly ProductRepositoryInterface $productRepository,
     ) {
     }
@@ -47,22 +45,22 @@ class ProductAssociationsDataMapper implements DataMapperInterface
             return;
         }
 
-        /** @var array<string, array<int, string>> $submittedByType */
-        $submittedByType = $data['associations'] ?? [];
+        $submittedByType = $data['associations'];
+        if (!\is_array($submittedByType)) {
+            return;
+        }
 
-        /** @var array<string, array<int, string>> $validByType */
-        $validByType = [];
+        // Types that are no longer registered are reconciled as well, so that publishing and copying a
+        // locale carry over the rows the normalizer deliberately retains for them.
+        /** @var array<string, array<int, string>> $targetUuidsByType */
+        $targetUuidsByType = [];
         /** @var array<int, string> $uuids */
         $uuids = [];
         foreach ($submittedByType as $type => $targetUuids) {
             $type = (string) $type;
-            if (!$this->associationTypeRegistry->has($type)) {
-                continue;
-            }
+            $targetUuids = $this->readTargetUuids($type, $targetUuids);
 
-            $targetUuids = \array_values(\array_unique($targetUuids));
-
-            $validByType[$type] = $targetUuids;
+            $targetUuidsByType[$type] = $targetUuids;
             foreach ($targetUuids as $targetUuid) {
                 $uuids[] = $targetUuid;
             }
@@ -78,9 +76,40 @@ class ProductAssociationsDataMapper implements DataMapperInterface
 
         $sourceUuid = $localizedDimensionContent->getResource()->getUuid();
 
-        foreach ($validByType as $type => $targetUuids) {
+        foreach ($targetUuidsByType as $type => $targetUuids) {
             $this->reconcileType($localizedDimensionContent, $type, $targetUuids, $targets, $sourceUuid);
         }
+    }
+
+    /**
+     * The generated form schema allows `null` next to the list of uuids for every type, so a type
+     * without any selection has to be accepted and reconciled as an empty list. Entries that are not
+     * uuids are dropped like uuids that resolve to no product.
+     *
+     * @return array<int, string>
+     */
+    private function readTargetUuids(string $type, mixed $targetUuids): array
+    {
+        if (null === $targetUuids) {
+            return [];
+        }
+
+        if (!\is_array($targetUuids)) {
+            throw new \InvalidArgumentException(\sprintf(
+                'Expected a list of product uuids for association type "%s", got "%s".',
+                $type,
+                \get_debug_type($targetUuids),
+            ));
+        }
+
+        $uuids = [];
+        foreach ($targetUuids as $targetUuid) {
+            if (\is_string($targetUuid)) {
+                $uuids[] = $targetUuid;
+            }
+        }
+
+        return \array_values(\array_unique($uuids));
     }
 
     /**

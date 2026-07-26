@@ -19,7 +19,6 @@ use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
-use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductAssociation;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
@@ -42,7 +41,6 @@ final class ProductAssociationsDataMapperTest extends TestCase
         $this->productRepository = $this->prophesize(ProductRepositoryInterface::class);
 
         $this->mapper = new ProductAssociationsDataMapper(
-            new ProductAssociationTypeRegistry(['alternative' => ['label' => 'Alternative']]),
             $this->productRepository->reveal(),
         );
     }
@@ -156,18 +154,91 @@ final class ProductAssociationsDataMapperTest extends TestCase
         self::assertSame($associationB, $result[1]);
     }
 
-    public function testSkipsUnknownType(): void
+    public function testMapsTypeThatIsNoLongerRegistered(): void
     {
         $source = new Product('uuid-source');
         $loc = new ProductDimensionContent($source);
         $unloc = new ProductDimensionContent($source);
 
+        $productB = new Product('uuid-b');
+
+        $this->productRepository->findBy(['uuids' => ['uuid-b']])
+            ->willReturn([$productB]);
+
         $this->mapper->map($unloc, $loc, [
-            'associations' => ['nope' => ['uuid-b']],
+            'associations' => ['removed-type' => ['uuid-b']],
+        ]);
+
+        $result = $loc->getAssociationsByType('removed-type');
+        self::assertCount(1, $result);
+        self::assertSame('uuid-b', $result[0]->getTarget()->getUuid());
+    }
+
+    public function testTreatsNullSelectionAsEmptySelection(): void
+    {
+        $source = new Product('uuid-source');
+        $loc = new ProductDimensionContent($source);
+        $unloc = new ProductDimensionContent($source);
+
+        $productB = new Product('uuid-b');
+        $loc->addAssociation(new ProductAssociation($loc, $productB, 'alternative', 0));
+
+        $this->mapper->map($unloc, $loc, [
+            'associations' => ['alternative' => null],
         ]);
 
         $this->productRepository->findBy(Argument::cetera())->shouldNotHaveBeenCalled();
         self::assertSame([], $loc->getAssociations());
+    }
+
+    public function testIgnoresNonArrayAssociations(): void
+    {
+        $source = new Product('uuid-source');
+        $loc = new ProductDimensionContent($source);
+        $unloc = new ProductDimensionContent($source);
+
+        $productB = new Product('uuid-b');
+        $association = new ProductAssociation($loc, $productB, 'alternative', 0);
+        $loc->addAssociation($association);
+
+        $this->mapper->map($unloc, $loc, ['associations' => null]);
+
+        $this->productRepository->findBy(Argument::cetera())->shouldNotHaveBeenCalled();
+        self::assertSame([$association], $loc->getAssociations());
+    }
+
+    public function testThrowsOnScalarSelection(): void
+    {
+        $source = new Product('uuid-source');
+        $loc = new ProductDimensionContent($source);
+        $unloc = new ProductDimensionContent($source);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Expected a list of product uuids for association type "alternative", got "string".');
+
+        $this->mapper->map($unloc, $loc, [
+            'associations' => ['alternative' => 'uuid-b'],
+        ]);
+    }
+
+    public function testSkipsNonStringTargets(): void
+    {
+        $source = new Product('uuid-source');
+        $loc = new ProductDimensionContent($source);
+        $unloc = new ProductDimensionContent($source);
+
+        $productB = new Product('uuid-b');
+
+        $this->productRepository->findBy(['uuids' => ['uuid-b']])
+            ->willReturn([$productB]);
+
+        $this->mapper->map($unloc, $loc, [
+            'associations' => ['alternative' => ['uuid-b', 42, null]],
+        ]);
+
+        $result = $loc->getAssociationsByType('alternative');
+        self::assertCount(1, $result);
+        self::assertSame('uuid-b', $result[0]->getTarget()->getUuid());
     }
 
     public function testSkipsMissingTarget(): void

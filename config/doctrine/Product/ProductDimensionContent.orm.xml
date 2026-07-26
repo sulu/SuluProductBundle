@@ -31,6 +31,7 @@
         >
             <cascade>
                 <cascade-persist/>
+                <cascade-remove/>
             </cascade>
         </one-to-many>
 
@@ -53,6 +54,7 @@
                      orphan-removal="true">
             <cascade>
                 <cascade-persist/>
+                <cascade-remove/>
             </cascade>
         </one-to-many>
 
@@ -62,6 +64,7 @@
                      orphan-removal="true">
             <cascade>
                 <cascade-persist/>
+                <cascade-remove/>
             </cascade>
         </one-to-many>
 

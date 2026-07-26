@@ -474,7 +474,6 @@ final class SuluProductBundle extends AbstractBundle
         $services->set('sulu_product.product_associations_data_mapper')
             ->class(ProductAssociationsDataMapper::class)
             ->args([
-                new Reference('sulu_product.association_type_registry'),
                 new Reference('sulu_product.product_repository'),
             ])
             ->tag('sulu_content.data_mapper');
@@ -964,7 +963,6 @@ final class SuluProductBundle extends AbstractBundle
             ->args([
                 new Reference('sulu_reference.reference_repository'),
                 new Reference('sulu_product.product_reference_refresher'),
-                new Reference('doctrine.orm.entity_manager'),
             ])
             ->tag('kernel.event_subscriber');
 
