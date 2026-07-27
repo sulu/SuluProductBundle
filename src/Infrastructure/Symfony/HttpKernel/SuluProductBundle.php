@@ -235,9 +235,8 @@ final class SuluProductBundle extends AbstractBundle
 
                             return false;
                         })
-                        // A digit-only key is coerced to an int array key by PHP and a key containing a
-                        // slash is re-split into a nested object by the form schema builder, so neither
-                        // survives the round trip through the form and the data mapper.
+                        // A digit-only key becomes an int array key and a key with a slash is re-split
+                        // into a nested object by the schema builder, so neither survives the round trip.
                         ->thenInvalid('Invalid association type key in %s: an association type key must start with a letter and may only contain letters, digits, underscores and hyphens.')
                     ->end()
                 ->end()

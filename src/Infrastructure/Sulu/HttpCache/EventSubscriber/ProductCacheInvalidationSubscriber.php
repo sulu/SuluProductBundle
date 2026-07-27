@@ -52,8 +52,7 @@ class ProductCacheInvalidationSubscriber implements EventSubscriberInterface
     {
         return [
             ProductWorkflowTransitionAppliedEvent::class => 'onWorkflowTransition',
-            // Runs before ProductAssociationReferenceCleanupSubscriber, which deletes the very
-            // reference records this subscriber reads to find the referring products.
+            // Must run before ProductAssociationReferenceCleanupSubscriber deletes those records.
             ProductRemovedEvent::class => ['onProductRemoved', 10],
         ];
     }
@@ -97,9 +96,8 @@ class ProductCacheInvalidationSubscriber implements EventSubscriberInterface
     }
 
     /**
-     * The association rows are already gone by the time this runs, because the event is dispatched
-     * from Doctrine's postFlush and the target join column cascades on delete. The reference records
-     * still point at the removed product, so they are what identifies the referring products.
+     * ProductAssociation rows are already gone by the time this runs post-flush, because the target
+     * join column cascades on delete. Reference records still point at the removed product.
      */
     private function invalidateReferringProductPathsOfRemovedProduct(string $removedProductUuid): void
     {

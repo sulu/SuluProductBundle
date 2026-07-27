@@ -50,12 +50,10 @@ class ProductAssociationsDataMapper implements DataMapperInterface
             return;
         }
 
-        // Types that are no longer registered are reconciled as well, so that publishing and copying a
-        // locale carry over the rows the normalizer deliberately retains for them. A registry gate
-        // cannot be reintroduced here: ContentCopier normalizes the source content and persists it onto
-        // a fresh target, so a retained type is indistinguishable from a freshly submitted one. The
-        // type is never used as an array key, because PHP would coerce a digit-only key back to an int
-        // and defeat the cast below.
+        // Unregistered types are reconciled too, so publishing and copying a locale carry over the rows
+        // the normalizer retains. A registry gate cannot tell those apart from freshly submitted ones,
+        // because ContentCopier persists normalized source data onto a fresh target. $type stays a list
+        // entry rather than an array key, since PHP would coerce a digit-only key back to an int.
         /** @var array<int, array{type: string, targetUuids: array<int, string>}> $submissions */
         $submissions = [];
         /** @var array<int, string> $uuids */
@@ -86,9 +84,8 @@ class ProductAssociationsDataMapper implements DataMapperInterface
     }
 
     /**
-     * The generated form schema allows `null` next to the list of uuids for every type, so a type
-     * without any selection has to be accepted and reconciled as an empty list. Entries that are not
-     * uuids are dropped like uuids that resolve to no product.
+     * The generated form schema allows `null` for a type with no selection, so it has to be accepted
+     * as an empty list. Non-uuid entries are dropped, like uuids that resolve to no product.
      *
      * @return array<int, string>
      */

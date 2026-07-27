@@ -51,7 +51,7 @@ class ProductAssociationsResolver implements ResolverInterface
                 $dimensionContent->getAssociationsByType($type->getKey()),
             );
 
-            // delegates to inherit priority 100 + metadata.properties (title, url), preventing recursive full-product resolution
+            // limited to title/url so nested products do not recursively resolve their own associations
             $map[$type->getKey()] = $this->productSelectionPropertyResolver->resolve($uuids, $locale);
         }
 

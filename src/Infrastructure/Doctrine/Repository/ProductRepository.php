@@ -179,10 +179,8 @@ final class ProductRepository implements ProductRepositoryInterface
      */
     public function findBy(array $filters = [], array $sortBy = [], array $selects = []): \Generator
     {
-        // Filtering by an association target joins a collection, so the row set holds one row per
-        // association and LIMIT/OFFSET applied to it would silently drop referrers while countBy still
-        // reports them. The distinct identifiers are paginated first, the products are then loaded for
-        // exactly those identifiers.
+        // The association filter joins a collection, so LIMIT/OFFSET would apply to one row per
+        // association and silently drop referrers. Paginate distinct uuids first, then load those.
         if (isset($filters['associationTargetUuid']) && (isset($filters['page']) || isset($filters['limit']))) {
             $uuids = \iterator_to_array($this->findIdentifiersBy($filters, $sortBy), false);
             if ([] === $uuids) {

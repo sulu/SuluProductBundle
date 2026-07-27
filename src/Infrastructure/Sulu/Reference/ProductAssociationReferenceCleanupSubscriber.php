@@ -20,14 +20,12 @@ use Sulu\Product\Domain\Model\ProductInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
- * Cleans up stale reference records that point to a removed product.
+ * Cleans up reference records left behind when a product is removed as an association target.
  *
- * Sulu's built-in reference cleanup only removes reference records where the removed product is the
- * referrer (source). The `ProductAssociation` rows on referrer products are cascade-deleted at the
- * database level once the target product is removed, so the records pointing at the removed product
- * are left behind. They are deleted directly with a single DQL delete: `ProductRemovedEvent` is
- * dispatched from Doctrine's `postFlush`, so anything that re-enters `EntityManager::flush()` here -
- * such as re-running the reference refresher for every referrer - breaks change-set computation.
+ * Sulu's built-in cleanup only handles removed referrers, and `ProductAssociation` rows cascade-delete
+ * in the database, so target-side references survive. They are removed here with a direct DQL delete,
+ * because `ProductRemovedEvent` fires from Doctrine's `postFlush` and re-entering
+ * `EntityManager::flush()` there breaks change-set computation.
  *
  * @internal No BC promise is given for this class. Create your own event subscriber or use the
  * Symfony DependencyInjection container to override this service.

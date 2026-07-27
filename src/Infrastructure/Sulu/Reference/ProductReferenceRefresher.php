@@ -51,9 +51,7 @@ class ProductReferenceRefresher implements ReferenceRefresherInterface
     }
 
     /**
-     * The refreshers are indexed by this key, and both the RefreshReferenceMessageHandler and the
-     * RefreshCommand look them up by the dimension content's resource key, which is what
-     * ReferenceDoctrineEventListener dispatches and what this refresher writes as referenceResourceKey.
+     * Must match the key refreshers are looked up by and the referenceResourceKey this class writes.
      */
     public static function getResourceKey(): string
     {
@@ -103,8 +101,7 @@ class ProductReferenceRefresher implements ReferenceRefresherInterface
      */
     private function processProductDimensionContent(ProductDimensionContentInterface $productDimensionContent): void
     {
-        // A dimension content without a template has no resolvable content and therefore no references
-        // to collect, while resolving it would throw because no template matches the empty key.
+        // No template means nothing to resolve, and resolving would throw for an empty key.
         if (null === $productDimensionContent->getTemplateKey() || '' === $productDimensionContent->getTemplateKey()) {
             return;
         }

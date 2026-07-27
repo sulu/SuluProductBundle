@@ -192,7 +192,7 @@ class ProductAdmin extends Admin
                 ->setParent(static::EDIT_TABS_VIEW),
         );
 
-        // Associations form — edit mode only, when at least one association type is configured
+        // Associations form — edit mode only
         if ([] !== $this->associationTypeRegistry->getTypes()) {
             $viewCollection->add(
                 $this->viewBuilderFactory->createFormViewBuilder(static::EDIT_TABS_VIEW . '.associations', '/associations')
