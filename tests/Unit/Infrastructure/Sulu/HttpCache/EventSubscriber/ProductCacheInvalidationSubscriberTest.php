@@ -19,6 +19,7 @@ use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Bundle\CategoryBundle\Entity\Category;
 use Sulu\Bundle\HttpCacheBundle\Cache\CacheManagerInterface;
+use Sulu\Bundle\ReferenceBundle\Domain\Repository\ReferenceRepositoryInterface;
 use Sulu\Bundle\TagBundle\Entity\Tag;
 use Sulu\Component\Localization\Localization;
 use Sulu\Component\Webspace\Manager\WebspaceCollection;
@@ -32,9 +33,11 @@ use Sulu\Product\Domain\Event\ProductRemovedEvent;
 use Sulu\Product\Domain\Event\ProductWorkflowTransitionAppliedEvent;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
+use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\HttpCache\EventSubscriber\ProductCacheInvalidationSubscriber;
+use Sulu\Product\Infrastructure\Sulu\Reference\ProductAssociationReferenceCleanupSubscriber;
 use Sulu\Route\Application\Routing\Generator\RouteGeneratorInterface;
 use Sulu\Route\Domain\Model\Route;
 use Sulu\Route\Domain\Repository\RouteRepositoryInterface;
@@ -74,6 +77,11 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
      */
     private ObjectProphecy $productRepository;
 
+    /**
+     * @var ObjectProphecy<ReferenceRepositoryInterface>
+     */
+    private ObjectProphecy $referenceRepository;
+
     private ProductCacheInvalidationSubscriber $subscriber;
 
     protected function setUp(): void
@@ -85,6 +93,7 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
         $this->routeGenerator = $this->prophesize(RouteGeneratorInterface::class);
         $this->webspaceManager = $this->prophesize(WebspaceManagerInterface::class);
         $this->productRepository = $this->prophesize(ProductRepositoryInterface::class);
+        $this->referenceRepository = $this->prophesize(ReferenceRepositoryInterface::class);
 
         $this->subscriber = new ProductCacheInvalidationSubscriber(
             $this->cacheManager->reveal(),
@@ -92,7 +101,8 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
             $this->contentAggregator->reveal(),
             $this->routeGenerator->reveal(),
             $this->webspaceManager->reveal(),
-            $this->productRepository->reveal()
+            $this->productRepository->reveal(),
+            $this->referenceRepository->reveal()
         );
     }
 
@@ -314,6 +324,60 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
         $this->subscriber->onProductRemoved($event);
     }
 
+    public function testInvalidateReferringProductPathsOnRemoveWhenCacheDoesNotSupportTags(): void
+    {
+        $event = new ProductRemovedEvent('product-uuid-456', 'Test Product', ['locales' => ['en']]);
+
+        $this->cacheManager->supportsTags()->willReturn(false);
+
+        $this->referenceRepository->findFlatBy(
+            [
+                'resourceKey' => ProductInterface::RESOURCE_KEY,
+                'resourceId' => 'product-uuid-456',
+                'referenceResourceKey' => ProductDimensionContentInterface::RESOURCE_KEY,
+            ],
+            [],
+            ['referenceResourceId', 'referenceLocale'],
+            true,
+        )->willReturn([
+            ['referenceResourceId' => 'referrer-uuid-789', 'referenceLocale' => 'en'],
+        ]);
+
+        $referrerRoute = new Route(ProductInterface::RESOURCE_KEY, 'referrer-uuid-789', 'en', '/en/shop/referrer-product');
+        $this->routeRepository->findBy([
+            'resourceKey' => ProductInterface::RESOURCE_KEY,
+            'resourceId' => 'referrer-uuid-789',
+            'locale' => 'en',
+        ])->willReturn([$referrerRoute]);
+
+        $localization = $this->prophesize(Localization::class);
+        $webspace = $this->prophesize(Webspace::class);
+        $webspace->getLocalization('en')->willReturn($localization->reveal());
+        $webspace->getKey()->willReturn('sulu_io');
+
+        $this->webspaceManager->getWebspaceCollection()->willReturn(new WebspaceCollection([
+            'sulu_io' => $webspace->reveal(),
+        ]));
+
+        $this->routeGenerator->generate('/en/shop/referrer-product', 'en', 'sulu_io', UrlGeneratorInterface::ABSOLUTE_URL)
+            ->willReturn('https://sulu.io/en/shop/referrer-product');
+
+        $this->cacheManager->invalidateTag('product-uuid-456')->shouldBeCalled();
+        $this->cacheManager->invalidatePath('https://sulu.io/en/shop/referrer-product')->shouldBeCalled();
+
+        $this->subscriber->onProductRemoved($event);
+    }
+
+    public function testDoesNotQueryReferrersOnRemoveWhenCacheSupportsTags(): void
+    {
+        $event = new ProductRemovedEvent('product-uuid-456', 'Test Product', ['locales' => ['en']]);
+
+        $this->cacheManager->invalidateTag('product-uuid-456')->shouldBeCalled();
+        $this->referenceRepository->findFlatBy(Argument::cetera())->shouldNotBeCalled();
+
+        $this->subscriber->onProductRemoved($event);
+    }
+
     public function testInvalidateOnUnpublish(): void
     {
         $product = new Product('product-uuid-789');
@@ -423,7 +487,8 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
             $this->contentAggregator->reveal(),
             $this->routeGenerator->reveal(),
             $this->webspaceManager->reveal(),
-            $this->productRepository->reveal()
+            $this->productRepository->reveal(),
+            $this->referenceRepository->reveal()
         );
 
         $product = new Product('product-uuid-123');
@@ -448,7 +513,8 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
             $this->contentAggregator->reveal(),
             $this->routeGenerator->reveal(),
             $this->webspaceManager->reveal(),
-            $this->productRepository->reveal()
+            $this->productRepository->reveal(),
+            $this->referenceRepository->reveal()
         );
 
         $event = new ProductRemovedEvent(
@@ -509,5 +575,19 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
 
         $this->assertArrayHasKey(ProductWorkflowTransitionAppliedEvent::class, $events);
         $this->assertArrayHasKey(ProductRemovedEvent::class, $events);
+    }
+
+    public function testRemovalListenerRunsBeforeTheReferenceCleanupSubscriber(): void
+    {
+        // The cleanup subscriber deletes the reference records that identify the referring products,
+        // so this subscriber has to read them first.
+        $listener = ProductCacheInvalidationSubscriber::getSubscribedEvents()[ProductRemovedEvent::class];
+        $cleanupListener = ProductAssociationReferenceCleanupSubscriber::getSubscribedEvents()[ProductRemovedEvent::class];
+
+        $this->assertIsArray($listener);
+        $this->assertGreaterThan(
+            \is_array($cleanupListener) ? $cleanupListener[1] : 0,
+            $listener[1],
+        );
     }
 }
