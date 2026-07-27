@@ -225,6 +225,21 @@ final class SuluProductBundle extends AbstractBundle
                             ->scalarNode('label')->defaultNull()->end()
                         ->end()
                     ->end()
+                    ->validate()
+                        ->ifTrue(static function(array $associationTypes): bool {
+                            foreach (\array_keys($associationTypes) as $key) {
+                                if (1 !== \preg_match('/^[a-zA-Z][a-zA-Z0-9_-]*$/', (string) $key)) {
+                                    return true;
+                                }
+                            }
+
+                            return false;
+                        })
+                        // A digit-only key is coerced to an int array key by PHP and a key containing a
+                        // slash is re-split into a nested object by the form schema builder, so neither
+                        // survives the round trip through the form and the data mapper.
+                        ->thenInvalid('Invalid association type key in %s: an association type key must start with a letter and may only contain letters, digits, underscores and hyphens.')
+                    ->end()
                 ->end()
                 ->arrayNode('product_statuses')
                     ->scalarPrototype()->end()
@@ -962,7 +977,6 @@ final class SuluProductBundle extends AbstractBundle
             ->class(ProductAssociationReferenceCleanupSubscriber::class)
             ->args([
                 new Reference('sulu_reference.reference_repository'),
-                new Reference('sulu_product.product_reference_refresher'),
             ])
             ->tag('kernel.event_subscriber');
 

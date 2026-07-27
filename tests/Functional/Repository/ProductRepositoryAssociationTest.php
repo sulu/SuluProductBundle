@@ -148,6 +148,43 @@ class ProductRepositoryAssociationTest extends SuluTestCase
         $this->assertNotContains($productE->getUuid(), $uuids);
     }
 
+    public function testPaginatedFindByAssociationTargetUuidReachesEveryReferrer(): void
+    {
+        $target = $this->createLiveProduct();
+        $referrers = [$this->createLiveProduct(), $this->createLiveProduct(), $this->createLiveProduct()];
+
+        foreach ($referrers as $referrer) {
+            $dimensionContent = $this->getLiveDimensionContent($referrer);
+            // Two rows to the same target are legal, because the unique constraint is scoped per type.
+            $dimensionContent->addAssociation(new ProductAssociation($dimensionContent, $target, 'alternative'));
+            $dimensionContent->addAssociation(new ProductAssociation($dimensionContent, $target, 'accessory'));
+        }
+
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        $filters = [
+            'locale' => 'en',
+            'stage' => DimensionContentInterface::STAGE_LIVE,
+            'associationTargetUuid' => $target->getUuid(),
+        ];
+
+        $this->assertSame(3, $this->repository->countBy($filters));
+
+        $paginated = [];
+        foreach ([1, 2] as $page) {
+            foreach ($this->repository->findBy($filters + ['page' => $page, 'limit' => 2]) as $product) {
+                $paginated[] = $product->getUuid();
+            }
+        }
+
+        $expected = \array_map(static fn (ProductInterface $p) => $p->getUuid(), $referrers);
+        \sort($expected);
+        \sort($paginated);
+
+        $this->assertSame($expected, $paginated);
+    }
+
     public function testFindByAssociationTargetUuidWithoutLocaleAndStageThrowsException(): void
     {
         $this->expectException(\InvalidArgumentException::class);

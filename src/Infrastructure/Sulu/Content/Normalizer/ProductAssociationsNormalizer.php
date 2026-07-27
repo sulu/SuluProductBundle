@@ -48,24 +48,25 @@ class ProductAssociationsNormalizer implements NormalizerInterface
             return $normalizedData;
         }
 
-        $map = [];
+        // The types are collected in a list rather than as array keys, because PHP would coerce a
+        // digit-only type to an int key and it would no longer satisfy the string parameter below.
+        /** @var array<int, string> $types */
+        $types = [];
         foreach ($this->associationTypeRegistry->getTypes() as $type) {
-            $map[$type->getKey()] = [];
+            $types[] = $type->getKey();
         }
 
-        foreach (\array_keys($map) as $type) {
-            $map[$type] = $this->getUuidsForType($object, $type);
-        }
-
-        $retainedTypes = [];
+        // Types that are no longer registered are retained, so that publishing and copying a locale
+        // carry their rows over.
         foreach ($object->getAssociations() as $association) {
             $type = $association->getType();
-            if (!$this->associationTypeRegistry->has($type)) {
-                $retainedTypes[$type] = true;
+            if (!\in_array($type, $types, true)) {
+                $types[] = $type;
             }
         }
 
-        foreach (\array_keys($retainedTypes) as $type) {
+        $map = [];
+        foreach ($types as $type) {
             $map[$type] = $this->getUuidsForType($object, $type);
         }
 

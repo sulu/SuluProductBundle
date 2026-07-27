@@ -64,6 +64,16 @@ final class ProductAssociationsNormalizerTest extends TestCase
         self::assertSame($data, $result);
     }
 
+    public function testRetainsDigitOnlyUnregisteredTypeWithoutFatalError(): void
+    {
+        $dc = new ProductDimensionContent(new Product('uuid-source'));
+        $dc->addAssociation(new ProductAssociation($dc, new Product('uuid-b'), '123', 0));
+
+        $result = $this->normalizer->enhance($dc, []);
+
+        self::assertSame(['alternative' => [], 'suitable' => [], '123' => ['uuid-b']], $result['associations']);
+    }
+
     public function testSeedsEveryConfiguredTypeToEmptyArray(): void
     {
         $dc = new ProductDimensionContent(new Product());

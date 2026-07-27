@@ -122,30 +122,22 @@ final class ProductAssociationReferenceCleanupTest extends SuluTestCase
         ]);
     }
 
-    public function testRemovingReferencedProductCleansUpStaleReferenceOnReferrer(): void
+    public function testCreatingProductWithAssociationWritesReferenceRecord(): void
     {
         self::purgeDatabase();
         $familyId = $this->createProductFamily();
         $targetId = $this->createProduct($familyId, 'Target Product');
         $sourceId = $this->createProduct($familyId, 'Source Product', ['alternative' => [$targetId]]);
 
-        // Seed the reference record directly, rather than relying on the automatic on-create trigger
-        // (ReferenceDoctrineEventListener), which does not fire for products in this application due to
-        // an unrelated, pre-existing resourceKey mismatch between what it dispatches and how the
-        // product refresher is indexed.
-        /** @var ReferenceRepositoryInterface $referenceRepository */
-        $referenceRepository = self::getContainer()->get(ReferenceRepositoryInterface::class);
-        $referenceRepository->add($referenceRepository->create(
-            resourceKey: ProductInterface::RESOURCE_KEY,
-            resourceId: $targetId,
-            referenceResourceKey: ProductDimensionContentInterface::RESOURCE_KEY,
-            referenceResourceId: $sourceId,
-            referenceLocale: 'en',
-            referenceTitle: 'Source Product',
-            referenceContext: 'draft',
-            referenceProperty: 'associations.alternative',
-        ));
-        $referenceRepository->flush();
+        $this->assertNotNull($this->findReference($targetId, $sourceId));
+    }
+
+    public function testRemovingReferencedProductCleansUpStaleReferenceOnReferrer(): void
+    {
+        self::purgeDatabase();
+        $familyId = $this->createProductFamily();
+        $targetId = $this->createProduct($familyId, 'Target Product');
+        $sourceId = $this->createProduct($familyId, 'Source Product', ['alternative' => [$targetId]]);
 
         $this->assertNotNull($this->findReference($targetId, $sourceId));
 

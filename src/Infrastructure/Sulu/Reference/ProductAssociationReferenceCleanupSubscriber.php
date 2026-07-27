@@ -24,10 +24,10 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  *
  * Sulu's built-in reference cleanup only removes reference records where the removed product is the
  * referrer (source). The `ProductAssociation` rows on referrer products are cascade-deleted at the
- * database level once the target product is removed, so they can no longer be used to find those
- * referrers. This subscriber instead reads the persisted reference records - which still point at the
- * removed product - to find the referrers, then re-runs the reference refresher for each of them so
- * their reference sets are recomputed from their current content, without the removed product.
+ * database level once the target product is removed, so the records pointing at the removed product
+ * are left behind. They are deleted directly with a single DQL delete: `ProductRemovedEvent` is
+ * dispatched from Doctrine's `postFlush`, so anything that re-enters `EntityManager::flush()` here -
+ * such as re-running the reference refresher for every referrer - breaks change-set computation.
  *
  * @internal No BC promise is given for this class. Create your own event subscriber or use the
  * Symfony DependencyInjection container to override this service.
@@ -36,7 +36,6 @@ class ProductAssociationReferenceCleanupSubscriber implements EventSubscriberInt
 {
     public function __construct(
         private readonly ReferenceRepositoryInterface $referenceRepository,
-        private readonly ProductReferenceRefresher $referenceRefresher,
     ) {
     }
 
@@ -49,52 +48,10 @@ class ProductAssociationReferenceCleanupSubscriber implements EventSubscriberInt
 
     public function onProductRemoved(ProductRemovedEvent $event): void
     {
-        $removedProductId = $event->getResourceId();
-
-        /**
-         * @var iterable<array{referenceResourceId: string, referenceLocale: string, referenceContext: string}> $referrers
-         */
-        $referrers = $this->referenceRepository->findFlatBy(
-            filters: [
-                'resourceKey' => ProductInterface::RESOURCE_KEY,
-                'resourceId' => $removedProductId,
-                'referenceResourceKey' => ProductDimensionContentInterface::RESOURCE_KEY,
-            ],
-            fields: ['referenceResourceId', 'referenceLocale', 'referenceContext'],
-            distinct: true,
-        );
-
-        $referrersToRefresh = [];
-        foreach ($referrers as $referrer) {
-            if ($removedProductId === $referrer['referenceResourceId']) {
-                continue;
-            }
-
-            $referrersToRefresh[] = $referrer;
-        }
-
-        if ([] === $referrersToRefresh) {
-            return;
-        }
-
-        foreach ($referrersToRefresh as $referrer) {
-            $this->refreshReferrer($referrer['referenceResourceId'], $referrer['referenceLocale'], $referrer['referenceContext']);
-        }
-
-        $this->referenceRepository->flush();
-    }
-
-    private function refreshReferrer(string $resourceId, string $locale, string $stage): void
-    {
-        $refreshedDimensionContents = $this->referenceRefresher->refresh([
-            'resourceId' => $resourceId,
-            'resourceKey' => ProductDimensionContentInterface::RESOURCE_KEY,
-            'locale' => $locale,
-            'stage' => $stage,
+        $this->referenceRepository->removeBy([
+            'resourceKey' => ProductInterface::RESOURCE_KEY,
+            'resourceId' => $event->getResourceId(),
+            'referenceResourceKey' => ProductDimensionContentInterface::RESOURCE_KEY,
         ]);
-
-        // Drain the generator to force execution of the refresh and reference persistence.
-        foreach ($refreshedDimensionContents as $ignored) {
-        }
     }
 }

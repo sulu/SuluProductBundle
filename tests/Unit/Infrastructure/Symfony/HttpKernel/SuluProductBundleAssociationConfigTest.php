@@ -17,6 +17,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Product\Infrastructure\Symfony\HttpKernel\SuluProductBundle;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\ConfigurationExtensionInterface;
@@ -73,6 +74,22 @@ final class SuluProductBundleAssociationConfigTest extends TestCase
         $processed = $this->processConfig(['association_types' => ['suitable' => ['label' => 'custom.label']]]);
 
         self::assertSame(['suitable' => ['label' => 'custom.label']], $processed['association_types']);
+    }
+
+    public function testDigitOnlyAssociationTypeKeyIsRejected(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessageMatches('/association type key/');
+
+        $this->processConfig(['association_types' => ['123' => null]]);
+    }
+
+    public function testAssociationTypeKeyWithSlashIsRejected(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessageMatches('/association type key/');
+
+        $this->processConfig(['association_types' => ['foo/bar' => null]]);
     }
 
     public function testOmittedAssociationTypesNormalizesToEmptyArray(): void

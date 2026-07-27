@@ -23,7 +23,6 @@ use Sulu\Product\Domain\Event\ProductRemovedEvent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Reference\ProductAssociationReferenceCleanupSubscriber;
-use Sulu\Product\Infrastructure\Sulu\Reference\ProductReferenceRefresher;
 
 #[CoversClass(ProductAssociationReferenceCleanupSubscriber::class)]
 final class ProductAssociationReferenceCleanupSubscriberTest extends TestCase
@@ -35,21 +34,14 @@ final class ProductAssociationReferenceCleanupSubscriberTest extends TestCase
      */
     private ObjectProphecy $referenceRepository;
 
-    /**
-     * @var ObjectProphecy<ProductReferenceRefresher>
-     */
-    private ObjectProphecy $referenceRefresher;
-
     private ProductAssociationReferenceCleanupSubscriber $subscriber;
 
     protected function setUp(): void
     {
         $this->referenceRepository = $this->prophesize(ReferenceRepositoryInterface::class);
-        $this->referenceRefresher = $this->prophesize(ProductReferenceRefresher::class);
 
         $this->subscriber = new ProductAssociationReferenceCleanupSubscriber(
             $this->referenceRepository->reveal(),
-            $this->referenceRefresher->reveal(),
         );
     }
 
@@ -61,87 +53,22 @@ final class ProductAssociationReferenceCleanupSubscriberTest extends TestCase
         );
     }
 
-    public function testOnProductRemovedRefreshesEachDistinctReferrer(): void
+    public function testOnProductRemovedRemovesReferencesPointingAtTheRemovedProduct(): void
     {
-        $removedProductId = 'uuid-b';
-
-        $this->referenceRepository->findFlatBy(Argument::cetera())->willReturn([
-            ['referenceResourceId' => 'uuid-a', 'referenceLocale' => 'en', 'referenceContext' => 'live'],
-            ['referenceResourceId' => 'uuid-d', 'referenceLocale' => 'de', 'referenceContext' => 'draft'],
-        ]);
-
-        $this->referenceRefresher->refresh([
-            'resourceId' => 'uuid-a',
-            'resourceKey' => ProductDimensionContentInterface::RESOURCE_KEY,
-            'locale' => 'en',
-            'stage' => 'live',
-        ])->willReturn($this->emptyGenerator());
-
-        $this->referenceRefresher->refresh([
-            'resourceId' => 'uuid-d',
-            'resourceKey' => ProductDimensionContentInterface::RESOURCE_KEY,
-            'locale' => 'de',
-            'stage' => 'draft',
-        ])->willReturn($this->emptyGenerator());
-
-        $this->subscriber->onProductRemoved(new ProductRemovedEvent($removedProductId, 'Removed Product'));
-
-        $this->referenceRepository->findFlatBy(
-            [
-                'resourceKey' => ProductInterface::RESOURCE_KEY,
-                'resourceId' => $removedProductId,
-                'referenceResourceKey' => ProductDimensionContentInterface::RESOURCE_KEY,
-            ],
-            [],
-            ['referenceResourceId', 'referenceLocale', 'referenceContext'],
-            true,
-        )->shouldHaveBeenCalledOnce();
-
-        $this->referenceRefresher->refresh([
-            'resourceId' => 'uuid-a',
-            'resourceKey' => ProductDimensionContentInterface::RESOURCE_KEY,
-            'locale' => 'en',
-            'stage' => 'live',
-        ])->shouldHaveBeenCalledOnce();
-
-        $this->referenceRefresher->refresh([
-            'resourceId' => 'uuid-d',
-            'resourceKey' => ProductDimensionContentInterface::RESOURCE_KEY,
-            'locale' => 'de',
-            'stage' => 'draft',
-        ])->shouldHaveBeenCalledOnce();
-
-        $this->referenceRepository->flush()->shouldHaveBeenCalledOnce();
-    }
-
-    public function testOnProductRemovedSkipsTheRemovedProductItself(): void
-    {
-        $removedProductId = 'uuid-b';
-
-        $this->referenceRepository->findFlatBy(Argument::cetera())->willReturn([
-            ['referenceResourceId' => $removedProductId, 'referenceLocale' => 'en', 'referenceContext' => 'live'],
-        ]);
-
-        $this->subscriber->onProductRemoved(new ProductRemovedEvent($removedProductId, 'Removed Product'));
-
-        $this->referenceRefresher->refresh(Argument::any())->shouldNotHaveBeenCalled();
-        $this->referenceRepository->flush()->shouldNotHaveBeenCalled();
-    }
-
-    public function testOnProductRemovedIsNoopWithoutInboundReferences(): void
-    {
-        $this->referenceRepository->findFlatBy(Argument::cetera())->willReturn([]);
-
         $this->subscriber->onProductRemoved(new ProductRemovedEvent('uuid-b', 'Removed Product'));
 
-        $this->referenceRefresher->refresh(Argument::any())->shouldNotHaveBeenCalled();
-        $this->referenceRepository->flush()->shouldNotHaveBeenCalled();
+        $this->referenceRepository->removeBy([
+            'resourceKey' => ProductInterface::RESOURCE_KEY,
+            'resourceId' => 'uuid-b',
+            'referenceResourceKey' => ProductDimensionContentInterface::RESOURCE_KEY,
+        ])->shouldHaveBeenCalledOnce();
     }
 
-    private function emptyGenerator(): \Generator
+    public function testOnProductRemovedDoesNotFlushBecauseTheEventIsDispatchedFromPostFlush(): void
     {
-        return (static function(): \Generator {
-            yield from [];
-        })();
+        $this->subscriber->onProductRemoved(new ProductRemovedEvent('uuid-b', 'Removed Product'));
+
+        $this->referenceRepository->flush()->shouldNotHaveBeenCalled();
+        $this->referenceRepository->findFlatBy(Argument::cetera())->shouldNotHaveBeenCalled();
     }
 }

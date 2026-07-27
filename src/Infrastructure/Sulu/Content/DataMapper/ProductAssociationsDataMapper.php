@@ -51,16 +51,20 @@ class ProductAssociationsDataMapper implements DataMapperInterface
         }
 
         // Types that are no longer registered are reconciled as well, so that publishing and copying a
-        // locale carry over the rows the normalizer deliberately retains for them.
-        /** @var array<string, array<int, string>> $targetUuidsByType */
-        $targetUuidsByType = [];
+        // locale carry over the rows the normalizer deliberately retains for them. A registry gate
+        // cannot be reintroduced here: ContentCopier normalizes the source content and persists it onto
+        // a fresh target, so a retained type is indistinguishable from a freshly submitted one. The
+        // type is never used as an array key, because PHP would coerce a digit-only key back to an int
+        // and defeat the cast below.
+        /** @var array<int, array{type: string, targetUuids: array<int, string>}> $submissions */
+        $submissions = [];
         /** @var array<int, string> $uuids */
         $uuids = [];
         foreach ($submittedByType as $type => $targetUuids) {
             $type = (string) $type;
             $targetUuids = $this->readTargetUuids($type, $targetUuids);
 
-            $targetUuidsByType[$type] = $targetUuids;
+            $submissions[] = ['type' => $type, 'targetUuids' => $targetUuids];
             foreach ($targetUuids as $targetUuid) {
                 $uuids[] = $targetUuid;
             }
@@ -76,8 +80,8 @@ class ProductAssociationsDataMapper implements DataMapperInterface
 
         $sourceUuid = $localizedDimensionContent->getResource()->getUuid();
 
-        foreach ($targetUuidsByType as $type => $targetUuids) {
-            $this->reconcileType($localizedDimensionContent, $type, $targetUuids, $targets, $sourceUuid);
+        foreach ($submissions as $submission) {
+            $this->reconcileType($localizedDimensionContent, $submission['type'], $submission['targetUuids'], $targets, $sourceUuid);
         }
     }
 

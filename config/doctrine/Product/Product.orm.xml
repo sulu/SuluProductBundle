@@ -13,7 +13,6 @@
         <one-to-many field="dimensionContents" target-entity="Sulu\Product\Domain\Model\ProductDimensionContentInterface" mapped-by="product">
             <cascade>
                 <cascade-persist/>
-                <cascade-remove/>
             </cascade>
         </one-to-many>
 

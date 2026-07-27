@@ -103,6 +103,24 @@ final class ProductAssociationsDataMapperTest extends TestCase
         self::assertSame(1, $result[1]->getPosition());
     }
 
+    public function testMapsDigitOnlyTypeAsString(): void
+    {
+        $source = new Product('uuid-source');
+        $loc = new ProductDimensionContent($source);
+        $unloc = new ProductDimensionContent($source);
+
+        $this->productRepository->findBy(['uuids' => ['uuid-b']])
+            ->willReturn([new Product('uuid-b')]);
+
+        $this->mapper->map($unloc, $loc, [
+            'associations' => ['123' => ['uuid-b']],
+        ]);
+
+        $result = $loc->getAssociationsByType('123');
+        self::assertCount(1, $result);
+        self::assertSame('123', $result[0]->getType());
+    }
+
     public function testRemovesDroppedTargets(): void
     {
         $source = new Product('uuid-source');
