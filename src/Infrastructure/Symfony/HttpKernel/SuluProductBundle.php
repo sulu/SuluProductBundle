@@ -1181,7 +1181,7 @@ final class SuluProductBundle extends AbstractBundle
                                     'list_overlay' => [
                                         'adapter' => 'table',
                                         'list_key' => 'products',
-                                        'display_properties' => ['title', 'routePath'],
+                                        'display_properties' => ['name'],
                                         'icon' => 'su-newspaper',
                                         'label' => 'sulu_product.selection_label',
                                         'overlay_title' => 'sulu_product.selection_overlay_title',
@@ -1197,7 +1197,7 @@ final class SuluProductBundle extends AbstractBundle
                                     'list_overlay' => [
                                         'adapter' => 'table',
                                         'list_key' => 'products',
-                                        'display_properties' => ['title'],
+                                        'display_properties' => ['name'],
                                         'empty_text' => 'sulu_product.no_product_selected',
                                         'icon' => 'su-newspaper',
                                         'overlay_title' => 'sulu_product.single_selection_overlay_title',
