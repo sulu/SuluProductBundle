@@ -185,6 +185,27 @@ class ProductRepositoryAssociationTest extends SuluTestCase
         $this->assertSame($expected, $paginated);
     }
 
+    public function testPaginatedFindByAssociationTargetUuidWithoutReferrersReturnsNothing(): void
+    {
+        $target = $this->createLiveProduct();
+
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        $products = \iterator_to_array(
+            $this->repository->findBy([
+                'locale' => 'en',
+                'stage' => DimensionContentInterface::STAGE_LIVE,
+                'associationTargetUuid' => $target->getUuid(),
+                'page' => 1,
+                'limit' => 10,
+            ]),
+            false,
+        );
+
+        $this->assertSame([], $products);
+    }
+
     public function testFindByAssociationTargetUuidWithoutLocaleAndStageThrowsException(): void
     {
         $this->expectException(\InvalidArgumentException::class);

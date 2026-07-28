@@ -183,9 +183,6 @@ final class ProductRepository implements ProductRepositoryInterface
         // association and silently drop referrers. Paginate distinct uuids first, then load those.
         if (isset($filters['associationTargetUuid']) && (isset($filters['page']) || isset($filters['limit']))) {
             $uuids = \iterator_to_array($this->findIdentifiersBy($filters, $sortBy), false);
-            if ([] === $uuids) {
-                return;
-            }
 
             $identifierFilters = $filters;
             unset(

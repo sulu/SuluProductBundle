@@ -368,6 +368,32 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
         $this->subscriber->onProductRemoved($event);
     }
 
+    public function testDoesNotInvalidatePathsOfTheRemovedProductItselfOnRemove(): void
+    {
+        $event = new ProductRemovedEvent('product-uuid-456', 'Test Product', ['locales' => ['en']]);
+
+        $this->cacheManager->supportsTags()->willReturn(false);
+
+        $this->referenceRepository->findFlatBy(
+            [
+                'resourceKey' => ProductInterface::RESOURCE_KEY,
+                'resourceId' => 'product-uuid-456',
+                'referenceResourceKey' => ProductDimensionContentInterface::RESOURCE_KEY,
+            ],
+            [],
+            ['referenceResourceId', 'referenceLocale'],
+            true,
+        )->willReturn([
+            ['referenceResourceId' => 'product-uuid-456', 'referenceLocale' => 'en'],
+        ]);
+
+        $this->cacheManager->invalidateTag('product-uuid-456')->shouldBeCalled();
+        $this->routeRepository->findBy(Argument::cetera())->shouldNotBeCalled();
+        $this->cacheManager->invalidatePath(Argument::cetera())->shouldNotBeCalled();
+
+        $this->subscriber->onProductRemoved($event);
+    }
+
     public function testDoesNotQueryReferrersOnRemoveWhenCacheSupportsTags(): void
     {
         $event = new ProductRemovedEvent('product-uuid-456', 'Test Product', ['locales' => ['en']]);
