@@ -96,6 +96,7 @@ use Sulu\Product\Infrastructure\Doctrine\Repository\ProductRepository;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeGroupAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
+use Sulu\Product\Infrastructure\Sulu\Admin\ProductAssociationsFieldMetadataValidator;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAssociationsFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAttributeFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductContentAdmin;
@@ -802,6 +803,13 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('translator'),
             ])
             ->tag('sulu_admin.form_metadata_visitor');
+
+        $services->set('sulu_product.product_associations_field_metadata_validator')
+            ->class(ProductAssociationsFieldMetadataValidator::class)
+            ->args([
+                new Reference('sulu_product.association_type_registry'),
+            ])
+            ->tag('sulu_admin.field_metadata_validator');
 
         $services->set('sulu_product.product_content_form_metadata_visitor')
             ->class(ProductContentFormMetadataVisitor::class)
