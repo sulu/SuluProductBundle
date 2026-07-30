@@ -26,7 +26,9 @@ use Sulu\Product\Infrastructure\Sulu\Admin\ProductAssociationsFormMetadataVisito
 /**
  * The test application config (tests/Application/config/config.yml) configures the
  * "alternative" and "suitable" association types, which is required for the assertions
- * in this test to hold.
+ * in this test to hold. It additionally declares "associations/suitable" in its own
+ * tests/Application/config/forms/product_associations.xml, so "suitable" is the
+ * project-declared field and "alternative" the generated one.
  */
 #[CoversClass(ProductAssociationsFormMetadataVisitor::class)]
 #[CoversClass(ProductAdmin::class)]
@@ -48,24 +50,53 @@ class ProductAssociationsAdminTest extends SuluTestCase
         $metadata = $formMetadataProvider->getMetadata('product_associations', 'en');
         $this->assertInstanceOf(FormMetadata::class, $metadata);
 
-        $section = $metadata->getItems()['associations'];
+        $items = $metadata->getItems();
+
+        $suitable = $items['associations/suitable'];
+        $this->assertInstanceOf(FieldMetadata::class, $suitable);
+        $this->assertSame('product_selection', $suitable->getType());
+
+        $section = $items['associations'];
         $this->assertInstanceOf(SectionMetadata::class, $section);
 
         $sectionItems = $section->getItems();
-        $this->assertArrayHasKey('associations/alternative', $sectionItems);
-        $this->assertArrayHasKey('associations/suitable', $sectionItems);
+        $this->assertSame(['associations/alternative'], \array_keys($sectionItems));
 
         $alternative = $sectionItems['associations/alternative'];
         $this->assertInstanceOf(FieldMetadata::class, $alternative);
         $this->assertSame('product_selection', $alternative->getType());
         $this->assertSame(12, $alternative->getColSpan());
+        $this->assertSame('sulu_product.association_type_alternative', $alternative->getLabel('en'));
 
-        $suitable = $sectionItems['associations/suitable'];
-        $this->assertInstanceOf(FieldMetadata::class, $suitable);
-        $this->assertSame('product_selection', $suitable->getType());
+        // the "associations/" prefix is nested into an "associations" object by the schema pipeline
+        $schema = \json_encode($metadata->getSchema()->toJsonSchema());
+        $this->assertIsString($schema);
+        $this->assertStringContainsString('"alternative"', $schema);
+        $this->assertStringContainsString('"suitable"', $schema);
+    }
 
-        $schema = $metadata->getSchema()->toJsonSchema();
-        $this->assertNotSame([], $schema);
+    public function testDeclaredFieldAppearsOnceWithItsParams(): void
+    {
+        self::bootKernel();
+
+        /** @var FormMetadataProvider $formMetadataProvider */
+        $formMetadataProvider = self::getContainer()->get('sulu_admin.form_metadata_provider');
+
+        $formMetadata = $formMetadataProvider->getMetadata('product_associations', 'en');
+        $this->assertInstanceOf(FormMetadata::class, $formMetadata);
+
+        $flatFields = $formMetadata->getFlatFieldMetadata();
+
+        // exactly one field per configured type - the declared one was not regenerated
+        $this->assertSame(['associations/suitable', 'associations/alternative'], \array_keys($flatFields));
+
+        $declared = $flatFields['associations/suitable'];
+        $this->assertSame('product_selection', $declared->getType());
+        $this->assertSame('Suitable products', $declared->getLabel('en'));
+        $this->assertNotNull($declared->findOption('properties'));
+
+        $generated = $flatFields['associations/alternative'];
+        $this->assertNull($generated->findOption('properties'));
     }
 
     public function testAdminRegistersAssociationsTabWhenTypesConfigured(): void

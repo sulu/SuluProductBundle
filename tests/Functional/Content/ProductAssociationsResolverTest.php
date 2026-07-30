@@ -105,4 +105,99 @@ class ProductAssociationsResolverTest extends SuluTestCase
         self::assertSame(100, $resolvable->getPriority());
         self::assertSame(['title' => 'title', 'url' => 'url'], $resolvable->getMetadata()['properties'] ?? null);
     }
+
+    public function testDeclaredFieldParamsAppearInResolvableMetadata(): void
+    {
+        $target = $this->productRepository->createNew();
+        $this->productRepository->add($target);
+
+        $product = $this->productRepository->createNew();
+
+        $dimensionContent = $product->createDimensionContent();
+        $dimensionContent->setLocale('en');
+        $dimensionContent->setStage('draft');
+        $dimensionContent->setTemplateKey('product');
+        $dimensionContent->addAssociation(new ProductAssociation($dimensionContent, $target, 'suitable'));
+        $product->addDimensionContent($dimensionContent);
+
+        $this->productRepository->add($product);
+        $this->entityManager->persist($dimensionContent);
+        $this->entityManager->flush();
+
+        $result = $this->contentResolver->resolve($dimensionContent);
+
+        $associationsData = $result['extension']['associations'];
+
+        $suitable = $associationsData['suitable'];
+        self::assertIsArray($suitable);
+        self::assertCount(1, $suitable);
+        $resolvable = $suitable[0];
+        self::assertInstanceOf(ResolvableResource::class, $resolvable);
+        self::assertSame($target->getUuid(), $resolvable->getId());
+        // declared property resolves alongside the forced title/url
+        self::assertSame(
+            ['description' => 'description', 'title' => 'title', 'url' => 'url'],
+            $resolvable->getMetadata()['properties'] ?? null,
+        );
+
+        // the generated type keeps its defaults
+        self::assertSame([], $associationsData['alternative']);
+    }
+
+    /**
+     * Regression guard for the bare-type re-keying: if the resolver ever passes
+     * `associations/<type>` keys, MetadataResolver::nestContentViews() unwraps the
+     * per-type ContentViews and the resolvable is never loaded - this test would
+     * then see a ResolvableResource instead of the resolved target array.
+     */
+    public function testPublishedTargetResolvesDeclaredProperties(): void
+    {
+        $target = $this->productRepository->createNew();
+
+        $targetUnlocalizedLive = $target->createDimensionContent();
+        $targetUnlocalizedLive->setStage('live');
+        $target->addDimensionContent($targetUnlocalizedLive);
+
+        $targetLocalizedLive = $target->createDimensionContent();
+        $targetLocalizedLive->setLocale('en');
+        $targetLocalizedLive->setStage('live');
+        $targetLocalizedLive->setTemplateKey('product');
+        $targetLocalizedLive->setTemplateData([
+            'title' => 'Suitable Target',
+            'url' => '/suitable-target',
+            'description' => 'A very suitable product',
+        ]);
+        $target->addDimensionContent($targetLocalizedLive);
+
+        $this->productRepository->add($target);
+        $this->entityManager->persist($targetUnlocalizedLive);
+        $this->entityManager->persist($targetLocalizedLive);
+
+        $product = $this->productRepository->createNew();
+
+        $dimensionContent = $product->createDimensionContent();
+        $dimensionContent->setLocale('en');
+        $dimensionContent->setStage('draft');
+        $dimensionContent->setTemplateKey('product');
+        $dimensionContent->addAssociation(new ProductAssociation($dimensionContent, $target, 'suitable'));
+        $product->addDimensionContent($dimensionContent);
+
+        $this->productRepository->add($product);
+        $this->entityManager->persist($dimensionContent);
+        $this->entityManager->flush();
+
+        $result = $this->contentResolver->resolve($dimensionContent);
+
+        $suitable = $result['extension']['associations']['suitable'];
+        self::assertIsArray($suitable);
+        self::assertCount(1, $suitable);
+
+        $resolved = $suitable[0];
+        self::assertIsArray($resolved);
+
+        $content = $resolved['content'] ?? null;
+        self::assertIsArray($content);
+        self::assertSame('Suitable Target', $content['title'] ?? null);
+        self::assertSame('A very suitable product', $content['description'] ?? null);
+    }
 }
