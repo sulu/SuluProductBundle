@@ -43,15 +43,22 @@ class ProductAssociationsFormMetadataVisitor implements FormMetadataVisitorInter
             return;
         }
 
+        $declaredFields = $formMetadata->getFlatFieldMetadata();
         $items = $formMetadata->getItems();
+
+        $existingSection = $items['associations'] ?? null;
+        $section = $existingSection instanceof SectionMetadata ? $existingSection : new SectionMetadata('associations');
 
         /** @var PropertyMetadata[] $schemaProperties */
         $schemaProperties = [];
 
-        $section = new SectionMetadata('associations');
-
         foreach ($this->associationTypeRegistry->getTypes() as $type) {
-            $field = new FieldMetadata('associations/' . $type->getKey());
+            $name = 'associations/' . $type->getKey();
+            if (isset($declaredFields[$name])) {
+                continue; // the project declared this field - it owns label, params and placement
+            }
+
+            $field = new FieldMetadata($name);
             $field->setType('product_selection');
             $field->setColSpan(12);
             $field->setLabel($this->translator->trans($type->getLabel(), [], 'admin', $locale), $locale);
@@ -63,7 +70,7 @@ class ProductAssociationsFormMetadataVisitor implements FormMetadataVisitorInter
                 : new PropertyMetadata($field->getName(), $field->isRequired());
         }
 
-        if ([] !== $section->getItems()) {
+        if ($section !== $existingSection && [] !== $section->getItems()) {
             $items[$section->getName()] = $section;
             $formMetadata->setItems($items);
         }

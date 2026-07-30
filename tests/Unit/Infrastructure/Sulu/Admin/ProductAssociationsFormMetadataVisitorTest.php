@@ -189,4 +189,98 @@ final class ProductAssociationsFormMetadataVisitorTest extends TestCase
         self::assertInstanceOf(SectionMetadata::class, $section);
         self::assertArrayHasKey('associations/alternative', $section->getItems());
     }
+
+    public function testSkipsTypesDeclaredByProject(): void
+    {
+        $form = new FormMetadata();
+        $form->setKey('product_associations');
+
+        $declared = new FieldMetadata('associations/alternative');
+        $declared->setType('product_selection');
+        $form->addItem($declared);
+
+        $this->visitor($this->registryWithTypes())->visitFormMetadata($form, 'en', []);
+
+        $items = $form->getItems();
+        self::assertSame($declared, $items['associations/alternative']);
+
+        $section = $items['associations'];
+        self::assertInstanceOf(SectionMetadata::class, $section);
+        self::assertSame(['associations/suitable'], \array_keys($section->getItems()));
+
+        self::assertSame([
+            'allOf' => [
+                ['type' => ['number', 'string', 'boolean', 'object', 'array', 'null']],
+                [
+                    'type' => 'object',
+                    'properties' => [
+                        'associations' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'suitable' => [
+                                    'anyOf' => [
+                                        ['type' => 'null'],
+                                        [
+                                            'type' => 'array',
+                                            'items' => ['type' => ['number', 'string', 'boolean', 'object', 'array', 'null']],
+                                            'maxItems' => 0,
+                                        ],
+                                        [
+                                            'type' => 'array',
+                                            'items' => [
+                                                'anyOf' => [
+                                                    ['type' => 'string'],
+                                                    ['type' => 'number'],
+                                                ],
+                                            ],
+                                            'uniqueItems' => true,
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ], $form->getSchema()->toJsonSchema());
+    }
+
+    public function testAppendsIntoExistingAssociationsSection(): void
+    {
+        $form = new FormMetadata();
+        $form->setKey('product_associations');
+
+        $declared = new FieldMetadata('associations/alternative');
+        $declared->setType('product_selection');
+        $projectSection = new SectionMetadata('associations');
+        $projectSection->addItem($declared);
+        $form->addItem($projectSection);
+
+        $this->visitor($this->registryWithTypes())->visitFormMetadata($form, 'en', []);
+
+        $section = $form->getItems()['associations'];
+        self::assertSame($projectSection, $section);
+        self::assertSame(['associations/alternative', 'associations/suitable'], \array_keys($section->getItems()));
+        self::assertSame($declared, $section->getItems()['associations/alternative']);
+    }
+
+    public function testCreatesNoSectionWhenAllTypesDeclared(): void
+    {
+        $form = new FormMetadata();
+        $form->setKey('product_associations');
+        $schemaBefore = $form->getSchema()->toJsonSchema();
+
+        $declared = new FieldMetadata('associations/alternative');
+        $declared->setType('product_selection');
+        $form->addItem($declared);
+
+        $registry = new ProductAssociationTypeRegistry([
+            'alternative' => ['label' => 'sulu_product.association_type_alternative'],
+        ]);
+
+        $this->visitor($registry)->visitFormMetadata($form, 'en', []);
+
+        self::assertArrayNotHasKey('associations', $form->getItems());
+        self::assertSame($schemaBefore, $form->getSchema()->toJsonSchema());
+    }
 }
