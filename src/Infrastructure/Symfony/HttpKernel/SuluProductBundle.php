@@ -886,8 +886,8 @@ final class SuluProductBundle extends AbstractBundle
         $services->set('sulu_product.product_associations_resolver')
             ->class(ProductAssociationsResolver::class)
             ->args([
-                new Reference('sulu_product.association_type_registry'),
-                new Reference('sulu_product.product_selection_property_resolver'),
+                new Reference('sulu_admin.form_metadata_provider'),
+                new Reference('sulu_content.metadata_resolver'),
             ])
             ->tag('sulu_content.content_resolver', ['type' => 'associations']);
 
