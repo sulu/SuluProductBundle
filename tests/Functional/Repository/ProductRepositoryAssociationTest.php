@@ -55,27 +55,33 @@ class ProductRepositoryAssociationTest extends SuluTestCase
     private function createLiveProduct(): ProductInterface
     {
         $product = $this->repository->createNew();
-        $dimensionContent = $product->createDimensionContent();
-        $dimensionContent->setLocale('en');
-        $dimensionContent->setStage(DimensionContentInterface::STAGE_LIVE);
-        $dimensionContent->setTemplateKey('product');
-        $product->addDimensionContent($dimensionContent);
+
+        $unlocalizedDimensionContent = $product->createDimensionContent();
+        $unlocalizedDimensionContent->setStage(DimensionContentInterface::STAGE_LIVE);
+        $product->addDimensionContent($unlocalizedDimensionContent);
+
+        $localizedDimensionContent = $product->createDimensionContent();
+        $localizedDimensionContent->setLocale('en');
+        $localizedDimensionContent->setStage(DimensionContentInterface::STAGE_LIVE);
+        $localizedDimensionContent->setTemplateKey('product');
+        $product->addDimensionContent($localizedDimensionContent);
 
         $this->repository->add($product);
-        $this->entityManager->persist($dimensionContent);
+        $this->entityManager->persist($unlocalizedDimensionContent);
+        $this->entityManager->persist($localizedDimensionContent);
 
         return $product;
     }
 
-    private function getLiveDimensionContent(ProductInterface $product): ProductDimensionContentInterface
+    private function getUnlocalizedDimensionContent(ProductInterface $product): ProductDimensionContentInterface
     {
         foreach ($product->getDimensionContents() as $dimensionContent) {
-            if ('en' === $dimensionContent->getLocale() && DimensionContentInterface::STAGE_LIVE === $dimensionContent->getStage()) {
+            if (null === $dimensionContent->getLocale() && DimensionContentInterface::STAGE_LIVE === $dimensionContent->getStage()) {
                 return $dimensionContent;
             }
         }
 
-        throw new \RuntimeException('Live "en" dimension content not found.');
+        throw new \RuntimeException('Unlocalized live dimension content not found.');
     }
 
     public function testFindByAssociationTargetUuidAndTypeReturnsOnlyMatchingReferrers(): void
@@ -85,10 +91,10 @@ class ProductRepositoryAssociationTest extends SuluTestCase
         $productD = $this->createLiveProduct();
         $productE = $this->createLiveProduct();
 
-        $dimensionContentA = $this->getLiveDimensionContent($productA);
+        $dimensionContentA = $this->getUnlocalizedDimensionContent($productA);
         $dimensionContentA->addAssociation(new ProductAssociation($dimensionContentA, $target, 'alternative'));
 
-        $dimensionContentD = $this->getLiveDimensionContent($productD);
+        $dimensionContentD = $this->getUnlocalizedDimensionContent($productD);
         $dimensionContentD->addAssociation(new ProductAssociation($dimensionContentD, $target, 'alternative'));
 
         $this->entityManager->flush();
@@ -121,10 +127,10 @@ class ProductRepositoryAssociationTest extends SuluTestCase
         $productD = $this->createLiveProduct();
         $productE = $this->createLiveProduct();
 
-        $dimensionContentA = $this->getLiveDimensionContent($productA);
+        $dimensionContentA = $this->getUnlocalizedDimensionContent($productA);
         $dimensionContentA->addAssociation(new ProductAssociation($dimensionContentA, $target, 'alternative'));
 
-        $dimensionContentD = $this->getLiveDimensionContent($productD);
+        $dimensionContentD = $this->getUnlocalizedDimensionContent($productD);
         $dimensionContentD->addAssociation(new ProductAssociation($dimensionContentD, $target, 'accessory'));
 
         $this->entityManager->flush();
@@ -154,7 +160,7 @@ class ProductRepositoryAssociationTest extends SuluTestCase
         $referrers = [$this->createLiveProduct(), $this->createLiveProduct(), $this->createLiveProduct()];
 
         foreach ($referrers as $referrer) {
-            $dimensionContent = $this->getLiveDimensionContent($referrer);
+            $dimensionContent = $this->getUnlocalizedDimensionContent($referrer);
             // Two rows to the same target are legal, because the unique constraint is scoped per type.
             $dimensionContent->addAssociation(new ProductAssociation($dimensionContent, $target, 'alternative'));
             $dimensionContent->addAssociation(new ProductAssociation($dimensionContent, $target, 'accessory'));

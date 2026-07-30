@@ -14,6 +14,7 @@ namespace Sulu\Product\Infrastructure\Doctrine\Repository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\NoResultException;
+use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\Query\Expr\OrderBy;
 use Doctrine\ORM\QueryBuilder;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
@@ -332,12 +333,27 @@ final class ProductRepository implements ProductRepositoryInterface
         $associationTargetUuid = $filters['associationTargetUuid'] ?? null;
         if (null !== $associationTargetUuid) {
             Assert::string($associationTargetUuid); // @phpstan-ignore staticMethod.alreadyNarrowedType
-            // inbound association query requires the dimension-content alias, which only exists when locale+stage are provided
+            // Associations hang on the unlocalized dimension content, locale and stage restrict the referrers.
             if (!\array_key_exists('locale', $filters) || !\array_key_exists('stage', $filters)) {
                 throw new \InvalidArgumentException('Filtering by "associationTargetUuid" requires both "locale" and "stage" filters.');
             }
+
+            $dimensionContentClassName = $this->productDimensionContentClassName;
+            $effectiveAttributes = $dimensionContentClassName::getEffectiveDimensionAttributes($filters);
+
             $queryBuilder
-                ->innerJoin('filterDimensionContent.associations', 'productAssociation')
+                ->innerJoin(
+                    $dimensionContentClassName,
+                    'associationDimensionContent',
+                    Join::WITH,
+                    'associationDimensionContent.product = product'
+                    . ' AND associationDimensionContent.locale IS NULL'
+                    . ' AND associationDimensionContent.stage = :associationStage'
+                    . ' AND associationDimensionContent.version = :associationVersion',
+                )
+                ->setParameter('associationStage', $effectiveAttributes['stage'])
+                ->setParameter('associationVersion', $effectiveAttributes['version'])
+                ->innerJoin('associationDimensionContent.associations', 'productAssociation')
                 ->andWhere('IDENTITY(productAssociation.target) = :associationTargetUuid')
                 ->setParameter('associationTargetUuid', $associationTargetUuid);
 

@@ -37,10 +37,6 @@ class ProductAssociationsDataMapper implements DataMapperInterface
             return;
         }
 
-        if (!$localizedDimensionContent instanceof ProductDimensionContentInterface) {
-            return;
-        }
-
         if (!\array_key_exists('associations', $data)) {
             return;
         }
@@ -76,10 +72,10 @@ class ProductAssociationsDataMapper implements DataMapperInterface
             }
         }
 
-        $sourceUuid = $localizedDimensionContent->getResource()->getUuid();
+        $sourceUuid = $unlocalizedDimensionContent->getResource()->getUuid();
 
         foreach ($submissions as $submission) {
-            $this->reconcileType($localizedDimensionContent, $submission['type'], $submission['targetUuids'], $targets, $sourceUuid);
+            $this->reconcileType($unlocalizedDimensionContent, $submission['type'], $submission['targetUuids'], $targets, $sourceUuid);
         }
     }
 
@@ -118,7 +114,7 @@ class ProductAssociationsDataMapper implements DataMapperInterface
      * @param array<string, ProductInterface> $targets
      */
     private function reconcileType(
-        ProductDimensionContentInterface $localizedDimensionContent,
+        ProductDimensionContentInterface $dimensionContent,
         string $type,
         array $targetUuids,
         array $targets,
@@ -140,13 +136,13 @@ class ProductAssociationsDataMapper implements DataMapperInterface
 
         /** @var array<string, ProductAssociationInterface> $existingByUuid */
         $existingByUuid = [];
-        foreach ($localizedDimensionContent->getAssociationsByType($type) as $existing) {
+        foreach ($dimensionContent->getAssociationsByType($type) as $existing) {
             $existingByUuid[$existing->getTarget()->getUuid()] = $existing;
         }
 
         foreach ($existingByUuid as $uuid => $existing) {
             if (!\in_array($uuid, $submittedUuids, true)) {
-                $localizedDimensionContent->removeAssociation($existing);
+                $dimensionContent->removeAssociation($existing);
                 unset($existingByUuid[$uuid]);
             }
         }
@@ -155,8 +151,8 @@ class ProductAssociationsDataMapper implements DataMapperInterface
             // $position is the index into the filtered (deduped, resolved, non-self-ref) list, not the raw submitted index.
             $existing = $existingByUuid[$uuid] ?? null;
             if (null === $existing) {
-                $localizedDimensionContent->addAssociation(
-                    new ProductAssociation($localizedDimensionContent, $targets[$uuid], $type, $position),
+                $dimensionContent->addAssociation(
+                    new ProductAssociation($dimensionContent, $targets[$uuid], $type, $position),
                 );
 
                 continue;

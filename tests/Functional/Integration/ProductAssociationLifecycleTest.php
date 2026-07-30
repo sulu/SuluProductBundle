@@ -27,9 +27,8 @@ use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 
 /**
  * Proves that associations (Tasks 5-7: DataMapper/Merger/Normalizer trio) survive the
- * product content lifecycle - publish (draft -> live), version restore, and locale copy -
- * with genuinely distinct, independent rows per dimension content rather than shared
- * instances.
+ * product content lifecycle - publish (draft -> live) and version restore - and that they
+ * live on the unlocalized dimension content, so every locale of a product shares them.
  */
 #[CoversClass(ProductAssociationsDataMapper::class)]
 #[CoversClass(ProductAssociationsMerger::class)]
@@ -142,7 +141,7 @@ class ProductAssociationLifecycleTest extends SuluTestCase
         return $productRepository->getOneBy(['uuid' => $uuid]);
     }
 
-    private function findCurrentDimensionContent(ProductInterface $product, string $locale, string $stage): ProductDimensionContentInterface
+    private function findCurrentDimensionContent(ProductInterface $product, ?string $locale, string $stage): ProductDimensionContentInterface
     {
         foreach ($product->getDimensionContents() as $dimensionContent) {
             if ($locale === $dimensionContent->getLocale()
@@ -153,7 +152,26 @@ class ProductAssociationLifecycleTest extends SuluTestCase
             }
         }
 
-        throw new \RuntimeException(\sprintf('Current dimension content for locale "%s" and stage "%s" not found.', $locale, $stage));
+        throw new \RuntimeException(\sprintf('Current dimension content for locale "%s" and stage "%s" not found.', $locale ?? 'null', $stage));
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function getAssociations(string $id, string $locale, string $type): array
+    {
+        $this->client->request('GET', '/admin/api/products/' . $id . '.json?locale=' . $locale);
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertIsArray($data['associations']);
+        $this->assertIsArray($data['associations'][$type]);
+
+        /** @var array<int, string> $uuids */
+        $uuids = $data['associations'][$type];
+
+        return $uuids;
     }
 
     public function testPublishCopiesAssociationsWithDistinctRows(): void
@@ -167,8 +185,8 @@ class ProductAssociationLifecycleTest extends SuluTestCase
         $this->assertHttpStatusCode(200, $this->client->getResponse());
 
         $product = $this->getProductWithDimensionContents($sourceId);
-        $draft = $this->findCurrentDimensionContent($product, 'en', DimensionContentInterface::STAGE_DRAFT);
-        $live = $this->findCurrentDimensionContent($product, 'en', DimensionContentInterface::STAGE_LIVE);
+        $draft = $this->findCurrentDimensionContent($product, null, DimensionContentInterface::STAGE_DRAFT);
+        $live = $this->findCurrentDimensionContent($product, null, DimensionContentInterface::STAGE_LIVE);
 
         $draftAssociations = $draft->getAssociationsByType('alternative');
         $liveAssociations = $live->getAssociationsByType('alternative');
@@ -212,7 +230,7 @@ class ProductAssociationLifecycleTest extends SuluTestCase
         $this->putAssociations($sourceId, 'en', ['alternative' => []]);
 
         $product = $this->getProductWithDimensionContents($sourceId);
-        $draftBeforeRestore = $this->findCurrentDimensionContent($product, 'en', DimensionContentInterface::STAGE_DRAFT);
+        $draftBeforeRestore = $this->findCurrentDimensionContent($product, null, DimensionContentInterface::STAGE_DRAFT);
         $this->assertCount(0, $draftBeforeRestore->getAssociationsByType('alternative'));
 
         $this->client->request(
@@ -222,14 +240,14 @@ class ProductAssociationLifecycleTest extends SuluTestCase
         $this->assertHttpStatusCode(200, $this->client->getResponse());
 
         $product = $this->getProductWithDimensionContents($sourceId);
-        $draftAfterRestore = $this->findCurrentDimensionContent($product, 'en', DimensionContentInterface::STAGE_DRAFT);
+        $draftAfterRestore = $this->findCurrentDimensionContent($product, null, DimensionContentInterface::STAGE_DRAFT);
         $associations = $draftAfterRestore->getAssociationsByType('alternative');
 
         $this->assertCount(1, $associations);
         $this->assertSame($targetId, $associations[0]->getTarget()->getUuid());
     }
 
-    public function testCopyLocaleCarriesAssociations(): void
+    public function testEveryLocaleSharesTheSameAssociations(): void
     {
         self::purgeDatabase();
         $familyId = $this->createProductFamily();
@@ -242,28 +260,22 @@ class ProductAssociationLifecycleTest extends SuluTestCase
         );
         $this->assertHttpStatusCode(200, $this->client->getResponse());
 
+        $this->assertSame([$targetId], $this->getAssociations($sourceId, 'en', 'alternative'));
+        $this->assertSame([$targetId], $this->getAssociations($sourceId, 'de', 'alternative'));
+
         $product = $this->getProductWithDimensionContents($sourceId);
+        $unlocalizedDraft = $this->findCurrentDimensionContent($product, null, DimensionContentInterface::STAGE_DRAFT);
         $enDraft = $this->findCurrentDimensionContent($product, 'en', DimensionContentInterface::STAGE_DRAFT);
         $deDraft = $this->findCurrentDimensionContent($product, 'de', DimensionContentInterface::STAGE_DRAFT);
 
-        $enAssociations = $enDraft->getAssociationsByType('alternative');
-        $deAssociations = $deDraft->getAssociationsByType('alternative');
+        $this->assertCount(1, $unlocalizedDraft->getAssociationsByType('alternative'));
+        $this->assertSame($targetId, $unlocalizedDraft->getAssociationsByType('alternative')[0]->getTarget()->getUuid());
+        $this->assertSame([], $enDraft->getAssociations());
+        $this->assertSame([], $deDraft->getAssociations());
 
-        $this->assertCount(1, $enAssociations);
-        $this->assertCount(1, $deAssociations);
-        $this->assertSame($targetId, $deAssociations[0]->getTarget()->getUuid());
-
-        // Distinct rows per locale, not the same instance copied over.
-        $this->assertNotSame($enAssociations[0]->getId(), $deAssociations[0]->getId());
-
-        // Mutating "de" must not affect "en" - each locale owns independent association rows.
         $this->putAssociations($sourceId, 'de', ['alternative' => []]);
 
-        $product = $this->getProductWithDimensionContents($sourceId);
-        $enDraftAfter = $this->findCurrentDimensionContent($product, 'en', DimensionContentInterface::STAGE_DRAFT);
-        $deDraftAfter = $this->findCurrentDimensionContent($product, 'de', DimensionContentInterface::STAGE_DRAFT);
-
-        $this->assertCount(1, $enDraftAfter->getAssociationsByType('alternative'));
-        $this->assertCount(0, $deDraftAfter->getAssociationsByType('alternative'));
+        $this->assertSame([], $this->getAssociations($sourceId, 'en', 'alternative'));
+        $this->assertSame([], $this->getAssociations($sourceId, 'de', 'alternative'));
     }
 }

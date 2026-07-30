@@ -22,7 +22,6 @@ use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductAssociation;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
-use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductAssociationsDataMapper;
 
@@ -55,16 +54,23 @@ final class ProductAssociationsDataMapperTest extends TestCase
         $this->addToAssertionCount(1);
     }
 
-    public function testEarlyReturnWhenLocalizedNotProductDimensionContent(): void
+    public function testLeavesLocalizedDimensionContentUntouched(): void
     {
-        /** @var ObjectProphecy<ProductDimensionContentInterface> $unloc */
-        $unloc = $this->prophesize(ProductDimensionContentInterface::class);
-        $locOther = $this->prophesize(DimensionContentInterface::class);
+        $source = new Product('uuid-source');
+        $loc = new ProductDimensionContent($source);
+        $unloc = new ProductDimensionContent($source);
 
-        $this->mapper->map($unloc->reveal(), $locOther->reveal(), ['associations' => ['alternative' => ['uuid-b']]]);
+        $productB = new Product('uuid-b');
 
-        $this->productRepository->findBy(Argument::cetera())->shouldNotHaveBeenCalled();
-        $this->addToAssertionCount(1);
+        $this->productRepository->findBy(['uuids' => ['uuid-b']])
+            ->willReturn([$productB]);
+
+        $this->mapper->map($unloc, $loc, [
+            'associations' => ['alternative' => ['uuid-b']],
+        ]);
+
+        self::assertCount(1, $unloc->getAssociationsByType('alternative'));
+        self::assertSame([], $loc->getAssociations());
     }
 
     public function testIgnoresWhenNoAssociationsKey(): void
@@ -76,7 +82,7 @@ final class ProductAssociationsDataMapperTest extends TestCase
         $this->mapper->map($unloc, $loc, ['locale' => 'en']);
 
         $this->productRepository->findBy(Argument::cetera())->shouldNotHaveBeenCalled();
-        self::assertSame([], $loc->getAssociations());
+        self::assertSame([], $unloc->getAssociations());
     }
 
     public function testMapsSubmittedAssociations(): void
@@ -95,7 +101,7 @@ final class ProductAssociationsDataMapperTest extends TestCase
             'associations' => ['alternative' => ['uuid-b', 'uuid-c']],
         ]);
 
-        $result = $loc->getAssociationsByType('alternative');
+        $result = $unloc->getAssociationsByType('alternative');
         self::assertCount(2, $result);
         self::assertSame('uuid-b', $result[0]->getTarget()->getUuid());
         self::assertSame(0, $result[0]->getPosition());
@@ -116,7 +122,7 @@ final class ProductAssociationsDataMapperTest extends TestCase
             'associations' => ['123' => ['uuid-b']],
         ]);
 
-        $result = $loc->getAssociationsByType('123');
+        $result = $unloc->getAssociationsByType('123');
         self::assertCount(1, $result);
         self::assertSame('123', $result[0]->getType());
     }
@@ -129,8 +135,8 @@ final class ProductAssociationsDataMapperTest extends TestCase
 
         $productB = new Product('uuid-b');
         $productC = new Product('uuid-c');
-        $loc->addAssociation(new ProductAssociation($loc, $productB, 'alternative', 0));
-        $loc->addAssociation(new ProductAssociation($loc, $productC, 'alternative', 1));
+        $unloc->addAssociation(new ProductAssociation($unloc, $productB, 'alternative', 0));
+        $unloc->addAssociation(new ProductAssociation($unloc, $productC, 'alternative', 1));
 
         $this->productRepository->findBy(['uuids' => ['uuid-b']])
             ->willReturn([$productB]);
@@ -139,7 +145,7 @@ final class ProductAssociationsDataMapperTest extends TestCase
             'associations' => ['alternative' => ['uuid-b']],
         ]);
 
-        $result = $loc->getAssociationsByType('alternative');
+        $result = $unloc->getAssociationsByType('alternative');
         self::assertCount(1, $result);
         self::assertSame('uuid-b', $result[0]->getTarget()->getUuid());
     }
@@ -152,10 +158,10 @@ final class ProductAssociationsDataMapperTest extends TestCase
 
         $productB = new Product('uuid-b');
         $productC = new Product('uuid-c');
-        $associationB = new ProductAssociation($loc, $productB, 'alternative', 0);
-        $associationC = new ProductAssociation($loc, $productC, 'alternative', 1);
-        $loc->addAssociation($associationB);
-        $loc->addAssociation($associationC);
+        $associationB = new ProductAssociation($unloc, $productB, 'alternative', 0);
+        $associationC = new ProductAssociation($unloc, $productC, 'alternative', 1);
+        $unloc->addAssociation($associationB);
+        $unloc->addAssociation($associationC);
 
         $this->productRepository->findBy(['uuids' => ['uuid-c', 'uuid-b']])
             ->willReturn([$productC, $productB]);
@@ -167,7 +173,7 @@ final class ProductAssociationsDataMapperTest extends TestCase
         self::assertSame(0, $associationC->getPosition());
         self::assertSame(1, $associationB->getPosition());
 
-        $result = $loc->getAssociationsByType('alternative');
+        $result = $unloc->getAssociationsByType('alternative');
         self::assertSame($associationC, $result[0]);
         self::assertSame($associationB, $result[1]);
     }
@@ -187,7 +193,7 @@ final class ProductAssociationsDataMapperTest extends TestCase
             'associations' => ['removed-type' => ['uuid-b']],
         ]);
 
-        $result = $loc->getAssociationsByType('removed-type');
+        $result = $unloc->getAssociationsByType('removed-type');
         self::assertCount(1, $result);
         self::assertSame('uuid-b', $result[0]->getTarget()->getUuid());
     }
@@ -199,14 +205,14 @@ final class ProductAssociationsDataMapperTest extends TestCase
         $unloc = new ProductDimensionContent($source);
 
         $productB = new Product('uuid-b');
-        $loc->addAssociation(new ProductAssociation($loc, $productB, 'alternative', 0));
+        $unloc->addAssociation(new ProductAssociation($unloc, $productB, 'alternative', 0));
 
         $this->mapper->map($unloc, $loc, [
             'associations' => ['alternative' => null],
         ]);
 
         $this->productRepository->findBy(Argument::cetera())->shouldNotHaveBeenCalled();
-        self::assertSame([], $loc->getAssociations());
+        self::assertSame([], $unloc->getAssociations());
     }
 
     public function testIgnoresNonArrayAssociations(): void
@@ -216,13 +222,13 @@ final class ProductAssociationsDataMapperTest extends TestCase
         $unloc = new ProductDimensionContent($source);
 
         $productB = new Product('uuid-b');
-        $association = new ProductAssociation($loc, $productB, 'alternative', 0);
-        $loc->addAssociation($association);
+        $association = new ProductAssociation($unloc, $productB, 'alternative', 0);
+        $unloc->addAssociation($association);
 
         $this->mapper->map($unloc, $loc, ['associations' => null]);
 
         $this->productRepository->findBy(Argument::cetera())->shouldNotHaveBeenCalled();
-        self::assertSame([$association], $loc->getAssociations());
+        self::assertSame([$association], $unloc->getAssociations());
     }
 
     public function testThrowsOnScalarSelection(): void
@@ -254,7 +260,7 @@ final class ProductAssociationsDataMapperTest extends TestCase
             'associations' => ['alternative' => ['uuid-b', 42, null]],
         ]);
 
-        $result = $loc->getAssociationsByType('alternative');
+        $result = $unloc->getAssociationsByType('alternative');
         self::assertCount(1, $result);
         self::assertSame('uuid-b', $result[0]->getTarget()->getUuid());
     }
@@ -274,7 +280,7 @@ final class ProductAssociationsDataMapperTest extends TestCase
             'associations' => ['alternative' => ['uuid-b', 'uuid-missing']],
         ]);
 
-        $result = $loc->getAssociationsByType('alternative');
+        $result = $unloc->getAssociationsByType('alternative');
         self::assertCount(1, $result);
         self::assertSame('uuid-b', $result[0]->getTarget()->getUuid());
     }
@@ -292,7 +298,7 @@ final class ProductAssociationsDataMapperTest extends TestCase
             'associations' => ['alternative' => ['uuid-source']],
         ]);
 
-        self::assertSame([], $loc->getAssociations());
+        self::assertSame([], $unloc->getAssociations());
     }
 
     public function testDedupesDuplicateSubmittedTargets(): void
@@ -310,7 +316,7 @@ final class ProductAssociationsDataMapperTest extends TestCase
             'associations' => ['alternative' => ['uuid-b', 'uuid-b']],
         ]);
 
-        $result = $loc->getAssociationsByType('alternative');
+        $result = $unloc->getAssociationsByType('alternative');
         self::assertCount(1, $result);
         self::assertSame('uuid-b', $result[0]->getTarget()->getUuid());
         self::assertSame(0, $result[0]->getPosition());
@@ -319,7 +325,7 @@ final class ProductAssociationsDataMapperTest extends TestCase
             'associations' => ['alternative' => ['uuid-b']],
         ]);
 
-        $result = $loc->getAssociationsByType('alternative');
+        $result = $unloc->getAssociationsByType('alternative');
         self::assertCount(1, $result);
         self::assertSame('uuid-b', $result[0]->getTarget()->getUuid());
         self::assertSame(0, $result[0]->getPosition());
