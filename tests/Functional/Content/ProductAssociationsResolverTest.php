@@ -140,15 +140,14 @@ class ProductAssociationsResolverTest extends SuluTestCase
             $resolvable->getMetadata()['properties'] ?? null,
         );
 
-        // the generated type keeps its defaults
+        // no alternative association was stored
         self::assertSame([], $associationsData['alternative']);
     }
 
     /**
-     * Regression guard for the bare-type re-keying: if the resolver ever passes
-     * `associations/<type>` keys, MetadataResolver::nestContentViews() unwraps the
-     * per-type ContentViews and the resolvable is never loaded - this test would
-     * then see a ResolvableResource instead of the resolved target array.
+     * Guards that association targets are really loaded and resolved with the declared
+     * property map, and that the per-type keys stay bare (`suitable`, not
+     * `associations/suitable`) - the bare key is the public output contract templates read.
      */
     public function testPublishedTargetResolvesDeclaredProperties(): void
     {

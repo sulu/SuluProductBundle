@@ -21,6 +21,7 @@ use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadataMapperRegistry;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\SchemaMetadata;
 use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
+use Sulu\Product\Infrastructure\Sulu\Content\PropertyResolver\ProductSelectionPropertyResolver;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
@@ -59,7 +60,7 @@ class ProductAssociationsFormMetadataVisitor implements FormMetadataVisitorInter
             }
 
             $field = new FieldMetadata($name);
-            $field->setType('product_selection');
+            $field->setType(ProductSelectionPropertyResolver::getType());
             $field->setColSpan(12);
             $field->setLabel($this->translator->trans($type->getLabel(), [], 'admin', $locale), $locale);
 

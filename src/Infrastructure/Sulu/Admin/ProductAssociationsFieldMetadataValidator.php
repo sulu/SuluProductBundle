@@ -18,6 +18,7 @@ use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\Validation\FieldMetadataValida
 use Sulu\Product\Domain\Association\ProductAssociationType;
 use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
 use Sulu\Product\Infrastructure\Sulu\Admin\Exception\InvalidProductAssociationFieldException;
+use Sulu\Product\Infrastructure\Sulu\Content\PropertyResolver\ProductSelectionPropertyResolver;
 
 /**
  * @internal
@@ -58,7 +59,7 @@ class ProductAssociationsFieldMetadataValidator implements FieldMetadataValidato
             ));
         }
 
-        if ('product_selection' !== $fieldMetadata->getType()) {
+        if (ProductSelectionPropertyResolver::getType() !== $fieldMetadata->getType()) {
             throw new InvalidProductAssociationFieldException($name, $formKey, \sprintf(
                 'field type "%s" is not supported, only "product_selection" fields map to product associations',
                 $fieldMetadata->getType(),

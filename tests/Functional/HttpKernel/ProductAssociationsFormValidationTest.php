@@ -47,6 +47,8 @@ final class ProductAssociationsFormValidationTest extends SuluTestCase
         $chainValidator = $container->get('sulu_admin.field_metadata_validator.chain');
 
         $cacheDir = \sys_get_temp_dir() . '/sulu-product-invalid-forms-' . \uniqid('', true);
+        // the fixture directory must hold exactly one, invalid form - a valid one alongside it
+        // would make warmUp() write into the temp cache dir before throwing
         $loader = new XmlFormMetadataLoader(
             $formXmlLoader,
             $chainValidator,

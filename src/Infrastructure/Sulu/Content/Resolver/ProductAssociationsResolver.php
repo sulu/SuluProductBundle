@@ -52,6 +52,7 @@ class ProductAssociationsResolver implements ResolverInterface
         /** @var string $locale */
         $locale = $dimensionContent->getLocale();
 
+        // by design a missing warmed form cache fails loudly here (MetadataNotFoundException)
         /** @var FormMetadata $formMetadata */
         $formMetadata = $this->formMetadataProvider->getMetadata(self::FORM_KEY, $locale, []);
 
@@ -62,8 +63,8 @@ class ProductAssociationsResolver implements ResolverInterface
                 continue;
             }
 
-            // re-keyed to the bare type: slash keys would make MetadataResolver nest and
-            // unwrap the per-type ContentViews, dropping resolvables and references
+            // re-keyed to the bare type: resolveItems() keys its output (and the data lookup) by
+            // array key, and the bare type is the output contract under extension.associations.<type>
             $type = \substr($name, \strlen(self::FIELD_PREFIX));
             $items[$type] = $field;
             $data[$type] = \array_map(

@@ -264,6 +264,28 @@ final class ProductAssociationsFormMetadataVisitorTest extends TestCase
         self::assertSame($declared, $section->getItems()['associations/alternative']);
     }
 
+    public function testSkipsTypesDeclaredInsideAnotherSection(): void
+    {
+        $form = new FormMetadata();
+        $form->setKey('product_associations');
+
+        $declared = new FieldMetadata('associations/alternative');
+        $declared->setType('product_selection');
+        $contentSection = new SectionMetadata('content');
+        $contentSection->addItem($declared);
+        $form->addItem($contentSection);
+
+        $this->visitor($this->registryWithTypes())->visitFormMetadata($form, 'en', []);
+
+        $items = $form->getItems();
+        self::assertSame($contentSection, $items['content']);
+        self::assertSame(['associations/alternative'], \array_keys($contentSection->getItems()));
+
+        $section = $items['associations'];
+        self::assertInstanceOf(SectionMetadata::class, $section);
+        self::assertSame(['associations/suitable'], \array_keys($section->getItems()));
+    }
+
     public function testCreatesNoSectionWhenAllTypesDeclared(): void
     {
         $form = new FormMetadata();

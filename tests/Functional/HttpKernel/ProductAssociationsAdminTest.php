@@ -66,6 +66,7 @@ class ProductAssociationsAdminTest extends SuluTestCase
         $this->assertInstanceOf(FieldMetadata::class, $alternative);
         $this->assertSame('product_selection', $alternative->getType());
         $this->assertSame(12, $alternative->getColSpan());
+        // the raw translation key, because no admin translation exists yet - update once one is added
         $this->assertSame('sulu_product.association_type_alternative', $alternative->getLabel('en'));
 
         // the "associations/" prefix is nested into an "associations" object by the schema pipeline
@@ -88,7 +89,7 @@ class ProductAssociationsAdminTest extends SuluTestCase
         $flatFields = $formMetadata->getFlatFieldMetadata();
 
         // exactly one field per configured type - the declared one was not regenerated
-        $this->assertSame(['associations/suitable', 'associations/alternative'], \array_keys($flatFields));
+        $this->assertEqualsCanonicalizing(['associations/suitable', 'associations/alternative'], \array_keys($flatFields));
 
         $declared = $flatFields['associations/suitable'];
         $this->assertSame('product_selection', $declared->getType());
