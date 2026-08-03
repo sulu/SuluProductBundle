@@ -47,7 +47,7 @@ class ProductTwigExtension extends AbstractExtension
     /**
      * @param array<string, string> $properties
      *
-     * @return array{attributes: list<array{key: string, label: string, type: string, value: mixed}>, ...}|null
+     * @return array{attributes: list<array{key: string, label: string, type: string, value: mixed, formattedValue: string|null}>, ...}|null
      */
     public function loadProduct(
         string $uuid,
@@ -99,7 +99,7 @@ class ProductTwigExtension extends AbstractExtension
     }
 
     /**
-     * @return list<array{key: string, label: string, type: string, value: mixed}>
+     * @return list<array{key: string, label: string, type: string, value: mixed, formattedValue: string|null}>
      */
     private function formatAttributes(ProductDimensionContentInterface $dimensionContent, string $locale): array
     {
@@ -117,11 +117,18 @@ class ProductTwigExtension extends AbstractExtension
                 default => $productAttribute->getValue(),
             };
 
+            $formattedValue = match ($attribute->getType()) {
+                AttributeInterface::TYPE_TEXT => $this->formatValue($attribute, $productAttribute->getText()),
+                AttributeInterface::TYPE_NUMBER => $this->formatValue($attribute, $productAttribute->getNumber()),
+                default => null,
+            };
+
             $result[] = [
                 'key' => $productAttribute->getAttributeKey(),
                 'label' => $attribute->getTranslation($locale)?->getName() ?? $productAttribute->getAttributeKey(),
                 'type' => $attribute->getType(),
                 'value' => $value,
+                'formattedValue' => $formattedValue,
             ];
         }
 
@@ -135,5 +142,20 @@ class ProductTwigExtension extends AbstractExtension
         }
 
         return (new \DateTimeImmutable('@' . (int) $timestamp))->format('Y-m-d');
+    }
+
+    private function formatValue(AttributeInterface $attribute, string|float|null $value): ?string
+    {
+        if (null === $value || '' === $value) {
+            return null;
+        }
+
+        $format = $attribute->getConfig()['format'] ?? null;
+
+        if (!\is_string($format) || '' === $format) {
+            return null;
+        }
+
+        return \str_replace('%value%', (string) $value, $format);
     }
 }
