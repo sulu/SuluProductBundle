@@ -21,6 +21,7 @@ use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadataMapperRegist
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\SchemaMetadata;
 use Sulu\Product\Domain\Model\AttributeGroupInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Injects the parent product family's `variant=true` (axis) attributes into the variant overlay
@@ -37,6 +38,7 @@ class ProductVariantAttributeFormMetadataVisitor implements FormMetadataVisitorI
         private readonly ProductFamilyRepositoryInterface $productFamilyRepository,
         private readonly AttributeFieldFactory $attributeFieldFactory,
         private readonly PropertyMetadataMapperRegistry $propertyMetadataMapperRegistry,
+        private readonly TranslatorInterface $translator,
     ) {
     }
 
@@ -112,9 +114,11 @@ class ProductVariantAttributeFormMetadataVisitor implements FormMetadataVisitorI
     {
         $translation = $group->getTranslation($locale)
             ?? (($defaultLocale = $group->getDefaultLocale()) !== null ? $group->getTranslation($defaultLocale) : null);
+        $name = $translation?->getName()
+            ?: $this->translator->trans('sulu_product.attributes', [], 'admin', $locale);
 
         $section = new SectionMetadata('attribute_group_' . $group->getId());
-        $section->setLabel($translation?->getName() ?? '', $locale);
+        $section->setLabel($name, $locale);
 
         return $section;
     }

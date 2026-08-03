@@ -23,6 +23,7 @@ use Sulu\Product\Domain\Model\AttributeGroupInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * @internal
@@ -35,6 +36,7 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
         private readonly ProductFamilyRepositoryInterface $productFamilyRepository,
         private readonly AttributeFieldFactory $attributeFieldFactory,
         private readonly PropertyMetadataMapperRegistry $propertyMetadataMapperRegistry,
+        private readonly TranslatorInterface $translator,
         private readonly ProductRepositoryInterface $productRepository,
     ) {
     }
@@ -114,9 +116,11 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
     {
         $translation = $group->getTranslation($locale)
             ?? (($defaultLocale = $group->getDefaultLocale()) !== null ? $group->getTranslation($defaultLocale) : null);
+        $name = $translation?->getName()
+            ?: $this->translator->trans('sulu_product.attributes', [], 'admin', $locale);
 
         $section = new SectionMetadata('attribute_group_' . $group->getId());
-        $section->setLabel($translation?->getName() ?? '', $locale);
+        $section->setLabel($name, $locale);
 
         return $section;
     }
