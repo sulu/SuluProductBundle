@@ -344,6 +344,45 @@ class AttributeControllerTest extends SuluTestCase
         $this->assertNull($data['measurementFamily']);
     }
 
+    public function testPersistsFormatInConfig(): void
+    {
+        self::purgeDatabase();
+        $groupId = $this->createGroup();
+
+        $this->client->request(
+            'POST',
+            '/admin/api/attributes.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'key' => 'insulation-resistance',
+                'name' => 'Insulation resistance',
+                'type' => 'number',
+                'group' => $groupId,
+                'config' => ['format' => '> %value% GΩ'],
+            ]) ?: null,
+        );
+        $postResponse = $this->client->getResponse();
+        $this->assertHttpStatusCode(201, $postResponse);
+        $postData = \json_decode((string) $postResponse->getContent(), true);
+        $this->assertIsArray($postData);
+        $id = $postData['id'];
+        $this->assertIsString($id);
+
+        $this->client->request('GET', '/admin/api/attributes/' . $id . '.json?locale=en');
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(200, $response);
+
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
+
+        $config = $data['config'];
+        $this->assertIsArray($config);
+        $this->assertSame('> %value% GΩ', $config['format']);
+    }
+
     public function testGetNotFound(): void
     {
         $this->client->request('GET', '/admin/api/attributes/non-existent-uuid.json?locale=en');
