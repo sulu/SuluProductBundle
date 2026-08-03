@@ -88,7 +88,7 @@
     "sulu_product.max": "Max",
     "sulu_product.step": "Schritt",
     "sulu_product.format": "Format",
-    "sulu_product.format_info_text": "Verfügbare Platzhalter: %value% (der gespeicherte Wert)",
+    "sulu_product.format_info_text": "Verfügbare Platzhalter: %value%, %unit%",
     "sulu_product.status": "Status",
     "sulu_product.short_description": "Kurzbeschreibung",
     "sulu_product.image": "Produktbild",

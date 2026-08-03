@@ -19,6 +19,7 @@ use Sulu\Content\Application\ContentAggregator\ContentAggregatorInterface;
 use Sulu\Content\Application\ContentResolver\ContentResolverInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
+use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
@@ -34,6 +35,7 @@ class ProductTwigExtension extends AbstractExtension
         private RequestAnalyzerInterface $requestAnalyzer,
         private ReferenceStoreInterface $referenceStore,
         private ContentResolverInterface $contentResolver,
+        private MeasurementRegistry $measurementRegistry,
     ) {
     }
 
@@ -150,12 +152,20 @@ class ProductTwigExtension extends AbstractExtension
             return null;
         }
 
-        $format = $attribute->getConfig()['format'] ?? null;
+        $config = $attribute->getConfig();
+        $format = $config['format'] ?? null;
 
         if (!\is_string($format) || '' === $format) {
             return null;
         }
 
-        return \str_replace('%value%', (string) $value, $format);
+        $unitKey = $config['unit'] ?? null;
+        $unit = \is_string($unitKey) ? $this->measurementRegistry->findUnit($unitKey) : null;
+
+        return \trim(\str_replace(
+            ['%value%', '%unit%'],
+            [(string) $value, $unit?->getSymbol() ?? ''],
+            $format,
+        ));
     }
 }
