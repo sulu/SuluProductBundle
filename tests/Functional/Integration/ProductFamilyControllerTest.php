@@ -225,7 +225,7 @@ class ProductFamilyControllerTest extends SuluTestCase
         $this->assertIsArray($data);
         $this->assertIsArray($data['attributes']);
         $this->assertSame(
-            [$attributeId => ['enabled' => true, 'required' => true, 'variant' => false]],
+            [$attributeId => ['enabled' => true, 'required' => true, 'variantSpecific' => false]],
             $data['attributes'],
         );
     }
@@ -247,7 +247,7 @@ class ProductFamilyControllerTest extends SuluTestCase
                 'name' => 'Apparel',
                 'description' => null,
                 'attributes' => [
-                    $attributeId => ['enabled' => false, 'required' => false, 'variant' => true],
+                    $attributeId => ['enabled' => false, 'required' => false, 'variantSpecific' => true],
                 ],
             ]) ?: null,
         );
@@ -290,7 +290,7 @@ class ProductFamilyControllerTest extends SuluTestCase
                 'name' => 'Apparel',
                 'description' => null,
                 'attributes' => [
-                    $attributeId => ['enabled' => false, 'required' => false, 'variant' => true],
+                    $attributeId => ['enabled' => false, 'required' => false, 'variantSpecific' => true],
                 ],
             ]) ?: null,
         );

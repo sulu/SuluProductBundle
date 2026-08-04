@@ -65,7 +65,7 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
             'locale' => 'en',
             'name' => 'My Family',
             'description' => 'desc',
-            'attributes' => [7 => ['enabled' => true, 'required' => true, 'variant' => false]],
+            'attributes' => [7 => ['enabled' => true, 'required' => true, 'variantSpecific' => false]],
         ]));
 
         $this->assertSame($family, $result);
@@ -91,7 +91,7 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
         ($handler)(new CreateProductFamilyMessage([
             'locale' => 'en',
             'name' => 'My Family',
-            'attributes' => [99 => ['enabled' => true, 'required' => false, 'variant' => false]],
+            'attributes' => [99 => ['enabled' => true, 'required' => false, 'variantSpecific' => false]],
         ]));
 
         $this->assertCount(0, $family->getFamilyAttributes());
@@ -110,12 +110,12 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
         ($handler)(new CreateProductFamilyMessage([
             'locale' => 'en',
             'name' => 'My Family',
-            'attributes' => [7 => ['enabled' => true, 'required' => false, 'variant' => true]],
+            'attributes' => [7 => ['enabled' => true, 'required' => false, 'variantSpecific' => true]],
         ]));
 
         $familyAttributes = $family->getFamilyAttributes();
         $this->assertCount(1, $familyAttributes);
-        $this->assertTrue($familyAttributes[0]->isVariant());
+        $this->assertTrue($familyAttributes[0]->isVariantSpecific());
     }
 
     public function testCreateThrowsWhenVariantAttributeIsNotEnabled(): void
@@ -129,7 +129,7 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
         ($handler)(new CreateProductFamilyMessage([
             'locale' => 'en',
             'name' => 'My Family',
-            'attributes' => [7 => ['enabled' => false, 'required' => false, 'variant' => true]],
+            'attributes' => [7 => ['enabled' => false, 'required' => false, 'variantSpecific' => true]],
         ]));
     }
 }

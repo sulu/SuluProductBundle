@@ -168,7 +168,7 @@ final class ProductFamilyController implements SecuredControllerInterface
      *   locale: string,
      *   name: string,
      *   description: string|null,
-     *   attributes: array<int, array{enabled: bool, required: bool, variant: bool}>,
+     *   attributes: array<int, array{enabled: bool, required: bool, variantSpecific: bool}>,
      * }
      */
     private function getData(Request $request): array
@@ -186,9 +186,9 @@ final class ProductFamilyController implements SecuredControllerInterface
 
     /**
      * Reads the nested `attributes/<id>/enabled`, `attributes/<id>/required` and
-     * `attributes/<id>/variant` fields produced by the form into a map keyed by attribute id.
+     * `attributes/<id>/variantSpecific` fields produced by the form into a map keyed by attribute id.
      *
-     * @return array<int, array{enabled: bool, required: bool, variant: bool}>
+     * @return array<int, array{enabled: bool, required: bool, variantSpecific: bool}>
      */
     private function extractAttributes(Request $request): array
     {
@@ -204,7 +204,7 @@ final class ProductFamilyController implements SecuredControllerInterface
             $attributes[(int) $attributeId] = [
                 'enabled' => (bool) ($entry['enabled'] ?? false),
                 'required' => (bool) ($entry['required'] ?? false),
-                'variant' => (bool) ($entry['variant'] ?? false),
+                'variantSpecific' => (bool) ($entry['variantSpecific'] ?? false),
             ];
         }
 

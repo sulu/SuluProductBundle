@@ -119,8 +119,8 @@ class ProductFamilyNormalizerTest extends TestCase
         $result = $this->normalizer()->normalize($family, null, ['locale' => 'en']);
 
         $this->assertSame([
-            9 => ['enabled' => false, 'required' => false, 'variant' => false],
-            10 => ['enabled' => false, 'required' => false, 'variant' => false],
+            9 => ['enabled' => false, 'required' => false, 'variantSpecific' => false],
+            10 => ['enabled' => false, 'required' => false, 'variantSpecific' => false],
         ], $result['attributes']);
     }
 
@@ -144,8 +144,8 @@ class ProductFamilyNormalizerTest extends TestCase
         $result = $this->normalizer()->normalize($family, null, ['locale' => 'en']);
 
         $this->assertSame([
-            9 => ['enabled' => true, 'required' => true, 'variant' => false],
-            10 => ['enabled' => false, 'required' => false, 'variant' => false],
+            9 => ['enabled' => true, 'required' => true, 'variantSpecific' => false],
+            10 => ['enabled' => false, 'required' => false, 'variantSpecific' => false],
         ], $result['attributes']);
     }
 
@@ -159,7 +159,7 @@ class ProductFamilyNormalizerTest extends TestCase
         $group->addGroupAttribute(new AttributeGroupAttribute($group, $attr9));
 
         $familyAttribute = new ProductFamilyAttribute($family, $attr9);
-        $familyAttribute->setVariant(true);
+        $familyAttribute->setVariantSpecific(true);
         $family->addFamilyAttribute($familyAttribute);
 
         $this->attributeGroupRepository->findAll()->willReturn([$group]);
@@ -167,7 +167,7 @@ class ProductFamilyNormalizerTest extends TestCase
         $result = $this->normalizer()->normalize($family, null, ['locale' => 'en']);
 
         $this->assertSame([
-            9 => ['enabled' => true, 'required' => false, 'variant' => true],
+            9 => ['enabled' => true, 'required' => false, 'variantSpecific' => true],
         ], $result['attributes']);
     }
 

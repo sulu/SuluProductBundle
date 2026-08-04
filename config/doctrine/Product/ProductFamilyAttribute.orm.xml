@@ -13,7 +13,7 @@
             </options>
         </field>
 
-        <field name="variant" type="boolean" nullable="false">
+        <field name="variantSpecific" type="boolean" nullable="false">
             <options>
                 <option name="default">0</option>
             </options>

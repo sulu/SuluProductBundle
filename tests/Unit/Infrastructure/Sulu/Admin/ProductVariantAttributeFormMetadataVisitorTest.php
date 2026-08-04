@@ -106,7 +106,7 @@ class ProductVariantAttributeFormMetadataVisitorTest extends TestCase
         $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
         $familyAttribute->getAttribute()->willReturn($attribute->reveal());
         $familyAttribute->isRequired()->willReturn($required);
-        $familyAttribute->isVariant()->willReturn($variant);
+        $familyAttribute->isVariantSpecific()->willReturn($variant);
 
         return [$attribute, $familyAttribute];
     }
@@ -189,7 +189,7 @@ class ProductVariantAttributeFormMetadataVisitorTest extends TestCase
 
         $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
         $familyAttribute->getAttribute()->willReturn($attribute->reveal());
-        $familyAttribute->isVariant()->willReturn(true);
+        $familyAttribute->isVariantSpecific()->willReturn(true);
 
         $family = $this->prophesize(ProductFamilyInterface::class);
         $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
@@ -220,7 +220,7 @@ class ProductVariantAttributeFormMetadataVisitorTest extends TestCase
         $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
         $familyAttribute->getAttribute()->willReturn($attribute->reveal());
         $familyAttribute->isRequired()->willReturn(false);
-        $familyAttribute->isVariant()->willReturn(true);
+        $familyAttribute->isVariantSpecific()->willReturn(true);
 
         $family = $this->prophesize(ProductFamilyInterface::class);
         $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
@@ -260,7 +260,7 @@ class ProductVariantAttributeFormMetadataVisitorTest extends TestCase
         $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
         $familyAttribute->getAttribute()->willReturn($attribute->reveal());
         $familyAttribute->isRequired()->willReturn(true);
-        $familyAttribute->isVariant()->willReturn(true);
+        $familyAttribute->isVariantSpecific()->willReturn(true);
 
         $family = $this->prophesize(ProductFamilyInterface::class);
         $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);

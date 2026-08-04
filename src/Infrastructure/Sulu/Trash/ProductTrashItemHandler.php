@@ -165,12 +165,9 @@ final class ProductTrashItemHandler implements
         }
 
         $parentUuid = $restoreData['parent'] ?? null;
-        if (\is_string($parentUuid)) {
-            $parent = $this->productRepository->findOneBy(['uuid' => $parentUuid]);
-            if (null !== $parent) {
-                $product->setParent($parent);
-            }
-        }
+        $product->setParent(
+            \is_string($parentUuid) ? $this->productRepository->findOneBy(['uuid' => $parentUuid]) : null,
+        );
 
         if (\is_string($restoreData['type'] ?? null)) {
             $product->setType($restoreData['type']);

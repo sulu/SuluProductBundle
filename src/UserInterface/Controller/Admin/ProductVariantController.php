@@ -154,7 +154,9 @@ final class ProductVariantController implements SecuredControllerInterface
             ], 409);
         }
 
-        $data = $this->getCreateData($request, $parentId, $parent);
+        /** @var CreateProductMessageData $data */
+        $data = $this->buildData($request, $parentId, $parent);
+
         $message = new CreateProductMessage($data);
         /** @var ProductInterface $variant */
         $variant = $this->handle(new Envelope($message, [new EnableFlushStamp()]));
@@ -170,7 +172,10 @@ final class ProductVariantController implements SecuredControllerInterface
         $parent = $this->getParentOrFail($parentId);
         $this->assertVariantOwnedByParent($parentId, $id);
 
-        $message = new ModifyProductMessage(['uuid' => $id], $this->getModifyData($request, $parentId, $parent));
+        /** @var ModifyProductMessageData $data */
+        $data = $this->buildData($request, $parentId, $parent);
+
+        $message = new ModifyProductMessage(['uuid' => $id], $data);
 
         try {
             $this->handle(new Envelope($message, [new EnableFlushStamp()]));
@@ -238,28 +243,6 @@ final class ProductVariantController implements SecuredControllerInterface
     }
 
     /**
-     * @return CreateProductMessageData
-     */
-    private function getCreateData(Request $request, string $parentId, ProductInterface $parent): array
-    {
-        /** @var CreateProductMessageData $data */
-        $data = $this->buildData($request, $parentId, $parent);
-
-        return $data;
-    }
-
-    /**
-     * @return ModifyProductMessageData
-     */
-    private function getModifyData(Request $request, string $parentId, ProductInterface $parent): array
-    {
-        /** @var ModifyProductMessageData $data */
-        $data = $this->buildData($request, $parentId, $parent);
-
-        return $data;
-    }
-
-    /**
      * @return array<string, mixed>
      */
     private function buildData(Request $request, string $parentId, ProductInterface $parent): array
@@ -311,7 +294,7 @@ final class ProductVariantController implements SecuredControllerInterface
     private function stripInheritedAttributes(ProductFamilyInterface $family, array $attributes): array
     {
         foreach ($family->getFamilyAttributes() as $familyAttribute) {
-            if (!$familyAttribute->isVariant()) {
+            if (!$familyAttribute->isVariantSpecific()) {
                 unset($attributes[$familyAttribute->getAttribute()->getId()]);
             }
         }

@@ -397,12 +397,14 @@ final class SuluProductBundle extends AbstractBundle
             ])
             ->tag('sulu_product.product_mapper');
 
+        // Must run before the content mapper, so the content pipeline already sees the final type
+        // and parent on the product (ProductAttributesDataMapper relies on it).
         $services->set('sulu_product.product_parent_mapper')
             ->class(ProductParentMapper::class)
             ->args([
                 new Reference('sulu_product.product_repository'),
             ])
-            ->tag('sulu_product.product_mapper');
+            ->tag('sulu_product.product_mapper', ['priority' => 10]);
 
         $services->set('sulu_product.variant_parent_publish_state_updater')
             ->class(VariantParentPublishStateUpdater::class)

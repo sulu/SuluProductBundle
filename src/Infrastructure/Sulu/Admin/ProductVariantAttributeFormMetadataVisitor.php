@@ -66,7 +66,7 @@ class ProductVariantAttributeFormMetadataVisitor implements FormMetadataVisitorI
         $section->setLabel($this->translator->trans('sulu_product.attributes', [], 'admin', $locale), $locale);
 
         foreach ($family->getFamilyAttributes() as $familyAttribute) {
-            if (!$familyAttribute->isVariant()) {
+            if (!$familyAttribute->isVariantSpecific()) {
                 continue;
             }
 

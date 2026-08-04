@@ -51,7 +51,7 @@ class ProductVariantControllerTest extends SuluTestCase
     }
 
     /**
-     * @param array<int, array{enabled: bool, required?: bool, variant?: bool}> $attributes
+     * @param array<int, array{enabled: bool, required?: bool, variantSpecific?: bool}> $attributes
      */
     private function createProductFamily(array $attributes = []): string
     {
@@ -60,7 +60,7 @@ class ProductVariantControllerTest extends SuluTestCase
             $normalized[$attributeId] = [
                 'enabled' => $entry['enabled'],
                 'required' => $entry['required'] ?? false,
-                'variant' => $entry['variant'] ?? false,
+                'variantSpecific' => $entry['variantSpecific'] ?? false,
             ];
         }
 
@@ -208,7 +208,7 @@ class ProductVariantControllerTest extends SuluTestCase
         self::purgeDatabase();
 
         $axisId = $this->createAttribute('size', 'Size');
-        $familyId = $this->createProductFamily([$axisId => ['enabled' => true, 'variant' => true]]);
+        $familyId = $this->createProductFamily([$axisId => ['enabled' => true, 'variantSpecific' => true]]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         $this->client->request(
@@ -376,8 +376,8 @@ class ProductVariantControllerTest extends SuluTestCase
         $sharedId = $this->createAttribute('color', 'Color');
         $axisId = $this->createAttribute('size', 'Size');
         $familyId = $this->createProductFamily([
-            $sharedId => ['enabled' => true, 'variant' => false],
-            $axisId => ['enabled' => true, 'variant' => true],
+            $sharedId => ['enabled' => true, 'variantSpecific' => false],
+            $axisId => ['enabled' => true, 'variantSpecific' => true],
         ]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
@@ -745,8 +745,8 @@ class ProductVariantControllerTest extends SuluTestCase
         $sharedId = $this->createAttribute('color', 'Color');
         $axisId = $this->createAttribute('size', 'Size');
         $familyId = $this->createProductFamily([
-            $sharedId => ['enabled' => true, 'required' => true, 'variant' => false],
-            $axisId => ['enabled' => true, 'variant' => true],
+            $sharedId => ['enabled' => true, 'required' => true, 'variantSpecific' => false],
+            $axisId => ['enabled' => true, 'variantSpecific' => true],
         ]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
@@ -811,7 +811,7 @@ class ProductVariantControllerTest extends SuluTestCase
 
         $sharedId = $this->createAttribute('color', 'Color');
         $familyId = $this->createProductFamily([
-            $sharedId => ['enabled' => true, 'required' => true, 'variant' => false],
+            $sharedId => ['enabled' => true, 'required' => true, 'variantSpecific' => false],
         ]);
         $parentId = $this->createProduct($familyId, 'Simple Product');
 
@@ -1092,7 +1092,7 @@ class ProductVariantControllerTest extends SuluTestCase
         self::purgeDatabase();
 
         $axisId = $this->createAttribute('size', 'Size');
-        $familyId = $this->createProductFamily([$axisId => ['enabled' => true, 'required' => true, 'variant' => true]]);
+        $familyId = $this->createProductFamily([$axisId => ['enabled' => true, 'required' => true, 'variantSpecific' => true]]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         $this->client->request(
@@ -1140,7 +1140,7 @@ class ProductVariantControllerTest extends SuluTestCase
         self::purgeDatabase();
 
         $axisId = $this->createAttribute('weight', 'Weight', AttributeInterface::TYPE_NUMBER);
-        $familyId = $this->createProductFamily([$axisId => ['enabled' => true, 'variant' => true]]);
+        $familyId = $this->createProductFamily([$axisId => ['enabled' => true, 'variantSpecific' => true]]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         $this->client->request(

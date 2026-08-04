@@ -241,7 +241,8 @@ final class ProductRepository implements ProductRepositoryInterface
      *     associationTargetUuid?: string,
      *     associationType?: string,
      *     parent?: string,
-     *     parentIsNull?: bool,
+     *     types?: string[],
+     *     excludeTypes?: string[],
      *     page?: int,
      *     limit?: int,
      * } $filters
@@ -291,8 +292,18 @@ final class ProductRepository implements ProductRepositoryInterface
                 ->setParameter('parent', $parent);
         }
 
-        if (true === ($filters['parentIsNull'] ?? null)) {
-            $queryBuilder->andWhere('product.parent IS NULL');
+        $types = $filters['types'] ?? null;
+        if (null !== $types) {
+            Assert::isArray($types); // @phpstan-ignore staticMethod.alreadyNarrowedType
+            $queryBuilder->andWhere('product.type IN(:types)')
+                ->setParameter('types', $types);
+        }
+
+        $excludeTypes = $filters['excludeTypes'] ?? null;
+        if (null !== $excludeTypes) {
+            Assert::isArray($excludeTypes); // @phpstan-ignore staticMethod.alreadyNarrowedType
+            $queryBuilder->andWhere('product.type NOT IN(:excludeTypes)')
+                ->setParameter('excludeTypes', $excludeTypes);
         }
 
         $limit = $filters['limit'] ?? null;

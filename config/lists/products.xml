@@ -147,11 +147,6 @@
             <entity-name>dimensionContent</entity-name>
         </property>
 
-        <property name="parent" visibility="never">
-            <field-name>parent</field-name>
-            <entity-name>Sulu\Product\Domain\Model\ProductInterface</entity-name>
-        </property>
-
         <property name="ghostLocale" translation="sulu_admin.ghost_locale" visibility="never">
             <field-name>locale</field-name>
             <entity-name>ghostDimensionContent</entity-name>

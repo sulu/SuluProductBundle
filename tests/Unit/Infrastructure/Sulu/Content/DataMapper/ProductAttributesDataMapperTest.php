@@ -332,21 +332,6 @@ class ProductAttributesDataMapperTest extends TestCase
         $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [1 => null]]);
     }
 
-    public function testVariantSkipsRequiredNonVariantAttributeDetectedViaDataParentOnCreate(): void
-    {
-        // isVariantResource is false — asserts the `data['parent']` fallback alone triggers the exemption.
-        $fixture = $this->makeProductFixture(1, required: true, isVariantAttribute: false, isVariantResource: false);
-        $fixture['unloc_prophecy']->addAttribute(Argument::cetera())->shouldNotBeCalled();
-
-        $this->mapper->map(
-            $fixture['unloc'],
-            $fixture['loc'],
-            ['attributes' => [1 => null], 'parent' => '0199-parent-uuid'],
-        );
-
-        $this->addToAssertionCount(1);
-    }
-
     public function testNonVariantProductStillEnforcesRequiredNonVariantAttribute(): void
     {
         $fixture = $this->makeProductFixture(1, required: true, isVariantAttribute: false, isVariantResource: false);
@@ -395,7 +380,7 @@ class ProductAttributesDataMapperTest extends TestCase
         $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
         $familyAttribute->getAttribute()->willReturn($attribute->reveal());
         $familyAttribute->isRequired()->willReturn($required);
-        $familyAttribute->isVariant()->willReturn($isVariantAttribute);
+        $familyAttribute->isVariantSpecific()->willReturn($isVariantAttribute);
 
         /** @var ObjectProphecy<ProductFamilyInterface> $family */
         $family = $this->prophesize(ProductFamilyInterface::class);

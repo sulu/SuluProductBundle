@@ -19,7 +19,7 @@ class ProductFamilyAttribute implements ProductFamilyAttributeInterface
 
     protected bool $required = false;
 
-    protected bool $variant = false;
+    protected bool $variantSpecific = false;
 
     protected ProductFamilyInterface $family;
 
@@ -48,14 +48,14 @@ class ProductFamilyAttribute implements ProductFamilyAttributeInterface
         return $this;
     }
 
-    public function isVariant(): bool
+    public function isVariantSpecific(): bool
     {
-        return $this->variant;
+        return $this->variantSpecific;
     }
 
-    public function setVariant(bool $variant): self
+    public function setVariantSpecific(bool $variantSpecific): self
     {
-        $this->variant = $variant;
+        $this->variantSpecific = $variantSpecific;
 
         return $this;
     }

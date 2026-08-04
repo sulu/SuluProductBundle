@@ -71,13 +71,13 @@ class ProductFamilyFormMetadataVisitor implements FormMetadataVisitorInterface
                 $requiredField->addOption($this->createTogglerOption());
                 $section->addItem($requiredField);
 
-                $variantField = new FieldMetadata('attributes/' . $attributeId . '/variant');
-                $variantField->setType('checkbox');
-                $variantField->setLabel($this->translator->trans('sulu_product.attribute_variant', ['%attributeName%' => $attributeName], 'admin', $locale), $locale);
-                $variantField->setColSpan(4);
-                $variantField->setDisabledCondition('!attributes["' . $attributeId . '"].enabled');
-                $variantField->addOption($this->createTogglerOption());
-                $section->addItem($variantField);
+                $variantSpecificField = new FieldMetadata('attributes/' . $attributeId . '/variantSpecific');
+                $variantSpecificField->setType('checkbox');
+                $variantSpecificField->setLabel($this->translator->trans('sulu_product.attribute_variant', ['%attributeName%' => $attributeName], 'admin', $locale), $locale);
+                $variantSpecificField->setColSpan(4);
+                $variantSpecificField->setDisabledCondition('!attributes["' . $attributeId . '"].enabled');
+                $variantSpecificField->addOption($this->createTogglerOption());
+                $section->addItem($variantSpecificField);
             }
 
             $items[$section->getName()] = $section;

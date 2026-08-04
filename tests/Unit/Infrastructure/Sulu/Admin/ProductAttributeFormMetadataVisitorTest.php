@@ -537,12 +537,12 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $attribute->getTranslation('en')->willReturn($translation->reveal());
 
         $nonVariantFamilyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
-        $nonVariantFamilyAttribute->isVariant()->willReturn(false);
+        $nonVariantFamilyAttribute->isVariantSpecific()->willReturn(false);
         $nonVariantFamilyAttribute->getAttribute()->willReturn($attribute->reveal());
         $nonVariantFamilyAttribute->isRequired()->willReturn(false);
 
         $variantFamilyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
-        $variantFamilyAttribute->isVariant()->willReturn(true);
+        $variantFamilyAttribute->isVariantSpecific()->willReturn(true);
 
         $family = $this->prophesize(ProductFamilyInterface::class);
         $family->getFamilyAttributes()->willReturn([

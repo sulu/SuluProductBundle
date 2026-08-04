@@ -114,7 +114,7 @@ class ProductFamilyFormMetadataVisitorTest extends TestCase
         $sectionItems = $section->getItems();
         $this->assertArrayHasKey('attributes/7/enabled', $sectionItems);
         $this->assertArrayHasKey('attributes/7/required', $sectionItems);
-        $this->assertArrayHasKey('attributes/7/variant', $sectionItems);
+        $this->assertArrayHasKey('attributes/7/variantSpecific', $sectionItems);
 
         $enabled = $sectionItems['attributes/7/enabled'];
         $this->assertInstanceOf(FieldMetadata::class, $enabled);
@@ -130,7 +130,7 @@ class ProductFamilyFormMetadataVisitorTest extends TestCase
         $this->assertSame(4, $required->getColSpan());
         $this->assertTogglerOption($required);
 
-        $variant = $sectionItems['attributes/7/variant'];
+        $variant = $sectionItems['attributes/7/variantSpecific'];
         $this->assertInstanceOf(FieldMetadata::class, $variant);
         $this->assertSame('checkbox', $variant->getType());
         $this->assertSame('Width', $variant->getLabel('en'));
@@ -161,7 +161,7 @@ class ProductFamilyFormMetadataVisitorTest extends TestCase
         $this->assertInstanceOf(SectionMetadata::class, $section);
         $this->assertSame('', $section->getLabel('en'));
         $this->assertSame('depth', $section->getItems()['attributes/4/enabled']->getLabel('en'));
-        $this->assertSame('depth', $section->getItems()['attributes/4/variant']->getLabel('en'));
+        $this->assertSame('depth', $section->getItems()['attributes/4/variantSpecific']->getLabel('en'));
     }
 
     private function assertTogglerOption(FieldMetadata $field): void

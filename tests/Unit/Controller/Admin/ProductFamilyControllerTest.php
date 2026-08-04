@@ -143,8 +143,8 @@ class ProductFamilyControllerTest extends TestCase
                 // Nested attributes map is read straight from the request; non-array entries are ignored.
                 return $message instanceof CreateProductFamilyMessage
                     && [
-                        9 => ['enabled' => true, 'required' => false, 'variant' => false],
-                        10 => ['enabled' => false, 'required' => false, 'variant' => false],
+                        9 => ['enabled' => true, 'required' => false, 'variantSpecific' => false],
+                        10 => ['enabled' => false, 'required' => false, 'variantSpecific' => false],
                     ] === $message->getAttributes();
             }),
             Argument::any(),
@@ -187,7 +187,7 @@ class ProductFamilyControllerTest extends TestCase
                 $message = $envelope->getMessage();
 
                 return $message instanceof CreateProductFamilyMessage
-                    && [9 => ['enabled' => true, 'required' => false, 'variant' => true]] === $message->getAttributes();
+                    && [9 => ['enabled' => true, 'required' => false, 'variantSpecific' => true]] === $message->getAttributes();
             }),
             Argument::any(),
         )
@@ -204,7 +204,7 @@ class ProductFamilyControllerTest extends TestCase
                 'name' => 'New Family',
                 'description' => null,
                 'attributes' => [
-                    9 => ['enabled' => true, 'required' => false, 'variant' => true],
+                    9 => ['enabled' => true, 'required' => false, 'variantSpecific' => true],
                 ],
             ],
         );

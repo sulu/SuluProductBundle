@@ -21,9 +21,9 @@ interface ProductFamilyAttributeInterface
 
     public function setRequired(bool $required): self;
 
-    public function isVariant(): bool;
+    public function isVariantSpecific(): bool;
 
-    public function setVariant(bool $variant): self;
+    public function setVariantSpecific(bool $variantSpecific): self;
 
     public function getFamily(): ProductFamilyInterface;
 

@@ -112,11 +112,7 @@ class ProductAttributesDataMapper implements DataMapperInterface
             }
         }
 
-        $resource = $unlocalizedDimensionContent->getResource();
-        // On create, ProductParentMapper hasn't run yet at this point in the ContentPersister
-        // pipeline, so `isType()` alone isn't reliable — fall back to `$data['parent']`.
-        $isVariant = $resource->isType(ProductInterface::TYPE_VARIANT)
-            || (\is_string($data['parent'] ?? null) && '' !== $data['parent']);
+        $isVariant = $unlocalizedDimensionContent->getResource()->isType(ProductInterface::TYPE_VARIANT);
 
         $this->assertRequiredSatisfied($familyAttributes, $allExisting, $isVariant);
     }
@@ -134,7 +130,7 @@ class ProductAttributesDataMapper implements DataMapperInterface
                 continue;
             }
 
-            if ($isVariant && !$familyAttribute->isVariant()) {
+            if ($isVariant && !$familyAttribute->isVariantSpecific()) {
                 // Shared attributes are inherited from (and required on) the parent, not the variant.
                 continue;
             }

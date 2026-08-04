@@ -81,7 +81,7 @@ final class ProductFamilyMapper implements ProductFamilyMapperInterface
         foreach ($enabledAttributes as $attributeId => $entry) {
             if (isset($existingMap[$attributeId])) {
                 $existingMap[$attributeId]->setRequired($entry['required']);
-                $existingMap[$attributeId]->setVariant($entry['variant']);
+                $existingMap[$attributeId]->setVariantSpecific($entry['variantSpecific']);
 
                 continue;
             }
@@ -93,20 +93,20 @@ final class ProductFamilyMapper implements ProductFamilyMapperInterface
 
             $familyAttribute = new ProductFamilyAttribute($family, $attribute);
             $familyAttribute->setRequired($entry['required']);
-            $familyAttribute->setVariant($entry['variant']);
+            $familyAttribute->setVariantSpecific($entry['variantSpecific']);
             $family->addFamilyAttribute($familyAttribute);
         }
     }
 
     /**
-     * @param array<int, array{enabled: bool, required: bool, variant: bool}> $attributes
+     * @param array<int, array{enabled: bool, required: bool, variantSpecific: bool}> $attributes
      *
      * @throws InvalidVariantAttributeException
      */
     private function assertVariantAttributesEnabled(array $attributes): void
     {
         foreach ($attributes as $attributeId => $entry) {
-            if ($entry['variant'] && !$entry['enabled']) {
+            if ($entry['variantSpecific'] && !$entry['enabled']) {
                 throw new InvalidVariantAttributeException($attributeId);
             }
         }

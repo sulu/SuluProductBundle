@@ -573,10 +573,9 @@ class ProductControllerTest extends SuluTestCase
 
     /**
      * A variant child is only ever created through the nested
-     * `/products/{parentId}/variants` endpoint (`ProductVariantController`), which is the
-     * only place `parent` may legitimately be set — the main `/products` endpoint strips a
-     * client-submitted `parent` from its own request body (see `testClientSubmittedParentIsStrippedOnPut`
-     * below), so it can no longer be used to create a variant child directly.
+     * `/products/{parentId}/variants` endpoint (`ProductVariantController`) — the main
+     * `/products` form offers no `variant` type and drops a client-submitted `parent`
+     * (see `testClientSubmittedParentIsIgnoredForNonVariantType` below).
      */
     public function testGetListExcludesVariantChildren(): void
     {
@@ -723,13 +722,11 @@ class ProductControllerTest extends SuluTestCase
     }
 
     /**
-     * The main `/products` endpoint has no `parent` field on its own form (only the nested
-     * variants endpoint legitimately sets it), so a client-submitted `parent` in the raw
-     * request body must be silently stripped — never re-parenting the product via
-     * `ProductParentMapper`. Otherwise the product would vanish from the main list (which
-     * filters `where(parent, null)`) and reappear under another product's Variants tab.
+     * Only a variant carries a parent (`ProductParentMapper`), so a `parent` submitted next to
+     * any other type is dropped. Otherwise the product would vanish from the main list (which
+     * excludes variants by type) and reappear under another product's Variants tab.
      */
-    public function testClientSubmittedParentIsStrippedOnPut(): void
+    public function testClientSubmittedParentIsIgnoredForNonVariantType(): void
     {
         self::purgeDatabase();
         $familyId = $this->createProductFamily();
@@ -745,6 +742,7 @@ class ProductControllerTest extends SuluTestCase
             \json_encode([
                 'locale' => 'en',
                 'title' => 'My Product',
+                'type' => ProductInterface::TYPE_PRODUCT,
                 'parent' => $potentialParentId,
             ]) ?: null,
         );
