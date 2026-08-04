@@ -19,9 +19,7 @@ use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Product\Application\AttributeType\AbstractAttributeType;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
-use Sulu\Product\Domain\Model\Product;
-use Sulu\Product\Domain\Model\ProductAttributeValue;
-use Sulu\Product\Domain\Model\ProductDimensionContent;
+use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 
 #[CoversClass(AbstractAttributeType::class)]
 class AbstractAttributeTypeTest extends TestCase
@@ -38,17 +36,16 @@ class AbstractAttributeTypeTest extends TestCase
             {
                 return 'product_attribute_stub';
             }
+
+            public function readValue(ProductAttributeValueInterface $value): mixed
+            {
+                return null;
+            }
+
+            public function writeValue(ProductAttributeValueInterface $value, mixed $raw): void
+            {
+            }
         };
-    }
-
-    public function testWriteAndReadValueUseJsonColumnByDefault(): void
-    {
-        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
-
-        $this->type()->writeValue($value, ['a' => 1]);
-
-        self::assertSame(['a' => 1], $value->getJson());
-        self::assertSame(['a' => 1], $this->type()->readValue($value));
     }
 
     public function testConfigureFieldIsNoOp(): void

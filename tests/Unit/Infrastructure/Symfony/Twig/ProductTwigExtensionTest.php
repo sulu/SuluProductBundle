@@ -256,17 +256,18 @@ class ProductTwigExtensionTest extends TestCase
         $this->assertSame(42.5, $result['attributes'][0]['value']);
     }
 
-    public function testLoadProductFormatsJsonAttribute(): void
+    public function testLoadProductFormatsDateAttribute(): void
     {
         $product = new Product('uuid-1');
         $pdc = new ProductDimensionContent($product);
 
         $attribute = new Attribute(new AttributeGroup());
-        $attribute->setKey('meta');
-        $attribute->setType(AttributeInterface::TYPE_JSON);
+        $attribute->setKey('released_at');
+        $attribute->setType(AttributeInterface::TYPE_DATE);
 
-        $productAttribute = new ProductAttributeValue($pdc, $attribute, 'meta');
-        $productAttribute->setJson(['foo' => 'bar']);
+        $timestamp = (new \DateTimeImmutable('2026-07-24 00:00:00', new \DateTimeZone('UTC')))->getTimestamp();
+        $productAttribute = new ProductAttributeValue($pdc, $attribute, 'released_at');
+        $productAttribute->setNumber((float) $timestamp);
 
         $pdc->addAttribute($productAttribute);
 
@@ -281,8 +282,36 @@ class ProductTwigExtensionTest extends TestCase
         $this->assertIsArray($result);
         /** @var array{attributes: list<array{key: string, label: string, type: string, value: mixed}>} $result */
         $this->assertCount(1, $result['attributes']);
-        $this->assertSame(AttributeInterface::TYPE_JSON, $result['attributes'][0]['type']);
-        $this->assertSame(['foo' => 'bar'], $result['attributes'][0]['value']);
+        $this->assertSame(AttributeInterface::TYPE_DATE, $result['attributes'][0]['type']);
+        $this->assertSame('2026-07-24', $result['attributes'][0]['value']);
+    }
+
+    public function testLoadProductReturnsNullForDateAttributeWithoutValue(): void
+    {
+        $product = new Product('uuid-1');
+        $pdc = new ProductDimensionContent($product);
+
+        $attribute = new Attribute(new AttributeGroup());
+        $attribute->setKey('released_at');
+        $attribute->setType(AttributeInterface::TYPE_DATE);
+
+        $productAttribute = new ProductAttributeValue($pdc, $attribute, 'released_at');
+
+        $pdc->addAttribute($productAttribute);
+
+        $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
+        $this->contentAggregator->aggregate($product, Argument::type('array'))
+            ->willReturn($pdc);
+        $this->contentResolver->resolve($pdc, [])->willReturn([]);
+        $this->referenceStore->add('uuid-1', ProductInterface::RESOURCE_KEY)->shouldBeCalled();
+
+        $result = $this->extension->loadProduct('uuid-1', [], 'en');
+
+        $this->assertIsArray($result);
+        /** @var array{attributes: list<array{key: string, label: string, type: string, value: mixed}>} $result */
+        $this->assertCount(1, $result['attributes']);
+        $this->assertSame(AttributeInterface::TYPE_DATE, $result['attributes'][0]['type']);
+        $this->assertNull($result['attributes'][0]['value']);
     }
 
     public function testLoadProductFormatsDefaultAttribute(): void

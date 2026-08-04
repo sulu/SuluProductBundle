@@ -40,7 +40,6 @@ class ProductAttributeValueTest extends TestCase
         $this->assertNull($productAttribute->getAttributeOptionKey());
         $this->assertNull($productAttribute->getNumber());
         $this->assertNull($productAttribute->getText());
-        $this->assertNull($productAttribute->getJson());
         $this->assertNull($productAttribute->getAttributeOption());
         $this->assertNull($productAttribute->getValue());
     }
@@ -78,18 +77,6 @@ class ProductAttributeValueTest extends TestCase
         $this->assertNull($productAttribute->getText());
     }
 
-    public function testSetJsonIsFluentAndStores(): void
-    {
-        $productAttribute = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'meta');
-        $data = ['foo' => 'bar', 'count' => 3];
-
-        $this->assertSame($productAttribute, $productAttribute->setJson($data));
-        $this->assertSame($data, $productAttribute->getJson());
-
-        $productAttribute->setJson(null);
-        $this->assertNull($productAttribute->getJson());
-    }
-
     public function testSetAttributeOptionIsFluentAndStores(): void
     {
         $attribute = new Attribute(new AttributeGroup());
@@ -109,7 +96,6 @@ class ProductAttributeValueTest extends TestCase
         $productAttribute->setAttributeOptionKey('red');
         $productAttribute->setNumber(1.0);
         $productAttribute->setText('text');
-        $productAttribute->setJson(['x' => 1]);
 
         $this->assertSame('red', $productAttribute->getValue());
     }
@@ -119,7 +105,6 @@ class ProductAttributeValueTest extends TestCase
         $productAttribute = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'weight');
         $productAttribute->setNumber(2.5);
         $productAttribute->setText('text');
-        $productAttribute->setJson(['x' => 1]);
 
         $this->assertSame(2.5, $productAttribute->getValue());
     }
@@ -128,17 +113,8 @@ class ProductAttributeValueTest extends TestCase
     {
         $productAttribute = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'description');
         $productAttribute->setText('Hello');
-        $productAttribute->setJson(['x' => 1]);
 
         $this->assertSame('Hello', $productAttribute->getValue());
-    }
-
-    public function testGetValueFallsBackToJson(): void
-    {
-        $productAttribute = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'meta');
-        $productAttribute->setJson(['x' => 1]);
-
-        $this->assertSame(['x' => 1], $productAttribute->getValue());
     }
 
     public function testGetIdReturnsDoctrineGeneratedId(): void
