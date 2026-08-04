@@ -143,8 +143,8 @@ class ProductFamilyControllerTest extends TestCase
                 // Nested attributes map is read straight from the request; non-array entries are ignored.
                 return $message instanceof CreateProductFamilyMessage
                     && [
-                        9 => ['enabled' => true, 'required' => false],
-                        10 => ['enabled' => false, 'required' => false],
+                        9 => ['enabled' => true, 'required' => false, 'variantSpecific' => false],
+                        10 => ['enabled' => false, 'required' => false, 'variantSpecific' => false],
                     ] === $message->getAttributes();
             }),
             Argument::any(),
@@ -175,6 +175,43 @@ class ProductFamilyControllerTest extends TestCase
         $data = \json_decode((string) $response->getContent(), true);
         $this->assertIsArray($data);
         $this->assertSame('created-uuid', $data['id']);
+    }
+
+    public function testPostActionExtractsVariantFlag(): void
+    {
+        $family = new ProductFamily();
+        $family->setUuid('created-uuid');
+
+        $this->messageBus->dispatch(
+            Argument::that(function(Envelope $envelope): bool {
+                $message = $envelope->getMessage();
+
+                return $message instanceof CreateProductFamilyMessage
+                    && [9 => ['enabled' => true, 'required' => false, 'variantSpecific' => true]] === $message->getAttributes();
+            }),
+            Argument::any(),
+        )
+            ->shouldBeCalledOnce()
+            ->willReturn($this->handledEnvelope($family));
+
+        $this->normalizer->normalize($family, null, ['locale' => 'en'])
+            ->shouldBeCalledOnce()
+            ->willReturn(['id' => 'created-uuid', 'name' => 'New Family', 'attributes' => []]);
+
+        $request = new Request(
+            ['locale' => 'en'],
+            [
+                'name' => 'New Family',
+                'description' => null,
+                'attributes' => [
+                    9 => ['enabled' => true, 'required' => false, 'variantSpecific' => true],
+                ],
+            ],
+        );
+
+        $response = $this->createController()->postAction($request);
+
+        $this->assertSame(201, $response->getStatusCode());
     }
 
     public function testPostActionReturns409OnUniqueConstraintViolation(): void

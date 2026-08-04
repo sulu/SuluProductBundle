@@ -13,19 +13,15 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Infrastructure\Sulu\Admin;
 
-use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
-use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataLoaderInterface;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataVisitorInterface;
-use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\OptionMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\SectionMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadataMapperRegistry;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\SchemaMetadata;
-use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
-use Sulu\Product\Domain\Measurement\MeasurementRegistry;
-use Sulu\Product\Domain\Measurement\Unit;
+use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
+use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
@@ -37,11 +33,10 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
 
     public function __construct(
         private readonly ProductFamilyRepositoryInterface $productFamilyRepository,
-        private readonly AttributeTypeRegistry $attributeTypeRegistry,
-        private readonly FormMetadataLoaderInterface $formMetadataLoader,
+        private readonly AttributeFieldFactory $attributeFieldFactory,
         private readonly PropertyMetadataMapperRegistry $propertyMetadataMapperRegistry,
-        private readonly MeasurementRegistry $measurementRegistry,
         private readonly TranslatorInterface $translator,
+        private readonly ProductRepositoryInterface $productRepository,
     ) {
     }
 
@@ -62,6 +57,9 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
             return;
         }
 
+        $product = $this->productRepository->findOneBy(['uuid' => $id]);
+        $isProductWithVariants = $product?->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS) ?? false;
+
         $items = $formMetadata->getItems();
 
         /** @var PropertyMetadata[] $schemaProperties */
@@ -71,46 +69,19 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
         $section->setLabel($this->translator->trans('sulu_product.attributes', [], 'admin', $locale), $locale);
 
         foreach ($family->getFamilyAttributes() as $familyAttribute) {
-            $attribute = $familyAttribute->getAttribute();
-            $attributeConfig = $attribute->getConfig();
-            $unitKey = $attributeConfig['unit'] ?? null;
-            $unit = \is_string($unitKey) ? $this->measurementRegistry->findUnit($unitKey) : null;
-            $hasUnit = $unit instanceof Unit;
-
-            if (!$this->attributeTypeRegistry->has($attribute->getType())) {
+            if ($isProductWithVariants && $familyAttribute->isVariantSpecific()) {
                 continue;
             }
 
-            $type = $this->attributeTypeRegistry->get($attribute->getType());
-
-            $template = $this->resolveTemplateField($type->getFormKey(), $locale);
-
-            if (null === $template) {
+            $result = $this->attributeFieldFactory->build($familyAttribute, $locale);
+            if (null === $result) {
                 continue;
             }
-
-            $translation = $attribute->getTranslation($locale)
-                ?? (($defaultLocale = $attribute->getDefaultLocale()) !== null ? $attribute->getTranslation($defaultLocale) : null);
-
-            $field = $this->cloneFieldWithName($template, 'attributes/' . $attribute->getId());
-            $field->setLabel($translation?->getName() ?? $attribute->getKey(), $locale);
-            $field->setRequired($familyAttribute->isRequired());
-
-            if ($hasUnit) {
-                $field->setColSpan(8);
-            }
-
-            $description = $translation?->getDescription();
-            if (null !== $description) {
-                $field->setDescription(\strip_tags($description), $locale);
-            }
-
-            $type->configureField($field, $attribute, $locale);
+            [$field, $unitField] = $result;
 
             $section->addItem($field);
 
-            if ($hasUnit) {
-                $unitField = $this->buildUnitField($attribute->getId(), $unit, $locale);
+            if (null !== $unitField) {
                 $section->addItem($unitField);
             }
 
@@ -129,73 +100,5 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
         }
 
         $formMetadata->setCacheable(false);
-    }
-
-    private function buildUnitField(int $attributeId, Unit $unit, string $locale): FieldMetadata
-    {
-        $field = new FieldMetadata('attributes/' . $attributeId . '_unit');
-        $field->setType('single_select');
-        $field->setColSpan(4);
-        $field->setDisabledCondition('true');
-        $field->setLabel($this->translator->trans('sulu_product.unit', [], 'admin', $locale), $locale);
-
-        $unitKey = $unit->getKey();
-
-        $values = new OptionMetadata();
-        $values->setName('values');
-        $values->setType(OptionMetadata::TYPE_COLLECTION);
-
-        $valueOption = new OptionMetadata();
-        $valueOption->setName($unitKey);
-        $valueOption->setValue($unitKey);
-        $valueOption->setTitle($unit->getSymbol(), $locale);
-        $values->addValueOption($valueOption);
-
-        $field->addOption($values);
-
-        return $field;
-    }
-
-    private function resolveTemplateField(string $formKey, string $locale): ?FieldMetadata
-    {
-        $fragment = $this->formMetadataLoader->getMetadata($formKey, $locale, []);
-        if (!$fragment instanceof FormMetadata) {
-            return null;
-        }
-
-        foreach ($fragment->getItems() as $item) {
-            if ($item instanceof FieldMetadata && 'value' === $item->getName()) {
-                return $item;
-            }
-        }
-
-        return null;
-    }
-
-    private function cloneFieldWithName(FieldMetadata $template, string $name): FieldMetadata
-    {
-        $field = new FieldMetadata($name);
-        $field->setType($template->getType());
-        $field->setColSpan($template->getColSpan());
-        $field->setDefaultType($template->getDefaultType());
-        $field->setVisibleCondition($template->getVisibleCondition());
-        $field->setDisabledCondition($template->getDisabledCondition());
-        $field->setMinOccurs($template->getMinOccurs());
-        $field->setMaxOccurs($template->getMaxOccurs());
-        $field->setSpaceAfter($template->getSpaceAfter());
-        $field->setOnInvalid($template->getOnInvalid());
-        $field->setTags($template->getTags());
-
-        foreach ($template->getOptions() as $option) {
-            $field->addOption($option);
-        }
-
-        foreach ($template->getTypes() as $blockType) {
-            $field->addType($blockType);
-        }
-
-        $field->setDescriptions($template->getDescriptions());
-
-        return $field;
     }
 }

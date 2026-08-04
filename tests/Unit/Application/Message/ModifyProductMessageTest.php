@@ -77,4 +77,32 @@ class ModifyProductMessageTest extends TestCase
 
         $this->assertSame([], $message->getAttributes());
     }
+
+    public function testGetTypeIsNullByDefault(): void
+    {
+        $message = new ModifyProductMessage(['uuid' => 'uuid-1'], ['locale' => 'en']);
+
+        $this->assertNull($message->getType());
+    }
+
+    public function testGetTypeWhenProvided(): void
+    {
+        $message = new ModifyProductMessage(['uuid' => 'uuid-1'], ['locale' => 'en', 'type' => 'variant']);
+
+        $this->assertSame('variant', $message->getType());
+    }
+
+    public function testGetParentIsNullByDefault(): void
+    {
+        $message = new ModifyProductMessage(['uuid' => 'uuid-1'], ['locale' => 'en']);
+
+        $this->assertNull($message->getParent());
+    }
+
+    public function testGetParentWhenProvided(): void
+    {
+        $message = new ModifyProductMessage(['uuid' => 'uuid-1'], ['locale' => 'en', 'parent' => 'parent-123']);
+
+        $this->assertSame('parent-123', $message->getParent());
+    }
 }

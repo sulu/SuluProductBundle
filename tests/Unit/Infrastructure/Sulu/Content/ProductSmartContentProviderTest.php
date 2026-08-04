@@ -355,4 +355,22 @@ class ProductSmartContentProviderTest extends TestCase
         $queryBuilder->leftJoin('filterDimensionContent.additionalWebspaces', 'additionalWebspace')->shouldHaveBeenCalled();
         $queryBuilder->setParameter('webspaceKey', 'sulu_io')->shouldHaveBeenCalled();
     }
+
+    public function testAddInternalFiltersExcludesVariants(): void
+    {
+        $queryBuilder = $this->createQueryBuilderProphecy();
+
+        /** @var ObjectProphecy<Query<mixed, mixed>> $query */
+        $query = $this->prophesize(Query::class);
+        $query->getSingleScalarResult()->willReturn(3);
+        $queryBuilder->getQuery()->willReturn($query->reveal());
+
+        $this->productRepository->createQueryBuilder('product')->willReturn($queryBuilder->reveal());
+
+        $result = $this->createProvider()->countBy($this->minimalFilters());
+
+        $this->assertSame(3, $result);
+        $queryBuilder->andWhere('product.type != :excludedProductType')->shouldHaveBeenCalled();
+        $queryBuilder->setParameter('excludedProductType', ProductInterface::TYPE_VARIANT)->shouldHaveBeenCalled();
+    }
 }

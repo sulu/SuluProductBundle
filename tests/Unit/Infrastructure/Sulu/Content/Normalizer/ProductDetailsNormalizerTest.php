@@ -21,6 +21,7 @@ use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
+use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\Normalizer\ProductDetailsNormalizer;
 
 #[CoversClass(ProductDetailsNormalizer::class)]
@@ -105,9 +106,16 @@ class ProductDetailsNormalizerTest extends TestCase
         $object->getStatus()->willReturn('available');
         $object->getDetailsData()->willReturn([]);
 
+        /** @var ObjectProphecy<ProductInterface> $product */
+        $product = $this->prophesize(ProductInterface::class);
+        $product->getType()->willReturn(ProductInterface::TYPE_VARIANT);
+        $object->getResource()->willReturn($product->reveal());
+
         $result = $this->normalizer->enhance($object->reveal(), []);
 
         $this->assertSame('available', $result['status']);
+        $this->assertSame([], $result['details']);
+        $this->assertSame(ProductInterface::TYPE_VARIANT, $result['type']);
     }
 
     public function testEnhanceEmitsDetailsBucketUnchanged(): void

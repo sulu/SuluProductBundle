@@ -19,6 +19,8 @@ class ProductFamilyAttribute implements ProductFamilyAttributeInterface
 
     protected bool $required = false;
 
+    protected bool $variantSpecific = false;
+
     protected ProductFamilyInterface $family;
 
     protected AttributeInterface $attribute;
@@ -42,6 +44,18 @@ class ProductFamilyAttribute implements ProductFamilyAttributeInterface
     public function setRequired(bool $required): self
     {
         $this->required = $required;
+
+        return $this;
+    }
+
+    public function isVariantSpecific(): bool
+    {
+        return $this->variantSpecific;
+    }
+
+    public function setVariantSpecific(bool $variantSpecific): self
+    {
+        $this->variantSpecific = $variantSpecific;
 
         return $this;
     }

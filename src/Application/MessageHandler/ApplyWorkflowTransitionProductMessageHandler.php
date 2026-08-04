@@ -16,6 +16,7 @@ use Sulu\Content\Application\ContentWorkflow\ContentWorkflowInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
 use Sulu\Product\Application\Message\ApplyWorkflowTransitionProductMessage;
+use Sulu\Product\Application\Workflow\VariantWorkflowCascader;
 use Sulu\Product\Domain\Event\ProductWorkflowTransitionAppliedEvent;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
@@ -29,7 +30,8 @@ final class ApplyWorkflowTransitionProductMessageHandler
     public function __construct(
         private ProductRepositoryInterface $productRepository,
         private ContentWorkflowInterface $contentWorkflow,
-        private DomainEventCollectorInterface $domainEventCollector
+        private DomainEventCollectorInterface $domainEventCollector,
+        private VariantWorkflowCascader $variantWorkflowCascader,
     ) {
     }
 
@@ -53,6 +55,10 @@ final class ApplyWorkflowTransitionProductMessageHandler
             ['locale' => $message->getLocale()],
             $message->getTransitionName()
         );
+
+        if ($product->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS)) {
+            $this->variantWorkflowCascader->cascade($product, $message->getTransitionName(), $message->getLocale());
+        }
 
         $this->domainEventCollector->collect(new ProductWorkflowTransitionAppliedEvent($product, $message->getTransitionName(), $message->getLocale()));
 

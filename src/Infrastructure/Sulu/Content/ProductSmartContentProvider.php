@@ -305,6 +305,9 @@ readonly class ProductSmartContentProvider implements SmartContentProviderInterf
      */
     protected function addInternalFilters(QueryBuilder $queryBuilder, array $filters, string $alias): void
     {
+        $queryBuilder->andWhere($alias . '.type != :excludedProductType')
+            ->setParameter('excludedProductType', ProductInterface::TYPE_VARIANT);
+
         $websiteCategoryIds = $filters['websiteCategories'];
         if ([] !== $websiteCategoryIds) {
             $this->smartContentQueryEnhancer->addJoinFilter(

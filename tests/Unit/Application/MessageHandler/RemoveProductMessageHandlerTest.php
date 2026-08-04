@@ -139,4 +139,40 @@ class RemoveProductMessageHandlerTest extends TestCase
 
         ($handler)($message);
     }
+
+    public function testRemoveProductWithVariantsStoresEachVariantInTrash(): void
+    {
+        $product = new Product('parent-uuid');
+        $product->setType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+
+        $variant = new Product('variant-uuid');
+
+        /** @var ObjectProphecy<TrashManagerInterface> $trashManager */
+        $trashManager = $this->prophesize(TrashManagerInterface::class);
+
+        $this->productRepository->getOneBy(['uuid' => 'parent-uuid'])
+            ->willReturn($product);
+
+        $this->productRepository->findBy(['parent' => 'parent-uuid'])
+            ->shouldBeCalledOnce()
+            ->willReturn([$variant]);
+
+        $this->productRepository->remove($product)->shouldBeCalledOnce();
+
+        $trashManager->store(ProductInterface::RESOURCE_KEY, $variant)
+            ->shouldBeCalledOnce();
+        $trashManager->store(ProductInterface::RESOURCE_KEY, $product)
+            ->shouldBeCalledOnce();
+
+        $this->domainEventCollector->collect(Argument::type(ProductRemovedEvent::class))
+            ->shouldBeCalled();
+
+        $handler = new RemoveProductMessageHandler(
+            $this->productRepository->reveal(),
+            $this->domainEventCollector->reveal(),
+            $trashManager->reveal(),
+        );
+
+        ($handler)(new RemoveProductMessage(['uuid' => 'parent-uuid'], 'en'));
+    }
 }

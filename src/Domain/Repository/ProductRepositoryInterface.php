@@ -101,6 +101,9 @@ interface ProductRepositoryInterface
      *     templateKeys?: string[],
      *     associationTargetUuid?: string,
      *     associationType?: string,
+     *     parent?: string,
+     *     types?: string[],
+     *     excludeTypes?: string[],
      *     page?: int,
      *     limit?: int,
      * } $filters
@@ -133,6 +136,9 @@ interface ProductRepositoryInterface
      *     templateKeys?: string[],
      *     associationTargetUuid?: string,
      *     associationType?: string,
+     *     parent?: string,
+     *     types?: string[],
+     *     excludeTypes?: string[],
      *     page?: int,
      *     limit?: int,
      * } $filters
@@ -160,6 +166,9 @@ interface ProductRepositoryInterface
      *     templateKeys?: string[],
      *     associationTargetUuid?: string,
      *     associationType?: string,
+     *     parent?: string,
+     *     types?: string[],
+     *     excludeTypes?: string[],
      * } $filters
      */
     public function countBy(array $filters = []): int;

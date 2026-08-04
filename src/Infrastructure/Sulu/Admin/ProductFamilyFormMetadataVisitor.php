@@ -59,17 +59,25 @@ class ProductFamilyFormMetadataVisitor implements FormMetadataVisitorInterface
                 $enabledField = new FieldMetadata('attributes/' . $attributeId . '/enabled');
                 $enabledField->setType('checkbox');
                 $enabledField->setLabel($this->translator->trans('sulu_product.attribute_enabled', ['%attributeName%' => $attributeName], 'admin', $locale), $locale);
-                $enabledField->setColSpan(6);
+                $enabledField->setColSpan(4);
                 $enabledField->addOption($this->createTogglerOption());
                 $section->addItem($enabledField);
 
                 $requiredField = new FieldMetadata('attributes/' . $attributeId . '/required');
                 $requiredField->setType('checkbox');
                 $requiredField->setLabel($this->translator->trans('sulu_product.attribute_required', ['%attributeName%' => $attributeName], 'admin', $locale), $locale);
-                $requiredField->setColSpan(6);
+                $requiredField->setColSpan(4);
                 $requiredField->setDisabledCondition('!attributes["' . $attributeId . '"].enabled');
                 $requiredField->addOption($this->createTogglerOption());
                 $section->addItem($requiredField);
+
+                $variantSpecificField = new FieldMetadata('attributes/' . $attributeId . '/variantSpecific');
+                $variantSpecificField->setType('checkbox');
+                $variantSpecificField->setLabel($this->translator->trans('sulu_product.attribute_variant', ['%attributeName%' => $attributeName], 'admin', $locale), $locale);
+                $variantSpecificField->setColSpan(4);
+                $variantSpecificField->setDisabledCondition('!attributes["' . $attributeId . '"].enabled');
+                $variantSpecificField->addOption($this->createTogglerOption());
+                $section->addItem($variantSpecificField);
             }
 
             $items[$section->getName()] = $section;

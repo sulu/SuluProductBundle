@@ -15,6 +15,7 @@ namespace Sulu\Product\Application\Mapper;
 
 use Sulu\Product\Application\Message\CreateProductFamilyMessage;
 use Sulu\Product\Application\Message\ModifyProductFamilyMessage;
+use Sulu\Product\Domain\Exception\InvalidVariantAttributeException;
 use Sulu\Product\Domain\Model\ProductFamilyAttribute;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Model\ProductFamilyTranslation;
@@ -59,6 +60,8 @@ final class ProductFamilyMapper implements ProductFamilyMapperInterface
         ProductFamilyInterface $family,
         CreateProductFamilyMessage|ModifyProductFamilyMessage $message,
     ): void {
+        $this->assertVariantAttributesEnabled($message->getAttributes());
+
         $enabledAttributes = \array_filter(
             $message->getAttributes(),
             static fn (array $entry): bool => $entry['enabled'],
@@ -78,6 +81,7 @@ final class ProductFamilyMapper implements ProductFamilyMapperInterface
         foreach ($enabledAttributes as $attributeId => $entry) {
             if (isset($existingMap[$attributeId])) {
                 $existingMap[$attributeId]->setRequired($entry['required']);
+                $existingMap[$attributeId]->setVariantSpecific($entry['variantSpecific']);
 
                 continue;
             }
@@ -89,7 +93,22 @@ final class ProductFamilyMapper implements ProductFamilyMapperInterface
 
             $familyAttribute = new ProductFamilyAttribute($family, $attribute);
             $familyAttribute->setRequired($entry['required']);
+            $familyAttribute->setVariantSpecific($entry['variantSpecific']);
             $family->addFamilyAttribute($familyAttribute);
+        }
+    }
+
+    /**
+     * @param array<int, array{enabled: bool, required: bool, variantSpecific: bool}> $attributes
+     *
+     * @throws InvalidVariantAttributeException
+     */
+    private function assertVariantAttributesEnabled(array $attributes): void
+    {
+        foreach ($attributes as $attributeId => $entry) {
+            if ($entry['variantSpecific'] && !$entry['enabled']) {
+                throw new InvalidVariantAttributeException($attributeId);
+            }
         }
     }
 }

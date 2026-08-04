@@ -114,18 +114,29 @@ class ProductFamilyFormMetadataVisitorTest extends TestCase
         $sectionItems = $section->getItems();
         $this->assertArrayHasKey('attributes/7/enabled', $sectionItems);
         $this->assertArrayHasKey('attributes/7/required', $sectionItems);
+        $this->assertArrayHasKey('attributes/7/variantSpecific', $sectionItems);
 
         $enabled = $sectionItems['attributes/7/enabled'];
         $this->assertInstanceOf(FieldMetadata::class, $enabled);
         $this->assertSame('checkbox', $enabled->getType());
         $this->assertSame('Width', $enabled->getLabel('en'));
+        $this->assertSame(4, $enabled->getColSpan());
         $this->assertTogglerOption($enabled);
 
         $required = $sectionItems['attributes/7/required'];
         $this->assertInstanceOf(FieldMetadata::class, $required);
         $this->assertSame('checkbox', $required->getType());
         $this->assertSame('!attributes["7"].enabled', $required->getDisabledCondition());
+        $this->assertSame(4, $required->getColSpan());
         $this->assertTogglerOption($required);
+
+        $variant = $sectionItems['attributes/7/variantSpecific'];
+        $this->assertInstanceOf(FieldMetadata::class, $variant);
+        $this->assertSame('checkbox', $variant->getType());
+        $this->assertSame('Width', $variant->getLabel('en'));
+        $this->assertSame('!attributes["7"].enabled', $variant->getDisabledCondition());
+        $this->assertSame(4, $variant->getColSpan());
+        $this->assertTogglerOption($variant);
 
         $this->assertFalse($formMetadata->isCacheable());
     }
@@ -150,6 +161,7 @@ class ProductFamilyFormMetadataVisitorTest extends TestCase
         $this->assertInstanceOf(SectionMetadata::class, $section);
         $this->assertSame('', $section->getLabel('en'));
         $this->assertSame('depth', $section->getItems()['attributes/4/enabled']->getLabel('en'));
+        $this->assertSame('depth', $section->getItems()['attributes/4/variantSpecific']->getLabel('en'));
     }
 
     private function assertTogglerOption(FieldMetadata $field): void

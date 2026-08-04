@@ -29,9 +29,13 @@ use Sulu\Product\Application\AttributeType\NumberAttributeType;
 use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeTranslationInterface;
+use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
+use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
+use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Infrastructure\Sulu\Admin\AttributeFieldFactory;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAttributeFormMetadataVisitor;
 use Symfony\Component\DependencyInjection\Container;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -47,10 +51,14 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
     /** @var ObjectProphecy<FormMetadataLoaderInterface> */
     private ObjectProphecy $formMetadataLoader;
 
+    /** @var ObjectProphecy<ProductRepositoryInterface> */
+    private ObjectProphecy $productRepository;
+
     protected function setUp(): void
     {
         $this->productFamilyRepository = $this->prophesize(ProductFamilyRepositoryInterface::class);
         $this->formMetadataLoader = $this->prophesize(FormMetadataLoaderInterface::class);
+        $this->productRepository = $this->prophesize(ProductRepositoryInterface::class);
     }
 
     private function visitor(): ProductAttributeFormMetadataVisitor
@@ -63,11 +71,15 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
 
         return new ProductAttributeFormMetadataVisitor(
             $this->productFamilyRepository->reveal(),
-            new AttributeTypeRegistry([new NumberAttributeType()]),
-            $this->formMetadataLoader->reveal(),
+            new AttributeFieldFactory(
+                new AttributeTypeRegistry([new NumberAttributeType()]),
+                $this->formMetadataLoader->reveal(),
+                new MeasurementRegistry(),
+                $translator,
+            ),
             new PropertyMetadataMapperRegistry($mapperContainer),
-            new MeasurementRegistry(),
             $translator,
+            $this->productRepository->reveal(),
         );
     }
 
@@ -509,5 +521,52 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $field = $section->getItems()['attributes/7'];
         self::assertInstanceOf(FieldMetadata::class, $field);
         self::assertSame('Gewicht', $field->getLabel('en'));
+    }
+
+    public function testSkipsVariantAttributesForVariantProduct(): void
+    {
+        $translation = $this->prophesize(AttributeTranslationInterface::class);
+        $translation->getName()->willReturn('Weight');
+        $translation->getDescription()->willReturn(null);
+
+        $attribute = $this->prophesize(AttributeInterface::class);
+        $attribute->getId()->willReturn(7);
+        $attribute->getKey()->willReturn('weight');
+        $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
+        $attribute->getConfig()->willReturn([]);
+        $attribute->getTranslation('en')->willReturn($translation->reveal());
+
+        $nonVariantFamilyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
+        $nonVariantFamilyAttribute->isVariantSpecific()->willReturn(false);
+        $nonVariantFamilyAttribute->getAttribute()->willReturn($attribute->reveal());
+        $nonVariantFamilyAttribute->isRequired()->willReturn(false);
+
+        $variantFamilyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
+        $variantFamilyAttribute->isVariantSpecific()->willReturn(true);
+
+        $family = $this->prophesize(ProductFamilyInterface::class);
+        $family->getFamilyAttributes()->willReturn([
+            $nonVariantFamilyAttribute->reveal(),
+            $variantFamilyAttribute->reveal(),
+        ]);
+
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
+        $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
+            ->willReturn($this->fragmentWithValueField());
+
+        $product = $this->prophesize(Product::class);
+        $product->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS)->willReturn(true);
+        $this->productRepository->findOneBy(['uuid' => 'uuid-1'])->willReturn($product->reveal());
+
+        $form = new FormMetadata();
+        $form->setKey('product_details');
+
+        $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'uuid-1']);
+
+        $section = $form->getItems()['attributes'];
+        self::assertInstanceOf(SectionMetadata::class, $section);
+        $sectionItems = $section->getItems();
+        self::assertArrayHasKey('attributes/7', $sectionItems);
+        self::assertArrayNotHasKey('attributes/8', $sectionItems);
     }
 }

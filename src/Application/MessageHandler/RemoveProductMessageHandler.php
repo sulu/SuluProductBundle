@@ -18,6 +18,7 @@ use Sulu\Product\Application\Message\RemoveProductMessage;
 use Sulu\Product\Domain\Event\ProductRemovedEvent;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
+use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 
 /**
@@ -36,6 +37,17 @@ final class RemoveProductMessageHandler
     public function __invoke(RemoveProductMessage $message): void
     {
         $product = $this->productRepository->getOneBy($message->getIdentifier());
+
+        if ($product->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS)) {
+            foreach ($this->productRepository->findBy(['parent' => $product->getUuid()]) as $variant) {
+                /** @var string $variantResourceKey */
+                $variantResourceKey = $variant::RESOURCE_KEY;
+
+                // Store (not remove) — the parent's ON DELETE CASCADE removes the variant row once
+                // $this->productRepository->remove($product) below is flushed.
+                $this->trashManager?->store($variantResourceKey, $variant);
+            }
+        }
 
         $this->productRepository->remove($product);
 

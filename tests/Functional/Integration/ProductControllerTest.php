@@ -19,8 +19,10 @@ use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeTranslation;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
+use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
+use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\UserInterface\Controller\Admin\ProductController;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 
@@ -72,7 +74,7 @@ class ProductControllerTest extends SuluTestCase
         return $familyId;
     }
 
-    private function createProduct(string $familyId, string $title = 'My Product'): string
+    private function createProduct(string $familyId, string $title = 'My Product', string $type = ProductInterface::TYPE_PRODUCT): string
     {
         /** @var int $counter */
         static $counter = 0;
@@ -89,6 +91,7 @@ class ProductControllerTest extends SuluTestCase
                 'title' => $title,
                 'url' => '/test-product-' . $counter,
                 'productFamily' => $familyId,
+                'type' => $type,
             ]) ?: null,
         );
         $this->assertHttpStatusCode(201, $this->client->getResponse());
@@ -568,6 +571,52 @@ class ProductControllerTest extends SuluTestCase
         $this->assertIsArray($data);
     }
 
+    /**
+     * A variant child is only ever created through the nested
+     * `/products/{parentId}/variants` endpoint (`ProductVariantController`) — the main
+     * `/products` form offers no `variant` type and drops a client-submitted `parent`
+     * (see `testClientSubmittedParentIsIgnoredForNonVariantType` below).
+     */
+    public function testGetListExcludesVariantChildren(): void
+    {
+        self::purgeDatabase();
+        $familyId = $this->createProductFamily();
+        $topLevelId = $this->createProduct($familyId, 'Top Level Product');
+        $parentId = $this->createProduct($familyId, 'Variant Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+
+        $this->client->request(
+            'POST',
+            '/admin/api/products/' . $parentId . '/variants.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'code' => 'VARIANT-CHILD',
+                'title' => 'Variant Child Product',
+            ]) ?: null,
+        );
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($data);
+        $childId = $data['id'];
+        $this->assertIsString($childId);
+
+        $this->client->request('GET', '/admin/api/products.json?locale=en');
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(200, $response);
+
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertIsArray($data['_embedded']);
+        $this->assertIsArray($data['_embedded']['products']);
+        $ids = \array_column($data['_embedded']['products'], 'id');
+
+        $this->assertContains($topLevelId, $ids);
+        $this->assertContains($parentId, $ids);
+        $this->assertNotContains($childId, $ids);
+    }
+
     public function testGetReturnsTemplateOnlyWhenContentMissing(): void
     {
         self::purgeDatabase();
@@ -670,5 +719,49 @@ class ProductControllerTest extends SuluTestCase
 
         $data = \json_decode((string) $response->getContent(), true);
         $this->assertIsArray($data);
+    }
+
+    /**
+     * Only a variant carries a parent (`ProductParentMapper`), so a `parent` submitted next to
+     * any other type is dropped. Otherwise the product would vanish from the main list (which
+     * excludes variants by type) and reappear under another product's Variants tab.
+     */
+    public function testClientSubmittedParentIsIgnoredForNonVariantType(): void
+    {
+        self::purgeDatabase();
+        $familyId = $this->createProductFamily();
+        $potentialParentId = $this->createProduct($familyId, 'Potential Parent');
+        $id = $this->createProduct($familyId, 'My Product');
+
+        $this->client->request(
+            'PUT',
+            '/admin/api/products/' . $id . '.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'title' => 'My Product',
+                'type' => ProductInterface::TYPE_PRODUCT,
+                'parent' => $potentialParentId,
+            ]) ?: null,
+        );
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        $container = self::getContainer();
+        /** @var ProductRepositoryInterface $productRepository */
+        $productRepository = $container->get(ProductRepositoryInterface::class);
+        $product = $productRepository->getOneBy(['uuid' => $id]);
+        $this->assertNull($product->getParent());
+
+        // ... and it must still show up in the main list (not hidden as if it were a variant).
+        $this->client->request('GET', '/admin/api/products.json?locale=en');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+        $listData = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($listData);
+        $this->assertIsArray($listData['_embedded']);
+        $this->assertIsArray($listData['_embedded']['products']);
+        $ids = \array_column($listData['_embedded']['products'], 'id');
+        $this->assertContains($id, $ids);
     }
 }

@@ -218,12 +218,39 @@ class ProductAdminTest extends TestCase
         $viewCollection = new ViewCollection();
         $this->admin->configureViews($viewCollection);
 
-        $this->assertCount(5, $viewCollection->all());
+        $this->assertCount(6, $viewCollection->all());
         $this->assertTrue($viewCollection->has(ProductAdmin::LIST_VIEW));
         $this->assertTrue($viewCollection->has(ProductAdmin::ADD_TABS_VIEW));
         $this->assertTrue($viewCollection->has(ProductAdmin::EDIT_TABS_VIEW));
         $this->assertTrue($viewCollection->has(ProductAdmin::ADD_TABS_VIEW . '.details'));
         $this->assertTrue($viewCollection->has(ProductAdmin::EDIT_TABS_VIEW . '.details'));
+        $this->assertTrue($viewCollection->has(ProductAdmin::EDIT_TABS_VIEW . '.variants'));
+    }
+
+    public function testConfigureViewsAddsVariantsTabView(): void
+    {
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(true);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::ADD)->willReturn(true);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::DELETE)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::LIVE)->willReturn(false);
+        $this->securityChecker->hasPermission(ActivityAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(false);
+
+        $viewCollection = new ViewCollection();
+        $this->admin->configureViews($viewCollection);
+
+        $variantsViewName = ProductAdmin::EDIT_TABS_VIEW . '.variants';
+        $this->assertTrue($viewCollection->has($variantsViewName));
+
+        $view = $viewCollection->get($variantsViewName)->getView();
+        $this->assertSame('product_variants', $view->getOption('resourceKey'));
+        $this->assertSame('product_variants', $view->getOption('listKey'));
+        $this->assertSame('product_variant', $view->getOption('formKey'));
+        $this->assertSame("type == 'product_with_variants'", $view->getOption('tabCondition'));
+        $this->assertSame(['id' => 'parentId'], $view->getOption('routerAttributesToListRequest'));
+        $this->assertSame(['id' => 'parentId'], $view->getOption('routerAttributesToFormRequest'));
+        $this->assertSame(['id' => 'parentId'], $view->getOption('routerAttributesToFormMetadata'));
+        $this->assertSame(ProductAdmin::EDIT_TABS_VIEW, $view->getParent());
     }
 
     public function testConfigureViewsWithLivePermission(): void

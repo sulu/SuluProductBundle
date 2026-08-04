@@ -17,6 +17,7 @@ namespace Sulu\Product\Application\Message;
  * @phpstan-type ProductFamilyAttributeMessageData array{
  *     enabled: bool,
  *     required: bool,
+ *     variantSpecific: bool,
  * }
  * @phpstan-type CreateProductFamilyMessageData array{
  *     locale: string,

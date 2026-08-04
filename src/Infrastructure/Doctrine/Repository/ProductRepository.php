@@ -240,6 +240,9 @@ final class ProductRepository implements ProductRepositoryInterface
      *     loadGhost?: bool,
      *     associationTargetUuid?: string,
      *     associationType?: string,
+     *     parent?: string,
+     *     types?: string[],
+     *     excludeTypes?: string[],
      *     page?: int,
      *     limit?: int,
      * } $filters
@@ -280,6 +283,27 @@ final class ProductRepository implements ProductRepositoryInterface
             Assert::isArray($uuids); // @phpstan-ignore staticMethod.alreadyNarrowedType
             $queryBuilder->andWhere('product.uuid IN(:uuids)')
                 ->setParameter('uuids', $uuids);
+        }
+
+        $parent = $filters['parent'] ?? null;
+        if (null !== $parent) {
+            Assert::string($parent); // @phpstan-ignore staticMethod.alreadyNarrowedType
+            $queryBuilder->andWhere('product.parent = :parent')
+                ->setParameter('parent', $parent);
+        }
+
+        $types = $filters['types'] ?? null;
+        if (null !== $types) {
+            Assert::isArray($types); // @phpstan-ignore staticMethod.alreadyNarrowedType
+            $queryBuilder->andWhere('product.type IN(:types)')
+                ->setParameter('types', $types);
+        }
+
+        $excludeTypes = $filters['excludeTypes'] ?? null;
+        if (null !== $excludeTypes) {
+            Assert::isArray($excludeTypes); // @phpstan-ignore staticMethod.alreadyNarrowedType
+            $queryBuilder->andWhere('product.type NOT IN(:excludeTypes)')
+                ->setParameter('excludeTypes', $excludeTypes);
         }
 
         $limit = $filters['limit'] ?? null;

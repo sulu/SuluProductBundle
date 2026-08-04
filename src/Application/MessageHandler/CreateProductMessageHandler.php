@@ -17,6 +17,7 @@ use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterfa
 use Sulu\Bundle\SecurityBundle\Entity\User;
 use Sulu\Product\Application\Mapper\ProductMapperInterface;
 use Sulu\Product\Application\Message\CreateProductMessage;
+use Sulu\Product\Application\Workflow\VariantParentPublishStateUpdater;
 use Sulu\Product\Domain\Event\ProductCreatedEvent;
 use Sulu\Product\Domain\Exception\ProductCodeNotUniqueException;
 use Sulu\Product\Domain\Model\ProductInterface;
@@ -36,6 +37,7 @@ final class CreateProductMessageHandler
         private ProductRepositoryInterface $productRepository,
         private iterable $productMappers,
         private DomainEventCollectorInterface $domainEventCollector,
+        private VariantParentPublishStateUpdater $variantParentPublishStateUpdater,
         private ?TokenStorageInterface $tokenStorage = null,
     ) {
     }
@@ -74,6 +76,8 @@ final class CreateProductMessageHandler
         }
 
         $this->productRepository->add($product);
+
+        $this->variantParentPublishStateUpdater->markParentAsChanged($product, $message->getLocale());
 
         $this->domainEventCollector->collect(new ProductCreatedEvent($product, $message->getLocale(), $data));
 

@@ -24,7 +24,7 @@ class ModifyProductFamilyMessageTest extends TestCase
     {
         $message = new ModifyProductFamilyMessage(
             ['uuid' => 'family-uuid'],
-            ['locale' => 'en', 'name' => 'X', 'attributes' => [1 => ['enabled' => true, 'required' => false]]],
+            ['locale' => 'en', 'name' => 'X', 'attributes' => [1 => ['enabled' => true, 'required' => false, 'variantSpecific' => false]]],
         );
 
         $this->assertSame('family-uuid', $message->getUuid());
@@ -32,7 +32,7 @@ class ModifyProductFamilyMessageTest extends TestCase
         $this->assertSame('en', $message->getLocale());
         $this->assertSame('X', $message->getName());
         $this->assertNull($message->getDescription());
-        $this->assertSame([1 => ['enabled' => true, 'required' => false]], $message->getAttributes());
-        $this->assertSame(['locale' => 'en', 'name' => 'X', 'attributes' => [1 => ['enabled' => true, 'required' => false]]], $message->getData());
+        $this->assertSame([1 => ['enabled' => true, 'required' => false, 'variantSpecific' => false]], $message->getAttributes());
+        $this->assertSame(['locale' => 'en', 'name' => 'X', 'attributes' => [1 => ['enabled' => true, 'required' => false, 'variantSpecific' => false]]], $message->getData());
     }
 }

@@ -1,11 +1,13 @@
 {
     "sulu_product.products": "Produkte",
+    "sulu_product.variants": "Varianten",
     "sulu_product.attribute": "Attribut",
     "sulu_product.attributes": "Attribute",
     "sulu_product.attribute_group": "Attributgruppe",
     "sulu_product.attribute_groups": "Attributgruppen",
     "sulu_product.attribute_enabled": "\"%attributeName%\" aktiviert",
     "sulu_product.attribute_required": "\"%attributeName%\" erforderlich",
+    "sulu_product.attribute_variant": "\"%attributeName%\" Variante",
     "sulu_product.product_family": "Produktfamilie",
     "sulu_product.product_families": "Produktfamilien",
     "sulu_product.no_product_family_selected": "Keine Produktfamilie ausgewählt",
@@ -24,6 +26,10 @@
     "sulu_product.type_date": "Datum",
     "sulu_product.option": "Option",
     "sulu_product.product": "Produkt",
+    "sulu_product.product_type": "Typ",
+    "sulu_product.product_type_product": "Produkt",
+    "sulu_product.product_type_product_with_variants": "Produkt mit Varianten",
+    "sulu_product.product_type_variant": "Variante",
     "sulu_product.code": "Code",
     "sulu_product.external_identifier": "External Identifier",
     "sulu_product.options": "Optionen",
@@ -98,5 +104,6 @@
     "sulu_product.product_status.available": "Verfügbar",
     "sulu_product.product_status.discontinued": "Eingestellt",
     "sulu_product.invalid_status": "Der Status \"{status}\" ist kein gültiger Produktstatus.",
+    "sulu_product.invalid_variant_attribute": "Das Attribut \"{attributeId}\" kann nur dann als Variantenattribut markiert werden, wenn es aktiviert ist.",
     "sulu_product.associations": "Verknüpfungen"
 }

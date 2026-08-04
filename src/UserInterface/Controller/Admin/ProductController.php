@@ -17,6 +17,7 @@ use Sulu\Component\Rest\Exception\EntityNotFoundException;
 use Sulu\Component\Rest\ListBuilder\Doctrine\DoctrineListBuilder;
 use Sulu\Component\Rest\ListBuilder\Doctrine\DoctrineListBuilderFactoryInterface;
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescriptorInterface;
+use Sulu\Component\Rest\ListBuilder\ListBuilderInterface;
 use Sulu\Component\Rest\ListBuilder\Metadata\FieldDescriptorFactoryInterface;
 use Sulu\Component\Rest\ListBuilder\PaginatedRepresentation;
 use Sulu\Component\Rest\RestHelperInterface;
@@ -80,6 +81,12 @@ final class ProductController implements SecuredControllerInterface
         $listBuilder->setIdField($fieldDescriptors['id']);
         $this->restHelper->initializeListBuilder($listBuilder, $fieldDescriptors);
         $listBuilder->setParameter('locale', $this->getLocale($request));
+        // Variants are edited through their parent's variants tab and must not show up in the main list.
+        $listBuilder->where(
+            $fieldDescriptors['type'],
+            ProductInterface::TYPE_VARIANT,
+            ListBuilderInterface::WHERE_COMPARATOR_UNEQUAL,
+        );
 
         $listRepresentation = new PaginatedRepresentation(
             $listBuilder->execute(),
@@ -136,7 +143,12 @@ final class ProductController implements SecuredControllerInterface
 
     public function postAction(Request $request): Response
     {
-        $data = $this->getCreateData($request);
+        /** @var CreateProductMessageData $data */
+        $data = \array_replace(
+            $request->request->all(),
+            ['locale' => $this->getLocale($request)],
+        );
+
         $message = new CreateProductMessage($data);
         /** @var ProductInterface $product */
         $product = $this->handle(new Envelope($message, [new EnableFlushStamp()]));
@@ -149,7 +161,13 @@ final class ProductController implements SecuredControllerInterface
 
     public function putAction(Request $request, string $id): Response
     {
-        $message = new ModifyProductMessage(['uuid' => $id], $this->getModifyData($request));
+        /** @var ModifyProductMessageData $data */
+        $data = \array_replace(
+            $request->request->all(),
+            ['locale' => $this->getLocale($request)],
+        );
+
+        $message = new ModifyProductMessage(['uuid' => $id], $data);
 
         try {
             $this->handle(new Envelope($message, [new EnableFlushStamp()]));
@@ -225,34 +243,6 @@ final class ProductController implements SecuredControllerInterface
     public function getLocale(Request $request): string
     {
         return $request->query->getString('locale', $request->getLocale());
-    }
-
-    /**
-     * @return CreateProductMessageData
-     */
-    private function getCreateData(Request $request): array
-    {
-        /** @var CreateProductMessageData $data */
-        $data = \array_replace(
-            $request->request->all(),
-            ['locale' => $this->getLocale($request)],
-        );
-
-        return $data;
-    }
-
-    /**
-     * @return ModifyProductMessageData
-     */
-    private function getModifyData(Request $request): array
-    {
-        /** @var ModifyProductMessageData $data */
-        $data = \array_replace(
-            $request->request->all(),
-            ['locale' => $this->getLocale($request)],
-        );
-
-        return $data;
     }
 
     private function handleAction(Request $request, string $uuid): void

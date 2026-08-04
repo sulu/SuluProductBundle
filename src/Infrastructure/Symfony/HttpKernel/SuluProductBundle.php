@@ -29,6 +29,7 @@ use Sulu\Product\Application\Mapper\ProductContentMapper;
 use Sulu\Product\Application\Mapper\ProductFamilyMapper;
 use Sulu\Product\Application\Mapper\ProductFamilyMapperInterface;
 use Sulu\Product\Application\Mapper\ProductMapperInterface;
+use Sulu\Product\Application\Mapper\ProductParentMapper;
 use Sulu\Product\Application\MessageHandler\ApplyWorkflowTransitionProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\CopyLocaleProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\CreateAttributeGroupMessageHandler;
@@ -46,6 +47,8 @@ use Sulu\Product\Application\MessageHandler\RemoveProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\RemoveProductTranslationMessageHandler;
 use Sulu\Product\Application\MessageHandler\RestoreProductVersionMessageHandler;
 use Sulu\Product\Application\Webspace\WebspaceSettingsConfigurationResolver;
+use Sulu\Product\Application\Workflow\VariantParentPublishStateUpdater;
+use Sulu\Product\Application\Workflow\VariantWorkflowCascader;
 use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
 use Sulu\Product\Domain\Event\ProductCreatedEvent;
 use Sulu\Product\Domain\Event\ProductModifiedEvent;
@@ -94,6 +97,7 @@ use Sulu\Product\Infrastructure\Doctrine\Repository\AttributeRepository;
 use Sulu\Product\Infrastructure\Doctrine\Repository\ProductFamilyRepository;
 use Sulu\Product\Infrastructure\Doctrine\Repository\ProductRepository;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeAdmin;
+use Sulu\Product\Infrastructure\Sulu\Admin\AttributeFieldFactory;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeGroupAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAssociationsFieldMetadataValidator;
@@ -104,6 +108,7 @@ use Sulu\Product\Infrastructure\Sulu\Admin\ProductContentFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductFamilyAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductFamilyFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductStatusFormMetadataVisitor;
+use Sulu\Product\Infrastructure\Sulu\Admin\ProductVariantAttributeFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\AdditionalWebspacesDataMapper;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductAssociationsDataMapper;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductAttributesDataMapper;
@@ -150,6 +155,7 @@ use Sulu\Product\UserInterface\Controller\Admin\MeasurementFamilyController;
 use Sulu\Product\UserInterface\Controller\Admin\MeasurementUnitController;
 use Sulu\Product\UserInterface\Controller\Admin\ProductController;
 use Sulu\Product\UserInterface\Controller\Admin\ProductFamilyController;
+use Sulu\Product\UserInterface\Controller\Admin\ProductVariantController;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -391,6 +397,29 @@ final class SuluProductBundle extends AbstractBundle
             ])
             ->tag('sulu_product.product_mapper');
 
+        // Must run before the content mapper, so the content pipeline already sees the final type
+        // and parent on the product (ProductAttributesDataMapper relies on it).
+        $services->set('sulu_product.product_parent_mapper')
+            ->class(ProductParentMapper::class)
+            ->args([
+                new Reference('sulu_product.product_repository'),
+            ])
+            ->tag('sulu_product.product_mapper', ['priority' => 10]);
+
+        $services->set('sulu_product.variant_parent_publish_state_updater')
+            ->class(VariantParentPublishStateUpdater::class)
+            ->args([
+                new Reference('sulu_product.product_repository'),
+                new Reference('sulu_content.content_workflow'),
+            ]);
+
+        $services->set('sulu_product.variant_workflow_cascader')
+            ->class(VariantWorkflowCascader::class)
+            ->args([
+                new Reference('sulu_product.product_repository'),
+                new Reference('sulu_content.content_workflow'),
+            ]);
+
         // Message Handler services
         $services->set('sulu_product.create_product_handler')
             ->class(CreateProductMessageHandler::class)
@@ -398,6 +427,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.product_repository'),
                 tagged_iterator('sulu_product.product_mapper'),
                 new Reference('sulu_activity.domain_event_collector'),
+                new Reference('sulu_product.variant_parent_publish_state_updater'),
                 new Reference('security.token_storage', ContainerInterface::NULL_ON_INVALID_REFERENCE),
             ])
             ->tag('messenger.message_handler');
@@ -408,6 +438,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.product_repository'),
                 tagged_iterator('sulu_product.product_mapper'),
                 new Reference('sulu_activity.domain_event_collector'),
+                new Reference('sulu_product.variant_parent_publish_state_updater'),
             ])
             ->tag('messenger.message_handler');
 
@@ -435,6 +466,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.product_repository'),
                 new Reference('sulu_content.content_workflow'),
                 new Reference('sulu_activity.domain_event_collector'),
+                new Reference('sulu_product.variant_workflow_cascader'),
             ])
             ->tag('messenger.message_handler');
 
@@ -783,14 +815,32 @@ final class SuluProductBundle extends AbstractBundle
             ])
             ->tag('sulu_admin.form_metadata_visitor');
 
+        $services->set('sulu_product.attribute_field_factory')
+            ->class(AttributeFieldFactory::class)
+            ->args([
+                new Reference('sulu_product.attribute_type_registry'),
+                new Reference('sulu_admin.xml_form_metadata_loader'),
+                new Reference('sulu_product.measurement_registry'),
+                new Reference('translator'),
+            ]);
+
         $services->set('sulu_product.product_attribute_form_metadata_visitor')
             ->class(ProductAttributeFormMetadataVisitor::class)
             ->args([
                 new Reference('sulu_product.product_family_repository'),
-                new Reference('sulu_product.attribute_type_registry'),
-                new Reference('sulu_admin.xml_form_metadata_loader'),
+                new Reference('sulu_product.attribute_field_factory'),
                 new Reference('sulu_admin.property_metadata_mapper_registry'),
-                new Reference('sulu_product.measurement_registry'),
+                new Reference('translator'),
+                new Reference('sulu_product.product_repository'),
+            ])
+            ->tag('sulu_admin.form_metadata_visitor');
+
+        $services->set('sulu_product.product_variant_attribute_form_metadata_visitor')
+            ->class(ProductVariantAttributeFormMetadataVisitor::class)
+            ->args([
+                new Reference('sulu_product.product_family_repository'),
+                new Reference('sulu_product.attribute_field_factory'),
+                new Reference('sulu_admin.property_metadata_mapper_registry'),
                 new Reference('translator'),
             ])
             ->tag('sulu_admin.form_metadata_visitor');
@@ -861,6 +911,21 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_message_bus'),
                 new Reference('serializer'),
                 new Reference('sulu_content.content_manager'),
+                new Reference('sulu_core.list_builder.field_descriptor_factory'),
+                new Reference('sulu_core.doctrine_list_builder_factory'),
+                new Reference('sulu_core.doctrine_rest_helper'),
+            ])
+            ->tag('sulu.context', ['context' => 'admin']);
+
+        $services->set('sulu_product.admin_product_variant_controller')
+            ->class(ProductVariantController::class)
+            ->public()
+            ->args([
+                new Reference('sulu_product.product_repository'),
+                new Reference('sulu_message_bus'),
+                new Reference('serializer'),
+                new Reference('sulu_content.content_manager'),
+                new Reference('sulu_product.product_family_repository'),
                 new Reference('sulu_core.list_builder.field_descriptor_factory'),
                 new Reference('sulu_core.doctrine_list_builder_factory'),
                 new Reference('sulu_core.doctrine_rest_helper'),
@@ -1147,6 +1212,12 @@ final class SuluProductBundle extends AbstractBundle
                             'routes' => [
                                 'list' => 'sulu_product.get_product_versions',
                                 'detail' => 'sulu_product.get_product',
+                            ],
+                        ],
+                        'product_variants' => [
+                            'routes' => [
+                                'list' => 'sulu_product.get_product_variants',
+                                'detail' => 'sulu_product.get_product_variant',
                             ],
                         ],
                         'attributes' => [

@@ -21,9 +21,11 @@ use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterfa
 use Sulu\Bundle\ContactBundle\Entity\ContactInterface;
 use Sulu\Bundle\SecurityBundle\Entity\User;
 use Sulu\Content\Application\ContentPersister\ContentPersisterInterface;
+use Sulu\Content\Application\ContentWorkflow\ContentWorkflowInterface;
 use Sulu\Product\Application\Mapper\ProductContentMapper;
 use Sulu\Product\Application\Message\CreateProductMessage;
 use Sulu\Product\Application\MessageHandler\CreateProductMessageHandler;
+use Sulu\Product\Application\Workflow\VariantParentPublishStateUpdater;
 use Sulu\Product\Domain\Event\ProductCreatedEvent;
 use Sulu\Product\Domain\Exception\ProductCodeNotUniqueException;
 use Sulu\Product\Domain\Model\Product;
@@ -66,10 +68,16 @@ class CreateProductMessageHandlerTest extends TestCase
 
     private function createHandler(?TokenStorageInterface $tokenStorage = null): CreateProductMessageHandler
     {
+        $updater = new VariantParentPublishStateUpdater(
+            $this->productRepository->reveal(),
+            $this->prophesize(ContentWorkflowInterface::class)->reveal(),
+        );
+
         return new CreateProductMessageHandler(
             $this->productRepository->reveal(),
             [new ProductContentMapper($this->contentPersister->reveal())],
             $this->domainEventCollector->reveal(),
+            $updater,
             $tokenStorage,
         );
     }

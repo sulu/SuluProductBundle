@@ -141,6 +141,31 @@ class ProductTrashItemHandlerTest extends TestCase
         $this->assertSame($product, $restored);
     }
 
+    public function testRestoreReattachesVariantParentAndType(): void
+    {
+        $product = new Product('variant-uuid');
+        $parent = new Product('parent-uuid');
+
+        $trashItem = $this->prophesize(TrashItemInterface::class);
+        $trashItem->getRestoreData()->willReturn([
+            'parent' => 'parent-uuid',
+            'type' => ProductInterface::TYPE_VARIANT,
+            'dimensionContents' => [],
+        ]);
+        $trashItem->getResourceId()->willReturn('variant-uuid');
+        $trashItem->getRestoreType()->willReturn(null);
+
+        $this->productRepository->findOneBy(['uuid' => 'variant-uuid'])->willReturn($product);
+        $this->productRepository->findOneBy(['uuid' => 'parent-uuid'])->willReturn($parent);
+        $this->domainEventCollector->collect(Argument::type(ProductRestoredEvent::class))->shouldBeCalled();
+
+        $restored = $this->handler->restore($trashItem->reveal());
+
+        $this->assertSame($product, $restored);
+        $this->assertSame($parent, $product->getParent());
+        $this->assertSame(ProductInterface::TYPE_VARIANT, $product->getType());
+    }
+
     public function testRestoreEmitsTranslationEventWhenRestoreTypeIsTranslation(): void
     {
         $product = new Product('uuid-restore');

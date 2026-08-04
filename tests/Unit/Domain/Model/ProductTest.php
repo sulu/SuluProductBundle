@@ -17,6 +17,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
+use Sulu\Product\Domain\Model\ProductInterface;
 use Symfony\Component\Uid\Uuid;
 
 #[CoversClass(Product::class)]
@@ -46,5 +47,38 @@ class ProductTest extends TestCase
 
         $this->assertInstanceOf(ProductDimensionContent::class, $dimensionContent);
         $this->assertSame($product, $dimensionContent->getResource());
+    }
+
+    public function testDefaultsToProduct(): void
+    {
+        $product = new Product();
+
+        self::assertSame(ProductInterface::TYPE_PRODUCT, $product->getType());
+        self::assertFalse($product->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS));
+        self::assertFalse($product->isType(ProductInterface::TYPE_VARIANT));
+        self::assertNull($product->getParent());
+        self::assertCount(0, $product->getVariants());
+    }
+
+    public function testProductWithVariantsType(): void
+    {
+        $product = new Product();
+        $product->setType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+
+        self::assertTrue($product->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS));
+        self::assertFalse($product->isType(ProductInterface::TYPE_VARIANT));
+    }
+
+    public function testParentChildLink(): void
+    {
+        $parent = new Product();
+        $parent->setType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+
+        $variant = new Product();
+        $variant->setType(ProductInterface::TYPE_VARIANT);
+        $variant->setParent($parent);
+
+        self::assertSame($parent, $variant->getParent());
+        self::assertTrue($variant->isType(ProductInterface::TYPE_VARIANT));
     }
 }
