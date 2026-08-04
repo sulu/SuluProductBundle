@@ -14,7 +14,6 @@ namespace Sulu\Product\Infrastructure\Doctrine\Repository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\NoResultException;
-use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\Query\Expr\OrderBy;
 use Doctrine\ORM\QueryBuilder;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
@@ -180,25 +179,6 @@ final class ProductRepository implements ProductRepositoryInterface
      */
     public function findBy(array $filters = [], array $sortBy = [], array $selects = []): \Generator
     {
-        // The association filter joins a collection, so LIMIT/OFFSET would apply to one row per
-        // association and silently drop referrers. Paginate distinct uuids first, then load those.
-        if (isset($filters['associationTargetUuid']) && (isset($filters['page']) || isset($filters['limit']))) {
-            $uuids = \iterator_to_array($this->findIdentifiersBy($filters, $sortBy), false);
-
-            $identifierFilters = $filters;
-            unset(
-                $identifierFilters['associationTargetUuid'],
-                $identifierFilters['associationType'],
-                $identifierFilters['page'],
-                $identifierFilters['limit'],
-            );
-            $identifierFilters['uuids'] = $uuids;
-
-            yield from $this->findBy($identifierFilters, $sortBy, $selects);
-
-            return;
-        }
-
         $queryBuilder = $this->createQueryBuilder($filters, $sortBy, $selects);
 
         /** @var iterable<ProductInterface> $products */
@@ -341,28 +321,32 @@ final class ProductRepository implements ProductRepositoryInterface
             $dimensionContentClassName = $this->productDimensionContentClassName;
             $effectiveAttributes = $dimensionContentClassName::getEffectiveDimensionAttributes($filters);
 
-            $queryBuilder
-                ->innerJoin(
-                    $dimensionContentClassName,
-                    'associationDimensionContent',
-                    Join::WITH,
-                    'associationDimensionContent.product = product'
-                    . ' AND associationDimensionContent.locale IS NULL'
-                    . ' AND associationDimensionContent.stage = :associationStage'
-                    . ' AND associationDimensionContent.version = :associationVersion',
-                )
-                ->setParameter('associationStage', $effectiveAttributes['stage'])
-                ->setParameter('associationVersion', $effectiveAttributes['version'])
+            // An EXISTS semi-join, deliberately not a join over the association collection: a referrer can
+            // point at the same target through several associations, because the unique constraint is
+            // scoped per type. A collection join would emit one root row per association, and LIMIT/OFFSET
+            // apply to rows and not to distinct products — pagination would silently drop referrers.
+            $associationQueryBuilder = $this->entityManager->createQueryBuilder()
+                ->select('associationDimensionContent.id')
+                ->from($dimensionContentClassName, 'associationDimensionContent')
                 ->innerJoin('associationDimensionContent.associations', 'productAssociation')
-                ->andWhere('IDENTITY(productAssociation.target) = :associationTargetUuid')
-                ->setParameter('associationTargetUuid', $associationTargetUuid);
+                ->where('associationDimensionContent.product = product')
+                ->andWhere('associationDimensionContent.locale IS NULL')
+                ->andWhere('associationDimensionContent.stage = :associationStage')
+                ->andWhere('associationDimensionContent.version = :associationVersion')
+                ->andWhere('IDENTITY(productAssociation.target) = :associationTargetUuid');
 
             $associationType = $filters['associationType'] ?? null;
             if (null !== $associationType) {
                 Assert::string($associationType); // @phpstan-ignore staticMethod.alreadyNarrowedType
-                $queryBuilder->andWhere('productAssociation.type = :associationType')
-                    ->setParameter('associationType', $associationType);
+                $associationQueryBuilder->andWhere('productAssociation.type = :associationType');
+                $queryBuilder->setParameter('associationType', $associationType);
             }
+
+            $queryBuilder
+                ->andWhere($queryBuilder->expr()->exists($associationQueryBuilder->getDQL()))
+                ->setParameter('associationStage', $effectiveAttributes['stage'])
+                ->setParameter('associationVersion', $effectiveAttributes['version'])
+                ->setParameter('associationTargetUuid', $associationTargetUuid);
         }
 
         if ([] !== $sortBy) {

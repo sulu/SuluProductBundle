@@ -46,10 +46,12 @@ class ProductAssociationsDataMapper implements DataMapperInterface
             return;
         }
 
-        // Unregistered types are reconciled too, so publishing and copying a locale carry over the rows
-        // the normalizer retains. A registry gate cannot tell those apart from freshly submitted ones,
-        // because ContentCopier persists normalized source data onto a fresh target. $type stays a list
-        // entry rather than an array key, since PHP would coerce a digit-only key back to an int.
+        // Every uuid is collected up front, so the targets below resolve in one query instead of one per
+        // type. Publishing and copying a locale run the normalized source data back through this mapper,
+        // which makes a copy indistinguishable from a submission — skipping types that are no longer
+        // registered would therefore delete rows on publish, so every submitted type gets reconciled. The
+        // type is kept as a list value instead of an array key, because PHP coerces a digit-only key
+        // back to an int.
         /** @var array<int, array{type: string, targetUuids: array<int, string>}> $submissions */
         $submissions = [];
         /** @var array<int, string> $uuids */
