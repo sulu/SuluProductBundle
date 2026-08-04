@@ -24,6 +24,7 @@ use Sulu\Component\Localization\Localization;
 use Sulu\Component\Webspace\Analyzer\RequestAnalyzerInterface;
 use Sulu\Content\Application\ContentAggregator\ContentAggregatorInterface;
 use Sulu\Content\Application\ContentResolver\ContentResolverInterface;
+use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
@@ -74,6 +75,7 @@ class ProductTwigExtensionTest extends TestCase
             $this->requestAnalyzer->reveal(),
             $this->referenceStore->reveal(),
             $this->contentResolver->reveal(),
+            new MeasurementRegistry(),
         );
     }
 
@@ -160,10 +162,10 @@ class ProductTwigExtensionTest extends TestCase
         $translation = new AttributeTranslation($attribute, 'en', 'Color');
         $attribute->addTranslation($translation);
 
-        $productAttribute = new ProductAttributeValue($pdc, $attribute, 'color');
-        $productAttribute->setText('Red');
+        $productAttributeValue = new ProductAttributeValue($pdc, $attribute, 'color');
+        $productAttributeValue->setText('Red');
 
-        $pdc->addAttribute($productAttribute);
+        $pdc->addAttribute($productAttributeValue);
 
         $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
         $this->contentAggregator->aggregate($product, Argument::type('array'))
@@ -206,11 +208,11 @@ class ProductTwigExtensionTest extends TestCase
         $optionTranslation = new AttributeOptionTranslation($option, 'en', 'Red');
         $option->addTranslation($optionTranslation);
 
-        $productAttribute = new ProductAttributeValue($pdc, $attribute, 'color');
-        $productAttribute->setAttributeOptionKey('red');
-        $productAttribute->setAttributeOption($option);
+        $productAttributeValue = new ProductAttributeValue($pdc, $attribute, 'color');
+        $productAttributeValue->setAttributeOptionKey('red');
+        $productAttributeValue->setAttributeOption($option);
 
-        $pdc->addAttribute($productAttribute);
+        $pdc->addAttribute($productAttributeValue);
 
         $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
         $this->contentAggregator->aggregate($product, Argument::type('array'))
@@ -236,10 +238,10 @@ class ProductTwigExtensionTest extends TestCase
         $attribute->setKey('weight');
         $attribute->setType(AttributeInterface::TYPE_NUMBER);
 
-        $productAttribute = new ProductAttributeValue($pdc, $attribute, 'weight');
-        $productAttribute->setNumber(42.5);
+        $productAttributeValue = new ProductAttributeValue($pdc, $attribute, 'weight');
+        $productAttributeValue->setNumber(42.5);
 
-        $pdc->addAttribute($productAttribute);
+        $pdc->addAttribute($productAttributeValue);
 
         $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
         $this->contentAggregator->aggregate($product, Argument::type('array'))
@@ -266,10 +268,10 @@ class ProductTwigExtensionTest extends TestCase
         $attribute->setType(AttributeInterface::TYPE_DATE);
 
         $timestamp = (new \DateTimeImmutable('2026-07-24 00:00:00', new \DateTimeZone('UTC')))->getTimestamp();
-        $productAttribute = new ProductAttributeValue($pdc, $attribute, 'released_at');
-        $productAttribute->setNumber((float) $timestamp);
+        $productAttributeValue = new ProductAttributeValue($pdc, $attribute, 'released_at');
+        $productAttributeValue->setNumber((float) $timestamp);
 
-        $pdc->addAttribute($productAttribute);
+        $pdc->addAttribute($productAttributeValue);
 
         $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
         $this->contentAggregator->aggregate($product, Argument::type('array'))
@@ -295,9 +297,9 @@ class ProductTwigExtensionTest extends TestCase
         $attribute->setKey('released_at');
         $attribute->setType(AttributeInterface::TYPE_DATE);
 
-        $productAttribute = new ProductAttributeValue($pdc, $attribute, 'released_at');
+        $productAttributeValue = new ProductAttributeValue($pdc, $attribute, 'released_at');
 
-        $pdc->addAttribute($productAttribute);
+        $pdc->addAttribute($productAttributeValue);
 
         $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
         $this->contentAggregator->aggregate($product, Argument::type('array'))
@@ -314,6 +316,284 @@ class ProductTwigExtensionTest extends TestCase
         $this->assertNull($result['attributes'][0]['value']);
     }
 
+    public function testLoadProductAppliesFormatToNumberAttribute(): void
+    {
+        $product = new Product('uuid-1');
+        $pdc = new ProductDimensionContent($product);
+
+        $attribute = new Attribute(new AttributeGroup());
+        $attribute->setKey('insulation-resistance');
+        $attribute->setType(AttributeInterface::TYPE_NUMBER);
+        $attribute->setConfig(['displayFormat' => '> %value% GΩ']);
+
+        $productAttributeValue = new ProductAttributeValue($pdc, $attribute, 'insulation-resistance');
+        $productAttributeValue->setNumber(2.0);
+
+        $pdc->addAttribute($productAttributeValue);
+
+        $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
+        $this->contentAggregator->aggregate($product, Argument::type('array'))
+            ->willReturn($pdc);
+        $this->contentResolver->resolve($pdc, [])->willReturn([]);
+        $this->referenceStore->add('uuid-1', ProductInterface::RESOURCE_KEY)->shouldBeCalled();
+
+        $result = $this->extension->loadProduct('uuid-1', [], 'en');
+
+        $this->assertIsArray($result);
+        /** @var array{attributes: list<array{key: string, label: string, type: string, value: mixed, formattedValue: string|null}>} $result */
+        $this->assertCount(1, $result['attributes']);
+        $this->assertSame(2.0, $result['attributes'][0]['value']);
+        $this->assertSame('> 2 GΩ', $result['attributes'][0]['formattedValue']);
+    }
+
+    public function testLoadProductAppliesFormatToTextAttribute(): void
+    {
+        $product = new Product('uuid-1');
+        $pdc = new ProductDimensionContent($product);
+
+        $attribute = new Attribute(new AttributeGroup());
+        $attribute->setKey('color');
+        $attribute->setType(AttributeInterface::TYPE_TEXT);
+        $attribute->setConfig(['displayFormat' => 'ca. %value%']);
+
+        $productAttributeValue = new ProductAttributeValue($pdc, $attribute, 'color');
+        $productAttributeValue->setText('Red');
+
+        $pdc->addAttribute($productAttributeValue);
+
+        $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
+        $this->contentAggregator->aggregate($product, Argument::type('array'))
+            ->willReturn($pdc);
+        $this->contentResolver->resolve($pdc, [])->willReturn([]);
+        $this->referenceStore->add('uuid-1', ProductInterface::RESOURCE_KEY)->shouldBeCalled();
+
+        $result = $this->extension->loadProduct('uuid-1', [], 'en');
+
+        $this->assertIsArray($result);
+        /** @var array{attributes: list<array{key: string, label: string, type: string, value: mixed, formattedValue: string|null}>} $result */
+        $this->assertCount(1, $result['attributes']);
+        $this->assertSame('Red', $result['attributes'][0]['value']);
+        $this->assertSame('ca. Red', $result['attributes'][0]['formattedValue']);
+    }
+
+    public function testLoadProductReplacesUnitPlaceholderWithConfiguredSymbol(): void
+    {
+        $product = new Product('uuid-1');
+        $pdc = new ProductDimensionContent($product);
+
+        $attribute = new Attribute(new AttributeGroup());
+        $attribute->setKey('insulation-resistance');
+        $attribute->setType(AttributeInterface::TYPE_NUMBER);
+        $attribute->setConfig(['unit' => 'OHM', 'displayFormat' => '> %value% %unit%']);
+
+        $productAttributeValue = new ProductAttributeValue($pdc, $attribute, 'insulation-resistance');
+        $productAttributeValue->setNumber(2.0);
+
+        $pdc->addAttribute($productAttributeValue);
+
+        $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
+        $this->contentAggregator->aggregate($product, Argument::type('array'))
+            ->willReturn($pdc);
+        $this->contentResolver->resolve($pdc, [])->willReturn([]);
+        $this->referenceStore->add('uuid-1', ProductInterface::RESOURCE_KEY)->shouldBeCalled();
+
+        $result = $this->extension->loadProduct('uuid-1', [], 'en');
+
+        $this->assertIsArray($result);
+        /** @var array{attributes: list<array{key: string, label: string, type: string, value: mixed, formattedValue: string|null}>} $result */
+        $this->assertCount(1, $result['attributes']);
+        $this->assertSame(2.0, $result['attributes'][0]['value']);
+        $this->assertSame('> 2 Ω', $result['attributes'][0]['formattedValue']);
+    }
+
+    public function testLoadProductRemovesUnitPlaceholderWithoutConfiguredUnit(): void
+    {
+        $product = new Product('uuid-1');
+        $pdc = new ProductDimensionContent($product);
+
+        $attribute = new Attribute(new AttributeGroup());
+        $attribute->setKey('weight');
+        $attribute->setType(AttributeInterface::TYPE_NUMBER);
+        $attribute->setConfig(['displayFormat' => '%value% %unit%']);
+
+        $productAttributeValue = new ProductAttributeValue($pdc, $attribute, 'weight');
+        $productAttributeValue->setNumber(2.0);
+
+        $pdc->addAttribute($productAttributeValue);
+
+        $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
+        $this->contentAggregator->aggregate($product, Argument::type('array'))
+            ->willReturn($pdc);
+        $this->contentResolver->resolve($pdc, [])->willReturn([]);
+        $this->referenceStore->add('uuid-1', ProductInterface::RESOURCE_KEY)->shouldBeCalled();
+
+        $result = $this->extension->loadProduct('uuid-1', [], 'en');
+
+        $this->assertIsArray($result);
+        /** @var array{attributes: list<array{key: string, label: string, type: string, value: mixed, formattedValue: string|null}>} $result */
+        $this->assertCount(1, $result['attributes']);
+        $this->assertSame('2', $result['attributes'][0]['formattedValue']);
+    }
+
+    public function testLoadProductRemovesUnitPlaceholderForUnresolvableUnitKey(): void
+    {
+        $product = new Product('uuid-1');
+        $pdc = new ProductDimensionContent($product);
+
+        $attribute = new Attribute(new AttributeGroup());
+        $attribute->setKey('weight');
+        $attribute->setType(AttributeInterface::TYPE_NUMBER);
+        $attribute->setConfig(['unit' => 'NOT_A_UNIT', 'displayFormat' => '%value% %unit%']);
+
+        $productAttributeValue = new ProductAttributeValue($pdc, $attribute, 'weight');
+        $productAttributeValue->setNumber(2.0);
+
+        $pdc->addAttribute($productAttributeValue);
+
+        $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
+        $this->contentAggregator->aggregate($product, Argument::type('array'))
+            ->willReturn($pdc);
+        $this->contentResolver->resolve($pdc, [])->willReturn([]);
+        $this->referenceStore->add('uuid-1', ProductInterface::RESOURCE_KEY)->shouldBeCalled();
+
+        $result = $this->extension->loadProduct('uuid-1', [], 'en');
+
+        $this->assertIsArray($result);
+        /** @var array{attributes: list<array{key: string, label: string, type: string, value: mixed, formattedValue: string|null}>} $result */
+        $this->assertCount(1, $result['attributes']);
+        $this->assertSame('2', $result['attributes'][0]['formattedValue']);
+    }
+
+    public function testLoadProductReturnsNullFormattedValueWithoutFormat(): void
+    {
+        $product = new Product('uuid-1');
+        $pdc = new ProductDimensionContent($product);
+
+        $attribute = new Attribute(new AttributeGroup());
+        $attribute->setKey('color');
+        $attribute->setType(AttributeInterface::TYPE_TEXT);
+
+        $productAttributeValue = new ProductAttributeValue($pdc, $attribute, 'color');
+        $productAttributeValue->setText('Red');
+
+        $pdc->addAttribute($productAttributeValue);
+
+        $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
+        $this->contentAggregator->aggregate($product, Argument::type('array'))
+            ->willReturn($pdc);
+        $this->contentResolver->resolve($pdc, [])->willReturn([]);
+        $this->referenceStore->add('uuid-1', ProductInterface::RESOURCE_KEY)->shouldBeCalled();
+
+        $result = $this->extension->loadProduct('uuid-1', [], 'en');
+
+        $this->assertIsArray($result);
+        /** @var array{attributes: list<array{key: string, label: string, type: string, value: mixed, formattedValue: string|null}>} $result */
+        $this->assertCount(1, $result['attributes']);
+        $this->assertSame('Red', $result['attributes'][0]['value']);
+        $this->assertNull($result['attributes'][0]['formattedValue']);
+    }
+
+    public function testLoadProductReturnsNullFormattedValueForEmptyValue(): void
+    {
+        $product = new Product('uuid-1');
+        $pdc = new ProductDimensionContent($product);
+
+        $numberAttribute = new Attribute(new AttributeGroup());
+        $numberAttribute->setKey('weight');
+        $numberAttribute->setType(AttributeInterface::TYPE_NUMBER);
+        $numberAttribute->setConfig(['displayFormat' => '%value% kg']);
+
+        $textAttribute = new Attribute(new AttributeGroup());
+        $textAttribute->setKey('color');
+        $textAttribute->setType(AttributeInterface::TYPE_TEXT);
+        $textAttribute->setConfig(['displayFormat' => 'ca. %value%']);
+
+        $productNumberAttribute = new ProductAttributeValue($pdc, $numberAttribute, 'weight');
+        $productTextAttribute = new ProductAttributeValue($pdc, $textAttribute, 'color');
+        $productTextAttribute->setText('');
+
+        $pdc->addAttribute($productNumberAttribute);
+        $pdc->addAttribute($productTextAttribute);
+
+        $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
+        $this->contentAggregator->aggregate($product, Argument::type('array'))
+            ->willReturn($pdc);
+        $this->contentResolver->resolve($pdc, [])->willReturn([]);
+        $this->referenceStore->add('uuid-1', ProductInterface::RESOURCE_KEY)->shouldBeCalled();
+
+        $result = $this->extension->loadProduct('uuid-1', [], 'en');
+
+        $this->assertIsArray($result);
+        /** @var array{attributes: list<array{key: string, label: string, type: string, value: mixed, formattedValue: string|null}>} $result */
+        $this->assertCount(2, $result['attributes']);
+        $this->assertNull($result['attributes'][0]['formattedValue']);
+        $this->assertNull($result['attributes'][1]['formattedValue']);
+    }
+
+    public function testLoadProductReturnsFormatWithoutTokenLiterally(): void
+    {
+        $product = new Product('uuid-1');
+        $pdc = new ProductDimensionContent($product);
+
+        $attribute = new Attribute(new AttributeGroup());
+        $attribute->setKey('weight');
+        $attribute->setType(AttributeInterface::TYPE_NUMBER);
+        $attribute->setConfig(['displayFormat' => 'on request']);
+
+        $productAttributeValue = new ProductAttributeValue($pdc, $attribute, 'weight');
+        $productAttributeValue->setNumber(42.5);
+
+        $pdc->addAttribute($productAttributeValue);
+
+        $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
+        $this->contentAggregator->aggregate($product, Argument::type('array'))
+            ->willReturn($pdc);
+        $this->contentResolver->resolve($pdc, [])->willReturn([]);
+        $this->referenceStore->add('uuid-1', ProductInterface::RESOURCE_KEY)->shouldBeCalled();
+
+        $result = $this->extension->loadProduct('uuid-1', [], 'en');
+
+        $this->assertIsArray($result);
+        /** @var array{attributes: list<array{key: string, label: string, type: string, value: mixed, formattedValue: string|null}>} $result */
+        $this->assertCount(1, $result['attributes']);
+        $this->assertSame(42.5, $result['attributes'][0]['value']);
+        $this->assertSame('on request', $result['attributes'][0]['formattedValue']);
+    }
+
+    public function testLoadProductIgnoresFormatForOptionsAttribute(): void
+    {
+        $product = new Product('uuid-1');
+        $pdc = new ProductDimensionContent($product);
+
+        $attribute = new Attribute(new AttributeGroup());
+        $attribute->setKey('color');
+        $attribute->setType(AttributeInterface::TYPE_OPTIONS);
+        $attribute->setConfig(['displayFormat' => 'ca. %value%']);
+
+        $option = new AttributeOption($attribute, 'red');
+        $option->addTranslation(new AttributeOptionTranslation($option, 'en', 'Red'));
+
+        $productAttributeValue = new ProductAttributeValue($pdc, $attribute, 'color');
+        $productAttributeValue->setAttributeOptionKey('red');
+        $productAttributeValue->setAttributeOption($option);
+
+        $pdc->addAttribute($productAttributeValue);
+
+        $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
+        $this->contentAggregator->aggregate($product, Argument::type('array'))
+            ->willReturn($pdc);
+        $this->contentResolver->resolve($pdc, [])->willReturn([]);
+        $this->referenceStore->add('uuid-1', ProductInterface::RESOURCE_KEY)->shouldBeCalled();
+
+        $result = $this->extension->loadProduct('uuid-1', [], 'en');
+
+        $this->assertIsArray($result);
+        /** @var array{attributes: list<array{key: string, label: string, type: string, value: mixed, formattedValue: string|null}>} $result */
+        $this->assertCount(1, $result['attributes']);
+        $this->assertSame('Red', $result['attributes'][0]['value']);
+        $this->assertNull($result['attributes'][0]['formattedValue']);
+    }
+
     public function testLoadProductFormatsDefaultAttribute(): void
     {
         $product = new Product('uuid-1');
@@ -323,10 +603,10 @@ class ProductTwigExtensionTest extends TestCase
         $attribute->setKey('custom');
         $attribute->setType('unknown_type');
 
-        $productAttribute = new ProductAttributeValue($pdc, $attribute, 'custom');
-        $productAttribute->setText('some-value');
+        $productAttributeValue = new ProductAttributeValue($pdc, $attribute, 'custom');
+        $productAttributeValue->setText('some-value');
 
-        $pdc->addAttribute($productAttribute);
+        $pdc->addAttribute($productAttributeValue);
 
         $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
         $this->contentAggregator->aggregate($product, Argument::type('array'))

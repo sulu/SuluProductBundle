@@ -31,90 +31,90 @@ class ProductAttributeValueTest extends TestCase
     {
         $pdc = new ProductDimensionContent(new Product());
         $attribute = new Attribute(new AttributeGroup());
-        $productAttribute = new ProductAttributeValue($pdc, $attribute, 'color');
+        $productAttributeValue = new ProductAttributeValue($pdc, $attribute, 'color');
 
-        $this->assertSame($pdc, $productAttribute->getProductDimensionContent());
-        $this->assertSame($attribute, $productAttribute->getAttribute());
-        $this->assertSame('color', $productAttribute->getAttributeKey());
+        $this->assertSame($pdc, $productAttributeValue->getProductDimensionContent());
+        $this->assertSame($attribute, $productAttributeValue->getAttribute());
+        $this->assertSame('color', $productAttributeValue->getAttributeKey());
 
-        $this->assertNull($productAttribute->getAttributeOptionKey());
-        $this->assertNull($productAttribute->getNumber());
-        $this->assertNull($productAttribute->getText());
-        $this->assertNull($productAttribute->getAttributeOption());
-        $this->assertNull($productAttribute->getValue());
+        $this->assertNull($productAttributeValue->getAttributeOptionKey());
+        $this->assertNull($productAttributeValue->getNumber());
+        $this->assertNull($productAttributeValue->getText());
+        $this->assertNull($productAttributeValue->getAttributeOption());
+        $this->assertNull($productAttributeValue->getValue());
     }
 
     public function testSetAttributeOptionKeyIsFluentAndStores(): void
     {
-        $productAttribute = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'color');
+        $productAttributeValue = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'color');
 
-        $this->assertSame($productAttribute, $productAttribute->setAttributeOptionKey('red'));
-        $this->assertSame('red', $productAttribute->getAttributeOptionKey());
+        $this->assertSame($productAttributeValue, $productAttributeValue->setAttributeOptionKey('red'));
+        $this->assertSame('red', $productAttributeValue->getAttributeOptionKey());
 
-        $productAttribute->setAttributeOptionKey(null);
-        $this->assertNull($productAttribute->getAttributeOptionKey());
+        $productAttributeValue->setAttributeOptionKey(null);
+        $this->assertNull($productAttributeValue->getAttributeOptionKey());
     }
 
     public function testSetNumberIsFluentAndStores(): void
     {
-        $productAttribute = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'weight');
+        $productAttributeValue = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'weight');
 
-        $this->assertSame($productAttribute, $productAttribute->setNumber(42.5));
-        $this->assertSame(42.5, $productAttribute->getNumber());
+        $this->assertSame($productAttributeValue, $productAttributeValue->setNumber(42.5));
+        $this->assertSame(42.5, $productAttributeValue->getNumber());
 
-        $productAttribute->setNumber(null);
-        $this->assertNull($productAttribute->getNumber());
+        $productAttributeValue->setNumber(null);
+        $this->assertNull($productAttributeValue->getNumber());
     }
 
     public function testSetTextIsFluentAndStores(): void
     {
-        $productAttribute = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'description');
+        $productAttributeValue = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'description');
 
-        $this->assertSame($productAttribute, $productAttribute->setText('Hello'));
-        $this->assertSame('Hello', $productAttribute->getText());
+        $this->assertSame($productAttributeValue, $productAttributeValue->setText('Hello'));
+        $this->assertSame('Hello', $productAttributeValue->getText());
 
-        $productAttribute->setText(null);
-        $this->assertNull($productAttribute->getText());
+        $productAttributeValue->setText(null);
+        $this->assertNull($productAttributeValue->getText());
     }
 
     public function testSetAttributeOptionIsFluentAndStores(): void
     {
         $attribute = new Attribute(new AttributeGroup());
-        $productAttribute = new ProductAttributeValue(new ProductDimensionContent(new Product()), $attribute, 'color');
+        $productAttributeValue = new ProductAttributeValue(new ProductDimensionContent(new Product()), $attribute, 'color');
         $option = new AttributeOption($attribute, 'red');
 
-        $this->assertSame($productAttribute, $productAttribute->setAttributeOption($option));
-        $this->assertSame($option, $productAttribute->getAttributeOption());
+        $this->assertSame($productAttributeValue, $productAttributeValue->setAttributeOption($option));
+        $this->assertSame($option, $productAttributeValue->getAttributeOption());
 
-        $productAttribute->setAttributeOption(null);
-        $this->assertNull($productAttribute->getAttributeOption());
+        $productAttributeValue->setAttributeOption(null);
+        $this->assertNull($productAttributeValue->getAttributeOption());
     }
 
     public function testGetValuePrefersAttributeOptionKey(): void
     {
-        $productAttribute = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'color');
-        $productAttribute->setAttributeOptionKey('red');
-        $productAttribute->setNumber(1.0);
-        $productAttribute->setText('text');
+        $productAttributeValue = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'color');
+        $productAttributeValue->setAttributeOptionKey('red');
+        $productAttributeValue->setNumber(1.0);
+        $productAttributeValue->setText('text');
 
-        $this->assertSame('red', $productAttribute->getValue());
+        $this->assertSame('red', $productAttributeValue->getValue());
     }
 
     public function testGetValueFallsBackToNumber(): void
     {
-        $productAttribute = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'weight');
-        $productAttribute->setNumber(2.5);
-        $productAttribute->setText('text');
+        $productAttributeValue = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'weight');
+        $productAttributeValue->setNumber(2.5);
+        $productAttributeValue->setText('text');
 
-        $this->assertSame(2.5, $productAttribute->getValue());
+        $this->assertSame(2.5, $productAttributeValue->getValue());
     }
 
     public function testGetValueFallsBackToText(): void
     {
-        $productAttribute = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'description');
-        $productAttribute->setText('Hello');
+        $productAttributeValue = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'description');
+        $productAttributeValue->setText('Hello');
 
-        $this->assertSame('Hello', $productAttribute->getValue());
+        $this->assertSame('Hello', $productAttributeValue->getValue());
     }
 
     public function testGetIdReturnsDoctrineGeneratedId(): void
