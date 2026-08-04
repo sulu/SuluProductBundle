@@ -89,6 +89,7 @@
     "sulu_product.step": "Schritt",
     "sulu_product.display_format": "Anzeigeformat",
     "sulu_product.display_format_info_text": "Verfügbare Platzhalter: %value%, %unit%",
+    "sulu_product.localized": "Lokalisiert",
     "sulu_product.status": "Status",
     "sulu_product.short_description": "Kurzbeschreibung",
     "sulu_product.image": "Produktbild",
