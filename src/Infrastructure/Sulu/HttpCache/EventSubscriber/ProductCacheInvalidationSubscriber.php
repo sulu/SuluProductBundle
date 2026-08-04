@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Sulu\Product\Infrastructure\Sulu\HttpCache\EventSubscriber;
 
 use Sulu\Bundle\HttpCacheBundle\Cache\CacheManagerInterface;
+use Sulu\Bundle\ReferenceBundle\Domain\Repository\ReferenceRepositoryInterface;
 use Sulu\Component\Webspace\Manager\WebspaceManagerInterface;
 use Sulu\Component\Webspace\Webspace;
 use Sulu\Content\Application\ContentAggregator\ContentAggregatorInterface;
@@ -24,6 +25,7 @@ use Sulu\Product\Domain\Event\ProductRemovedEvent;
 use Sulu\Product\Domain\Event\ProductWorkflowTransitionAppliedEvent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
+use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Route\Application\Routing\Generator\RouteGeneratorInterface;
 use Sulu\Route\Domain\Repository\RouteRepositoryInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -40,7 +42,9 @@ class ProductCacheInvalidationSubscriber implements EventSubscriberInterface
         private RouteRepositoryInterface $routeRepository,
         private ContentAggregatorInterface $contentAggregator,
         private RouteGeneratorInterface $routeGenerator,
-        private WebspaceManagerInterface $webspaceManager
+        private WebspaceManagerInterface $webspaceManager,
+        private ProductRepositoryInterface $productRepository,
+        private ReferenceRepositoryInterface $referenceRepository
     ) {
     }
 
@@ -48,7 +52,8 @@ class ProductCacheInvalidationSubscriber implements EventSubscriberInterface
     {
         return [
             ProductWorkflowTransitionAppliedEvent::class => 'onWorkflowTransition',
-            ProductRemovedEvent::class => 'onProductRemoved',
+            // Must run before ProductAssociationReferenceCleanupSubscriber deletes those records.
+            ProductRemovedEvent::class => ['onProductRemoved', 10],
         ];
     }
 
@@ -70,7 +75,8 @@ class ProductCacheInvalidationSubscriber implements EventSubscriberInterface
         $this->cacheManager->invalidateTag($product->getUuid());
 
         if (!$this->cacheManager->supportsTags()) {
-            $this->invalidateProductPaths($product, $event->getResourceLocale());
+            $this->invalidateProductPaths($product->getUuid(), $event->getResourceLocale());
+            $this->invalidateReferringProductPaths($product, $event->getResourceLocale());
         }
 
         $this->invalidateProductExcerpt($product, $event->getResourceLocale());
@@ -83,9 +89,39 @@ class ProductCacheInvalidationSubscriber implements EventSubscriberInterface
         }
 
         $this->cacheManager->invalidateTag($event->getResourceId());
+
+        if (!$this->cacheManager->supportsTags()) {
+            $this->invalidateReferringProductPathsOfRemovedProduct($event->getResourceId());
+        }
     }
 
-    private function invalidateProductPaths(ProductInterface $product, ?string $locale): void
+    /**
+     * ProductAssociation rows are already gone by the time this runs post-flush, because the target
+     * join column cascades on delete. Reference records still point at the removed product.
+     */
+    private function invalidateReferringProductPathsOfRemovedProduct(string $removedProductUuid): void
+    {
+        /** @var iterable<array{referenceResourceId: string, referenceLocale: string}> $referrers */
+        $referrers = $this->referenceRepository->findFlatBy(
+            filters: [
+                'resourceKey' => ProductInterface::RESOURCE_KEY,
+                'resourceId' => $removedProductUuid,
+                'referenceResourceKey' => ProductDimensionContentInterface::RESOURCE_KEY,
+            ],
+            fields: ['referenceResourceId', 'referenceLocale'],
+            distinct: true,
+        );
+
+        foreach ($referrers as $referrer) {
+            if ($removedProductUuid === $referrer['referenceResourceId']) {
+                continue;
+            }
+
+            $this->invalidateProductPaths($referrer['referenceResourceId'], $referrer['referenceLocale']);
+        }
+    }
+
+    private function invalidateProductPaths(string $productUuid, ?string $locale): void
     {
         if (!$locale || !$this->cacheManager) {
             return;
@@ -93,7 +129,7 @@ class ProductCacheInvalidationSubscriber implements EventSubscriberInterface
 
         $routes = $this->routeRepository->findBy([
             'resourceKey' => ProductInterface::RESOURCE_KEY,
-            'resourceId' => $product->getUuid(),
+            'resourceId' => $productUuid,
             'locale' => $locale,
         ]);
 
@@ -115,6 +151,23 @@ class ProductCacheInvalidationSubscriber implements EventSubscriberInterface
 
                 $this->cacheManager->invalidatePath($url);
             }
+        }
+    }
+
+    private function invalidateReferringProductPaths(ProductInterface $product, ?string $locale): void
+    {
+        if (!$locale || !$this->cacheManager) {
+            return;
+        }
+
+        $referrers = $this->productRepository->findBy([
+            'associationTargetUuid' => $product->getUuid(),
+            'locale' => $locale,
+            'stage' => DimensionContentInterface::STAGE_LIVE,
+        ]);
+
+        foreach ($referrers as $referrer) {
+            $this->invalidateProductPaths($referrer->getUuid(), $locale);
         }
     }
 

@@ -46,6 +46,7 @@ use Sulu\Product\Application\MessageHandler\RemoveProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\RemoveProductTranslationMessageHandler;
 use Sulu\Product\Application\MessageHandler\RestoreProductVersionMessageHandler;
 use Sulu\Product\Application\Webspace\WebspaceSettingsConfigurationResolver;
+use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
 use Sulu\Product\Domain\Event\ProductCreatedEvent;
 use Sulu\Product\Domain\Event\ProductModifiedEvent;
 use Sulu\Product\Domain\Event\ProductRemovedEvent;
@@ -71,6 +72,8 @@ use Sulu\Product\Domain\Model\AttributeOptionTranslationInterface;
 use Sulu\Product\Domain\Model\AttributeTranslation;
 use Sulu\Product\Domain\Model\AttributeTranslationInterface;
 use Sulu\Product\Domain\Model\Product;
+use Sulu\Product\Domain\Model\ProductAssociation;
+use Sulu\Product\Domain\Model\ProductAssociationInterface;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
@@ -93,6 +96,8 @@ use Sulu\Product\Infrastructure\Doctrine\Repository\ProductRepository;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeGroupAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
+use Sulu\Product\Infrastructure\Sulu\Admin\ProductAssociationsFieldMetadataValidator;
+use Sulu\Product\Infrastructure\Sulu\Admin\ProductAssociationsFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAttributeFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductContentAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductContentFormMetadataVisitor;
@@ -100,11 +105,14 @@ use Sulu\Product\Infrastructure\Sulu\Admin\ProductFamilyAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductFamilyFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductStatusFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\AdditionalWebspacesDataMapper;
+use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductAssociationsDataMapper;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductAttributesDataMapper;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductDetailsDataMapper;
 use Sulu\Product\Infrastructure\Sulu\Content\Merger\AdditionalWebspacesMerger;
+use Sulu\Product\Infrastructure\Sulu\Content\Merger\ProductAssociationsMerger;
 use Sulu\Product\Infrastructure\Sulu\Content\Merger\ProductAttributesMerger;
 use Sulu\Product\Infrastructure\Sulu\Content\Merger\ProductDetailsMerger;
+use Sulu\Product\Infrastructure\Sulu\Content\Normalizer\ProductAssociationsNormalizer;
 use Sulu\Product\Infrastructure\Sulu\Content\Normalizer\ProductAttributesNormalizer;
 use Sulu\Product\Infrastructure\Sulu\Content\Normalizer\ProductDetailsNormalizer;
 use Sulu\Product\Infrastructure\Sulu\Content\PageTreeProductSmartContentProvider;
@@ -113,11 +121,13 @@ use Sulu\Product\Infrastructure\Sulu\Content\ProductSmartContentProvider;
 use Sulu\Product\Infrastructure\Sulu\Content\ProductTeaserProvider;
 use Sulu\Product\Infrastructure\Sulu\Content\PropertyResolver\ProductSelectionPropertyResolver;
 use Sulu\Product\Infrastructure\Sulu\Content\PropertyResolver\SingleProductSelectionPropertyResolver;
+use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductAssociationsResolver;
 use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductDetailsResolver;
 use Sulu\Product\Infrastructure\Sulu\Content\ResourceLoader\ProductResourceLoader;
 use Sulu\Product\Infrastructure\Sulu\Content\Select\AttributeSelectService;
 use Sulu\Product\Infrastructure\Sulu\Content\Select\AttributeTypeSelectService;
 use Sulu\Product\Infrastructure\Sulu\HttpCache\EventSubscriber\ProductCacheInvalidationSubscriber;
+use Sulu\Product\Infrastructure\Sulu\Reference\ProductAssociationReferenceCleanupSubscriber;
 use Sulu\Product\Infrastructure\Sulu\Reference\ProductReferenceRefresher;
 use Sulu\Product\Infrastructure\Sulu\Route\ProductRouteDefaultsProvider;
 use Sulu\Product\Infrastructure\Sulu\Search\AdminProductIndexListener;
@@ -208,6 +218,29 @@ final class SuluProductBundle extends AbstractBundle
                         ->end()
                     ->end()
                 ->end()
+                ->arrayNode('association_types')
+                    ->info('Custom product association types (e.g. "alternative", "suitable"). Omit the whole section to disable association types.')
+                    ->useAttributeAsKey('key')
+                    ->arrayPrototype()
+                        ->children()
+                            ->scalarNode('label')->defaultNull()->end()
+                        ->end()
+                    ->end()
+                    ->validate()
+                        ->ifTrue(static function(array $associationTypes): bool {
+                            foreach (\array_keys($associationTypes) as $key) {
+                                if (1 !== \preg_match('/^[a-zA-Z][a-zA-Z0-9_-]*$/', (string) $key)) {
+                                    return true;
+                                }
+                            }
+
+                            return false;
+                        })
+                        // A digit-only key becomes an int array key and a key with a slash is re-split
+                        // into a nested object by the schema builder, so neither survives the round trip.
+                        ->thenInvalid('Invalid association type key in %s: an association type key must start with a letter and may only contain letters, digits, underscores and hyphens.')
+                    ->end()
+                ->end()
                 ->arrayNode('product_statuses')
                     ->scalarPrototype()->end()
                     ->defaultValue(['announced', 'available', 'discontinued'])
@@ -272,6 +305,23 @@ final class SuluProductBundle extends AbstractBundle
     }
 
     /**
+     * @param array<string, array{label?: string|null}> $associationTypes
+     *
+     * @return array<string, array{label: string}>
+     */
+    private function resolveAssociationTypesMap(array $associationTypes): array
+    {
+        $resolvedMap = [];
+        foreach ($associationTypes as $key => $associationType) {
+            $resolvedMap[$key] = [
+                'label' => $associationType['label'] ?? \sprintf('sulu_product.association_type_%s', $key),
+            ];
+        }
+
+        return $resolvedMap;
+    }
+
+    /**
      * @param array<string, mixed> $config
      *
      * @internal this method is not part of the public API and should only be called by the Symfony framework classes
@@ -292,6 +342,10 @@ final class SuluProductBundle extends AbstractBundle
         /** @var array<string, array{units: array<string>}> $measurements */
         $measurements = $config['measurements'] ?? [];
         $builder->setParameter('sulu_product.measurements', $this->resolveMeasurementsEnabledMap($measurements));
+
+        /** @var array<string, array{label?: string|null}> $associationTypes */
+        $associationTypes = $config['association_types'] ?? [];
+        $builder->setParameter('sulu_product.association_types', $this->resolveAssociationTypesMap($associationTypes));
 
         /** @var array<int, string> $productStatuses */
         $productStatuses = $config['product_statuses'] ?? [];
@@ -432,12 +486,23 @@ final class SuluProductBundle extends AbstractBundle
             ])
             ->tag('sulu_content.data_mapper', ['priority' => -10]);
 
+        $services->set('sulu_product.product_associations_data_mapper')
+            ->class(ProductAssociationsDataMapper::class)
+            ->args([
+                new Reference('sulu_product.product_repository'),
+            ])
+            ->tag('sulu_content.data_mapper');
+
         $services->set('sulu_product.product_details_merger')
             ->class(ProductDetailsMerger::class)
             ->tag('sulu_content.merger');
 
         $services->set('sulu_product.product_attributes_merger')
             ->class(ProductAttributesMerger::class)
+            ->tag('sulu_content.merger');
+
+        $services->set('sulu_product.product_associations_merger')
+            ->class(ProductAssociationsMerger::class)
             ->tag('sulu_content.merger');
 
         $services->set('sulu_product.product_details_normalizer')
@@ -448,6 +513,13 @@ final class SuluProductBundle extends AbstractBundle
             ->class(ProductAttributesNormalizer::class)
             ->args([
                 new Reference('sulu_product.attribute_type_registry'),
+            ])
+            ->tag('sulu_content.normalizer');
+
+        $services->set('sulu_product.product_associations_normalizer')
+            ->class(ProductAssociationsNormalizer::class)
+            ->args([
+                new Reference('sulu_product.association_type_registry'),
             ])
             ->tag('sulu_content.normalizer');
 
@@ -466,6 +538,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_security.security_checker'),
                 new Reference('sulu.core.localization_manager'),
                 new Reference('sulu_activity.activity_list_view_builder_factory'),
+                new Reference('sulu_product.association_type_registry'),
             ])
             ->tag('sulu.context', ['context' => 'admin'])
             ->tag('sulu.admin');
@@ -508,6 +581,14 @@ final class SuluProductBundle extends AbstractBundle
             ->args([
                 '%sulu_product.measurements%',
             ]);
+
+        $services->set('sulu_product.association_type_registry')
+            ->class(ProductAssociationTypeRegistry::class)
+            ->args([
+                '%sulu_product.association_types%',
+            ]);
+
+        $services->alias(ProductAssociationTypeRegistry::class, 'sulu_product.association_type_registry');
 
         $services->set('sulu_product.admin_measurement_family_controller')
             ->class(MeasurementFamilyController::class)
@@ -714,6 +795,22 @@ final class SuluProductBundle extends AbstractBundle
             ])
             ->tag('sulu_admin.form_metadata_visitor');
 
+        $services->set('sulu_product.product_associations_form_metadata_visitor')
+            ->class(ProductAssociationsFormMetadataVisitor::class)
+            ->args([
+                new Reference('sulu_product.association_type_registry'),
+                new Reference('sulu_admin.property_metadata_mapper_registry'),
+                new Reference('translator'),
+            ])
+            ->tag('sulu_admin.form_metadata_visitor');
+
+        $services->set('sulu_product.product_associations_field_metadata_validator')
+            ->class(ProductAssociationsFieldMetadataValidator::class)
+            ->args([
+                new Reference('sulu_product.association_type_registry'),
+            ])
+            ->tag('sulu_admin.field_metadata_validator');
+
         $services->set('sulu_product.product_content_form_metadata_visitor')
             ->class(ProductContentFormMetadataVisitor::class)
             ->tag('sulu_admin.typed_form_metadata_visitor');
@@ -785,6 +882,14 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_content.metadata_resolver'),
             ])
             ->tag('sulu_content.content_resolver', ['type' => 'product']);
+
+        $services->set('sulu_product.product_associations_resolver')
+            ->class(ProductAssociationsResolver::class)
+            ->args([
+                new Reference('sulu_admin.form_metadata_provider'),
+                new Reference('sulu_content.metadata_resolver'),
+            ])
+            ->tag('sulu_content.content_resolver', ['type' => 'associations']);
 
         $services->set('sulu_product.product_resource_loader')
             ->class(ProductResourceLoader::class)
@@ -875,6 +980,13 @@ final class SuluProductBundle extends AbstractBundle
             ])
             ->tag('sulu_reference.refresher');
 
+        $services->set('sulu_product.product_association_reference_cleanup_subscriber')
+            ->class(ProductAssociationReferenceCleanupSubscriber::class)
+            ->args([
+                new Reference('sulu_reference.reference_repository'),
+            ])
+            ->tag('kernel.event_subscriber');
+
         // Cache Invalidation
         $services->set('sulu_product.product_cache_invalidation_subscriber')
             ->class(ProductCacheInvalidationSubscriber::class)
@@ -884,6 +996,8 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_content.content_aggregator'),
                 new Reference('sulu_route.route_generator'),
                 new Reference('sulu_core.webspace.webspace_manager'),
+                new Reference('sulu_product.product_repository'),
+                new Reference('sulu_reference.reference_repository'),
             ])
             ->tag('kernel.event_subscriber');
 
@@ -1074,7 +1188,7 @@ final class SuluProductBundle extends AbstractBundle
                                     'list_overlay' => [
                                         'adapter' => 'table',
                                         'list_key' => 'products',
-                                        'display_properties' => ['title', 'routePath'],
+                                        'display_properties' => ['name'],
                                         'icon' => 'su-newspaper',
                                         'label' => 'sulu_product.selection_label',
                                         'overlay_title' => 'sulu_product.selection_overlay_title',
@@ -1090,7 +1204,7 @@ final class SuluProductBundle extends AbstractBundle
                                     'list_overlay' => [
                                         'adapter' => 'table',
                                         'list_key' => 'products',
-                                        'display_properties' => ['title'],
+                                        'display_properties' => ['name'],
                                         'empty_text' => 'sulu_product.no_product_selected',
                                         'icon' => 'su-newspaper',
                                         'overlay_title' => 'sulu_product.single_selection_overlay_title',
@@ -1251,6 +1365,7 @@ final class SuluProductBundle extends AbstractBundle
             ProductInterface::class => 'sulu.model.product.class',
             ProductDimensionContentInterface::class => 'sulu.model.product_content.class',
             ProductAttributeValueInterface::class => ProductAttributeValue::class,
+            ProductAssociationInterface::class => ProductAssociation::class,
             AttributeInterface::class => Attribute::class,
             AttributeTranslationInterface::class => AttributeTranslation::class,
             AttributeOptionInterface::class => AttributeOption::class,

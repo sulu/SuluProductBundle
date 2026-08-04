@@ -56,5 +56,14 @@
             </cascade>
         </one-to-many>
 
+        <one-to-many field="associations"
+                     target-entity="Sulu\Product\Domain\Model\ProductAssociationInterface"
+                     mapped-by="productDimensionContent"
+                     orphan-removal="true">
+            <cascade>
+                <cascade-persist/>
+            </cascade>
+        </one-to-many>
+
     </mapped-superclass>
 </doctrine-mapping>

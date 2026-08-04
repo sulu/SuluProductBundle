@@ -68,6 +68,11 @@ class ProductDimensionContent implements ProductDimensionContentInterface
      */
     protected Collection $attributes;
 
+    /**
+     * @var Collection<int, ProductAssociationInterface>
+     */
+    protected Collection $associations;
+
     protected string $status = self::DEFAULT_STATUS;
 
     /**
@@ -80,6 +85,7 @@ class ProductDimensionContent implements ProductDimensionContentInterface
         $this->product = $product;
         $this->additionalWebspaces = new ArrayCollection();
         $this->attributes = new ArrayCollection();
+        $this->associations = new ArrayCollection();
         $this->created = new \DateTimeImmutable();
         $this->changed = new \DateTimeImmutable();
     }
@@ -263,6 +269,41 @@ class ProductDimensionContent implements ProductDimensionContentInterface
         $this->attributes->removeElement($attribute);
 
         return $this;
+    }
+
+    /**
+     * @return ProductAssociationInterface[]
+     */
+    public function getAssociations(): array
+    {
+        return $this->associations->toArray();
+    }
+
+    public function addAssociation(ProductAssociationInterface $association): void
+    {
+        if (!$this->associations->contains($association)) {
+            $this->associations->add($association);
+        }
+    }
+
+    public function removeAssociation(ProductAssociationInterface $association): void
+    {
+        $this->associations->removeElement($association);
+    }
+
+    /**
+     * @return ProductAssociationInterface[]
+     */
+    public function getAssociationsByType(string $type): array
+    {
+        $associations = \array_values(\array_filter(
+            $this->getAssociations(),
+            static fn (ProductAssociationInterface $association): bool => $type === $association->getType(),
+        ));
+
+        \usort($associations, static fn (ProductAssociationInterface $a, ProductAssociationInterface $b) => $a->getPosition() <=> $b->getPosition());
+
+        return $associations;
     }
 
     public function getStatus(): string

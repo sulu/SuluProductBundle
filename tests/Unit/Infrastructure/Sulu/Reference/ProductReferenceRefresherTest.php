@@ -31,7 +31,6 @@ use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
-use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Reference\ProductReferenceRefresher;
 
 class ProductReferenceRefresherTest extends TestCase
@@ -77,9 +76,9 @@ class ProductReferenceRefresherTest extends TestCase
         );
     }
 
-    public function testGetResourceKey(): void
+    public function testGetResourceKeyMatchesTheKeyTheRefreshersAreIndexedBy(): void
     {
-        $this->assertSame(ProductInterface::RESOURCE_KEY, ProductReferenceRefresher::getResourceKey());
+        $this->assertSame(ProductDimensionContentInterface::RESOURCE_KEY, ProductReferenceRefresher::getResourceKey());
     }
 
     public function testRefreshReturnsGenerator(): void
@@ -254,6 +253,7 @@ class ProductReferenceRefresherTest extends TestCase
         $dimensionContent = new ProductDimensionContent($product);
         $dimensionContent->setLocale('en');
         $dimensionContent->setStage('live');
+        $dimensionContent->setTemplateKey('product');
 
         $query = $this->stubQueryBuilderNoFilter();
         $query->toIterable()->willReturn(new \ArrayIterator([$dimensionContent]));

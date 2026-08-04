@@ -238,6 +238,8 @@ final class ProductRepository implements ProductRepositoryInterface
      *     tagOperator?: 'AND'|'OR',
      *     templateKeys?: string[],
      *     loadGhost?: bool,
+     *     associationTargetUuid?: string,
+     *     associationType?: string,
      *     page?: int,
      *     limit?: int,
      * } $filters
@@ -306,6 +308,45 @@ final class ProductRepository implements ProductRepositoryInterface
                 $filters,
                 $sortBy,
             );
+        }
+
+        $associationTargetUuid = $filters['associationTargetUuid'] ?? null;
+        if (null !== $associationTargetUuid) {
+            Assert::string($associationTargetUuid); // @phpstan-ignore staticMethod.alreadyNarrowedType
+            // Associations hang on the unlocalized dimension content, locale and stage restrict the referrers.
+            if (!\array_key_exists('locale', $filters) || !\array_key_exists('stage', $filters)) {
+                throw new \InvalidArgumentException('Filtering by "associationTargetUuid" requires both "locale" and "stage" filters.');
+            }
+
+            $dimensionContentClassName = $this->productDimensionContentClassName;
+            $effectiveAttributes = $dimensionContentClassName::getEffectiveDimensionAttributes($filters);
+
+            // An EXISTS semi-join, deliberately not a join over the association collection: a referrer can
+            // point at the same target through several associations, because the unique constraint is
+            // scoped per type. A collection join would emit one root row per association, and LIMIT/OFFSET
+            // apply to rows and not to distinct products — pagination would silently drop referrers.
+            $associationQueryBuilder = $this->entityManager->createQueryBuilder()
+                ->select('associationDimensionContent.id')
+                ->from($dimensionContentClassName, 'associationDimensionContent')
+                ->innerJoin('associationDimensionContent.associations', 'productAssociation')
+                ->where('associationDimensionContent.product = product')
+                ->andWhere('associationDimensionContent.locale IS NULL')
+                ->andWhere('associationDimensionContent.stage = :associationStage')
+                ->andWhere('associationDimensionContent.version = :associationVersion')
+                ->andWhere('IDENTITY(productAssociation.target) = :associationTargetUuid');
+
+            $associationType = $filters['associationType'] ?? null;
+            if (null !== $associationType) {
+                Assert::string($associationType); // @phpstan-ignore staticMethod.alreadyNarrowedType
+                $associationQueryBuilder->andWhere('productAssociation.type = :associationType');
+                $queryBuilder->setParameter('associationType', $associationType);
+            }
+
+            $queryBuilder
+                ->andWhere($queryBuilder->expr()->exists($associationQueryBuilder->getDQL()))
+                ->setParameter('associationStage', $effectiveAttributes['stage'])
+                ->setParameter('associationVersion', $effectiveAttributes['version'])
+                ->setParameter('associationTargetUuid', $associationTargetUuid);
         }
 
         if ([] !== $sortBy) {

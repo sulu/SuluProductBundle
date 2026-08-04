@@ -25,7 +25,6 @@ use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
-use Sulu\Product\Domain\Model\ProductInterface;
 
 /**
  * @internal Modifying or depending on this service may result in unexpected behavior and is not supported.
@@ -51,9 +50,12 @@ class ProductReferenceRefresher implements ReferenceRefresherInterface
         $this->productDimensionContentRepository = $repository;
     }
 
+    /**
+     * Must match the key refreshers are looked up by and the referenceResourceKey this class writes.
+     */
     public static function getResourceKey(): string
     {
-        return ProductInterface::RESOURCE_KEY;
+        return ProductDimensionContentInterface::RESOURCE_KEY;
     }
 
     public function refresh(?array $filter = null): \Generator
@@ -99,6 +101,11 @@ class ProductReferenceRefresher implements ReferenceRefresherInterface
      */
     private function processProductDimensionContent(ProductDimensionContentInterface $productDimensionContent): void
     {
+        // No template means nothing to resolve, and resolving would throw for an empty key.
+        if (null === $productDimensionContent->getTemplateKey() || '' === $productDimensionContent->getTemplateKey()) {
+            return;
+        }
+
         $referenceCollector = new ReferenceCollector(
             referenceRepository: $this->referenceRepository,
             referenceResourceKey: $productDimensionContent->getResourceKey(),

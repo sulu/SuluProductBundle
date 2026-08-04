@@ -76,6 +76,20 @@ interface ProductDimensionContentInterface extends DimensionContentInterface, Ex
 
     public function removeAttribute(ProductAttributeValueInterface $attribute): static;
 
+    /**
+     * @return ProductAssociationInterface[]
+     */
+    public function getAssociations(): array;
+
+    public function addAssociation(ProductAssociationInterface $association): void;
+
+    public function removeAssociation(ProductAssociationInterface $association): void;
+
+    /**
+     * @return ProductAssociationInterface[]
+     */
+    public function getAssociationsByType(string $type): array;
+
     public function getStatus(): string;
 
     public function setStatus(string $status): static;

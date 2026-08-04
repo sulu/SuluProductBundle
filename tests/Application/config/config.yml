@@ -9,5 +9,13 @@ twig:
     paths:
         - '%kernel.project_dir%/templates'
 
+sulu_admin:
+    forms:
+        directories:
+            - '%kernel.project_dir%/config/forms'
+
 sulu_product:
     default_main_webspace: 'sulu-io'
+    association_types:
+        alternative: ~
+        suitable: ~
