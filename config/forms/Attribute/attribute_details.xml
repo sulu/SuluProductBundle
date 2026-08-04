@@ -104,11 +104,11 @@
             </meta>
         </property>
 
-        <property name="config/format" type="text_line" colspan="6"
+        <property name="config/displayFormat" type="text_line" colspan="6"
                   visibleCondition='type == "text" || type == "number"'>
             <meta>
-                <title>sulu_product.format</title>
-                <info_text>sulu_product.format_info_text</info_text>
+                <title>sulu_product.display_format</title>
+                <info_text>sulu_product.display_format_info_text</info_text>
             </meta>
         </property>
 

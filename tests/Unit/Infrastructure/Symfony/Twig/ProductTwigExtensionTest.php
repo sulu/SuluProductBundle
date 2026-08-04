@@ -162,10 +162,10 @@ class ProductTwigExtensionTest extends TestCase
         $translation = new AttributeTranslation($attribute, 'en', 'Color');
         $attribute->addTranslation($translation);
 
-        $productAttribute = new ProductAttributeValue($pdc, $attribute, 'color');
-        $productAttribute->setText('Red');
+        $productAttributeValue = new ProductAttributeValue($pdc, $attribute, 'color');
+        $productAttributeValue->setText('Red');
 
-        $pdc->addAttribute($productAttribute);
+        $pdc->addAttribute($productAttributeValue);
 
         $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
         $this->contentAggregator->aggregate($product, Argument::type('array'))
@@ -208,11 +208,11 @@ class ProductTwigExtensionTest extends TestCase
         $optionTranslation = new AttributeOptionTranslation($option, 'en', 'Red');
         $option->addTranslation($optionTranslation);
 
-        $productAttribute = new ProductAttributeValue($pdc, $attribute, 'color');
-        $productAttribute->setAttributeOptionKey('red');
-        $productAttribute->setAttributeOption($option);
+        $productAttributeValue = new ProductAttributeValue($pdc, $attribute, 'color');
+        $productAttributeValue->setAttributeOptionKey('red');
+        $productAttributeValue->setAttributeOption($option);
 
-        $pdc->addAttribute($productAttribute);
+        $pdc->addAttribute($productAttributeValue);
 
         $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
         $this->contentAggregator->aggregate($product, Argument::type('array'))
@@ -238,10 +238,10 @@ class ProductTwigExtensionTest extends TestCase
         $attribute->setKey('weight');
         $attribute->setType(AttributeInterface::TYPE_NUMBER);
 
-        $productAttribute = new ProductAttributeValue($pdc, $attribute, 'weight');
-        $productAttribute->setNumber(42.5);
+        $productAttributeValue = new ProductAttributeValue($pdc, $attribute, 'weight');
+        $productAttributeValue->setNumber(42.5);
 
-        $pdc->addAttribute($productAttribute);
+        $pdc->addAttribute($productAttributeValue);
 
         $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
         $this->contentAggregator->aggregate($product, Argument::type('array'))
@@ -268,10 +268,10 @@ class ProductTwigExtensionTest extends TestCase
         $attribute->setType(AttributeInterface::TYPE_DATE);
 
         $timestamp = (new \DateTimeImmutable('2026-07-24 00:00:00', new \DateTimeZone('UTC')))->getTimestamp();
-        $productAttribute = new ProductAttributeValue($pdc, $attribute, 'released_at');
-        $productAttribute->setNumber((float) $timestamp);
+        $productAttributeValue = new ProductAttributeValue($pdc, $attribute, 'released_at');
+        $productAttributeValue->setNumber((float) $timestamp);
 
-        $pdc->addAttribute($productAttribute);
+        $pdc->addAttribute($productAttributeValue);
 
         $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
         $this->contentAggregator->aggregate($product, Argument::type('array'))
@@ -297,9 +297,9 @@ class ProductTwigExtensionTest extends TestCase
         $attribute->setKey('released_at');
         $attribute->setType(AttributeInterface::TYPE_DATE);
 
-        $productAttribute = new ProductAttributeValue($pdc, $attribute, 'released_at');
+        $productAttributeValue = new ProductAttributeValue($pdc, $attribute, 'released_at');
 
-        $pdc->addAttribute($productAttribute);
+        $pdc->addAttribute($productAttributeValue);
 
         $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
         $this->contentAggregator->aggregate($product, Argument::type('array'))
@@ -324,12 +324,12 @@ class ProductTwigExtensionTest extends TestCase
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setKey('insulation-resistance');
         $attribute->setType(AttributeInterface::TYPE_NUMBER);
-        $attribute->setConfig(['format' => '> %value% GΩ']);
+        $attribute->setConfig(['displayFormat' => '> %value% GΩ']);
 
-        $productAttribute = new ProductAttributeValue($pdc, $attribute, 'insulation-resistance');
-        $productAttribute->setNumber(2.0);
+        $productAttributeValue = new ProductAttributeValue($pdc, $attribute, 'insulation-resistance');
+        $productAttributeValue->setNumber(2.0);
 
-        $pdc->addAttribute($productAttribute);
+        $pdc->addAttribute($productAttributeValue);
 
         $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
         $this->contentAggregator->aggregate($product, Argument::type('array'))
@@ -354,12 +354,12 @@ class ProductTwigExtensionTest extends TestCase
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setKey('color');
         $attribute->setType(AttributeInterface::TYPE_TEXT);
-        $attribute->setConfig(['format' => 'ca. %value%']);
+        $attribute->setConfig(['displayFormat' => 'ca. %value%']);
 
-        $productAttribute = new ProductAttributeValue($pdc, $attribute, 'color');
-        $productAttribute->setText('Red');
+        $productAttributeValue = new ProductAttributeValue($pdc, $attribute, 'color');
+        $productAttributeValue->setText('Red');
 
-        $pdc->addAttribute($productAttribute);
+        $pdc->addAttribute($productAttributeValue);
 
         $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
         $this->contentAggregator->aggregate($product, Argument::type('array'))
@@ -384,12 +384,12 @@ class ProductTwigExtensionTest extends TestCase
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setKey('insulation-resistance');
         $attribute->setType(AttributeInterface::TYPE_NUMBER);
-        $attribute->setConfig(['unit' => 'OHM', 'format' => '> %value% %unit%']);
+        $attribute->setConfig(['unit' => 'OHM', 'displayFormat' => '> %value% %unit%']);
 
-        $productAttribute = new ProductAttributeValue($pdc, $attribute, 'insulation-resistance');
-        $productAttribute->setNumber(2.0);
+        $productAttributeValue = new ProductAttributeValue($pdc, $attribute, 'insulation-resistance');
+        $productAttributeValue->setNumber(2.0);
 
-        $pdc->addAttribute($productAttribute);
+        $pdc->addAttribute($productAttributeValue);
 
         $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
         $this->contentAggregator->aggregate($product, Argument::type('array'))
@@ -414,12 +414,12 @@ class ProductTwigExtensionTest extends TestCase
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setKey('weight');
         $attribute->setType(AttributeInterface::TYPE_NUMBER);
-        $attribute->setConfig(['format' => '%value% %unit%']);
+        $attribute->setConfig(['displayFormat' => '%value% %unit%']);
 
-        $productAttribute = new ProductAttributeValue($pdc, $attribute, 'weight');
-        $productAttribute->setNumber(2.0);
+        $productAttributeValue = new ProductAttributeValue($pdc, $attribute, 'weight');
+        $productAttributeValue->setNumber(2.0);
 
-        $pdc->addAttribute($productAttribute);
+        $pdc->addAttribute($productAttributeValue);
 
         $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
         $this->contentAggregator->aggregate($product, Argument::type('array'))
@@ -443,12 +443,12 @@ class ProductTwigExtensionTest extends TestCase
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setKey('weight');
         $attribute->setType(AttributeInterface::TYPE_NUMBER);
-        $attribute->setConfig(['unit' => 'NOT_A_UNIT', 'format' => '%value% %unit%']);
+        $attribute->setConfig(['unit' => 'NOT_A_UNIT', 'displayFormat' => '%value% %unit%']);
 
-        $productAttribute = new ProductAttributeValue($pdc, $attribute, 'weight');
-        $productAttribute->setNumber(2.0);
+        $productAttributeValue = new ProductAttributeValue($pdc, $attribute, 'weight');
+        $productAttributeValue->setNumber(2.0);
 
-        $pdc->addAttribute($productAttribute);
+        $pdc->addAttribute($productAttributeValue);
 
         $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
         $this->contentAggregator->aggregate($product, Argument::type('array'))
@@ -473,10 +473,10 @@ class ProductTwigExtensionTest extends TestCase
         $attribute->setKey('color');
         $attribute->setType(AttributeInterface::TYPE_TEXT);
 
-        $productAttribute = new ProductAttributeValue($pdc, $attribute, 'color');
-        $productAttribute->setText('Red');
+        $productAttributeValue = new ProductAttributeValue($pdc, $attribute, 'color');
+        $productAttributeValue->setText('Red');
 
-        $pdc->addAttribute($productAttribute);
+        $pdc->addAttribute($productAttributeValue);
 
         $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
         $this->contentAggregator->aggregate($product, Argument::type('array'))
@@ -501,12 +501,12 @@ class ProductTwigExtensionTest extends TestCase
         $numberAttribute = new Attribute(new AttributeGroup());
         $numberAttribute->setKey('weight');
         $numberAttribute->setType(AttributeInterface::TYPE_NUMBER);
-        $numberAttribute->setConfig(['format' => '%value% kg']);
+        $numberAttribute->setConfig(['displayFormat' => '%value% kg']);
 
         $textAttribute = new Attribute(new AttributeGroup());
         $textAttribute->setKey('color');
         $textAttribute->setType(AttributeInterface::TYPE_TEXT);
-        $textAttribute->setConfig(['format' => 'ca. %value%']);
+        $textAttribute->setConfig(['displayFormat' => 'ca. %value%']);
 
         $productNumberAttribute = new ProductAttributeValue($pdc, $numberAttribute, 'weight');
         $productTextAttribute = new ProductAttributeValue($pdc, $textAttribute, 'color');
@@ -538,12 +538,12 @@ class ProductTwigExtensionTest extends TestCase
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setKey('weight');
         $attribute->setType(AttributeInterface::TYPE_NUMBER);
-        $attribute->setConfig(['format' => 'on request']);
+        $attribute->setConfig(['displayFormat' => 'on request']);
 
-        $productAttribute = new ProductAttributeValue($pdc, $attribute, 'weight');
-        $productAttribute->setNumber(42.5);
+        $productAttributeValue = new ProductAttributeValue($pdc, $attribute, 'weight');
+        $productAttributeValue->setNumber(42.5);
 
-        $pdc->addAttribute($productAttribute);
+        $pdc->addAttribute($productAttributeValue);
 
         $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
         $this->contentAggregator->aggregate($product, Argument::type('array'))
@@ -568,16 +568,16 @@ class ProductTwigExtensionTest extends TestCase
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setKey('color');
         $attribute->setType(AttributeInterface::TYPE_OPTIONS);
-        $attribute->setConfig(['format' => 'ca. %value%']);
+        $attribute->setConfig(['displayFormat' => 'ca. %value%']);
 
         $option = new AttributeOption($attribute, 'red');
         $option->addTranslation(new AttributeOptionTranslation($option, 'en', 'Red'));
 
-        $productAttribute = new ProductAttributeValue($pdc, $attribute, 'color');
-        $productAttribute->setAttributeOptionKey('red');
-        $productAttribute->setAttributeOption($option);
+        $productAttributeValue = new ProductAttributeValue($pdc, $attribute, 'color');
+        $productAttributeValue->setAttributeOptionKey('red');
+        $productAttributeValue->setAttributeOption($option);
 
-        $pdc->addAttribute($productAttribute);
+        $pdc->addAttribute($productAttributeValue);
 
         $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
         $this->contentAggregator->aggregate($product, Argument::type('array'))
@@ -603,10 +603,10 @@ class ProductTwigExtensionTest extends TestCase
         $attribute->setKey('custom');
         $attribute->setType('unknown_type');
 
-        $productAttribute = new ProductAttributeValue($pdc, $attribute, 'custom');
-        $productAttribute->setText('some-value');
+        $productAttributeValue = new ProductAttributeValue($pdc, $attribute, 'custom');
+        $productAttributeValue->setText('some-value');
 
-        $pdc->addAttribute($productAttribute);
+        $pdc->addAttribute($productAttributeValue);
 
         $this->productRepository->findOneBy(Argument::cetera())->willReturn($product);
         $this->contentAggregator->aggregate($product, Argument::type('array'))

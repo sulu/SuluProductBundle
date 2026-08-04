@@ -107,27 +107,27 @@ class ProductTwigExtension extends AbstractExtension
     {
         $result = [];
 
-        foreach ($dimensionContent->getAttributes() as $productAttribute) {
-            $attribute = $productAttribute->getAttribute();
+        foreach ($dimensionContent->getAttributes() as $productAttributeValue) {
+            $attribute = $productAttributeValue->getAttribute();
 
             $value = match ($attribute->getType()) {
-                AttributeInterface::TYPE_OPTIONS => $productAttribute->getAttributeOption()?->getTranslation($locale)?->getName()
-                    ?? $productAttribute->getAttributeOptionKey(),
-                AttributeInterface::TYPE_TEXT => $productAttribute->getText(),
-                AttributeInterface::TYPE_NUMBER => $productAttribute->getNumber(),
-                AttributeInterface::TYPE_DATE => $this->resolveDate($productAttribute->getNumber()),
-                default => $productAttribute->getValue(),
+                AttributeInterface::TYPE_OPTIONS => $productAttributeValue->getAttributeOption()?->getTranslation($locale)?->getName()
+                    ?? $productAttributeValue->getAttributeOptionKey(),
+                AttributeInterface::TYPE_TEXT => $productAttributeValue->getText(),
+                AttributeInterface::TYPE_NUMBER => $productAttributeValue->getNumber(),
+                AttributeInterface::TYPE_DATE => $this->resolveDate($productAttributeValue->getNumber()),
+                default => $productAttributeValue->getValue(),
             };
 
             $formattedValue = match ($attribute->getType()) {
-                AttributeInterface::TYPE_TEXT => $this->formatValue($attribute, $productAttribute->getText()),
-                AttributeInterface::TYPE_NUMBER => $this->formatValue($attribute, $productAttribute->getNumber()),
+                AttributeInterface::TYPE_TEXT => $this->formatValue($attribute, $productAttributeValue->getText()),
+                AttributeInterface::TYPE_NUMBER => $this->formatValue($attribute, $productAttributeValue->getNumber()),
                 default => null,
             };
 
             $result[] = [
-                'key' => $productAttribute->getAttributeKey(),
-                'label' => $attribute->getTranslation($locale)?->getName() ?? $productAttribute->getAttributeKey(),
+                'key' => $productAttributeValue->getAttributeKey(),
+                'label' => $attribute->getTranslation($locale)?->getName() ?? $productAttributeValue->getAttributeKey(),
                 'type' => $attribute->getType(),
                 'value' => $value,
                 'formattedValue' => $formattedValue,
@@ -153,7 +153,7 @@ class ProductTwigExtension extends AbstractExtension
         }
 
         $config = $attribute->getConfig();
-        $format = $config['format'] ?? null;
+        $format = $config['displayFormat'] ?? null;
 
         if (!\is_string($format) || '' === $format) {
             return null;

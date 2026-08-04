@@ -361,7 +361,7 @@ class AttributeControllerTest extends SuluTestCase
                 'name' => 'Insulation resistance',
                 'type' => 'number',
                 'group' => $groupId,
-                'config' => ['format' => '> %value% GΩ'],
+                'config' => ['displayFormat' => '> %value% GΩ'],
             ]) ?: null,
         );
         $postResponse = $this->client->getResponse();
@@ -380,7 +380,7 @@ class AttributeControllerTest extends SuluTestCase
 
         $config = $data['config'];
         $this->assertIsArray($config);
-        $this->assertSame('> %value% GΩ', $config['format']);
+        $this->assertSame('> %value% GΩ', $config['displayFormat']);
     }
 
     public function testGetNotFound(): void
