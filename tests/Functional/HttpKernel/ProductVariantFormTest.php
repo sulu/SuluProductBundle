@@ -26,9 +26,8 @@ class ProductVariantFormTest extends SuluTestCase
     }
 
     /**
-     * ProductDetailsDataMapper::mapDetailsData() resolves the `details/` fields of *any* product —
-     * variants included — against the product_details metadata. A field the variant form declares
-     * under a different name is submitted by the admin, matches nothing, and is silently dropped.
+     * mapDetailsData() resolves `details/` fields against the product_details metadata, for
+     * variants too. A field named differently here matches nothing and is dropped on save.
      */
     public function testVariantDetailFieldsAreDeclaredInProductDetailsToo(): void
     {

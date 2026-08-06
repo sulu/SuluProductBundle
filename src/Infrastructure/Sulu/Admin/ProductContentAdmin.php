@@ -71,8 +71,8 @@ class ProductContentAdmin extends Admin
     }
 
     /**
-     * The content views default to tab orders that collide with the product's own tabs, so they are
-     * pushed behind details (10), variants (20) and associations (30).
+     * The content views default to orders that collide with details (10), variants (20) and
+     * associations (30).
      */
     private function applyTabOrder(ViewBuilderInterface $viewBuilder): void
     {

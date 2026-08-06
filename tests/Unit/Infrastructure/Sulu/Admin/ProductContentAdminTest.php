@@ -99,8 +99,7 @@ class ProductContentAdminTest extends TestCase
     }
 
     /**
-     * The content views ship with tab orders that collide with the product's own tabs
-     * (content defaults to 20, the same as variants; seo to 30, the same as associations).
+     * Content defaults to 20 like variants, seo to 30 like associations.
      */
     public function testContentViewsAreOrderedBehindTheProductsOwnTabs(): void
     {

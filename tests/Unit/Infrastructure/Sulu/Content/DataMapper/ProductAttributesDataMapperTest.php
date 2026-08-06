@@ -344,8 +344,8 @@ class ProductAttributesDataMapperTest extends TestCase
     }
 
     /**
-     * Regression: a required variant axis is not rendered on the product form at all, so enforcing
-     * it against the product made a product with variants impossible to save.
+     * Regression: enforcing a variant axis against the product made a product with variants
+     * impossible to save.
      */
     public function testProductSkipsRequiredVariantAttribute(): void
     {

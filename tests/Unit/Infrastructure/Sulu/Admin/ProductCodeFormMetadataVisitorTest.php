@@ -59,8 +59,7 @@ class ProductCodeFormMetadataVisitorTest extends TestCase
                                 'type' => 'object',
                                 'properties' => [
                                     'type' => ['const' => 'product'],
-                                    // minLength, because a bare `required` would accept the `null`
-                                    // that a code-less product loads with
+                                    // a bare `required` would accept the `null` a code-less product loads with
                                     'code' => ['type' => 'string', 'minLength' => 1],
                                 ],
                                 'required' => ['code'],

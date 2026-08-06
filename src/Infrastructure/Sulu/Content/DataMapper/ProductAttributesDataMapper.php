@@ -131,8 +131,7 @@ class ProductAttributesDataMapper implements DataMapperInterface
             }
 
             if ($familyAttribute->isVariantSpecific() !== $isVariant) {
-                // Variant axes are required on the variant, shared attributes on the product:
-                // neither side can satisfy a requirement whose field the other side owns.
+                // variant axes are required on the variant, shared attributes on the product
                 continue;
             }
 

@@ -22,10 +22,9 @@ use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\StringMetadata;
 use Sulu\Product\Domain\Model\ProductInterface;
 
 /**
- * A plain product must carry a code, a product with variants may leave it empty — the variants
- * carry their own. Expressed as a schema branch on `type` instead of `mandatory="true"` so it
- * follows the type select live, and with a non-empty string constraint because a bare `required`
- * would accept the `null` that a code-less product loads with.
+ * Requires a code on plain products only, as a schema branch so it follows the type select live.
+ * The length constraint is needed because a bare `required` accepts the `null` a code-less
+ * product loads with.
  *
  * @internal
  */

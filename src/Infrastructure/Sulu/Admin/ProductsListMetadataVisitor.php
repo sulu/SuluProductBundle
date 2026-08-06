@@ -18,9 +18,8 @@ use Sulu\Bundle\AdminBundle\Metadata\ListMetadata\ListMetadataVisitorInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 
 /**
- * Fills the status filter options from the configured product statuses, the same source
- * {@see ProductStatusFormMetadataVisitor} uses for the form's status select — they cannot be
- * hardcoded in the list XML because projects can configure their own statuses.
+ * Fills the status filter options from the configured statuses, which cannot be hardcoded in the
+ * list XML because projects can configure their own.
  *
  * @internal
  */

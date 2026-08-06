@@ -20,10 +20,6 @@ use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataProvider;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductCodeFormMetadataVisitor;
 
-/**
- * Covers that the visitor is wired up and reaches the real product form; the exact shape of the
- * branch is asserted in the visitor's unit test.
- */
 #[CoversClass(ProductCodeFormMetadataVisitor::class)]
 class ProductDetailsFormSchemaTest extends SuluTestCase
 {

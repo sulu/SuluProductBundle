@@ -55,10 +55,6 @@ class ProductsListFiltersTest extends SuluTestCase
         );
     }
 
-    /**
-     * The options come from the configured statuses, not from the list XML, so a project that
-     * configures its own statuses gets them in the filter too.
-     */
     public function testStatusFilterOptionsComeFromTheConfiguredStatuses(): void
     {
         $field = $this->listMetadata()->getField('status');

@@ -837,8 +837,7 @@ class ProductVariantControllerTest extends SuluTestCase
     {
         self::purgeDatabase();
 
-        // A required variant axis is only ever rendered on the variant overlay, so the parent
-        // has no field to satisfy it with — enforcing it there made the parent unsavable.
+        // the axis is only rendered on the variant overlay, so the parent cannot satisfy it
         $axisId = $this->createAttribute('size', 'Size');
         $familyId = $this->createProductFamily([
             $axisId => ['enabled' => true, 'required' => true, 'variantSpecific' => true],
