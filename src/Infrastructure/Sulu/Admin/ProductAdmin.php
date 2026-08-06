@@ -25,6 +25,7 @@ use Sulu\Component\Localization\Manager\LocalizationManagerInterface;
 use Sulu\Component\Security\Authorization\PermissionTypes;
 use Sulu\Component\Security\Authorization\SecurityCheckerInterface;
 use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
+use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 
 /**
@@ -182,8 +183,11 @@ class ProductAdmin extends Admin
             );
         }
         $viewCollection->add(
-            $this->viewBuilderFactory->createFormViewBuilder(static::EDIT_TABS_VIEW . '.details', '/details')
+            $this->viewBuilderFactory->createPreviewFormViewBuilder(static::EDIT_TABS_VIEW . '.details', '/details')
                 ->setResourceKey(ProductInterface::RESOURCE_KEY)
+                // the preview object provider is registered for the dimension content, not the product
+                ->setPreviewResourceKey(ProductDimensionContentInterface::RESOURCE_KEY)
+                ->setPreviewCondition('workflowPlace != null')
                 ->setFormKey(ProductInterface::FORM_KEY)
                 ->setTabTitle('sulu_admin.details')
                 ->setTabOrder(10)

@@ -103,6 +103,7 @@ use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAssociationsFieldMetadataValidator;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAssociationsFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAttributeFormMetadataVisitor;
+use Sulu\Product\Infrastructure\Sulu\Admin\ProductCodeFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductContentAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductContentFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductFamilyAdmin;
@@ -831,7 +832,6 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.attribute_field_factory'),
                 new Reference('sulu_admin.property_metadata_mapper_registry'),
                 new Reference('translator'),
-                new Reference('sulu_product.product_repository'),
             ])
             ->tag('sulu_admin.form_metadata_visitor');
 
@@ -864,6 +864,10 @@ final class SuluProductBundle extends AbstractBundle
         $services->set('sulu_product.product_content_form_metadata_visitor')
             ->class(ProductContentFormMetadataVisitor::class)
             ->tag('sulu_admin.typed_form_metadata_visitor');
+
+        $services->set('sulu_product.product_code_form_metadata_visitor')
+            ->class(ProductCodeFormMetadataVisitor::class)
+            ->tag('sulu_admin.form_metadata_visitor');
 
         $services->set('sulu_product.product_status_form_metadata_visitor')
             ->class(ProductStatusFormMetadataVisitor::class)

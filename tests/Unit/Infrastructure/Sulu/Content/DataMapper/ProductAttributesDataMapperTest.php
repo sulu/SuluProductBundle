@@ -343,6 +343,20 @@ class ProductAttributesDataMapperTest extends TestCase
         $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [1 => null]]);
     }
 
+    /**
+     * Regression: a required variant axis is not rendered on the product form at all, so enforcing
+     * it against the product made a product with variants impossible to save.
+     */
+    public function testProductSkipsRequiredVariantAttribute(): void
+    {
+        $fixture = $this->makeProductFixture(1, required: true, isVariantAttribute: true, isVariantResource: false);
+        $fixture['unloc_prophecy']->addAttribute(Argument::cetera())->shouldNotBeCalled();
+
+        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [1 => null]]);
+
+        $this->addToAssertionCount(1);
+    }
+
     private function prophesizeNonVariantResource(): ProductInterface
     {
         /** @var ObjectProphecy<ProductInterface> $resource */

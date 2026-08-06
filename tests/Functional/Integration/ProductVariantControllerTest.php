@@ -833,6 +833,70 @@ class ProductVariantControllerTest extends SuluTestCase
         $this->assertHttpStatusCode(422, $this->client->getResponse());
     }
 
+    public function testParentWithRequiredVariantAttributeIsSavable(): void
+    {
+        self::purgeDatabase();
+
+        // A required variant axis is only ever rendered on the variant overlay, so the parent
+        // has no field to satisfy it with — enforcing it there made the parent unsavable.
+        $axisId = $this->createAttribute('size', 'Size');
+        $familyId = $this->createProductFamily([
+            $axisId => ['enabled' => true, 'required' => true, 'variantSpecific' => true],
+        ]);
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+
+        $this->client->request(
+            'PUT',
+            '/admin/api/products/' . $parentId . '.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'title' => 'Parent Product',
+                'attributes' => [],
+            ]) ?: null,
+        );
+
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+    }
+
+    public function testVariantPersistsDetailsFields(): void
+    {
+        self::purgeDatabase();
+
+        $familyId = $this->createProductFamily();
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $variantId = $this->createVariant($parentId);
+
+        $this->client->request(
+            'PUT',
+            '/admin/api/products/' . $parentId . '/variants/' . $variantId . '.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'code' => 'CX3-RD-L',
+                'title' => 'Variant L',
+                'details' => ['shortDescription' => '<p>Variant blurb</p>'],
+            ]) ?: null,
+        );
+
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        $this->client->request(
+            'GET',
+            '/admin/api/products/' . $parentId . '/variants/' . $variantId . '.json?locale=en',
+        );
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertIsArray($data['details']);
+        $this->assertSame('<p>Variant blurb</p>', $data['details']['shortDescription']);
+    }
+
     public function testCreatingAVariantMarksParentAsHavingUnpublishedChanges(): void
     {
         self::purgeDatabase();
