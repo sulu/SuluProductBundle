@@ -827,4 +827,25 @@ class ProductControllerTest extends SuluTestCase
 
         return $ids;
     }
+
+    /**
+     * A single selection loads the whole item from the detail endpoint, so its display property has to
+     * exist there. The list column is called "name" while the detail response only carries "title".
+     */
+    public function testSingleProductSelectionDisplayPropertyExistsInDetailResponse(): void
+    {
+        self::purgeDatabase();
+
+        $familyId = $this->createProductFamily();
+        $productId = $this->createProduct($familyId, 'Selectable Product');
+
+        $this->client->request('GET', '/admin/api/products/' . $productId . '.json?locale=en');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($data);
+
+        $this->assertArrayHasKey('title', $data);
+        $this->assertSame('Selectable Product', $data['title']);
+    }
 }

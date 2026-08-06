@@ -1288,7 +1288,8 @@ final class SuluProductBundle extends AbstractBundle
                                     'list_overlay' => [
                                         'adapter' => 'table',
                                         'list_key' => 'products',
-                                        'display_properties' => ['name'],
+                                        // the selected item is loaded from the detail endpoint, which has no `name`
+                                        'display_properties' => ['title'],
                                         'empty_text' => 'sulu_product.no_product_selected',
                                         'icon' => 'su-newspaper',
                                         'overlay_title' => 'sulu_product.single_selection_overlay_title',

@@ -33,10 +33,11 @@ class ProductFieldTypeOptionsTest extends SuluTestCase
     }
 
     /**
-     * A selection renders the configured display properties of the referenced list, so a property the
-     * list does not provide leaves every selected item blank in the admin.
+     * A multi selection renders its items from the list endpoint, so a display property the list does
+     * not provide leaves every selected item blank in the admin. Single selections load the whole item
+     * from the detail endpoint instead and are covered by ProductControllerTest.
      */
-    public function testEverySelectionDisplayPropertyIsProvidedByItsList(): void
+    public function testEveryMultiSelectionDisplayPropertyIsProvidedByItsList(): void
     {
         self::bootKernel();
 
@@ -45,6 +46,10 @@ class ProductFieldTypeOptionsTest extends SuluTestCase
 
         $assertedProperties = 0;
         foreach ($this->getSelectionListOverlayTypes() as $fieldTypeName => $type) {
+            if (!\str_starts_with($fieldTypeName, 'selection.')) {
+                continue;
+            }
+
             $fieldDescriptors = $fieldDescriptorFactory->getFieldDescriptors($type['list_key']);
             $this->assertIsArray($fieldDescriptors, \sprintf('List "%s" of "%s" does not exist.', $type['list_key'], $fieldTypeName));
 
