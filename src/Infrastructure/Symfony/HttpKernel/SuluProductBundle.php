@@ -1215,7 +1215,7 @@ final class SuluProductBundle extends AbstractBundle
                                 'detail' => 'sulu_product.get_product',
                             ],
                         ],
-                        'products_versions' => [
+                        ProductInterface::LIST_KEY_VERSIONS => [
                             'routes' => [
                                 'list' => 'sulu_product.get_product_versions',
                                 'detail' => 'sulu_product.get_product',
