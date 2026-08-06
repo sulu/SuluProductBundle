@@ -100,6 +100,7 @@
     "sulu_product.short_description": "Kurzbeschreibung",
     "sulu_product.image": "Produktbild",
     "sulu_product.documents": "Produktdokumente",
+    "sulu_product.media": "Medien",
     "sulu_product.product_status.announced": "Angekündigt",
     "sulu_product.product_status.available": "Verfügbar",
     "sulu_product.product_status.discontinued": "Eingestellt",

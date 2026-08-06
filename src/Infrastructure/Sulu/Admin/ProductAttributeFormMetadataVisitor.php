@@ -20,9 +20,7 @@ use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadataMapperRegistry;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\SchemaMetadata;
 use Sulu\Product\Domain\Model\AttributeGroupInterface;
-use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
-use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
@@ -37,7 +35,6 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
         private readonly AttributeFieldFactory $attributeFieldFactory,
         private readonly PropertyMetadataMapperRegistry $propertyMetadataMapperRegistry,
         private readonly TranslatorInterface $translator,
-        private readonly ProductRepositoryInterface $productRepository,
     ) {
     }
 
@@ -58,9 +55,6 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
             return;
         }
 
-        $product = $this->productRepository->findOneBy(['uuid' => $id]);
-        $isProductWithVariants = $product?->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS) ?? false;
-
         $items = $formMetadata->getItems();
 
         /** @var array<int, SectionMetadata> $sections */
@@ -69,7 +63,8 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
         $schemaProperties = [];
 
         foreach ($family->getFamilyAttributes() as $familyAttribute) {
-            if ($isProductWithVariants && $familyAttribute->isVariantSpecific()) {
+            if ($familyAttribute->isVariantSpecific()) {
+                // variant axes live on the variant overlay, never on a product
                 continue;
             }
 

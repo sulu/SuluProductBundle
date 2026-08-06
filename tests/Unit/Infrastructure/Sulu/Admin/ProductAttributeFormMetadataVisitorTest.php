@@ -32,12 +32,9 @@ use Sulu\Product\Domain\Model\AttributeGroupInterface;
 use Sulu\Product\Domain\Model\AttributeGroupTranslationInterface;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeTranslationInterface;
-use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
-use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
-use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeFieldFactory;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAttributeFormMetadataVisitor;
 use Symfony\Component\DependencyInjection\Container;
@@ -54,14 +51,10 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
     /** @var ObjectProphecy<FormMetadataLoaderInterface> */
     private ObjectProphecy $formMetadataLoader;
 
-    /** @var ObjectProphecy<ProductRepositoryInterface> */
-    private ObjectProphecy $productRepository;
-
     protected function setUp(): void
     {
         $this->productFamilyRepository = $this->prophesize(ProductFamilyRepositoryInterface::class);
         $this->formMetadataLoader = $this->prophesize(FormMetadataLoaderInterface::class);
-        $this->productRepository = $this->prophesize(ProductRepositoryInterface::class);
     }
 
     private function visitor(): ProductAttributeFormMetadataVisitor
@@ -87,7 +80,6 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
             ),
             new PropertyMetadataMapperRegistry($mapperContainer),
             $translator,
-            $this->productRepository->reveal(),
         );
     }
 
@@ -157,6 +149,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $attribute->getGroup()->willReturn($this->group());
 
         $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
+        $familyAttribute->isVariantSpecific()->willReturn(false);
         $familyAttribute->getAttribute()->willReturn($attribute->reveal());
         $familyAttribute->isRequired()->willReturn(true);
 
@@ -213,6 +206,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $attribute->getGroup()->willReturn($this->group(9, $groupName));
 
         $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
+        $familyAttribute->isVariantSpecific()->willReturn(false);
         $familyAttribute->getAttribute()->willReturn($attribute->reveal());
         $familyAttribute->isRequired()->willReturn(false);
 
@@ -259,6 +253,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $attribute->getGroup()->willReturn($group->reveal());
 
         $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
+        $familyAttribute->isVariantSpecific()->willReturn(false);
         $familyAttribute->getAttribute()->willReturn($attribute->reveal());
         $familyAttribute->isRequired()->willReturn(false);
 
@@ -296,6 +291,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $attribute->getGroup()->willReturn($this->group());
 
         $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
+        $familyAttribute->isVariantSpecific()->willReturn(false);
         $familyAttribute->getAttribute()->willReturn($attribute->reveal());
         $familyAttribute->isRequired()->willReturn(true);
 
@@ -347,6 +343,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $attribute->getGroup()->willReturn($this->group());
 
         $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
+        $familyAttribute->isVariantSpecific()->willReturn(false);
         $familyAttribute->getAttribute()->willReturn($attribute->reveal());
         $familyAttribute->isRequired()->willReturn(false);
 
@@ -376,6 +373,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $attribute->getConfig()->willReturn([]);
 
         $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
+        $familyAttribute->isVariantSpecific()->willReturn(false);
         $familyAttribute->getAttribute()->willReturn($attribute->reveal());
 
         $family = $this->prophesize(ProductFamilyInterface::class);
@@ -398,6 +396,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $attribute->getConfig()->willReturn([]);
 
         $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
+        $familyAttribute->isVariantSpecific()->willReturn(false);
         $familyAttribute->getAttribute()->willReturn($attribute->reveal());
 
         $family = $this->prophesize(ProductFamilyInterface::class);
@@ -429,6 +428,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $attribute->getGroup()->willReturn($this->group());
 
         $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
+        $familyAttribute->isVariantSpecific()->willReturn(false);
         $familyAttribute->getAttribute()->willReturn($attribute->reveal());
         $familyAttribute->isRequired()->willReturn(false);
 
@@ -471,6 +471,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $attribute->getConfig()->willReturn([]);
 
         $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
+        $familyAttribute->isVariantSpecific()->willReturn(false);
         $familyAttribute->getAttribute()->willReturn($attribute->reveal());
 
         $family = $this->prophesize(ProductFamilyInterface::class);
@@ -508,6 +509,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $attribute->getGroup()->willReturn($this->group());
 
         $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
+        $familyAttribute->isVariantSpecific()->willReturn(false);
         $familyAttribute->getAttribute()->willReturn($attribute->reveal());
         $familyAttribute->isRequired()->willReturn(false);
 
@@ -576,6 +578,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $attribute->getGroup()->willReturn($this->group());
 
         $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
+        $familyAttribute->isVariantSpecific()->willReturn(false);
         $familyAttribute->getAttribute()->willReturn($attribute->reveal());
         $familyAttribute->isRequired()->willReturn(false);
 
@@ -628,6 +631,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $attribute->getGroup()->willReturn($this->group());
 
         $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
+        $familyAttribute->isVariantSpecific()->willReturn(false);
         $familyAttribute->getAttribute()->willReturn($attribute->reveal());
         $familyAttribute->isRequired()->willReturn(false);
 
@@ -650,7 +654,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         self::assertSame('Gewicht', $field->getLabel('en'));
     }
 
-    public function testSkipsVariantAttributesForVariantProduct(): void
+    public function testSkipsVariantAttributesForEveryProductType(): void
     {
         $translation = $this->prophesize(AttributeTranslationInterface::class);
         $translation->getName()->willReturn('Weight');
@@ -682,10 +686,6 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
             ->willReturn($this->fragmentWithValueField());
 
-        $product = $this->prophesize(Product::class);
-        $product->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS)->willReturn(true);
-        $this->productRepository->findOneBy(['uuid' => 'uuid-1'])->willReturn($product->reveal());
-
         $form = new FormMetadata();
         $form->setKey('product_details');
 
@@ -713,6 +713,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $attribute7->getGroup()->willReturn($this->group(1, 'Dimensions'));
 
         $familyAttribute7 = $this->prophesize(ProductFamilyAttributeInterface::class);
+        $familyAttribute7->isVariantSpecific()->willReturn(false);
         $familyAttribute7->getAttribute()->willReturn($attribute7->reveal());
         $familyAttribute7->isRequired()->willReturn(false);
 
@@ -729,6 +730,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $attribute8->getGroup()->willReturn($this->group(2, 'Electrical'));
 
         $familyAttribute8 = $this->prophesize(ProductFamilyAttributeInterface::class);
+        $familyAttribute8->isVariantSpecific()->willReturn(false);
         $familyAttribute8->getAttribute()->willReturn($attribute8->reveal());
         $familyAttribute8->isRequired()->willReturn(false);
 

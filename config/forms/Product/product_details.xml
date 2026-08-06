@@ -6,9 +6,9 @@
     <key>product_details</key>
 
     <properties>
-        <property name="title" type="text_line" mandatory="true" colspan="9">
+        <property name="title" type="text_line" mandatory="true" colspan="12">
             <meta>
-                <title>sulu_admin.title</title>
+                <title>sulu_admin.name</title>
             </meta>
 
             <params>
@@ -16,7 +16,25 @@
             </params>
         </property>
 
-        <property name="type" type="single_select" mandatory="true" colspan="3" disabledCondition="!!id">
+        <property name="code" type="text_line" colspan="6">
+            <meta>
+                <title>sulu_product.code</title>
+            </meta>
+        </property>
+
+        <property name="status" type="single_select" colspan="6">
+            <meta>
+                <title>sulu_product.status</title>
+            </meta>
+        </property>
+
+        <property name="productFamily" type="single_product_family_selection" mandatory="true" colspan="6" disabledCondition="!!id" multilingual="false">
+            <meta>
+                <title>sulu_product.product_family</title>
+            </meta>
+        </property>
+
+        <property name="type" type="single_select" mandatory="true" colspan="6" disabledCondition="!!id">
             <meta>
                 <title>sulu_product.product_type</title>
             </meta>
@@ -38,33 +56,11 @@
             </params>
         </property>
 
-        <property name="code" type="text_line" colspan="3" visibleCondition="type != 'product_with_variants'">
-            <meta>
-                <title>sulu_product.code</title>
-            </meta>
-
-            <params>
-                <param name="headline" value="true"/>
-            </params>
-        </property>
-
-        <property name="externalIdentifier" type="text_line"
+        <property name="externalIdentifier" type="text_line" colspan="12"
                   visibleCondition="!!externalIdentifier"
                   disabledCondition="true">
             <meta>
                 <title>sulu_product.external_identifier</title>
-            </meta>
-        </property>
-
-        <property name="productFamily" type="single_product_family_selection" mandatory="true" colspan="6" disabledCondition="!!id" multilingual="false">
-            <meta>
-                <title>sulu_product.product_family</title>
-            </meta>
-        </property>
-
-        <property name="status" type="single_select" colspan="6">
-            <meta>
-                <title>sulu_product.status</title>
             </meta>
         </property>
 
@@ -74,24 +70,32 @@
             </meta>
         </property>
 
-        <property name="details/image" type="single_media_selection" multilingual="false">
+        <section name="media" colspan="12">
             <meta>
-                <title>sulu_product.image</title>
+                <title>sulu_product.media</title>
             </meta>
 
-            <params>
-                <param name="types" value="image"/>
-            </params>
-        </property>
+            <properties>
+                <property name="details/image" type="single_media_selection" colspan="12" multilingual="false">
+                    <meta>
+                        <title>sulu_product.image</title>
+                    </meta>
 
-        <property name="details/documents" type="media_selection" multilingual="false">
-            <meta>
-                <title>sulu_product.documents</title>
-            </meta>
+                    <params>
+                        <param name="types" value="image"/>
+                    </params>
+                </property>
 
-            <params>
-                <param name="types" value="document"/>
-            </params>
-        </property>
+                <property name="details/documents" type="media_selection" colspan="12" multilingual="false">
+                    <meta>
+                        <title>sulu_product.documents</title>
+                    </meta>
+
+                    <params>
+                        <param name="types" value="document"/>
+                    </params>
+                </property>
+            </properties>
+        </section>
     </properties>
 </form>

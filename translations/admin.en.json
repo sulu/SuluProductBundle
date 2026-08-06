@@ -99,6 +99,7 @@
     "sulu_product.short_description": "Short description",
     "sulu_product.image": "Product image",
     "sulu_product.documents": "Product documents",
+    "sulu_product.media": "Media",
     "sulu_product.product_status.announced": "Announced",
     "sulu_product.product_status.available": "Available",
     "sulu_product.product_status.discontinued": "Discontinued",

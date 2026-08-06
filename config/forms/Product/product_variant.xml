@@ -6,10 +6,14 @@
     <key>product_variant</key>
 
     <properties>
-        <property name="title" type="text_line" colspan="6">
+        <property name="title" type="text_line" mandatory="true" colspan="12">
             <meta>
-                <title>sulu_admin.title</title>
+                <title>sulu_admin.name</title>
             </meta>
+
+            <params>
+                <param name="headline" value="true"/>
+            </params>
         </property>
 
         <property name="code" type="text_line" mandatory="true" colspan="6">
@@ -24,30 +28,46 @@
             </meta>
         </property>
 
-        <property name="shortDescription" type="text_editor" colspan="12">
+        <property name="externalIdentifier" type="text_line" colspan="12"
+                  visibleCondition="!!externalIdentifier"
+                  disabledCondition="true">
+            <meta>
+                <title>sulu_product.external_identifier</title>
+            </meta>
+        </property>
+
+        <property name="details/shortDescription" type="text_editor" colspan="12">
             <meta>
                 <title>sulu_product.short_description</title>
             </meta>
         </property>
 
-        <property name="image" type="single_media_selection" colspan="6">
+        <section name="media" colspan="12">
             <meta>
-                <title>sulu_product.image</title>
+                <title>sulu_product.media</title>
             </meta>
 
-            <params>
-                <param name="types" value="image"/>
-            </params>
-        </property>
+            <properties>
+                <property name="details/image" type="single_media_selection" colspan="12" multilingual="false">
+                    <meta>
+                        <title>sulu_product.image</title>
+                    </meta>
 
-        <property name="documents" type="media_selection" colspan="6">
-            <meta>
-                <title>sulu_product.documents</title>
-            </meta>
+                    <params>
+                        <param name="types" value="image"/>
+                    </params>
+                </property>
 
-            <params>
-                <param name="types" value="document"/>
-            </params>
-        </property>
+                <property name="details/documents" type="media_selection" colspan="12" multilingual="false">
+                    <meta>
+                        <title>sulu_product.documents</title>
+                    </meta>
+
+                    <params>
+                        <param name="types" value="document"/>
+                    </params>
+                </property>
+            </properties>
+        </section>
     </properties>
 </form>

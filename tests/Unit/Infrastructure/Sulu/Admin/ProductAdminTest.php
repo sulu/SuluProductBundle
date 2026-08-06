@@ -20,12 +20,15 @@ use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Bundle\ActivityBundle\Infrastructure\Sulu\Admin\ActivityAdmin;
 use Sulu\Bundle\ActivityBundle\Infrastructure\Sulu\Admin\View\ActivityViewBuilderFactory;
 use Sulu\Bundle\AdminBundle\Admin\Navigation\NavigationItemCollection;
+use Sulu\Bundle\AdminBundle\Admin\View\FormViewBuilder;
+use Sulu\Bundle\AdminBundle\Admin\View\PreviewFormViewBuilder;
 use Sulu\Bundle\AdminBundle\Admin\View\ViewBuilderFactory;
 use Sulu\Bundle\AdminBundle\Admin\View\ViewCollection;
 use Sulu\Component\Localization\Manager\LocalizationManagerInterface;
 use Sulu\Component\Security\Authorization\PermissionTypes;
 use Sulu\Component\Security\Authorization\SecurityCheckerInterface;
 use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
+use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeGroupAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
@@ -225,6 +228,32 @@ class ProductAdminTest extends TestCase
         $this->assertTrue($viewCollection->has(ProductAdmin::ADD_TABS_VIEW . '.details'));
         $this->assertTrue($viewCollection->has(ProductAdmin::EDIT_TABS_VIEW . '.details'));
         $this->assertTrue($viewCollection->has(ProductAdmin::EDIT_TABS_VIEW . '.variants'));
+    }
+
+    public function testDetailsEditViewRendersPreview(): void
+    {
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(true);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::ADD)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::DELETE)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::LIVE)->willReturn(false);
+        $this->securityChecker->hasPermission(ActivityAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(false);
+
+        $viewCollection = new ViewCollection();
+        $this->admin->configureViews($viewCollection);
+
+        $editView = $viewCollection->get(ProductAdmin::EDIT_TABS_VIEW . '.details')->getView();
+        $this->assertSame(PreviewFormViewBuilder::TYPE, $editView->getType());
+        // the preview object provider is tagged for the dimension content, not the product itself
+        $this->assertSame(
+            ProductDimensionContentInterface::RESOURCE_KEY,
+            $editView->getOption('previewResourceKey'),
+        );
+        $this->assertSame('workflowPlace != null', $editView->getOption('previewCondition'));
+
+        // nothing to preview before the product exists
+        $addView = $viewCollection->get(ProductAdmin::ADD_TABS_VIEW . '.details')->getView();
+        $this->assertSame(FormViewBuilder::TYPE, $addView->getType());
     }
 
     public function testConfigureViewsAddsVariantsTabView(): void
