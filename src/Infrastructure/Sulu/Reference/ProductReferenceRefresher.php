@@ -25,6 +25,7 @@ use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
+use Sulu\Product\Domain\Model\ProductInterface;
 
 /**
  * @internal Modifying or depending on this service may result in unexpected behavior and is not supported.
@@ -55,7 +56,7 @@ class ProductReferenceRefresher implements ReferenceRefresherInterface
      */
     public static function getResourceKey(): string
     {
-        return ProductDimensionContentInterface::RESOURCE_KEY;
+        return ProductInterface::RESOURCE_KEY;
     }
 
     public function refresh(?array $filter = null): \Generator

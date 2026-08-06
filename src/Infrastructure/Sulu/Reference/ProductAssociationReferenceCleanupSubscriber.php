@@ -15,7 +15,6 @@ namespace Sulu\Product\Infrastructure\Sulu\Reference;
 
 use Sulu\Bundle\ReferenceBundle\Domain\Repository\ReferenceRepositoryInterface;
 use Sulu\Product\Domain\Event\ProductRemovedEvent;
-use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
@@ -49,7 +48,7 @@ class ProductAssociationReferenceCleanupSubscriber implements EventSubscriberInt
         $this->referenceRepository->removeBy([
             'resourceKey' => ProductInterface::RESOURCE_KEY,
             'resourceId' => $event->getResourceId(),
-            'referenceResourceKey' => ProductDimensionContentInterface::RESOURCE_KEY,
+            'referenceResourceKey' => ProductInterface::RESOURCE_KEY,
         ]);
     }
 }

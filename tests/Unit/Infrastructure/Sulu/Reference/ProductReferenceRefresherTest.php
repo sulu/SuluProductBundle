@@ -31,6 +31,7 @@ use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
+use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Reference\ProductReferenceRefresher;
 
 class ProductReferenceRefresherTest extends TestCase
@@ -78,7 +79,7 @@ class ProductReferenceRefresherTest extends TestCase
 
     public function testGetResourceKeyMatchesTheKeyTheRefreshersAreIndexedBy(): void
     {
-        $this->assertSame(ProductDimensionContentInterface::RESOURCE_KEY, ProductReferenceRefresher::getResourceKey());
+        $this->assertSame(ProductInterface::RESOURCE_KEY, ProductReferenceRefresher::getResourceKey());
     }
 
     public function testRefreshReturnsGenerator(): void
