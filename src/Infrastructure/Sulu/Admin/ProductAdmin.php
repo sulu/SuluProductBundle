@@ -137,7 +137,7 @@ class ProductAdmin extends Admin
                 ->setResourceKey(ProductInterface::RESOURCE_KEY)
                 ->addLocales($locales)
                 ->setBackView(static::LIST_VIEW)
-                ->setTitleProperty('name'),
+                ->setTitleProperty('title'),
         );
 
         // Details form — add mode
@@ -225,6 +225,7 @@ class ProductAdmin extends Admin
                     ->setResourceKey(ProductInterface::RESOURCE_KEY)
                     ->setFormKey('product_associations')
                     ->setTabTitle('sulu_product.associations')
+                    ->setTitleVisible(true)
                     ->setTabOrder(30)
                     ->addRouterAttributesToFormMetadata(['id'])
                     ->addToolbarActions($editToolbarActions)

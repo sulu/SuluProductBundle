@@ -18,6 +18,7 @@ use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
+use Sulu\Bundle\AdminBundle\Admin\View\FormViewBuilderInterface;
 use Sulu\Bundle\AdminBundle\Admin\View\PreviewFormViewBuilderInterface;
 use Sulu\Bundle\AdminBundle\Admin\View\ViewBuilderInterface;
 use Sulu\Bundle\AdminBundle\Admin\View\ViewCollection;
@@ -95,5 +96,49 @@ class ProductContentAdminTest extends TestCase
         $this->admin->configureViews($viewCollection);
 
         $this->assertCount(2, $viewCollection->all());
+    }
+
+    /**
+     * The content views ship with tab orders that collide with the product's own tabs
+     * (content defaults to 20, the same as variants; seo to 30, the same as associations).
+     */
+    public function testContentViewsAreOrderedBehindTheProductsOwnTabs(): void
+    {
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)
+            ->willReturn(true);
+
+        $this->contentViewBuilderFactory->getDefaultToolbarActions(ProductInterface::class)
+            ->willReturn([]);
+
+        $expectedOrders = [
+            ProductAdmin::EDIT_TABS_VIEW . '.content' => 40,
+            ProductAdmin::EDIT_TABS_VIEW . '.seo' => 50,
+            ProductAdmin::EDIT_TABS_VIEW . '.excerpt' => 60,
+            ProductAdmin::EDIT_TABS_VIEW . '.settings' => 70,
+        ];
+
+        $viewBuilders = [];
+        foreach ($expectedOrders as $name => $tabOrder) {
+            $viewBuilder = $this->prophesize(FormViewBuilderInterface::class);
+            $viewBuilder->getName()->willReturn($name);
+            $viewBuilder->setTabOrder($tabOrder)->shouldBeCalled();
+            $viewBuilders[] = $viewBuilder->reveal();
+        }
+
+        // the insights views carry no tab order of ours and must be left alone
+        $insights = $this->prophesize(FormViewBuilderInterface::class);
+        $insights->getName()->willReturn(ProductAdmin::EDIT_TABS_VIEW . '.insights');
+        $insights->setTabOrder(Argument::any())->shouldNotBeCalled();
+        $viewBuilders[] = $insights->reveal();
+
+        $this->contentViewBuilderFactory->createViews(
+            ProductInterface::class,
+            ProductAdmin::EDIT_TABS_VIEW,
+            null,
+            ProductAdmin::SECURITY_CONTEXT,
+            Argument::any(),
+        )->willReturn($viewBuilders);
+
+        $this->admin->configureViews(new ViewCollection());
     }
 }

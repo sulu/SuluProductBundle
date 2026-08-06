@@ -20,6 +20,14 @@
         </join>
     </joins>
 
+    <joins name="productFamily" ref="unlocalizedDimensionContent">
+        <join>
+            <entity-name>Sulu\Product\Domain\Model\ProductFamilyInterface</entity-name>
+            <field-name>unlocalizedDimensionContent.productFamily</field-name>
+            <method>LEFT</method>
+        </join>
+    </joins>
+
     <joins name="ghostDimensionContent" ref="unlocalizedDimensionContent">
         <join>
             <entity-name>ghostDimensionContent</entity-name>
@@ -90,6 +98,8 @@
                     <param name="prefix" value="sulu_product.product_status."/>
                 </params>
             </transformer>
+
+            <filter type="select"/>
         </property>
 
         <property name="type" translation="sulu_product.product_type" visibility="yes">
@@ -100,6 +110,29 @@
                     <param name="prefix" value="sulu_product.product_type_"/>
                 </params>
             </transformer>
+
+            <filter type="select">
+                <params>
+                    <param name="options" type="collection">
+                        <param name="product" value="sulu_product.product_type_product"/>
+                        <param name="product_with_variants" value="sulu_product.product_type_product_with_variants"/>
+                    </param>
+                </params>
+            </filter>
+        </property>
+
+        <property name="productFamily" translation="sulu_product.product_family" visibility="never">
+            <field-name>uuid</field-name>
+            <entity-name>Sulu\Product\Domain\Model\ProductFamilyInterface</entity-name>
+
+            <joins ref="productFamily"/>
+
+            <filter type="selection">
+                <params>
+                    <param name="displayProperty" value="name"/>
+                    <param name="resourceKey" value="product_families"/>
+                </params>
+            </filter>
         </property>
 
         <property name="created" translation="sulu_admin.created" visibility="no">
@@ -145,6 +178,23 @@
         <property name="locale" translation="sulu_admin.locale" visibility="never">
             <field-name>locale</field-name>
             <entity-name>dimensionContent</entity-name>
+        </property>
+
+        <property name="publishedState" translation="sulu_content.published_state" visibility="never">
+            <field-name>workflowPlace</field-name>
+            <entity-name>dimensionContent</entity-name>
+
+            <joins ref="dimensionContent"/>
+
+            <filter type="select">
+                <params>
+                    <param name="options" type="collection">
+                        <param name="published" value="sulu_content.state_published"/>
+                        <param name="unpublished" value="sulu_content.state_not_published"/>
+                        <param name="draft" value="sulu_admin.draft"/>
+                    </param>
+                </params>
+            </filter>
         </property>
 
         <property name="ghostLocale" translation="sulu_admin.ghost_locale" visibility="never">

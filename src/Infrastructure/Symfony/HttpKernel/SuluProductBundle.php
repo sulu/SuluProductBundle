@@ -108,6 +108,7 @@ use Sulu\Product\Infrastructure\Sulu\Admin\ProductContentAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductContentFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductFamilyAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductFamilyFormMetadataVisitor;
+use Sulu\Product\Infrastructure\Sulu\Admin\ProductsListMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductStatusFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductVariantAttributeFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\AdditionalWebspacesDataMapper;
@@ -868,6 +869,13 @@ final class SuluProductBundle extends AbstractBundle
         $services->set('sulu_product.product_code_form_metadata_visitor')
             ->class(ProductCodeFormMetadataVisitor::class)
             ->tag('sulu_admin.form_metadata_visitor');
+
+        $services->set('sulu_product.products_list_metadata_visitor')
+            ->class(ProductsListMetadataVisitor::class)
+            ->args([
+                '%sulu_product.product_statuses%',
+            ])
+            ->tag('sulu_admin.list_metadata_visitor');
 
         $services->set('sulu_product.product_status_form_metadata_visitor')
             ->class(ProductStatusFormMetadataVisitor::class)

@@ -14,7 +14,9 @@ declare(strict_types=1);
 namespace Sulu\Product\Infrastructure\Sulu\Admin;
 
 use Sulu\Bundle\AdminBundle\Admin\Admin;
+use Sulu\Bundle\AdminBundle\Admin\View\FormViewBuilderInterface;
 use Sulu\Bundle\AdminBundle\Admin\View\PreviewFormViewBuilderInterface;
+use Sulu\Bundle\AdminBundle\Admin\View\ViewBuilderInterface;
 use Sulu\Bundle\AdminBundle\Admin\View\ViewCollection;
 use Sulu\Component\Security\Authorization\PermissionTypes;
 use Sulu\Component\Security\Authorization\SecurityCheckerInterface;
@@ -28,6 +30,13 @@ use Sulu\Product\Domain\Model\ProductInterface;
  */
 class ProductContentAdmin extends Admin
 {
+    private const TAB_ORDERS = [
+        ProductAdmin::EDIT_TABS_VIEW . '.content' => 40,
+        ProductAdmin::EDIT_TABS_VIEW . '.seo' => 50,
+        ProductAdmin::EDIT_TABS_VIEW . '.excerpt' => 60,
+        ProductAdmin::EDIT_TABS_VIEW . '.settings' => 70,
+    ];
+
     public function __construct(
         private ContentViewBuilderFactoryInterface $contentViewBuilderFactory,
         private SecurityCheckerInterface $securityChecker,
@@ -54,7 +63,27 @@ class ProductContentAdmin extends Admin
             if ($viewBuilder instanceof PreviewFormViewBuilderInterface) {
                 $viewBuilder->setPreviewCondition('workflowPlace != null');
             }
+
+            $this->applyTabOrder($viewBuilder);
+
             $viewCollection->add($viewBuilder);
+        }
+    }
+
+    /**
+     * The content views default to tab orders that collide with the product's own tabs, so they are
+     * pushed behind details (10), variants (20) and associations (30).
+     */
+    private function applyTabOrder(ViewBuilderInterface $viewBuilder): void
+    {
+        $tabOrder = self::TAB_ORDERS[$viewBuilder->getName()] ?? null;
+
+        if (null === $tabOrder) {
+            return;
+        }
+
+        if ($viewBuilder instanceof PreviewFormViewBuilderInterface || $viewBuilder instanceof FormViewBuilderInterface) {
+            $viewBuilder->setTabOrder($tabOrder);
         }
     }
 

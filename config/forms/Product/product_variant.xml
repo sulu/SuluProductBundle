@@ -8,7 +8,7 @@
     <properties>
         <property name="title" type="text_line" mandatory="true" colspan="12">
             <meta>
-                <title>sulu_admin.title</title>
+                <title>sulu_admin.name</title>
             </meta>
 
             <params>

@@ -764,4 +764,67 @@ class ProductControllerTest extends SuluTestCase
         $ids = \array_column($listData['_embedded']['products'], 'id');
         $this->assertContains($id, $ids);
     }
+
+    public function testListFiltersByProductFamilyTypeAndStatus(): void
+    {
+        self::purgeDatabase();
+
+        $familyA = $this->createProductFamily();
+        $familyB = $this->createProductFamily();
+
+        $plainInA = $this->createProduct($familyA, 'Plain In A');
+        $withVariantsInA = $this->createProduct($familyA, 'Variants In A', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $plainInB = $this->createProduct($familyB, 'Plain In B');
+
+        $expectedFamilyA = [$plainInA, $withVariantsInA];
+        \sort($expectedFamilyA);
+        $this->assertSame($expectedFamilyA, $this->listIds(['productFamily' => $familyA]));
+
+        $this->assertSame(
+            [$withVariantsInA],
+            $this->listIds(['type' => ProductInterface::TYPE_PRODUCT_WITH_VARIANTS]),
+        );
+
+        $this->assertSame(
+            [$plainInB],
+            $this->listIds(['productFamily' => $familyB, 'type' => ProductInterface::TYPE_PRODUCT]),
+        );
+
+        // every product defaults to the "available" status
+        $expectedAll = [$plainInA, $withVariantsInA, $plainInB];
+        \sort($expectedAll);
+        $this->assertSame($expectedAll, $this->listIds(['status' => 'available']));
+        $this->assertSame([], $this->listIds(['status' => 'discontinued']));
+
+        // nothing is published yet, so the whole list sits in "unpublished"
+        $this->assertSame($expectedAll, $this->listIds(['publishedState' => 'unpublished']));
+        $this->assertSame([], $this->listIds(['publishedState' => 'published']));
+
+        $this->client->request('POST', '/admin/api/products/' . $plainInA . '.json?locale=en&action=publish');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        $this->assertSame([$plainInA], $this->listIds(['publishedState' => 'published']));
+    }
+
+    /**
+     * @param array<string, string> $filter
+     *
+     * @return array<int, string>
+     */
+    private function listIds(array $filter): array
+    {
+        $this->client->request('GET', '/admin/api/products.json?locale=en', ['filter' => $filter]);
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertIsArray($data['_embedded']);
+        $this->assertIsArray($data['_embedded']['products']);
+
+        /** @var array<int, string> $ids */
+        $ids = \array_column($data['_embedded']['products'], 'id');
+        \sort($ids);
+
+        return $ids;
+    }
 }
