@@ -25,6 +25,7 @@ use Sulu\Component\Security\SecuredControllerInterface;
 use Sulu\Content\Application\ContentManager\ContentManagerInterface;
 use Sulu\Content\Domain\Exception\ContentNotFoundException;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Content\Domain\Model\WorkflowInterface;
 use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
 use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushStamp;
 use Sulu\Product\Application\Message\ApplyWorkflowTransitionProductMessage;
@@ -80,6 +81,9 @@ final class ProductController implements SecuredControllerInterface
         $listBuilder = $this->listBuilderFactory->create(ProductInterface::class);
         $listBuilder->setIdField($fieldDescriptors['id']);
         $this->restHelper->initializeListBuilder($listBuilder, $fieldDescriptors);
+        // the publish indicator is rendered from these two, whether or not the list requests them
+        $listBuilder->addSelectField($fieldDescriptors['published']);
+        $listBuilder->addSelectField($fieldDescriptors['publishedState']);
         $listBuilder->setParameter('locale', $this->getLocale($request));
         // Variants are edited through their parent's variants tab and must not show up in the main list.
         $listBuilder->where(
@@ -96,8 +100,15 @@ final class ProductController implements SecuredControllerInterface
             $listBuilder->count(),
         );
 
+        /** @var array{_embedded: array{products: array<int, array<string, mixed>>}} $list */
+        $list = $listRepresentation->toArray();
+        foreach ($list['_embedded'][ProductInterface::RESOURCE_KEY] as &$item) {
+            // the admin expects a boolean, the list builder returns the raw workflow place
+            $item['publishedState'] = WorkflowInterface::WORKFLOW_PLACE_PUBLISHED === ($item['publishedState'] ?? null);
+        }
+
         return new JsonResponse($this->normalizer->normalize(
-            $listRepresentation->toArray(),
+            $list,
             'json',
         ));
     }

@@ -848,4 +848,39 @@ class ProductControllerTest extends SuluTestCase
         $this->assertArrayHasKey('title', $data);
         $this->assertSame('Selectable Product', $data['title']);
     }
+
+    public function testListExposesThePublishStateForTheIndicator(): void
+    {
+        self::purgeDatabase();
+        $familyId = $this->createProductFamily();
+        $draftId = $this->createProduct($familyId, 'Draft Product');
+        $publishedId = $this->createProduct($familyId, 'Published Product');
+
+        $this->client->request('POST', '/admin/api/products/' . $publishedId . '.json?locale=en&action=publish');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        // the list does not ask for either field, the indicator needs them anyway
+        $this->client->request('GET', '/admin/api/products.json?locale=en&fields=name,id&flat=true');
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(200, $response);
+
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertIsArray($data['_embedded']);
+        $this->assertIsArray($data['_embedded']['products']);
+
+        $byId = [];
+        foreach ($data['_embedded']['products'] as $item) {
+            $this->assertIsArray($item);
+            $this->assertIsString($item['id']);
+            $byId[$item['id']] = $item;
+        }
+
+        // the admin derives the circle from a boolean state plus a publish date
+        $this->assertFalse($byId[$draftId]['publishedState']);
+        $this->assertNull($byId[$draftId]['published']);
+
+        $this->assertTrue($byId[$publishedId]['publishedState']);
+        $this->assertNotNull($byId[$publishedId]['published']);
+    }
 }
