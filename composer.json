@@ -26,6 +26,9 @@
         "twig/twig": "^3.0",
         "webmozart/assert": "^1.0 || ^2.0"
     },
+    "conflict": {
+        "doctrine/orm": "3.7.x-dev"
+    },
     "require-dev": {
         "ext-filter": "*",
         "handcraftedinthealps/code-coverage-checker": "^0.2.1",
