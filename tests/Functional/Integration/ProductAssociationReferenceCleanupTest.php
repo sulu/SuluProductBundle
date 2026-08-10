@@ -17,7 +17,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Sulu\Bundle\ReferenceBundle\Domain\Repository\ReferenceRepositoryInterface;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
-use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Reference\ProductAssociationReferenceCleanupSubscriber;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -117,7 +116,7 @@ final class ProductAssociationReferenceCleanupTest extends SuluTestCase
         return $referenceRepository->findOneBy([
             'resourceKey' => ProductInterface::RESOURCE_KEY,
             'resourceId' => $targetId,
-            'referenceResourceKey' => ProductDimensionContentInterface::RESOURCE_KEY,
+            'referenceResourceKey' => ProductInterface::RESOURCE_KEY,
             'referenceResourceId' => $referrerId,
         ]);
     }

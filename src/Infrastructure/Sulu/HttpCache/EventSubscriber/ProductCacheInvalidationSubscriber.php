@@ -106,7 +106,7 @@ class ProductCacheInvalidationSubscriber implements EventSubscriberInterface
             filters: [
                 'resourceKey' => ProductInterface::RESOURCE_KEY,
                 'resourceId' => $removedProductUuid,
-                'referenceResourceKey' => ProductDimensionContentInterface::RESOURCE_KEY,
+                'referenceResourceKey' => ProductInterface::RESOURCE_KEY,
             ],
             fields: ['referenceResourceId', 'referenceLocale'],
             distinct: true,

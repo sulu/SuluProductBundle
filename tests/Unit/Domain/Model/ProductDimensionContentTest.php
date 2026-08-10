@@ -22,7 +22,6 @@ use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductAssociationInterface;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
-use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductInterface;
 
@@ -50,7 +49,7 @@ class ProductDimensionContentTest extends TestCase
     public function testGetResourceKeyReturnsExpectedKey(): void
     {
         $this->assertSame(
-            ProductDimensionContentInterface::RESOURCE_KEY,
+            ProductInterface::RESOURCE_KEY,
             ProductDimensionContent::getResourceKey(),
         );
     }

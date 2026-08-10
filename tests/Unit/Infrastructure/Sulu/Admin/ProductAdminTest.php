@@ -28,7 +28,6 @@ use Sulu\Component\Localization\Manager\LocalizationManagerInterface;
 use Sulu\Component\Security\Authorization\PermissionTypes;
 use Sulu\Component\Security\Authorization\SecurityCheckerInterface;
 use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
-use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeGroupAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
@@ -244,11 +243,9 @@ class ProductAdminTest extends TestCase
 
         $editView = $viewCollection->get(ProductAdmin::EDIT_TABS_VIEW . '.details')->getView();
         $this->assertSame(PreviewFormViewBuilder::TYPE, $editView->getType());
-        // the preview object provider is tagged for the dimension content, not the product itself
-        $this->assertSame(
-            ProductDimensionContentInterface::RESOURCE_KEY,
-            $editView->getOption('previewResourceKey'),
-        );
+        // the preview object provider is registered for the product resource key, so the view
+        // needs no separate preview resource key
+        $this->assertNull($editView->getOption('previewResourceKey'));
         $this->assertSame('workflowPlace != null', $editView->getOption('previewCondition'));
 
         // nothing to preview before the product exists

@@ -986,7 +986,7 @@ final class SuluProductBundle extends AbstractBundle
                 ProductAdmin::SECURITY_CONTEXT,
             ])
             ->tag('sulu.context', ['context' => 'admin'])
-            ->tag('sulu_preview.object_provider', ['provider-key' => ProductDimensionContentInterface::RESOURCE_KEY]);
+            ->tag('sulu_preview.object_provider', ['provider-key' => ProductInterface::RESOURCE_KEY]);
 
         $services->set('sulu_product.product_teaser_provider')
             ->class(ProductTeaserProvider::class)
@@ -1118,7 +1118,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_admin.metadata_provider_registry'),
                 new Reference('sulu_http_cache.cache_lifetime.resolver'),
             ])
-            ->tag('sulu_route.route_defaults_provider', ['resource_key' => ProductDimensionContentInterface::RESOURCE_KEY]);
+            ->tag('sulu_route.route_defaults_provider', ['resource_key' => ProductInterface::RESOURCE_KEY]);
 
         $services->set('sulu_product.admin_product_index_listener')
             ->class(AdminProductIndexListener::class)
@@ -1209,14 +1209,9 @@ final class SuluProductBundle extends AbstractBundle
                         ],
                     ],
                     'resources' => [
-                        'products' => [
+                        ProductInterface::RESOURCE_KEY => [
                             'routes' => [
                                 'list' => 'sulu_product.get_products',
-                                'detail' => 'sulu_product.get_product',
-                            ],
-                        ],
-                        ProductDimensionContentInterface::RESOURCE_KEY => [
-                            'routes' => [
                                 'detail' => 'sulu_product.get_product',
                             ],
                         ],

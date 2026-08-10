@@ -33,7 +33,6 @@ use Sulu\Product\Domain\Event\ProductRemovedEvent;
 use Sulu\Product\Domain\Event\ProductWorkflowTransitionAppliedEvent;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
-use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\HttpCache\EventSubscriber\ProductCacheInvalidationSubscriber;
@@ -334,7 +333,7 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
             [
                 'resourceKey' => ProductInterface::RESOURCE_KEY,
                 'resourceId' => 'product-uuid-456',
-                'referenceResourceKey' => ProductDimensionContentInterface::RESOURCE_KEY,
+                'referenceResourceKey' => ProductInterface::RESOURCE_KEY,
             ],
             [],
             ['referenceResourceId', 'referenceLocale'],
@@ -378,7 +377,7 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
             [
                 'resourceKey' => ProductInterface::RESOURCE_KEY,
                 'resourceId' => 'product-uuid-456',
-                'referenceResourceKey' => ProductDimensionContentInterface::RESOURCE_KEY,
+                'referenceResourceKey' => ProductInterface::RESOURCE_KEY,
             ],
             [],
             ['referenceResourceId', 'referenceLocale'],

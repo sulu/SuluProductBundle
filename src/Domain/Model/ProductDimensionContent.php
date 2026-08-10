@@ -133,7 +133,7 @@ class ProductDimensionContent implements ProductDimensionContentInterface
 
     public static function getResourceKey(): string
     {
-        return ProductDimensionContentInterface::RESOURCE_KEY;
+        return ProductInterface::RESOURCE_KEY;
     }
 
     public function getCustomizeWebspaceSettings(): bool

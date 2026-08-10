@@ -29,8 +29,6 @@ use Sulu\Content\Domain\Model\WorkflowInterface;
  */
 interface ProductDimensionContentInterface extends DimensionContentInterface, ExcerptInterface, TaxonomyInterface, SeoInterface, TemplateInterface, RoutableInterface, WorkflowInterface, ShadowInterface, WebspaceInterface, AuthorInterface, AuditableInterface
 {
-    public const RESOURCE_KEY = 'product_contents';
-
     public const DEFAULT_STATUS = 'available';
 
     public function getTitle(): ?string;

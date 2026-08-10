@@ -20,7 +20,6 @@ use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Bundle\ReferenceBundle\Domain\Repository\ReferenceRepositoryInterface;
 use Sulu\Product\Domain\Event\ProductRemovedEvent;
-use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Reference\ProductAssociationReferenceCleanupSubscriber;
 
@@ -60,7 +59,7 @@ final class ProductAssociationReferenceCleanupSubscriberTest extends TestCase
         $this->referenceRepository->removeBy([
             'resourceKey' => ProductInterface::RESOURCE_KEY,
             'resourceId' => 'uuid-b',
-            'referenceResourceKey' => ProductDimensionContentInterface::RESOURCE_KEY,
+            'referenceResourceKey' => ProductInterface::RESOURCE_KEY,
         ])->shouldHaveBeenCalledOnce();
     }
 
