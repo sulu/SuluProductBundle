@@ -223,7 +223,7 @@ final class ProductController implements SecuredControllerInterface
         $locale = $this->getLocale($request);
 
         /** @var DoctrineFieldDescriptorInterface[] $fieldDescriptors */
-        $fieldDescriptors = $this->fieldDescriptorFactory->getFieldDescriptors('products_versions');
+        $fieldDescriptors = $this->fieldDescriptorFactory->getFieldDescriptors(ProductInterface::LIST_KEY_VERSIONS);
         /** @var DoctrineListBuilder $listBuilder */
         $listBuilder = $this->listBuilderFactory->create(ProductInterface::class);
         $listBuilder->setParameter('locale', $locale);
@@ -235,8 +235,8 @@ final class ProductController implements SecuredControllerInterface
         $result = $listBuilder->execute();
         $listRepresentation = new PaginatedRepresentation(
             $result,
-            'products_versions',
-            $listBuilder->getCurrentPage(),
+            ProductInterface::LIST_KEY_VERSIONS,
+            (int) $listBuilder->getCurrentPage(),
             (int) $listBuilder->getLimit(),
             $listBuilder->count(),
         );

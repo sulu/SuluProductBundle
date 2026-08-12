@@ -883,4 +883,32 @@ class ProductControllerTest extends SuluTestCase
         $this->assertTrue($byId[$publishedId]['publishedState']);
         $this->assertNotNull($byId[$publishedId]['published']);
     }
+
+    public function testGetVersionsListsPublishedVersions(): void
+    {
+        self::purgeDatabase();
+        $familyId = $this->createProductFamily();
+        $id = $this->createProduct($familyId, 'Versioned Product');
+
+        $this->client->request('POST', '/admin/api/products/' . $id . '.json?locale=en&action=publish');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        // the parameters the versions tab sends
+        $this->client->request(
+            'GET',
+            '/admin/api/products/' . $id . '/versions?page=1&locale=en&limit=10&fields=title,version,changer,id&flat=true',
+        );
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(200, $response);
+
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertSame(1, $data['page']);
+        $this->assertIsArray($data['_embedded']);
+        $this->assertIsArray($data['_embedded']['products_versions']);
+        $this->assertCount(1, $data['_embedded']['products_versions']);
+        $version = $data['_embedded']['products_versions'][0];
+        $this->assertIsArray($version);
+        $this->assertSame('Versioned Product', $version['title']);
+    }
 }
