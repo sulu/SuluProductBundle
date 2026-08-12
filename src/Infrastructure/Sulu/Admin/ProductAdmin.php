@@ -61,7 +61,7 @@ class ProductAdmin extends Admin
 
         $parent = new NavigationItem('sulu_product.products');
         $parent->setPosition(20);
-        $parent->setIcon('su-newspaper');
+        $parent->setIcon('su-industry');
 
         if ($hasProducts) {
             $productsChild = new NavigationItem('sulu_product.products');

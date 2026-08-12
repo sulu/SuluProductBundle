@@ -180,6 +180,15 @@
             <entity-name>dimensionContent</entity-name>
         </property>
 
+        <property name="published" translation="sulu_admin.published" type="date" visibility="never">
+            <field-name>workflowPublished</field-name>
+            <entity-name>dimensionContent</entity-name>
+
+            <joins ref="dimensionContent"/>
+
+            <transformer type="datetime"/>
+        </property>
+
         <property name="publishedState" translation="sulu_content.published_state" visibility="never">
             <field-name>workflowPlace</field-name>
             <entity-name>dimensionContent</entity-name>

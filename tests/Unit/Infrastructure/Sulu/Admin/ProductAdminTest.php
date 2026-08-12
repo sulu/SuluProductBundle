@@ -97,6 +97,7 @@ class ProductAdminTest extends TestCase
         $this->assertCount(1, $items);
         $parent = \reset($items);
         $this->assertCount(2, $parent->getChildren());
+        $this->assertSame('su-industry', $parent->getIcon());
     }
 
     public function testConfigureNavigationItemsOnlyProducts(): void

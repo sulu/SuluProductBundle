@@ -1268,7 +1268,7 @@ final class SuluProductBundle extends AbstractBundle
                                         'adapter' => 'table',
                                         'list_key' => 'products',
                                         'display_properties' => ['name'],
-                                        'icon' => 'su-newspaper',
+                                        'icon' => 'su-industry',
                                         'label' => 'sulu_product.selection_label',
                                         'overlay_title' => 'sulu_product.selection_overlay_title',
                                     ],
@@ -1286,7 +1286,7 @@ final class SuluProductBundle extends AbstractBundle
                                         // the selected item is loaded from the detail endpoint, which has no `name`
                                         'display_properties' => ['title'],
                                         'empty_text' => 'sulu_product.no_product_selected',
-                                        'icon' => 'su-newspaper',
+                                        'icon' => 'su-industry',
                                         'overlay_title' => 'sulu_product.single_selection_overlay_title',
                                     ],
                                 ],
@@ -1411,7 +1411,7 @@ final class SuluProductBundle extends AbstractBundle
                         'resources' => [
                             ProductInterface::RESOURCE_KEY => [
                                 'name' => 'sulu_product.products',
-                                'icon' => 'su-newspaper',
+                                'icon' => 'su-industry',
                                 'route' => [
                                     'name' => ProductAdmin::EDIT_TABS_VIEW . '.details',
                                     'resultToRoute' => [
