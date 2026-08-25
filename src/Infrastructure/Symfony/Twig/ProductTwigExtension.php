@@ -19,8 +19,6 @@ use Sulu\Content\Application\ContentAggregator\ContentAggregatorInterface;
 use Sulu\Content\Application\ContentResolver\ContentResolverInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
-use Sulu\Product\Domain\Measurement\MeasurementRegistry;
-use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
@@ -35,7 +33,6 @@ class ProductTwigExtension extends AbstractExtension
         private RequestAnalyzerInterface $requestAnalyzer,
         private ReferenceStoreInterface $referenceStore,
         private ContentResolverInterface $contentResolver,
-        private MeasurementRegistry $measurementRegistry,
     ) {
     }
 
@@ -49,7 +46,7 @@ class ProductTwigExtension extends AbstractExtension
     /**
      * @param array<string, string> $properties
      *
-     * @return array{attributes: list<array{key: string, label: string, type: string, value: mixed, formattedValue: string|null}>, ...}|null
+     * @return array<string, mixed>|null
      */
     public function loadProduct(
         string $uuid,
@@ -93,79 +90,9 @@ class ProductTwigExtension extends AbstractExtension
         );
 
         $resolvedContent = $this->contentResolver->resolve($dimensionContent, $properties);
-        $resolvedContent['attributes'] = $this->formatAttributes($dimensionContent, $locale);
 
         $this->referenceStore->add($product->getUuid(), ProductInterface::RESOURCE_KEY);
 
         return $resolvedContent;
-    }
-
-    /**
-     * @return list<array{key: string, label: string, type: string, value: mixed, formattedValue: string|null}>
-     */
-    private function formatAttributes(ProductDimensionContentInterface $dimensionContent, string $locale): array
-    {
-        $result = [];
-
-        foreach ($dimensionContent->getAttributes() as $productAttributeValue) {
-            $attribute = $productAttributeValue->getAttribute();
-
-            $value = match ($attribute->getType()) {
-                AttributeInterface::TYPE_OPTIONS => $productAttributeValue->getAttributeOption()?->getTranslation($locale)?->getName()
-                    ?? $productAttributeValue->getAttributeOptionKey(),
-                AttributeInterface::TYPE_TEXT => $productAttributeValue->getText(),
-                AttributeInterface::TYPE_NUMBER => $productAttributeValue->getNumber(),
-                AttributeInterface::TYPE_DATE => $this->resolveDate($productAttributeValue->getNumber()),
-                default => $productAttributeValue->getValue(),
-            };
-
-            $formattedValue = match ($attribute->getType()) {
-                AttributeInterface::TYPE_TEXT => $this->formatValue($attribute, $productAttributeValue->getText()),
-                AttributeInterface::TYPE_NUMBER => $this->formatValue($attribute, $productAttributeValue->getNumber()),
-                default => null,
-            };
-
-            $result[] = [
-                'key' => $productAttributeValue->getAttributeKey(),
-                'label' => $attribute->getTranslation($locale)?->getName() ?? $productAttributeValue->getAttributeKey(),
-                'type' => $attribute->getType(),
-                'value' => $value,
-                'formattedValue' => $formattedValue,
-            ];
-        }
-
-        return $result;
-    }
-
-    private function resolveDate(?float $timestamp): ?string
-    {
-        if (null === $timestamp) {
-            return null;
-        }
-
-        return (new \DateTimeImmutable('@' . (int) $timestamp))->format('Y-m-d');
-    }
-
-    private function formatValue(AttributeInterface $attribute, string|float|null $value): ?string
-    {
-        if (null === $value || '' === $value) {
-            return null;
-        }
-
-        $config = $attribute->getConfig();
-        $format = $config['displayFormat'] ?? null;
-
-        if (!\is_string($format) || '' === $format) {
-            return null;
-        }
-
-        $unitKey = $config['unit'] ?? null;
-        $unit = \is_string($unitKey) ? $this->measurementRegistry->findUnit($unitKey) : null;
-
-        return \trim(\str_replace(
-            ['%value%', '%unit%'],
-            [(string) $value, $unit?->getSymbol() ?? ''],
-            $format,
-        ));
     }
 }

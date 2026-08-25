@@ -36,6 +36,7 @@ use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductDetailsResolver;
+use Sulu\Product\Infrastructure\Sulu\Content\ResourceLoader\ProductFamilyResourceLoader;
 
 #[CoversClass(ProductDetailsResolver::class)]
 class ProductDetailsResolverTest extends TestCase
@@ -139,8 +140,12 @@ class ProductDetailsResolverTest extends TestCase
 
         self::assertSame('SKU-1', $this->contentViewAt($dc, 'code')->getContent());
         self::assertSame('EXT-1', $this->contentViewAt($dc, 'externalIdentifier')->getContent());
-        self::assertSame('fam-uuid', $this->contentViewAt($dc, 'productFamily')->getContent());
         self::assertSame('available', $this->contentViewAt($dc, 'status')->getContent());
+
+        $productFamily = $this->contentViewAt($dc, 'productFamily')->getContent();
+        self::assertInstanceOf(ResolvableResource::class, $productFamily);
+        self::assertSame('fam-uuid', $productFamily->getId());
+        self::assertSame(ProductFamilyResourceLoader::RESOURCE_LOADER_KEY, $productFamily->getResourceLoaderKey());
     }
 
     public function testResolvesNullEntityOwnedFields(): void

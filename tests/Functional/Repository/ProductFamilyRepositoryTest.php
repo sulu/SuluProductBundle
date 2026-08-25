@@ -119,6 +119,47 @@ class ProductFamilyRepositoryTest extends SuluTestCase
         $this->assertSame($familyUuid, $loaded->getUuid());
     }
 
+    public function testFindByUuidsReturnsMatchingFamilies(): void
+    {
+        $family1 = $this->repository->create();
+        $this->repository->save($family1);
+        $family2 = $this->repository->create();
+        $this->repository->save($family2);
+        $family3 = $this->repository->create();
+        $this->repository->save($family3);
+        $this->entityManager->flush();
+
+        $uuid1 = $family1->getUuid();
+        $uuid2 = $family2->getUuid();
+        $this->assertNotNull($uuid1);
+        $this->assertNotNull($uuid2);
+        $this->entityManager->clear();
+
+        $result = [];
+        foreach ($this->repository->findBy(['uuids' => [$uuid1, $uuid2]]) as $family) {
+            $result[] = $family;
+        }
+
+        $this->assertCount(2, $result);
+        $loadedUuids = \array_map(static fn (ProductFamilyInterface $family) => $family->getUuid(), $result);
+        $this->assertContains($uuid1, $loadedUuids);
+        $this->assertContains($uuid2, $loadedUuids);
+    }
+
+    public function testFindByWithoutFiltersReturnsAllFamilies(): void
+    {
+        $this->repository->save($this->repository->create());
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        $result = [];
+        foreach ($this->repository->findBy() as $family) {
+            $result[] = $family;
+        }
+
+        $this->assertCount(1, $result);
+    }
+
     public function testFindOneByReturnsNullForUnknownUuid(): void
     {
         $this->assertNull($this->repository->findOneBy(['uuid' => '00000000-0000-0000-0000-000000000000']));

@@ -46,6 +46,7 @@ use Sulu\Product\Application\MessageHandler\RemoveProductFamilyMessageHandler;
 use Sulu\Product\Application\MessageHandler\RemoveProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\RemoveProductTranslationMessageHandler;
 use Sulu\Product\Application\MessageHandler\RestoreProductVersionMessageHandler;
+use Sulu\Product\Application\Variant\ProductVariantLoader;
 use Sulu\Product\Application\Webspace\WebspaceSettingsConfigurationResolver;
 use Sulu\Product\Application\Workflow\VariantParentPublishStateUpdater;
 use Sulu\Product\Application\Workflow\VariantWorkflowCascader;
@@ -106,6 +107,7 @@ use Sulu\Product\Infrastructure\Sulu\Admin\ProductAttributeFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductCodeFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductContentAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductContentFormMetadataVisitor;
+use Sulu\Product\Infrastructure\Sulu\Admin\ProductDetailsFieldMetadataValidator;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductFamilyAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductFamilyFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductsListMetadataVisitor;
@@ -129,7 +131,11 @@ use Sulu\Product\Infrastructure\Sulu\Content\ProductTeaserProvider;
 use Sulu\Product\Infrastructure\Sulu\Content\PropertyResolver\ProductSelectionPropertyResolver;
 use Sulu\Product\Infrastructure\Sulu\Content\PropertyResolver\SingleProductSelectionPropertyResolver;
 use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductAssociationsResolver;
+use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductAttributesResolver;
 use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductDetailsResolver;
+use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductResolver;
+use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductVariantsResolver;
+use Sulu\Product\Infrastructure\Sulu\Content\ResourceLoader\ProductFamilyResourceLoader;
 use Sulu\Product\Infrastructure\Sulu\Content\ResourceLoader\ProductResourceLoader;
 use Sulu\Product\Infrastructure\Sulu\Content\Select\AttributeSelectService;
 use Sulu\Product\Infrastructure\Sulu\Content\Select\AttributeTypeSelectService;
@@ -150,6 +156,7 @@ use Sulu\Product\Infrastructure\Sulu\Sitemap\ProductsSitemapProvider;
 use Sulu\Product\Infrastructure\Sulu\Trash\ProductTrashItemHandler;
 use Sulu\Product\Infrastructure\Symfony\Serializer\Normalizer\ProductFamilyNormalizer;
 use Sulu\Product\Infrastructure\Symfony\Serializer\Normalizer\ProductNormalizer;
+use Sulu\Product\Infrastructure\Symfony\Twig\ProductAttributeTwigExtension;
 use Sulu\Product\Infrastructure\Symfony\Twig\ProductTwigExtension;
 use Sulu\Product\UserInterface\Controller\Admin\AttributeController;
 use Sulu\Product\UserInterface\Controller\Admin\AttributeGroupController;
@@ -615,6 +622,7 @@ final class SuluProductBundle extends AbstractBundle
             ->args([
                 '%sulu_product.measurements%',
             ]);
+        $services->alias(MeasurementRegistry::class, 'sulu_product.measurement_registry');
 
         $services->set('sulu_product.association_type_registry')
             ->class(ProductAssociationTypeRegistry::class)
@@ -862,6 +870,10 @@ final class SuluProductBundle extends AbstractBundle
             ])
             ->tag('sulu_admin.field_metadata_validator');
 
+        $services->set('sulu_product.product_details_field_metadata_validator')
+            ->class(ProductDetailsFieldMetadataValidator::class)
+            ->tag('sulu_admin.field_metadata_validator');
+
         $services->set('sulu_product.product_content_form_metadata_visitor')
             ->class(ProductContentFormMetadataVisitor::class)
             ->tag('sulu_admin.typed_form_metadata_visitor');
@@ -957,16 +969,36 @@ final class SuluProductBundle extends AbstractBundle
             ->args([
                 new Reference('sulu_admin.xml_form_metadata_loader'),
                 new Reference('sulu_content.metadata_resolver'),
-            ])
-            ->tag('sulu_content.content_resolver', ['type' => 'product']);
+            ]);
 
         $services->set('sulu_product.product_associations_resolver')
             ->class(ProductAssociationsResolver::class)
             ->args([
                 new Reference('sulu_admin.form_metadata_provider'),
                 new Reference('sulu_content.metadata_resolver'),
+            ]);
+
+        $services->set('sulu_product.product_attributes_resolver')
+            ->class(ProductAttributesResolver::class)
+            ->args([
+                new Reference('sulu_product.measurement_registry'),
+            ]);
+
+        $services->set('sulu_product.product_variants_resolver')
+            ->class(ProductVariantsResolver::class)
+            ->args([
+                new Reference('sulu_product.product_variant_loader'),
+            ]);
+
+        $services->set('sulu_product.product_resolver')
+            ->class(ProductResolver::class)
+            ->args([
+                new Reference('sulu_product.product_details_resolver'),
+                new Reference('sulu_product.product_attributes_resolver'),
+                new Reference('sulu_product.product_associations_resolver'),
+                new Reference('sulu_product.product_variants_resolver'),
             ])
-            ->tag('sulu_content.content_resolver', ['type' => 'associations']);
+            ->tag('sulu_content.content_resolver', ['type' => 'product', 'placement' => 'root']);
 
         $services->set('sulu_product.product_resource_loader')
             ->class(ProductResourceLoader::class)
@@ -974,6 +1006,13 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.product_repository'),
             ])
             ->tag('sulu_content.resource_loader', ['type' => ProductResourceLoader::RESOURCE_LOADER_KEY]);
+
+        $services->set('sulu_product.product_family_resource_loader')
+            ->class(ProductFamilyResourceLoader::class)
+            ->args([
+                new Reference('sulu_product.product_family_repository'),
+            ])
+            ->tag('sulu_content.resource_loader', ['type' => ProductFamilyResourceLoader::RESOURCE_LOADER_KEY]);
 
         $services->set('sulu_product.product_preview_provider')
             ->class(ContentObjectProvider::class)
@@ -1043,8 +1082,11 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_core.webspace.request_analyzer'),
                 new Reference('sulu_http_cache.reference_store'),
                 new Reference('sulu_content.content_resolver'),
-                new Reference('sulu_product.measurement_registry'),
             ])
+            ->tag('twig.extension');
+
+        $services->set('sulu_product.product_attribute_twig_extension')
+            ->class(ProductAttributeTwigExtension::class)
             ->tag('twig.extension');
 
         // Reference services
@@ -1119,6 +1161,15 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_http_cache.cache_lifetime.resolver'),
             ])
             ->tag('sulu_route.route_defaults_provider', ['resource_key' => ProductInterface::RESOURCE_KEY]);
+
+        $services->set('sulu_product.product_variant_loader')
+            ->class(ProductVariantLoader::class)
+            ->args([
+                new Reference('sulu_product.product_repository'),
+                new Reference('sulu_content.content_aggregator'),
+            ]);
+
+        $services->alias(ProductVariantLoader::class, 'sulu_product.product_variant_loader');
 
         $services->set('sulu_product.admin_product_index_listener')
             ->class(AdminProductIndexListener::class)

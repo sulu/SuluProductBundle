@@ -23,7 +23,7 @@ use Sulu\Product\Domain\Model\ProductAssociationInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 
 /**
- * Exposes the product's association targets to the frontend under `extension.associations.*`.
+ * Exposes the product's association targets to the frontend under `product.associations.*`.
  *
  * Which properties resolve per type is controlled by the merged `product_associations`
  * form metadata - projects override it by declaring `associations/<type>` fields with params.
@@ -64,7 +64,7 @@ class ProductAssociationsResolver implements ResolverInterface
             }
 
             // re-keyed to the bare type: resolveItems() keys its output (and the data lookup) by
-            // array key, and the bare type is the output contract under extension.associations.<type>
+            // array key, and the bare type is the output contract under product.associations.<type>
             $type = \substr($name, \strlen(self::FIELD_PREFIX));
             $items[$type] = $field;
             $data[$type] = \array_map(

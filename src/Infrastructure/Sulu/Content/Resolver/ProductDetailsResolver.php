@@ -21,9 +21,10 @@ use Sulu\Content\Application\MetadataResolver\MetadataResolver;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
+use Sulu\Product\Infrastructure\Sulu\Content\ResourceLoader\ProductFamilyResourceLoader;
 
 /**
- * Exposes the product Details master-data fields to the frontend under `extension.product.*`.
+ * Exposes the product Details master-data fields to the frontend under `product.*`.
  *
  * @internal
  */
@@ -41,18 +42,35 @@ class ProductDetailsResolver implements ResolverInterface
             return null;
         }
 
-        // a project's details/<field> overrides a colliding entity-field name
+        // details/<field> cannot collide with code, externalIdentifier, productFamily or status:
+        // ProductDetailsFieldMetadataValidator rejects those names at cache warmup. The merge
+        // order below only matters for non-reserved field names.
         return ContentView::create(
             \array_merge(
                 [
                     'code' => ContentView::create($dimensionContent->getCode(), []),
                     'externalIdentifier' => ContentView::create($dimensionContent->getExternalIdentifier(), []),
-                    'productFamily' => ContentView::create($dimensionContent->getProductFamily()?->getUuid(), []),
+                    'productFamily' => $this->resolveProductFamily($dimensionContent),
                     'status' => ContentView::create($dimensionContent->getStatus(), []),
                 ],
                 $this->resolveDetailsData($dimensionContent),
             ),
             [],
+        );
+    }
+
+    private function resolveProductFamily(ProductDimensionContentInterface $dimensionContent): ContentView
+    {
+        $uuid = $dimensionContent->getProductFamily()?->getUuid();
+
+        if (null === $uuid) {
+            return ContentView::create(null, []);
+        }
+
+        return ContentView::createResolvable(
+            id: $uuid,
+            resourceLoaderKey: ProductFamilyResourceLoader::RESOURCE_LOADER_KEY,
+            view: [],
         );
     }
 

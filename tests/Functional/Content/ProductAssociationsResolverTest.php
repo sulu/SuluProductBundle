@@ -64,9 +64,9 @@ class ProductAssociationsResolverTest extends SuluTestCase
      * fully resolving it recursively (title/url) would require route generation/publishing
      * setup unrelated to this resolver. Asserting on the still-unresolved ResolvableResource
      * is sufficient to prove the resolver + DI wiring (`type => associations`) produce a
-     * `product_selection`-shaped resolvable, limited to `title`/`url`, under `extension.associations`.
+     * `product_selection`-shaped resolvable, limited to `title`/`url`, under `product.associations`.
      */
-    public function testProductAssociationsAppearUnderExtensionAssociations(): void
+    public function testProductAssociationsAppearUnderRootProductAssociations(): void
     {
         $target = $this->productRepository->createNew();
         $this->productRepository->add($target);
@@ -87,8 +87,12 @@ class ProductAssociationsResolverTest extends SuluTestCase
 
         $result = $this->contentResolver->resolve($dimensionContent);
 
-        self::assertArrayHasKey('associations', $result['extension']);
-        $associationsData = $result['extension']['associations'];
+        self::assertArrayHasKey('product', $result);
+        $productData = $result['product'];
+        self::assertIsArray($productData);
+        self::assertArrayHasKey('associations', $productData);
+        $associationsData = $productData['associations'];
+        self::assertIsArray($associationsData);
 
         self::assertArrayHasKey('alternative', $associationsData);
         self::assertArrayHasKey('suitable', $associationsData);
@@ -126,7 +130,11 @@ class ProductAssociationsResolverTest extends SuluTestCase
 
         $result = $this->contentResolver->resolve($dimensionContent);
 
-        $associationsData = $result['extension']['associations'];
+        self::assertArrayHasKey('product', $result);
+        $productData = $result['product'];
+        self::assertIsArray($productData);
+        $associationsData = $productData['associations'];
+        self::assertIsArray($associationsData);
 
         $suitable = $associationsData['suitable'];
         self::assertIsArray($suitable);
@@ -187,7 +195,13 @@ class ProductAssociationsResolverTest extends SuluTestCase
 
         $result = $this->contentResolver->resolve($dimensionContent);
 
-        $suitable = $result['extension']['associations']['suitable'];
+        self::assertArrayHasKey('product', $result);
+        $productData = $result['product'];
+        self::assertIsArray($productData);
+        $associationsData = $productData['associations'];
+        self::assertIsArray($associationsData);
+
+        $suitable = $associationsData['suitable'];
         self::assertIsArray($suitable);
         self::assertCount(1, $suitable);
 
