@@ -19,6 +19,7 @@
     "sulu_product.no_attribute_group_selected": "No attribute group selected",
     "sulu_product.select_attribute_group": "Select attribute group",
     "sulu_product.position": "Position",
+    "sulu_product.variant_position_info": "Sorts the variants. The first one is what a product URL shows when no variant is selected.",
     "sulu_product.type": "Type",
     "sulu_product.type_number": "Number",
     "sulu_product.type_text": "Text",

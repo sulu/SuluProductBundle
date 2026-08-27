@@ -51,4 +51,9 @@ interface ProductInterface extends AuditableInterface, ContentRichEntityInterfac
     public function getParent(): ?self;
 
     public function setParent(?self $parent): self;
+
+    /** Sort order among its siblings; the first variant is what a bare product URL shows. */
+    public function getPosition(): int;
+
+    public function setPosition(int $position): self;
 }

@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Sulu\Product\Tests\Unit\Infrastructure\Sulu\Content\Resolver;
 
 use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
@@ -35,17 +34,17 @@ use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductInterface;
-use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductDetailsResolver;
+use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductResolver;
 
-#[CoversClass(ProductDetailsResolver::class)]
-class ProductDetailsResolverTest extends TestCase
+#[CoversClass(ProductResolver::class)]
+class ProductResolverDetailsTest extends ProductResolverTestCase
 {
     use ProphecyTrait;
 
     /** @var ObjectProphecy<FormMetadataLoaderInterface> */
     private ObjectProphecy $formMetadataLoader;
 
-    private ProductDetailsResolver $resolver;
+    private ProductResolver $resolver;
 
     protected function setUp(): void
     {
@@ -61,9 +60,9 @@ class ProductDetailsResolverTest extends TestCase
             ])),
         );
 
-        $this->resolver = new ProductDetailsResolver(
-            $this->formMetadataLoader->reveal(),
-            $metadataResolver,
+        $this->resolver = $this->createResolver(
+            formMetadataLoader: $this->formMetadataLoader->reveal(),
+            metadataResolver: $metadataResolver,
         );
     }
 
@@ -100,7 +99,7 @@ class ProductDetailsResolverTest extends TestCase
     /**
      * @return array<mixed, mixed>
      */
-    private function resolveContent(ProductDimensionContent $dimensionContent): array
+    private function resolveProduct(ProductDimensionContent $dimensionContent): array
     {
         $result = $this->resolver->resolve($dimensionContent);
         self::assertInstanceOf(ContentView::class, $result);
@@ -113,7 +112,7 @@ class ProductDetailsResolverTest extends TestCase
 
     private function contentViewAt(ProductDimensionContent $dimensionContent, string $key): ContentView
     {
-        $view = $this->resolveContent($dimensionContent)[$key];
+        $view = $this->resolveProduct($dimensionContent)[$key];
         self::assertInstanceOf(ContentView::class, $view);
 
         return $view;
@@ -139,8 +138,12 @@ class ProductDetailsResolverTest extends TestCase
 
         self::assertSame('SKU-1', $this->contentViewAt($dc, 'code')->getContent());
         self::assertSame('EXT-1', $this->contentViewAt($dc, 'externalIdentifier')->getContent());
-        self::assertSame('fam-uuid', $this->contentViewAt($dc, 'productFamily')->getContent());
         self::assertSame('available', $this->contentViewAt($dc, 'status')->getContent());
+
+        self::assertSame(
+            ['uuid' => 'fam-uuid', 'externalIdentifier' => null, 'name' => null],
+            $this->contentViewAt($dc, 'productFamily')->getContent(),
+        );
     }
 
     public function testResolvesNullEntityOwnedFields(): void
@@ -152,6 +155,35 @@ class ProductDetailsResolverTest extends TestCase
         self::assertNull($this->contentViewAt($dc, 'productFamily')->getContent());
         // status is non-nullable and defaults to "available"
         self::assertSame('available', $this->contentViewAt($dc, 'status')->getContent());
+    }
+
+    /** A project's own `product_details.xml` field is addressable as `product.<field>`. */
+    public function testAProjectDeclaredDetailsFieldIsRequestableByAReference(): void
+    {
+        $this->givenFormMetadata(['details/customField' => 'text_line']);
+
+        $dc = $this->makeDimensionContent(['customField' => 'from-project']);
+
+        $content = $this->resolveContent($dc, ['custom' => 'product.customField'], $this->resolver);
+
+        self::assertArrayHasKey('custom', $content);
+        $view = $content['custom'];
+        self::assertInstanceOf(ContentView::class, $view);
+        self::assertSame('from-project', $view->getContent());
+    }
+
+    public function testADetailsFieldAReferenceDidNotAskForIsNeverResolved(): void
+    {
+        $this->givenFormMetadata([
+            'details/shortDescription' => 'text_editor',
+            'details/customField' => 'text_line',
+        ]);
+
+        $dc = $this->makeDimensionContent(['shortDescription' => '<p>hi</p>', 'customField' => 'x']);
+
+        $content = $this->resolveContent($dc, ['custom' => 'product.customField'], $this->resolver);
+
+        self::assertArrayNotHasKey('shortDescription', $content);
     }
 
     public function testResolvesBucketFieldByItsXmlType(): void
@@ -250,7 +282,7 @@ class ProductDetailsResolverTest extends TestCase
             'details/shortDescription' => 'text_editor',
         ]);
 
-        $content = $this->resolveContent($this->makeDimensionContent(['shortDescription' => '<p>hi</p>']));
+        $content = $this->resolveProduct($this->makeDimensionContent(['shortDescription' => '<p>hi</p>']));
 
         self::assertArrayHasKey('shortDescription', $content);
         self::assertArrayNotHasKey('title', $content);
@@ -262,7 +294,7 @@ class ProductDetailsResolverTest extends TestCase
         $dc = $this->makeDimensionContent(['shortDescription' => '<p>hi</p>']);
         $dc->setCode('SKU-1');
 
-        $content = $this->resolveContent($dc);
+        $content = $this->resolveProduct($dc);
 
         self::assertArrayNotHasKey('shortDescription', $content);
         self::assertArrayHasKey('code', $content);

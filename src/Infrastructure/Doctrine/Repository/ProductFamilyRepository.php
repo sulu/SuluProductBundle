@@ -78,6 +78,14 @@ final class ProductFamilyRepository implements ProductFamilyRepositoryInterface
         return $family;
     }
 
+    public function findBy(array $filters = []): iterable
+    {
+        /** @var iterable<ProductFamilyInterface> $result */
+        $result = $this->createQueryBuilder($filters)->getQuery()->getResult();
+
+        return $result;
+    }
+
     /**
      * @param ProductFamilyRepositoryFilters $filters
      */
@@ -90,6 +98,13 @@ final class ProductFamilyRepository implements ProductFamilyRepositoryInterface
             Assert::string($uuid); // @phpstan-ignore staticMethod.alreadyNarrowedType
             $queryBuilder->andWhere('productFamily.uuid = :uuid')
                 ->setParameter('uuid', $uuid);
+        }
+
+        $uuids = $filters['uuids'] ?? null;
+        if (null !== $uuids) {
+            Assert::isArray($uuids); // @phpstan-ignore staticMethod.alreadyNarrowedType
+            $queryBuilder->andWhere('productFamily.uuid IN(:uuids)')
+                ->setParameter('uuids', $uuids);
         }
 
         $externalIdentifier = $filters['externalIdentifier'] ?? null;

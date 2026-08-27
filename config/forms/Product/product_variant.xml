@@ -28,6 +28,13 @@
             </meta>
         </property>
 
+        <property name="position" type="number" colspan="6">
+            <meta>
+                <title>sulu_product.position</title>
+                <info_text>sulu_product.variant_position_info</info_text>
+            </meta>
+        </property>
+
         <property name="externalIdentifier" type="text_line" colspan="12"
                   visibleCondition="!!externalIdentifier"
                   disabledCondition="true">

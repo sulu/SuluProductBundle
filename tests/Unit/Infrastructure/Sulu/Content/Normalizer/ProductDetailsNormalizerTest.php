@@ -109,6 +109,7 @@ class ProductDetailsNormalizerTest extends TestCase
         /** @var ObjectProphecy<ProductInterface> $product */
         $product = $this->prophesize(ProductInterface::class);
         $product->getType()->willReturn(ProductInterface::TYPE_VARIANT);
+        $product->getPosition()->willReturn(3);
         $object->getResource()->willReturn($product->reveal());
 
         $result = $this->normalizer->enhance($object->reveal(), []);
@@ -116,6 +117,7 @@ class ProductDetailsNormalizerTest extends TestCase
         $this->assertSame('available', $result['status']);
         $this->assertSame([], $result['details']);
         $this->assertSame(ProductInterface::TYPE_VARIANT, $result['type']);
+        $this->assertSame(3, $result['position']);
     }
 
     public function testEnhanceEmitsDetailsBucketUnchanged(): void

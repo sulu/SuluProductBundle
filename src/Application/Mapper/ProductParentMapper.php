@@ -18,7 +18,7 @@ use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Webmozart\Assert\Assert;
 
 /**
- * Maps the identity-level variant fields (type + parent) onto the Product. These live on
+ * Maps the identity-level variant fields (type, parent, position) onto the Product. These live on
  * `pr_products`, so they are set directly on the model rather than through the ContentPersister
  * pipeline.
  *
@@ -43,6 +43,7 @@ final class ProductParentMapper implements ProductMapperInterface
 
         if (!$product->isType(ProductInterface::TYPE_VARIANT)) {
             $product->setParent(null);
+            $product->setPosition(0);
 
             return;
         }
@@ -51,5 +52,10 @@ final class ProductParentMapper implements ProductMapperInterface
         Assert::stringNotEmpty($parent);
 
         $product->setParent($this->productRepository->getOneBy(['uuid' => $parent]));
+
+        if (\array_key_exists('position', $data)) {
+            Assert::integerish($data['position']);
+            $product->setPosition((int) $data['position']);
+        }
     }
 }

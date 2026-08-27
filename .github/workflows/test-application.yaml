@@ -26,7 +26,9 @@ jobs:
             APP_SECRET: a448d1dfcaa563fce56c2fd9981f662b
             MAILER_URL: null://localhost
             SULU_ADMIN_EMAIL:
-            COMPOSER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            # Composer reads COMPOSER_AUTH, not COMPOSER_TOKEN; the vcs repository in
+            # composer.json enumerates refs over the GitHub API and is rate-limited without it.
+            COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ secrets.GITHUB_TOKEN }}"}}'
 
         strategy:
             fail-fast: false
@@ -117,7 +119,9 @@ jobs:
             APP_SECRET: a448d1dfcaa563fce56c2fd9981f662b
             MAILER_URL: null://localhost
             SULU_ADMIN_EMAIL:
-            COMPOSER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            # Composer reads COMPOSER_AUTH, not COMPOSER_TOKEN; the vcs repository in
+            # composer.json enumerates refs over the GitHub API and is rate-limited without it.
+            COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ secrets.GITHUB_TOKEN }}"}}'
 
         steps:
             - name: Checkout project
@@ -164,7 +168,9 @@ jobs:
             APP_SECRET: a448d1dfcaa563fce56c2fd9981f662b
             MAILER_URL: null://localhost
             SULU_ADMIN_EMAIL:
-            COMPOSER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            # Composer reads COMPOSER_AUTH, not COMPOSER_TOKEN; the vcs repository in
+            # composer.json enumerates refs over the GitHub API and is rate-limited without it.
+            COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ secrets.GITHUB_TOKEN }}"}}'
             SYMFONY_DEPRECATIONS_HELPER: weak
             DATABASE_URL: mysql://root:ChangeMe@127.0.0.1:3306/sulu_test?serverVersion=8.0&charset=utf8mb4
 

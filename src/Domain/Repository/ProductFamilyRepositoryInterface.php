@@ -19,6 +19,7 @@ use Sulu\Product\Domain\Model\ProductFamilyInterface;
 /**
  * @phpstan-type ProductFamilyRepositoryFilters array{
  *     uuid?: string,
+ *     uuids?: string[],
  *     externalIdentifier?: string,
  *     productUuid?: string,
  * }
@@ -31,6 +32,13 @@ interface ProductFamilyRepositoryInterface
      * @param ProductFamilyRepositoryFilters $filters
      */
     public function findOneBy(array $filters): ?ProductFamilyInterface;
+
+    /**
+     * @param ProductFamilyRepositoryFilters $filters
+     *
+     * @return iterable<ProductFamilyInterface>
+     */
+    public function findBy(array $filters = []): iterable;
 
     /**
      * @param ProductFamilyRepositoryFilters $filters

@@ -34,6 +34,9 @@ class Product implements ProductInterface
 
     protected ?ProductInterface $parent = null;
 
+    /** Sort order among its siblings; the first variant is what a bare product URL shows. */
+    protected int $position = 0;
+
     /** @var Collection<int, ProductInterface> */
     protected Collection $variants;
 
@@ -87,6 +90,18 @@ class Product implements ProductInterface
     public function setParent(?ProductInterface $parent): self
     {
         $this->parent = $parent;
+
+        return $this;
+    }
+
+    public function getPosition(): int
+    {
+        return $this->position;
+    }
+
+    public function setPosition(int $position): self
+    {
+        $this->position = $position;
 
         return $this;
     }

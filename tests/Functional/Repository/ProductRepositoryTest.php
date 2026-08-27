@@ -677,6 +677,34 @@ class ProductRepositoryTest extends SuluTestCase
     }
 
     /**
+     * Branch B2: sort by 'position' triggers the third elseif in createQueryBuilder. As above, a
+     * non-empty filter keeps the enhancer's empty-filter+sortBy shortcut out of the way.
+     */
+    public function testFindBySortByPositionAsc(): void
+    {
+        $first = $this->createAndPersistProduct('POS1');
+        $second = $this->createAndPersistProduct('POS2');
+        $first->setPosition(2);
+        $second->setPosition(1);
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        $products = \iterator_to_array(
+            $this->repository->findBy(
+                ['uuids' => [$first->getUuid(), $second->getUuid()]],
+                ['position' => 'asc'],
+            ),
+            false,
+        );
+
+        $this->assertCount(2, $products);
+        $this->assertSame(
+            [$second->getUuid(), $first->getUuid()],
+            \array_map(static fn (ProductInterface $product): string => $product->getUuid(), $products),
+        );
+    }
+
+    /**
      * Branch C: passing a falsy value for a select group key causes the loop to `continue`
      * without expanding the group. The query should still return products normally.
      */

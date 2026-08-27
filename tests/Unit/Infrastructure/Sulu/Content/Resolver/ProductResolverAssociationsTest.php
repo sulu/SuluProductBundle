@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Sulu\Product\Tests\Unit\Infrastructure\Sulu\Content\Resolver;
 
 use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
@@ -28,10 +27,10 @@ use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductAssociation;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
-use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductAssociationsResolver;
+use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductResolver;
 
-#[CoversClass(ProductAssociationsResolver::class)]
-final class ProductAssociationsResolverTest extends TestCase
+#[CoversClass(ProductResolver::class)]
+final class ProductResolverAssociationsTest extends ProductResolverTestCase
 {
     use ProphecyTrait;
 
@@ -41,17 +40,10 @@ final class ProductAssociationsResolverTest extends TestCase
     /** @var ObjectProphecy<MetadataResolver> */
     private ObjectProphecy $metadataResolver;
 
-    private ProductAssociationsResolver $resolver;
-
     protected function setUp(): void
     {
         $this->formMetadataProvider = $this->prophesize(MetadataProviderInterface::class);
         $this->metadataResolver = $this->prophesize(MetadataResolver::class);
-
-        $this->resolver = new ProductAssociationsResolver(
-            $this->formMetadataProvider->reveal(),
-            $this->metadataResolver->reveal(),
-        );
     }
 
     public function testReturnsNullForNonProductDimensionContent(): void
@@ -60,7 +52,7 @@ final class ProductAssociationsResolverTest extends TestCase
 
         $this->formMetadataProvider->getMetadata(Argument::cetera())->shouldNotBeCalled();
 
-        self::assertNull($this->resolver->resolve($other->reveal()));
+        self::assertNull($this->resolver()->resolve($other->reveal()));
     }
 
     public function testResolvesFormFieldsReKeyedByBareType(): void
@@ -104,13 +96,58 @@ final class ProductAssociationsResolverTest extends TestCase
             ->willReturn(['alternative' => $alternativeView, 'suitable' => $suitableView])
             ->shouldBeCalledOnce();
 
-        $result = $this->resolver->resolve($dimensionContent);
+        $associations = $this->resolveContent($dimensionContent, null, $this->resolver())['associations'];
 
-        self::assertNotNull($result);
+        self::assertInstanceOf(ContentView::class, $associations);
         self::assertSame(
             ['alternative' => $alternativeView, 'suitable' => $suitableView],
-            $result->getContent(),
+            $associations->getContent(),
         );
-        self::assertSame([], $result->getView());
+        self::assertSame([], $associations->getView());
+    }
+
+    /** Associations are built for a reference too — a listing shows an accessory's own targets. */
+    public function testResolvesAssociationsForAReferenceThatAsksForThem(): void
+    {
+        $formMetadata = new FormMetadata();
+        $formMetadata->setKey('product_associations');
+        $formMetadata->setItems([]);
+
+        $this->formMetadataProvider->getMetadata('product_associations', 'en', [])
+            ->willReturn($formMetadata)
+            ->shouldBeCalledOnce();
+
+        $this->metadataResolver->resolveItems([], [], 'en')->willReturn([])->shouldBeCalledOnce();
+
+        $dimensionContent = new ProductDimensionContent(new Product());
+        $dimensionContent->setLocale('en');
+
+        $content = $this->resolveContent(
+            $dimensionContent,
+            ['associations' => 'product.associations'],
+            $this->resolver(),
+        );
+
+        self::assertArrayHasKey('associations', $content);
+    }
+
+    public function testOmitsAssociationsForAReferenceThatDoesNotAskForThem(): void
+    {
+        $this->formMetadataProvider->getMetadata('product_associations', 'en', [])->shouldNotBeCalled();
+
+        $dimensionContent = new ProductDimensionContent(new Product());
+        $dimensionContent->setLocale('en');
+
+        $content = $this->resolveContent($dimensionContent, ['title' => 'title'], $this->resolver());
+
+        self::assertArrayNotHasKey('associations', $content);
+    }
+
+    private function resolver(): ProductResolver
+    {
+        return $this->createResolver(
+            formMetadataProvider: $this->formMetadataProvider->reveal(),
+            metadataResolver: $this->metadataResolver->reveal(),
+        );
     }
 }

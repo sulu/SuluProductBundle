@@ -19,7 +19,7 @@ namespace Sulu\Product\Application\Message;
  *     productFamily: string,
  *     uuid?: string,
  *     title?: string,
- *     code?: string,
+ *     code?: string|null,
  *     template?: string,
  *     author?: int|null,
  *     authored?: string,
@@ -28,6 +28,7 @@ namespace Sulu\Product\Application\Message;
  *     details?: array<string, mixed>,
  *     type?: string,
  *     parent?: string,
+ *     position?: int,
  * }
  */
 class CreateProductMessage

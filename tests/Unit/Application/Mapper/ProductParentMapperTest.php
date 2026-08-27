@@ -96,4 +96,35 @@ class ProductParentMapperTest extends TestCase
         self::assertSame(ProductInterface::TYPE_PRODUCT, $product->getType());
         self::assertSame($parent, $product->getParent());
     }
+
+    public function testTheVariantPositionIsMapped(): void
+    {
+        $parent = new Product('11111111-1111-7111-8111-111111111111');
+        $repository = $this->prophesize(ProductRepositoryInterface::class);
+        $repository->getOneBy(['uuid' => $parent->getUuid()])->willReturn($parent);
+
+        $mapper = new ProductParentMapper($repository->reveal());
+
+        $variant = new Product();
+        $mapper->mapProductData($variant, [
+            'type' => ProductInterface::TYPE_VARIANT,
+            'parent' => $parent->getUuid(),
+            'position' => 3,
+        ]);
+
+        self::assertSame(3, $variant->getPosition());
+    }
+
+    public function testAProductThatIsNoLongerAVariantLosesItsPosition(): void
+    {
+        $repository = $this->prophesize(ProductRepositoryInterface::class);
+        $mapper = new ProductParentMapper($repository->reveal());
+
+        $product = new Product();
+        $product->setPosition(4);
+
+        $mapper->mapProductData($product, ['type' => ProductInterface::TYPE_PRODUCT]);
+
+        self::assertSame(0, $product->getPosition());
+    }
 }
