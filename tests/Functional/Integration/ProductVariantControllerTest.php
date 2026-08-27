@@ -115,11 +115,22 @@ class ProductVariantControllerTest extends SuluTestCase
         return $id;
     }
 
-    private function createVariant(string $parentId, string $title = 'Variant'): string
+    private function createVariant(string $parentId, string $title = 'Variant', ?int $position = null): string
     {
         /** @var int $counter */
         static $counter = 0;
         ++$counter;
+
+        $payload = [
+            'locale' => 'en',
+            'code' => 'VARIANT-' . $counter,
+            'title' => $title,
+            'url' => '/test-variant-' . $counter,
+        ];
+
+        if (null !== $position) {
+            $payload['position'] = $position;
+        }
 
         $this->client->request(
             'POST',
@@ -127,12 +138,7 @@ class ProductVariantControllerTest extends SuluTestCase
             [],
             [],
             [],
-            \json_encode([
-                'locale' => 'en',
-                'code' => 'VARIANT-' . $counter,
-                'title' => $title,
-                'url' => '/test-variant-' . $counter,
-            ]) ?: null,
+            \json_encode($payload) ?: null,
         );
         $this->assertHttpStatusCode(201, $this->client->getResponse());
         $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
@@ -518,6 +524,84 @@ class ProductVariantControllerTest extends SuluTestCase
         $this->assertSame('CX3-RD-L', $row['code']);
         $this->assertArrayHasKey('status', $row);
         $this->assertSame('Variant L', $row['name']);
+    }
+
+    public function testCgetOrdersVariantsByPositionByDefault(): void
+    {
+        self::purgeDatabase();
+        $familyId = $this->createProductFamily();
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+
+        $third = $this->createVariant($parentId, 'Third', 3);
+        $first = $this->createVariant($parentId, 'First', 1);
+        $second = $this->createVariant($parentId, 'Second', 2);
+
+        $this->client->request('GET', '/admin/api/products/' . $parentId . '/variants.json?locale=en');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        $this->assertSame([$first, $second, $third], $this->getListedVariantIds());
+    }
+
+    public function testCgetLetsAnExplicitSortReplaceThePositionDefault(): void
+    {
+        self::purgeDatabase();
+        $familyId = $this->createProductFamily();
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+
+        $this->createVariant($parentId, 'Third', 3);
+        $this->createVariant($parentId, 'First', 1);
+        $this->createVariant($parentId, 'Second', 2);
+
+        $this->client->request(
+            'GET',
+            '/admin/api/products/' . $parentId . '/variants.json?locale=en&sortBy=name&sortOrder=desc',
+        );
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        $list = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($list);
+        $this->assertIsArray($list['_embedded']);
+        $this->assertIsArray($list['_embedded']['product_variants']);
+        $names = \array_column($list['_embedded']['product_variants'], 'name');
+
+        $this->assertSame(['Third', 'Second', 'First'], $names);
+    }
+
+    public function testCgetExposesThePositionColumn(): void
+    {
+        self::purgeDatabase();
+        $familyId = $this->createProductFamily();
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+
+        $this->createVariant($parentId, 'Only', 7);
+
+        $this->client->request('GET', '/admin/api/products/' . $parentId . '/variants.json?locale=en');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        $list = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($list);
+        $this->assertIsArray($list['_embedded']);
+        $this->assertIsArray($list['_embedded']['product_variants']);
+        $row = $list['_embedded']['product_variants'][0];
+        $this->assertIsArray($row);
+
+        $this->assertSame(7, $row['position']);
+    }
+
+    /**
+     * @return string[]
+     */
+    private function getListedVariantIds(): array
+    {
+        $list = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($list);
+        $this->assertIsArray($list['_embedded']);
+        $this->assertIsArray($list['_embedded']['product_variants']);
+
+        /** @var string[] $ids */
+        $ids = \array_column($list['_embedded']['product_variants'], 'id');
+
+        return $ids;
     }
 
     public function testDelete(): void

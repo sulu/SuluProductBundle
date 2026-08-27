@@ -48,6 +48,7 @@ class ProductDetailsNormalizer implements NormalizerInterface
         $normalizedData['status'] = $object->getStatus();
         $normalizedData['details'] = $object->getDetailsData();
         $normalizedData['type'] = $object->getResource()->getType();
+        $normalizedData['position'] = $object->getResource()->getPosition();
 
         return $normalizedData;
     }

@@ -81,4 +81,13 @@ class ProductTest extends TestCase
         self::assertSame($parent, $variant->getParent());
         self::assertTrue($variant->isType(ProductInterface::TYPE_VARIANT));
     }
+
+    public function testPositionDefaultsToZeroAndRoundTrips(): void
+    {
+        $product = new Product();
+
+        self::assertSame(0, $product->getPosition());
+        self::assertSame($product, $product->setPosition(7));
+        self::assertSame(7, $product->getPosition());
+    }
 }

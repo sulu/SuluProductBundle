@@ -21,13 +21,14 @@ use Sulu\Product\Domain\Model\AttributeGroupTranslation;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeTranslation;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
+use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
-use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductAttributesResolver;
+use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductResolver;
 
-#[CoversClass(ProductAttributesResolver::class)]
-class ProductAttributesResolverTest extends SuluTestCase
+#[CoversClass(ProductResolver::class)]
+class ProductResolverAttributesTest extends SuluTestCase
 {
     private ContentResolverInterface $contentResolver;
 
@@ -116,12 +117,10 @@ class ProductAttributesResolverTest extends SuluTestCase
         self::assertIsArray($attributes);
         self::assertArrayHasKey('housing', $attributes);
 
+        // the values pass through unformatted; the Twig filter renders them
         $attribute = $attributes['housing'];
-        self::assertIsArray($attribute);
-        self::assertSame('Zink', $attribute['formattedValue']);
-
-        $group = $attribute['group'];
-        self::assertIsArray($group);
-        self::assertSame('Mechanische Daten', $group['label']);
+        self::assertInstanceOf(ProductAttributeValueInterface::class, $attribute);
+        self::assertSame('Zink', $attribute->getText());
+        self::assertSame('Mechanische Daten', $attribute->getAttribute()->getGroup()->getTranslation('de')?->getName());
     }
 }

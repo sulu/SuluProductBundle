@@ -85,6 +85,11 @@ final class ProductVariantController implements SecuredControllerInterface
         $listBuilder->setParameter('locale', $locale);
         $listBuilder->where($fieldDescriptors['parent'], $parentId);
 
+        if (null === $request->query->get('sortBy')) {
+            $listBuilder->sort($fieldDescriptors['position']);
+            $listBuilder->sort($fieldDescriptors['id']);
+        }
+
         $listRepresentation = new PaginatedRepresentation(
             $listBuilder->execute(),
             ProductInterface::LIST_KEY_VARIANTS,

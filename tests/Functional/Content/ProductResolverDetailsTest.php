@@ -22,11 +22,10 @@ use Sulu\Content\Tests\Functional\Traits\CreateMediaTrait;
 use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductFamilyTranslation;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
-use Sulu\Product\Infrastructure\Sulu\Content\ProductFamilyWrapper;
-use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductDetailsResolver;
+use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductResolver;
 
-#[CoversClass(ProductDetailsResolver::class)]
-class ProductDetailsResolverTest extends SuluTestCase
+#[CoversClass(ProductResolver::class)]
+class ProductResolverDetailsTest extends SuluTestCase
 {
     use CreateMediaTrait;
 
@@ -93,7 +92,7 @@ class ProductDetailsResolverTest extends SuluTestCase
         self::assertSame([], $productData['documents']);
     }
 
-    public function testProductFamilyResolvesToARealObject(): void
+    public function testProductFamilyResolvesWithItsLocalisedName(): void
     {
         $family = new ProductFamily();
         $family->setUuid('family-uuid-fe');
@@ -118,8 +117,9 @@ class ProductDetailsResolverTest extends SuluTestCase
         self::assertArrayHasKey('product', $result);
         $productData = $result['product'];
         self::assertIsArray($productData);
-        self::assertInstanceOf(ProductFamilyWrapper::class, $productData['productFamily']);
-        self::assertSame('XLR', $productData['productFamily']->getName());
+        $family = $productData['productFamily'];
+        self::assertIsArray($family);
+        self::assertSame('XLR', $family['name']);
     }
 
     public function testDetailsMediaResolvesThroughItsPropertyResolver(): void

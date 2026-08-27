@@ -16,6 +16,12 @@
             </options>
         </field>
 
+        <field name="position" type="integer" column="position">
+            <options>
+                <option name="default">0</option>
+            </options>
+        </field>
+
         <one-to-many field="dimensionContents" target-entity="Sulu\Product\Domain\Model\ProductDimensionContentInterface" mapped-by="product">
             <cascade>
                 <cascade-persist/>

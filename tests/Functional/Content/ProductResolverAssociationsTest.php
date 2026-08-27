@@ -21,11 +21,11 @@ use Sulu\Content\Application\ContentResolver\Value\ResolvableResource;
 use Sulu\Product\Domain\Model\ProductAssociation;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
-use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductAssociationsResolver;
+use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductResolver;
 use Sulu\Product\Infrastructure\Sulu\Content\ResourceLoader\ProductResourceLoader;
 
-#[CoversClass(ProductAssociationsResolver::class)]
-class ProductAssociationsResolverTest extends SuluTestCase
+#[CoversClass(ProductResolver::class)]
+class ProductResolverAssociationsTest extends SuluTestCase
 {
     private ContentResolverInterface $contentResolver;
 

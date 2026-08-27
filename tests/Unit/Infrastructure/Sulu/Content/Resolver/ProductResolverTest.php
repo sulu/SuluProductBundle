@@ -14,80 +14,107 @@ declare(strict_types=1);
 namespace Sulu\Product\Tests\Unit\Infrastructure\Sulu\Content\Resolver;
 
 use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\TestCase;
-use Sulu\Content\Application\ContentResolver\Resolver\ResolverInterface;
-use Sulu\Content\Application\ContentResolver\Value\ContentView;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Product\Domain\Model\Product;
+use Sulu\Product\Domain\Model\ProductDimensionContent;
+use Sulu\Product\Domain\Model\ProductInterface;
+use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductResolver;
 
 #[CoversClass(ProductResolver::class)]
-class ProductResolverTest extends TestCase
+class ProductResolverTest extends ProductResolverTestCase
 {
-    public function testMergesDetailFieldsAndNestsTheThreeSiblings(): void
+    public function testReturnsNullForNonProductContent(): void
     {
-        $content = $this->createStub(DimensionContentInterface::class);
+        self::assertNull($this->createResolver()->resolve($this->createStub(DimensionContentInterface::class)));
+    }
 
-        $resolver = new ProductResolver(
-            $this->resolverReturning(ContentView::create([
-                'code' => ContentView::create('NL4FX', []),
-                'status' => ContentView::create('published', []),
-            ], [])),
-            $this->resolverReturning(ContentView::create(['weight' => ['key' => 'weight']], [])),
-            $this->resolverReturning(ContentView::create(['accessories' => ContentView::create([], [])], [])),
-            $this->resolverReturning(ContentView::create(['a-uuid'], [])),
+    public function testAPageCarriesTheMasterDataAndEverySection(): void
+    {
+        $productRepository = $this->createStub(ProductRepositoryInterface::class);
+        $productRepository->method('findBy')->willReturn([new Product('variant-uuid-1')]);
+
+        $content = $this->resolveContent(
+            $this->createContent(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS),
+            null,
+            $this->createResolver(productRepository: $productRepository),
         );
-
-        $contentView = $resolver->resolve($content);
-        self::assertNotNull($contentView);
-
-        /** @var array<string, mixed> $result */
-        $result = $contentView->getContent();
 
         self::assertSame(
-            ['code', 'status', 'attributes', 'associations', 'variants'],
-            \array_keys($result),
+            ['code', 'externalIdentifier', 'productFamily', 'status', 'position', 'attributes', 'associations', 'variants'],
+            \array_keys($content),
         );
     }
 
-    public function testOmitsChildrenThatResolveToNull(): void
+    /** A reference gets the always-on master data; everything expensive is opt-in. */
+    public function testAReferenceCarriesTheAlwaysOnMasterDataOnly(): void
     {
-        $content = $this->createStub(DimensionContentInterface::class);
+        $productRepository = $this->createMock(ProductRepositoryInterface::class);
+        $productRepository->expects(self::never())->method('findBy');
 
-        $resolver = new ProductResolver(
-            $this->resolverReturning(ContentView::create(['code' => ContentView::create('NL4FX', [])], [])),
-            $this->resolverReturning(null),
-            $this->resolverReturning(null),
-            $this->resolverReturning(null),
+        $content = $this->resolveContent(
+            $this->createContent(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS),
+            ['title' => 'title'],
+            $this->createResolver(productRepository: $productRepository),
         );
 
-        $contentView = $resolver->resolve($content);
-        self::assertNotNull($contentView);
-
-        /** @var array<string, mixed> $result */
-        $result = $contentView->getContent();
-
-        self::assertSame(['code'], \array_keys($result));
+        self::assertSame(
+            ['code', 'externalIdentifier', 'status', 'productFamily', 'position'],
+            \array_keys($content),
+        );
     }
 
-    public function testReturnsNullWhenTheDetailsResolverDoesNotApply(): void
+    public function testAReferenceResolvesVariantsWhenItAsksForThem(): void
     {
-        $content = $this->createStub(DimensionContentInterface::class);
+        $productRepository = $this->createMock(ProductRepositoryInterface::class);
+        $productRepository->expects(self::once())->method('findBy')->willReturn([new Product('variant-uuid')]);
 
-        $resolver = new ProductResolver(
-            $this->resolverReturning(null),
-            $this->resolverReturning(null),
-            $this->resolverReturning(null),
-            $this->resolverReturning(null),
+        $content = $this->resolveContent(
+            $this->createContent(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS),
+            ['variants' => 'product.variants'],
+            $this->createResolver(productRepository: $productRepository),
         );
 
-        self::assertNull($resolver->resolve($content));
+        self::assertArrayHasKey('variants', $content);
     }
 
-    private function resolverReturning(?ContentView $contentView): ResolverInterface
+    public function testAReferenceKeepsTheKeyTheBlockAddressedItBy(): void
     {
-        $resolver = $this->createStub(ResolverInterface::class);
-        $resolver->method('resolve')->willReturn($contentView);
+        $content = $this->resolveContent(
+            $this->createContent(ProductInterface::TYPE_PRODUCT),
+            ['sku' => 'product.code'],
+            $this->createResolver(),
+        );
 
-        return $resolver;
+        self::assertArrayHasKey('sku', $content);
+    }
+
+    public function testAnEmptyPropertyListResolvesNothing(): void
+    {
+        self::assertNull(
+            $this->createResolver()->resolve($this->createContent(ProductInterface::TYPE_PRODUCT), []),
+        );
+    }
+
+    public function testAProductWithoutVariantsHasNoVariantsKey(): void
+    {
+        $content = $this->resolveContent($this->createContent(ProductInterface::TYPE_PRODUCT));
+
+        self::assertSame(
+            ['code', 'externalIdentifier', 'productFamily', 'status', 'position', 'attributes', 'associations'],
+            \array_keys($content),
+        );
+    }
+
+    private function createContent(string $type): ProductDimensionContent
+    {
+        $product = new Product();
+        $product->setType($type);
+
+        $content = new ProductDimensionContent($product);
+        $content->setLocale('de');
+        $content->setStage('live');
+
+        return $content;
     }
 }

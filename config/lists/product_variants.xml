@@ -59,6 +59,11 @@
             <joins ref="unlocalizedDimensionContent"/>
         </property>
 
+        <property name="position" translation="sulu_product.position" visibility="yes">
+            <field-name>position</field-name>
+            <entity-name>Sulu\Product\Domain\Model\ProductInterface</entity-name>
+        </property>
+
         <property name="status" translation="sulu_product.status" visibility="yes">
             <field-name>status</field-name>
             <entity-name>unlocalizedDimensionContent</entity-name>

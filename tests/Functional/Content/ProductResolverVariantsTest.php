@@ -19,10 +19,10 @@ use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Content\Application\ContentResolver\ContentResolverInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
-use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductVariantsResolver;
+use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductResolver;
 
-#[CoversClass(ProductVariantsResolver::class)]
-class ProductVariantsResolverTest extends SuluTestCase
+#[CoversClass(ProductResolver::class)]
+class ProductResolverVariantsTest extends SuluTestCase
 {
     private ContentResolverInterface $contentResolver;
 
@@ -122,20 +122,23 @@ class ProductVariantsResolverTest extends SuluTestCase
         self::assertIsArray($variant2Data);
 
         $variant1Content = $variant1Data['content'];
-        $variant2Content = $variant2Data['content'];
+        $variant2Product = $variant2Data['product'];
+        $variant1Product = $variant1Data['product'];
         self::assertIsArray($variant1Content);
-        self::assertIsArray($variant2Content);
+        self::assertIsArray($variant1Product);
+        self::assertIsArray($variant2Product);
 
-        // The `properties` metadata map hoists `code` from `product.code` into the resolved
-        // reference's `content` bucket — the general content-resolver pipeline collapses
-        // `{resource, content, view, extension}` wrappers to their `content` only for fields
-        // nested under a page's own `content` section (e.g. a `product_selection` template
-        // field); `product.variants` is a top-level root key, so each resolved variant keeps
-        // its full wrapper shape and the hoisted properties live under `content`.
-        self::assertSame('NL4FX-4', $variant1Content['code']);
+        // No property projection, so a variant keeps the page's own shape: the template data under
+        // `content`, the master data under `product`. `product.variants` is a top-level root key,
+        // so each resolved variant also keeps its `{resource, content, view, extension}` wrapper.
+        self::assertSame('NL4FX-4', $variant1Product['code']);
         self::assertSame('NL4FX-4 Variant', $variant1Content['title']);
-        self::assertArrayHasKey('url', $variant1Content);
-        self::assertArrayHasKey('image', $variant1Content);
-        self::assertSame('NL4FX-5', $variant2Content['code']);
+        self::assertSame('NL4FX-5', $variant2Product['code']);
+
+        // Attributes resolve for a variant — the product page reads them for the selected one.
+        self::assertArrayHasKey('attributes', $variant1Product);
+
+        // A variant is not itself `product_with_variants`, so the resolve does not nest.
+        self::assertArrayNotHasKey('variants', $variant1Product);
     }
 }

@@ -250,6 +250,7 @@ final class ProductRepository implements ProductRepositoryInterface
      *     uuid?: 'asc'|'desc',
      *     title?: 'asc'|'desc',
      *     created?: 'asc'|'desc',
+     *     position?: 'asc'|'desc',
      * } $sortBy
      * @param array{
      *     product_admin?: bool,
@@ -379,6 +380,8 @@ final class ProductRepository implements ProductRepositoryInterface
                     $queryBuilder->addOrderBy('product.uuid', $order);
                 } elseif ('created' === $field) {
                     $queryBuilder->addOrderBy('product.created', $order);
+                } elseif ('position' === $field) {
+                    $queryBuilder->addOrderBy('product.position', $order);
                 }
             }
         }

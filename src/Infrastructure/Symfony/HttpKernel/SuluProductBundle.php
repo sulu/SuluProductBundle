@@ -46,7 +46,6 @@ use Sulu\Product\Application\MessageHandler\RemoveProductFamilyMessageHandler;
 use Sulu\Product\Application\MessageHandler\RemoveProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\RemoveProductTranslationMessageHandler;
 use Sulu\Product\Application\MessageHandler\RestoreProductVersionMessageHandler;
-use Sulu\Product\Application\Variant\ProductVariantLoader;
 use Sulu\Product\Application\Webspace\WebspaceSettingsConfigurationResolver;
 use Sulu\Product\Application\Workflow\VariantParentPublishStateUpdater;
 use Sulu\Product\Application\Workflow\VariantWorkflowCascader;
@@ -130,12 +129,7 @@ use Sulu\Product\Infrastructure\Sulu\Content\ProductSmartContentProvider;
 use Sulu\Product\Infrastructure\Sulu\Content\ProductTeaserProvider;
 use Sulu\Product\Infrastructure\Sulu\Content\PropertyResolver\ProductSelectionPropertyResolver;
 use Sulu\Product\Infrastructure\Sulu\Content\PropertyResolver\SingleProductSelectionPropertyResolver;
-use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductAssociationsResolver;
-use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductAttributesResolver;
-use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductDetailsResolver;
 use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductResolver;
-use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductVariantsResolver;
-use Sulu\Product\Infrastructure\Sulu\Content\ResourceLoader\ProductFamilyResourceLoader;
 use Sulu\Product\Infrastructure\Sulu\Content\ResourceLoader\ProductResourceLoader;
 use Sulu\Product\Infrastructure\Sulu\Content\Select\AttributeSelectService;
 use Sulu\Product\Infrastructure\Sulu\Content\Select\AttributeTypeSelectService;
@@ -964,41 +958,15 @@ final class SuluProductBundle extends AbstractBundle
             ->class(ProductSelectionPropertyResolver::class)
             ->tag('sulu_content.property_resolver');
 
-        $services->set('sulu_product.product_details_resolver')
-            ->class(ProductDetailsResolver::class)
-            ->args([
-                new Reference('sulu_admin.xml_form_metadata_loader'),
-                new Reference('sulu_content.metadata_resolver'),
-            ]);
-
-        $services->set('sulu_product.product_associations_resolver')
-            ->class(ProductAssociationsResolver::class)
-            ->args([
-                new Reference('sulu_admin.form_metadata_provider'),
-                new Reference('sulu_content.metadata_resolver'),
-            ]);
-
-        $services->set('sulu_product.product_attributes_resolver')
-            ->class(ProductAttributesResolver::class)
-            ->args([
-                new Reference('sulu_product.measurement_registry'),
-            ]);
-
-        $services->set('sulu_product.product_variants_resolver')
-            ->class(ProductVariantsResolver::class)
-            ->args([
-                new Reference('sulu_product.product_variant_loader'),
-            ]);
-
         $services->set('sulu_product.product_resolver')
             ->class(ProductResolver::class)
             ->args([
-                new Reference('sulu_product.product_details_resolver'),
-                new Reference('sulu_product.product_attributes_resolver'),
-                new Reference('sulu_product.product_associations_resolver'),
-                new Reference('sulu_product.product_variants_resolver'),
+                new Reference('sulu_admin.xml_form_metadata_loader'),
+                new Reference('sulu_admin.form_metadata_provider'),
+                new Reference('sulu_content.metadata_resolver'),
+                new Reference('sulu_product.product_repository'),
             ])
-            ->tag('sulu_content.content_resolver', ['type' => 'product', 'placement' => 'root']);
+            ->tag('sulu_content.content_resolver', ['type' => 'product', 'path' => '[root][product]']);
 
         $services->set('sulu_product.product_resource_loader')
             ->class(ProductResourceLoader::class)
@@ -1006,13 +974,6 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.product_repository'),
             ])
             ->tag('sulu_content.resource_loader', ['type' => ProductResourceLoader::RESOURCE_LOADER_KEY]);
-
-        $services->set('sulu_product.product_family_resource_loader')
-            ->class(ProductFamilyResourceLoader::class)
-            ->args([
-                new Reference('sulu_product.product_family_repository'),
-            ])
-            ->tag('sulu_content.resource_loader', ['type' => ProductFamilyResourceLoader::RESOURCE_LOADER_KEY]);
 
         $services->set('sulu_product.product_preview_provider')
             ->class(ContentObjectProvider::class)
@@ -1087,6 +1048,10 @@ final class SuluProductBundle extends AbstractBundle
 
         $services->set('sulu_product.product_attribute_twig_extension')
             ->class(ProductAttributeTwigExtension::class)
+            ->args([
+                new Reference('sulu_product.measurement_registry'),
+                new Reference('sulu_core.webspace.request_analyzer'),
+            ])
             ->tag('twig.extension');
 
         // Reference services
@@ -1161,15 +1126,6 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_http_cache.cache_lifetime.resolver'),
             ])
             ->tag('sulu_route.route_defaults_provider', ['resource_key' => ProductInterface::RESOURCE_KEY]);
-
-        $services->set('sulu_product.product_variant_loader')
-            ->class(ProductVariantLoader::class)
-            ->args([
-                new Reference('sulu_product.product_repository'),
-                new Reference('sulu_content.content_aggregator'),
-            ]);
-
-        $services->alias(ProductVariantLoader::class, 'sulu_product.product_variant_loader');
 
         $services->set('sulu_product.admin_product_index_listener')
             ->class(AdminProductIndexListener::class)

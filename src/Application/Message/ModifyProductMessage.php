@@ -20,7 +20,7 @@ namespace Sulu\Product\Application\Message;
  * @phpstan-type ModifyProductMessageData array{
  *     locale: string,
  *     title?: string,
- *     code?: string,
+ *     code?: string|null,
  *     template?: string,
  *     productFamily?: string,
  *     attributes?: array<int, mixed>,
@@ -28,6 +28,7 @@ namespace Sulu\Product\Application\Message;
  *     details?: array<string, mixed>,
  *     type?: string,
  *     parent?: string,
+ *     position?: int,
  * }
  */
 class ModifyProductMessage
