@@ -22,6 +22,8 @@ use Sulu\Product\Domain\Model\ProductFamilyInterface;
  *     uuids?: string[],
  *     externalIdentifier?: string,
  *     productUuid?: string,
+ *     page?: int,
+ *     limit?: int,
  * }
  * @phpstan-type ProductFamilyRepositorySelects array{
  *     product_family_form?: bool,
@@ -60,6 +62,13 @@ interface ProductFamilyRepositoryInterface
      * @return iterable<ProductFamilyInterface>
      */
     public function findBy(array $filters = [], array $selects = []): iterable;
+
+    /**
+     * The page and limit filters are ignored, they are stripped before counting.
+     *
+     * @param ProductFamilyRepositoryFilters $filters
+     */
+    public function countBy(array $filters = []): int;
 
     /**
      * @param ProductFamilyRepositoryFilters $filters

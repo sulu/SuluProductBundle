@@ -107,6 +107,22 @@ final class ProductFamilyRepository implements ProductFamilyRepositoryInterface
         return $families;
     }
 
+    public function countBy(array $filters = []): int
+    {
+        // The countBy method will ignore any page and limit parameters
+        // for better developer experience we will strip them away here
+        // instead of that the developer need to take that into account
+        // in there call of the countBy method.
+        unset($filters['page']); // @phpstan-ignore-line
+        unset($filters['limit']); // @phpstan-ignore-line
+
+        $queryBuilder = $this->createQueryBuilder($filters);
+
+        $queryBuilder->select('COUNT(DISTINCT productFamily.id)');
+
+        return (int) $queryBuilder->getQuery()->getSingleScalarResult();
+    }
+
     /**
      * @param ProductFamilyRepositoryFilters $filters
      * @param ProductFamilyRepositorySelects $selects
@@ -173,6 +189,20 @@ final class ProductFamilyRepository implements ProductFamilyRepositoryInterface
             $queryBuilder
                 ->addSelect('attributeGroup')
                 ->leftJoin('attribute.group', 'attributeGroup');
+        }
+
+        $limit = $filters['limit'] ?? null;
+        if (null !== $limit) {
+            Assert::integer($limit); // @phpstan-ignore staticMethod.alreadyNarrowedType
+            $queryBuilder->setMaxResults($limit);
+        }
+
+        $page = $filters['page'] ?? null;
+        if (null !== $page) {
+            Assert::integer($page); // @phpstan-ignore staticMethod.alreadyNarrowedType
+            Assert::notNull($limit);
+            $offset = (int) ($limit * ($page - 1));
+            $queryBuilder->setFirstResult($offset);
         }
 
         return $queryBuilder;
