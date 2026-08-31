@@ -108,8 +108,10 @@ interface ProductRepositoryInterface
      *     limit?: int,
      * } $filters
      * @param array{
-     *     id?: 'asc'|'desc',
+     *     uuid?: 'asc'|'desc',
      *     title?: 'asc'|'desc',
+     *     created?: 'asc'|'desc',
+     *     position?: 'asc'|'desc',
      * } $sortBy
      * @param array{
      *     product_admin?: bool,
@@ -143,8 +145,10 @@ interface ProductRepositoryInterface
      *     limit?: int,
      * } $filters
      * @param array{
-     *     id?: 'asc'|'desc',
+     *     uuid?: 'asc'|'desc',
      *     title?: 'asc'|'desc',
+     *     created?: 'asc'|'desc',
+     *     position?: 'asc'|'desc',
      * } $sortBy
      *
      * @return iterable<string>

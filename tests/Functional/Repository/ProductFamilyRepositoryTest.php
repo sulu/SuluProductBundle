@@ -160,6 +160,74 @@ class ProductFamilyRepositoryTest extends SuluTestCase
         $this->assertCount(1, $result);
     }
 
+    public function testFindByLimitAndPageReturnsTheRequestedSlice(): void
+    {
+        for ($i = 0; $i < 5; ++$i) {
+            $this->repository->save($this->repository->create());
+        }
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        $firstPage = [];
+        foreach ($this->repository->findBy(['page' => 1, 'limit' => 2]) as $family) {
+            $firstPage[] = $family;
+        }
+
+        $secondPage = [];
+        foreach ($this->repository->findBy(['page' => 2, 'limit' => 2]) as $family) {
+            $secondPage[] = $family;
+        }
+
+        $lastPage = [];
+        foreach ($this->repository->findBy(['page' => 3, 'limit' => 2]) as $family) {
+            $lastPage[] = $family;
+        }
+
+        $this->assertCount(2, $firstPage);
+        $this->assertCount(2, $secondPage);
+        $this->assertCount(1, $lastPage);
+
+        $uuids = \array_map(
+            static fn (ProductFamilyInterface $family) => $family->getUuid(),
+            [...$firstPage, ...$secondPage, ...$lastPage],
+        );
+        $this->assertCount(5, \array_unique($uuids));
+    }
+
+    public function testCountByCountsAllFamilies(): void
+    {
+        $this->repository->save($this->repository->create());
+        $this->repository->save($this->repository->create());
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        $this->assertSame(2, $this->repository->countBy());
+    }
+
+    public function testCountByAppliesTheFilters(): void
+    {
+        $family = $this->repository->create();
+        $family->setExternalIdentifier('shoes');
+        $this->repository->save($family);
+        $this->repository->save($this->repository->create());
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        $this->assertSame(1, $this->repository->countBy(['externalIdentifier' => 'shoes']));
+        $this->assertSame(0, $this->repository->countBy(['externalIdentifier' => 'hats']));
+    }
+
+    public function testCountByIgnoresPageAndLimit(): void
+    {
+        for ($i = 0; $i < 3; ++$i) {
+            $this->repository->save($this->repository->create());
+        }
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        $this->assertSame(3, $this->repository->countBy(['page' => 1, 'limit' => 1]));
+    }
+
     public function testFindOneByReturnsNullForUnknownUuid(): void
     {
         $this->assertNull($this->repository->findOneBy(['uuid' => '00000000-0000-0000-0000-000000000000']));
