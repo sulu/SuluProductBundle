@@ -49,7 +49,10 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
             return;
         }
 
-        $family = $this->productFamilyRepository->findOneBy(['productUuid' => $id]);
+        $family = $this->productFamilyRepository->findOneBy(
+            ['productUuid' => $id],
+            [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true],
+        );
 
         if (null === $family) {
             return;

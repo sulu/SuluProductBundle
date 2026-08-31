@@ -80,7 +80,7 @@ class ProductFamilyFormMetadataVisitorTest extends TestCase
 
     public function testIgnoresOtherFormKeys(): void
     {
-        $this->attributeGroupRepository->findAll()->shouldNotBeCalled();
+        $this->attributeGroupRepository->findBy(Argument::cetera())->shouldNotBeCalled();
 
         $formMetadata = new FormMetadata();
         $formMetadata->setKey('something_else');
@@ -98,7 +98,11 @@ class ProductFamilyFormMetadataVisitorTest extends TestCase
         $attribute = $this->attributeWithId(7, 'width', 'Width');
         $group->addGroupAttribute(new AttributeGroupAttribute($group, $attribute));
 
-        $this->attributeGroupRepository->findAll()->willReturn([$group]);
+        $this->attributeGroupRepository->findBy(
+            [],
+            [],
+            [AttributeGroupRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true],
+        )->willReturn([$group]);
 
         $formMetadata = new FormMetadata();
         $formMetadata->setKey(ProductFamilyInterface::FORM_KEY);
@@ -150,7 +154,11 @@ class ProductFamilyFormMetadataVisitorTest extends TestCase
         $attribute->setKey('depth');
         $group->addGroupAttribute(new AttributeGroupAttribute($group, $attribute));
 
-        $this->attributeGroupRepository->findAll()->willReturn([$group]);
+        $this->attributeGroupRepository->findBy(
+            [],
+            [],
+            [AttributeGroupRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true],
+        )->willReturn([$group]);
 
         $formMetadata = new FormMetadata();
         $formMetadata->setKey(ProductFamilyInterface::FORM_KEY);

@@ -26,9 +26,20 @@ use Webmozart\Assert\Assert;
 
 /**
  * @phpstan-import-type AttributeGroupRepositoryFilters from AttributeGroupRepositoryInterface
+ * @phpstan-import-type AttributeGroupRepositorySortBy from AttributeGroupRepositoryInterface
+ * @phpstan-import-type AttributeGroupRepositorySelects from AttributeGroupRepositoryInterface
  */
 final class AttributeGroupRepository implements AttributeGroupRepositoryInterface
 {
+    private const SELECTS = [
+        // GROUPS
+        self::GROUP_SELECT_PRODUCT_FAMILY_FORM => [
+            self::SELECT_GROUP_ATTRIBUTES => true,
+            self::SELECT_GROUP_ATTRIBUTE_TRANSLATIONS => true,
+            self::SELECT_GROUP_TRANSLATIONS => true,
+        ],
+    ];
+
     /** @var EntityRepository<AttributeGroupInterface> */
     private EntityRepository $entityRepository;
 
@@ -77,9 +88,13 @@ final class AttributeGroupRepository implements AttributeGroupRepositoryInterfac
 
     /**
      * @param AttributeGroupRepositoryFilters $filters
+     * @param AttributeGroupRepositorySortBy $sortBy
+     * @param AttributeGroupRepositorySelects $selects
      */
-    public function createQueryBuilder(array $filters): QueryBuilder
+    public function createQueryBuilder(array $filters, array $sortBy = [], array $selects = []): QueryBuilder
     {
+        $selects = $this->resolveSelectGroups($selects);
+
         $queryBuilder = $this->entityRepository->createQueryBuilder('attributeGroup');
 
         $uuid = $filters['uuid'] ?? null;
@@ -96,17 +111,76 @@ final class AttributeGroupRepository implements AttributeGroupRepositoryInterfac
                 ->setParameter('externalIdentifier', $externalIdentifier);
         }
 
+        if ([] !== $sortBy) {
+            foreach ($sortBy as $field => $order) {
+                if ('id' === $field) {
+                    $queryBuilder->addOrderBy('attributeGroup.id', $order);
+                } elseif ('externalIdentifier' === $field) {
+                    $queryBuilder->addOrderBy('attributeGroup.externalIdentifier', $order);
+                }
+            }
+        }
+
+        // selects
+        if ($selects[self::SELECT_GROUP_ATTRIBUTES] ?? false) {
+            $queryBuilder
+                ->addSelect('groupAttribute', 'attribute')
+                ->leftJoin('attributeGroup.groupAttributes', 'groupAttribute')
+                ->leftJoin('groupAttribute.attribute', 'attribute');
+        }
+
+        if ($selects[self::SELECT_GROUP_ATTRIBUTE_TRANSLATIONS] ?? false) {
+            Assert::notFalse($selects[self::SELECT_GROUP_ATTRIBUTES] ?? false);
+
+            // Translations stay unfiltered, callers fall back to the default locale.
+            $queryBuilder
+                ->addSelect('attributeTranslation')
+                ->leftJoin('attribute.translations', 'attributeTranslation');
+        }
+
         return $queryBuilder;
     }
 
-    public function findAll(): array
+    public function findBy(array $filters = [], array $sortBy = [], array $selects = []): iterable
     {
-        /** @var list<AttributeGroupInterface> $groups */
-        $groups = $this->entityRepository->createQueryBuilder('attributeGroup')
+        /** @var iterable<AttributeGroupInterface> $groups */
+        $groups = $this->createQueryBuilder($filters, $sortBy, $selects)
             ->getQuery()
             ->getResult();
 
+        $selects = $this->resolveSelectGroups($selects);
+
+        if ($selects[self::SELECT_GROUP_TRANSLATIONS] ?? false) {
+            // Own query, joined they would multiply the attribute rows above. Hydrating them fills
+            // the groups' collections, the result itself is not needed.
+            $this->createQueryBuilder($filters)
+                ->addSelect('groupTranslation')
+                ->leftJoin('attributeGroup.translations', 'groupTranslation')
+                ->getQuery()
+                ->getResult();
+        }
+
         return $groups;
+    }
+
+    /**
+     * @param AttributeGroupRepositorySelects $selects
+     *
+     * @return AttributeGroupRepositorySelects
+     */
+    private function resolveSelectGroups(array $selects): array
+    {
+        foreach ($selects as $selectGroup => $value) {
+            if (!$value || !isset(self::SELECTS[$selectGroup])) {
+                continue;
+            }
+
+            foreach (self::SELECTS[$selectGroup] as $select => $selectValue) {
+                $selects[$select] = $selectValue;
+            }
+        }
+
+        return $selects;
     }
 
     public function save(AttributeGroupInterface $group): void

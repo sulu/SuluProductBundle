@@ -21,9 +21,25 @@ use Sulu\Product\Domain\Model\AttributeGroupInterface;
  *     uuid?: string,
  *     externalIdentifier?: string,
  * }
+ * @phpstan-type AttributeGroupRepositorySortBy array{
+ *     id?: 'asc'|'desc',
+ *     externalIdentifier?: 'asc'|'desc',
+ * }
+ * @phpstan-type AttributeGroupRepositorySelects array{
+ *     product_family_form?: bool,
+ *     with-group-attributes?: bool,
+ *     with-group-attribute-translations?: bool,
+ *     with-group-translations?: bool,
+ * }|array<string, mixed>
  */
 interface AttributeGroupRepositoryInterface
 {
+    public const GROUP_SELECT_PRODUCT_FAMILY_FORM = 'product_family_form';
+
+    public const SELECT_GROUP_ATTRIBUTES = 'with-group-attributes';
+    public const SELECT_GROUP_ATTRIBUTE_TRANSLATIONS = 'with-group-attribute-translations';
+    public const SELECT_GROUP_TRANSLATIONS = 'with-group-translations';
+
     public function create(): AttributeGroupInterface;
 
     /**
@@ -43,7 +59,11 @@ interface AttributeGroupRepositoryInterface
     public function remove(AttributeGroupInterface $group): void;
 
     /**
-     * @return list<AttributeGroupInterface>
+     * @param AttributeGroupRepositoryFilters $filters
+     * @param AttributeGroupRepositorySortBy $sortBy
+     * @param AttributeGroupRepositorySelects $selects
+     *
+     * @return iterable<AttributeGroupInterface>
      */
-    public function findAll(): array;
+    public function findBy(array $filters = [], array $sortBy = [], array $selects = []): iterable;
 }

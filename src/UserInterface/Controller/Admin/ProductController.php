@@ -129,6 +129,7 @@ final class ProductController implements SecuredControllerInterface
                         'dimensionAttributes' => $dimensionAttributes,
                         'selects' => [DimensionContentQueryEnhancer::GROUP_SELECT_CONTENT_ADMIN => true],
                     ],
+                    ProductRepositoryInterface::SELECT_PRODUCT_FAMILY => true,
                 ],
             );
         } catch (ProductNotFoundException $e) {

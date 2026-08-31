@@ -57,7 +57,11 @@ class ProductFamilyNormalizerTest extends TestCase
     public function testSupportsNormalizationReturnsTrueForProductFamily(): void
     {
         $normalizer = $this->normalizer();
-        $this->attributeGroupRepository->findAll()->willReturn([]);
+        $this->attributeGroupRepository->findBy(
+            [],
+            [],
+            [AttributeGroupRepositoryInterface::SELECT_GROUP_ATTRIBUTES => true],
+        )->willReturn([]);
 
         $this->assertTrue($normalizer->supportsNormalization(new ProductFamily()));
         $this->assertFalse($normalizer->supportsNormalization(new \stdClass()));
@@ -76,7 +80,11 @@ class ProductFamilyNormalizerTest extends TestCase
         $family = new ProductFamily();
         $family->setUuid('test-uuid');
 
-        $this->attributeGroupRepository->findAll()->willReturn([]);
+        $this->attributeGroupRepository->findBy(
+            [],
+            [],
+            [AttributeGroupRepositoryInterface::SELECT_GROUP_ATTRIBUTES => true],
+        )->willReturn([]);
 
         $result = $this->normalizer()->normalize($family, null, ['locale' => 'en']);
 
@@ -95,7 +103,11 @@ class ProductFamilyNormalizerTest extends TestCase
         $translation->setDescription('Clothing family');
         $family->addTranslation($translation);
 
-        $this->attributeGroupRepository->findAll()->willReturn([]);
+        $this->attributeGroupRepository->findBy(
+            [],
+            [],
+            [AttributeGroupRepositoryInterface::SELECT_GROUP_ATTRIBUTES => true],
+        )->willReturn([]);
 
         $result = $this->normalizer()->normalize($family, null, ['locale' => 'en']);
 
@@ -114,7 +126,11 @@ class ProductFamilyNormalizerTest extends TestCase
         $group->addGroupAttribute(new AttributeGroupAttribute($group, $attr9));
         $group->addGroupAttribute(new AttributeGroupAttribute($group, $attr10));
 
-        $this->attributeGroupRepository->findAll()->willReturn([$group]);
+        $this->attributeGroupRepository->findBy(
+            [],
+            [],
+            [AttributeGroupRepositoryInterface::SELECT_GROUP_ATTRIBUTES => true],
+        )->willReturn([$group]);
 
         $result = $this->normalizer()->normalize($family, null, ['locale' => 'en']);
 
@@ -139,7 +155,11 @@ class ProductFamilyNormalizerTest extends TestCase
         $familyAttribute->setRequired(true);
         $family->addFamilyAttribute($familyAttribute);
 
-        $this->attributeGroupRepository->findAll()->willReturn([$group]);
+        $this->attributeGroupRepository->findBy(
+            [],
+            [],
+            [AttributeGroupRepositoryInterface::SELECT_GROUP_ATTRIBUTES => true],
+        )->willReturn([$group]);
 
         $result = $this->normalizer()->normalize($family, null, ['locale' => 'en']);
 
@@ -162,7 +182,11 @@ class ProductFamilyNormalizerTest extends TestCase
         $familyAttribute->setVariantSpecific(true);
         $family->addFamilyAttribute($familyAttribute);
 
-        $this->attributeGroupRepository->findAll()->willReturn([$group]);
+        $this->attributeGroupRepository->findBy(
+            [],
+            [],
+            [AttributeGroupRepositoryInterface::SELECT_GROUP_ATTRIBUTES => true],
+        )->willReturn([$group]);
 
         $result = $this->normalizer()->normalize($family, null, ['locale' => 'en']);
 
@@ -178,7 +202,11 @@ class ProductFamilyNormalizerTest extends TestCase
         $translation = new ProductFamilyTranslation($family, 'en', 'English Name');
         $family->addTranslation($translation);
 
-        $this->attributeGroupRepository->findAll()->willReturn([]);
+        $this->attributeGroupRepository->findBy(
+            [],
+            [],
+            [AttributeGroupRepositoryInterface::SELECT_GROUP_ATTRIBUTES => true],
+        )->willReturn([]);
 
         $result = $this->normalizer()->normalize($family, null, []);
 
@@ -193,7 +221,11 @@ class ProductFamilyNormalizerTest extends TestCase
         $de = new ProductFamilyTranslation($family, 'de', 'Fallback Name');
         $family->addTranslation($de);
 
-        $this->attributeGroupRepository->findAll()->willReturn([]);
+        $this->attributeGroupRepository->findBy(
+            [],
+            [],
+            [AttributeGroupRepositoryInterface::SELECT_GROUP_ATTRIBUTES => true],
+        )->willReturn([]);
 
         $result = $this->normalizer()->normalize($family, null, ['locale' => 'en']);
 

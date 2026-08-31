@@ -156,7 +156,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $family = $this->prophesize(ProductFamilyInterface::class);
         $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
 
-        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'], [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true])->willReturn($family->reveal());
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
             ->willReturn($this->fragmentWithValueField());
 
@@ -213,7 +213,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $family = $this->prophesize(ProductFamilyInterface::class);
         $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
 
-        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'], [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true])->willReturn($family->reveal());
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
             ->willReturn($this->fragmentWithValueField());
 
@@ -260,7 +260,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $family = $this->prophesize(ProductFamilyInterface::class);
         $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
 
-        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'], [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true])->willReturn($family->reveal());
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
             ->willReturn($this->fragmentWithValueField());
 
@@ -298,7 +298,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $family = $this->prophesize(ProductFamilyInterface::class);
         $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
 
-        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'], [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true])->willReturn($family->reveal());
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
             ->willReturn($this->fragmentWithValueField());
 
@@ -350,7 +350,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $family = $this->prophesize(ProductFamilyInterface::class);
         $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
 
-        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'], [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true])->willReturn($family->reveal());
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
             ->willReturn($this->fragmentWithValueField());
 
@@ -379,7 +379,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $family = $this->prophesize(ProductFamilyInterface::class);
         $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
 
-        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'], [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true])->willReturn($family->reveal());
 
         $form = new FormMetadata();
         $form->setKey('product_details');
@@ -402,7 +402,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $family = $this->prophesize(ProductFamilyInterface::class);
         $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
 
-        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'], [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true])->willReturn($family->reveal());
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])->willReturn(null);
 
         $form = new FormMetadata();
@@ -435,7 +435,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $family = $this->prophesize(ProductFamilyInterface::class);
         $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
 
-        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'], [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true])->willReturn($family->reveal());
 
         $field = new FieldMetadata('value');
         $field->setType('single_select');
@@ -477,7 +477,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $family = $this->prophesize(ProductFamilyInterface::class);
         $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
 
-        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'], [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true])->willReturn($family->reveal());
 
         $fragment = new FormMetadata();
         $fragment->setKey('product_attribute_number');
@@ -516,7 +516,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $family = $this->prophesize(ProductFamilyInterface::class);
         $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
 
-        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'], [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true])->willReturn($family->reveal());
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
             ->willReturn($this->fragmentWithValueField());
 
@@ -585,7 +585,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $family = $this->prophesize(ProductFamilyInterface::class);
         $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
 
-        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'], [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true])->willReturn($family->reveal());
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
             ->willReturn($this->fragmentWithValueField());
 
@@ -604,7 +604,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
 
     public function testInjectsNothingWhenNoFamilyFound(): void
     {
-        $this->productFamilyRepository->findOneBy(['productUuid' => 'missing'])->willReturn(null);
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'missing'], [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true])->willReturn(null);
 
         $form = new FormMetadata();
         $form->setKey('product_details');
@@ -638,7 +638,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $family = $this->prophesize(ProductFamilyInterface::class);
         $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
 
-        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'], [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true])->willReturn($family->reveal());
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
             ->willReturn($this->fragmentWithValueField());
 
@@ -682,7 +682,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
             $variantFamilyAttribute->reveal(),
         ]);
 
-        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'], [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true])->willReturn($family->reveal());
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
             ->willReturn($this->fragmentWithValueField());
 
@@ -740,7 +740,7 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
             $familyAttribute8->reveal(),
         ]);
 
-        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'])->willReturn($family->reveal());
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'], [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true])->willReturn($family->reveal());
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
             ->willReturn($this->fragmentWithValueField());
 
