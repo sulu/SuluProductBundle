@@ -11,6 +11,8 @@ EOF;
 
 $finder = PhpCsFixer\Finder::create()
     ->exclude(['var/cache', 'tests/Application/var', 'tests/reports', 'node_modules'])
+    // Generated on cache warmup: Symfony's DI component dumps the config reference here.
+    ->notPath('tests/Application/config/reference.php')
     ->in(__DIR__);
 
 $config = new PhpCsFixer\Config();

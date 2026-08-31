@@ -25,6 +25,8 @@ return RectorConfig::configure()
         __DIR__ . '/tests',
     ])
     ->withSkipPath('*/tests/Application/var/cache')
+    // Generated on cache warmup: Symfony's DI component dumps the config reference here.
+    ->withSkipPath('*/tests/Application/config/reference.php')
     ->withPHPStanConfigs([
         __DIR__ . '/phpstan.dist.neon',
     ])

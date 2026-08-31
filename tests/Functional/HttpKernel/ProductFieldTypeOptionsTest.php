@@ -106,7 +106,7 @@ class ProductFieldTypeOptionsTest extends SuluTestCase
                 return '';
             }
 
-            public function getXsdValidationBasePath(): string|false
+            public function getXsdValidationBasePath(): false
             {
                 return false;
             }
