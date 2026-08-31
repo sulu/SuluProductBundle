@@ -35,6 +35,7 @@ final class ProductRepository implements ProductRepositoryInterface
             self::SELECT_PRODUCT_CONTENT => [
                 DimensionContentQueryEnhancer::GROUP_SELECT_CONTENT_ADMIN => true,
             ],
+            self::SELECT_PRODUCT_FAMILY => true,
         ],
         self::GROUP_SELECT_PRODUCT_WEBSITE => [
             self::SELECT_PRODUCT_CONTENT => [
@@ -256,6 +257,7 @@ final class ProductRepository implements ProductRepositoryInterface
      *     product_admin?: bool,
      *     product_website?: bool,
      *     with-product-content?: bool|array<string, mixed>,
+     *     with-product-family?: bool,
      * }|array<string, mixed> $selects
      */
     public function createQueryBuilder(array $filters, array $sortBy = [], array $selects = []): QueryBuilder
@@ -410,6 +412,16 @@ final class ProductRepository implements ProductRepositoryInterface
                 $dimensionAttributes,
                 $contentSelects,
             );
+        }
+
+        if ($selects[self::SELECT_PRODUCT_FAMILY] ?? false) {
+            Assert::notFalse($selects[self::SELECT_PRODUCT_CONTENT] ?? false);
+
+            $queryBuilder
+                ->addSelect('productFamily', 'familyAttribute', 'familyAttributeAttribute')
+                ->leftJoin('dimensionContent.productFamily', 'productFamily')
+                ->leftJoin('productFamily.familyAttributes', 'familyAttribute')
+                ->leftJoin('familyAttribute.attribute', 'familyAttributeAttribute');
         }
 
         return $queryBuilder;

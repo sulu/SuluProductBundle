@@ -35,6 +35,7 @@ interface ProductRepositoryInterface
      * They are used by groups.
      */
     public const SELECT_PRODUCT_CONTENT = 'with-product-content';
+    public const SELECT_PRODUCT_FAMILY = 'with-product-family';
 
     public function createNew(?string $uuid = null): ProductInterface;
 
@@ -52,6 +53,7 @@ interface ProductRepositoryInterface
      *     product_admin?: bool,
      *     product_website?: bool,
      *     with-product-content?: bool|array<string, mixed>,
+     *     with-product-family?: bool,
      * }|array<string, mixed> $selects
      *
      * @throws ProductNotFoundException
@@ -71,6 +73,7 @@ interface ProductRepositoryInterface
      *     product_admin?: bool,
      *     product_website?: bool,
      *     with-product-content?: bool|array<string, mixed>,
+     *     with-product-family?: bool,
      * }|array<string, mixed> $selects
      */
     public function findOneBy(array $filters, array $selects = []): ?ProductInterface;
@@ -115,6 +118,7 @@ interface ProductRepositoryInterface
      *     product_admin?: bool,
      *     product_website?: bool,
      *     with-product-content?: bool|array<string, mixed>,
+     *     with-product-family?: bool,
      * }|array<string, mixed> $selects
      *
      * @return iterable<ProductInterface>

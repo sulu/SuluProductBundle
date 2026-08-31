@@ -41,7 +41,13 @@ class ProductFamilyFormMetadataVisitor implements FormMetadataVisitorInterface
 
         $items = $formMetadata->getItems();
 
-        foreach ($this->attributeGroupRepository->findAll() as $group) {
+        $groups = $this->attributeGroupRepository->findBy(
+            [],
+            [],
+            [AttributeGroupRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true],
+        );
+
+        foreach ($groups as $group) {
             $groupTranslation = $group->getTranslation($locale)
                 ?? (($defaultLocale = $group->getDefaultLocale()) !== null ? $group->getTranslation($defaultLocale) : null);
             $groupName = $groupTranslation?->getName() ?? '';

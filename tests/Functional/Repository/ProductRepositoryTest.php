@@ -19,8 +19,12 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
+use Sulu\Product\Domain\Model\AttributeInterface;
+use Sulu\Product\Domain\Model\ProductFamilyAttribute;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
+use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
+use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Doctrine\Repository\ProductRepository;
@@ -839,5 +843,78 @@ class ProductRepositoryTest extends SuluTestCase
 
         $this->assertCount(1, $result);
         $this->assertSame($uuid, $result[0]->getUuid());
+    }
+
+    /**
+     * SELECT_PRODUCT_FAMILY joins the family and its attributes onto the dimension content,
+     * so normalizers can walk them without a query per attribute.
+     */
+    public function testSelectProductFamilyLoadsTheFamilyAttributesWithTheProduct(): void
+    {
+        $container = self::getContainer();
+        /** @var AttributeGroupRepositoryInterface $groupRepository */
+        $groupRepository = $container->get(AttributeGroupRepositoryInterface::class);
+        /** @var AttributeRepositoryInterface $attributeRepository */
+        $attributeRepository = $container->get(AttributeRepositoryInterface::class);
+
+        $group = $groupRepository->create();
+        $groupRepository->save($group);
+
+        $attribute = $attributeRepository->create($group);
+        $attribute->setKey('color');
+        $attribute->setType(AttributeInterface::TYPE_TEXT);
+        $attributeRepository->save($attribute);
+
+        $family = $this->productFamilyRepository->create();
+        $family->addFamilyAttribute(new ProductFamilyAttribute($family, $attribute));
+        $this->productFamilyRepository->save($family);
+
+        $product = $this->repository->createNew();
+        $pdc = $product->createDimensionContent();
+        $pdc->setProductFamily($family);
+        $product->addDimensionContent($pdc);
+        $this->repository->add($product);
+        $this->entityManager->persist($pdc);
+        $this->entityManager->flush();
+
+        $uuid = $product->getUuid();
+        $attributeId = $attribute->getId();
+        $this->entityManager->clear();
+
+        $selects = [
+            ProductRepositoryInterface::SELECT_PRODUCT_CONTENT => [
+                DimensionContentQueryEnhancer::GROUP_SELECT_CONTENT_ADMIN => true,
+            ],
+            ProductRepositoryInterface::SELECT_PRODUCT_FAMILY => true,
+        ];
+
+        $loaded = $this->repository->getOneBy(['uuid' => $uuid], $selects);
+
+        $queriesBefore = $this->countQueries();
+
+        $familyAttributes = [];
+        foreach ($loaded->getDimensionContents() as $dimensionContent) {
+            $productFamily = $dimensionContent->getProductFamily();
+            if (null === $productFamily) {
+                continue;
+            }
+
+            foreach ($productFamily->getFamilyAttributes() as $familyAttribute) {
+                $familyAttributes[] = $familyAttribute->getAttribute()->getId();
+            }
+        }
+
+        $this->assertSame([$attributeId], $familyAttributes);
+        $this->assertSame($queriesBefore, $this->countQueries(), 'walking the family graph must not query');
+    }
+
+    private function countQueries(): int
+    {
+        /** @var array<array{Value: string}> $rows */
+        $rows = $this->entityManager->getConnection()
+            ->executeQuery("SHOW SESSION STATUS LIKE 'Com_select'")
+            ->fetchAllAssociative();
+
+        return (int) $rows[0]['Value'];
     }
 }

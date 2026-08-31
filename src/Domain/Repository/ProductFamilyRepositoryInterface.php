@@ -23,29 +23,51 @@ use Sulu\Product\Domain\Model\ProductFamilyInterface;
  *     externalIdentifier?: string,
  *     productUuid?: string,
  * }
+ * @phpstan-type ProductFamilyRepositorySelects array{
+ *     product_family_form?: bool,
+ *     with-family-attributes?: bool,
+ *     with-family-attribute-groups?: bool,
+ *     with-family-attribute-options?: bool,
+ * }|array<string, mixed>
  */
 interface ProductFamilyRepositoryInterface
 {
+    /**
+     * Groups represents serialization / resolver group, this one is used by the form metadata visitors.
+     */
+    public const GROUP_SELECT_PRODUCT_FAMILY_FORM = 'product_family_form';
+
+    /**
+     * Withs represents additional selects which can be load to join and select specific sub entities.
+     * They are used by groups.
+     */
+    public const SELECT_FAMILY_ATTRIBUTES = 'with-family-attributes';
+    public const SELECT_FAMILY_ATTRIBUTE_GROUPS = 'with-family-attribute-groups';
+    public const SELECT_FAMILY_ATTRIBUTE_OPTIONS = 'with-family-attribute-options';
+
     public function create(): ProductFamilyInterface;
 
     /**
      * @param ProductFamilyRepositoryFilters $filters
+     * @param ProductFamilyRepositorySelects $selects
      */
-    public function findOneBy(array $filters): ?ProductFamilyInterface;
+    public function findOneBy(array $filters, array $selects = []): ?ProductFamilyInterface;
 
     /**
      * @param ProductFamilyRepositoryFilters $filters
+     * @param ProductFamilyRepositorySelects $selects
      *
      * @return iterable<ProductFamilyInterface>
      */
-    public function findBy(array $filters = []): iterable;
+    public function findBy(array $filters = [], array $selects = []): iterable;
 
     /**
      * @param ProductFamilyRepositoryFilters $filters
+     * @param ProductFamilyRepositorySelects $selects
      *
      * @throws ProductFamilyNotFoundException
      */
-    public function getOneBy(array $filters): ProductFamilyInterface;
+    public function getOneBy(array $filters, array $selects = []): ProductFamilyInterface;
 
     public function save(ProductFamilyInterface $family): void;
 

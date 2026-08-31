@@ -20,8 +20,11 @@ use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Exception\ProductFamilyNotFoundException;
+use Sulu\Product\Domain\Model\Attribute;
+use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductFamily;
+use Sulu\Product\Domain\Model\ProductFamilyAttribute;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Symfony\Component\Uid\Uuid;
@@ -29,9 +32,19 @@ use Webmozart\Assert\Assert;
 
 /**
  * @phpstan-import-type ProductFamilyRepositoryFilters from ProductFamilyRepositoryInterface
+ * @phpstan-import-type ProductFamilyRepositorySelects from ProductFamilyRepositoryInterface
  */
 final class ProductFamilyRepository implements ProductFamilyRepositoryInterface
 {
+    private const SELECTS = [
+        // GROUPS
+        self::GROUP_SELECT_PRODUCT_FAMILY_FORM => [
+            self::SELECT_FAMILY_ATTRIBUTES => true,
+            self::SELECT_FAMILY_ATTRIBUTE_GROUPS => true,
+            self::SELECT_FAMILY_ATTRIBUTE_OPTIONS => true,
+        ],
+    ];
+
     /** @var EntityRepository<ProductFamilyInterface> */
     private EntityRepository $entityRepository;
 
@@ -50,9 +63,9 @@ final class ProductFamilyRepository implements ProductFamilyRepositoryInterface
         return $family;
     }
 
-    public function findOneBy(array $filters): ?ProductFamilyInterface
+    public function findOneBy(array $filters, array $selects = []): ?ProductFamilyInterface
     {
-        $queryBuilder = $this->createQueryBuilder($filters);
+        $queryBuilder = $this->createQueryBuilder($filters, $selects);
 
         try {
             /** @var ProductFamilyInterface $family */
@@ -61,12 +74,14 @@ final class ProductFamilyRepository implements ProductFamilyRepositoryInterface
             return null;
         }
 
+        $this->addRowMultiplyingSelects([$family], $selects);
+
         return $family;
     }
 
-    public function getOneBy(array $filters): ProductFamilyInterface
+    public function getOneBy(array $filters, array $selects = []): ProductFamilyInterface
     {
-        $queryBuilder = $this->createQueryBuilder($filters);
+        $queryBuilder = $this->createQueryBuilder($filters, $selects);
 
         try {
             /** @var ProductFamilyInterface $family */
@@ -75,22 +90,31 @@ final class ProductFamilyRepository implements ProductFamilyRepositoryInterface
             throw new ProductFamilyNotFoundException($filters, $e);
         }
 
+        $this->addRowMultiplyingSelects([$family], $selects);
+
         return $family;
     }
 
-    public function findBy(array $filters = []): iterable
+    public function findBy(array $filters = [], array $selects = []): iterable
     {
-        /** @var iterable<ProductFamilyInterface> $result */
-        $result = $this->createQueryBuilder($filters)->getQuery()->getResult();
+        /** @var list<ProductFamilyInterface> $families */
+        $families = $this->createQueryBuilder($filters, $selects)
+            ->getQuery()
+            ->getResult();
 
-        return $result;
+        $this->addRowMultiplyingSelects($families, $selects);
+
+        return $families;
     }
 
     /**
      * @param ProductFamilyRepositoryFilters $filters
+     * @param ProductFamilyRepositorySelects $selects
      */
-    public function createQueryBuilder(array $filters): QueryBuilder
+    public function createQueryBuilder(array $filters, array $selects = []): QueryBuilder
     {
+        $selects = $this->resolveSelectGroups($selects);
+
         $queryBuilder = $this->entityRepository->createQueryBuilder('productFamily');
 
         $uuid = $filters['uuid'] ?? null;
@@ -133,7 +157,102 @@ final class ProductFamilyRepository implements ProductFamilyRepositoryInterface
                 ->setParameter('productUuid', $productUuid);
         }
 
+        // selects
+        if ($selects[self::SELECT_FAMILY_ATTRIBUTES] ?? false) {
+            // Translations stay unfiltered, callers fall back to the default locale.
+            $queryBuilder
+                ->addSelect('familyAttribute', 'attribute', 'attributeTranslation')
+                ->leftJoin('productFamily.familyAttributes', 'familyAttribute')
+                ->leftJoin('familyAttribute.attribute', 'attribute')
+                ->leftJoin('attribute.translations', 'attributeTranslation');
+        }
+
+        if ($selects[self::SELECT_FAMILY_ATTRIBUTE_GROUPS] ?? false) {
+            Assert::notFalse($selects[self::SELECT_FAMILY_ATTRIBUTES] ?? false);
+
+            $queryBuilder
+                ->addSelect('attributeGroup')
+                ->leftJoin('attribute.group', 'attributeGroup');
+        }
+
         return $queryBuilder;
+    }
+
+    /**
+     * Own queries, joined they would multiply the rows of the main query. Hydrating them fills the
+     * collections of the loaded entities, the results themselves are not needed.
+     *
+     * @param list<ProductFamilyInterface> $families
+     * @param ProductFamilyRepositorySelects $selects
+     */
+    private function addRowMultiplyingSelects(array $families, array $selects): void
+    {
+        if ([] === $families) {
+            return;
+        }
+
+        $selects = $this->resolveSelectGroups($selects);
+
+        if ($selects[self::SELECT_FAMILY_ATTRIBUTE_GROUPS] ?? false) {
+            $this->entityManager->createQueryBuilder()
+                ->select('attributeGroup', 'attributeGroupTranslation')
+                ->from(AttributeGroup::class, 'attributeGroup')
+                ->innerJoin(
+                    Attribute::class,
+                    'attribute',
+                    Join::WITH,
+                    'attribute.group = attributeGroup',
+                )
+                ->innerJoin(
+                    ProductFamilyAttribute::class,
+                    'familyAttribute',
+                    Join::WITH,
+                    'familyAttribute.attribute = attribute',
+                )
+                ->leftJoin('attributeGroup.translations', 'attributeGroupTranslation')
+                ->where('familyAttribute.family IN (:families)')
+                ->setParameter('families', $families)
+                ->getQuery()
+                ->getResult();
+        }
+
+        if ($selects[self::SELECT_FAMILY_ATTRIBUTE_OPTIONS] ?? false) {
+            $this->entityManager->createQueryBuilder()
+                ->select('attribute', 'option', 'optionTranslation')
+                ->from(Attribute::class, 'attribute')
+                ->innerJoin(
+                    ProductFamilyAttribute::class,
+                    'familyAttribute',
+                    Join::WITH,
+                    'familyAttribute.attribute = attribute',
+                )
+                ->leftJoin('attribute.options', 'option')
+                ->leftJoin('option.translations', 'optionTranslation')
+                ->where('familyAttribute.family IN (:families)')
+                ->setParameter('families', $families)
+                ->getQuery()
+                ->getResult();
+        }
+    }
+
+    /**
+     * @param ProductFamilyRepositorySelects $selects
+     *
+     * @return ProductFamilyRepositorySelects
+     */
+    private function resolveSelectGroups(array $selects): array
+    {
+        foreach ($selects as $selectGroup => $value) {
+            if (!$value || !isset(self::SELECTS[$selectGroup])) {
+                continue;
+            }
+
+            foreach (self::SELECTS[$selectGroup] as $select => $selectValue) {
+                $selects[$select] = $selectValue;
+            }
+        }
+
+        return $selects;
     }
 
     public function save(ProductFamilyInterface $family): void

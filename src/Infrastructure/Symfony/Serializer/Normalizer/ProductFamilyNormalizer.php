@@ -45,7 +45,13 @@ final class ProductFamilyNormalizer implements NormalizerInterface
         }
 
         $attributes = [];
-        foreach ($this->attributeGroupRepository->findAll() as $group) {
+        $groups = $this->attributeGroupRepository->findBy(
+            [],
+            [],
+            [AttributeGroupRepositoryInterface::SELECT_GROUP_ATTRIBUTES => true],
+        );
+
+        foreach ($groups as $group) {
             foreach ($group->getGroupAttributes() as $groupAttribute) {
                 $attributes[$groupAttribute->getAttribute()->getId()] = [
                     'enabled' => false,
