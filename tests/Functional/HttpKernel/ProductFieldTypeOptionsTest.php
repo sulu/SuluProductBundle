@@ -106,7 +106,9 @@ class ProductFieldTypeOptionsTest extends SuluTestCase
                 return '';
             }
 
-            public function getXsdValidationBasePath(): string|false
+            // Symfony 8 dropped this from ExtensionInterface; the narrower "false"
+            // still satisfies the "string|false" the 6.4/7.x interface declares.
+            public function getXsdValidationBasePath(): false
             {
                 return false;
             }

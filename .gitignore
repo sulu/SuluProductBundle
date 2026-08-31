@@ -21,6 +21,8 @@ var
 
 # tests
 tests/Application/var
+# Config-reference shapes Symfony's DI component dumps on cache warmup.
+tests/Application/config/reference.php
 
 # php-cs-fixer
 .php_cs.cache
