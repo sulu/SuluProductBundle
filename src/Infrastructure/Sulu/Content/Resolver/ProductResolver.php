@@ -101,7 +101,9 @@ class ProductResolver implements ResolverInterface
     }
 
     /**
-     * Always resolved for a reference; everything else is opt-in.
+     * Always resolved for a reference; everything else is opt-in. `image` and `shortDescription`
+     * are template fields rather than fixed columns, so a project whose template drops them
+     * resolves without them: resolveDetailsData() skips a requested field the form does not declare.
      *
      * @return array<string, string>
      */
@@ -113,6 +115,8 @@ class ProductResolver implements ResolverInterface
             'status' => self::getPrefix() . 'status',
             'productFamily' => self::getPrefix() . 'productFamily',
             'position' => self::getPrefix() . 'position',
+            'image' => self::getPrefix() . 'image',
+            'shortDescription' => self::getPrefix() . 'shortDescription',
         ];
     }
 

@@ -227,6 +227,11 @@ final class SuluProductBundle extends AbstractBundle
                         ->end()
                     ->end()
                 ->end()
+                ->scalarNode('variant_query_parameter')
+                    ->info('Query parameter a variant URL carries, e.g. /product/xy?variant=XY-2.')
+                    ->defaultValue('variant')
+                    ->cannotBeEmpty()
+                ->end()
                 ->arrayNode('association_types')
                     ->info('Custom product association types (e.g. "alternative", "suitable"). Omit the whole section to disable association types.')
                     ->useAttributeAsKey('key')
@@ -359,6 +364,10 @@ final class SuluProductBundle extends AbstractBundle
         /** @var array<int, string> $productStatuses */
         $productStatuses = $config['product_statuses'] ?? [];
         $builder->setParameter('sulu_product.product_statuses', $productStatuses);
+
+        /** @var string $variantQueryParameter */
+        $variantQueryParameter = $config['variant_query_parameter'] ?? 'variant';
+        $builder->setParameter('sulu_product.variant_query_parameter', $variantQueryParameter);
 
         $services = $container->services();
 
@@ -972,7 +981,9 @@ final class SuluProductBundle extends AbstractBundle
             ->class(ProductResourceLoader::class)
             ->args([
                 new Reference('sulu_product.product_repository'),
+                '%sulu_product.variant_query_parameter%',
             ])
+            ->tag('kernel.reset', ['method' => 'reset'])
             ->tag('sulu_content.resource_loader', ['type' => ProductResourceLoader::RESOURCE_LOADER_KEY]);
 
         $services->set('sulu_product.product_preview_provider')

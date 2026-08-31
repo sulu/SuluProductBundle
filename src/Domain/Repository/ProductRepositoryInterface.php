@@ -107,10 +107,12 @@ interface ProductRepositoryInterface
      *     page?: int,
      *     limit?: int,
      * } $filters
-     * @param array{
-     *     id?: 'asc'|'desc',
-     *     title?: 'asc'|'desc',
-     * } $sortBy
+     * @param array<string, 'asc'|'desc'> $sortBy `uuid`, `position`, `created` and `changed`, plus
+     *                                            `title`, `authored` and `workflowPublished` when
+     *                                            `locale` and `stage` filter, which is what joins
+     *                                            that table. The key order is the ORDER BY order.
+     *                                            An unknown field is ignored; a dimension content
+     *                                            field without those filters throws
      * @param array{
      *     product_admin?: bool,
      *     product_website?: bool,
@@ -142,10 +144,12 @@ interface ProductRepositoryInterface
      *     page?: int,
      *     limit?: int,
      * } $filters
-     * @param array{
-     *     id?: 'asc'|'desc',
-     *     title?: 'asc'|'desc',
-     * } $sortBy
+     * @param array<string, 'asc'|'desc'> $sortBy `uuid`, `position`, `created` and `changed`, plus
+     *                                            `title`, `authored` and `workflowPublished` when
+     *                                            `locale` and `stage` filter, which is what joins
+     *                                            that table. The key order is the ORDER BY order.
+     *                                            An unknown field is ignored; a dimension content
+     *                                            field without those filters throws
      *
      * @return iterable<string>
      */
@@ -172,6 +176,16 @@ interface ProductRepositoryInterface
      * } $filters
      */
     public function countBy(array $filters = []): int;
+
+    /**
+     * The route lives on the dimension content, so a product without one in that locale and stage
+     * is absent from the result, and one whose dimension content carries no route maps to null.
+     *
+     * @param array{uuids: string[], locale: string, stage: string} $filters
+     *
+     * @return array<string, string|null> slug by product uuid
+     */
+    public function findSlugsBy(array $filters): array;
 
     public function add(ProductInterface $product): void;
 

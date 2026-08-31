@@ -1,5 +1,23 @@
 # Sulu Product Bundle
 
+## Variant URLs
+
+A variant owns no route of its own. Referenced from a page, it resolves to its parent's URL plus a
+query parameter carrying the variant code, so `/products/cable` with code `XY-2` resolves to
+`/products/cable?variant=XY-2`.
+
+The bundle only writes that URL — nothing reads the parameter back off the request. A project
+selects the variant itself, which makes the key a contract between both sides: change it under
+`sulu_product.variant_query_parameter` and the reading side has to match by hand.
+
+```yaml
+sulu_product:
+    variant_query_parameter: 'variant' # default
+```
+
+A variant whose parent has no published route in the requested locale resolves without a `url`,
+because an empty string would point at the site root.
+
 ## Association form overrides
 
 The bundle generates a `product_associations` form with one field per configured
@@ -14,7 +32,9 @@ Rules for the declared fields:
 - Only the type `product_selection` is allowed — no other field type maps to product
   associations.
 - A `properties` collection param declares which target properties resolve, in addition to the
-  always-forced `title` and `url`.
+  always-resolved `title`, `url`, `code`, `externalIdentifier`, `status`, `productFamily`,
+  `position`, `image` and `shortDescription`. The last two are template fields, so a project whose
+  `product_details.xml` drops them resolves without them instead of failing.
 - Declared fields are never regenerated or relabeled, so add `<meta><title>` yourself.
 - Invalid fields fail `cache:warmup`.
 

@@ -24,6 +24,7 @@ use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Doctrine\Repository\ProductRepository;
+use Sulu\Route\Domain\Model\Route;
 
 #[CoversClass(ProductRepository::class)]
 class ProductRepositoryTest extends SuluTestCase
@@ -620,6 +621,200 @@ class ProductRepositoryTest extends SuluTestCase
 
         $this->assertCount(1, $result);
         $this->assertSame($uuid, $result[0]->getUuid());
+    }
+
+    /**
+     * The caller's key order is the ORDER BY order. `DimensionContentQueryEnhancer::addFilters()`
+     * also knows `created`, so it used to append it ahead of `position` and decide the order alone.
+     */
+    public function testCreateQueryBuilderSortsInTheOrderTheKeysWereGiven(): void
+    {
+        $qb = $this->doctrineRepository->createQueryBuilder(
+            ['locale' => 'en', 'stage' => 'live'],
+            ['position' => 'asc', 'created' => 'asc', 'uuid' => 'asc'],
+        );
+
+        $this->assertStringEndsWith(
+            'ORDER BY product.position asc, product.created asc, product.uuid asc',
+            $qb->getDQL(),
+        );
+        // getDQL() only concatenates the parts; an unmapped field fails when the query is parsed.
+        $qb->getQuery()->getResult();
+    }
+
+    /** A dimension content field keeps its place among the product's own. */
+    public function testCreateQueryBuilderSortsAcrossBothAliasesInOneOrder(): void
+    {
+        $qb = $this->doctrineRepository->createQueryBuilder(
+            ['locale' => 'en', 'stage' => 'live'],
+            ['position' => 'asc', 'title' => 'desc'],
+        );
+
+        $this->assertStringEndsWith(
+            'ORDER BY product.position asc, filterDimensionContent.title desc',
+            $qb->getDQL(),
+        );
+        $qb->getQuery()->getResult();
+    }
+
+    /** Every alias maps to a real column, including the ones no caller in this bundle passes. */
+    public function testCreateQueryBuilderSortsByEveryKnownField(): void
+    {
+        $qb = $this->doctrineRepository->createQueryBuilder(
+            ['locale' => 'en', 'stage' => 'live'],
+            [
+                'uuid' => 'asc',
+                'position' => 'asc',
+                'created' => 'asc',
+                'changed' => 'desc',
+                'title' => 'asc',
+                'authored' => 'desc',
+                'workflowPublished' => 'desc',
+            ],
+        );
+
+        $this->assertStringEndsWith(
+            'ORDER BY product.uuid asc, product.position asc, product.created asc, product.changed desc,'
+            . ' filterDimensionContent.title asc, filterDimensionContent.authored desc,'
+            . ' filterDimensionContent.workflowPublished desc',
+            $qb->getDQL(),
+        );
+        $qb->getQuery()->getResult();
+    }
+
+    /** The clause order decides the row order, not just the DQL string. */
+    public function testCreateQueryBuilderReturnsRowsInTheRequestedOrder(): void
+    {
+        $first = $this->createLiveProduct('en', 'B', 0);
+        $last = $this->createLiveProduct('en', 'A', 1);
+        $this->entityManager->clear();
+
+        $byPosition = $this->doctrineRepository->createQueryBuilder(
+            ['locale' => 'en', 'stage' => 'live'],
+            ['position' => 'asc', 'title' => 'asc'],
+        );
+
+        /** @var ProductInterface[] $result */
+        $result = $byPosition->getQuery()->getResult();
+        $this->assertSame(
+            [$first->getUuid(), $last->getUuid()],
+            [$result[0]->getUuid(), $result[1]->getUuid()],
+        );
+
+        // Same two rows, and the dimension content field now decides: the order flips.
+        $byTitle = $this->doctrineRepository->createQueryBuilder(
+            ['locale' => 'en', 'stage' => 'live'],
+            ['title' => 'asc', 'position' => 'asc'],
+        );
+
+        /** @var ProductInterface[] $flipped */
+        $flipped = $byTitle->getQuery()->getResult();
+        $this->assertSame(
+            [$last->getUuid(), $first->getUuid()],
+            [$flipped[0]->getUuid(), $flipped[1]->getUuid()],
+        );
+    }
+
+    /**
+     * Without `locale` and `stage` the dimension content is not joined. A field we know but cannot
+     * reach would order the rows arbitrarily, so it is a caller mistake rather than a field to skip.
+     */
+    public function testCreateQueryBuilderRejectsDimensionContentFieldsWithoutTheJoin(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Sorting by "title" requires both "locale" and "stage" filters.');
+
+        $this->doctrineRepository->createQueryBuilder(
+            ['uuids' => ['01a01e90-f47c-7822-8206-b3464acc3a13']],
+            ['title' => 'asc', 'position' => 'asc'],
+        );
+    }
+
+    /** An unknown field stays silent: the caller cannot have meant a column that does not exist. */
+    public function testCreateQueryBuilderIgnoresUnknownSortFields(): void
+    {
+        $qb = $this->doctrineRepository->createQueryBuilder(
+            ['uuids' => ['01a01e90-f47c-7822-8206-b3464acc3a13']],
+            ['nonExistingField' => 'asc', 'position' => 'asc'],
+        );
+
+        $this->assertStringEndsWith('ORDER BY product.position asc', $qb->getDQL());
+        $qb->getQuery()->getResult();
+    }
+
+    public function testFindSlugsByReturnsTheSlugOfEveryRequestedProduct(): void
+    {
+        $withRoute = $this->createLiveProduct('en', 'Routed', 0, '/routed');
+        $withoutRoute = $this->createLiveProduct('en', 'Unrouted', 1);
+        $this->entityManager->clear();
+
+        $slugs = $this->repository->findSlugsBy([
+            'uuids' => [$withRoute->getUuid(), $withoutRoute->getUuid()],
+            'locale' => 'en',
+            'stage' => 'live',
+        ]);
+
+        $this->assertSame(
+            [$withRoute->getUuid() => '/routed', $withoutRoute->getUuid() => null],
+            $slugs,
+        );
+    }
+
+    /** No dimension content in that locale and stage means no entry, which is not the same as null. */
+    public function testFindSlugsByOmitsProductsWithoutContentInTheRequestedDimension(): void
+    {
+        $product = $this->createLiveProduct('en', 'Routed', 0, '/routed');
+        $this->entityManager->clear();
+
+        $this->assertSame([], $this->repository->findSlugsBy([
+            'uuids' => [$product->getUuid()],
+            'locale' => 'de',
+            'stage' => 'live',
+        ]));
+
+        $this->assertSame([], $this->repository->findSlugsBy([
+            'uuids' => [$product->getUuid()],
+            'locale' => 'en',
+            'stage' => 'draft',
+        ]));
+    }
+
+    public function testFindSlugsByWithoutUuidsDoesNotQuery(): void
+    {
+        $this->assertSame([], $this->repository->findSlugsBy([
+            'uuids' => [],
+            'locale' => 'en',
+            'stage' => 'live',
+        ]));
+    }
+
+    private function createLiveProduct(
+        string $locale,
+        string $title,
+        int $position,
+        ?string $slug = null,
+    ): ProductInterface {
+        $product = $this->repository->createNew();
+        $product->setPosition($position);
+
+        $dimensionContent = $product->createDimensionContent();
+        $dimensionContent->setLocale($locale);
+        $dimensionContent->setStage('live');
+        $dimensionContent->setTitle($title);
+
+        // The route association carries no cascade, so it is persisted on its own.
+        if (null !== $slug) {
+            $route = new Route(ProductInterface::RESOURCE_KEY, $product->getUuid(), $locale, $slug);
+            $dimensionContent->setRoute($route);
+            $this->entityManager->persist($route);
+        }
+
+        $product->addDimensionContent($dimensionContent);
+        $this->repository->add($product);
+        $this->entityManager->persist($dimensionContent);
+        $this->entityManager->flush();
+
+        return $product;
     }
 
     public function testCreateQueryBuilderWithAdminGroupSelectIncludesDimensionContents(): void
