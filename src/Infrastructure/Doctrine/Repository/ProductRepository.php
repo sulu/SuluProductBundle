@@ -45,6 +45,22 @@ final class ProductRepository implements ProductRepositoryInterface
     ];
 
     /**
+     * The query alias each sortable field lives on. A `filterDimensionContent` field sorts only
+     * where addFilters() joined that table.
+     *
+     * @var array<string, string>
+     */
+    private const SORT_ALIASES = [
+        'uuid' => 'product',
+        'position' => 'product',
+        'created' => 'product',
+        'changed' => 'product',
+        'title' => 'filterDimensionContent',
+        'authored' => 'filterDimensionContent',
+        'workflowPublished' => 'filterDimensionContent',
+    ];
+
+    /**
      * @var EntityManagerInterface
      */
     private $entityManager;
@@ -210,6 +226,32 @@ final class ProductRepository implements ProductRepositoryInterface
         return \array_column($result, 'uuid');
     }
 
+    public function findSlugsBy(array $filters): array
+    {
+        if ([] === $filters['uuids']) {
+            return [];
+        }
+
+        /** @var list<array{uuid: string, slug: string|null}> $rows */
+        $rows = $this->entityManager->createQueryBuilder()
+            ->select('product.uuid', 'route.slug')
+            ->from($this->productDimensionContentClassName, 'dimensionContent')
+            ->join('dimensionContent.product', 'product')
+            ->leftJoin('dimensionContent.route', 'route')
+            ->where('product.uuid IN (:uuids)')
+            ->andWhere('dimensionContent.locale = :locale')
+            ->andWhere('dimensionContent.stage = :stage')
+            ->andWhere('dimensionContent.version = :version')
+            ->setParameter('uuids', $filters['uuids'])
+            ->setParameter('locale', $filters['locale'])
+            ->setParameter('stage', $filters['stage'])
+            ->setParameter('version', DimensionContentInterface::CURRENT_VERSION)
+            ->getQuery()
+            ->getArrayResult();
+
+        return \array_column($rows, 'slug', 'uuid');
+    }
+
     public function add(ProductInterface $product): void
     {
         $this->entityManager->persist($product);
@@ -247,12 +289,10 @@ final class ProductRepository implements ProductRepositoryInterface
      *     page?: int,
      *     limit?: int,
      * } $filters
-     * @param array{
-     *     uuid?: 'asc'|'desc',
-     *     title?: 'asc'|'desc',
-     *     created?: 'asc'|'desc',
-     *     position?: 'asc'|'desc',
-     * } $sortBy
+     * @param array<string, 'asc'|'desc'> $sortBy fields from self::SORT_ALIASES; the key order is
+     *                                            the ORDER BY order. Unknown fields are ignored,
+     *                                            a filterDimensionContent field without a `locale`
+     *                                            and `stage` filter throws
      * @param array{
      *     product_admin?: bool,
      *     product_website?: bool,
@@ -323,17 +363,20 @@ final class ProductRepository implements ProductRepositoryInterface
             $queryBuilder->setFirstResult($offset);
         }
 
-        if (
-            (\array_key_exists('locale', $filters)       // should also work with locale = null
-            && \array_key_exists('stage', $filters))
-            || ([] === $filters && [] !== $sortBy)      // if no filters are set, but sortBy is set, we need to set the sorting
-        ) {
+        $hasDimensionContentJoin = (\array_key_exists('locale', $filters)       // should also work with locale = null
+                && \array_key_exists('stage', $filters))
+            || ([] === $filters && [] !== $sortBy);      // if no filters are set, but sortBy is set, we need to set the sorting
+
+        if ($hasDimensionContentJoin) {
             $this->dimensionContentQueryEnhancer->addFilters(
                 $queryBuilder,
                 'product',
                 $this->productDimensionContentClassName,
                 $filters,
-                $sortBy,
+                // No sorting here: the enhancer appends its own fields to the ORDER BY before this
+                // method reaches its own, so a field it knows would outrank every field it does not,
+                // whatever order the caller asked for. Applied below in one pass instead.
+                [],
             );
         }
 
@@ -376,16 +419,21 @@ final class ProductRepository implements ProductRepositoryInterface
                 ->setParameter('associationTargetUuid', $associationTargetUuid);
         }
 
-        if ([] !== $sortBy) {
-            foreach ($sortBy as $field => $order) {
-                if ('uuid' === $field) {
-                    $queryBuilder->addOrderBy('product.uuid', $order);
-                } elseif ('created' === $field) {
-                    $queryBuilder->addOrderBy('product.created', $order);
-                } elseif ('position' === $field) {
-                    $queryBuilder->addOrderBy('product.position', $order);
-                }
+        // One pass over the caller's keys, so their order is the ORDER BY order.
+        foreach ($sortBy as $field => $order) {
+            $alias = self::SORT_ALIASES[$field] ?? null;
+
+            if (null === $alias) {
+                continue;
             }
+
+            // A field we know but cannot reach is a caller mistake, not a field to skip: silently
+            // dropping it returns arbitrarily ordered rows with no signal.
+            if ('filterDimensionContent' === $alias && !$hasDimensionContentJoin) {
+                throw new \InvalidArgumentException(\sprintf('Sorting by "%s" requires both "locale" and "stage" filters.', $field));
+            }
+
+            $queryBuilder->addOrderBy($alias . '.' . $field, $order);
         }
 
         // selects

@@ -175,14 +175,52 @@ class ProductResolverDetailsTest extends ProductResolverTestCase
     public function testADetailsFieldAReferenceDidNotAskForIsNeverResolved(): void
     {
         $this->givenFormMetadata([
+            'details/otherField' => 'text_line',
+            'details/customField' => 'text_line',
+        ]);
+
+        $dc = $this->makeDimensionContent(['otherField' => 'y', 'customField' => 'x']);
+
+        $content = $this->resolveContent($dc, ['custom' => 'product.customField'], $this->resolver);
+
+        self::assertArrayNotHasKey('otherField', $content);
+    }
+
+    /** A card shows a picture and a teaser, so a reference gets both without asking for them. */
+    public function testImageAndShortDescriptionAreResolvedWithoutBeingAskedFor(): void
+    {
+        $this->givenFormMetadata([
+            'details/image' => 'single_media_selection',
             'details/shortDescription' => 'text_editor',
             'details/customField' => 'text_line',
         ]);
 
-        $dc = $this->makeDimensionContent(['shortDescription' => '<p>hi</p>', 'customField' => 'x']);
+        $dc = $this->makeDimensionContent([
+            'image' => ['id' => 7],
+            'shortDescription' => '<p>hi</p>',
+            'customField' => 'x',
+        ]);
 
         $content = $this->resolveContent($dc, ['custom' => 'product.customField'], $this->resolver);
 
+        self::assertArrayHasKey('image', $content);
+        self::assertArrayHasKey('shortDescription', $content);
+
+        $shortDescription = $content['shortDescription'];
+        self::assertInstanceOf(ContentView::class, $shortDescription);
+        self::assertSame('<p>hi</p>', $shortDescription->getContent());
+    }
+
+    /** A project whose template drops them resolves without them rather than failing. */
+    public function testDefaultDetailsFieldsTheTemplateDoesNotDeclareAreSkipped(): void
+    {
+        $this->givenFormMetadata(['details/customField' => 'text_line']);
+
+        $dc = $this->makeDimensionContent(['customField' => 'x']);
+
+        $content = $this->resolveContent($dc, ['custom' => 'product.customField'], $this->resolver);
+
+        self::assertArrayNotHasKey('image', $content);
         self::assertArrayNotHasKey('shortDescription', $content);
     }
 
