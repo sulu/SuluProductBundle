@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Infrastructure\Symfony\HttpKernel;
 
+use Psr\Container\ContainerInterface as PsrContainerInterface;
 use Sulu\Bundle\HttpCacheBundle\ReferenceStore\ReferenceStore;
 use Sulu\Bundle\PersistenceBundle\DependencyInjection\PersistenceExtensionTrait;
 use Sulu\Bundle\PersistenceBundle\PersistenceBundleTrait;
@@ -159,6 +160,7 @@ use Sulu\Product\UserInterface\Controller\Admin\MeasurementUnitController;
 use Sulu\Product\UserInterface\Controller\Admin\ProductController;
 use Sulu\Product\UserInterface\Controller\Admin\ProductFamilyController;
 use Sulu\Product\UserInterface\Controller\Admin\ProductVariantController;
+use Sulu\Product\UserInterface\Controller\Website\ProductController as WebsiteProductController;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -985,6 +987,20 @@ final class SuluProductBundle extends AbstractBundle
             ])
             ->tag('kernel.reset', ['method' => 'reset'])
             ->tag('sulu_content.resource_loader', ['type' => ProductResourceLoader::RESOURCE_LOADER_KEY]);
+
+        $services->set('sulu_product.website_product_controller')
+            ->class(WebsiteProductController::class)
+            ->public()
+            ->args([
+                new Reference('request_stack'),
+                '%sulu_product.variant_query_parameter%',
+            ])
+            ->tag('container.service_subscriber')
+            ->tag('controller.service_arguments')
+            ->call('setContainer', [new Reference(PsrContainerInterface::class)]);
+
+        $services->alias(WebsiteProductController::class, 'sulu_product.website_product_controller')
+            ->public();
 
         $services->set('sulu_product.product_preview_provider')
             ->class(ContentObjectProvider::class)

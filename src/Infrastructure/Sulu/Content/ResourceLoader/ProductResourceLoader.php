@@ -108,6 +108,11 @@ class ProductResourceLoader implements ResourceLoaderContentViewEnhancementInter
             return ContentView::create([], []);
         }
 
+        // Position 0 is what the bare parent URL shows, so its code would be a second address.
+        if (0 === $product->getPosition()) {
+            return ContentView::create(['url' => $slug], []);
+        }
+
         return ContentView::create(
             ['url' => $slug . '?' . \http_build_query([$this->variantQueryParameter => $code])],
             [],

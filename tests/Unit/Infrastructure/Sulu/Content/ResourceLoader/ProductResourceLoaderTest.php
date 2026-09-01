@@ -100,6 +100,23 @@ class ProductResourceLoaderTest extends TestCase
         $this->assertSame([], $contentView->getView());
     }
 
+    public function testResolveContentViewEnhancementOmitsTheCodeOfTheDefaultVariant(): void
+    {
+        $parent = $this->createProduct('parent-1');
+        $variant = $this->createVariant('variant-1', $parent, 0);
+
+        $this->expectFindBy(['variant-1'], [$variant]);
+        $this->expectParentSlugQuery(['parent-1'], ['parent-1' => '/parent']);
+        $this->loader->load(['variant-1'], 'en');
+
+        $contentView = $this->loader->resolveContentViewEnhancement(
+            $this->createDimensionContent($variant, 'en', 'CODE-1'),
+        );
+
+        // The bare parent URL shows position 0 already, so its code would be a second address.
+        $this->assertSame(['url' => '/parent'], $contentView->getContent());
+    }
+
     public function testResolveContentViewEnhancementIgnoresAForeignResource(): void
     {
         $contentView = $this->loader->resolveContentViewEnhancement(new \stdClass());
@@ -273,11 +290,12 @@ class ProductResourceLoaderTest extends TestCase
         return $dimensionContent;
     }
 
-    private static function createVariant(string $uuid, ProductInterface $parent): Product
+    private static function createVariant(string $uuid, ProductInterface $parent, int $position = 1): Product
     {
         $variant = self::createProduct($uuid);
         $variant->setType(ProductInterface::TYPE_VARIANT);
         $variant->setParent($parent);
+        $variant->setPosition($position);
 
         return $variant;
     }
