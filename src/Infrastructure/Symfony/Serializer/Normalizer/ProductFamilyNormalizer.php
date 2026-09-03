@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Sulu\Product\Infrastructure\Symfony\Serializer\Normalizer;
 
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
-use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 /**
@@ -22,11 +21,6 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
  */
 final class ProductFamilyNormalizer implements NormalizerInterface
 {
-    public function __construct(
-        private AttributeGroupRepositoryInterface $attributeGroupRepository,
-    ) {
-    }
-
     /**
      * @param ProductFamilyInterface $data
      * @param array<string, mixed> $context
@@ -45,25 +39,9 @@ final class ProductFamilyNormalizer implements NormalizerInterface
         }
 
         $attributes = [];
-        $groups = $this->attributeGroupRepository->findBy(
-            [],
-            [],
-            [AttributeGroupRepositoryInterface::SELECT_GROUP_ATTRIBUTES => true],
-        );
-
-        foreach ($groups as $group) {
-            foreach ($group->getGroupAttributes() as $groupAttribute) {
-                $attributes[$groupAttribute->getAttribute()->getId()] = [
-                    'enabled' => false,
-                    'required' => false,
-                    'variantSpecific' => false,
-                ];
-            }
-        }
-
         foreach ($data->getFamilyAttributes() as $familyAttribute) {
-            $attributes[$familyAttribute->getAttribute()->getId()] = [
-                'enabled' => true,
+            $attributes[] = [
+                'id' => $familyAttribute->getAttribute()->getUuid(),
                 'required' => $familyAttribute->isRequired(),
                 'variantSpecific' => $familyAttribute->isVariantSpecific(),
             ];

@@ -138,6 +138,52 @@ class AttributeControllerTest extends SuluTestCase
         $this->assertSame(['attr-a1', 'attr-a2'], $keys);
     }
 
+    public function testListRequestWithExplicitFieldsReturnsGroupAndGroupName(): void
+    {
+        // The "product_family_attributes" field constructs its MultiSelectionStore with this exact request
+        // shape (id, name, group, groupName) to resolve grouping; "group"/"groupName" are
+        // visibility="never" in the list XML, so AbstractListBuilder::setSelectFields() strips them
+        // unless the request names them explicitly, which is what this pins.
+        self::purgeDatabase();
+        $groupId = $this->createGroup('Group For Fields');
+
+        $this->client->request(
+            'POST',
+            '/admin/api/attributes.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'key' => 'probe',
+                'name' => 'Probe',
+                'type' => 'text',
+                'group' => $groupId,
+            ]) ?: null,
+        );
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+        $postData = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($postData);
+        $id = $postData['id'];
+        $this->assertIsString($id);
+
+        $this->client->request(
+            'GET',
+            '/admin/api/attributes.json?locale=en&ids=' . $id . '&fields=id,name,group,groupName',
+        );
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(200, $response);
+
+        /** @var array{_embedded: array{attributes: list<array<string, mixed>>}} $data */
+        $data = \json_decode((string) $response->getContent(), true);
+        $item = $data['_embedded']['attributes'][0];
+
+        $this->assertSame($id, $item['id']);
+        $this->assertSame('Probe', $item['name']);
+        $this->assertSame($groupId, $item['group']);
+        $this->assertSame('Group For Fields', $item['groupName']);
+    }
+
     public function testPost(): string
     {
         self::purgeDatabase();

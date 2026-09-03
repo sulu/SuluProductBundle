@@ -51,14 +51,22 @@ class ProductVariantControllerTest extends SuluTestCase
     }
 
     /**
-     * @param array<int, array{enabled: bool, required?: bool, variantSpecific?: bool}> $attributes
+     * Membership in $attributes is the family assignment; there is no separate "enabled" flag.
+     *
+     * @param array<int, array{required?: bool, variantSpecific?: bool}> $attributes
      */
     private function createProductFamily(array $attributes = []): string
     {
+        /** @var AttributeRepositoryInterface $attributeRepository */
+        $attributeRepository = self::getContainer()->get(AttributeRepositoryInterface::class);
+
         $normalized = [];
         foreach ($attributes as $attributeId => $entry) {
-            $normalized[$attributeId] = [
-                'enabled' => $entry['enabled'],
+            $attribute = $attributeRepository->findOneBy(['id' => $attributeId]);
+            $this->assertNotNull($attribute);
+
+            $normalized[] = [
+                'id' => $attribute->getUuid(),
                 'required' => $entry['required'] ?? false,
                 'variantSpecific' => $entry['variantSpecific'] ?? false,
             ];
@@ -214,7 +222,7 @@ class ProductVariantControllerTest extends SuluTestCase
         self::purgeDatabase();
 
         $axisId = $this->createAttribute('size', 'Size');
-        $familyId = $this->createProductFamily([$axisId => ['enabled' => true, 'variantSpecific' => true]]);
+        $familyId = $this->createProductFamily([$axisId => ['variantSpecific' => true]]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         $this->client->request(
@@ -382,8 +390,8 @@ class ProductVariantControllerTest extends SuluTestCase
         $sharedId = $this->createAttribute('color', 'Color');
         $axisId = $this->createAttribute('size', 'Size');
         $familyId = $this->createProductFamily([
-            $sharedId => ['enabled' => true, 'variantSpecific' => false],
-            $axisId => ['enabled' => true, 'variantSpecific' => true],
+            $sharedId => ['variantSpecific' => false],
+            $axisId => ['variantSpecific' => true],
         ]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
@@ -829,8 +837,8 @@ class ProductVariantControllerTest extends SuluTestCase
         $sharedId = $this->createAttribute('color', 'Color');
         $axisId = $this->createAttribute('size', 'Size');
         $familyId = $this->createProductFamily([
-            $sharedId => ['enabled' => true, 'required' => true, 'variantSpecific' => false],
-            $axisId => ['enabled' => true, 'variantSpecific' => true],
+            $sharedId => ['required' => true, 'variantSpecific' => false],
+            $axisId => ['variantSpecific' => true],
         ]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
@@ -895,7 +903,7 @@ class ProductVariantControllerTest extends SuluTestCase
 
         $sharedId = $this->createAttribute('color', 'Color');
         $familyId = $this->createProductFamily([
-            $sharedId => ['enabled' => true, 'required' => true, 'variantSpecific' => false],
+            $sharedId => ['required' => true, 'variantSpecific' => false],
         ]);
         $parentId = $this->createProduct($familyId, 'Simple Product');
 
@@ -924,7 +932,7 @@ class ProductVariantControllerTest extends SuluTestCase
         // the axis is only rendered on the variant overlay, so the parent cannot satisfy it
         $axisId = $this->createAttribute('size', 'Size');
         $familyId = $this->createProductFamily([
-            $axisId => ['enabled' => true, 'required' => true, 'variantSpecific' => true],
+            $axisId => ['required' => true, 'variantSpecific' => true],
         ]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
@@ -1239,7 +1247,7 @@ class ProductVariantControllerTest extends SuluTestCase
         self::purgeDatabase();
 
         $axisId = $this->createAttribute('size', 'Size');
-        $familyId = $this->createProductFamily([$axisId => ['enabled' => true, 'required' => true, 'variantSpecific' => true]]);
+        $familyId = $this->createProductFamily([$axisId => ['required' => true, 'variantSpecific' => true]]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         $this->client->request(
@@ -1287,7 +1295,7 @@ class ProductVariantControllerTest extends SuluTestCase
         self::purgeDatabase();
 
         $axisId = $this->createAttribute('weight', 'Weight', AttributeInterface::TYPE_NUMBER);
-        $familyId = $this->createProductFamily([$axisId => ['enabled' => true, 'variantSpecific' => true]]);
+        $familyId = $this->createProductFamily([$axisId => ['variantSpecific' => true]]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         $this->client->request(

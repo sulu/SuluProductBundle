@@ -15,40 +15,26 @@ namespace Sulu\Product\Tests\Unit\Infrastructure\Symfony\Serializer\Normalizer;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
-use Prophecy\PhpUnit\ProphecyTrait;
-use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
-use Sulu\Product\Domain\Model\AttributeGroupAttribute;
 use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductFamilyAttribute;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Model\ProductFamilyTranslation;
-use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Infrastructure\Symfony\Serializer\Normalizer\ProductFamilyNormalizer;
 
 #[CoversClass(ProductFamilyNormalizer::class)]
 class ProductFamilyNormalizerTest extends TestCase
 {
-    use ProphecyTrait;
-
-    /** @var ObjectProphecy<AttributeGroupRepositoryInterface> */
-    private ObjectProphecy $attributeGroupRepository;
-
-    protected function setUp(): void
-    {
-        $this->attributeGroupRepository = $this->prophesize(AttributeGroupRepositoryInterface::class);
-    }
-
     private function normalizer(): ProductFamilyNormalizer
     {
-        return new ProductFamilyNormalizer($this->attributeGroupRepository->reveal());
+        return new ProductFamilyNormalizer();
     }
 
-    private function attributeWithId(int $id, string $key): Attribute
+    private function attributeWithUuid(string $uuid, string $key): Attribute
     {
         $attribute = new Attribute(new AttributeGroup());
-        (new \ReflectionProperty(Attribute::class, 'id'))->setValue($attribute, $id);
+        $attribute->setUuid($uuid);
         $attribute->setKey($key);
 
         return $attribute;
@@ -57,11 +43,6 @@ class ProductFamilyNormalizerTest extends TestCase
     public function testSupportsNormalizationReturnsTrueForProductFamily(): void
     {
         $normalizer = $this->normalizer();
-        $this->attributeGroupRepository->findBy(
-            [],
-            [],
-            [AttributeGroupRepositoryInterface::SELECT_GROUP_ATTRIBUTES => true],
-        )->willReturn([]);
 
         $this->assertTrue($normalizer->supportsNormalization(new ProductFamily()));
         $this->assertFalse($normalizer->supportsNormalization(new \stdClass()));
@@ -80,12 +61,6 @@ class ProductFamilyNormalizerTest extends TestCase
         $family = new ProductFamily();
         $family->setUuid('test-uuid');
 
-        $this->attributeGroupRepository->findBy(
-            [],
-            [],
-            [AttributeGroupRepositoryInterface::SELECT_GROUP_ATTRIBUTES => true],
-        )->willReturn([]);
-
         $result = $this->normalizer()->normalize($family, null, ['locale' => 'en']);
 
         $this->assertSame('test-uuid', $result['id']);
@@ -103,95 +78,33 @@ class ProductFamilyNormalizerTest extends TestCase
         $translation->setDescription('Clothing family');
         $family->addTranslation($translation);
 
-        $this->attributeGroupRepository->findBy(
-            [],
-            [],
-            [AttributeGroupRepositoryInterface::SELECT_GROUP_ATTRIBUTES => true],
-        )->willReturn([]);
-
         $result = $this->normalizer()->normalize($family, null, ['locale' => 'en']);
 
         $this->assertSame('Apparel', $result['name']);
         $this->assertSame('Clothing family', $result['description']);
     }
 
-    public function testNormalizePrePopulatesAllGroupAttributesAsDisabled(): void
+    public function testNormalizeReturnsOnlyTheFamilysOwnAttributesAsAList(): void
     {
         $family = new ProductFamily();
         $family->setUuid('test-uuid');
 
-        $group = new AttributeGroup();
-        $attr9 = $this->attributeWithId(9, 'color');
-        $attr10 = $this->attributeWithId(10, 'size');
-        $group->addGroupAttribute(new AttributeGroupAttribute($group, $attr9));
-        $group->addGroupAttribute(new AttributeGroupAttribute($group, $attr10));
+        $attributeColor = $this->attributeWithUuid('uuid-1', 'color');
+        $attributeSize = $this->attributeWithUuid('uuid-2', 'size');
 
-        $this->attributeGroupRepository->findBy(
-            [],
-            [],
-            [AttributeGroupRepositoryInterface::SELECT_GROUP_ATTRIBUTES => true],
-        )->willReturn([$group]);
+        $familyAttributeColor = new ProductFamilyAttribute($family, $attributeColor);
+        $familyAttributeColor->setRequired(true);
+        $family->addFamilyAttribute($familyAttributeColor);
 
-        $result = $this->normalizer()->normalize($family, null, ['locale' => 'en']);
-
-        $this->assertSame([
-            9 => ['enabled' => false, 'required' => false, 'variantSpecific' => false],
-            10 => ['enabled' => false, 'required' => false, 'variantSpecific' => false],
-        ], $result['attributes']);
-    }
-
-    public function testNormalizeOverridesEnabledFamilyAttributes(): void
-    {
-        $family = new ProductFamily();
-        $family->setUuid('test-uuid');
-
-        $group = new AttributeGroup();
-        $attr9 = $this->attributeWithId(9, 'color');
-        $attr10 = $this->attributeWithId(10, 'size');
-        $group->addGroupAttribute(new AttributeGroupAttribute($group, $attr9));
-        $group->addGroupAttribute(new AttributeGroupAttribute($group, $attr10));
-
-        $familyAttribute = new ProductFamilyAttribute($family, $attr9);
-        $familyAttribute->setRequired(true);
-        $family->addFamilyAttribute($familyAttribute);
-
-        $this->attributeGroupRepository->findBy(
-            [],
-            [],
-            [AttributeGroupRepositoryInterface::SELECT_GROUP_ATTRIBUTES => true],
-        )->willReturn([$group]);
+        $familyAttributeSize = new ProductFamilyAttribute($family, $attributeSize);
+        $familyAttributeSize->setVariantSpecific(true);
+        $family->addFamilyAttribute($familyAttributeSize);
 
         $result = $this->normalizer()->normalize($family, null, ['locale' => 'en']);
 
         $this->assertSame([
-            9 => ['enabled' => true, 'required' => true, 'variantSpecific' => false],
-            10 => ['enabled' => false, 'required' => false, 'variantSpecific' => false],
-        ], $result['attributes']);
-    }
-
-    public function testNormalizeExposesVariantFlag(): void
-    {
-        $family = new ProductFamily();
-        $family->setUuid('test-uuid');
-
-        $group = new AttributeGroup();
-        $attr9 = $this->attributeWithId(9, 'color');
-        $group->addGroupAttribute(new AttributeGroupAttribute($group, $attr9));
-
-        $familyAttribute = new ProductFamilyAttribute($family, $attr9);
-        $familyAttribute->setVariantSpecific(true);
-        $family->addFamilyAttribute($familyAttribute);
-
-        $this->attributeGroupRepository->findBy(
-            [],
-            [],
-            [AttributeGroupRepositoryInterface::SELECT_GROUP_ATTRIBUTES => true],
-        )->willReturn([$group]);
-
-        $result = $this->normalizer()->normalize($family, null, ['locale' => 'en']);
-
-        $this->assertSame([
-            9 => ['enabled' => true, 'required' => false, 'variantSpecific' => true],
+            ['id' => 'uuid-1', 'required' => true, 'variantSpecific' => false],
+            ['id' => 'uuid-2', 'required' => false, 'variantSpecific' => true],
         ], $result['attributes']);
     }
 
@@ -201,12 +114,6 @@ class ProductFamilyNormalizerTest extends TestCase
         $family->setUuid('test-uuid');
         $translation = new ProductFamilyTranslation($family, 'en', 'English Name');
         $family->addTranslation($translation);
-
-        $this->attributeGroupRepository->findBy(
-            [],
-            [],
-            [AttributeGroupRepositoryInterface::SELECT_GROUP_ATTRIBUTES => true],
-        )->willReturn([]);
 
         $result = $this->normalizer()->normalize($family, null, []);
 
@@ -220,12 +127,6 @@ class ProductFamilyNormalizerTest extends TestCase
         $family->setDefaultLocale('de');
         $de = new ProductFamilyTranslation($family, 'de', 'Fallback Name');
         $family->addTranslation($de);
-
-        $this->attributeGroupRepository->findBy(
-            [],
-            [],
-            [AttributeGroupRepositoryInterface::SELECT_GROUP_ATTRIBUTES => true],
-        )->willReturn([]);
 
         $result = $this->normalizer()->normalize($family, null, ['locale' => 'en']);
 

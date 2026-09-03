@@ -29,5 +29,11 @@
                 <title>sulu_admin.description</title>
             </meta>
         </property>
+
+        <property name="attributes" type="product_family_attributes">
+            <meta>
+                <title>sulu_product.attributes</title>
+            </meta>
+        </property>
     </properties>
 </form>

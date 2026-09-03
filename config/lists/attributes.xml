@@ -26,6 +26,32 @@
             <method>LEFT</method>
         </join>
     </joins>
+    <joins name="groupTranslation">
+        <join>
+            <entity-name>Sulu\Product\Domain\Model\AttributeGroupInterface</entity-name>
+            <field-name>Sulu\Product\Domain\Model\AttributeInterface.group</field-name>
+            <method>LEFT</method>
+        </join>
+        <join>
+            <entity-name>groupTranslation</entity-name>
+            <field-name>Sulu\Product\Domain\Model\AttributeGroupInterface.translations</field-name>
+            <method>LEFT</method>
+            <condition>groupTranslation.locale = :locale</condition>
+        </join>
+    </joins>
+    <joins name="groupDefaultTranslation">
+        <join>
+            <entity-name>Sulu\Product\Domain\Model\AttributeGroupInterface</entity-name>
+            <field-name>Sulu\Product\Domain\Model\AttributeInterface.group</field-name>
+            <method>LEFT</method>
+        </join>
+        <join>
+            <entity-name>groupTranslationDefault</entity-name>
+            <field-name>Sulu\Product\Domain\Model\AttributeGroupInterface.translations</field-name>
+            <method>LEFT</method>
+            <condition>groupTranslationDefault.locale = Sulu\Product\Domain\Model\AttributeGroupInterface.defaultLocale</condition>
+        </join>
+    </joins>
 
     <joins name="creator">
         <join>
@@ -93,6 +119,19 @@
             <entity-name>Sulu\Product\Domain\Model\AttributeGroupInterface</entity-name>
             <joins ref="group"/>
         </property>
+
+        <case-property name="groupName" visibility="never">
+            <field>
+                <field-name>name</field-name>
+                <entity-name>groupTranslation</entity-name>
+                <joins ref="groupTranslation"/>
+            </field>
+            <field>
+                <field-name>name</field-name>
+                <entity-name>groupTranslationDefault</entity-name>
+                <joins ref="groupDefaultTranslation"/>
+            </field>
+        </case-property>
 
         <property name="created" translation="sulu_admin.created" visibility="no">
             <field-name>created</field-name>

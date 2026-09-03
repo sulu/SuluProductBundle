@@ -108,7 +108,6 @@ use Sulu\Product\Infrastructure\Sulu\Admin\ProductContentAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductContentFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductDetailsFieldMetadataValidator;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductFamilyAdmin;
-use Sulu\Product\Infrastructure\Sulu\Admin\ProductFamilyFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductsListMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductStatusFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductVariantAttributeFormMetadataVisitor;
@@ -714,9 +713,6 @@ final class SuluProductBundle extends AbstractBundle
 
         $services->set('sulu_product.product_family_normalizer')
             ->class(ProductFamilyNormalizer::class)
-            ->args([
-                new Reference('sulu_product.attribute_group_repository'),
-            ])
             ->tag('serializer.normalizer');
 
         $services->set('sulu_product.product_normalizer')
@@ -810,14 +806,6 @@ final class SuluProductBundle extends AbstractBundle
             ])
             ->tag('sulu.context', ['context' => 'admin'])
             ->tag('sulu.admin');
-
-        $services->set('sulu_product.product_family_form_metadata_visitor')
-            ->class(ProductFamilyFormMetadataVisitor::class)
-            ->args([
-                new Reference('sulu_product.attribute_group_repository'),
-                new Reference('translator'),
-            ])
-            ->tag('sulu_admin.form_metadata_visitor');
 
         $services->set('sulu_product.attribute_field_factory')
             ->class(AttributeFieldFactory::class)
