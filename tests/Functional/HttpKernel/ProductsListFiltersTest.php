@@ -89,6 +89,16 @@ class ProductsListFiltersTest extends SuluTestCase
         );
     }
 
+    public function testForeignListKeyIsIgnored(): void
+    {
+        // The "attributes" list has no "status" field. If the guard did not return early for a
+        // foreign key, ProductsListMetadataVisitor::visitListMetadata() would call
+        // $listMetadata->getField('status') below and throw FieldMetadataNotFoundException.
+        $field = $this->listMetadata('attributes')->getField('key');
+
+        $this->assertSame('key', $field->getName());
+    }
+
     private function listMetadata(string $key = 'products'): ListMetadata
     {
         self::bootKernel();

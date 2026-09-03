@@ -49,7 +49,12 @@ class ProductControllerTest extends SuluTestCase
     {
         $attributes = [];
         if (null !== $attributeId) {
-            $attributes[$attributeId] = ['enabled' => true, 'required' => $required];
+            /** @var AttributeRepositoryInterface $attributeRepository */
+            $attributeRepository = self::getContainer()->get(AttributeRepositoryInterface::class);
+            $attribute = $attributeRepository->findOneBy(['id' => $attributeId]);
+            $this->assertNotNull($attribute);
+
+            $attributes[] = ['id' => $attribute->getUuid(), 'required' => $required, 'variantSpecific' => false];
         }
 
         $this->client->request(

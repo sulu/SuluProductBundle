@@ -25,7 +25,7 @@ use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushS
 use Sulu\Product\Application\Message\CreateProductFamilyMessage;
 use Sulu\Product\Application\Message\ModifyProductFamilyMessage;
 use Sulu\Product\Application\Message\RemoveProductFamilyMessage;
-use Sulu\Product\Domain\Exception\InvalidVariantAttributeException;
+use Sulu\Product\Domain\Exception\InvalidProductFamilyAttributesException;
 use Sulu\Product\Domain\Exception\ProductFamilyHasProductsException;
 use Sulu\Product\Domain\Exception\ProductFamilyNotFoundException;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
@@ -100,15 +100,17 @@ final class ProductFamilyController implements SecuredControllerInterface
 
     public function postAction(Request $request): Response
     {
-        $message = new CreateProductFamilyMessage($this->getData($request));
+        try {
+            $message = new CreateProductFamilyMessage($this->getData($request));
+        } catch (InvalidProductFamilyAttributesException $e) {
+            return new JsonResponse(['detail' => $e->getMessage()], 422);
+        }
 
         try {
             /** @var ProductFamilyInterface $family */
             $family = $this->handle(new Envelope($message, [new EnableFlushStamp()]));
         } catch (UniqueConstraintViolationException) {
             return new JsonResponse(['detail' => 'ProductFamily already exists.'], 409);
-        } catch (InvalidVariantAttributeException $e) {
-            return new JsonResponse(['detail' => $e->getMessage()], 422);
         }
 
         $locale = $this->getLocale($request);
@@ -120,7 +122,11 @@ final class ProductFamilyController implements SecuredControllerInterface
 
     public function putAction(Request $request, string $id): Response
     {
-        $message = new ModifyProductFamilyMessage(['uuid' => $id], $this->getData($request));
+        try {
+            $message = new ModifyProductFamilyMessage(['uuid' => $id], $this->getData($request));
+        } catch (InvalidProductFamilyAttributesException $e) {
+            return new JsonResponse(['detail' => $e->getMessage()], 422);
+        }
 
         try {
             /** @var ProductFamilyInterface $family */
@@ -129,8 +135,6 @@ final class ProductFamilyController implements SecuredControllerInterface
             return new JsonResponse(['detail' => 'ProductFamily already exists.'], 409);
         } catch (ProductFamilyNotFoundException $e) {
             return new JsonResponse(['detail' => $e->getMessage()], 404);
-        } catch (InvalidVariantAttributeException $e) {
-            return new JsonResponse(['detail' => $e->getMessage()], 422);
         }
 
         $locale = $this->getLocale($request);
@@ -168,7 +172,7 @@ final class ProductFamilyController implements SecuredControllerInterface
      *   locale: string,
      *   name: string,
      *   description: string|null,
-     *   attributes: array<int, array{enabled: bool, required: bool, variantSpecific: bool}>,
+     *   attributes: list<array{id: string, required: bool, variantSpecific: bool}>,
      * }
      */
     private function getData(Request $request): array
@@ -185,27 +189,31 @@ final class ProductFamilyController implements SecuredControllerInterface
     }
 
     /**
-     * Reads the nested `attributes/<id>/enabled`, `attributes/<id>/required` and
-     * `attributes/<id>/variantSpecific` fields produced by the form into a map keyed by attribute id.
+     * @return list<array{id: string, required: bool, variantSpecific: bool}>
      *
-     * @return array<int, array{enabled: bool, required: bool, variantSpecific: bool}>
+     * @throws InvalidProductFamilyAttributesException if "attributes" is submitted non-empty but no
+     *                                                 entry parses, which would otherwise be
+     *                                                 indistinguishable from "remove everything"
      */
     private function extractAttributes(Request $request): array
     {
+        $rawAttributes = $request->request->all('attributes');
         $attributes = [];
 
-        /** @var array<int|string, mixed> $submitted */
-        $submitted = $request->request->all('attributes');
-        foreach ($submitted as $attributeId => $entry) {
-            if (!\is_array($entry)) {
+        foreach ($rawAttributes as $attribute) {
+            if (!\is_array($attribute) || !isset($attribute['id']) || !\is_string($attribute['id'])) {
                 continue;
             }
 
-            $attributes[(int) $attributeId] = [
-                'enabled' => (bool) ($entry['enabled'] ?? false),
-                'required' => (bool) ($entry['required'] ?? false),
-                'variantSpecific' => (bool) ($entry['variantSpecific'] ?? false),
+            $attributes[] = [
+                'id' => $attribute['id'],
+                'required' => (bool) ($attribute['required'] ?? false),
+                'variantSpecific' => (bool) ($attribute['variantSpecific'] ?? false),
             ];
+        }
+
+        if ([] !== $rawAttributes && [] === $attributes) {
+            throw new InvalidProductFamilyAttributesException();
         }
 
         return $attributes;

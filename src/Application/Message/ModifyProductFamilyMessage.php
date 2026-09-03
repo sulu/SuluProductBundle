@@ -23,7 +23,7 @@ namespace Sulu\Product\Application\Message;
  *     locale: string,
  *     name: string,
  *     description?: string|null,
- *     attributes?: array<int, ProductFamilyAttributeMessageData>|null,
+ *     attributes?: list<ProductFamilyAttributeMessageData>|null,
  * }
  */
 class ModifyProductFamilyMessage
@@ -67,7 +67,7 @@ class ModifyProductFamilyMessage
     }
 
     /**
-     * @return array<int, ProductFamilyAttributeMessageData>
+     * @return list<ProductFamilyAttributeMessageData>
      */
     public function getAttributes(): array
     {

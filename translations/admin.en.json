@@ -5,9 +5,10 @@
     "sulu_product.attributes": "Attributes",
     "sulu_product.attribute_group": "Attribute group",
     "sulu_product.attribute_groups": "Attribute groups",
-    "sulu_product.attribute_enabled": "\"%attributeName%\" enabled",
-    "sulu_product.attribute_required": "\"%attributeName%\" required",
-    "sulu_product.attribute_variant": "\"%attributeName%\" variant",
+    "sulu_product.attribute_required": "Required",
+    "sulu_product.attribute_variant": "Variant",
+    "sulu_product.add_attributes_overlay_title": "Add attributes",
+    "sulu_product.attribute_count": "{count} {count, plural, =1 {attribute} other {attributes}}",
     "sulu_product.product_family": "Product family",
     "sulu_product.product_families": "Product families",
     "sulu_product.no_product_family_selected": "No product family selected",
@@ -105,6 +106,5 @@
     "sulu_product.product_status.available": "Available",
     "sulu_product.product_status.discontinued": "Discontinued",
     "sulu_product.invalid_status": "The status \"{status}\" is not a valid product status.",
-    "sulu_product.invalid_variant_attribute": "The attribute \"{attributeId}\" cannot be marked as a variant attribute unless it is enabled.",
     "sulu_product.associations": "Associations"
 }

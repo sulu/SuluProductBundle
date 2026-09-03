@@ -5,9 +5,10 @@
     "sulu_product.attributes": "Attribute",
     "sulu_product.attribute_group": "Attributgruppe",
     "sulu_product.attribute_groups": "Attributgruppen",
-    "sulu_product.attribute_enabled": "\"%attributeName%\" aktiviert",
-    "sulu_product.attribute_required": "\"%attributeName%\" erforderlich",
-    "sulu_product.attribute_variant": "\"%attributeName%\" Variante",
+    "sulu_product.attribute_required": "Erforderlich",
+    "sulu_product.attribute_variant": "Variante",
+    "sulu_product.add_attributes_overlay_title": "Attribute hinzufügen",
+    "sulu_product.attribute_count": "{count} {count, plural, =1 {Attribut} other {Attribute}}",
     "sulu_product.product_family": "Produktfamilie",
     "sulu_product.product_families": "Produktfamilien",
     "sulu_product.no_product_family_selected": "Keine Produktfamilie ausgewählt",
@@ -106,6 +107,5 @@
     "sulu_product.product_status.available": "Verfügbar",
     "sulu_product.product_status.discontinued": "Eingestellt",
     "sulu_product.invalid_status": "Der Status \"{status}\" ist kein gültiger Produktstatus.",
-    "sulu_product.invalid_variant_attribute": "Das Attribut \"{attributeId}\" kann nur dann als Variantenattribut markiert werden, wenn es aktiviert ist.",
     "sulu_product.associations": "Verknüpfungen"
 }

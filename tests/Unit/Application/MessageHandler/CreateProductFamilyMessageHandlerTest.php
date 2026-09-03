@@ -14,13 +14,11 @@ declare(strict_types=1);
 namespace Sulu\Product\Tests\Unit\Application\MessageHandler;
 
 use PHPUnit\Framework\TestCase;
-use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Product\Application\Mapper\ProductFamilyMapper;
 use Sulu\Product\Application\Message\CreateProductFamilyMessage;
 use Sulu\Product\Application\MessageHandler\CreateProductFamilyMessageHandler;
-use Sulu\Product\Domain\Exception\InvalidVariantAttributeException;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\ProductFamily;
@@ -51,21 +49,32 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
         );
     }
 
+    private function attributeWithUuid(string $uuid): Attribute
+    {
+        $attribute = new Attribute(new AttributeGroup());
+        $attribute->setUuid($uuid);
+        $attribute->setKey('attr-' . $uuid);
+
+        return $attribute;
+    }
+
     public function testCreateFamilyWithTranslationAndAttributes(): void
     {
         $family = new ProductFamily();
         $this->familyRepository->create()->willReturn($family);
         $this->familyRepository->save($family)->shouldBeCalledOnce();
 
-        $attribute = new Attribute(new AttributeGroup());
-        $this->attributeRepository->findOneBy(['id' => 7])->willReturn($attribute);
+        $attribute = $this->attributeWithUuid('uuid-7');
+        $this->attributeRepository->findOneBy(['uuid' => 'uuid-7'])->willReturn($attribute);
 
         $handler = $this->createHandler();
         $result = ($handler)(new CreateProductFamilyMessage([
             'locale' => 'en',
             'name' => 'My Family',
             'description' => 'desc',
-            'attributes' => [7 => ['enabled' => true, 'required' => true, 'variantSpecific' => false]],
+            'attributes' => [
+                ['id' => 'uuid-7', 'required' => true, 'variantSpecific' => false],
+            ],
         ]));
 
         $this->assertSame($family, $result);
@@ -85,13 +94,15 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
         $family = new ProductFamily();
         $this->familyRepository->create()->willReturn($family);
         $this->familyRepository->save($family)->shouldBeCalledOnce();
-        $this->attributeRepository->findOneBy(['id' => 99])->willReturn(null);
+        $this->attributeRepository->findOneBy(['uuid' => 'uuid-99'])->willReturn(null);
 
         $handler = $this->createHandler();
         ($handler)(new CreateProductFamilyMessage([
             'locale' => 'en',
             'name' => 'My Family',
-            'attributes' => [99 => ['enabled' => true, 'required' => false, 'variantSpecific' => false]],
+            'attributes' => [
+                ['id' => 'uuid-99', 'required' => false, 'variantSpecific' => false],
+            ],
         ]));
 
         $this->assertCount(0, $family->getFamilyAttributes());
@@ -103,33 +114,20 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
         $this->familyRepository->create()->willReturn($family);
         $this->familyRepository->save($family)->shouldBeCalledOnce();
 
-        $attribute = new Attribute(new AttributeGroup());
-        $this->attributeRepository->findOneBy(['id' => 7])->willReturn($attribute);
+        $attribute = $this->attributeWithUuid('uuid-7');
+        $this->attributeRepository->findOneBy(['uuid' => 'uuid-7'])->willReturn($attribute);
 
         $handler = $this->createHandler();
         ($handler)(new CreateProductFamilyMessage([
             'locale' => 'en',
             'name' => 'My Family',
-            'attributes' => [7 => ['enabled' => true, 'required' => false, 'variantSpecific' => true]],
+            'attributes' => [
+                ['id' => 'uuid-7', 'required' => false, 'variantSpecific' => true],
+            ],
         ]));
 
         $familyAttributes = $family->getFamilyAttributes();
         $this->assertCount(1, $familyAttributes);
         $this->assertTrue($familyAttributes[0]->isVariantSpecific());
-    }
-
-    public function testCreateThrowsWhenVariantAttributeIsNotEnabled(): void
-    {
-        $this->familyRepository->create()->willReturn(new ProductFamily());
-        $this->familyRepository->save(Argument::any())->shouldNotBeCalled();
-
-        $this->expectException(InvalidVariantAttributeException::class);
-
-        $handler = $this->createHandler();
-        ($handler)(new CreateProductFamilyMessage([
-            'locale' => 'en',
-            'name' => 'My Family',
-            'attributes' => [7 => ['enabled' => false, 'required' => false, 'variantSpecific' => true]],
-        ]));
     }
 }
