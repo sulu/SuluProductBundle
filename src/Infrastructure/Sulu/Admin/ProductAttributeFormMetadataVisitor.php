@@ -20,94 +20,109 @@ use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadataMapperRegistry;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\SchemaMetadata;
 use Sulu\Product\Domain\Model\AttributeGroupInterface;
+use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
+ * Fills the "product_attributes" form with one section per attribute group and one field per family
+ * attribute. The family comes from the metadata options, so the admin can request the form for a
+ * family before the product is saved.
+ *
+ * Options: "productFamily" (family uuid) or "product" (product uuid, resolved to its family);
+ * "variant" truthy keeps only axis attributes, otherwise only shared ones.
+ *
+ * The JSON schema carries the field constraints (required, min, max) keyed by field name, so the
+ * admin can validate the values before saving.
+ *
  * @internal
  */
 class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterface
 {
-    private const FORM_KEY = 'product_details';
+    public const FORM_KEY = 'product_attributes';
 
     public function __construct(
         private readonly ProductFamilyRepositoryInterface $productFamilyRepository,
         private readonly AttributeFieldFactory $attributeFieldFactory,
-        private readonly PropertyMetadataMapperRegistry $propertyMetadataMapperRegistry,
         private readonly TranslatorInterface $translator,
+        private readonly PropertyMetadataMapperRegistry $propertyMetadataMapperRegistry,
     ) {
     }
 
+    /**
+     * @param array<string, mixed> $metadataOptions
+     */
     public function visitFormMetadata(FormMetadata $formMetadata, string $locale, array $metadataOptions = []): void
     {
         if (self::FORM_KEY !== $formMetadata->getKey()) {
             return;
         }
 
-        $id = $metadataOptions['id'] ?? null;
-        if (!\is_string($id)) {
-            return;
-        }
+        // The response depends on family configuration that can change without the URL
+        // changing, so it must not be cached by the HTTP layer or the browser.
+        $formMetadata->setCacheable(false);
 
-        $family = $this->productFamilyRepository->findOneBy(
-            ['productUuid' => $id],
-            [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true],
-        );
-
+        $family = $this->resolveFamily($metadataOptions);
         if (null === $family) {
             return;
         }
 
-        $items = $formMetadata->getItems();
+        $variant = \filter_var($metadataOptions['variant'] ?? false, \FILTER_VALIDATE_BOOLEAN);
 
         /** @var array<int, SectionMetadata> $sections */
         $sections = [];
-        /** @var PropertyMetadata[] $schemaProperties */
+        /** @var list<PropertyMetadata> $schemaProperties */
         $schemaProperties = [];
 
         foreach ($family->getFamilyAttributes() as $familyAttribute) {
-            if ($familyAttribute->isVariantSpecific()) {
-                // variant axes live on the variant overlay, never on a product
+            if ($familyAttribute->isVariantSpecific() !== $variant) {
                 continue;
             }
 
-            $result = $this->attributeFieldFactory->build($familyAttribute, $locale);
-            if (null === $result) {
+            $field = $this->attributeFieldFactory->build($familyAttribute, $locale);
+            if (null === $field) {
                 continue;
             }
-            [$field, $unitField] = $result;
 
             $group = $familyAttribute->getAttribute()->getGroup();
             $groupId = $group->getId();
-
-            if (!isset($sections[$groupId])) {
-                $sections[$groupId] = $this->createGroupSection($group, $locale);
-            }
-            $section = $sections[$groupId];
-
-            $section->addItem($field);
-
-            if (null !== $unitField) {
-                $section->addItem($unitField);
-            }
+            $sections[$groupId] ??= $this->createGroupSection($group, $locale);
+            $sections[$groupId]->addItem($field);
 
             $schemaProperties[] = $this->propertyMetadataMapperRegistry->has($field->getType())
                 ? $this->propertyMetadataMapperRegistry->get($field->getType())->mapPropertyMetadata($field)
                 : new PropertyMetadata($field->getName(), $field->isRequired());
         }
 
-        if ([] !== $sections) {
-            foreach ($sections as $section) {
-                $items[$section->getName()] = $section;
-            }
-            $formMetadata->setItems($items);
+        $items = $formMetadata->getItems();
+        foreach ($sections as $section) {
+            $items[$section->getName()] = $section;
         }
+        $formMetadata->setItems($items);
 
         if ([] !== $schemaProperties) {
             $formMetadata->setSchema($formMetadata->getSchema()->merge(new SchemaMetadata($schemaProperties)));
         }
+    }
 
-        $formMetadata->setCacheable(false);
+    /**
+     * @param array<string, mixed> $metadataOptions
+     */
+    private function resolveFamily(array $metadataOptions): ?ProductFamilyInterface
+    {
+        $select = [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true];
+
+        $familyUuid = $metadataOptions['productFamily'] ?? null;
+        if (\is_string($familyUuid) && '' !== $familyUuid) {
+            return $this->productFamilyRepository->findOneBy(['uuid' => $familyUuid], $select);
+        }
+
+        $productUuid = $metadataOptions['product'] ?? null;
+        if (\is_string($productUuid) && '' !== $productUuid) {
+            return $this->productFamilyRepository->findOneBy(['productUuid' => $productUuid], $select);
+        }
+
+        return null;
     }
 
     private function createGroupSection(AttributeGroupInterface $group, string $locale): SectionMetadata

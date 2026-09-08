@@ -21,10 +21,10 @@ use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataLoaderInterface;
-use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\OptionMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\SectionMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadataMapper\NumberPropertyMetadataMapper;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadataMapperRegistry;
+use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\SchemaMetadata;
 use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
 use Sulu\Product\Application\AttributeType\NumberAttributeType;
 use Sulu\Product\Domain\Measurement\MeasurementRegistry;
@@ -45,6 +45,8 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
 {
     use ProphecyTrait;
 
+    private const FAMILY_SELECT = [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true];
+
     /** @var ObjectProphecy<ProductFamilyRepositoryInterface> */
     private ObjectProphecy $productFamilyRepository;
 
@@ -55,20 +57,17 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
     {
         $this->productFamilyRepository = $this->prophesize(ProductFamilyRepositoryInterface::class);
         $this->formMetadataLoader = $this->prophesize(FormMetadataLoaderInterface::class);
+        $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
+            ->willReturn($this->fragmentWithValueField());
     }
 
     private function visitor(): ProductAttributeFormMetadataVisitor
     {
+        $translator = $this->createStub(TranslatorInterface::class);
+        $translator->method('trans')->willReturn('Attributes');
+
         $mapperContainer = new Container();
         $mapperContainer->set('number', new NumberPropertyMetadataMapper());
-
-        $translator = $this->createStub(TranslatorInterface::class);
-        $translator->method('trans')->willReturnCallback(
-            static fn (string $id): string => match ($id) {
-                'sulu_product.attributes' => 'Attributes',
-                default => 'Unit',
-            },
-        );
 
         return new ProductAttributeFormMetadataVisitor(
             $this->productFamilyRepository->reveal(),
@@ -76,29 +75,18 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
                 new AttributeTypeRegistry([new NumberAttributeType()]),
                 $this->formMetadataLoader->reveal(),
                 new MeasurementRegistry(),
-                $translator,
             ),
-            new PropertyMetadataMapperRegistry($mapperContainer),
             $translator,
+            new PropertyMetadataMapperRegistry($mapperContainer),
         );
     }
 
-    private function group(int $id = 1, ?string $name = 'Dimensions'): AttributeGroupInterface
+    private function form(): FormMetadata
     {
-        $group = $this->prophesize(AttributeGroupInterface::class);
-        $group->getId()->willReturn($id);
-        $group->getDefaultLocale()->willReturn(null);
+        $form = new FormMetadata();
+        $form->setKey('product_attributes');
 
-        $translation = null;
-        if (null !== $name) {
-            $translationProphecy = $this->prophesize(AttributeGroupTranslationInterface::class);
-            $translationProphecy->getName()->willReturn($name);
-            $translation = $translationProphecy->reveal();
-        }
-
-        $group->getTranslation('en')->willReturn($translation);
-
-        return $group->reveal();
+        return $form;
     }
 
     private function fragmentWithValueField(): FormMetadata
@@ -114,71 +102,226 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         return $fragment;
     }
 
+    private function group(int $id = 1, ?string $name = 'Dimensions', ?string $defaultLocale = null): AttributeGroupInterface
+    {
+        $group = $this->prophesize(AttributeGroupInterface::class);
+        $group->getId()->willReturn($id);
+        $group->getDefaultLocale()->willReturn($defaultLocale);
+
+        $translation = null;
+        if (null !== $name) {
+            $translationProphecy = $this->prophesize(AttributeGroupTranslationInterface::class);
+            $translationProphecy->getName()->willReturn($name);
+            $translation = $translationProphecy->reveal();
+        }
+
+        $group->getTranslation('en')->willReturn($translation);
+        if (null !== $defaultLocale) {
+            $group->getTranslation($defaultLocale)->willReturn($translation);
+        }
+
+        return $group->reveal();
+    }
+
+    /**
+     * @param array<string, mixed> $config
+     */
+    private function familyAttribute(
+        int $id,
+        string $name,
+        AttributeGroupInterface $group,
+        bool $variantSpecific = false,
+        bool $required = false,
+        array $config = [],
+    ): ProductFamilyAttributeInterface {
+        $translation = $this->prophesize(AttributeTranslationInterface::class);
+        $translation->getName()->willReturn($name);
+        $translation->getDescription()->willReturn(null);
+
+        $attribute = $this->prophesize(AttributeInterface::class);
+        $attribute->getId()->willReturn($id);
+        $attribute->getKey()->willReturn(\strtolower($name));
+        $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
+        $attribute->getConfig()->willReturn($config);
+        $attribute->getDefaultLocale()->willReturn(null);
+        $attribute->getTranslation('en')->willReturn($translation->reveal());
+        $attribute->getGroup()->willReturn($group);
+
+        $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
+        $familyAttribute->isVariantSpecific()->willReturn($variantSpecific);
+        $familyAttribute->isRequired()->willReturn($required);
+        $familyAttribute->getAttribute()->willReturn($attribute->reveal());
+
+        return $familyAttribute->reveal();
+    }
+
+    /**
+     * @param list<ProductFamilyAttributeInterface> $familyAttributes
+     */
+    private function family(array $familyAttributes): ProductFamilyInterface
+    {
+        $family = $this->prophesize(ProductFamilyInterface::class);
+        $family->getFamilyAttributes()->willReturn($familyAttributes);
+
+        return $family->reveal();
+    }
+
     public function testIgnoresOtherForms(): void
     {
         $form = new FormMetadata();
-        $form->setKey('product_family_details');  // not product_details
+        $form->setKey('product_details');
 
-        $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'uuid-1']);
+        $this->visitor()->visitFormMetadata($form, 'en', ['productFamily' => 'family-1']);
 
         self::assertSame([], $form->getItems());
+        self::assertTrue($form->isCacheable());
     }
 
-    public function testNoIdInjectsNothing(): void
+    public function testNoSelectorInjectsNothingButStaysUncacheable(): void
     {
-        $form = new FormMetadata();
-        $form->setKey('product_details');
+        $form = $this->form();
 
         $this->visitor()->visitFormMetadata($form, 'en', []);
 
         self::assertSame([], $form->getItems());
+        self::assertFalse($form->isCacheable());
     }
 
-    public function testInjectsFieldPerEnabledFamilyAttribute(): void
+    public function testUnknownFamilyInjectsNothing(): void
     {
-        $translation = $this->prophesize(AttributeTranslationInterface::class);
-        $translation->getName()->willReturn('Weight');
-        $translation->getDescription()->willReturn('Weight in kilograms');
+        $this->productFamilyRepository->findOneBy(['uuid' => 'family-x'], self::FAMILY_SELECT)->willReturn(null);
+        $form = $this->form();
 
-        $attribute = $this->prophesize(AttributeInterface::class);
-        $attribute->getId()->willReturn(7);
-        $attribute->getKey()->willReturn('weight');
-        $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
-        $attribute->getConfig()->willReturn([]);
-        $attribute->getTranslation('en')->willReturn($translation->reveal());
-        $attribute->getGroup()->willReturn($this->group());
+        $this->visitor()->visitFormMetadata($form, 'en', ['productFamily' => 'family-x']);
 
-        $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
-        $familyAttribute->isVariantSpecific()->willReturn(false);
-        $familyAttribute->getAttribute()->willReturn($attribute->reveal());
-        $familyAttribute->isRequired()->willReturn(true);
+        self::assertSame([], $form->getItems());
+        self::assertFalse($form->isCacheable());
+    }
 
-        $family = $this->prophesize(ProductFamilyInterface::class);
-        $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
+    public function testInjectsSharedAttributesGroupedBySection(): void
+    {
+        $dimensions = $this->group(1, 'Dimensions');
+        $electrical = $this->group(2, 'Electrical');
+        $this->productFamilyRepository->findOneBy(['uuid' => 'family-1'], self::FAMILY_SELECT)->willReturn($this->family([
+            $this->familyAttribute(7, 'Weight', $dimensions, false, true),
+            $this->familyAttribute(8, 'Colour', $dimensions, true),
+            $this->familyAttribute(9, 'Voltage', $electrical, false, false, ['unit' => 'VOLT']),
+        ]));
+        $form = $this->form();
 
-        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'], [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true])->willReturn($family->reveal());
-        $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
-            ->willReturn($this->fragmentWithValueField());
-
-        $form = new FormMetadata();
-        $form->setKey('product_details');
-
-        $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'uuid-1']);
+        $this->visitor()->visitFormMetadata($form, 'en', ['productFamily' => 'family-1']);
 
         $items = $form->getItems();
-        self::assertArrayHasKey('attribute_group_1', $items);
-        $section = $items['attribute_group_1'];
-        self::assertInstanceOf(SectionMetadata::class, $section);
-        self::assertSame('Dimensions', $section->getLabel('en'));
-        $sectionItems = $section->getItems();
-        self::assertArrayHasKey('attributes/7', $sectionItems);
-        $field = $sectionItems['attributes/7'];
-        self::assertInstanceOf(FieldMetadata::class, $field);
-        self::assertSame('number', $field->getType());
-        self::assertSame('Weight', $field->getLabel('en'));
-        self::assertSame('Weight in kilograms', $field->getDescription('en'));
-        self::assertTrue($field->isRequired());
+        self::assertSame(['attribute_group_1', 'attribute_group_2'], \array_keys($items));
+
+        $dimensionsSection = $items['attribute_group_1'];
+        self::assertInstanceOf(SectionMetadata::class, $dimensionsSection);
+        self::assertSame('Dimensions', $dimensionsSection->getLabel('en'));
+        self::assertSame(['attribute_7'], \array_keys($dimensionsSection->getItems()));
+        $weight = $dimensionsSection->getItems()['attribute_7'];
+        self::assertInstanceOf(FieldMetadata::class, $weight);
+        self::assertSame('number', $weight->getType());
+        self::assertSame('Weight', $weight->getLabel('en'));
+        self::assertTrue($weight->isRequired());
+
+        $electricalSection = $items['attribute_group_2'];
+        self::assertInstanceOf(SectionMetadata::class, $electricalSection);
+        $voltage = $electricalSection->getItems()['attribute_9'];
+        self::assertInstanceOf(FieldMetadata::class, $voltage);
+        self::assertSame('Voltage (V)', $voltage->getLabel('en'));
+
         self::assertFalse($form->isCacheable());
+    }
+
+    public function testSetsValidationSchemaKeyedByFieldName(): void
+    {
+        $dimensions = $this->group(1, 'Dimensions');
+        $this->productFamilyRepository->findOneBy(['uuid' => 'family-1'], self::FAMILY_SELECT)->willReturn($this->family([
+            $this->familyAttribute(7, 'Weight', $dimensions, false, true, ['min' => 0, 'max' => 10]),
+            $this->familyAttribute(8, 'Colour', $dimensions, true),
+            $this->familyAttribute(9, 'Voltage', $dimensions),
+        ]));
+        $form = $this->form();
+
+        $this->visitor()->visitFormMetadata($form, 'en', ['productFamily' => 'family-1']);
+
+        self::assertSame([
+            'allOf' => [
+                ['type' => ['number', 'string', 'boolean', 'object', 'array', 'null']],
+                [
+                    'type' => 'object',
+                    'properties' => [
+                        'attribute_7' => ['type' => 'number', 'minimum' => 0.0, 'maximum' => 10.0],
+                        'attribute_9' => ['anyOf' => [['type' => 'null'], ['type' => 'number']]],
+                    ],
+                    'required' => ['attribute_7'],
+                ],
+            ],
+        ], $form->getSchema()->toJsonSchema());
+    }
+
+    public function testLeavesTheSchemaAloneWithoutAttributes(): void
+    {
+        $this->productFamilyRepository->findOneBy(['uuid' => 'family-1'], self::FAMILY_SELECT)->willReturn($this->family([]));
+        $form = $this->form();
+
+        $this->visitor()->visitFormMetadata($form, 'en', ['productFamily' => 'family-1']);
+
+        self::assertEquals(new SchemaMetadata(), $form->getSchema());
+    }
+
+    /**
+     * @return iterable<string, array{0: mixed}>
+     */
+    public static function provideVariantFlags(): iterable
+    {
+        yield 'string true' => ['true'];
+        yield 'string 1' => ['1'];
+        yield 'bool true' => [true];
+    }
+
+    #[DataProvider('provideVariantFlags')]
+    public function testVariantFlagKeepsOnlyAxisAttributes(mixed $variant): void
+    {
+        $group = $this->group();
+        $this->productFamilyRepository->findOneBy(['uuid' => 'family-1'], self::FAMILY_SELECT)->willReturn($this->family([
+            $this->familyAttribute(7, 'Weight', $group),
+            $this->familyAttribute(8, 'Colour', $group, true),
+        ]));
+        $form = $this->form();
+
+        $this->visitor()->visitFormMetadata($form, 'en', ['productFamily' => 'family-1', 'variant' => $variant]);
+
+        $section = $form->getItems()['attribute_group_1'];
+        self::assertInstanceOf(SectionMetadata::class, $section);
+        self::assertSame(['attribute_8'], \array_keys($section->getItems()));
+    }
+
+    public function testResolvesFamilyThroughProductOption(): void
+    {
+        $group = $this->group();
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'product-1'], self::FAMILY_SELECT)->willReturn($this->family([
+            $this->familyAttribute(7, 'Weight', $group),
+        ]));
+        $form = $this->form();
+
+        $this->visitor()->visitFormMetadata($form, 'en', ['product' => 'product-1']);
+
+        self::assertSame(['attribute_group_1'], \array_keys($form->getItems()));
+    }
+
+    public function testProductFamilyOptionWinsOverProductOption(): void
+    {
+        $group = $this->group();
+        $this->productFamilyRepository->findOneBy(['uuid' => 'family-1'], self::FAMILY_SELECT)->willReturn($this->family([
+            $this->familyAttribute(7, 'Weight', $group),
+        ]));
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'product-1'], self::FAMILY_SELECT)->shouldNotBeCalled();
+        $form = $this->form();
+
+        $this->visitor()->visitFormMetadata($form, 'en', ['productFamily' => 'family-1', 'product' => 'product-1']);
+
+        self::assertSame(['attribute_group_1'], \array_keys($form->getItems()));
     }
 
     /**
@@ -193,48 +336,20 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
     #[DataProvider('provideMissingGroupNames')]
     public function testUsesGenericSectionLabelWhenGroupNameMissing(?string $groupName): void
     {
-        $translation = $this->prophesize(AttributeTranslationInterface::class);
-        $translation->getName()->willReturn('Weight');
-        $translation->getDescription()->willReturn(null);
+        $this->productFamilyRepository->findOneBy(['uuid' => 'family-1'], self::FAMILY_SELECT)->willReturn($this->family([
+            $this->familyAttribute(7, 'Weight', $this->group(9, $groupName)),
+        ]));
+        $form = $this->form();
 
-        $attribute = $this->prophesize(AttributeInterface::class);
-        $attribute->getId()->willReturn(7);
-        $attribute->getKey()->willReturn('weight');
-        $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
-        $attribute->getConfig()->willReturn([]);
-        $attribute->getTranslation('en')->willReturn($translation->reveal());
-        $attribute->getGroup()->willReturn($this->group(9, $groupName));
+        $this->visitor()->visitFormMetadata($form, 'en', ['productFamily' => 'family-1']);
 
-        $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
-        $familyAttribute->isVariantSpecific()->willReturn(false);
-        $familyAttribute->getAttribute()->willReturn($attribute->reveal());
-        $familyAttribute->isRequired()->willReturn(false);
-
-        $family = $this->prophesize(ProductFamilyInterface::class);
-        $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
-
-        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'], [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true])->willReturn($family->reveal());
-        $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
-            ->willReturn($this->fragmentWithValueField());
-
-        $form = new FormMetadata();
-        $form->setKey('product_details');
-
-        $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'uuid-1']);
-
-        $items = $form->getItems();
-        self::assertArrayHasKey('attribute_group_9', $items);
-        $section = $items['attribute_group_9'];
+        $section = $form->getItems()['attribute_group_9'];
         self::assertInstanceOf(SectionMetadata::class, $section);
         self::assertSame('Attributes', $section->getLabel('en'));
     }
 
     public function testUsesDefaultLocaleGroupNameWhenLocaleTranslationMissing(): void
     {
-        $translation = $this->prophesize(AttributeTranslationInterface::class);
-        $translation->getName()->willReturn('Weight');
-        $translation->getDescription()->willReturn(null);
-
         $groupTranslation = $this->prophesize(AttributeGroupTranslationInterface::class);
         $groupTranslation->getName()->willReturn('Abmessungen');
 
@@ -244,522 +359,28 @@ class ProductAttributeFormMetadataVisitorTest extends TestCase
         $group->getDefaultLocale()->willReturn('de');
         $group->getTranslation('de')->willReturn($groupTranslation->reveal());
 
-        $attribute = $this->prophesize(AttributeInterface::class);
-        $attribute->getId()->willReturn(7);
-        $attribute->getKey()->willReturn('weight');
-        $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
-        $attribute->getConfig()->willReturn([]);
-        $attribute->getTranslation('en')->willReturn($translation->reveal());
-        $attribute->getGroup()->willReturn($group->reveal());
+        $this->productFamilyRepository->findOneBy(['uuid' => 'family-1'], self::FAMILY_SELECT)->willReturn($this->family([
+            $this->familyAttribute(7, 'Weight', $group->reveal()),
+        ]));
+        $form = $this->form();
 
-        $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
-        $familyAttribute->isVariantSpecific()->willReturn(false);
-        $familyAttribute->getAttribute()->willReturn($attribute->reveal());
-        $familyAttribute->isRequired()->willReturn(false);
+        $this->visitor()->visitFormMetadata($form, 'en', ['productFamily' => 'family-1']);
 
-        $family = $this->prophesize(ProductFamilyInterface::class);
-        $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
-
-        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'], [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true])->willReturn($family->reveal());
-        $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
-            ->willReturn($this->fragmentWithValueField());
-
-        $form = new FormMetadata();
-        $form->setKey('product_details');
-
-        $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'uuid-1']);
-
-        $items = $form->getItems();
-        self::assertArrayHasKey('attribute_group_3', $items);
-        $section = $items['attribute_group_3'];
+        $section = $form->getItems()['attribute_group_3'];
         self::assertInstanceOf(SectionMetadata::class, $section);
         self::assertSame('Abmessungen', $section->getLabel('en'));
     }
 
-    public function testInjectsValidationSchemaForAttributes(): void
+    public function testSkipsAttributesWithoutFormFragment(): void
     {
-        $translation = $this->prophesize(AttributeTranslationInterface::class);
-        $translation->getName()->willReturn('Weight');
-        $translation->getDescription()->willReturn(null);
-
-        $attribute = $this->prophesize(AttributeInterface::class);
-        $attribute->getId()->willReturn(7);
-        $attribute->getKey()->willReturn('weight');
-        $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
-        $attribute->getConfig()->willReturn(['min' => 0, 'max' => 10]);
-        $attribute->getTranslation('en')->willReturn($translation->reveal());
-        $attribute->getGroup()->willReturn($this->group());
-
-        $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
-        $familyAttribute->isVariantSpecific()->willReturn(false);
-        $familyAttribute->getAttribute()->willReturn($attribute->reveal());
-        $familyAttribute->isRequired()->willReturn(true);
-
-        $family = $this->prophesize(ProductFamilyInterface::class);
-        $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
-
-        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'], [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true])->willReturn($family->reveal());
-        $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
-            ->willReturn($this->fragmentWithValueField());
-
-        $form = new FormMetadata();
-        $form->setKey('product_details');
-
-        $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'uuid-1']);
-
-        $schema = $form->getSchema()->toJsonSchema();
-
-        self::assertSame([
-            'allOf' => [
-                ['type' => ['number', 'string', 'boolean', 'object', 'array', 'null']],
-                [
-                    'type' => 'object',
-                    'properties' => [
-                        'attributes' => [
-                            'type' => 'object',
-                            'properties' => [
-                                7 => ['type' => 'number', 'minimum' => 0.0, 'maximum' => 10.0],
-                            ],
-                            'required' => ['7'],
-                        ],
-                    ],
-                ],
-            ],
-        ], $schema);
-    }
-
-    public function testDoesNotSetDescriptionWhenAttributeHasNone(): void
-    {
-        $translation = $this->prophesize(AttributeTranslationInterface::class);
-        $translation->getName()->willReturn('Weight');
-        $translation->getDescription()->willReturn(null);
-
-        $attribute = $this->prophesize(AttributeInterface::class);
-        $attribute->getId()->willReturn(7);
-        $attribute->getKey()->willReturn('weight');
-        $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
-        $attribute->getConfig()->willReturn([]);
-        $attribute->getTranslation('en')->willReturn($translation->reveal());
-        $attribute->getGroup()->willReturn($this->group());
-
-        $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
-        $familyAttribute->isVariantSpecific()->willReturn(false);
-        $familyAttribute->getAttribute()->willReturn($attribute->reveal());
-        $familyAttribute->isRequired()->willReturn(false);
-
-        $family = $this->prophesize(ProductFamilyInterface::class);
-        $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
-
-        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'], [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true])->willReturn($family->reveal());
-        $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
-            ->willReturn($this->fragmentWithValueField());
-
-        $form = new FormMetadata();
-        $form->setKey('product_details');
-
-        $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'uuid-1']);
-
-        $section = $form->getItems()['attribute_group_1'];
-        self::assertInstanceOf(SectionMetadata::class, $section);
-        $field = $section->getItems()['attributes/7'];
-        self::assertInstanceOf(FieldMetadata::class, $field);
-        self::assertNull($field->getDescription('en'));
-    }
-
-    public function testSkipsAttributeWithUnknownType(): void
-    {
-        $attribute = $this->prophesize(AttributeInterface::class);
-        $attribute->getType()->willReturn('unknown_type');
-        $attribute->getConfig()->willReturn([]);
-
-        $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
-        $familyAttribute->isVariantSpecific()->willReturn(false);
-        $familyAttribute->getAttribute()->willReturn($attribute->reveal());
-
-        $family = $this->prophesize(ProductFamilyInterface::class);
-        $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
-
-        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'], [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true])->willReturn($family->reveal());
-
-        $form = new FormMetadata();
-        $form->setKey('product_details');
-
-        $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'uuid-1']);
-
-        self::assertSame([], $form->getItems());
-    }
-
-    public function testSkipsAttributeWhenFragmentIsNotFormMetadata(): void
-    {
-        $attribute = $this->prophesize(AttributeInterface::class);
-        $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
-        $attribute->getConfig()->willReturn([]);
-
-        $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
-        $familyAttribute->isVariantSpecific()->willReturn(false);
-        $familyAttribute->getAttribute()->willReturn($attribute->reveal());
-
-        $family = $this->prophesize(ProductFamilyInterface::class);
-        $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
-
-        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'], [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true])->willReturn($family->reveal());
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])->willReturn(null);
+        $this->productFamilyRepository->findOneBy(['uuid' => 'family-1'], self::FAMILY_SELECT)->willReturn($this->family([
+            $this->familyAttribute(7, 'Weight', $this->group()),
+        ]));
+        $form = $this->form();
 
-        $form = new FormMetadata();
-        $form->setKey('product_details');
-
-        $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'uuid-1']);
-
-        self::assertSame([], $form->getItems());
-    }
-
-    public function testCloneCopiesFragmentOptionsAndTypes(): void
-    {
-        $translation = $this->prophesize(AttributeTranslationInterface::class);
-        $translation->getName()->willReturn('Weight');
-        $translation->getDescription()->willReturn(null);
-
-        $attribute = $this->prophesize(AttributeInterface::class);
-        $attribute->getId()->willReturn(7);
-        $attribute->getKey()->willReturn('weight');
-        $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
-        $attribute->getConfig()->willReturn([]);
-        $attribute->getTranslation('en')->willReturn($translation->reveal());
-        $attribute->getGroup()->willReturn($this->group());
-
-        $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
-        $familyAttribute->isVariantSpecific()->willReturn(false);
-        $familyAttribute->getAttribute()->willReturn($attribute->reveal());
-        $familyAttribute->isRequired()->willReturn(false);
-
-        $family = $this->prophesize(ProductFamilyInterface::class);
-        $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
-
-        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'], [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true])->willReturn($family->reveal());
-
-        $field = new FieldMetadata('value');
-        $field->setType('single_select');
-        $option = new OptionMetadata();
-        $option->setName('opt');
-        $field->addOption($option);
-        $blockType = new FormMetadata();
-        $blockType->setKey('some_block');
-        $field->addType($blockType);
-
-        $fragment = new FormMetadata();
-        $fragment->setKey('product_attribute_number');
-        $fragment->addItem($field);
-        $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])->willReturn($fragment);
-
-        $form = new FormMetadata();
-        $form->setKey('product_details');
-
-        $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'uuid-1']);
-
-        $section = $form->getItems()['attribute_group_1'];
-        self::assertInstanceOf(SectionMetadata::class, $section);
-        $injected = $section->getItems()['attributes/7'];
-        self::assertInstanceOf(FieldMetadata::class, $injected);
-        self::assertArrayHasKey('opt', $injected->getOptions());
-        self::assertCount(1, $injected->getTypes());
-    }
-
-    public function testSkipsAttributeWhenFragmentHasNoValueField(): void
-    {
-        $attribute = $this->prophesize(AttributeInterface::class);
-        $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
-        $attribute->getConfig()->willReturn([]);
-
-        $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
-        $familyAttribute->isVariantSpecific()->willReturn(false);
-        $familyAttribute->getAttribute()->willReturn($attribute->reveal());
-
-        $family = $this->prophesize(ProductFamilyInterface::class);
-        $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
-
-        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'], [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true])->willReturn($family->reveal());
-
-        $fragment = new FormMetadata();
-        $fragment->setKey('product_attribute_number');
-        $other = new FieldMetadata('other');
-        $other->setType('number');
-        $fragment->addItem($other);
-        $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])->willReturn($fragment);
-
-        $form = new FormMetadata();
-        $form->setKey('product_details');
-
-        $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'uuid-1']);
+        $this->visitor()->visitFormMetadata($form, 'en', ['productFamily' => 'family-1']);
 
         self::assertSame([], $form->getItems());
-    }
-
-    public function testInjectsUnitFieldDerivedFromStoredUnit(): void
-    {
-        $translation = $this->prophesize(AttributeTranslationInterface::class);
-        $translation->getName()->willReturn('Weight');
-        $translation->getDescription()->willReturn(null);
-
-        $attribute = $this->prophesize(AttributeInterface::class);
-        $attribute->getId()->willReturn(7);
-        $attribute->getKey()->willReturn('weight');
-        $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
-        $attribute->getConfig()->willReturn(['unit' => 'KILOGRAM']);
-        $attribute->getTranslation('en')->willReturn($translation->reveal());
-        $attribute->getGroup()->willReturn($this->group());
-
-        $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
-        $familyAttribute->isVariantSpecific()->willReturn(false);
-        $familyAttribute->getAttribute()->willReturn($attribute->reveal());
-        $familyAttribute->isRequired()->willReturn(false);
-
-        $family = $this->prophesize(ProductFamilyInterface::class);
-        $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
-
-        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'], [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true])->willReturn($family->reveal());
-        $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
-            ->willReturn($this->fragmentWithValueField());
-
-        $form = new FormMetadata();
-        $form->setKey('product_details');
-
-        $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'uuid-1']);
-
-        $section = $form->getItems()['attribute_group_1'];
-        self::assertInstanceOf(SectionMetadata::class, $section);
-        $sectionItems = $section->getItems();
-
-        $valueField = $sectionItems['attributes/7'];
-        self::assertInstanceOf(FieldMetadata::class, $valueField);
-        self::assertSame(8, $valueField->getColSpan());
-
-        self::assertArrayHasKey('attributes/7_unit', $sectionItems);
-        $unitField = $sectionItems['attributes/7_unit'];
-        self::assertInstanceOf(FieldMetadata::class, $unitField);
-        self::assertSame('single_select', $unitField->getType());
-        self::assertSame(4, $unitField->getColSpan());
-        self::assertSame('true', $unitField->getDisabledCondition());
-        self::assertSame('Unit', $unitField->getLabel('en'));
-
-        $valuesOption = $unitField->getOptions()['values'];
-        /** @var OptionMetadata[] $valueOptions */
-        $valueOptions = $valuesOption->getValue();
-        self::assertCount(1, $valueOptions);
-        self::assertSame('KILOGRAM', $valueOptions[0]->getName());
-        self::assertSame('KILOGRAM', $valueOptions[0]->getValue());
-        self::assertSame('kg', $valueOptions[0]->getTitle('en'));
-    }
-
-    public function testDoesNotInjectUnitFieldWhenUnitMissing(): void
-    {
-        $this->assertNoUnitFieldForConfig([]);
-    }
-
-    public function testDoesNotInjectUnitFieldWhenUnitUnknown(): void
-    {
-        $this->assertNoUnitFieldForConfig(['unit' => 'NON_EXISTENT_UNIT']);
-    }
-
-    /**
-     * @param array<string, mixed> $config
-     */
-    private function assertNoUnitFieldForConfig(array $config): void
-    {
-        $translation = $this->prophesize(AttributeTranslationInterface::class);
-        $translation->getName()->willReturn('Weight');
-        $translation->getDescription()->willReturn(null);
-
-        $attribute = $this->prophesize(AttributeInterface::class);
-        $attribute->getId()->willReturn(7);
-        $attribute->getKey()->willReturn('weight');
-        $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
-        $attribute->getConfig()->willReturn($config);
-        $attribute->getTranslation('en')->willReturn($translation->reveal());
-        $attribute->getGroup()->willReturn($this->group());
-
-        $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
-        $familyAttribute->isVariantSpecific()->willReturn(false);
-        $familyAttribute->getAttribute()->willReturn($attribute->reveal());
-        $familyAttribute->isRequired()->willReturn(false);
-
-        $family = $this->prophesize(ProductFamilyInterface::class);
-        $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
-
-        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'], [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true])->willReturn($family->reveal());
-        $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
-            ->willReturn($this->fragmentWithValueField());
-
-        $form = new FormMetadata();
-        $form->setKey('product_details');
-
-        $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'uuid-1']);
-
-        $section = $form->getItems()['attribute_group_1'];
-        self::assertInstanceOf(SectionMetadata::class, $section);
-        $sectionItems = $section->getItems();
-        self::assertArrayHasKey('attributes/7', $sectionItems);
-        self::assertArrayNotHasKey('attributes/7_unit', $sectionItems);
-        self::assertSame(12, $sectionItems['attributes/7']->getColSpan());
-    }
-
-    public function testInjectsNothingWhenNoFamilyFound(): void
-    {
-        $this->productFamilyRepository->findOneBy(['productUuid' => 'missing'], [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true])->willReturn(null);
-
-        $form = new FormMetadata();
-        $form->setKey('product_details');
-
-        $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'missing']);
-
-        self::assertSame([], $form->getItems());
-    }
-
-    public function testUsesDefaultLocaleTranslationWhenLocaleTranslationMissing(): void
-    {
-        $fallbackTranslation = $this->prophesize(AttributeTranslationInterface::class);
-        $fallbackTranslation->getName()->willReturn('Gewicht');
-        $fallbackTranslation->getDescription()->willReturn(null);
-
-        $attribute = $this->prophesize(AttributeInterface::class);
-        $attribute->getId()->willReturn(7);
-        $attribute->getKey()->willReturn('weight');
-        $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
-        $attribute->getConfig()->willReturn([]);
-        $attribute->getTranslation('en')->willReturn(null);
-        $attribute->getDefaultLocale()->willReturn('de');
-        $attribute->getTranslation('de')->willReturn($fallbackTranslation->reveal());
-        $attribute->getGroup()->willReturn($this->group());
-
-        $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
-        $familyAttribute->isVariantSpecific()->willReturn(false);
-        $familyAttribute->getAttribute()->willReturn($attribute->reveal());
-        $familyAttribute->isRequired()->willReturn(false);
-
-        $family = $this->prophesize(ProductFamilyInterface::class);
-        $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
-
-        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'], [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true])->willReturn($family->reveal());
-        $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
-            ->willReturn($this->fragmentWithValueField());
-
-        $form = new FormMetadata();
-        $form->setKey('product_details');
-
-        $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'uuid-1']);
-
-        $section = $form->getItems()['attribute_group_1'];
-        self::assertInstanceOf(SectionMetadata::class, $section);
-        $field = $section->getItems()['attributes/7'];
-        self::assertInstanceOf(FieldMetadata::class, $field);
-        self::assertSame('Gewicht', $field->getLabel('en'));
-    }
-
-    public function testSkipsVariantAttributesForEveryProductType(): void
-    {
-        $translation = $this->prophesize(AttributeTranslationInterface::class);
-        $translation->getName()->willReturn('Weight');
-        $translation->getDescription()->willReturn(null);
-
-        $attribute = $this->prophesize(AttributeInterface::class);
-        $attribute->getId()->willReturn(7);
-        $attribute->getKey()->willReturn('weight');
-        $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
-        $attribute->getConfig()->willReturn([]);
-        $attribute->getTranslation('en')->willReturn($translation->reveal());
-        $attribute->getGroup()->willReturn($this->group());
-
-        $nonVariantFamilyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
-        $nonVariantFamilyAttribute->isVariantSpecific()->willReturn(false);
-        $nonVariantFamilyAttribute->getAttribute()->willReturn($attribute->reveal());
-        $nonVariantFamilyAttribute->isRequired()->willReturn(false);
-
-        $variantFamilyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
-        $variantFamilyAttribute->isVariantSpecific()->willReturn(true);
-
-        $family = $this->prophesize(ProductFamilyInterface::class);
-        $family->getFamilyAttributes()->willReturn([
-            $nonVariantFamilyAttribute->reveal(),
-            $variantFamilyAttribute->reveal(),
-        ]);
-
-        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'], [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true])->willReturn($family->reveal());
-        $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
-            ->willReturn($this->fragmentWithValueField());
-
-        $form = new FormMetadata();
-        $form->setKey('product_details');
-
-        $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'uuid-1']);
-
-        $section = $form->getItems()['attribute_group_1'];
-        self::assertInstanceOf(SectionMetadata::class, $section);
-        $sectionItems = $section->getItems();
-        self::assertArrayHasKey('attributes/7', $sectionItems);
-        self::assertArrayNotHasKey('attributes/8', $sectionItems);
-    }
-
-    public function testGroupsAttributesIntoSeparateSectionsPerGroup(): void
-    {
-        $translation7 = $this->prophesize(AttributeTranslationInterface::class);
-        $translation7->getName()->willReturn('Weight');
-        $translation7->getDescription()->willReturn(null);
-
-        $attribute7 = $this->prophesize(AttributeInterface::class);
-        $attribute7->getId()->willReturn(7);
-        $attribute7->getKey()->willReturn('weight');
-        $attribute7->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
-        $attribute7->getConfig()->willReturn([]);
-        $attribute7->getTranslation('en')->willReturn($translation7->reveal());
-        $attribute7->getGroup()->willReturn($this->group(1, 'Dimensions'));
-
-        $familyAttribute7 = $this->prophesize(ProductFamilyAttributeInterface::class);
-        $familyAttribute7->isVariantSpecific()->willReturn(false);
-        $familyAttribute7->getAttribute()->willReturn($attribute7->reveal());
-        $familyAttribute7->isRequired()->willReturn(false);
-
-        $translation8 = $this->prophesize(AttributeTranslationInterface::class);
-        $translation8->getName()->willReturn('Voltage');
-        $translation8->getDescription()->willReturn(null);
-
-        $attribute8 = $this->prophesize(AttributeInterface::class);
-        $attribute8->getId()->willReturn(8);
-        $attribute8->getKey()->willReturn('voltage');
-        $attribute8->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
-        $attribute8->getConfig()->willReturn([]);
-        $attribute8->getTranslation('en')->willReturn($translation8->reveal());
-        $attribute8->getGroup()->willReturn($this->group(2, 'Electrical'));
-
-        $familyAttribute8 = $this->prophesize(ProductFamilyAttributeInterface::class);
-        $familyAttribute8->isVariantSpecific()->willReturn(false);
-        $familyAttribute8->getAttribute()->willReturn($attribute8->reveal());
-        $familyAttribute8->isRequired()->willReturn(false);
-
-        $family = $this->prophesize(ProductFamilyInterface::class);
-        $family->getFamilyAttributes()->willReturn([
-            $familyAttribute7->reveal(),
-            $familyAttribute8->reveal(),
-        ]);
-
-        $this->productFamilyRepository->findOneBy(['productUuid' => 'uuid-1'], [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true])->willReturn($family->reveal());
-        $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
-            ->willReturn($this->fragmentWithValueField());
-
-        $form = new FormMetadata();
-        $form->setKey('product_details');
-
-        $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'uuid-1']);
-
-        $items = $form->getItems();
-        self::assertArrayHasKey('attribute_group_1', $items);
-        self::assertArrayHasKey('attribute_group_2', $items);
-
-        $sectionOne = $items['attribute_group_1'];
-        self::assertInstanceOf(SectionMetadata::class, $sectionOne);
-        self::assertArrayHasKey('attributes/7', $sectionOne->getItems());
-        self::assertArrayNotHasKey('attributes/8', $sectionOne->getItems());
-
-        $sectionTwo = $items['attribute_group_2'];
-        self::assertInstanceOf(SectionMetadata::class, $sectionTwo);
-        self::assertArrayHasKey('attributes/8', $sectionTwo->getItems());
     }
 }

@@ -953,6 +953,54 @@ class ProductVariantControllerTest extends SuluTestCase
         $this->assertHttpStatusCode(200, $this->client->getResponse());
     }
 
+    /**
+     * A never-touched attributes field on the overlay posts no `attributes` key at all; the
+     * controller must still enforce the family's required axis attribute in that case.
+     */
+    public function testPostVariantEnforcesRequiredAttributeWhenKeyIsAbsentFromRequest(): void
+    {
+        self::purgeDatabase();
+
+        $axisId = $this->createAttribute('size', 'Size');
+        $familyId = $this->createProductFamily([
+            $axisId => ['required' => true, 'variantSpecific' => true],
+        ]);
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+
+        $this->client->request(
+            'POST',
+            '/admin/api/products/' . $parentId . '/variants.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'code' => 'CX3-RD-L',
+                'title' => 'Variant L',
+            ]) ?: null,
+        );
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(422, $response);
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertArrayHasKey('detail', $data);
+
+        $this->client->request(
+            'POST',
+            '/admin/api/products/' . $parentId . '/variants.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'code' => 'CX3-RD-M',
+                'title' => 'Variant M',
+                'attributes' => [$axisId => 'M'],
+            ]) ?: null,
+        );
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+    }
+
     public function testVariantPersistsDetailsFields(): void
     {
         self::purgeDatabase();

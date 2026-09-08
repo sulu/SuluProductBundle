@@ -113,7 +113,6 @@ use Sulu\Product\Infrastructure\Sulu\Admin\ProductFamilyAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductRouteFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductsListMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductStatusFormMetadataVisitor;
-use Sulu\Product\Infrastructure\Sulu\Admin\ProductVariantAttributeFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\AdditionalWebspacesDataMapper;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductAssociationsDataMapper;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductAttributesDataMapper;
@@ -860,7 +859,6 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.attribute_type_registry'),
                 new Reference('sulu_admin.xml_form_metadata_loader'),
                 new Reference('sulu_product.measurement_registry'),
-                new Reference('translator'),
             ]);
 
         $services->set('sulu_product.product_attribute_form_metadata_visitor')
@@ -868,18 +866,8 @@ final class SuluProductBundle extends AbstractBundle
             ->args([
                 new Reference('sulu_product.product_family_repository'),
                 new Reference('sulu_product.attribute_field_factory'),
-                new Reference('sulu_admin.property_metadata_mapper_registry'),
                 new Reference('translator'),
-            ])
-            ->tag('sulu_admin.form_metadata_visitor');
-
-        $services->set('sulu_product.product_variant_attribute_form_metadata_visitor')
-            ->class(ProductVariantAttributeFormMetadataVisitor::class)
-            ->args([
-                new Reference('sulu_product.product_family_repository'),
-                new Reference('sulu_product.attribute_field_factory'),
                 new Reference('sulu_admin.property_metadata_mapper_registry'),
-                new Reference('translator'),
             ])
             ->tag('sulu_admin.form_metadata_visitor');
 
