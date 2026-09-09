@@ -93,4 +93,18 @@ class ProductRemovedEventTest extends TestCase
 
         $this->assertSame(['en', 'fr'], $event->getAllLocales());
     }
+
+    public function testGetRelatedProductIdsDefaultsToEmptyArray(): void
+    {
+        $event = new ProductRemovedEvent('product-id', 'Title');
+
+        $this->assertSame([], $event->getRelatedProductIds());
+    }
+
+    public function testGetRelatedProductIdsReturnsIdsFromContext(): void
+    {
+        $event = new ProductRemovedEvent('product-id', 'Title', ['relatedIds' => ['parent-id', 'variant-id']]);
+
+        $this->assertSame(['parent-id', 'variant-id'], $event->getRelatedProductIds());
+    }
 }

@@ -175,4 +175,63 @@ class RemoveProductMessageHandlerTest extends TestCase
 
         ($handler)(new RemoveProductMessage(['uuid' => 'parent-uuid'], 'en'));
     }
+
+    /**
+     * The variants go with the parent through ON DELETE CASCADE, so their uuids have to leave the
+     * handler with the event.
+     */
+    public function testRemoveProductWithVariantsPutsTheVariantIdsIntoTheEvent(): void
+    {
+        $product = new Product('parent-uuid');
+        $product->setType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+
+        $this->productRepository->getOneBy(['uuid' => 'parent-uuid'])
+            ->willReturn($product);
+
+        $this->productRepository->findBy(['parent' => 'parent-uuid'])
+            ->willReturn([new Product('variant-one-uuid'), new Product('variant-two-uuid')]);
+
+        $this->productRepository->remove($product)->shouldBeCalledOnce();
+
+        $this->domainEventCollector->collect(Argument::that(function(ProductRemovedEvent $event): bool {
+            $this->assertSame(['variant-one-uuid', 'variant-two-uuid'], $event->getRelatedProductIds());
+
+            return true;
+        }))->shouldBeCalledOnce();
+
+        $handler = new RemoveProductMessageHandler(
+            $this->productRepository->reveal(),
+            $this->domainEventCollector->reveal(),
+            null,
+        );
+
+        ($handler)(new RemoveProductMessage(['uuid' => 'parent-uuid'], 'en'));
+    }
+
+    public function testRemoveVariantPutsTheParentIdIntoTheEvent(): void
+    {
+        $parent = new Product('parent-uuid');
+        $variant = new Product('variant-uuid');
+        $variant->setType(ProductInterface::TYPE_VARIANT);
+        $variant->setParent($parent);
+
+        $this->productRepository->getOneBy(['uuid' => 'variant-uuid'])
+            ->willReturn($variant);
+
+        $this->productRepository->remove($variant)->shouldBeCalledOnce();
+
+        $this->domainEventCollector->collect(Argument::that(function(ProductRemovedEvent $event): bool {
+            $this->assertSame(['parent-uuid'], $event->getRelatedProductIds());
+
+            return true;
+        }))->shouldBeCalledOnce();
+
+        $handler = new RemoveProductMessageHandler(
+            $this->productRepository->reveal(),
+            $this->domainEventCollector->reveal(),
+            null,
+        );
+
+        ($handler)(new RemoveProductMessage(['uuid' => 'variant-uuid'], 'en'));
+    }
 }

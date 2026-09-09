@@ -132,6 +132,7 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
     {
         $queryBuilder = $this->dimensionContentRepository->createQueryBuilder('dimensionContent')
             ->leftJoin('dimensionContent.route', 'route')
+            ->innerJoin('dimensionContent.product', 'product')
             ->select('IDENTITY(dimensionContent.product) AS productId')
             ->addSelect('dimensionContent.authored')
             ->addSelect('dimensionContent.changed')
@@ -142,11 +143,13 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
             ->addSelect('route.slug')
             ->where('dimensionContent.stage = :stage')
             ->andWhere('dimensionContent.locale IS NOT NULL')
-            ->andWhere('dimensionContent.version = :version');
+            ->andWhere('dimensionContent.version = :version')
+            ->andWhere('product.type != :variantType');
 
         $parameters = [
             'stage' => DimensionContentInterface::STAGE_LIVE,
             'version' => DimensionContentInterface::CURRENT_VERSION,
+            'variantType' => ProductInterface::TYPE_VARIANT,
         ];
 
         if (0 < \count($identifiers)) {
