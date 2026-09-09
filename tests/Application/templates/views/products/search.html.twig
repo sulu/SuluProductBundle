@@ -1,0 +1,15 @@
+{% extends 'views/base.html.twig' %}
+
+{% block content %}
+    <p>query={{ query }}</p>
+    <p>total={{ total }}</p>
+    <p>page={{ page }}</p>
+    <p>limit={{ limit }}</p>
+    <p>variantQueryParameter={{ variantQueryParameter }}</p>
+    <p>statusFacet={{ facets.status.count|default({})|json_encode }}</p>
+    <ul>
+    {% for hit in hits %}
+        <li>{{ hit.title }}</li>
+    {% endfor %}
+    </ul>
+{% endblock %}

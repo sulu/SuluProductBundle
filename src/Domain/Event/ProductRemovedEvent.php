@@ -21,7 +21,8 @@ class ProductRemovedEvent extends DomainEvent
 {
     /**
      * @param array{
-     *     locales?: string[]
+     *     locales?: string[],
+     *     relatedIds?: string[]
      * } $context
      */
     public function __construct(
@@ -68,5 +69,16 @@ class ProductRemovedEvent extends DomainEvent
     public function getAllLocales(): ?array
     {
         return $this->context['locales'] ?? null;
+    }
+
+    /**
+     * Uuids of the parent and the variants the removal takes with it, so consumers can react on
+     * the whole family. The removed product itself is not part of the list.
+     *
+     * @return string[]
+     */
+    public function getRelatedProductIds(): array
+    {
+        return $this->context['relatedIds'] ?? [];
     }
 }
