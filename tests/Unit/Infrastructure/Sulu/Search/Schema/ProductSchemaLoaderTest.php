@@ -21,7 +21,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Sulu\Product\Infrastructure\Sulu\Search\ProductIndex;
-use Sulu\Product\Infrastructure\Sulu\Search\Schema\AttributeIndexFieldProvider;
+use Sulu\Product\Infrastructure\Sulu\Search\Schema\NumericAttributeLister;
 use Sulu\Product\Infrastructure\Sulu\Search\Schema\ProductSchemaLoader;
 
 #[CoversClass(ProductSchemaLoader::class)]
@@ -29,59 +29,77 @@ class ProductSchemaLoaderTest extends TestCase
 {
     use ProphecyTrait;
 
-    public function testAppendsDynamicFieldsToProductsIndexOnly(): void
+    public function testAppendsNumericFieldsToProductField(): void
     {
         $inner = $this->prophesize(LoaderInterface::class);
         $inner->load()->willReturn(new Schema([
-            ProductIndex::NAME => new Index('test_' . ProductIndex::NAME, [
-                'id' => new Field\IdentifierField('id'),
-            ]),
-            'website' => new Index('test_website', [
-                'id' => new Field\IdentifierField('id'),
-            ]),
+            ProductIndex::NAME => new Index('test_' . ProductIndex::NAME, $this->websiteFields()),
+            'admin' => new Index('test_admin', ['id' => new Field\IdentifierField('id')]),
         ]));
 
-        $fieldProvider = $this->prophesize(AttributeIndexFieldProvider::class);
-        $fieldProvider->getFields()->willReturn([
-            'attr_weight' => new Field\FloatField('attr_weight', multiple: true, filterable: true, facet: true),
+        $lister = $this->prophesize(NumericAttributeLister::class);
+        $lister->getFields()->willReturn([
+            'weight' => new Field\FloatField('weight', multiple: true, searchable: false, filterable: true, facet: true),
         ]);
 
-        $schema = (new ProductSchemaLoader($inner->reveal(), $fieldProvider->reveal()))->load();
+        $schema = (new ProductSchemaLoader($inner->reveal(), $lister->reveal()))->load();
+        $index = $schema->indexes[ProductIndex::NAME];
 
-        $products = $schema->indexes[ProductIndex::NAME];
-        $this->assertSame('test_' . ProductIndex::NAME, $products->name);
-        $this->assertArrayHasKey('id', $products->fields);
-        $this->assertArrayHasKey('attr_weight', $products->fields);
-        $this->assertArrayNotHasKey('attr_weight', $schema->indexes['website']->fields);
+        $this->assertSame('test_' . ProductIndex::NAME, $index->name);
+        $this->assertArrayHasKey('id', $index->fields);
+        $this->assertContains('product.attributes_numeric_values.weight', $index->filterableFields);
+        $this->assertContains('product.attributes_numeric_values.weight', $index->facetFields);
+        $this->assertContains('product.attributes_text_values', $index->filterableFields);
     }
 
-    public function testStaticFieldWinsOverDynamicFieldOfSameName(): void
+    public function testStaticFieldWinsOverNumericFieldOfSameName(): void
     {
         $inner = $this->prophesize(LoaderInterface::class);
         $inner->load()->willReturn(new Schema([
-            ProductIndex::NAME => new Index(ProductIndex::NAME, [
-                'id' => new Field\IdentifierField('id'),
-                'attr_weight' => new Field\TextField('attr_weight'),
-            ]),
+            ProductIndex::NAME => new Index(ProductIndex::NAME, $this->websiteFields([
+                'weight' => new Field\TextField('weight', searchable: false, filterable: true),
+            ])),
         ]));
-        $fieldProvider = $this->prophesize(AttributeIndexFieldProvider::class);
-        $fieldProvider->getFields()->willReturn([
-            'attr_weight' => new Field\FloatField('attr_weight', multiple: true, filterable: true),
+
+        $lister = $this->prophesize(NumericAttributeLister::class);
+        $lister->getFields()->willReturn([
+            'weight' => new Field\FloatField('weight', multiple: true, searchable: false, filterable: true),
         ]);
 
-        $schema = (new ProductSchemaLoader($inner->reveal(), $fieldProvider->reveal()))->load();
+        $schema = (new ProductSchemaLoader($inner->reveal(), $lister->reveal()))->load();
 
-        $this->assertInstanceOf(Field\TextField::class, $schema->indexes[ProductIndex::NAME]->fields['attr_weight']);
+        /** @var Field\ObjectField $product */
+        $product = $schema->indexes[ProductIndex::NAME]->fields[ProductIndex::FIELD];
+        /** @var Field\ObjectField $numericValues */
+        $numericValues = $product->fields[ProductIndex::NUMERIC_VALUES_FIELD];
+        $this->assertInstanceOf(Field\TextField::class, $numericValues->fields['weight']);
     }
 
-    public function testSchemaWithoutProductsIndexIsReturnedUnchanged(): void
+    public function testSchemaWithoutProductFieldIsReturnedUnchanged(): void
     {
         $inner = $this->prophesize(LoaderInterface::class);
-        $original = new Schema(['website' => new Index('website', ['id' => new Field\IdentifierField('id')])]);
+        $original = new Schema([ProductIndex::NAME => new Index(ProductIndex::NAME, ['id' => new Field\IdentifierField('id')])]);
         $inner->load()->willReturn($original);
-        $fieldProvider = $this->prophesize(AttributeIndexFieldProvider::class);
-        $fieldProvider->getFields()->shouldNotBeCalled();
 
-        $this->assertSame($original, (new ProductSchemaLoader($inner->reveal(), $fieldProvider->reveal()))->load());
+        $lister = $this->prophesize(NumericAttributeLister::class);
+        $lister->getFields()->shouldNotBeCalled();
+
+        $this->assertSame($original, (new ProductSchemaLoader($inner->reveal(), $lister->reveal()))->load());
+    }
+
+    /**
+     * @param array<string, Field\AbstractField> $numericFields
+     *
+     * @return array<string, Field\AbstractField>
+     */
+    private function websiteFields(array $numericFields = []): array
+    {
+        return [
+            'id' => new Field\IdentifierField('id'),
+            ProductIndex::FIELD => new Field\ObjectField(ProductIndex::FIELD, [
+                ProductIndex::TEXT_VALUES_FIELD => new Field\TextField(ProductIndex::TEXT_VALUES_FIELD, multiple: true, searchable: false, filterable: true, facet: true),
+                ProductIndex::NUMERIC_VALUES_FIELD => new Field\ObjectField(ProductIndex::NUMERIC_VALUES_FIELD, $numericFields),
+            ]),
+        ];
     }
 }

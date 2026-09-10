@@ -81,6 +81,8 @@ class WebsiteProductReindexProviderTest extends TestCase
 
         $this->dimensionContentRepository->createQueryBuilder('dimensionContent')
             ->willReturn($this->dimensionContentQb->reveal());
+        $this->dimensionContentRepository->getClassName()
+            ->willReturn(ProductDimensionContentInterface::class);
         $this->additionalWebspacesRepository->createQueryBuilder('additionalWebspace')
             ->willReturn($this->additionalQb->reveal());
 
@@ -130,7 +132,15 @@ class WebsiteProductReindexProviderTest extends TestCase
         $this->dimensionQuery->getResult()->willReturn(
             [
                 [
-                    'productId' => 42,
+                    'productId' => '42',
+                    'type' => ProductInterface::TYPE_PRODUCT,
+                    'parentId' => null,
+                    'code' => 'NC3',
+                    'status' => 'available',
+                    'productFamilyId' => 'family-uuid',
+                    'productFamilyName' => 'XLR',
+                    'detailsData' => [],
+                    'unlocalizedDetailsData' => [],
                     'authored' => new \DateTimeImmutable('2024-01-01'),
                     'changed' => new \DateTimeImmutable('2024-01-02'),
                     'title' => 'Sample',
@@ -144,7 +154,7 @@ class WebsiteProductReindexProviderTest extends TestCase
         );
 
         $this->additionalQuery->getResult()->willReturn([
-            ['productDimensionContentId' => 7, 'webspace' => 'extra'],
+            ['dimensionContentId' => 7, 'webspace' => 'extra'],
         ]);
 
         $provider = new WebsiteProductReindexProvider($this->entityManager->reveal());
@@ -156,6 +166,13 @@ class WebsiteProductReindexProviderTest extends TestCase
         $this->assertSame('Sample', $results[0]['title']);
         $this->assertSame('/sample', $results[0]['url']);
         $this->assertSame(['main', 'extra'], $results[0]['webspaces']);
+        $this->assertSame(ProductInterface::RESOURCE_KEY, $results[0]['resourceKey']);
+        $product = $results[0]['product'];
+        $this->assertIsArray($product);
+        $this->assertSame('NC3', $product['code']);
+        $this->assertSame('available', $product['status']);
+        $this->assertSame('family-uuid', $product['productFamilyId']);
+        $this->assertSame('XLR', $product['productFamilyName']);
     }
 
     public function testProvideRunsEnhancers(): void
@@ -163,7 +180,15 @@ class WebsiteProductReindexProviderTest extends TestCase
         $this->dimensionQuery->getResult()->willReturn(
             [
                 [
-                    'productId' => 1,
+                    'productId' => '1',
+                    'type' => ProductInterface::TYPE_PRODUCT,
+                    'parentId' => null,
+                    'code' => 'CODE-1',
+                    'status' => 'available',
+                    'productFamilyId' => null,
+                    'productFamilyName' => null,
+                    'detailsData' => [],
+                    'unlocalizedDetailsData' => [],
                     'authored' => null,
                     'changed' => new \DateTimeImmutable('2024-01-02'),
                     'title' => 'T',
@@ -211,7 +236,15 @@ class WebsiteProductReindexProviderTest extends TestCase
         $this->dimensionQuery->getResult()->willReturn(
             [
                 [
-                    'productId' => 99,
+                    'productId' => '99',
+                    'type' => ProductInterface::TYPE_PRODUCT,
+                    'parentId' => null,
+                    'code' => 'CODE-99',
+                    'status' => 'available',
+                    'productFamilyId' => null,
+                    'productFamilyName' => null,
+                    'detailsData' => [],
+                    'unlocalizedDetailsData' => [],
                     'authored' => new \DateTimeImmutable('2024-01-01'),
                     'changed' => new \DateTimeImmutable('2024-01-02'),
                     'title' => 'Match',
@@ -234,27 +267,32 @@ class WebsiteProductReindexProviderTest extends TestCase
         $this->assertSame(ProductInterface::RESOURCE_KEY . '__99__en', $results[0]['id']);
     }
 
-    public function testProvideWithBatchMissingDimensionContentIds(): void
+    public function testProvideWithoutAdditionalWebspacesKeepsTheMainOne(): void
     {
-        // Batch row without a dimensionContentId column makes array_column()
-        // return an empty list, exercising the early return in
-        // loadAdditionalWebspaces().
         $this->dimensionQuery->getResult()->willReturn(
             [
                 [
-                    'productId' => 7,
+                    'productId' => '7',
+                    'type' => ProductInterface::TYPE_PRODUCT,
+                    'parentId' => null,
+                    'code' => 'CODE-7',
+                    'status' => 'available',
+                    'productFamilyId' => null,
+                    'productFamilyName' => null,
+                    'detailsData' => [],
+                    'unlocalizedDetailsData' => [],
                     'authored' => new \DateTimeImmutable('2024-01-01'),
                     'changed' => new \DateTimeImmutable('2024-01-02'),
-                    'title' => 'NoDimension',
+                    'title' => 'Only main',
                     'locale' => 'en',
                     'mainWebspace' => 'main',
-                    'slug' => '/no-dimension',
+                    'dimensionContentId' => 11,
+                    'slug' => '/only-main',
                 ],
             ],
             [],
         );
-
-        $this->additionalQb->getQuery()->shouldNotBeCalled();
+        $this->additionalQuery->getResult()->willReturn([]);
 
         $provider = new WebsiteProductReindexProvider($this->entityManager->reveal());
 
@@ -262,5 +300,39 @@ class WebsiteProductReindexProviderTest extends TestCase
 
         $this->assertCount(1, $results);
         $this->assertSame(['main'], $results[0]['webspaces']);
+    }
+
+    public function testProvideTakesTheImageFromTheMergedDetails(): void
+    {
+        $this->dimensionQuery->getResult()->willReturn(
+            [
+                [
+                    'productId' => '8',
+                    'type' => ProductInterface::TYPE_PRODUCT,
+                    'parentId' => null,
+                    'code' => 'CODE-8',
+                    'status' => 'available',
+                    'productFamilyId' => null,
+                    'productFamilyName' => null,
+                    'detailsData' => [],
+                    'unlocalizedDetailsData' => ['image' => ['id' => 3]],
+                    'authored' => null,
+                    'changed' => new \DateTimeImmutable('2024-01-02'),
+                    'title' => 'With image',
+                    'locale' => 'en',
+                    'mainWebspace' => 'main',
+                    'dimensionContentId' => 12,
+                    'slug' => '/with-image',
+                ],
+            ],
+            [],
+        );
+        $this->additionalQuery->getResult()->willReturn([]);
+
+        $provider = new WebsiteProductReindexProvider($this->entityManager->reveal());
+
+        $results = \iterator_to_array($provider->provide(new ReindexConfig()));
+
+        $this->assertSame('3', $results[0]['mediaId']);
     }
 }

@@ -18,6 +18,9 @@ use CmsIg\Seal\Engine;
 use CmsIg\Seal\Schema\Field;
 use CmsIg\Seal\Schema\Index;
 use CmsIg\Seal\Schema\Schema;
+use CmsIg\Seal\Search\Condition;
+use CmsIg\Seal\Search\Facet;
+use CmsIg\Seal\Search\Search;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Product\Application\Search\ProductSearcher;
@@ -35,60 +38,89 @@ class ProductSearcherTest extends TestCase
 
     protected function setUp(): void
     {
-        // Mirrors the flags of config/schemas/products.php: `title` is neither filterable, sortable
-        // nor a facet, `changedAt` is the sortable field.
+        // Mirrors Sulu's website index plus config/schemas/website.php: `title` is neither
+        // filterable, sortable nor a facet, `product.changedAt` is the sortable field.
         $this->schema = new Schema([
             ProductIndex::NAME => new Index(ProductIndex::NAME, [
                 'id' => new Field\IdentifierField('id'),
-                'type' => new Field\TextField('type', searchable: false, filterable: true),
+                'resourceKey' => new Field\TextField('resourceKey', searchable: false, filterable: true),
                 'locale' => new Field\TextField('locale', searchable: false, filterable: true),
                 'webspaces' => new Field\TextField('webspaces', multiple: true, searchable: false, filterable: true),
                 'title' => new Field\TextField('title'),
                 'content' => new Field\TextField('content', multiple: true),
-                'status' => new Field\TextField('status', searchable: false, filterable: true, facet: true),
-                'changedAt' => new Field\DateTimeField('changedAt', sortable: true),
-                'attr_weight' => new Field\FloatField('attr_weight', multiple: true, filterable: true, facet: true),
+                ProductIndex::FIELD => new Field\ObjectField(ProductIndex::FIELD, [
+                    'status' => new Field\TextField('status', searchable: false, filterable: true, facet: true),
+                    'changedAt' => new Field\DateTimeField('changedAt', searchable: false, sortable: true),
+                    ProductIndex::TEXT_VALUES_FIELD => new Field\TextField(ProductIndex::TEXT_VALUES_FIELD, multiple: true, searchable: false, filterable: true, facet: true),
+                    ProductIndex::NUMERIC_VALUES_FIELD => new Field\ObjectField(ProductIndex::NUMERIC_VALUES_FIELD, [
+                        'weight' => new Field\FloatField('weight', multiple: true, searchable: false, filterable: true, facet: true),
+                    ]),
+                ]),
             ]),
         ]);
         $this->engine = new Engine(new MemoryAdapter(), $this->schema);
         $this->engine->createIndex(ProductIndex::NAME);
 
         $documents = [
-            ['id' => 'p1', 'type' => ProductInterface::TYPE_PRODUCT, 'locale' => 'en', 'webspaces' => ['ws'], 'title' => 'Plain cable', 'content' => [], 'status' => 'available', 'changedAt' => '2024-01-01 00:00:00', 'attr_weight' => [1.0]],
-            ['id' => 'p2', 'type' => ProductInterface::TYPE_PRODUCT_WITH_VARIANTS, 'locale' => 'en', 'webspaces' => ['ws'], 'title' => 'Parent cable', 'content' => [], 'status' => 'available', 'changedAt' => '2024-01-04 00:00:00', 'attr_weight' => [2.0, 3.0]],
-            ['id' => 'v1', 'type' => ProductInterface::TYPE_VARIANT, 'locale' => 'en', 'webspaces' => ['ws'], 'title' => 'Variant cable red', 'content' => [], 'status' => 'available', 'changedAt' => '2024-01-02 00:00:00', 'attr_weight' => [2.0]],
-            ['id' => 'v2', 'type' => ProductInterface::TYPE_VARIANT, 'locale' => 'en', 'webspaces' => ['ws'], 'title' => 'Variant cable blue', 'content' => [], 'status' => 'discontinued', 'changedAt' => '2024-01-03 00:00:00', 'attr_weight' => [3.0]],
-            ['id' => 'de', 'type' => ProductInterface::TYPE_PRODUCT, 'locale' => 'de', 'webspaces' => ['ws'], 'title' => 'Kabel', 'content' => [], 'status' => 'available', 'changedAt' => '2024-01-01 00:00:00', 'attr_weight' => [1.0]],
-            ['id' => 'other', 'type' => ProductInterface::TYPE_PRODUCT, 'locale' => 'en', 'webspaces' => ['other'], 'title' => 'Other cable', 'content' => [], 'status' => 'available', 'changedAt' => '2024-01-01 00:00:00', 'attr_weight' => [1.0]],
+            $this->document('p1', 'Plain cable', 'available', '2024-01-01', ['colour:red'], [1.0]),
+            $this->document('v1', 'Variant cable red', 'available', '2024-01-02', ['colour:red'], [2.0]),
+            $this->document('v2', 'Variant cable blue', 'discontinued', '2024-01-03', ['colour:blue'], [3.0]),
+            $this->document('de', 'Kabel', 'available', '2024-01-01', [], [1.0], locale: 'de'),
+            $this->document('other', 'Other cable', 'available', '2024-01-01', [], [1.0], webspace: 'other'),
+            // A page of the same webspace shares the index and must stay out of a product search.
+            [
+                'id' => 'page',
+                'resourceKey' => 'pages',
+                'locale' => 'en',
+                'webspaces' => ['ws'],
+                'title' => 'Cable page',
+                'content' => [],
+            ],
         ];
         foreach ($documents as $document) {
             $this->engine->saveDocument(ProductIndex::NAME, $document);
         }
     }
 
-    public function testDefaultHitsAreVariantsAndVariantLessProductsInLocaleAndWebspace(): void
+    public function testHitsAreTheProductsOfTheLocaleAndWebspace(): void
     {
         $result = $this->searcher()->search(new ProductSearchQuery('en', 'ws', 'cable'));
 
         $this->assertEqualsCanonicalizing(['p1', 'v1', 'v2'], $this->ids($result));
     }
 
-    public function testProductsPolicyExcludesVariants(): void
+    /**
+     * A product field is addressed by its path. An option or text attribute is filtered through
+     * the shared text values field, so its attribute key is part of the value.
+     */
+    public function testEqualsInAndRangeFiltersAreBuiltForTheProductPaths(): void
     {
-        $result = $this->searcher()->search(new ProductSearchQuery('en', 'ws', hits: ProductSearchQuery::HITS_PRODUCTS));
+        $search = $this->recordedSearch(new ProductSearchQuery(
+            'en',
+            'ws',
+            equals: [
+                'product.status' => 'available',
+                ProductIndex::textValuesPath() => [ProductIndex::textValue('colour', 'red'), ProductIndex::textValue('colour', 'blue')],
+            ],
+            ranges: [ProductIndex::numericValuePath('weight') => ['min' => 2.0, 'max' => 3.0]],
+        ));
 
-        $this->assertEqualsCanonicalizing(['p1', 'p2'], $this->ids($result));
-    }
-
-    public function testEqualsAndRangeFilters(): void
-    {
-        $searcher = $this->searcher();
-
-        $result = $searcher->search(new ProductSearchQuery('en', 'ws', equals: ['status' => 'available'], ranges: ['attr_weight' => ['min' => 2.0]]));
-        $this->assertSame(['v1'], $this->ids($result));
-
-        $result = $searcher->search(new ProductSearchQuery('en', 'ws', equals: ['status' => ['available', 'discontinued']], ranges: ['attr_weight' => ['min' => 2.0, 'max' => 2.5]]));
-        $this->assertSame(['v1'], $this->ids($result));
+        $this->assertEquals(
+            new Condition\EqualCondition('product.status', 'available'),
+            $this->filter($search, Condition\EqualCondition::class, 'product.status'),
+        );
+        $this->assertEquals(
+            new Condition\InCondition(ProductIndex::textValuesPath(), ['colour:red', 'colour:blue']),
+            $this->filter($search, Condition\InCondition::class, ProductIndex::textValuesPath()),
+        );
+        $this->assertEquals(
+            new Condition\GreaterThanEqualCondition(ProductIndex::numericValuePath('weight'), 2.0),
+            $this->filter($search, Condition\GreaterThanEqualCondition::class, ProductIndex::numericValuePath('weight')),
+        );
+        $this->assertEquals(
+            new Condition\LessThanEqualCondition(ProductIndex::numericValuePath('weight'), 3.0),
+            $this->filter($search, Condition\LessThanEqualCondition::class, ProductIndex::numericValuePath('weight')),
+        );
     }
 
     /**
@@ -97,54 +129,52 @@ class ProductSearcherTest extends TestCase
      */
     public function testEmptyEqualsValuesAreIgnored(): void
     {
-        $searcher = $this->searcher();
+        foreach (['', [], ['']] as $value) {
+            $search = $this->recordedSearch(new ProductSearchQuery('en', 'ws', equals: ['product.status' => $value]));
 
-        $result = $searcher->search(new ProductSearchQuery('en', 'ws', equals: ['status' => '']));
-        $this->assertEqualsCanonicalizing(['p1', 'v1', 'v2'], $this->ids($result));
+            $this->assertNull($this->filter($search, Condition\EqualCondition::class, 'product.status'));
+            $this->assertNull($this->filter($search, Condition\InCondition::class, 'product.status'));
+        }
 
-        $result = $searcher->search(new ProductSearchQuery('en', 'ws', equals: ['status' => []]));
-        $this->assertEqualsCanonicalizing(['p1', 'v1', 'v2'], $this->ids($result));
-
-        $result = $searcher->search(new ProductSearchQuery('en', 'ws', equals: ['status' => ['', 'available']]));
-        $this->assertEqualsCanonicalizing(['p1', 'v1'], $this->ids($result));
+        $search = $this->recordedSearch(new ProductSearchQuery('en', 'ws', equals: ['product.status' => ['', 'available']]));
+        $this->assertEquals(
+            new Condition\InCondition('product.status', ['available']),
+            $this->filter($search, Condition\InCondition::class, 'product.status'),
+        );
     }
 
-    public function testSortingAndPaging(): void
+    public function testPaging(): void
     {
         $searcher = $this->searcher();
 
-        $result = $searcher->search(new ProductSearchQuery('en', 'ws', limit: 2, sortBy: ['changedAt' => 'asc']));
-        $this->assertSame(['p1', 'v1'], $this->ids($result));
-
-        $result = $searcher->search(new ProductSearchQuery('en', 'ws', page: 2, limit: 2, sortBy: ['changedAt' => 'asc']));
-        $this->assertSame(['v2'], $this->ids($result));
+        $this->assertCount(2, $this->ids($searcher->search(new ProductSearchQuery('en', 'ws', limit: 2))));
+        $this->assertCount(1, $this->ids($searcher->search(new ProductSearchQuery('en', 'ws', page: 2, limit: 2))));
 
         // The memory adapter counts the returned page, so only an unpaged query shows the match count.
-        $result = $searcher->search(new ProductSearchQuery('en', 'ws', limit: 100));
-        $this->assertSame(3, $result->total());
+        $this->assertSame(3, $searcher->search(new ProductSearchQuery('en', 'ws', limit: 100))->total());
     }
 
-    public function testFacets(): void
+    public function testSortingIsBuiltForTheProductPath(): void
     {
-        $result = $this->searcher()->search(new ProductSearchQuery('en', 'ws', countFacets: ['status'], minMaxFacets: ['attr_weight']));
+        $search = $this->recordedSearch(new ProductSearchQuery('en', 'ws', sortBy: ['product.changedAt' => 'desc']));
 
-        $facets = $result->facets();
-        $status = $facets['status'];
-        $this->assertIsArray($status);
-        $this->assertSame(['available' => 2, 'discontinued' => 1], $status['count']);
-
-        // The memory adapter reduces min/max over the whole field value, so a multiple field keeps its list.
-        $weight = $facets['attr_weight'];
-        $this->assertIsArray($weight);
-        $this->assertSame([1.0], $weight['min']);
-        $this->assertSame([3.0], $weight['max']);
+        $this->assertSame(['product.changedAt' => 'desc'], $search->sortBys);
     }
 
-    public function testAllPolicyReturnsProductsAndVariants(): void
+    public function testFacetsAreBuiltForTheProductPaths(): void
     {
-        $result = $this->searcher()->search(new ProductSearchQuery('en', 'ws', hits: ProductSearchQuery::HITS_ALL));
+        $search = $this->recordedSearch(new ProductSearchQuery(
+            'en',
+            'ws',
+            countFacets: ['product.status', ProductIndex::textValuesPath()],
+            minMaxFacets: [ProductIndex::numericValuePath('weight')],
+        ));
 
-        $this->assertEqualsCanonicalizing(['p1', 'p2', 'v1', 'v2'], $this->ids($result));
+        $this->assertEquals([
+            new Facet\CountFacet('product.status'),
+            new Facet\CountFacet(ProductIndex::textValuesPath()),
+            new Facet\MinMaxFacet(ProductIndex::numericValuePath('weight')),
+        ], $search->facets);
     }
 
     public function testTermIsHighlighted(): void
@@ -156,13 +186,6 @@ class ProductSearcherTest extends TestCase
             $this->assertIsArray($formatted);
             $this->assertSame('<mark>Plain</mark> cable', $formatted['title']);
         }
-    }
-
-    public function testUnknownHitPolicyIsRejected(): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-
-        new ProductSearchQuery('en', 'ws', hits: 'unknown');
     }
 
     public function testNonPositivePagingIsRejected(): void
@@ -178,33 +201,84 @@ class ProductSearcherTest extends TestCase
      */
     public function testFilterAndRangeOnANonFilterableFieldAreIgnored(): void
     {
-        $searcher = $this->searcher();
+        $search = $this->recordedSearch(new ProductSearchQuery(
+            'en',
+            'ws',
+            equals: ['title' => 'nothing matches this'],
+            ranges: ['product.attributes_numeric_values.unknown' => ['min' => 1.0]],
+        ));
 
-        $result = $searcher->search(new ProductSearchQuery('en', 'ws', equals: ['title' => 'nothing matches this']));
-        $this->assertEqualsCanonicalizing(['p1', 'v1', 'v2'], $this->ids($result));
-
-        $result = $searcher->search(new ProductSearchQuery('en', 'ws', ranges: ['title' => ['min' => 1.0, 'max' => 2.0]]));
-        $this->assertEqualsCanonicalizing(['p1', 'v1', 'v2'], $this->ids($result));
+        // Only resource key, locale and webspace remain, the filters the searcher always applies.
+        $this->assertCount(3, $search->filters);
     }
 
     public function testSortOnANonSortableFieldIsIgnored(): void
     {
-        $result = $this->searcher()->search(new ProductSearchQuery('en', 'ws', sortBy: ['title' => 'asc']));
+        $search = $this->recordedSearch(new ProductSearchQuery('en', 'ws', sortBy: ['title' => 'asc']));
 
-        // Sorted by title the order would be p1, v2, v1.
-        $this->assertSame(['p1', 'v1', 'v2'], $this->ids($result));
+        $this->assertSame([], $search->sortBys);
     }
 
     public function testFacetOnAFieldWithoutTheFacetFlagIsIgnored(): void
     {
-        $result = $this->searcher()->search(new ProductSearchQuery('en', 'ws', countFacets: ['title'], minMaxFacets: ['title']));
+        $search = $this->recordedSearch(new ProductSearchQuery('en', 'ws', countFacets: ['title'], minMaxFacets: ['title']));
 
-        $this->assertSame([], $result->facets());
+        $this->assertSame([], $search->facets);
     }
 
     private function searcher(): ProductSearcher
     {
         return new ProductSearcher($this->engine, $this->schema);
+    }
+
+    private function recordedSearch(ProductSearchQuery $query): Search
+    {
+        $adapter = new RecordingAdapter();
+        (new ProductSearcher(new Engine($adapter, $this->schema), $this->schema))->search($query);
+
+        $search = $adapter->search;
+        $this->assertInstanceOf(Search::class, $search);
+
+        return $search;
+    }
+
+    /**
+     * @param class-string $condition
+     */
+    private function filter(Search $search, string $condition, string $field): ?object
+    {
+        foreach ($search->filters as $filter) {
+            /* @phpstan-ignore-next-line property.notFound */
+            if ($filter::class === $condition && $filter->field === $field) {
+                return $filter;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param string[] $textValues
+     * @param float[] $weights
+     *
+     * @return array<string, mixed>
+     */
+    private function document(string $id, string $title, string $status, string $changedAt, array $textValues, array $weights, string $locale = 'en', string $webspace = 'ws'): array
+    {
+        return [
+            'id' => $id,
+            'resourceKey' => ProductInterface::RESOURCE_KEY,
+            'locale' => $locale,
+            'webspaces' => [$webspace],
+            'title' => $title,
+            'content' => [],
+            ProductIndex::FIELD => [
+                'status' => $status,
+                'changedAt' => $changedAt . ' 00:00:00',
+                ProductIndex::TEXT_VALUES_FIELD => $textValues,
+                ProductIndex::NUMERIC_VALUES_FIELD => ['weight' => $weights],
+            ],
+        ];
     }
 
     /**

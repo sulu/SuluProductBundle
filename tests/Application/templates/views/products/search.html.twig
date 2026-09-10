@@ -6,7 +6,7 @@
     <p>page={{ page }}</p>
     <p>limit={{ limit }}</p>
     <p>variantQueryParameter={{ variantQueryParameter }}</p>
-    <p>statusFacet={{ facets.status.count|default({})|json_encode }}</p>
+    <p>facets={{ facets|json_encode }}</p>
     <ul>
     {% for hit in hits %}
         <li>{{ hit.title }}</li>

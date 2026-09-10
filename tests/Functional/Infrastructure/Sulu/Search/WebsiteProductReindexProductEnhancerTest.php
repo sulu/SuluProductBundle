@@ -24,10 +24,10 @@ use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Search\ProductIndex;
-use Sulu\Product\Infrastructure\Sulu\Search\Schema\AttributeIndexFieldProvider;
+use Sulu\Product\Infrastructure\Sulu\Search\Schema\NumericAttributeLister;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 
-class CatalogueProductReindexAttributeEnhancerTest extends SuluTestCase
+class WebsiteProductReindexProductEnhancerTest extends SuluTestCase
 {
     private KernelBrowser $client;
 
@@ -39,7 +39,7 @@ class CatalogueProductReindexAttributeEnhancerTest extends SuluTestCase
         );
     }
 
-    public function testAttributeValuesMergeAcrossParentAndVariant(): void
+    public function testAVariantInheritsTheSharedValuesOfItsParent(): void
     {
         self::purgeDatabase();
 
@@ -66,37 +66,31 @@ class CatalogueProductReindexAttributeEnhancerTest extends SuluTestCase
         /** @var EngineInterface $engine */
         $engine = self::getContainer()->get('cmsig_seal.engine.default');
 
-        // The parent shows its own values plus the variant-specific values of all its variants.
-        $parent = $engine->getDocument(ProductIndex::NAME, ProductIndex::documentId($parentId, 'en'));
-        $this->assertSame([2.5], $parent['attr_weight']);
-        $this->assertIsArray($parent['opt_colour']);
-        $this->assertEqualsCanonicalizing(['red', 'blue'], $parent['opt_colour']);
-        $this->assertIsArray($parent['content']);
-        $this->assertContains('Gold plated', $parent['content']);
-        $this->assertContains('Red', $parent['content']);
-        $this->assertContains('Blue', $parent['content']);
-        $this->assertIsArray($parent['attributes']);
-        $this->assertIsArray($parent['attributes']['weight']);
-        $this->assertSame('Weight', $parent['attributes']['weight']['label']);
-        $this->assertSame(2.5, $parent['attributes']['weight']['value']);
-        $this->assertIsArray($parent['attributes']['note']);
-        $this->assertSame('Gold plated', $parent['attributes']['note']['value']);
-
         // A variant shows its own axis value plus the parent's shared values.
         $red = $engine->getDocument(ProductIndex::NAME, ProductIndex::documentId($redId, 'en'));
-        $this->assertSame([2.5], $red['attr_weight']);
-        $this->assertSame(['red'], $red['opt_colour']);
+        $redProduct = $red['product'];
+        $this->assertIsArray($redProduct);
+        $this->assertSame(['weight' => [2.5]], $redProduct['attributes_numeric_values']);
+        $this->assertIsArray($redProduct['attributes_text_values']);
+        $this->assertEqualsCanonicalizing(['colour:red', 'note:Gold plated'], $redProduct['attributes_text_values']);
         $this->assertIsArray($red['content']);
         $this->assertContains('Red', $red['content']);
         $this->assertNotContains('Blue', $red['content']);
         $this->assertContains('Gold plated', $red['content']);
-        $this->assertIsArray($red['attributes']);
-        $this->assertIsArray($red['attributes']['colour']);
-        $this->assertSame('Red', $red['attributes']['colour']['value']);
-        $this->assertSame('Colour', $red['attributes']['colour']['label']);
+        $this->assertIsArray($redProduct['attributes']);
+        $this->assertIsArray($redProduct['attributes']['colour']);
+        $this->assertSame('Red', $redProduct['attributes']['colour']['value']);
+        $this->assertSame('Colour', $redProduct['attributes']['colour']['label']);
+        $this->assertIsArray($redProduct['attributes']['weight']);
+        $this->assertSame('Weight', $redProduct['attributes']['weight']['label']);
+        $this->assertSame(2.5, $redProduct['attributes']['weight']['value']);
 
         $blue = $engine->getDocument(ProductIndex::NAME, ProductIndex::documentId($blueId, 'en'));
-        $this->assertSame(['blue'], $blue['opt_colour']);
+        $blueProduct = $blue['product'];
+        $this->assertIsArray($blueProduct);
+        $this->assertIsArray($blueProduct['attributes_text_values']);
+        $this->assertContains('colour:blue', $blueProduct['attributes_text_values']);
+        $this->assertNotContains('colour:red', $blueProduct['attributes_text_values']);
     }
 
     public function testProductWithoutVariantsShowsOnlyItsOwnValues(): void
@@ -122,27 +116,32 @@ class CatalogueProductReindexAttributeEnhancerTest extends SuluTestCase
         $engine = self::getContainer()->get('cmsig_seal.engine.default');
 
         $first = $engine->getDocument(ProductIndex::NAME, ProductIndex::documentId($firstId, 'en'));
-        $this->assertSame([1.5], $first['attr_weight']);
+        $firstProduct = $first['product'];
+        $this->assertIsArray($firstProduct);
+        $this->assertSame(['weight' => [1.5]], $firstProduct['attributes_numeric_values']);
+        $this->assertSame(['note:First note'], $firstProduct['attributes_text_values']);
         $this->assertIsArray($first['content']);
         $this->assertContains('First note', $first['content']);
 
         $second = $engine->getDocument(ProductIndex::NAME, ProductIndex::documentId($secondId, 'en'));
-        $this->assertSame([3.0], $second['attr_weight']);
-        $this->assertIsArray($second['attributes']);
-        $this->assertArrayNotHasKey('note', $second['attributes']);
+        $secondProduct = $second['product'];
+        $this->assertIsArray($secondProduct);
+        $this->assertSame(['weight' => [3.0]], $secondProduct['attributes_numeric_values']);
+        $this->assertIsArray($secondProduct['attributes']);
+        $this->assertArrayNotHasKey('note', $secondProduct['attributes']);
         $this->assertIsArray($second['content']);
         $this->assertNotContains('First note', $second['content']);
     }
 
     /**
-     * The attribute fields are appended to the index schema from the attribute table, so the
-     * attributes must exist and the cached field list must be dropped before the index is created.
+     * The numeric fields are appended to the index schema from the attribute table, so the
+     * attributes must exist and the cached list must be dropped before the index is created.
      */
     private function clearAttributeIndexFields(): void
     {
-        /** @var AttributeIndexFieldProvider $fieldProvider */
-        $fieldProvider = self::getContainer()->get('sulu_product.attribute_index_field_provider');
-        $fieldProvider->clear();
+        /** @var NumericAttributeLister $lister */
+        $lister = self::getContainer()->get('sulu_product.numeric_attribute_lister');
+        $lister->clear();
     }
 
     /**

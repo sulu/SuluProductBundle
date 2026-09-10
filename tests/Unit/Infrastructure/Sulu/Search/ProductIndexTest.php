@@ -25,14 +25,25 @@ class ProductIndexTest extends TestCase
         $this->assertSame('products__abc__de', ProductIndex::documentId('abc', 'de'));
     }
 
-    public function testAttributeFieldSanitisesKey(): void
+    public function testTextValuesPath(): void
     {
-        $this->assertSame('attr_cable_length', ProductIndex::attributeField('cable_length'));
-        $this->assertSame('attr_cable_length_mm', ProductIndex::attributeField('cable-length.mm'));
+        $this->assertSame('product.attributes_text_values', ProductIndex::textValuesPath());
     }
 
-    public function testOptionField(): void
+    public function testTextValueJoinsKeyAndValue(): void
     {
-        $this->assertSame('opt_colour', ProductIndex::optionField('colour'));
+        $this->assertSame('colour:black', ProductIndex::textValue('colour', 'black'));
+        $this->assertSame('cable_length:5 m', ProductIndex::textValue('cable-length', '5 m'));
+    }
+
+    public function testNumericFieldSanitisesKey(): void
+    {
+        $this->assertSame('cable_length', ProductIndex::numericField('cable_length'));
+        $this->assertSame('cable_length_mm', ProductIndex::numericField('cable-length.mm'));
+    }
+
+    public function testNumericValuePath(): void
+    {
+        $this->assertSame('product.attributes_numeric_values.weight', ProductIndex::numericValuePath('weight'));
     }
 }

@@ -142,15 +142,13 @@ use Sulu\Product\Infrastructure\Sulu\Reference\ProductReferenceRefresher;
 use Sulu\Product\Infrastructure\Sulu\Route\ProductRouteDefaultsProvider;
 use Sulu\Product\Infrastructure\Sulu\Search\AdminProductIndexListener;
 use Sulu\Product\Infrastructure\Sulu\Search\AdminProductReindexProvider;
-use Sulu\Product\Infrastructure\Sulu\Search\CatalogueProductIndexListener;
-use Sulu\Product\Infrastructure\Sulu\Search\CatalogueProductReindexProvider;
-use Sulu\Product\Infrastructure\Sulu\Search\Schema\AttributeIndexFieldCacheInvalidator;
-use Sulu\Product\Infrastructure\Sulu\Search\Schema\AttributeIndexFieldProvider;
+use Sulu\Product\Infrastructure\Sulu\Search\Schema\NumericAttributeCacheInvalidator;
+use Sulu\Product\Infrastructure\Sulu\Search\Schema\NumericAttributeLister;
 use Sulu\Product\Infrastructure\Sulu\Search\Schema\ProductSchemaLoader;
 use Sulu\Product\Infrastructure\Sulu\Search\Visitor\AdminProductReindexProviderEnhancerInterface;
-use Sulu\Product\Infrastructure\Sulu\Search\Visitor\CatalogueProductReindexAttributeEnhancer;
 use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductReindexContentEnhancer;
 use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductReindexExcerptEnhancer;
+use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductReindexProductEnhancer;
 use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductReindexProviderEnhancerInterface;
 use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductReindexTaxonomyEnhancer;
 use Sulu\Product\Infrastructure\Sulu\Search\WebsiteProductIndexListener;
@@ -1233,24 +1231,20 @@ final class SuluProductBundle extends AbstractBundle
         $builder->registerForAutoconfiguration(WebsiteProductReindexProviderEnhancerInterface::class)
             ->addTag('sulu_product.website_product_reindex_provider_enhancer');
 
-        // The website enhancers write the same document keys, so they serve the catalogue index too.
         $services->set('sulu_product.website_product_reindex_content_enhancer')
             ->class(WebsiteProductReindexContentEnhancer::class)
             ->args([
                 new Reference('sulu_admin.form_metadata_provider'),
             ])
-            ->tag('sulu_product.website_product_reindex_provider_enhancer')
-            ->tag('sulu_product.catalogue_product_reindex_provider_enhancer');
+            ->tag('sulu_product.website_product_reindex_provider_enhancer');
 
         $services->set('sulu_product.website_product_reindex_excerpt_enhancer')
             ->class(WebsiteProductReindexExcerptEnhancer::class)
-            ->tag('sulu_product.website_product_reindex_provider_enhancer')
-            ->tag('sulu_product.catalogue_product_reindex_provider_enhancer');
+            ->tag('sulu_product.website_product_reindex_provider_enhancer');
 
         $services->set('sulu_product.website_product_reindex_taxonomy_enhancer')
             ->class(WebsiteProductReindexTaxonomyEnhancer::class)
-            ->tag('sulu_product.website_product_reindex_provider_enhancer')
-            ->tag('sulu_product.catalogue_product_reindex_provider_enhancer');
+            ->tag('sulu_product.website_product_reindex_provider_enhancer');
 
         $services->set('sulu_product.website_product_reindex_provider')
             ->class(WebsiteProductReindexProvider::class)
@@ -1260,30 +1254,13 @@ final class SuluProductBundle extends AbstractBundle
             ])
             ->tag('cmsig_seal.reindex_provider');
 
-        // Runs after the content enhancer, which resets `content` the option labels are appended to.
-        $services->set('sulu_product.catalogue_product_reindex_attribute_enhancer')
-            ->class(CatalogueProductReindexAttributeEnhancer::class)
+        // Runs after the content enhancer, which resets the `content` its text is appended to.
+        $services->set('sulu_product.website_product_reindex_product_enhancer')
+            ->class(WebsiteProductReindexProductEnhancer::class)
             ->args([
                 new Reference('doctrine.orm.entity_manager'),
             ])
-            ->tag('sulu_product.catalogue_product_reindex_provider_enhancer', ['priority' => -10]);
-
-        $services->set('sulu_product.catalogue_product_index_listener')
-            ->class(CatalogueProductIndexListener::class)
-            ->args([
-                new Reference('sulu_message_bus'),
-            ])
-            ->tag('kernel.event_listener', ['event' => ProductWorkflowTransitionAppliedEvent::class, 'method' => 'onProductChanged'])
-            ->tag('kernel.event_listener', ['event' => ProductRemovedEvent::class, 'method' => 'onProductChanged'])
-            ->tag('kernel.event_listener', ['event' => ProductTranslationRemovedEvent::class, 'method' => 'onProductChanged']);
-
-        $services->set('sulu_product.catalogue_product_reindex_provider')
-            ->class(CatalogueProductReindexProvider::class)
-            ->args([
-                new Reference('doctrine.orm.entity_manager'),
-                tagged_iterator('sulu_product.catalogue_product_reindex_provider_enhancer'),
-            ])
-            ->tag('cmsig_seal.reindex_provider');
+            ->tag('sulu_product.website_product_reindex_provider_enhancer', ['priority' => -10]);
 
         $services->set('sulu_product.product_searcher')
             ->class(ProductSearcher::class)
@@ -1305,8 +1282,8 @@ final class SuluProductBundle extends AbstractBundle
             ])
             ->tag('sulu.context', ['context' => 'website']);
 
-        $services->set('sulu_product.attribute_index_field_provider')
-            ->class(AttributeIndexFieldProvider::class)
+        $services->set('sulu_product.numeric_attribute_lister')
+            ->class(NumericAttributeLister::class)
             ->args([
                 new Reference('doctrine.orm.entity_manager'),
                 new Reference('cache.app'),
@@ -1317,13 +1294,13 @@ final class SuluProductBundle extends AbstractBundle
             ->decorate('cmsig_seal.schema_loader.default')
             ->args([
                 new Reference('.inner'),
-                new Reference('sulu_product.attribute_index_field_provider'),
+                new Reference('sulu_product.numeric_attribute_lister'),
             ]);
 
-        $services->set('sulu_product.attribute_index_field_cache_invalidator')
-            ->class(AttributeIndexFieldCacheInvalidator::class)
+        $services->set('sulu_product.numeric_attribute_cache_invalidator')
+            ->class(NumericAttributeCacheInvalidator::class)
             ->args([
-                new Reference('sulu_product.attribute_index_field_provider'),
+                new Reference('sulu_product.numeric_attribute_lister'),
             ])
             ->tag('doctrine.orm.entity_listener', ['entity' => Attribute::class, 'event' => 'postPersist'])
             ->tag('doctrine.orm.entity_listener', ['entity' => Attribute::class, 'event' => 'postUpdate'])

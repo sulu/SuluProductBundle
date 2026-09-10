@@ -22,35 +22,40 @@ use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Search\ProductIndex;
-use Sulu\Product\Infrastructure\Sulu\Search\Schema\AttributeIndexFieldProvider;
+use Sulu\Product\Infrastructure\Sulu\Search\Schema\NumericAttributeLister;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\Cache\CacheItem;
 
 class ProductSchemaTest extends SuluTestCase
 {
-    public function testProductsIndexHasStaticFields(): void
+    public function testWebsiteIndexCarriesTheProductFieldNextToSulusOwnFields(): void
     {
         /** @var Schema $schema */
         $schema = self::getContainer()->get('cmsig_seal.schema.default');
 
         $this->assertArrayHasKey(ProductIndex::NAME, $schema->indexes);
-        $fields = $schema->indexes[ProductIndex::NAME]->fields;
+        $index = $schema->indexes[ProductIndex::NAME];
 
-        foreach (['id', 'resourceId', 'type', 'parentId', 'code', 'locale', 'webspaces', 'title', 'url', 'content', 'mediaId', 'productFamilyId', 'productFamilyName', 'status', 'authoredAt', 'changedAt', 'attributes', 'metadata'] as $name) {
-            $this->assertArrayHasKey($name, $fields, $name);
+        // Sulu owns the index, so the fields a product document shares with a page come from it.
+        foreach (['id', 'resourceKey', 'resourceId', 'locale', 'webspaces', 'title', 'url', 'content', 'mediaId', 'authoredAt', 'metadata'] as $name) {
+            $this->assertArrayHasKey($name, $index->fields, $name);
         }
 
-        $this->assertInstanceOf(Field\IdentifierField::class, $fields['id']);
-        $this->assertTrue($fields['type']->filterable);
-        $this->assertTrue($fields['parentId']->filterable);
-        $this->assertTrue($fields['code']->searchable);
-        $this->assertTrue($fields['code']->filterable);
-        $this->assertTrue($fields['productFamilyId']->facet);
-        $this->assertTrue($fields['status']->facet);
-        $this->assertTrue($fields['content']->multiple);
+        $product = $index->fields[ProductIndex::FIELD];
+        $this->assertInstanceOf(Field\ObjectField::class, $product);
+        foreach (['code', 'status', 'productFamilyId', 'productFamilyName', ProductIndex::TEXT_VALUES_FIELD, ProductIndex::NUMERIC_VALUES_FIELD, 'attributes'] as $name) {
+            $this->assertArrayHasKey($name, $product->fields, $name);
+        }
+
+        $this->assertContains('product.code', $index->filterableFields);
+        $this->assertContains('product.status', $index->facetFields);
+        $this->assertContains('product.productFamilyId', $index->facetFields);
+        $this->assertContains(ProductIndex::textValuesPath(), $index->filterableFields);
+        $this->assertContains(ProductIndex::textValuesPath(), $index->facetFields);
+        $this->assertTrue($product->fields[ProductIndex::TEXT_VALUES_FIELD]->multiple);
     }
 
-    public function testNumberAndOptionsAttributesBecomeIndexFields(): void
+    public function testOnlyNumberAndDateAttributesBecomeIndexFields(): void
     {
         self::purgeDatabase();
         $container = self::getContainer();
@@ -64,7 +69,7 @@ class ProductSchemaTest extends SuluTestCase
 
         $group = $groupRepository->create();
         $groupRepository->save($group);
-        foreach ([['weight', AttributeInterface::TYPE_NUMBER], ['colour', AttributeInterface::TYPE_OPTIONS], ['note', AttributeInterface::TYPE_TEXT]] as [$key, $type]) {
+        foreach ([['weight', AttributeInterface::TYPE_NUMBER], ['delivered', AttributeInterface::TYPE_DATE], ['colour', AttributeInterface::TYPE_OPTIONS], ['note', AttributeInterface::TYPE_TEXT]] as [$key, $type]) {
             $attribute = $attributeRepository->create($group);
             $attribute->setKey($key);
             $attribute->setType($type);
@@ -72,23 +77,25 @@ class ProductSchemaTest extends SuluTestCase
         }
         $entityManager->flush();
 
-        /** @var AttributeIndexFieldProvider $fieldProvider */
-        $fieldProvider = $container->get('sulu_product.attribute_index_field_provider');
-        $fieldProvider->clear();
+        /** @var NumericAttributeLister $lister */
+        $lister = $container->get('sulu_product.numeric_attribute_lister');
+        $lister->clear();
 
         /** @var LoaderInterface $loader */
         $loader = $container->get('sulu_product.product_schema_loader');
-        $fields = $loader->load()->indexes[ProductIndex::NAME]->fields;
+        $index = $loader->load()->indexes[ProductIndex::NAME];
+        $fields = $this->numericFields($index->fields);
 
-        $this->assertInstanceOf(Field\FloatField::class, $fields['attr_weight']);
-        $this->assertTrue($fields['attr_weight']->filterable);
-        $this->assertInstanceOf(Field\TextField::class, $fields['opt_colour']);
-        $this->assertTrue($fields['opt_colour']->facet);
-        $this->assertArrayNotHasKey('attr_note', $fields);
-        $this->assertArrayNotHasKey('opt_note', $fields);
+        $this->assertInstanceOf(Field\FloatField::class, $fields['weight']);
+        $this->assertTrue($fields['weight']->filterable);
+        $this->assertInstanceOf(Field\FloatField::class, $fields['delivered']);
+        $this->assertArrayNotHasKey('colour', $fields, 'An options attribute is filtered through the text values.');
+        $this->assertArrayNotHasKey('note', $fields);
+        $this->assertContains(ProductIndex::numericValuePath('weight'), $index->filterableFields);
+        $this->assertContains(ProductIndex::numericValuePath('weight'), $index->facetFields);
     }
 
-    public function testAttributeIndexFieldCacheIsInvalidatedAutomaticallyByTheDoctrineListener(): void
+    public function testNumericAttributeCacheIsInvalidatedAutomaticallyByTheDoctrineListener(): void
     {
         self::purgeDatabase();
         $container = self::getContainer();
@@ -99,17 +106,17 @@ class ProductSchemaTest extends SuluTestCase
         $attributeRepository = $container->get(AttributeRepositoryInterface::class);
         /** @var EntityManagerInterface $entityManager */
         $entityManager = $container->get('doctrine.orm.entity_manager');
-        /** @var AttributeIndexFieldProvider $fieldProvider */
-        $fieldProvider = $container->get('sulu_product.attribute_index_field_provider');
+        /** @var NumericAttributeLister $lister */
+        $lister = $container->get('sulu_product.numeric_attribute_lister');
         /** @var LoaderInterface $loader */
         $loader = $container->get('sulu_product.product_schema_loader');
 
         // Warm the cache with the database in its just-purged, attribute-free state. No test
         // below calls clear() itself; every field-list change must reach the schema through the
         // doctrine.orm.entity_listener wiring alone.
-        $fieldProvider->clear();
-        $fields = $loader->load()->indexes[ProductIndex::NAME]->fields;
-        $this->assertArrayNotHasKey('attr_weight', $fields);
+        $lister->clear();
+        $fields = $this->numericFields($loader->load()->indexes[ProductIndex::NAME]->fields);
+        $this->assertArrayNotHasKey('weight', $fields);
 
         $group = $groupRepository->create();
         $groupRepository->save($group);
@@ -119,23 +126,38 @@ class ProductSchemaTest extends SuluTestCase
         $attributeRepository->save($attribute);
         $entityManager->flush();
 
-        $fields = $loader->load()->indexes[ProductIndex::NAME]->fields;
-        $this->assertInstanceOf(Field\FloatField::class, $fields['attr_weight'], 'postPersist should have invalidated the cache');
-        $this->assertTrue($fields['attr_weight']->filterable);
+        $fields = $this->numericFields($loader->load()->indexes[ProductIndex::NAME]->fields);
+        $this->assertInstanceOf(Field\FloatField::class, $fields['weight'], 'postPersist should have invalidated the cache');
+        $this->assertTrue($fields['weight']->filterable);
 
         $attribute->setKey('mass');
         $attributeRepository->save($attribute);
         $entityManager->flush();
 
-        $fields = $loader->load()->indexes[ProductIndex::NAME]->fields;
-        $this->assertArrayNotHasKey('attr_weight', $fields, 'postUpdate should have invalidated the cache');
-        $this->assertInstanceOf(Field\FloatField::class, $fields['attr_mass']);
+        $fields = $this->numericFields($loader->load()->indexes[ProductIndex::NAME]->fields);
+        $this->assertArrayNotHasKey('weight', $fields, 'postUpdate should have invalidated the cache');
+        $this->assertInstanceOf(Field\FloatField::class, $fields['mass']);
 
         $attributeRepository->remove($attribute);
         $entityManager->flush();
 
-        $fields = $loader->load()->indexes[ProductIndex::NAME]->fields;
-        $this->assertArrayNotHasKey('attr_mass', $fields, 'postRemove should have invalidated the cache');
+        $fields = $this->numericFields($loader->load()->indexes[ProductIndex::NAME]->fields);
+        $this->assertArrayNotHasKey('mass', $fields, 'postRemove should have invalidated the cache');
+    }
+
+    /**
+     * @param array<string, Field\AbstractField> $indexFields
+     *
+     * @return array<string, Field\AbstractField>
+     */
+    private function numericFields(array $indexFields): array
+    {
+        $product = $indexFields[ProductIndex::FIELD];
+        $this->assertInstanceOf(Field\ObjectField::class, $product);
+        $numericValues = $product->fields[ProductIndex::NUMERIC_VALUES_FIELD];
+        $this->assertInstanceOf(Field\ObjectField::class, $numericValues);
+
+        return $numericValues->fields;
     }
 
     /**
@@ -148,13 +170,13 @@ class ProductSchemaTest extends SuluTestCase
         $entityManager = self::getContainer()->get('doctrine.orm.entity_manager');
 
         $cache = new ArrayAdapter();
-        (new AttributeIndexFieldProvider($entityManager, $cache))->getFields();
+        (new NumericAttributeLister($entityManager, $cache))->getFields();
 
-        $metadata = $cache->getItem(AttributeIndexFieldProvider::CACHE_KEY)->getMetadata();
+        $metadata = $cache->getItem(NumericAttributeLister::CACHE_KEY)->getMetadata();
 
         $this->assertArrayHasKey(CacheItem::METADATA_EXPIRY, $metadata);
         $this->assertEqualsWithDelta(
-            \microtime(true) + AttributeIndexFieldProvider::CACHE_TTL,
+            \microtime(true) + NumericAttributeLister::CACHE_TTL,
             $metadata[CacheItem::METADATA_EXPIRY],
             30.0,
         );

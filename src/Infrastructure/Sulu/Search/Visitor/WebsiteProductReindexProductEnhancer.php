@@ -23,9 +23,14 @@ use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Search\ProductIndex;
 
 /**
- * Puts attribute values into the catalogue document: numbers and option keys into their
- * filter fields, text and option labels into the text bag, everything into the display map.
- * Values are merged between a parent and its variants by the family's variant-specific flag.
+ * Fills the product field of the website document: option keys and text values as
+ * "<attributeKey>:<value>" entries, number and date values per attribute field, and a display map.
+ * The details tab's own text (code, external identifier, product family name, short description)
+ * plus the text values and option labels go into the searchable content, which the content
+ * enhancer resets, so this enhancer runs after it.
+ *
+ * A variant carries its own values plus those of its parent that the family does not mark
+ * variant-specific. A product without variants carries its own.
  *
  * @phpstan-type ValueRow array{
  *     productId: string,
@@ -44,17 +49,12 @@ use Sulu\Product\Infrastructure\Sulu\Search\ProductIndex;
  * @internal this class is internal no backwards compatibility promise is given for this class
  *           use Symfony Dependency Injection to override or create your own enhancer instead
  */
-final class CatalogueProductReindexAttributeEnhancer implements WebsiteProductReindexProviderEnhancerInterface, BatchAwareReindexEnhancerInterface
+final class WebsiteProductReindexProductEnhancer implements WebsiteProductReindexProviderEnhancerInterface, BatchAwareReindexEnhancerInterface
 {
     /**
      * @var array<string, array<string, ValueRow>> a product's own values, keyed by "<productId>__<locale>" and attribute key
      */
     private array $ownValues = [];
-
-    /**
-     * @var array<string, array<int, ValueRow>> the values of a product's variants, keyed by "<parentId>__<locale>"
-     */
-    private array $variantValues = [];
 
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
@@ -68,7 +68,6 @@ final class CatalogueProductReindexAttributeEnhancer implements WebsiteProductRe
     public function prepareBatch(array $rows): void
     {
         $this->ownValues = [];
-        $this->variantValues = [];
 
         $productIds = [];
         $locales = [];
@@ -80,6 +79,7 @@ final class CatalogueProductReindexAttributeEnhancer implements WebsiteProductRe
 
             $productIds[] = $productId;
 
+            // A variant reads its parent's values, so the parent is loaded with the batch.
             $parentId = $row['parentId'] ?? null;
             if (\is_string($parentId) && '' !== $parentId) {
                 $productIds[] = $parentId;
@@ -106,10 +106,6 @@ final class CatalogueProductReindexAttributeEnhancer implements WebsiteProductRe
                 if (!isset($this->ownValues[$key][$valueRow['attributeKey']]) || null !== $valueRow['valueLocale']) {
                     $this->ownValues[$key][$valueRow['attributeKey']] = $valueRow;
                 }
-
-                if (null !== $valueRow['parentId']) {
-                    $this->variantValues[$valueRow['parentId'] . '__' . $locale][] = $valueRow;
-                }
             }
         }
     }
@@ -132,98 +128,87 @@ final class CatalogueProductReindexAttributeEnhancer implements WebsiteProductRe
             }
         }
 
+        foreach (['code', 'externalIdentifier', 'productFamilyName'] as $key) {
+            $value = $queryResult[$key] ?? null;
+            if (\is_string($value) && '' !== $value) {
+                $content[] = $value;
+            }
+        }
+
+        $detailsData = $queryResult['detailsData'] ?? null;
+        $shortDescription = \is_array($detailsData) ? $detailsData['shortDescription'] ?? null : null;
+        if (\is_string($shortDescription)) {
+            $text = \trim(\strip_tags($shortDescription));
+            if ('' !== $text) {
+                $content[] = $text;
+            }
+        }
+
+        $textValues = [];
+        $numericValues = [];
         $attributes = [];
 
-        foreach ($this->mergedValues($productId, $locale, $type, \is_string($parentId) ? $parentId : null) as $key => $valueRows) {
-            $label = $valueRows[0]['attributeLabel'] ?? $key;
+        foreach ($this->mergedValues($productId, $locale, $type, \is_string($parentId) ? $parentId : null) as $key => $valueRow) {
+            $label = $valueRow['attributeLabel'] ?? $key;
 
-            switch ($valueRows[0]['attributeType']) {
+            switch ($valueRow['attributeType']) {
                 case AttributeInterface::TYPE_NUMBER:
                 case AttributeInterface::TYPE_DATE:
-                    $numbers = [];
-                    foreach ($valueRows as $valueRow) {
-                        if (null !== $valueRow['number']) {
-                            $numbers[] = $valueRow['number'];
-                        }
-                    }
-                    $numbers = \array_values(\array_unique($numbers));
-                    if ([] === $numbers) {
+                    if (null === $valueRow['number']) {
                         break;
                     }
 
-                    $document[ProductIndex::attributeField($key)] = $numbers;
-                    $attributes[$key] = ['label' => $label, 'value' => 1 === \count($numbers) ? $numbers[0] : $numbers];
+                    $numericValues[ProductIndex::numericField($key)] = [$valueRow['number']];
+                    $attributes[$key] = ['label' => $label, 'value' => $valueRow['number']];
                     break;
                 case AttributeInterface::TYPE_OPTIONS:
-                    $optionKeys = [];
-                    $optionLabels = [];
-                    foreach ($valueRows as $valueRow) {
-                        if (null === $valueRow['optionKey']) {
-                            continue;
-                        }
-
-                        $optionKeys[] = $valueRow['optionKey'];
-                        $optionLabels[] = $valueRow['optionLabel'] ?? $valueRow['optionKey'];
-                    }
-                    $optionKeys = \array_values(\array_unique($optionKeys));
-                    $optionLabels = \array_values(\array_unique($optionLabels));
-                    if ([] === $optionKeys) {
+                    if (null === $valueRow['optionKey']) {
                         break;
                     }
 
-                    $document[ProductIndex::optionField($key)] = $optionKeys;
-                    $content = \array_merge($content, $optionLabels);
-                    $attributes[$key] = ['label' => $label, 'value' => 1 === \count($optionLabels) ? $optionLabels[0] : $optionLabels];
+                    $optionLabel = $valueRow['optionLabel'] ?? $valueRow['optionKey'];
+                    $textValues[] = ProductIndex::textValue($key, $valueRow['optionKey']);
+                    $content[] = $optionLabel;
+                    $attributes[$key] = ['label' => $label, 'value' => $optionLabel];
                     break;
                 case AttributeInterface::TYPE_TEXT:
-                    $texts = [];
-                    foreach ($valueRows as $valueRow) {
-                        if (\is_string($valueRow['text']) && '' !== \trim($valueRow['text'])) {
-                            $texts[] = \trim($valueRow['text']);
-                        }
-                    }
-                    $texts = \array_values(\array_unique($texts));
-                    if ([] === $texts) {
+                    $text = \is_string($valueRow['text']) ? \trim($valueRow['text']) : '';
+                    if ('' === $text) {
                         break;
                     }
 
-                    $content = \array_merge($content, $texts);
-                    $attributes[$key] = ['label' => $label, 'value' => 1 === \count($texts) ? $texts[0] : $texts];
+                    $textValues[] = ProductIndex::textValue($key, $text);
+                    $content[] = $text;
+                    $attributes[$key] = ['label' => $label, 'value' => $text];
                     break;
             }
         }
 
         $document['content'] = \array_values(\array_unique($content));
-        $document['attributes'] = $attributes;
+
+        /** @var array<string, mixed> $product */
+        $product = \is_array($document[ProductIndex::FIELD] ?? null) ? $document[ProductIndex::FIELD] : [];
+        $product[ProductIndex::TEXT_VALUES_FIELD] = \array_values(\array_unique($textValues));
+        $product[ProductIndex::NUMERIC_VALUES_FIELD] = $numericValues;
+        $product['attributes'] = $attributes;
+        $document[ProductIndex::FIELD] = $product;
 
         return $document;
     }
 
     /**
-     * A product shows its own values, a parent additionally the variant-specific values of its
-     * variants, a variant additionally the shared values of its parent. Own values win per key.
+     * Own values win over the parent's; a variant-specific attribute of the parent is not inherited.
      *
-     * @return array<string, array<int, ValueRow>> attribute key => rows
+     * @return array<string, ValueRow> attribute key => row
      */
     private function mergedValues(string $productId, string $locale, string $type, ?string $parentId): array
     {
-        $merged = [];
-        foreach ($this->ownValues[$productId . '__' . $locale] ?? [] as $attributeKey => $valueRow) {
-            $merged[$attributeKey] = [$valueRow];
-        }
+        $merged = $this->ownValues[$productId . '__' . $locale] ?? [];
 
         if (ProductInterface::TYPE_VARIANT === $type && null !== $parentId) {
             foreach ($this->ownValues[$parentId . '__' . $locale] ?? [] as $attributeKey => $valueRow) {
                 if (true !== $valueRow['variantSpecific'] && !isset($merged[$attributeKey])) {
-                    $merged[$attributeKey] = [$valueRow];
-                }
-            }
-        }
-
-        if (ProductInterface::TYPE_PRODUCT_WITH_VARIANTS === $type) {
-            foreach ($this->variantValues[$productId . '__' . $locale] ?? [] as $valueRow) {
-                if (true === $valueRow['variantSpecific']) {
-                    $merged[$valueRow['attributeKey']][] = $valueRow;
+                    $merged[$attributeKey] = $valueRow;
                 }
             }
         }
@@ -232,9 +217,9 @@ final class CatalogueProductReindexAttributeEnhancer implements WebsiteProductRe
     }
 
     /**
-     * The values of the given products and of their variants, in the live current version.
-     * A value sits on the localized dimension content when its attribute is localized and on the
-     * unlocalized one otherwise, so both rows are read for a document's locale.
+     * The values of the given products, in the live current version. A value sits on the localized
+     * dimension content when its attribute is localized and on the unlocalized one otherwise, so
+     * both rows are read for a document's locale.
      *
      * @param string[] $productIds
      *
@@ -267,7 +252,7 @@ final class CatalogueProductReindexAttributeEnhancer implements WebsiteProductRe
             ->where('dimensionContent.stage = :stage')
             ->andWhere('dimensionContent.version = :version')
             ->andWhere('dimensionContent.locale = :locale OR dimensionContent.locale IS NULL')
-            ->andWhere('product.uuid IN (:productIds) OR IDENTITY(product.parent) IN (:productIds)')
+            ->andWhere('product.uuid IN (:productIds)')
             ->setParameter('stage', DimensionContentInterface::STAGE_LIVE)
             ->setParameter('version', DimensionContentInterface::CURRENT_VERSION)
             ->setParameter('locale', $locale)
