@@ -22,8 +22,8 @@ use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Search\ProductIndex;
 
 /**
- * Runs a catalogue query against the products index. Locale, webspace and the hit policy are
- * always applied; the index only holds live content, so no stage filter is needed.
+ * Runs a catalogue query against the product documents of the website index. Resource key, locale
+ * and webspace are always applied; the index only holds live content, so no stage filter is needed.
  *
  * Field names come from the outside, so every one is checked against the index schema and dropped
  * when the schema does not allow that use. An adapter would otherwise either fail the request or
@@ -43,17 +43,12 @@ final class ProductSearcher
             ?? throw new \RuntimeException(\sprintf('The index "%s" is missing from the schema.', ProductIndex::NAME));
 
         $search = $this->engine->createSearchBuilder(ProductIndex::NAME)
+            ->addFilter(Condition::equal('resourceKey', ProductInterface::RESOURCE_KEY))
             ->addFilter(Condition::equal('locale', $query->locale))
             ->addFilter(Condition::equal('webspaces', $query->webspace));
 
         if ('' !== \trim($query->term)) {
             $search->addFilter(Condition::search(\trim($query->term)));
-        }
-
-        if (ProductSearchQuery::HITS_LEAVES === $query->hits) {
-            $search->addFilter(Condition::notEqual('type', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS));
-        } elseif (ProductSearchQuery::HITS_PRODUCTS === $query->hits) {
-            $search->addFilter(Condition::notEqual('type', ProductInterface::TYPE_VARIANT));
         }
 
         foreach ($query->equals as $field => $value) {

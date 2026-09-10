@@ -21,23 +21,54 @@ use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentAdditionalWebspace;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
+use Sulu\Product\Infrastructure\Sulu\Search\Visitor\BatchAwareReindexEnhancerInterface;
 use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductReindexProviderEnhancerInterface;
 
 /**
+ * One document per published leaf: a product without variants, or a variant. A product that has
+ * variants is represented by them, so it gets no document of its own. A variant is shown on its
+ * parent's page, so its document carries the parent's slug and webspaces.
+ *
  * @phpstan-type Product array{
- *     productId: int,
- *     changed: \DateTimeImmutable,
- *     title: string,
- *     locale: string,
- *     mainWebspace: string|null,
- *     additionalWebspaces: string[]|null,
- *     slug: string,
+ *     productId: string,
+ *     type: string,
+ *     parentId: string|null,
  *     dimensionContentId: int,
+ *     locale: string,
+ *     title: string|null,
+ *     code: string|null,
+ *     externalIdentifier: string|null,
+ *     status: string,
+ *     productFamilyId: string|null,
+ *     productFamilyName: string|null,
+ *     mainWebspace: string|null,
+ *     slug: string|null,
  *     authored: \DateTimeImmutable|null,
+ *     changed: \DateTimeImmutable,
+ *     detailsData: array<string, mixed>,
+ * }
+ * @phpstan-type RawProduct array{
+ *     productId: string,
+ *     type: string,
+ *     parentId: string|null,
+ *     dimensionContentId: int,
+ *     locale: string,
+ *     title: string|null,
+ *     code: string|null,
+ *     externalIdentifier: string|null,
+ *     status: string,
+ *     productFamilyId: string|null,
+ *     productFamilyName: string|null,
+ *     mainWebspace: string|null,
+ *     slug: string|null,
+ *     authored: \DateTimeImmutable|null,
+ *     changed: \DateTimeImmutable,
+ *     detailsData: array<string, mixed>,
+ *     unlocalizedDetailsData: array<string, mixed>,
  * }
  *
  * @internal this class is internal no backwards compatibility promise is given for this class
- *            use Symfony Dependency Injection to override or create your own ReindexProvider instead
+ *           use Symfony Dependency Injection to override or create your own ReindexProvider instead
  */
 final class WebsiteProductReindexProvider implements ReindexProviderInterface
 {
@@ -58,13 +89,10 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
      */
     public function __construct(
         EntityManagerInterface $entityManager,
-        private iterable $enhancers = [],
+        private readonly iterable $enhancers = [],
     ) {
-        $dimensionContentRepository = $entityManager->getRepository(ProductDimensionContentInterface::class);
-        $additionalWebspacesRepository = $entityManager->getRepository(ProductDimensionContentAdditionalWebspace::class);
-
-        $this->dimensionContentRepository = $dimensionContentRepository;
-        $this->additionalWebspacesRepository = $additionalWebspacesRepository;
+        $this->dimensionContentRepository = $entityManager->getRepository(ProductDimensionContentInterface::class);
+        $this->additionalWebspacesRepository = $entityManager->getRepository(ProductDimensionContentAdditionalWebspace::class);
     }
 
     public function total(): ?int
@@ -79,40 +107,24 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
         $batch = $this->loadBatch($identifiers, $offset);
 
         while ([] !== $batch) {
-            $dimensionContentIds = \array_column($batch, 'dimensionContentId');
-            $additionalWebspacesResult = $this->loadAdditionalWebspaces($dimensionContentIds);
+            $webspaces = $this->loadWebspaces($batch);
+            $parentSlugs = $this->loadParentSlugs($batch);
 
-            /** @var Product $product */
-            foreach ($batch as $product) {
-                $authoredAt = $product['authored'] ?? $product['changed'];
-                $webspaces = $product['mainWebspace'] ? [$product['mainWebspace']] : [];
-
-                foreach ($additionalWebspacesResult as $additionalWebspaceRow) {
-                    if ($additionalWebspaceRow['productDimensionContentId'] === $product['dimensionContentId'] && !\in_array($additionalWebspaceRow['webspace'], $webspaces, true)) {
-                        $webspaces[] = $additionalWebspaceRow['webspace'];
-                    }
+            foreach ($this->enhancers as $enhancer) {
+                if ($enhancer instanceof BatchAwareReindexEnhancerInterface) {
+                    $enhancer->prepareBatch($batch);
                 }
+            }
 
-                $data = [
-                    'id' => ProductInterface::RESOURCE_KEY . '__' . ((string) $product['productId']) . '__' . $product['locale'],
-                    'resourceKey' => ProductInterface::RESOURCE_KEY,
-                    'resourceId' => (string) $product['productId'],
-                    'locale' => $product['locale'],
-                    'webspaces' => $webspaces,
-                    'title' => '',
-                    'url' => $product['slug'],
-                    'content' => [],
-                    'mediaId' => '',
-                    'authoredAt' => $authoredAt->format('c'),
-                    'metadata' => [],
-                ];
+            foreach ($batch as $row) {
+                $data = $this->createDocument($row, $webspaces, $parentSlugs);
 
                 foreach ($this->enhancers as $enhancer) {
-                    $data = $enhancer->enhanceDocument($product, $data);
+                    $data = $enhancer->enhanceDocument($row, $data);
                 }
 
                 if ('' === $data['title']) {
-                    $data['title'] = $product['title'];
+                    $data['title'] = (string) $row['title'];
                 }
 
                 yield $data;
@@ -124,50 +136,114 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
     }
 
     /**
+     * @param Product $row
+     * @param array<string, string[]> $webspaces keyed by "<productId>__<locale>"
+     * @param array<string, string> $parentSlugs keyed by "<parentId>__<locale>"
+     *
+     * @return array<string, mixed>
+     */
+    private function createDocument(array $row, array $webspaces, array $parentSlugs): array
+    {
+        $key = $row['productId'] . '__' . $row['locale'];
+        $isVariant = ProductInterface::TYPE_VARIANT === $row['type'];
+        $webspaceKey = $isVariant && null !== $row['parentId'] ? $row['parentId'] . '__' . $row['locale'] : $key;
+        $url = $isVariant && null !== $row['parentId']
+            ? ($parentSlugs[$row['parentId'] . '__' . $row['locale']] ?? '')
+            : (string) $row['slug'];
+
+        // A variant keeps its own image; an empty one is not filled from the parent.
+        $image = $row['detailsData']['image'] ?? null;
+        $mediaId = \is_array($image) && isset($image['id']) && \is_numeric($image['id']) ? (string) $image['id'] : '';
+
+        return [
+            'id' => ProductIndex::documentId($row['productId'], $row['locale']),
+            'resourceKey' => ProductInterface::RESOURCE_KEY,
+            'resourceId' => $row['productId'],
+            'locale' => $row['locale'],
+            'webspaces' => $webspaces[$webspaceKey] ?? [],
+            'title' => '',
+            'url' => $url,
+            'content' => [],
+            'mediaId' => $mediaId,
+            'authoredAt' => ($row['authored'] ?? $row['changed'])->format('c'),
+            'metadata' => [],
+            ProductIndex::FIELD => [
+                'code' => (string) $row['code'],
+                'type' => $row['type'],
+                'status' => $row['status'],
+                'productFamilyId' => (string) $row['productFamilyId'],
+                'productFamilyName' => (string) $row['productFamilyName'],
+                'changedAt' => $row['changed']->format('c'),
+                ProductIndex::TEXT_VALUES_FIELD => [],
+                ProductIndex::NUMERIC_VALUES_FIELD => [],
+                'attributes' => [],
+            ],
+        ];
+    }
+
+    /**
      * @param string[] $identifiers
      *
      * @return array<int, Product>
      */
     private function loadBatch(array $identifiers, int $offset): array
     {
+        // Code, status and the product family are stored once per product, on the unlocalized dimension content.
         $queryBuilder = $this->dimensionContentRepository->createQueryBuilder('dimensionContent')
-            ->leftJoin('dimensionContent.route', 'route')
             ->innerJoin('dimensionContent.product', 'product')
-            ->select('IDENTITY(dimensionContent.product) AS productId')
+            ->innerJoin(
+                $this->dimensionContentRepository->getClassName(),
+                'unlocalizedDimensionContent',
+                'WITH',
+                'unlocalizedDimensionContent.product = product'
+                . ' AND unlocalizedDimensionContent.locale IS NULL'
+                . ' AND unlocalizedDimensionContent.stage = dimensionContent.stage'
+                . ' AND unlocalizedDimensionContent.version = dimensionContent.version',
+            )
+            ->leftJoin('dimensionContent.route', 'route')
+            ->leftJoin('unlocalizedDimensionContent.productFamily', 'productFamily')
+            ->leftJoin('productFamily.translations', 'productFamilyTranslation', 'WITH', 'productFamilyTranslation.locale = dimensionContent.locale')
+            ->select('product.uuid AS productId')
+            ->addSelect('product.type AS type')
+            ->addSelect('IDENTITY(product.parent) AS parentId')
+            ->addSelect('dimensionContent.id AS dimensionContentId')
+            ->addSelect('dimensionContent.locale')
+            ->addSelect('dimensionContent.title')
+            ->addSelect('unlocalizedDimensionContent.code')
+            ->addSelect('unlocalizedDimensionContent.externalIdentifier')
+            ->addSelect('unlocalizedDimensionContent.status')
+            ->addSelect('productFamily.uuid AS productFamilyId')
+            ->addSelect('productFamilyTranslation.name AS productFamilyName')
+            ->addSelect('dimensionContent.mainWebspace')
+            ->addSelect('route.slug')
             ->addSelect('dimensionContent.authored')
             ->addSelect('dimensionContent.changed')
-            ->addSelect('dimensionContent.title')
-            ->addSelect('dimensionContent.locale')
-            ->addSelect('dimensionContent.mainWebspace')
-            ->addSelect('dimensionContent.id AS dimensionContentId')
-            ->addSelect('route.slug')
+            ->addSelect('dimensionContent.detailsData')
+            ->addSelect('unlocalizedDimensionContent.detailsData AS unlocalizedDetailsData')
             ->where('dimensionContent.stage = :stage')
             ->andWhere('dimensionContent.locale IS NOT NULL')
             ->andWhere('dimensionContent.version = :version')
-            ->andWhere('product.type != :variantType');
+            // A product that has variants is represented by its variants.
+            ->andWhere('product.type != :parentType');
 
         $parameters = [
             'stage' => DimensionContentInterface::STAGE_LIVE,
             'version' => DimensionContentInterface::CURRENT_VERSION,
-            'variantType' => ProductInterface::TYPE_VARIANT,
+            'parentType' => ProductInterface::TYPE_PRODUCT_WITH_VARIANTS,
         ];
 
         if (0 < \count($identifiers)) {
             $conditions = [];
 
             foreach ($identifiers as $index => $identifier) {
-                $resourceKey = \explode('__', $identifier)[0];
-
-                if (ProductInterface::RESOURCE_KEY !== $resourceKey) {
+                $parts = \explode('__', $identifier);
+                if (ProductInterface::RESOURCE_KEY !== $parts[0]) {
                     continue;
                 }
 
-                $id = \explode('__', $identifier)[1] ?? '';
-                $locale = \explode('__', $identifier)[2] ?? '';
-
-                $conditions[] = "(dimensionContent.product = :id{$index} AND dimensionContent.locale = :locale{$index})";
-                $parameters["id{$index}"] = $id;
-                $parameters["locale{$index}"] = $locale;
+                $conditions[] = "(product.uuid = :id{$index} AND dimensionContent.locale = :locale{$index})";
+                $parameters["id{$index}"] = $parts[1] ?? '';
+                $parameters["locale{$index}"] = $parts[2] ?? '';
             }
 
             if (!$conditions) {
@@ -189,32 +265,166 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
             ->setFirstResult($offset)
             ->setMaxResults(self::BATCH_SIZE);
 
-        /** @var array<int, Product> */
-        return $queryBuilder->getQuery()->getResult();
+        /** @var array<int, RawProduct> $rows */
+        $rows = $queryBuilder->getQuery()->getResult();
+
+        return $this->mergeDetailsData($rows);
+    }
+
+    /**
+     * Details are split over both dimension contents by multilinguality, so a row carries the
+     * merged bag, localized winning, the same precedence ProductDetailsMerger applies.
+     *
+     * @param array<int, RawProduct> $rows
+     *
+     * @return array<int, Product>
+     */
+    private function mergeDetailsData(array $rows): array
+    {
+        $merged = [];
+        foreach ($rows as $row) {
+            $unlocalizedDetailsData = $row['unlocalizedDetailsData'];
+            unset($row['unlocalizedDetailsData']);
+            $row['detailsData'] = \array_merge($unlocalizedDetailsData, $row['detailsData']);
+            $merged[] = $row;
+        }
+
+        return $merged;
+    }
+
+    /**
+     * Main plus additional webspaces per document key "<productId>__<locale>".
+     *
+     * @param array<int, Product> $batch
+     *
+     * @return array<string, string[]>
+     */
+    private function loadWebspaces(array $batch): array
+    {
+        $webspaces = [];
+        $byDimensionContentId = [];
+        foreach ($batch as $row) {
+            $key = $row['productId'] . '__' . $row['locale'];
+            $webspaces[$key] = $row['mainWebspace'] ? [$row['mainWebspace']] : [];
+            $byDimensionContentId[$row['dimensionContentId']] = $key;
+        }
+
+        // Variants inherit the parent's webspaces; parents outside the batch are loaded with them.
+        foreach ($this->loadParentWebspaceRows($this->parentIds($batch)) as $parentRow) {
+            $key = $parentRow['productId'] . '__' . $parentRow['locale'];
+            $webspaces[$key] ??= $parentRow['mainWebspace'] ? [$parentRow['mainWebspace']] : [];
+            $byDimensionContentId[$parentRow['dimensionContentId']] = $key;
+        }
+
+        if ([] === $byDimensionContentId) {
+            return $webspaces;
+        }
+
+        foreach ($this->loadAdditionalWebspaceRows(\array_keys($byDimensionContentId)) as $additionalRow) {
+            $key = $byDimensionContentId[$additionalRow['dimensionContentId']] ?? null;
+            if (null !== $key && !\in_array($additionalRow['webspace'], $webspaces[$key], true)) {
+                $webspaces[$key][] = $additionalRow['webspace'];
+            }
+        }
+
+        return $webspaces;
+    }
+
+    /**
+     * @param string[] $parentIds
+     *
+     * @return array<int, array{productId: string, locale: string, mainWebspace: string|null, dimensionContentId: int}>
+     */
+    private function loadParentWebspaceRows(array $parentIds): array
+    {
+        if ([] === $parentIds) {
+            return [];
+        }
+
+        /** @var array<int, array{productId: string, locale: string, mainWebspace: string|null, dimensionContentId: int}> */
+        return $this->dimensionContentRepository->createQueryBuilder('dimensionContent')
+            ->innerJoin('dimensionContent.product', 'product')
+            ->select('product.uuid AS productId', 'dimensionContent.locale', 'dimensionContent.mainWebspace', 'dimensionContent.id AS dimensionContentId')
+            ->where('product.uuid IN (:parentIds)')
+            ->andWhere('dimensionContent.stage = :stage')
+            ->andWhere('dimensionContent.version = :version')
+            ->andWhere('dimensionContent.locale IS NOT NULL')
+            ->setParameter('parentIds', $parentIds)
+            ->setParameter('stage', DimensionContentInterface::STAGE_LIVE)
+            ->setParameter('version', DimensionContentInterface::CURRENT_VERSION)
+            ->getQuery()->getResult();
     }
 
     /**
      * @param int[] $dimensionContentIds
      *
-     * @return array<int, array{productDimensionContentId: int, webspace: string}>
+     * @return array<int, array{dimensionContentId: int, webspace: string}>
      */
-    private function loadAdditionalWebspaces(array $dimensionContentIds = []): array
+    private function loadAdditionalWebspaceRows(array $dimensionContentIds): array
     {
-        if (0 === \count($dimensionContentIds)) {
+        return $this->additionalWebspacesRepository->createQueryBuilder('additionalWebspace')
+            ->select('IDENTITY(additionalWebspace.productDimensionContent) AS dimensionContentId')
+            ->addSelect('additionalWebspace.additionalWebspace AS webspace')
+            ->where('additionalWebspace.productDimensionContent IN (:dimensionContentIds)')
+            ->setParameter('dimensionContentIds', $dimensionContentIds)
+            ->getQuery()->getResult();
+    }
+
+    /**
+     * Live route slugs of the batch's parents, keyed by "<parentId>__<locale>".
+     *
+     * @param array<int, Product> $batch
+     *
+     * @return array<string, string>
+     */
+    private function loadParentSlugs(array $batch): array
+    {
+        $slugs = [];
+        foreach ($this->loadParentSlugRows($this->parentIds($batch)) as $row) {
+            $slugs[$row['productId'] . '__' . $row['locale']] = $row['slug'];
+        }
+
+        return $slugs;
+    }
+
+    /**
+     * @param string[] $parentIds
+     *
+     * @return array<int, array{productId: string, locale: string, slug: string}>
+     */
+    private function loadParentSlugRows(array $parentIds): array
+    {
+        if ([] === $parentIds) {
             return [];
         }
 
-        $queryBuilder = $this->additionalWebspacesRepository->createQueryBuilder('additionalWebspace')
-            ->select('IDENTITY(additionalWebspace.productDimensionContent) AS productDimensionContentId')
-            ->addSelect('additionalWebspace.additionalWebspace AS webspace')
-            ->where('additionalWebspace.productDimensionContent IN (:dimensionContentIds)')
-            ->setParameter('dimensionContentIds', $dimensionContentIds);
+        /** @var array<int, array{productId: string, locale: string, slug: string}> */
+        return $this->dimensionContentRepository->createQueryBuilder('dimensionContent')
+            ->innerJoin('dimensionContent.product', 'product')
+            ->innerJoin('dimensionContent.route', 'route')
+            ->select('product.uuid AS productId', 'dimensionContent.locale', 'route.slug')
+            ->where('product.uuid IN (:parentIds)')
+            ->andWhere('dimensionContent.stage = :stage')
+            ->andWhere('dimensionContent.version = :version')
+            ->andWhere('dimensionContent.locale IS NOT NULL')
+            ->setParameter('parentIds', $parentIds)
+            ->setParameter('stage', DimensionContentInterface::STAGE_LIVE)
+            ->setParameter('version', DimensionContentInterface::CURRENT_VERSION)
+            ->getQuery()->getResult();
+    }
 
-        return $queryBuilder->getQuery()->getResult();
+    /**
+     * @param array<int, Product> $batch
+     *
+     * @return string[]
+     */
+    private function parentIds(array $batch): array
+    {
+        return \array_values(\array_unique(\array_filter(\array_column($batch, 'parentId'))));
     }
 
     public static function getIndex(): string
     {
-        return 'website';
+        return ProductIndex::NAME;
     }
 }

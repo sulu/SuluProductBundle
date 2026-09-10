@@ -14,29 +14,29 @@ declare(strict_types=1);
 namespace Sulu\Product\Infrastructure\Sulu\Search\Schema;
 
 /**
- * Clears the cached attribute field list whenever an attribute row changes.
+ * Clears the cached numeric attribute list whenever an attribute row changes.
  *
  * @internal
  */
-final class AttributeIndexFieldCacheInvalidator
+final class NumericAttributeCacheInvalidator
 {
     public function __construct(
-        private readonly AttributeIndexFieldProvider $attributeIndexFieldProvider,
+        private readonly NumericAttributeLister $numericAttributeLister,
     ) {
     }
 
     public function postPersist(): void
     {
-        $this->attributeIndexFieldProvider->clear();
+        $this->numericAttributeLister->clear();
     }
 
     public function postUpdate(): void
     {
-        $this->attributeIndexFieldProvider->clear();
+        $this->numericAttributeLister->clear();
     }
 
     public function postRemove(): void
     {
-        $this->attributeIndexFieldProvider->clear();
+        $this->numericAttributeLister->clear();
     }
 }
