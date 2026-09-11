@@ -38,14 +38,9 @@ final class RemoveProductMessageHandler
     {
         $product = $this->productRepository->getOneBy($message->getIdentifier());
 
-        // The parent and the cascade-removed variants are only reachable before the flush, so their
-        // uuids travel with the event.
+        // The cascade-removed variants are only reachable before the flush, so their uuids travel
+        // with the event.
         $relatedIds = [];
-        $parent = $product->getParent();
-        if (null !== $parent) {
-            $relatedIds[] = $parent->getUuid();
-        }
-
         if ($product->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS)) {
             foreach ($this->productRepository->findBy(['parent' => $product->getUuid()]) as $variant) {
                 /** @var string $variantResourceKey */
@@ -71,7 +66,7 @@ final class RemoveProductMessageHandler
         $unlocalizedDimensionContent = $dimensionContentCollection->getDimensionContent(['locale' => null, 'stage' => 'draft']);
         $context = $unlocalizedDimensionContent?->getAvailableLocales() ? ['locales' => $unlocalizedDimensionContent->getAvailableLocales()] : [];
         if ([] !== $relatedIds) {
-            $context['relatedIds'] = \array_values(\array_unique($relatedIds));
+            $context['relatedIds'] = $relatedIds;
         }
 
         // Try to get title from the removed locale first, fallback to any available locale if null

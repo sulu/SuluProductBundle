@@ -126,28 +126,19 @@ The `product` field holds:
 | field | use |
 |---|---|
 | `code` | filterable, addresses a variant; the searchable copy sits in the index's `content` |
-| `type` | `variant` or `product`, filterable, so a template can address a variant |
-| `status`, `productFamilyId` | filterable and facet |
-| `productFamilyName` | display |
-| `changedAt` | the sortable field, since Sulu's own fields carry no `sortable` flag |
+| `productFamilyId` | filterable and facet |
 | `attributes_text_values` | one `<attributeKey>:<value>` entry per option key and text value, filterable and facet |
 | `attributes_numeric_values.<attributeKey>` | the values of a number or date attribute, filterable and facet |
-| `attributes` | display map `<attributeKey> => {label, value}` |
 
 Option and text attributes need no field of their own, so adding one changes no schema. A number or
-date attribute does: `NumericAttributeLister` reads the attribute table and `ProductSchemaLoader`
-appends its field to `attributes_numeric_values`. The live index only learns it when it is recreated:
+date attribute does: `ProductSchemaLoader` reads the attribute table and appends its field to
+`attributes_numeric_values`. The live index only learns it when it is recreated:
 
     bin/console cmsig:seal:reindex --index website --drop
 
 Until then products still index, but the new attribute does not filter. Recreation is never automatic.
-The attribute list is cached and invalidated only through the ORM (a Doctrine entity listener on
-`Attribute`); an attribute written by raw SQL needs `bin/console cache:pool:clear cache.app` as well.
-The entry also expires after `NumericAttributeLister::CACHE_TTL` (5 minutes), because that
-invalidation only reaches the kernel context it runs in. On Symfony below 7.4, or with any pool that
-is not shared between the admin and the website process, the website kernel therefore sees a new
-attribute field only after the TTL or after `bin/console cache:pool:clear cache.app` in the website
-context. A shared pool (Redis, Memcached) avoids the delay.
+The schema is read once per container, so a long-running process such as a Messenger worker sees a
+new attribute only after a restart.
 
 A variant document carries its own attribute values plus those of its parent that the family does not
 mark variant-specific, its own title and code, and its parent's url and webspaces.
@@ -155,46 +146,40 @@ mark variant-specific, its own title and code, and its parent's url and webspace
 The admin index keeps the opposite rule: it holds the parent, because the edit view belongs to it,
 and skips variants.
 
-### Website catalogue search
+### Searching products
 
-Import the route with the `portal` type, so it is served under every portal URL, and configure the
-template:
+The bundle ships no route, controller or template for a catalogue page. A project builds its own
+overview controller on SEAL's `EngineInterface`, which is autowirable, and restricts the search to
+the product documents of the current locale and webspace:
 
-```yaml
-# config/routes/sulu_product_website.yaml
-sulu_product_website:
-    type: portal
-    resource: "@SuluProductBundle/config/routing_website.yaml"
+```php
+use CmsIg\Seal\Search\Condition\Condition;
+use CmsIg\Seal\Search\Facet\Facet;
+use Sulu\Product\Domain\Model\ProductInterface;
+use Sulu\Product\Infrastructure\Sulu\Search\ProductIndex;
+
+$result = $engine->createSearchBuilder(ProductIndex::NAME)
+    ->addFilter(Condition::equal('resourceKey', ProductInterface::RESOURCE_KEY))
+    ->addFilter(Condition::equal('locale', $locale))
+    ->addFilter(Condition::equal('webspaces', $webspaceKey))
+    ->addFilter(Condition::search($term))
+    ->addFilter(Condition::equal(ProductIndex::textValuesPath(), ProductIndex::textValue('colour', 'black')))
+    ->addFilter(Condition::greaterThanEqual(ProductIndex::numericValuePath('weight'), 20.0))
+    ->addFacet(Facet::count(ProductIndex::textValuesPath()))
+    ->limit(24)
+    ->offset(0)
+    ->getResult();
 ```
 
-```xml
-<!-- config/webspaces/<key>.xml -->
-<template type="product_search">products/search</template>
-```
+Field names are the index's paths, so a product field reads `product.productFamilyId`,
+`product.attributes_text_values` or `product.attributes_numeric_values.<attributeKey>`; `ProductIndex`
+builds the attribute paths and values.
 
-`GET /{locale}/products/search?q=...` renders that template with `query`, `hits`, `total`, `facets`,
-`page`, `limit`, `filters`, `ranges` and `variantQueryParameter` (the configured
-`sulu_product.variant_query_parameter`). Query parameters: `filter[<field>]`,
-`range[<field>][min|max]`, `facet[]`, `minmax[]`, `sort[<field>]`, `page`, `limit`. Field names are
-the index's paths, so a product field reads `product.status`, `product.attributes_text_values` or
-`product.attributes_numeric_values.<attributeKey>`:
-
-```
-?filter[product.attributes_text_values]=colour:black
-?range[product.attributes_numeric_values.weight][min]=20
-?facet[]=product.attributes_text_values&facet[]=product.status
-```
-
-A parameter of the wrong shape falls back to its default, `limit` is capped at 100 and `page` at
-`MAX_WINDOW / limit`, so that `(page - 1) * limit + limit` never exceeds 10000. That is
-Elasticsearch's default `index.max_result_window`; a deeper offset would be a search-phase exception
-on a public GET.
-
-Field names come from the request, so `ProductSearcher` checks every one against the index schema and
-silently drops what the schema does not allow: `filter`/`range` on a field that is not `filterable`,
-`sort` on a field that is not `sortable`, `facet`/`minmax` on a field without the `facet` flag. A
-custom controller building a `ProductSearchQuery` itself gets the same check. Every search is
-restricted to the product documents of the current locale and webspace.
+A controller that takes field names from the request checks them against the index schema
+(`filterableFields`, `facetFields`, `sortableFields` of `Schema::$indexes['website']`) before they
+reach a condition, because an adapter either fails the request on an unknown field or takes the name
+into its own filter syntax. It also caps the page size and the page number: Elasticsearch rejects an
+offset beyond `index.max_result_window` (10000 by default) with a search-phase exception.
 
 One count facet on `attributes_text_values` returns the values of every option and text attribute in
 a single bucket list, capped at 100 values by the adapters, so it is meant for a result set already
@@ -204,10 +189,11 @@ Nested fields need an adapter that resolves a dotted path. Elasticsearch and Lou
 adapter of a Sulu test setup does not, and throws on such a filter, so a project that wants to test
 its catalogue filters runs its tests on Loupe.
 
-A variant document's `url` is its parent's; the template appends `?<variantQueryParameter>=<code>`,
-the same contract the "Variant URLs" section above describes.
-Override `ProductSearchController::createQuery()` or replace `sulu_product.controller.website_search`
-to change the contract. `ProductSearcher` is autowirable for custom controllers.
+A variant document's `url` is its parent's, so the template appends
+`?<variantQueryParameter>=<code>`, the same contract the "Variant URLs" section above describes.
+
+Sulu's own site search needs none of this: products are documents of the shared `website` index, so
+`sulu_search.website_search` finds them next to pages and articles.
 
 ## Association form overrides
 

@@ -1,4 +1,0 @@
-sulu_product.website_search:
-    path: /products/search.{_format}
-    controller: sulu_product.controller.website_search::indexAction
-    format: html

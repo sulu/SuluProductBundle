@@ -13,7 +13,6 @@
         "doctrine/orm": "^2.17.3 || ^3.3",
         "sulu/messenger": "^1.0",
         "sulu/sulu": "^3.1@dev",
-        "symfony/cache-contracts": "^3.0",
         "symfony/config": "^6.4 || ^7.1 || ^8.0",
         "symfony/dependency-injection": "^6.4 || ^7.1 || ^8.0",
         "symfony/event-dispatcher": "^6.4 || ^7.1 || ^8.0",

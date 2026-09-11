@@ -58,22 +58,19 @@ class WebsiteProductReindexProviderTest extends SuluTestCase
         $this->assertSame('Plain', $plain['title']);
         $plainProduct = $plain['product'];
         $this->assertIsArray($plainProduct);
-        $this->assertSame(ProductInterface::TYPE_PRODUCT, $plainProduct['type']);
         $this->assertSame($familyId, $plainProduct['productFamilyId']);
-        $this->assertSame('Test Family', $plainProduct['productFamilyName']);
-        $this->assertSame('available', $plainProduct['status']);
         $plainUrl = $plain['url'];
         $this->assertIsString($plainUrl);
         $this->assertStringStartsWith('/search-product-', $plainUrl);
 
         $variant = $engine->getDocument(ProductIndex::NAME, ProductIndex::documentId($variantId, 'en'));
+        $this->assertSame($variantId, $variant['resourceId']);
         $this->assertSame(['sulu-io'], $variant['webspaces']);
         $variantUrl = $variant['url'];
         $this->assertIsString($variantUrl);
         $this->assertStringStartsWith('/search-product-', $variantUrl);
         $variantProduct = $variant['product'];
         $this->assertIsArray($variantProduct);
-        $this->assertSame(ProductInterface::TYPE_VARIANT, $variantProduct['type']);
         $variantCode = $variantProduct['code'];
         $this->assertIsString($variantCode);
         $this->assertStringStartsWith('SEARCH-VARIANT-', $variantCode);

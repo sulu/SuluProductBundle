@@ -38,7 +38,6 @@ use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductReindexProvide
  *     title: string|null,
  *     code: string|null,
  *     externalIdentifier: string|null,
- *     status: string,
  *     productFamilyId: string|null,
  *     productFamilyName: string|null,
  *     mainWebspace: string|null,
@@ -56,7 +55,6 @@ use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductReindexProvide
  *     title: string|null,
  *     code: string|null,
  *     externalIdentifier: string|null,
- *     status: string,
  *     productFamilyId: string|null,
  *     productFamilyName: string|null,
  *     mainWebspace: string|null,
@@ -169,14 +167,9 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
             'metadata' => [],
             ProductIndex::FIELD => [
                 'code' => (string) $row['code'],
-                'type' => $row['type'],
-                'status' => $row['status'],
                 'productFamilyId' => (string) $row['productFamilyId'],
-                'productFamilyName' => (string) $row['productFamilyName'],
-                'changedAt' => $row['changed']->format('c'),
                 ProductIndex::TEXT_VALUES_FIELD => [],
                 ProductIndex::NUMERIC_VALUES_FIELD => [],
-                'attributes' => [],
             ],
         ];
     }
@@ -188,7 +181,7 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
      */
     private function loadBatch(array $identifiers, int $offset): array
     {
-        // Code, status and the product family are stored once per product, on the unlocalized dimension content.
+        // Code and the product family are stored once per product, on the unlocalized dimension content.
         $queryBuilder = $this->dimensionContentRepository->createQueryBuilder('dimensionContent')
             ->innerJoin('dimensionContent.product', 'product')
             ->innerJoin(
@@ -211,7 +204,6 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
             ->addSelect('dimensionContent.title')
             ->addSelect('unlocalizedDimensionContent.code')
             ->addSelect('unlocalizedDimensionContent.externalIdentifier')
-            ->addSelect('unlocalizedDimensionContent.status')
             ->addSelect('productFamily.uuid AS productFamilyId')
             ->addSelect('productFamilyTranslation.name AS productFamilyName')
             ->addSelect('dimensionContent.mainWebspace')
