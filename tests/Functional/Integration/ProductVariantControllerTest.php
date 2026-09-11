@@ -106,13 +106,14 @@ class ProductVariantControllerTest extends SuluTestCase
             [],
             [],
             [],
-            \json_encode([
+            \json_encode(\array_filter([
                 'locale' => 'en',
                 'title' => $title,
-                'url' => '/test-product-' . $counter,
+                // a product with variants shows no route field, its variants carry the routes
+                'url' => ProductInterface::TYPE_PRODUCT_WITH_VARIANTS === $type ? null : '/test-product-' . $counter,
                 'productFamily' => $familyId,
                 'type' => $type,
-            ]) ?: null,
+            ], static fn ($value) => null !== $value)) ?: null,
         );
         $this->assertHttpStatusCode(201, $this->client->getResponse());
         $data = \json_decode((string) $this->client->getResponse()->getContent(), true);

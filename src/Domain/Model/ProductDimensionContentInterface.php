@@ -31,6 +31,11 @@ interface ProductDimensionContentInterface extends DimensionContentInterface, Ex
 {
     public const DEFAULT_STATUS = 'available';
 
+    /**
+     * @internal
+     */
+    public function removeRoute(): void;
+
     public function getTitle(): ?string;
 
     public function setTitle(?string $title): static;

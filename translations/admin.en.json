@@ -28,6 +28,7 @@
     "sulu_product.product_type_product_with_variants": "Product with variants",
     "sulu_product.product_type_variant": "Variant",
     "sulu_product.code": "Code",
+    "sulu_product.url": "URL",
     "sulu_product.external_identifier": "External Identifier",
     "sulu_product.options": "Options",
     "sulu_product.no_product_selected": "No product selected",

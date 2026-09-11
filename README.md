@@ -1,22 +1,38 @@
 # Sulu Product Bundle
 
-## Variant URLs
+## Product route
 
-A variant owns no route of its own. Referenced from a page, it resolves to its parent's URL plus a
-query parameter carrying the variant code, so `/products/cable` with code `XY-2` resolves to
-`/products/cable?variant=XY-2`.
-
-The bundle only writes that URL — nothing reads the parameter back off the request. A project
-selects the variant itself, which makes the key a contract between both sides: change it under
-`sulu_product.variant_query_parameter` and the reading side has to match by hand.
+The route field of a product lives in the `product_details` form and in the `product_variant`
+overlay, not in the product template. Its field type and its params are configured once for the
+whole project, so a form does not repeat them:
 
 ```yaml
 sulu_product:
-    variant_query_parameter: 'variant' # default
+    route:
+        type: route # default, e.g. "page_tree_route" for a route below a page
+        params:
+            route_schema: "/products/{implode('-', object)}" # default
 ```
 
-A variant whose parent has no published route in the requested locale resolves without a `url`,
-because an empty string would point at the site root.
+`params` takes any key the configured field type understands and forwards it to the field as-is;
+`route_schema` is the one the `route` field reads to generate the URL out of the fields tagged
+`sulu.rlp.part`. A param configured here wins over the same param declared in the form XML. Both
+forms get the same type and the same params.
+
+`route_schema` defaults to the value above, so a product URL starts with `/products/` without any
+configuration. A project overrides that key or adds params of its own, and the default stays for
+every key the project does not set.
+
+The same field is added invisibly to every product template, because `RoutableDataMapper` of the
+content package reads the route property off the template metadata. A template declaring its own
+`url` property keeps it and only receives the configured type and params.
+
+## Variant URLs
+
+A variant owns its route: the URL field is mandatory on the variant overlay, so every variant
+carries an address of its own. A product with variants owns none, it is reached through its
+variants, which is why the field is hidden for that type and the route guard drops one that
+reaches such a product programmatically.
 
 ## Association form overrides
 

@@ -131,6 +131,14 @@ class ProductDimensionContent implements ProductDimensionContentInterface
         return false;
     }
 
+    /**
+     * @internal
+     */
+    public function removeRoute(): void
+    {
+        $this->route = null;
+    }
+
     public static function getResourceKey(): string
     {
         return ProductInterface::RESOURCE_KEY;

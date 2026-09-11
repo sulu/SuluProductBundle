@@ -24,6 +24,7 @@ use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductInterface;
+use Sulu\Route\Domain\Model\Route;
 
 #[CoversClass(ProductDimensionContent::class)]
 class ProductDimensionContentTest extends TestCase
@@ -57,6 +58,16 @@ class ProductDimensionContentTest extends TestCase
     public function testIsRouteMandatoryReturnsFalse(): void
     {
         $this->assertFalse(ProductDimensionContent::isRouteMandatory());
+    }
+
+    public function testRemoveRouteDropsTheRoute(): void
+    {
+        $dimensionContent = new ProductDimensionContent(new Product());
+        $dimensionContent->setRoute(new Route('products', '1', 'en', '/products/my-product'));
+
+        $dimensionContent->removeRoute();
+
+        $this->assertNull($dimensionContent->getRoute());
     }
 
     public function testSetTemplateDataExtractsTitle(): void

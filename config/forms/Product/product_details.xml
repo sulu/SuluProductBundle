@@ -6,35 +6,8 @@
     <key>product_details</key>
 
     <properties>
-        <property name="title" type="text_line" mandatory="true" colspan="12">
-            <meta>
-                <title>sulu_admin.name</title>
-            </meta>
-
-            <params>
-                <param name="headline" value="true"/>
-            </params>
-        </property>
-
-        <property name="code" type="text_line" colspan="6">
-            <meta>
-                <title>sulu_product.code</title>
-            </meta>
-        </property>
-
-        <property name="status" type="single_select" colspan="6">
-            <meta>
-                <title>sulu_product.status</title>
-            </meta>
-        </property>
-
-        <property name="productFamily" type="single_product_family_selection" mandatory="true" colspan="6" disabledCondition="!!id" multilingual="false">
-            <meta>
-                <title>sulu_product.product_family</title>
-            </meta>
-        </property>
-
-        <property name="type" type="single_select" mandatory="true" colspan="6" disabledCondition="!!id">
+        <property name="type" type="single_select" mandatory="true" colspan="4" disabledCondition="!!id or url">
+            <!-- as soon as an URL generated we can not allow to switch back as emptying an URL is not possible -->
             <meta>
                 <title>sulu_product.product_type</title>
             </meta>
@@ -54,6 +27,48 @@
                     </param>
                 </param>
             </params>
+        </property>
+
+        <property name="productFamily" type="single_product_family_selection" mandatory="true" colspan="4" disabledCondition="!!id" multilingual="false">
+            <meta>
+                <title>sulu_product.product_family</title>
+            </meta>
+        </property>
+
+        <property name="status" type="single_select" colspan="4">
+            <meta>
+                <title>sulu_product.status</title>
+            </meta>
+        </property>
+
+        <property name="title" type="text_line" mandatory="true" colspan="8">
+            <meta>
+                <title>sulu_admin.name</title>
+            </meta>
+
+            <params>
+                <param name="headline" value="true"/>
+            </params>
+
+            <tag name="sulu.rlp.part"/>
+        </property>
+
+        <property name="code" type="text_line" colspan="4">
+            <meta>
+                <title>sulu_product.code</title>
+            </meta>
+
+            <params>
+                <param name="headline" value="true"/>
+            </params>
+        </property>
+
+        <property name="url" type="route" colspan="12" visibleCondition="type != 'product_with_variants'">
+            <meta>
+                <title>sulu_product.url</title>
+            </meta>
+
+            <tag name="sulu.rlp"/>
         </property>
 
         <property name="externalIdentifier" type="text_line" colspan="12"
