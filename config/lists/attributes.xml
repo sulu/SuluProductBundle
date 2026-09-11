@@ -99,6 +99,33 @@
             </field>
         </case-property>
 
+        <case-property name="groupName" translation="sulu_product.attribute_group" visibility="yes" sortable="true">
+            <field>
+                <field-name>name</field-name>
+                <entity-name>groupTranslation</entity-name>
+                <joins ref="groupTranslation"/>
+            </field>
+            <field>
+                <field-name>name</field-name>
+                <entity-name>groupTranslationDefault</entity-name>
+                <joins ref="groupDefaultTranslation"/>
+            </field>
+        </case-property>
+
+        <property name="group" translation="sulu_product.attribute_group" visibility="never">
+            <field-name>uuid</field-name>
+            <entity-name>Sulu\Product\Domain\Model\AttributeGroupInterface</entity-name>
+            <joins ref="group"/>
+
+            <filter type="selection">
+                <params>
+                    <param name="displayProperty" value="name"/>
+                    <param name="resourceKey" value="attribute_groups"/>
+                    <param name="type" value="select"/>
+                </params>
+            </filter>
+        </property>
+
         <property name="key" translation="sulu_admin.key" visibility="yes" searchability="yes">
             <field-name>key</field-name>
             <entity-name>Sulu\Product\Domain\Model\AttributeInterface</entity-name>
@@ -113,25 +140,6 @@
             <field-name>position</field-name>
             <entity-name>Sulu\Product\Domain\Model\AttributeInterface</entity-name>
         </property>
-
-        <property name="group" visibility="never">
-            <field-name>uuid</field-name>
-            <entity-name>Sulu\Product\Domain\Model\AttributeGroupInterface</entity-name>
-            <joins ref="group"/>
-        </property>
-
-        <case-property name="groupName" translation="sulu_product.attribute_group" visibility="yes" sortable="true">
-            <field>
-                <field-name>name</field-name>
-                <entity-name>groupTranslation</entity-name>
-                <joins ref="groupTranslation"/>
-            </field>
-            <field>
-                <field-name>name</field-name>
-                <entity-name>groupTranslationDefault</entity-name>
-                <joins ref="groupDefaultTranslation"/>
-            </field>
-        </case-property>
 
         <property name="created" translation="sulu_admin.created" visibility="no">
             <field-name>created</field-name>

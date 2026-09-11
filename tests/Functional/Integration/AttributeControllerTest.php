@@ -138,6 +138,41 @@ class AttributeControllerTest extends SuluTestCase
         $this->assertSame(['attr-a1', 'attr-a2'], $keys);
     }
 
+    /** The list XML declares a selection filter on the group, so the admin and the overlay can narrow by it. */
+    public function testGetListFiltersByGroupFilterParameter(): void
+    {
+        self::purgeDatabase();
+        $groupAId = $this->createGroup('Group A');
+        $groupBId = $this->createGroup('Group B');
+        $groupCId = $this->createGroup('Group C');
+
+        foreach ([['attr-a', $groupAId], ['attr-b', $groupBId], ['attr-c', $groupCId]] as [$key, $group]) {
+            $this->client->request(
+                'POST',
+                '/admin/api/attributes.json?locale=en',
+                [],
+                [],
+                [],
+                \json_encode(['locale' => 'en', 'key' => $key, 'name' => $key, 'type' => 'text', 'group' => $group]) ?: null,
+            );
+            $this->assertHttpStatusCode(201, $this->client->getResponse());
+        }
+
+        $this->client->request(
+            'GET',
+            '/admin/api/attributes.json?locale=en&filter[group]=' . $groupAId . ',' . $groupCId,
+        );
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(200, $response);
+
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
+        /** @var array{_embedded: array{attributes: list<array{key: string}>}} $data */
+        $keys = \array_column($data['_embedded']['attributes'], 'key');
+        \sort($keys);
+        $this->assertSame(['attr-a', 'attr-c'], $keys);
+    }
+
     public function testGetListSortsByGroupNameThenPosition(): void
     {
         self::purgeDatabase();
