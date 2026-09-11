@@ -103,8 +103,8 @@ class ProductRemovedEventTest extends TestCase
 
     public function testGetRelatedProductIdsReturnsIdsFromContext(): void
     {
-        $event = new ProductRemovedEvent('product-id', 'Title', ['relatedIds' => ['parent-id', 'variant-id']]);
+        $event = new ProductRemovedEvent('product-id', 'Title', ['relatedIds' => ['variant-one-id', 'variant-two-id']]);
 
-        $this->assertSame(['parent-id', 'variant-id'], $event->getRelatedProductIds());
+        $this->assertSame(['variant-one-id', 'variant-two-id'], $event->getRelatedProductIds());
     }
 }

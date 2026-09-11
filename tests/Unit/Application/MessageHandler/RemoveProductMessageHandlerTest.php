@@ -208,7 +208,11 @@ class RemoveProductMessageHandlerTest extends TestCase
         ($handler)(new RemoveProductMessage(['uuid' => 'parent-uuid'], 'en'));
     }
 
-    public function testRemoveVariantPutsTheParentIdIntoTheEvent(): void
+    /**
+     * A parent is represented by its variants and has no document of its own, so removing a variant
+     * leaves nothing of the parent to update.
+     */
+    public function testRemoveVariantPutsNoRelatedIdsIntoTheEvent(): void
     {
         $parent = new Product('parent-uuid');
         $variant = new Product('variant-uuid');
@@ -221,7 +225,7 @@ class RemoveProductMessageHandlerTest extends TestCase
         $this->productRepository->remove($variant)->shouldBeCalledOnce();
 
         $this->domainEventCollector->collect(Argument::that(function(ProductRemovedEvent $event): bool {
-            $this->assertSame(['parent-uuid'], $event->getRelatedProductIds());
+            $this->assertArrayNotHasKey('relatedIds', $event->getEventContext());
 
             return true;
         }))->shouldBeCalledOnce();

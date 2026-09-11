@@ -72,8 +72,8 @@ class ProductRemovedEvent extends DomainEvent
     }
 
     /**
-     * Uuids of the parent and the variants the removal takes with it, so consumers can react on
-     * the whole family. The removed product itself is not part of the list.
+     * Uuids of the variants the removal takes with it, as they fire no event of their own. The
+     * removed product itself is not part of the list.
      *
      * @return string[]
      */

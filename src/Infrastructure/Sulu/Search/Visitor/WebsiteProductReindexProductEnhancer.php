@@ -24,7 +24,7 @@ use Sulu\Product\Infrastructure\Sulu\Search\ProductIndex;
 
 /**
  * Fills the product field of the website document: option keys and text values as
- * "<attributeKey>:<value>" entries, number and date values per attribute field, and a display map.
+ * "<attributeKey>:<value>" entries, and number and date values per attribute field.
  * The details tab's own text (code, external identifier, product family name, short description)
  * plus the text values and option labels go into the searchable content, which the content
  * enhancer resets, so this enhancer runs after it.
@@ -38,7 +38,6 @@ use Sulu\Product\Infrastructure\Sulu\Search\ProductIndex;
  *     valueLocale: string|null,
  *     attributeKey: string,
  *     attributeType: string,
- *     attributeLabel: string|null,
  *     optionKey: string|null,
  *     optionLabel: string|null,
  *     number: float|null,
@@ -146,11 +145,8 @@ final class WebsiteProductReindexProductEnhancer implements WebsiteProductReinde
 
         $textValues = [];
         $numericValues = [];
-        $attributes = [];
 
         foreach ($this->mergedValues($productId, $locale, $type, \is_string($parentId) ? $parentId : null) as $key => $valueRow) {
-            $label = $valueRow['attributeLabel'] ?? $key;
-
             switch ($valueRow['attributeType']) {
                 case AttributeInterface::TYPE_NUMBER:
                 case AttributeInterface::TYPE_DATE:
@@ -159,17 +155,14 @@ final class WebsiteProductReindexProductEnhancer implements WebsiteProductReinde
                     }
 
                     $numericValues[ProductIndex::numericField($key)] = [$valueRow['number']];
-                    $attributes[$key] = ['label' => $label, 'value' => $valueRow['number']];
                     break;
                 case AttributeInterface::TYPE_OPTIONS:
                     if (null === $valueRow['optionKey']) {
                         break;
                     }
 
-                    $optionLabel = $valueRow['optionLabel'] ?? $valueRow['optionKey'];
                     $textValues[] = ProductIndex::textValue($key, $valueRow['optionKey']);
-                    $content[] = $optionLabel;
-                    $attributes[$key] = ['label' => $label, 'value' => $optionLabel];
+                    $content[] = $valueRow['optionLabel'] ?? $valueRow['optionKey'];
                     break;
                 case AttributeInterface::TYPE_TEXT:
                     $text = \is_string($valueRow['text']) ? \trim($valueRow['text']) : '';
@@ -179,7 +172,6 @@ final class WebsiteProductReindexProductEnhancer implements WebsiteProductReinde
 
                     $textValues[] = ProductIndex::textValue($key, $text);
                     $content[] = $text;
-                    $attributes[$key] = ['label' => $label, 'value' => $text];
                     break;
             }
         }
@@ -190,7 +182,6 @@ final class WebsiteProductReindexProductEnhancer implements WebsiteProductReinde
         $product = \is_array($document[ProductIndex::FIELD] ?? null) ? $document[ProductIndex::FIELD] : [];
         $product[ProductIndex::TEXT_VALUES_FIELD] = \array_values(\array_unique($textValues));
         $product[ProductIndex::NUMERIC_VALUES_FIELD] = $numericValues;
-        $product['attributes'] = $attributes;
         $document[ProductIndex::FIELD] = $product;
 
         return $document;
@@ -233,7 +224,6 @@ final class WebsiteProductReindexProductEnhancer implements WebsiteProductReinde
             ->innerJoin('value.productDimensionContent', 'dimensionContent')
             ->innerJoin('dimensionContent.product', 'product')
             ->innerJoin('value.attribute', 'attribute')
-            ->leftJoin('attribute.translations', 'attributeTranslation', Join::WITH, 'attributeTranslation.locale = :locale')
             // The option relation of a value is not written, so its label is looked up by key.
             ->leftJoin('attribute.options', 'option', Join::WITH, 'option.key = value.attributeOptionKey')
             ->leftJoin('option.translations', 'optionTranslation', Join::WITH, 'optionTranslation.locale = :locale')
@@ -243,7 +233,6 @@ final class WebsiteProductReindexProductEnhancer implements WebsiteProductReinde
             ->addSelect('dimensionContent.locale AS valueLocale')
             ->addSelect('attribute.key AS attributeKey')
             ->addSelect('attribute.type AS attributeType')
-            ->addSelect('attributeTranslation.name AS attributeLabel')
             ->addSelect('value.attributeOptionKey AS optionKey')
             ->addSelect('optionTranslation.name AS optionLabel')
             ->addSelect('value.number')

@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Sulu\Product\Tests\Functional\Infrastructure\Sulu\Search;
 
 use CmsIg\Seal\Schema\Field;
+use CmsIg\Seal\Schema\Index;
 use CmsIg\Seal\Schema\Loader\LoaderInterface;
 use CmsIg\Seal\Schema\Schema;
 use Doctrine\ORM\EntityManagerInterface;
@@ -22,9 +23,7 @@ use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Search\ProductIndex;
-use Sulu\Product\Infrastructure\Sulu\Search\Schema\NumericAttributeLister;
-use Symfony\Component\Cache\Adapter\ArrayAdapter;
-use Symfony\Component\Cache\CacheItem;
+use Sulu\Product\Infrastructure\Sulu\Search\Schema\ProductSchemaLoader;
 
 class ProductSchemaTest extends SuluTestCase
 {
@@ -43,12 +42,11 @@ class ProductSchemaTest extends SuluTestCase
 
         $product = $index->fields[ProductIndex::FIELD];
         $this->assertInstanceOf(Field\ObjectField::class, $product);
-        foreach (['code', 'status', 'productFamilyId', 'productFamilyName', ProductIndex::TEXT_VALUES_FIELD, ProductIndex::NUMERIC_VALUES_FIELD, 'attributes'] as $name) {
+        foreach (['code', 'productFamilyId', ProductIndex::TEXT_VALUES_FIELD, ProductIndex::NUMERIC_VALUES_FIELD] as $name) {
             $this->assertArrayHasKey($name, $product->fields, $name);
         }
 
         $this->assertContains('product.code', $index->filterableFields);
-        $this->assertContains('product.status', $index->facetFields);
         $this->assertContains('product.productFamilyId', $index->facetFields);
         $this->assertContains(ProductIndex::textValuesPath(), $index->filterableFields);
         $this->assertContains(ProductIndex::textValuesPath(), $index->facetFields);
@@ -77,10 +75,6 @@ class ProductSchemaTest extends SuluTestCase
         }
         $entityManager->flush();
 
-        /** @var NumericAttributeLister $lister */
-        $lister = $container->get('sulu_product.numeric_attribute_lister');
-        $lister->clear();
-
         /** @var LoaderInterface $loader */
         $loader = $container->get('sulu_product.product_schema_loader');
         $index = $loader->load()->indexes[ProductIndex::NAME];
@@ -95,7 +89,7 @@ class ProductSchemaTest extends SuluTestCase
         $this->assertContains(ProductIndex::numericValuePath('weight'), $index->facetFields);
     }
 
-    public function testNumericAttributeCacheIsInvalidatedAutomaticallyByTheDoctrineListener(): void
+    public function testSchemaFollowsTheAttributeTable(): void
     {
         self::purgeDatabase();
         $container = self::getContainer();
@@ -106,15 +100,9 @@ class ProductSchemaTest extends SuluTestCase
         $attributeRepository = $container->get(AttributeRepositoryInterface::class);
         /** @var EntityManagerInterface $entityManager */
         $entityManager = $container->get('doctrine.orm.entity_manager');
-        /** @var NumericAttributeLister $lister */
-        $lister = $container->get('sulu_product.numeric_attribute_lister');
         /** @var LoaderInterface $loader */
         $loader = $container->get('sulu_product.product_schema_loader');
 
-        // Warm the cache with the database in its just-purged, attribute-free state. No test
-        // below calls clear() itself; every field-list change must reach the schema through the
-        // doctrine.orm.entity_listener wiring alone.
-        $lister->clear();
         $fields = $this->numericFields($loader->load()->indexes[ProductIndex::NAME]->fields);
         $this->assertArrayNotHasKey('weight', $fields);
 
@@ -127,22 +115,97 @@ class ProductSchemaTest extends SuluTestCase
         $entityManager->flush();
 
         $fields = $this->numericFields($loader->load()->indexes[ProductIndex::NAME]->fields);
-        $this->assertInstanceOf(Field\FloatField::class, $fields['weight'], 'postPersist should have invalidated the cache');
-        $this->assertTrue($fields['weight']->filterable);
+        $this->assertInstanceOf(Field\FloatField::class, $fields['weight']);
 
         $attribute->setKey('mass');
         $attributeRepository->save($attribute);
         $entityManager->flush();
 
         $fields = $this->numericFields($loader->load()->indexes[ProductIndex::NAME]->fields);
-        $this->assertArrayNotHasKey('weight', $fields, 'postUpdate should have invalidated the cache');
+        $this->assertArrayNotHasKey('weight', $fields);
         $this->assertInstanceOf(Field\FloatField::class, $fields['mass']);
 
         $attributeRepository->remove($attribute);
         $entityManager->flush();
 
         $fields = $this->numericFields($loader->load()->indexes[ProductIndex::NAME]->fields);
-        $this->assertArrayNotHasKey('mass', $fields, 'postRemove should have invalidated the cache');
+        $this->assertArrayNotHasKey('mass', $fields);
+    }
+
+    public function testStaticFieldWinsOverNumericFieldOfSameName(): void
+    {
+        self::purgeDatabase();
+        $this->createNumericAttribute('weight');
+
+        $loader = $this->createLoader(new Schema([
+            ProductIndex::NAME => new Index(ProductIndex::NAME, $this->websiteFields([
+                'weight' => new Field\TextField('weight', searchable: false, filterable: true),
+            ])),
+        ]));
+
+        $fields = $this->numericFields($loader->load()->indexes[ProductIndex::NAME]->fields);
+        $this->assertInstanceOf(Field\TextField::class, $fields['weight']);
+    }
+
+    public function testSchemaWithoutProductFieldIsReturnedUnchanged(): void
+    {
+        $original = new Schema([ProductIndex::NAME => new Index(ProductIndex::NAME, ['id' => new Field\IdentifierField('id')])]);
+
+        $this->assertSame($original, $this->createLoader($original)->load());
+    }
+
+    private function createLoader(Schema $schema): ProductSchemaLoader
+    {
+        /** @var EntityManagerInterface $entityManager */
+        $entityManager = self::getContainer()->get('doctrine.orm.entity_manager');
+
+        $inner = new class($schema) implements LoaderInterface {
+            public function __construct(private readonly Schema $schema)
+            {
+            }
+
+            public function load(): Schema
+            {
+                return $this->schema;
+            }
+        };
+
+        return new ProductSchemaLoader($inner, $entityManager);
+    }
+
+    private function createNumericAttribute(string $key): void
+    {
+        $container = self::getContainer();
+        /** @var AttributeGroupRepositoryInterface $groupRepository */
+        $groupRepository = $container->get(AttributeGroupRepositoryInterface::class);
+        /** @var AttributeRepositoryInterface $attributeRepository */
+        $attributeRepository = $container->get(AttributeRepositoryInterface::class);
+        /** @var EntityManagerInterface $entityManager */
+        $entityManager = $container->get('doctrine.orm.entity_manager');
+
+        $group = $groupRepository->create();
+        $groupRepository->save($group);
+        $attribute = $attributeRepository->create($group);
+        $attribute->setKey($key);
+        $attribute->setType(AttributeInterface::TYPE_NUMBER);
+        $attributeRepository->save($attribute);
+        $entityManager->flush();
+    }
+
+    /**
+     * @param array<string, Field\AbstractField> $numericFields
+     *
+     * @return array<string, Field\AbstractField>
+     */
+    private function websiteFields(array $numericFields = []): array
+    {
+        return [
+            'id' => new Field\IdentifierField('id'),
+            ProductIndex::FIELD => new Field\ObjectField(ProductIndex::FIELD, [
+                ProductIndex::TEXT_VALUES_FIELD => new Field\TextField(ProductIndex::TEXT_VALUES_FIELD, multiple: true, searchable: false, filterable: true, facet: true),
+                ProductIndex::NUMERIC_VALUES_FIELD => new Field\ObjectField(ProductIndex::NUMERIC_VALUES_FIELD, $numericFields),
+            ]),
+        ];
     }
 
     /**
@@ -158,27 +221,5 @@ class ProductSchemaTest extends SuluTestCase
         $this->assertInstanceOf(Field\ObjectField::class, $numericValues);
 
         return $numericValues->fields;
-    }
-
-    /**
-     * The entity listener only invalidates the pool of the kernel context it runs in, so the entry
-     * carries an expiry as well.
-     */
-    public function testCachedFieldListIsStoredWithAnExpiry(): void
-    {
-        /** @var EntityManagerInterface $entityManager */
-        $entityManager = self::getContainer()->get('doctrine.orm.entity_manager');
-
-        $cache = new ArrayAdapter();
-        (new NumericAttributeLister($entityManager, $cache))->getFields();
-
-        $metadata = $cache->getItem(NumericAttributeLister::CACHE_KEY)->getMetadata();
-
-        $this->assertArrayHasKey(CacheItem::METADATA_EXPIRY, $metadata);
-        $this->assertEqualsWithDelta(
-            \microtime(true) + NumericAttributeLister::CACHE_TTL,
-            $metadata[CacheItem::METADATA_EXPIRY],
-            30.0,
-        );
     }
 }

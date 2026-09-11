@@ -24,7 +24,6 @@
 
     <templates>
         <template type="search">search/search</template>
-        <template type="product_search">views/products/search</template>
     </templates>
 
     <navigation>

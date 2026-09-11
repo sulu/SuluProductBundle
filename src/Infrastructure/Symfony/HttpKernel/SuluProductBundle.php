@@ -47,7 +47,6 @@ use Sulu\Product\Application\MessageHandler\RemoveProductFamilyMessageHandler;
 use Sulu\Product\Application\MessageHandler\RemoveProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\RemoveProductTranslationMessageHandler;
 use Sulu\Product\Application\MessageHandler\RestoreProductVersionMessageHandler;
-use Sulu\Product\Application\Search\ProductSearcher;
 use Sulu\Product\Application\Webspace\WebspaceSettingsConfigurationResolver;
 use Sulu\Product\Application\Workflow\VariantParentPublishStateUpdater;
 use Sulu\Product\Application\Workflow\VariantWorkflowCascader;
@@ -142,8 +141,6 @@ use Sulu\Product\Infrastructure\Sulu\Reference\ProductReferenceRefresher;
 use Sulu\Product\Infrastructure\Sulu\Route\ProductRouteDefaultsProvider;
 use Sulu\Product\Infrastructure\Sulu\Search\AdminProductIndexListener;
 use Sulu\Product\Infrastructure\Sulu\Search\AdminProductReindexProvider;
-use Sulu\Product\Infrastructure\Sulu\Search\Schema\NumericAttributeCacheInvalidator;
-use Sulu\Product\Infrastructure\Sulu\Search\Schema\NumericAttributeLister;
 use Sulu\Product\Infrastructure\Sulu\Search\Schema\ProductSchemaLoader;
 use Sulu\Product\Infrastructure\Sulu\Search\Visitor\AdminProductReindexProviderEnhancerInterface;
 use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductReindexContentEnhancer;
@@ -167,7 +164,6 @@ use Sulu\Product\UserInterface\Controller\Admin\ProductController;
 use Sulu\Product\UserInterface\Controller\Admin\ProductFamilyController;
 use Sulu\Product\UserInterface\Controller\Admin\ProductVariantController;
 use Sulu\Product\UserInterface\Controller\Website\ProductController as WebsiteProductController;
-use Sulu\Product\UserInterface\Controller\Website\ProductSearchController;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -1262,49 +1258,13 @@ final class SuluProductBundle extends AbstractBundle
             ])
             ->tag('sulu_product.website_product_reindex_provider_enhancer', ['priority' => -10]);
 
-        $services->set('sulu_product.product_searcher')
-            ->class(ProductSearcher::class)
-            ->args([
-                new Reference('cmsig_seal.engine.default'),
-                new Reference('cmsig_seal.schema.default'),
-            ]);
-        $services->alias(ProductSearcher::class, 'sulu_product.product_searcher');
-
-        $services->set('sulu_product.controller.website_search')
-            ->class(ProductSearchController::class)
-            ->public()
-            ->args([
-                new Reference('sulu_product.product_searcher'),
-                new Reference('sulu_core.webspace.request_analyzer'),
-                new Reference('twig'),
-                new Reference('sulu_website.resolver.template_attribute'),
-                '%sulu_product.variant_query_parameter%',
-            ])
-            ->tag('sulu.context', ['context' => 'website']);
-
-        $services->set('sulu_product.numeric_attribute_lister')
-            ->class(NumericAttributeLister::class)
-            ->args([
-                new Reference('doctrine.orm.entity_manager'),
-                new Reference('cache.app'),
-            ]);
-
         $services->set('sulu_product.product_schema_loader')
             ->class(ProductSchemaLoader::class)
             ->decorate('cmsig_seal.schema_loader.default')
             ->args([
                 new Reference('.inner'),
-                new Reference('sulu_product.numeric_attribute_lister'),
+                new Reference('doctrine.orm.entity_manager'),
             ]);
-
-        $services->set('sulu_product.numeric_attribute_cache_invalidator')
-            ->class(NumericAttributeCacheInvalidator::class)
-            ->args([
-                new Reference('sulu_product.numeric_attribute_lister'),
-            ])
-            ->tag('doctrine.orm.entity_listener', ['entity' => Attribute::class, 'event' => 'postPersist'])
-            ->tag('doctrine.orm.entity_listener', ['entity' => Attribute::class, 'event' => 'postUpdate'])
-            ->tag('doctrine.orm.entity_listener', ['entity' => Attribute::class, 'event' => 'postRemove']);
     }
 
     /**

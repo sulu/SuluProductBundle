@@ -17,18 +17,28 @@ use CmsIg\Seal\Schema\Field;
 use CmsIg\Seal\Schema\Index;
 use CmsIg\Seal\Schema\Loader\LoaderInterface;
 use CmsIg\Seal\Schema\Schema;
+use Doctrine\ORM\EntityManagerInterface;
+use Sulu\Product\Domain\Model\Attribute;
+use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Infrastructure\Sulu\Search\ProductIndex;
 
 /**
- * Appends one field per numeric attribute to the product object field of the website index.
+ * Appends one field per number and date attribute to the product object field of the website
+ * index; a date is stored in the number column. Text and options attributes need none, their
+ * values go into the text values field.
  *
  * @internal
  */
 final class ProductSchemaLoader implements LoaderInterface
 {
+    private const NUMERIC_TYPES = [
+        AttributeInterface::TYPE_NUMBER,
+        AttributeInterface::TYPE_DATE,
+    ];
+
     public function __construct(
         private readonly LoaderInterface $inner,
-        private readonly NumericAttributeLister $numericAttributeLister,
+        private readonly EntityManagerInterface $entityManager,
     ) {
     }
 
@@ -50,7 +60,7 @@ final class ProductSchemaLoader implements LoaderInterface
         $productFields = $product->fields;
         $productFields[ProductIndex::NUMERIC_VALUES_FIELD] = new Field\ObjectField(
             $numericValues->name,
-            \array_merge($this->numericAttributeLister->getFields(), $numericValues->fields),
+            \array_merge($this->loadNumericFields(), $numericValues->fields),
             $numericValues->multiple,
             $numericValues->options,
         );
@@ -67,5 +77,35 @@ final class ProductSchemaLoader implements LoaderInterface
         $indexes[ProductIndex::NAME] = new Index($index->name, $fields, $index->options);
 
         return new Schema($indexes);
+    }
+
+    /**
+     * @return array<string, Field\FloatField>
+     */
+    private function loadNumericFields(): array
+    {
+        /** @var array<int, array{key: string}> $rows */
+        $rows = $this->entityManager->createQueryBuilder()
+            ->select('attribute.key AS key')
+            ->from(Attribute::class, 'attribute')
+            ->where('attribute.type IN (:types)')
+            ->setParameter('types', self::NUMERIC_TYPES)
+            ->orderBy('attribute.key', 'ASC')
+            ->getQuery()
+            ->getArrayResult();
+
+        $fields = [];
+        foreach (\array_column($rows, 'key') as $attributeKey) {
+            $name = ProductIndex::numericField($attributeKey);
+
+            // A field name must start with a letter and hold word characters only.
+            if (1 !== \preg_match('/^[A-Za-z]\w*$/', $name)) {
+                continue;
+            }
+
+            $fields[$name] = new Field\FloatField($name, multiple: true, searchable: false, filterable: true, facet: true);
+        }
+
+        return $fields;
     }
 }

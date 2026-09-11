@@ -136,7 +136,6 @@ class WebsiteProductReindexProviderTest extends TestCase
                     'type' => ProductInterface::TYPE_PRODUCT,
                     'parentId' => null,
                     'code' => 'NC3',
-                    'status' => 'available',
                     'productFamilyId' => 'family-uuid',
                     'productFamilyName' => 'XLR',
                     'detailsData' => [],
@@ -170,9 +169,7 @@ class WebsiteProductReindexProviderTest extends TestCase
         $product = $results[0]['product'];
         $this->assertIsArray($product);
         $this->assertSame('NC3', $product['code']);
-        $this->assertSame('available', $product['status']);
         $this->assertSame('family-uuid', $product['productFamilyId']);
-        $this->assertSame('XLR', $product['productFamilyName']);
     }
 
     public function testProvideRunsEnhancers(): void
@@ -184,7 +181,6 @@ class WebsiteProductReindexProviderTest extends TestCase
                     'type' => ProductInterface::TYPE_PRODUCT,
                     'parentId' => null,
                     'code' => 'CODE-1',
-                    'status' => 'available',
                     'productFamilyId' => null,
                     'productFamilyName' => null,
                     'detailsData' => [],
@@ -240,7 +236,6 @@ class WebsiteProductReindexProviderTest extends TestCase
                     'type' => ProductInterface::TYPE_PRODUCT,
                     'parentId' => null,
                     'code' => 'CODE-99',
-                    'status' => 'available',
                     'productFamilyId' => null,
                     'productFamilyName' => null,
                     'detailsData' => [],
@@ -276,7 +271,6 @@ class WebsiteProductReindexProviderTest extends TestCase
                     'type' => ProductInterface::TYPE_PRODUCT,
                     'parentId' => null,
                     'code' => 'CODE-7',
-                    'status' => 'available',
                     'productFamilyId' => null,
                     'productFamilyName' => null,
                     'detailsData' => [],
@@ -311,7 +305,6 @@ class WebsiteProductReindexProviderTest extends TestCase
                     'type' => ProductInterface::TYPE_PRODUCT,
                     'parentId' => null,
                     'code' => 'CODE-8',
-                    'status' => 'available',
                     'productFamilyId' => null,
                     'productFamilyName' => null,
                     'detailsData' => [],

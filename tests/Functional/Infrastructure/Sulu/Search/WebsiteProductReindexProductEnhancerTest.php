@@ -24,7 +24,6 @@ use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Search\ProductIndex;
-use Sulu\Product\Infrastructure\Sulu\Search\Schema\NumericAttributeLister;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 
 class WebsiteProductReindexProductEnhancerTest extends SuluTestCase
@@ -48,7 +47,6 @@ class WebsiteProductReindexProductEnhancerTest extends SuluTestCase
         $weightId = $this->createAttribute('weight', 'Weight', AttributeInterface::TYPE_NUMBER, false);
         $colourId = $this->createAttribute('colour', 'Colour', AttributeInterface::TYPE_OPTIONS, false, ['red' => 'Red', 'blue' => 'Blue']);
         $noteId = $this->createAttribute('note', 'Note', AttributeInterface::TYPE_TEXT, true);
-        $this->clearAttributeIndexFields();
 
         $familyId = $this->createProductFamily([
             $weightId => ['enabled' => true],
@@ -77,13 +75,6 @@ class WebsiteProductReindexProductEnhancerTest extends SuluTestCase
         $this->assertContains('Red', $red['content']);
         $this->assertNotContains('Blue', $red['content']);
         $this->assertContains('Gold plated', $red['content']);
-        $this->assertIsArray($redProduct['attributes']);
-        $this->assertIsArray($redProduct['attributes']['colour']);
-        $this->assertSame('Red', $redProduct['attributes']['colour']['value']);
-        $this->assertSame('Colour', $redProduct['attributes']['colour']['label']);
-        $this->assertIsArray($redProduct['attributes']['weight']);
-        $this->assertSame('Weight', $redProduct['attributes']['weight']['label']);
-        $this->assertSame(2.5, $redProduct['attributes']['weight']['value']);
 
         $blue = $engine->getDocument(ProductIndex::NAME, ProductIndex::documentId($blueId, 'en'));
         $blueProduct = $blue['product'];
@@ -99,7 +90,6 @@ class WebsiteProductReindexProductEnhancerTest extends SuluTestCase
 
         $weightId = $this->createAttribute('weight', 'Weight', AttributeInterface::TYPE_NUMBER, false);
         $noteId = $this->createAttribute('note', 'Note', AttributeInterface::TYPE_TEXT, true);
-        $this->clearAttributeIndexFields();
 
         $familyId = $this->createProductFamily([
             $weightId => ['enabled' => true],
@@ -127,21 +117,9 @@ class WebsiteProductReindexProductEnhancerTest extends SuluTestCase
         $secondProduct = $second['product'];
         $this->assertIsArray($secondProduct);
         $this->assertSame(['weight' => [3.0]], $secondProduct['attributes_numeric_values']);
-        $this->assertIsArray($secondProduct['attributes']);
-        $this->assertArrayNotHasKey('note', $secondProduct['attributes']);
+        $this->assertSame([], $secondProduct['attributes_text_values']);
         $this->assertIsArray($second['content']);
         $this->assertNotContains('First note', $second['content']);
-    }
-
-    /**
-     * The numeric fields are appended to the index schema from the attribute table, so the
-     * attributes must exist and the cached list must be dropped before the index is created.
-     */
-    private function clearAttributeIndexFields(): void
-    {
-        /** @var NumericAttributeLister $lister */
-        $lister = self::getContainer()->get('sulu_product.numeric_attribute_lister');
-        $lister->clear();
     }
 
     /**
