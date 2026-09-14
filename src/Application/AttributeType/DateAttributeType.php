@@ -19,7 +19,7 @@ use Webmozart\Assert\Assert;
 
 final class DateAttributeType extends AbstractAttributeType
 {
-    private const FORMAT = 'Y-m-d';
+    public const FORMAT = 'Y-m-d';
 
     public function getKey(): string
     {
