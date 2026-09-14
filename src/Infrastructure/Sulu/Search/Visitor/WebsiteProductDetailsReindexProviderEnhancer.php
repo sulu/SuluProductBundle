@@ -14,13 +14,11 @@ declare(strict_types=1);
 namespace Sulu\Product\Infrastructure\Sulu\Search\Visitor;
 
 use CmsIg\Seal\Converter\HtmlToTextConverter;
-use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
-use Sulu\Content\Domain\Model\DimensionContentInterface;
-use Sulu\Product\Domain\Model\AttributeInterface;
+use Sulu\Product\Domain\Model\AttributeOption;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
-use Sulu\Product\Domain\Model\ProductInterface;
 
 /**
  * Indexes the details tab: the product family and the attribute values as filter fields of the
@@ -31,15 +29,10 @@ use Sulu\Product\Domain\Model\ProductInterface;
  * variant-specific.
  *
  * @phpstan-type ValueRow array{
- *     productId: string,
- *     valueLocale: string|null,
- *     attributeKey: string,
- *     attributeType: string,
  *     optionKey: string|null,
  *     optionLabel: string|null,
  *     number: float|null,
  *     text: string|null,
- *     variantSpecific: bool|null,
  * }
  *
  * @internal this class is internal no backwards compatibility promise is given for this class
@@ -51,10 +44,10 @@ final class WebsiteProductDetailsReindexProviderEnhancer implements WebsiteProdu
     public const TEXT_VALUES_FIELD = 'attributes_text_values';
     public const NUMERIC_VALUES_FIELD = 'attributes_numeric_values';
 
-    public function __construct(
-        private readonly EntityManagerInterface $entityManager,
-    ) {
-    }
+    private const UNIT_SEPARATOR = "\x1F";
+    private const RECORD_SEPARATOR = "\x1E";
+    private const FIELD_COUNT = 5;
+    private const GROUP_CONCAT_MAX_LEN = 1048576;
 
     /**
      * One entry of the text values field: the attribute an option key or text value belongs to is
@@ -81,6 +74,13 @@ final class WebsiteProductDetailsReindexProviderEnhancer implements WebsiteProdu
 
     public function enhanceQuery(QueryBuilder $queryBuilder): void
     {
+        // MySQL and MariaDB cut GROUP_CONCAT at group_concat_max_len with only a warning, so the
+        // session limit is raised for every batch; Postgres aggregates without a limit.
+        $connection = $queryBuilder->getEntityManager()->getConnection();
+        if ($connection->getDatabasePlatform() instanceof AbstractMySQLPlatform) {
+            $connection->executeStatement('SET SESSION group_concat_max_len = ' . self::GROUP_CONCAT_MAX_LEN);
+        }
+
         $queryBuilder
             ->leftJoin('unlocalizedDimensionContent.productFamily', 'productFamily')
             ->leftJoin('productFamily.translations', 'productFamilyTranslation', Join::WITH, 'productFamilyTranslation.locale = dimensionContent.locale')
@@ -88,19 +88,56 @@ final class WebsiteProductDetailsReindexProviderEnhancer implements WebsiteProdu
             ->addSelect('productFamily.uuid AS productFamilyId')
             ->addSelect('productFamilyTranslation.name AS productFamilyName')
             ->addSelect('dimensionContent.detailsData')
-            ->addSelect('unlocalizedDimensionContent.detailsData AS unlocalizedDetailsData');
+            ->addSelect('unlocalizedDimensionContent.detailsData AS unlocalizedDetailsData')
+            ->addSelect('(' . $this->valuesSubquery($queryBuilder, 'own', 'product') . ') AS ownAttributeValues')
+            ->addSelect('(' . $this->valuesSubquery($queryBuilder, 'parent', 'product.parent') . ') AS parentAttributeValues');
+    }
+
+    /**
+     * The live values of one product, packed into one string so the batch query carries them and
+     * no query runs per document. A localized value is ordered after the unlocalized one, so the
+     * last record of an attribute wins. The parent's variant-specific attributes are not inherited.
+     *
+     * The product and its parent get a subquery each: with both in one `OR`, MySQL no longer uses
+     * the product index and scans every dimension content of the locale per row.
+     */
+    private function valuesSubquery(QueryBuilder $queryBuilder, string $alias, string $productExpression): string
+    {
+        $u = "'" . self::UNIT_SEPARATOR . "'";
+        $r = "'" . self::RECORD_SEPARATOR . "'";
+
+        $subquery = $queryBuilder->getEntityManager()->createQueryBuilder()
+            ->select(
+                'GROUP_CONCAT('
+                . "{$alias}Value.attributeKey, {$u}, "
+                . "COALESCE({$alias}Value.attributeOptionKey, ''), {$u}, "
+                . "COALESCE({$alias}OptionTranslation.name, ''), {$u}, "
+                . "COALESCE(CONCAT({$alias}Value.number, ''), ''), {$u}, "
+                . "COALESCE({$alias}Value.text, ''), {$r}"
+                . " ORDER BY CASE WHEN {$alias}DimensionContent.locale IS NULL THEN 0 ELSE 1 END ASC"
+                . " SEPARATOR '')",
+            )
+            ->from(ProductAttributeValue::class, "{$alias}Value")
+            ->innerJoin("{$alias}Value.productDimensionContent", "{$alias}DimensionContent")
+            // The option relation of a value is not written, so its label is looked up by key.
+            ->leftJoin(AttributeOption::class, "{$alias}Option", Join::WITH, "{$alias}Option.attribute = {$alias}Value.attribute AND {$alias}Option.key = {$alias}Value.attributeOptionKey")
+            ->leftJoin("{$alias}Option.translations", "{$alias}OptionTranslation", Join::WITH, "{$alias}OptionTranslation.locale = dimensionContent.locale")
+            ->where("{$alias}DimensionContent.product = {$productExpression}")
+            ->andWhere("{$alias}DimensionContent.stage = dimensionContent.stage")
+            ->andWhere("{$alias}DimensionContent.version = dimensionContent.version")
+            ->andWhere("{$alias}DimensionContent.locale = dimensionContent.locale OR {$alias}DimensionContent.locale IS NULL");
+
+        if ('parent' === $alias) {
+            $subquery
+                ->leftJoin("{$alias}Value.productFamilyAttribute", "{$alias}FamilyAttribute")
+                ->andWhere("{$alias}FamilyAttribute.variantSpecific = false OR {$alias}FamilyAttribute.variantSpecific IS NULL");
+        }
+
+        return $subquery->getDQL();
     }
 
     public function enhanceDocument(array $queryResult, array $document): array
     {
-        /** @var string $productId */
-        $productId = $queryResult['productId'];
-        /** @var string $locale */
-        $locale = $queryResult['locale'];
-        /** @var string $type */
-        $type = $queryResult['type'];
-        /** @var string|null $parentId */
-        $parentId = $queryResult['parentId'];
         /** @var list<string> $content */
         $content = $document['content'];
 
@@ -133,28 +170,21 @@ final class WebsiteProductDetailsReindexProviderEnhancer implements WebsiteProdu
         $textValues = [];
         $numericValues = [];
 
-        $isVariant = ProductInterface::TYPE_VARIANT === $type && null !== $parentId;
-        foreach ($this->loadValues($productId, $isVariant ? $parentId : null, $locale) as $key => $valueRow) {
-            switch ($valueRow['attributeType']) {
-                case AttributeInterface::TYPE_NUMBER:
-                case AttributeInterface::TYPE_DATE:
-                    if (null !== $valueRow['number']) {
-                        $numericValues[self::numericField($key)] = [$valueRow['number']];
-                    }
-                    break;
-                case AttributeInterface::TYPE_OPTIONS:
-                    if (null !== $valueRow['optionKey']) {
-                        $textValues[] = self::textValue($key, $valueRow['optionKey']);
-                        $content[] = $valueRow['optionLabel'] ?? $valueRow['optionKey'];
-                    }
-                    break;
-                case AttributeInterface::TYPE_TEXT:
-                    $text = \is_string($valueRow['text']) ? \trim($valueRow['text']) : '';
-                    if ('' !== $text) {
-                        $textValues[] = self::textValue($key, $text);
-                        $content[] = $text;
-                    }
-                    break;
+        // The product's own value wins over the parent's. An attribute type writes exactly one
+        // column, so the set column tells the type.
+        $values = \array_replace(
+            $this->decodeValues($queryResult['parentAttributeValues'] ?? null),
+            $this->decodeValues($queryResult['ownAttributeValues'] ?? null),
+        );
+        foreach ($values as $key => $valueRow) {
+            if (null !== $valueRow['number']) {
+                $numericValues[self::numericField($key)] = [$valueRow['number']];
+            } elseif (null !== $valueRow['optionKey']) {
+                $textValues[] = self::textValue($key, $valueRow['optionKey']);
+                $content[] = $valueRow['optionLabel'] ?? $valueRow['optionKey'];
+            } elseif (null !== $valueRow['text']) {
+                $textValues[] = self::textValue($key, $valueRow['text']);
+                $content[] = $valueRow['text'];
             }
         }
 
@@ -171,68 +201,37 @@ final class WebsiteProductDetailsReindexProviderEnhancer implements WebsiteProdu
     }
 
     /**
-     * The product's own values win over the parent's; a variant-specific attribute of the parent is
-     * not inherited.
-     *
-     * @return array<string, ValueRow> attribute key => row
+     * @return array<string, ValueRow> attribute key => the winning row
      */
-    private function loadValues(string $productId, ?string $parentId, string $locale): array
+    private function decodeValues(mixed $packed): array
     {
+        if (!\is_string($packed) || '' === $packed) {
+            return [];
+        }
+
+        // Every complete record ends with the record separator, so a cut string is detected.
+        if (!\str_ends_with($packed, self::RECORD_SEPARATOR)) {
+            throw new \RuntimeException('The packed attribute values were truncated, raise the "group_concat_max_len" of the MySQL connection.');
+        }
+
         $values = [];
-        foreach ($this->loadValueRows(\array_filter([$productId, $parentId]), $locale) as $valueRow) {
-            // A value sits on the localized or the unlocalized row; should both carry it, the localized one wins.
-            if (!isset($values[$valueRow['productId']][$valueRow['attributeKey']]) || null !== $valueRow['valueLocale']) {
-                $values[$valueRow['productId']][$valueRow['attributeKey']] = $valueRow;
+        foreach (\explode(self::RECORD_SEPARATOR, \substr($packed, 0, -1)) as $record) {
+            $fields = \explode(self::UNIT_SEPARATOR, $record);
+            if (self::FIELD_COUNT !== \count($fields)) {
+                throw new \RuntimeException('An attribute value contains a separator control character and cannot be indexed.');
             }
+
+            [$key, $optionKey, $optionLabel, $number, $text] = $fields;
+            $text = \trim($text);
+
+            $values[$key] = [
+                'optionKey' => '' !== $optionKey ? $optionKey : null,
+                'optionLabel' => '' !== $optionLabel ? $optionLabel : null,
+                'number' => '' !== $number ? (float) $number : null,
+                'text' => '' !== $text ? $text : null,
+            ];
         }
 
-        $merged = $values[$productId] ?? [];
-        foreach (null !== $parentId ? $values[$parentId] ?? [] : [] as $attributeKey => $valueRow) {
-            if (true !== $valueRow['variantSpecific'] && !isset($merged[$attributeKey])) {
-                $merged[$attributeKey] = $valueRow;
-            }
-        }
-
-        return $merged;
-    }
-
-    /**
-     * Live values in the current version, from the localized and the unlocalized dimension content.
-     *
-     * @param string[] $productIds
-     *
-     * @return array<int, ValueRow>
-     */
-    private function loadValueRows(array $productIds, string $locale): array
-    {
-        /** @var array<int, ValueRow> */
-        return $this->entityManager->createQueryBuilder()
-            ->from(ProductAttributeValue::class, 'value')
-            ->innerJoin('value.productDimensionContent', 'dimensionContent')
-            ->innerJoin('dimensionContent.product', 'product')
-            ->innerJoin('value.attribute', 'attribute')
-            // The option relation of a value is not written, so its label is looked up by key.
-            ->leftJoin('attribute.options', 'option', Join::WITH, 'option.key = value.attributeOptionKey')
-            ->leftJoin('option.translations', 'optionTranslation', Join::WITH, 'optionTranslation.locale = :locale')
-            ->leftJoin('value.productFamilyAttribute', 'familyAttribute')
-            ->select('product.uuid AS productId')
-            ->addSelect('dimensionContent.locale AS valueLocale')
-            ->addSelect('attribute.key AS attributeKey')
-            ->addSelect('attribute.type AS attributeType')
-            ->addSelect('value.attributeOptionKey AS optionKey')
-            ->addSelect('optionTranslation.name AS optionLabel')
-            ->addSelect('value.number')
-            ->addSelect('value.text')
-            ->addSelect('familyAttribute.variantSpecific')
-            ->where('dimensionContent.stage = :stage')
-            ->andWhere('dimensionContent.version = :version')
-            ->andWhere('dimensionContent.locale = :locale OR dimensionContent.locale IS NULL')
-            ->andWhere('product.uuid IN (:productIds)')
-            ->setParameter('stage', DimensionContentInterface::STAGE_LIVE)
-            ->setParameter('version', DimensionContentInterface::CURRENT_VERSION)
-            ->setParameter('locale', $locale)
-            ->setParameter('productIds', $productIds)
-            ->getQuery()
-            ->getResult();
+        return $values;
     }
 }

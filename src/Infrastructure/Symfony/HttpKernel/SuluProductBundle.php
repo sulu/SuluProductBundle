@@ -1342,9 +1342,6 @@ final class SuluProductBundle extends AbstractBundle
             // Runs after the content enhancer, which resets the `content` its text is appended to.
             $services->set('sulu_product.website_product_details_reindex_provider_enhancer')
                 ->class(WebsiteProductDetailsReindexProviderEnhancer::class)
-                ->args([
-                    new Reference('doctrine.orm.entity_manager'),
-                ])
                 ->tag('sulu_product.website_product_reindex_provider_enhancer', ['priority' => -10]);
 
             $services->set('sulu_product.product_schema_loader')
