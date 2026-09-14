@@ -113,7 +113,7 @@
             </properties>
         </section>
 
-        <section name="attributes" colspan="12">
+        <section name="attributes" colspan="12" visibleCondition="!!productFamily">
             <meta>
                 <title>sulu_product.attributes</title>
             </meta>

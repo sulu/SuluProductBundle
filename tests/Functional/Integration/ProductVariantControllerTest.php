@@ -94,8 +94,15 @@ class ProductVariantControllerTest extends SuluTestCase
         return $familyId;
     }
 
-    private function createProduct(string $familyId, string $title = 'My Product', string $type = ProductInterface::TYPE_PRODUCT): string
-    {
+    /**
+     * @param array<int, mixed> $attributes values for the family's required shared attributes, which create enforces
+     */
+    private function createProduct(
+        string $familyId,
+        string $title = 'My Product',
+        string $type = ProductInterface::TYPE_PRODUCT,
+        array $attributes = [],
+    ): string {
         /** @var int $counter */
         static $counter = 0;
         ++$counter;
@@ -113,6 +120,7 @@ class ProductVariantControllerTest extends SuluTestCase
                 'url' => ProductInterface::TYPE_PRODUCT_WITH_VARIANTS === $type ? null : '/test-product-' . $counter,
                 'productFamily' => $familyId,
                 'type' => $type,
+                'attributes' => $attributes ?: null,
             ], static fn ($value) => null !== $value)) ?: null,
         );
         $this->assertHttpStatusCode(201, $this->client->getResponse());
@@ -841,22 +849,13 @@ class ProductVariantControllerTest extends SuluTestCase
             $sharedId => ['required' => true, 'variantSpecific' => false],
             $axisId => ['variantSpecific' => true],
         ]);
-        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
-
         // The parent carries the required shared (non-variant) attribute value.
-        $this->client->request(
-            'PUT',
-            '/admin/api/products/' . $parentId . '.json?locale=en',
-            [],
-            [],
-            [],
-            \json_encode([
-                'locale' => 'en',
-                'title' => 'Parent Product',
-                'attributes' => [$sharedId => 'Red'],
-            ]) ?: null,
+        $parentId = $this->createProduct(
+            $familyId,
+            'Parent Product',
+            ProductInterface::TYPE_PRODUCT_WITH_VARIANTS,
+            [$sharedId => 'Red'],
         );
-        $this->assertHttpStatusCode(200, $this->client->getResponse());
 
         // Creating a variant with only its own axis value must succeed, even
         // though the family has a required non-variant attribute the variant
@@ -906,7 +905,7 @@ class ProductVariantControllerTest extends SuluTestCase
         $familyId = $this->createProductFamily([
             $sharedId => ['required' => true, 'variantSpecific' => false],
         ]);
-        $parentId = $this->createProduct($familyId, 'Simple Product');
+        $parentId = $this->createProduct($familyId, 'Simple Product', attributes: [$sharedId => 'Red']);
 
         // A non-variant (parent/simple) product must still be rejected when the
         // required attribute is missing; the variant exemption must not weaken
@@ -953,10 +952,6 @@ class ProductVariantControllerTest extends SuluTestCase
         $this->assertHttpStatusCode(200, $this->client->getResponse());
     }
 
-    /**
-     * A never-touched attributes field on the overlay posts no `attributes` key at all; the
-     * controller must still enforce the family's required axis attribute in that case.
-     */
     public function testPostVariantEnforcesRequiredAttributeWhenKeyIsAbsentFromRequest(): void
     {
         self::purgeDatabase();
@@ -983,7 +978,11 @@ class ProductVariantControllerTest extends SuluTestCase
         $this->assertHttpStatusCode(422, $response);
         $data = \json_decode((string) $response->getContent(), true);
         $this->assertIsArray($data);
-        $this->assertArrayHasKey('detail', $data);
+        $this->assertArrayHasKey(
+            'detail',
+            $data,
+            'an untouched overlay field posts no `attributes` key, and the required axis attribute must still be enforced',
+        );
 
         $this->client->request(
             'POST',
@@ -999,6 +998,38 @@ class ProductVariantControllerTest extends SuluTestCase
             ]) ?: null,
         );
         $this->assertHttpStatusCode(201, $this->client->getResponse());
+    }
+
+    public function testPostVariantWithInvalidAttributeTypeReturns400(): void
+    {
+        self::purgeDatabase();
+
+        $axisId = $this->createAttribute('size', 'Size');
+        $familyId = $this->createProductFamily([
+            $axisId => ['required' => false, 'variantSpecific' => true],
+        ]);
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+
+        $this->client->request(
+            'POST',
+            '/admin/api/products/' . $parentId . '/variants.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'code' => 'CX3-RD-S',
+                'title' => 'Variant S',
+                'attributes' => [$axisId => 12345],
+            ]) ?: null,
+        );
+
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(400, $response);
+
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertArrayHasKey('detail', $data);
     }
 
     public function testVariantPersistsDetailsFields(): void

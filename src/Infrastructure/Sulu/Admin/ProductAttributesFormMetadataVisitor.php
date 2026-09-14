@@ -16,9 +16,6 @@ namespace Sulu\Product\Infrastructure\Sulu\Admin;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataVisitorInterface;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\SectionMetadata;
-use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadata;
-use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadataMapperRegistry;
-use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\SchemaMetadata;
 use Sulu\Product\Domain\Model\AttributeGroupInterface;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
@@ -26,26 +23,23 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Fills the "product_attributes" form with one section per attribute group and one field per family
- * attribute. The family comes from the metadata options, so the admin can request the form for a
- * family before the product is saved.
+ * attribute. Validation lives in the product forms' schema, see
+ * {@see ProductAttributesSchemaFormMetadataVisitor}.
  *
- * Options: "productFamily" (family uuid) or "product" (product uuid, resolved to its family);
- * "variant" truthy keeps only axis attributes, otherwise only shared ones.
- *
- * The JSON schema carries the field constraints (required, min, max) keyed by field name, so the
- * admin can validate the values before saving.
+ * Options: "productFamily" (family uuid), so the form can be requested before the product is saved,
+ * or "product" (product uuid, resolved to its family); "variant" truthy keeps only axis attributes,
+ * otherwise only shared ones.
  *
  * @internal
  */
-class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterface
+class ProductAttributesFormMetadataVisitor implements FormMetadataVisitorInterface
 {
-    public const FORM_KEY = 'product_attributes';
+    private const FORM_KEY = 'product_attributes';
 
     public function __construct(
         private readonly ProductFamilyRepositoryInterface $productFamilyRepository,
         private readonly AttributeFieldFactory $attributeFieldFactory,
         private readonly TranslatorInterface $translator,
-        private readonly PropertyMetadataMapperRegistry $propertyMetadataMapperRegistry,
     ) {
     }
 
@@ -58,8 +52,7 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
             return;
         }
 
-        // The response depends on family configuration that can change without the URL
-        // changing, so it must not be cached by the HTTP layer or the browser.
+        // The response depends on family configuration, which changes without the URL changing.
         $formMetadata->setCacheable(false);
 
         $family = $this->resolveFamily($metadataOptions);
@@ -71,8 +64,6 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
 
         /** @var array<int, SectionMetadata> $sections */
         $sections = [];
-        /** @var list<PropertyMetadata> $schemaProperties */
-        $schemaProperties = [];
 
         foreach ($family->getFamilyAttributes() as $familyAttribute) {
             if ($familyAttribute->isVariantSpecific() !== $variant) {
@@ -88,10 +79,6 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
             $groupId = $group->getId();
             $sections[$groupId] ??= $this->createGroupSection($group, $locale);
             $sections[$groupId]->addItem($field);
-
-            $schemaProperties[] = $this->propertyMetadataMapperRegistry->has($field->getType())
-                ? $this->propertyMetadataMapperRegistry->get($field->getType())->mapPropertyMetadata($field)
-                : new PropertyMetadata($field->getName(), $field->isRequired());
         }
 
         $items = $formMetadata->getItems();
@@ -99,10 +86,6 @@ class ProductAttributeFormMetadataVisitor implements FormMetadataVisitorInterfac
             $items[$section->getName()] = $section;
         }
         $formMetadata->setItems($items);
-
-        if ([] !== $schemaProperties) {
-            $formMetadata->setSchema($formMetadata->getSchema()->merge(new SchemaMetadata($schemaProperties)));
-        }
     }
 
     /**

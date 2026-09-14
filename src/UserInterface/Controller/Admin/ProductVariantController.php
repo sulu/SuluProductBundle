@@ -272,9 +272,8 @@ final class ProductVariantController implements SecuredControllerInterface
             ],
         );
 
-        // Always materialise the key: the overlay's single `attributes` field only posts
-        // one when touched, and the mapper no-ops on an absent key (partial-update safety
-        // for other tabs), which would let a never-touched required axis attribute through.
+        // `attributes` is always sent: the mapper skips an absent key, which would let an
+        // untouched required axis attribute through.
         $attributes = $data['attributes'] ?? [];
         /** @var array<int, mixed> $attributes */
         $attributes = \is_array($attributes) ? $attributes : [];

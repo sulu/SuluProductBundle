@@ -16,26 +16,45 @@ namespace Sulu\Product\Infrastructure\Sulu\Admin;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataLoaderInterface;
+use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadataMapperRegistry;
 use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
 use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
 
 /**
- * Builds the admin field metadata for a single {@see ProductFamilyAttributeInterface}, so the
- * fragment-cloning logic lives in one place.
+ * Builds the admin field metadata for a single {@see ProductFamilyAttributeInterface}.
  *
  * @internal
  */
 class AttributeFieldFactory
 {
-    // Mirrored by the admin's ProductAttributesRenderer (sulu/sulu, the JS contract), so it is public.
-    public const NAME_PREFIX = 'attribute_';
+    // The admin's ProductAttributes container strips this prefix to recover the attribute id.
+    private const NAME_PREFIX = 'attribute_';
 
     public function __construct(
         private readonly AttributeTypeRegistry $attributeTypeRegistry,
         private readonly FormMetadataLoaderInterface $formMetadataLoader,
         private readonly MeasurementRegistry $measurementRegistry,
+        private readonly PropertyMetadataMapperRegistry $propertyMetadataMapperRegistry,
     ) {
+    }
+
+    /**
+     * The JSON schema of the attribute's value, keyed by attribute id like the submitted values.
+     *
+     * @return PropertyMetadata|null null when the attribute has no field
+     */
+    public function buildSchemaProperty(ProductFamilyAttributeInterface $familyAttribute, string $locale): ?PropertyMetadata
+    {
+        $field = $this->buildField($familyAttribute, $locale, (string) $familyAttribute->getAttribute()->getId());
+        if (null === $field) {
+            return null;
+        }
+
+        return $this->propertyMetadataMapperRegistry->has($field->getType())
+            ? $this->propertyMetadataMapperRegistry->get($field->getType())->mapPropertyMetadata($field)
+            : new PropertyMetadata($field->getName(), $field->isRequired());
     }
 
     /**
@@ -43,6 +62,21 @@ class AttributeFieldFactory
      */
     public function build(ProductFamilyAttributeInterface $familyAttribute, string $locale): ?FieldMetadata
     {
+        return $this->buildField(
+            $familyAttribute,
+            $locale,
+            self::NAME_PREFIX . $familyAttribute->getAttribute()->getId(),
+        );
+    }
+
+    /**
+     * @return FieldMetadata|null null when the attribute's type is unknown or has no form fragment
+     */
+    private function buildField(
+        ProductFamilyAttributeInterface $familyAttribute,
+        string $locale,
+        string $name,
+    ): ?FieldMetadata {
         $attribute = $familyAttribute->getAttribute();
 
         if (!$this->attributeTypeRegistry->has($attribute->getType())) {
@@ -60,7 +94,7 @@ class AttributeFieldFactory
         $translation = $attribute->getTranslation($locale)
             ?? (($defaultLocale = $attribute->getDefaultLocale()) !== null ? $attribute->getTranslation($defaultLocale) : null);
 
-        $field = $this->cloneFieldWithName($template, self::NAME_PREFIX . $attribute->getId());
+        $field = $this->cloneFieldWithName($template, $name);
         $field->setLabel($this->buildLabel($translation?->getName() ?? $attribute->getKey(), $attribute->getConfig()), $locale);
         $field->setRequired($familyAttribute->isRequired());
 
@@ -75,8 +109,6 @@ class AttributeFieldFactory
     }
 
     /**
-     * The unit is part of the label, "Length (mm)", so the row needs no unit column.
-     *
      * @param array<string, mixed> $config
      */
     private function buildLabel(string $name, array $config): string

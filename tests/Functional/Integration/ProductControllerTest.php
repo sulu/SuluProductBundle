@@ -80,8 +80,15 @@ class ProductControllerTest extends SuluTestCase
         return $familyId;
     }
 
-    private function createProduct(string $familyId, string $title = 'My Product', string $type = ProductInterface::TYPE_PRODUCT): string
-    {
+    /**
+     * @param array<int, mixed> $attributes values for the family's required attributes, which create enforces
+     */
+    private function createProduct(
+        string $familyId,
+        string $title = 'My Product',
+        string $type = ProductInterface::TYPE_PRODUCT,
+        array $attributes = [],
+    ): string {
         /** @var int $counter */
         static $counter = 0;
         ++$counter;
@@ -99,6 +106,7 @@ class ProductControllerTest extends SuluTestCase
                 'url' => ProductInterface::TYPE_PRODUCT_WITH_VARIANTS === $type ? null : '/test-product-' . $counter,
                 'productFamily' => $familyId,
                 'type' => $type,
+                'attributes' => $attributes ?: null,
             ], static fn ($value) => null !== $value)) ?: null,
         );
         $this->assertHttpStatusCode(201, $this->client->getResponse());
@@ -154,6 +162,31 @@ class ProductControllerTest extends SuluTestCase
         $attribute->setType(AttributeInterface::TYPE_NUMBER);
         $attribute->setLocalized(true);
         $attribute->addTranslation(new AttributeTranslation($attribute, 'en', 'Localized Weight'));
+        $attributeRepository->save($attribute);
+
+        $em->flush();
+
+        return $attribute->getId();
+    }
+
+    private function createTextAttribute(): int
+    {
+        $container = self::getContainer();
+
+        /** @var AttributeGroupRepositoryInterface $groupRepository */
+        $groupRepository = $container->get(AttributeGroupRepositoryInterface::class);
+        /** @var AttributeRepositoryInterface $attributeRepository */
+        $attributeRepository = $container->get(AttributeRepositoryInterface::class);
+        /** @var EntityManagerInterface $em */
+        $em = $container->get('doctrine.orm.entity_manager');
+
+        $group = $groupRepository->create();
+        $groupRepository->save($group);
+
+        $attribute = $attributeRepository->create($group);
+        $attribute->setKey('description');
+        $attribute->setType(AttributeInterface::TYPE_TEXT);
+        $attribute->addTranslation(new AttributeTranslation($attribute, 'en', 'Description'));
         $attributeRepository->save($attribute);
 
         $em->flush();
@@ -418,7 +451,7 @@ class ProductControllerTest extends SuluTestCase
         self::purgeDatabase();
         $attributeId = $this->createRequiredAttribute();
         $familyId = $this->createProductFamily($attributeId);
-        $id = $this->createProduct($familyId);
+        $id = $this->createProduct($familyId, attributes: [$attributeId => 12.5]);
 
         // PUT with attributes key but empty value for required attribute
         $this->client->request(
@@ -713,29 +746,11 @@ class ProductControllerTest extends SuluTestCase
     {
         self::purgeDatabase();
 
-        // Create a text attribute
-        $container = self::getContainer();
-        /** @var AttributeGroupRepositoryInterface $groupRepository */
-        $groupRepository = $container->get(AttributeGroupRepositoryInterface::class);
-        /** @var AttributeRepositoryInterface $attributeRepository */
-        $attributeRepository = $container->get(AttributeRepositoryInterface::class);
-        /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine.orm.entity_manager');
-
-        $group = $groupRepository->create();
-        $groupRepository->save($group);
-        $attribute = $attributeRepository->create($group);
-        $attribute->setKey('description');
-        $attribute->setType(AttributeInterface::TYPE_TEXT);
-        $attribute->addTranslation(new AttributeTranslation($attribute, 'en', 'Description'));
-        $attributeRepository->save($attribute);
-        $em->flush();
-
-        $attributeId = $attribute->getId();
+        $attributeId = $this->createTextAttribute();
 
         // Create a family with the text attribute enabled (not required)
         $familyId = $this->createProductFamily($attributeId);
-        $id = $this->createProduct($familyId);
+        $id = $this->createProduct($familyId, attributes: [$attributeId => 'Something']);
 
         // Pass an integer (not a string) for a text attribute → triggers Webmozart Assert::string()
         $this->client->request(
@@ -746,6 +761,92 @@ class ProductControllerTest extends SuluTestCase
             [],
             \json_encode([
                 'locale' => 'en',
+                'attributes' => [$attributeId => 12345],
+            ]) ?: null,
+        );
+
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(400, $response);
+
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertArrayHasKey('detail', $data);
+    }
+
+    public function testPostWithMissingRequiredAttributeReturns422(): void
+    {
+        self::purgeDatabase();
+        $attributeId = $this->createRequiredAttribute();
+        $familyId = $this->createProductFamily($attributeId);
+
+        $this->client->request(
+            'POST',
+            '/admin/api/products.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'title' => 'My Product',
+                'url' => '/post-missing-required-attribute',
+                'productFamily' => $familyId,
+                'attributes' => [$attributeId => null],
+            ]) ?: null,
+        );
+
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(422, $response);
+
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertArrayHasKey('detail', $data);
+    }
+
+    public function testPostWithoutAttributesKeyReturns422(): void
+    {
+        self::purgeDatabase();
+        $attributeId = $this->createRequiredAttribute();
+        $familyId = $this->createProductFamily($attributeId);
+
+        $this->client->request(
+            'POST',
+            '/admin/api/products.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'title' => 'My Product',
+                'url' => '/post-without-attributes-key',
+                'productFamily' => $familyId,
+            ]) ?: null,
+        );
+
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(422, $response);
+
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertArrayHasKey('detail', $data);
+    }
+
+    public function testPostWithInvalidAttributeTypeReturns400(): void
+    {
+        self::purgeDatabase();
+        $attributeId = $this->createTextAttribute();
+        $familyId = $this->createProductFamily($attributeId);
+
+        $this->client->request(
+            'POST',
+            '/admin/api/products.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'title' => 'My Product',
+                'url' => '/post-invalid-attribute-type',
+                'productFamily' => $familyId,
                 'attributes' => [$attributeId => 12345],
             ]) ?: null,
         );

@@ -50,7 +50,7 @@ class AbstractAttributeTypeTest extends TestCase
 
     public function testConfigureFieldIsNoOp(): void
     {
-        $field = new FieldMetadata('attributes/1');
+        $field = new FieldMetadata('attribute_1');
         $field->setType('text_line');
 
         $this->type()->configureField($field, new Attribute(new AttributeGroup()), 'en');

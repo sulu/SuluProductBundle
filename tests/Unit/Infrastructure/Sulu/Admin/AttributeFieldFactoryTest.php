@@ -21,6 +21,8 @@ use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataLoaderInterface;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\OptionMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadataMapper\NumberPropertyMetadataMapper;
+use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadataMapperRegistry;
 use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
 use Sulu\Product\Application\AttributeType\NumberAttributeType;
 use Sulu\Product\Domain\Measurement\MeasurementRegistry;
@@ -28,6 +30,7 @@ use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeTranslationInterface;
 use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeFieldFactory;
+use Symfony\Component\DependencyInjection\Container;
 
 #[CoversClass(AttributeFieldFactory::class)]
 class AttributeFieldFactoryTest extends TestCase
@@ -44,10 +47,14 @@ class AttributeFieldFactoryTest extends TestCase
 
     private function factory(): AttributeFieldFactory
     {
+        $mapperContainer = new Container();
+        $mapperContainer->set('number', new NumberPropertyMetadataMapper());
+
         return new AttributeFieldFactory(
             new AttributeTypeRegistry([new NumberAttributeType()]),
             $this->formMetadataLoader->reveal(),
             new MeasurementRegistry(),
+            new PropertyMetadataMapperRegistry($mapperContainer),
         );
     }
 
@@ -163,6 +170,29 @@ class AttributeFieldFactoryTest extends TestCase
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])->willReturn($fragment);
 
         self::assertNull($this->factory()->build($familyAttribute->reveal(), 'en'));
+    }
+
+    public function testBuildsSchemaPropertyKeyedByAttributeId(): void
+    {
+        $attribute = $this->attribute(7, 'weight', AttributeInterface::TYPE_NUMBER, ['min' => 0, 'max' => 10], 'Weight');
+        $familyAttribute = $this->familyAttribute($attribute->reveal(), true);
+        $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
+            ->willReturn($this->fragmentWithValueField());
+
+        $property = $this->factory()->buildSchemaProperty($familyAttribute->reveal(), 'en');
+
+        self::assertNotNull($property);
+        self::assertSame('7', $property->getName());
+        self::assertTrue($property->isMandatory());
+        self::assertSame(['type' => 'number', 'minimum' => 0.0, 'maximum' => 10.0], $property->toJsonSchema());
+    }
+
+    public function testSchemaPropertyIsNullWithoutField(): void
+    {
+        $attribute = $this->attribute(7, 'weight', 'unknown', [], 'Weight');
+        $familyAttribute = $this->familyAttribute($attribute->reveal());
+
+        self::assertNull($this->factory()->buildSchemaProperty($familyAttribute->reveal(), 'en'));
     }
 
     public function testBuildsFieldWithTranslationForRequestedLocaleAndNoUnit(): void
