@@ -19,7 +19,6 @@ use CmsIg\Seal\Reindex\ReindexConfig;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Content\Tests\Functional\Traits\CreateMediaTrait;
 use Sulu\Product\Domain\Model\ProductInterface;
-use Sulu\Product\Infrastructure\Sulu\Search\ProductIndex;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Component\Messenger\MessageBusInterface;
 
@@ -40,12 +39,13 @@ class WebsiteProductReindexProviderTest extends SuluTestCase
     /**
      * The leaves are the documents: a variant stands for its parent, which gets none of its own.
      */
-    public function testVariantIsIndexedWithTheParentsUrlAndTheParentIsNot(): void
+    public function testVariantsAreIndexedWithTheirVariantUrlAndTheParentIsNot(): void
     {
         self::purgeDatabase();
         $familyId = $this->createProductFamily();
         $parentId = $this->createProduct($familyId, 'Parent', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
-        $variantId = $this->createVariant($parentId);
+        $firstVariantId = $this->createVariant($parentId, 0);
+        $secondVariantId = $this->createVariant($parentId, 1, 'SEARCH-SECOND-VARIANT');
         $plainId = $this->createProduct($familyId, 'Plain', ProductInterface::TYPE_PRODUCT);
         $this->publish($parentId);
         $this->publish($plainId);
@@ -53,33 +53,33 @@ class WebsiteProductReindexProviderTest extends SuluTestCase
         /** @var EngineInterface $engine */
         $engine = self::getContainer()->get('cmsig_seal.engine.default');
 
-        $plain = $engine->getDocument(ProductIndex::NAME, ProductIndex::documentId($plainId, 'en'));
+        $plain = $engine->getDocument('website', 'products__' . $plainId . '__en');
         $this->assertSame(ProductInterface::RESOURCE_KEY, $plain['resourceKey']);
         $this->assertSame('Plain', $plain['title']);
         $plainProduct = $plain['product'];
         $this->assertIsArray($plainProduct);
         $this->assertSame($familyId, $plainProduct['productFamilyId']);
+        $this->assertArrayNotHasKey('code', $plainProduct, 'The code is only searchable, through the content.');
         $plainUrl = $plain['url'];
         $this->assertIsString($plainUrl);
         $this->assertStringStartsWith('/search-product-', $plainUrl);
 
-        $variant = $engine->getDocument(ProductIndex::NAME, ProductIndex::documentId($variantId, 'en'));
-        $this->assertSame($variantId, $variant['resourceId']);
-        $this->assertSame(['sulu-io'], $variant['webspaces']);
-        $variantUrl = $variant['url'];
-        $this->assertIsString($variantUrl);
-        $this->assertStringStartsWith('/search-product-', $variantUrl);
-        $variantProduct = $variant['product'];
-        $this->assertIsArray($variantProduct);
-        $variantCode = $variantProduct['code'];
-        $this->assertIsString($variantCode);
-        $this->assertStringStartsWith('SEARCH-VARIANT-', $variantCode);
-        $content = $variant['content'];
+        $firstVariant = $engine->getDocument('website', 'products__' . $firstVariantId . '__en');
+        $this->assertSame($firstVariantId, $firstVariant['resourceId']);
+        $this->assertSame(['sulu-io'], $firstVariant['webspaces']);
+        $parentUrl = $firstVariant['url'];
+        $this->assertIsString($parentUrl);
+        $this->assertStringStartsWith('/search-product-', $parentUrl);
+        $this->assertStringNotContainsString('?', $parentUrl, 'The first variant is what the bare parent URL shows.');
+
+        $secondVariant = $engine->getDocument('website', 'products__' . $secondVariantId . '__en');
+        $this->assertSame($parentUrl . '?variant=SEARCH-SECOND-VARIANT', $secondVariant['url']);
+        $content = $secondVariant['content'];
         $this->assertIsArray($content);
-        $this->assertContains($variantCode, $content, 'The code is searchable through the content.');
+        $this->assertContains('SEARCH-SECOND-VARIANT', $content, 'The code is searchable through the content.');
 
         $this->expectException(DocumentNotFoundException::class);
-        $engine->getDocument(ProductIndex::NAME, ProductIndex::documentId($parentId, 'en'));
+        $engine->getDocument('website', 'products__' . $parentId . '__en');
     }
 
     /**
@@ -101,10 +101,10 @@ class WebsiteProductReindexProviderTest extends SuluTestCase
         /** @var EngineInterface $engine */
         $engine = self::getContainer()->get('cmsig_seal.engine.default');
 
-        $this->assertSame($parentId, $engine->getDocument('admin', ProductIndex::documentId($parentId, 'en'))['resourceId']);
+        $this->assertSame($parentId, $engine->getDocument('admin', 'products__' . $parentId . '__en')['resourceId']);
 
         $this->expectException(DocumentNotFoundException::class);
-        $engine->getDocument('admin', ProductIndex::documentId($variantId, 'en'));
+        $engine->getDocument('admin', 'products__' . $variantId . '__en');
     }
 
     /**
@@ -122,16 +122,16 @@ class WebsiteProductReindexProviderTest extends SuluTestCase
 
         /** @var MessageBusInterface $messageBus */
         $messageBus = self::getContainer()->get('sulu_message_bus');
-        $messageBus->dispatch(ReindexConfig::create()->withIndex(ProductIndex::NAME)->withDropIndex(true));
+        $messageBus->dispatch(ReindexConfig::create()->withIndex('website')->withDropIndex(true));
 
         /** @var EngineInterface $engine */
         $engine = self::getContainer()->get('cmsig_seal.engine.default');
 
-        $this->assertSame($variantId, $engine->getDocument(ProductIndex::NAME, ProductIndex::documentId($variantId, 'en'))['resourceId']);
+        $this->assertSame($variantId, $engine->getDocument('website', 'products__' . $variantId . '__en')['resourceId']);
 
         foreach ([$parentId, $draftId] as $missingId) {
             try {
-                $engine->getDocument(ProductIndex::NAME, ProductIndex::documentId($missingId, 'en'));
+                $engine->getDocument('website', 'products__' . $missingId . '__en');
                 $this->fail('A product with variants and an unpublished product get no document.');
             } catch (DocumentNotFoundException) {
                 $this->addToAssertionCount(1);
@@ -162,11 +162,11 @@ class WebsiteProductReindexProviderTest extends SuluTestCase
         $engine = self::getContainer()->get('cmsig_seal.engine.default');
 
         // details/image is not multilingual, so it only exists on the unlocalized dimension content.
-        $plain = $engine->getDocument(ProductIndex::NAME, ProductIndex::documentId($plainId, 'en'));
+        $plain = $engine->getDocument('website', 'products__' . $plainId . '__en');
         $this->assertSame((string) $mediaId, $plain['mediaId']);
 
         // A variant keeps its own image; an empty one is not filled from the parent.
-        $variant = $engine->getDocument(ProductIndex::NAME, ProductIndex::documentId($variantId, 'en'));
+        $variant = $engine->getDocument('website', 'products__' . $variantId . '__en');
         $this->assertSame('', $variant['mediaId']);
     }
 
@@ -179,7 +179,7 @@ class WebsiteProductReindexProviderTest extends SuluTestCase
         /** @var EngineInterface $engine */
         $engine = self::getContainer()->get('cmsig_seal.engine.default');
         $this->expectException(DocumentNotFoundException::class);
-        $engine->getDocument(ProductIndex::NAME, ProductIndex::documentId($draftId, 'en'));
+        $engine->getDocument('website', 'products__' . $draftId . '__en');
     }
 
     private function publish(string $id): void
@@ -228,16 +228,17 @@ class WebsiteProductReindexProviderTest extends SuluTestCase
         return $id;
     }
 
-    private function createVariant(string $parentId): string
+    private function createVariant(string $parentId, int $position = 0, ?string $code = null): string
     {
         /** @var int $counter */
         static $counter = 0;
         ++$counter;
         $this->client->request('POST', '/admin/api/products/' . $parentId . '/variants.json?locale=en', [], [], [], \json_encode([
             'locale' => 'en',
-            'code' => 'SEARCH-VARIANT-' . $counter,
+            'code' => $code ?? 'SEARCH-VARIANT-' . $counter,
             'title' => 'Variant ' . $counter,
             'url' => '/search-variant-' . $counter,
+            'position' => $position,
         ]) ?: null);
         $this->assertHttpStatusCode(201, $this->client->getResponse());
         $data = \json_decode((string) $this->client->getResponse()->getContent(), true);

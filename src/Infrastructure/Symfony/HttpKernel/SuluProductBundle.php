@@ -148,9 +148,9 @@ use Sulu\Product\Infrastructure\Sulu\Search\AdminProductIndexListener;
 use Sulu\Product\Infrastructure\Sulu\Search\AdminProductReindexProvider;
 use Sulu\Product\Infrastructure\Sulu\Search\Schema\ProductSchemaLoader;
 use Sulu\Product\Infrastructure\Sulu\Search\Visitor\AdminProductReindexProviderEnhancerInterface;
+use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductDetailsReindexProviderEnhancer;
 use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductReindexContentEnhancer;
 use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductReindexExcerptEnhancer;
-use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductReindexProductEnhancer;
 use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductReindexProviderEnhancerInterface;
 use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductReindexTaxonomyEnhancer;
 use Sulu\Product\Infrastructure\Sulu\Search\WebsiteProductIndexListener;
@@ -287,6 +287,20 @@ final class SuluProductBundle extends AbstractBundle
                         ->end()
                     ->end()
                 ->end()
+                ->arrayNode('search')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->arrayNode('website')
+                            ->addDefaultsIfNotSet()
+                            ->children()
+                                ->booleanNode('additional_product_filters')
+                                    ->info('Indexes the product family and the attribute values as filter fields of the website index.')
+                                    ->defaultTrue()
+                                ->end()
+                            ->end()
+                        ->end()
+                    ->end()
+                ->end()
                 ->arrayNode('association_types')
                     ->info('Custom product association types (e.g. "alternative", "suitable"). Omit the whole section to disable association types.')
                     ->useAttributeAsKey('key')
@@ -332,6 +346,23 @@ final class SuluProductBundle extends AbstractBundle
                     ->end()
                 ->end()
             ->end();
+    }
+
+    /**
+     * Prepending runs before the configuration is processed, so the raw configs are read, last one winning.
+     */
+    private function isAdditionalProductFiltersEnabled(ContainerBuilder $builder): bool
+    {
+        $enabled = true;
+        /** @var array{search?: array{website?: array{additional_product_filters?: bool|null}}} $config */
+        foreach ($builder->getExtensionConfig('sulu_product') as $config) {
+            $value = $config['search']['website']['additional_product_filters'] ?? null;
+            if (null !== $value) {
+                $enabled = (bool) $value;
+            }
+        }
+
+        return $enabled;
     }
 
     /**
@@ -428,6 +459,9 @@ final class SuluProductBundle extends AbstractBundle
         $route = $config['route'];
         $builder->setParameter('sulu_product.route.type', $route['type']);
         $builder->setParameter('sulu_product.route.params', $route['params']);
+
+        /** @var array{website: array{additional_product_filters: bool}} $search */
+        $search = $config['search'];
 
         $services = $container->services();
 
@@ -1300,24 +1334,27 @@ final class SuluProductBundle extends AbstractBundle
             ->args([
                 new Reference('doctrine.orm.entity_manager'),
                 tagged_iterator('sulu_product.website_product_reindex_provider_enhancer'),
+                '%sulu_product.variant_query_parameter%',
             ])
             ->tag('cmsig_seal.reindex_provider');
 
-        // Runs after the content enhancer, which resets the `content` its text is appended to.
-        $services->set('sulu_product.website_product_reindex_product_enhancer')
-            ->class(WebsiteProductReindexProductEnhancer::class)
-            ->args([
-                new Reference('doctrine.orm.entity_manager'),
-            ])
-            ->tag('sulu_product.website_product_reindex_provider_enhancer', ['priority' => -10]);
+        if ($search['website']['additional_product_filters']) {
+            // Runs after the content enhancer, which resets the `content` its text is appended to.
+            $services->set('sulu_product.website_product_details_reindex_provider_enhancer')
+                ->class(WebsiteProductDetailsReindexProviderEnhancer::class)
+                ->args([
+                    new Reference('doctrine.orm.entity_manager'),
+                ])
+                ->tag('sulu_product.website_product_reindex_provider_enhancer', ['priority' => -10]);
 
-        $services->set('sulu_product.product_schema_loader')
-            ->class(ProductSchemaLoader::class)
-            ->decorate('cmsig_seal.schema_loader.default')
-            ->args([
-                new Reference('.inner'),
-                new Reference('doctrine.orm.entity_manager'),
-            ]);
+            $services->set('sulu_product.product_schema_loader')
+                ->class(ProductSchemaLoader::class)
+                ->decorate('cmsig_seal.schema_loader.default')
+                ->args([
+                    new Reference('.inner'),
+                    new Reference('doctrine.orm.entity_manager'),
+                ]);
+        }
     }
 
     /**
@@ -1589,7 +1626,7 @@ final class SuluProductBundle extends AbstractBundle
             );
         }
 
-        if ($builder->hasExtension('cmsig_seal')) {
+        if ($builder->hasExtension('cmsig_seal') && $this->isAdditionalProductFiltersEnabled($builder)) {
             $builder->prependExtensionConfig(
                 'cmsig_seal',
                 [

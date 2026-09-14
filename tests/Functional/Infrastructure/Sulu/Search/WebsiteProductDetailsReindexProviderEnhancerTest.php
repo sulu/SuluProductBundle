@@ -23,10 +23,9 @@ use Sulu\Product\Domain\Model\AttributeTranslation;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
-use Sulu\Product\Infrastructure\Sulu\Search\ProductIndex;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 
-class WebsiteProductReindexProductEnhancerTest extends SuluTestCase
+class WebsiteProductDetailsReindexProviderEnhancerTest extends SuluTestCase
 {
     private KernelBrowser $client;
 
@@ -49,9 +48,9 @@ class WebsiteProductReindexProductEnhancerTest extends SuluTestCase
         $noteId = $this->createAttribute('note', 'Note', AttributeInterface::TYPE_TEXT, true);
 
         $familyId = $this->createProductFamily([
-            $weightId => ['enabled' => true],
-            $colourId => ['enabled' => true, 'variantSpecific' => true],
-            $noteId => ['enabled' => true],
+            $weightId => [],
+            $colourId => ['variantSpecific' => true],
+            $noteId => [],
         ]);
         $parentId = $this->createProduct($familyId, 'Cable', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
         $this->putAttributes($parentId, [$weightId => 2.5, $noteId => 'Gold plated']);
@@ -65,7 +64,7 @@ class WebsiteProductReindexProductEnhancerTest extends SuluTestCase
         $engine = self::getContainer()->get('cmsig_seal.engine.default');
 
         // A variant shows its own axis value plus the parent's shared values.
-        $red = $engine->getDocument(ProductIndex::NAME, ProductIndex::documentId($redId, 'en'));
+        $red = $engine->getDocument('website', 'products__' . $redId . '__en');
         $redProduct = $red['product'];
         $this->assertIsArray($redProduct);
         $this->assertSame(['weight' => [2.5]], $redProduct['attributes_numeric_values']);
@@ -76,7 +75,7 @@ class WebsiteProductReindexProductEnhancerTest extends SuluTestCase
         $this->assertNotContains('Blue', $red['content']);
         $this->assertContains('Gold plated', $red['content']);
 
-        $blue = $engine->getDocument(ProductIndex::NAME, ProductIndex::documentId($blueId, 'en'));
+        $blue = $engine->getDocument('website', 'products__' . $blueId . '__en');
         $blueProduct = $blue['product'];
         $this->assertIsArray($blueProduct);
         $this->assertIsArray($blueProduct['attributes_text_values']);
@@ -92,10 +91,13 @@ class WebsiteProductReindexProductEnhancerTest extends SuluTestCase
         $noteId = $this->createAttribute('note', 'Note', AttributeInterface::TYPE_TEXT, true);
 
         $familyId = $this->createProductFamily([
-            $weightId => ['enabled' => true],
-            $noteId => ['enabled' => true],
+            $weightId => [],
+            $noteId => [],
         ]);
-        $firstId = $this->createProduct($familyId, 'First', ProductInterface::TYPE_PRODUCT);
+        $firstId = $this->createProduct($familyId, 'First', ProductInterface::TYPE_PRODUCT, [
+            'image' => ['id' => 42],
+            'shortDescription' => '<p>Gold plated</p><p>Contacts &amp; shell</p>',
+        ], ['description' => 'Excerpt text']);
         $this->putAttributes($firstId, [$weightId => 1.5, $noteId => 'First note']);
         $secondId = $this->createProduct($familyId, 'Second', ProductInterface::TYPE_PRODUCT);
         $this->putAttributes($secondId, [$weightId => 3.0]);
@@ -105,15 +107,18 @@ class WebsiteProductReindexProductEnhancerTest extends SuluTestCase
         /** @var EngineInterface $engine */
         $engine = self::getContainer()->get('cmsig_seal.engine.default');
 
-        $first = $engine->getDocument(ProductIndex::NAME, ProductIndex::documentId($firstId, 'en'));
+        $first = $engine->getDocument('website', 'products__' . $firstId . '__en');
         $firstProduct = $first['product'];
         $this->assertIsArray($firstProduct);
         $this->assertSame(['weight' => [1.5]], $firstProduct['attributes_numeric_values']);
         $this->assertSame(['note:First note'], $firstProduct['attributes_text_values']);
         $this->assertIsArray($first['content']);
         $this->assertContains('First note', $first['content']);
+        $this->assertContains('Excerpt text', $first['content'], 'The details are appended to the content of the enhancers before.');
+        $this->assertContains("Gold plated\nContacts & shell", $first['content'], 'The short description is rich text, converted like an editor field.');
+        $this->assertSame('42', $first['mediaId'], 'Without a template or excerpt image, the details image is used.');
 
-        $second = $engine->getDocument(ProductIndex::NAME, ProductIndex::documentId($secondId, 'en'));
+        $second = $engine->getDocument('website', 'products__' . $secondId . '__en');
         $secondProduct = $second['product'];
         $this->assertIsArray($secondProduct);
         $this->assertSame(['weight' => [3.0]], $secondProduct['attributes_numeric_values']);
@@ -155,14 +160,14 @@ class WebsiteProductReindexProductEnhancerTest extends SuluTestCase
     }
 
     /**
-     * @param array<int, array{enabled: bool, required?: bool, variantSpecific?: bool}> $attributes
+     * @param array<int, array{required?: bool, variantSpecific?: bool}> $attributes keyed by attribute id
      */
     private function createProductFamily(array $attributes = []): string
     {
         $normalized = [];
         foreach ($attributes as $attributeId => $entry) {
             $normalized[$attributeId] = [
-                'enabled' => $entry['enabled'],
+                'enabled' => true,
                 'required' => $entry['required'] ?? false,
                 'variantSpecific' => $entry['variantSpecific'] ?? false,
             ];
@@ -182,7 +187,11 @@ class WebsiteProductReindexProductEnhancerTest extends SuluTestCase
         return $familyId;
     }
 
-    private function createProduct(string $familyId, string $title, string $type): string
+    /**
+     * @param array<string, mixed> $details
+     * @param array<string, mixed> $excerpt
+     */
+    private function createProduct(string $familyId, string $title, string $type, array $details = [], array $excerpt = []): string
     {
         /** @var int $counter */
         static $counter = 0;
@@ -194,7 +203,7 @@ class WebsiteProductReindexProductEnhancerTest extends SuluTestCase
             'url' => '/attribute-product-' . $counter,
             'productFamily' => $familyId,
             'type' => $type,
-        ]) ?: null);
+        ] + ([] !== $details ? ['details' => $details] : []) + ([] !== $excerpt ? ['excerpt' => $excerpt] : [])) ?: null);
         $this->assertHttpStatusCode(201, $this->client->getResponse());
         $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
         $this->assertIsArray($data);

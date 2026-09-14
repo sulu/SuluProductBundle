@@ -22,7 +22,6 @@ use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
-use Sulu\Product\Infrastructure\Sulu\Search\ProductIndex;
 use Sulu\Product\Infrastructure\Sulu\Search\Schema\ProductSchemaLoader;
 
 class ProductSchemaTest extends SuluTestCase
@@ -32,25 +31,24 @@ class ProductSchemaTest extends SuluTestCase
         /** @var Schema $schema */
         $schema = self::getContainer()->get('cmsig_seal.schema.default');
 
-        $this->assertArrayHasKey(ProductIndex::NAME, $schema->indexes);
-        $index = $schema->indexes[ProductIndex::NAME];
+        $this->assertArrayHasKey('website', $schema->indexes);
+        $index = $schema->indexes['website'];
 
         // Sulu owns the index, so the fields a product document shares with a page come from it.
         foreach (['id', 'resourceKey', 'resourceId', 'locale', 'webspaces', 'title', 'url', 'content', 'mediaId', 'authoredAt', 'metadata'] as $name) {
             $this->assertArrayHasKey($name, $index->fields, $name);
         }
 
-        $product = $index->fields[ProductIndex::FIELD];
+        $product = $index->fields['product'];
         $this->assertInstanceOf(Field\ObjectField::class, $product);
-        foreach (['code', 'productFamilyId', ProductIndex::TEXT_VALUES_FIELD, ProductIndex::NUMERIC_VALUES_FIELD] as $name) {
+        foreach (['productFamilyId', 'attributes_text_values', 'attributes_numeric_values'] as $name) {
             $this->assertArrayHasKey($name, $product->fields, $name);
         }
 
-        $this->assertContains('product.code', $index->filterableFields);
         $this->assertContains('product.productFamilyId', $index->facetFields);
-        $this->assertContains(ProductIndex::textValuesPath(), $index->filterableFields);
-        $this->assertContains(ProductIndex::textValuesPath(), $index->facetFields);
-        $this->assertTrue($product->fields[ProductIndex::TEXT_VALUES_FIELD]->multiple);
+        $this->assertContains('product.attributes_text_values', $index->filterableFields);
+        $this->assertContains('product.attributes_text_values', $index->facetFields);
+        $this->assertTrue($product->fields['attributes_text_values']->multiple);
     }
 
     public function testOnlyNumberAndDateAttributesBecomeIndexFields(): void
@@ -77,7 +75,7 @@ class ProductSchemaTest extends SuluTestCase
 
         /** @var LoaderInterface $loader */
         $loader = $container->get('sulu_product.product_schema_loader');
-        $index = $loader->load()->indexes[ProductIndex::NAME];
+        $index = $loader->load()->indexes['website'];
         $fields = $this->numericFields($index->fields);
 
         $this->assertInstanceOf(Field\FloatField::class, $fields['weight']);
@@ -85,8 +83,8 @@ class ProductSchemaTest extends SuluTestCase
         $this->assertInstanceOf(Field\FloatField::class, $fields['delivered']);
         $this->assertArrayNotHasKey('colour', $fields, 'An options attribute is filtered through the text values.');
         $this->assertArrayNotHasKey('note', $fields);
-        $this->assertContains(ProductIndex::numericValuePath('weight'), $index->filterableFields);
-        $this->assertContains(ProductIndex::numericValuePath('weight'), $index->facetFields);
+        $this->assertContains('product.attributes_numeric_values.weight', $index->filterableFields);
+        $this->assertContains('product.attributes_numeric_values.weight', $index->facetFields);
     }
 
     public function testSchemaFollowsTheAttributeTable(): void
@@ -103,7 +101,7 @@ class ProductSchemaTest extends SuluTestCase
         /** @var LoaderInterface $loader */
         $loader = $container->get('sulu_product.product_schema_loader');
 
-        $fields = $this->numericFields($loader->load()->indexes[ProductIndex::NAME]->fields);
+        $fields = $this->numericFields($loader->load()->indexes['website']->fields);
         $this->assertArrayNotHasKey('weight', $fields);
 
         $group = $groupRepository->create();
@@ -114,22 +112,45 @@ class ProductSchemaTest extends SuluTestCase
         $attributeRepository->save($attribute);
         $entityManager->flush();
 
-        $fields = $this->numericFields($loader->load()->indexes[ProductIndex::NAME]->fields);
+        $fields = $this->numericFields($loader->load()->indexes['website']->fields);
         $this->assertInstanceOf(Field\FloatField::class, $fields['weight']);
 
         $attribute->setKey('mass');
         $attributeRepository->save($attribute);
         $entityManager->flush();
 
-        $fields = $this->numericFields($loader->load()->indexes[ProductIndex::NAME]->fields);
+        $fields = $this->numericFields($loader->load()->indexes['website']->fields);
         $this->assertArrayNotHasKey('weight', $fields);
         $this->assertInstanceOf(Field\FloatField::class, $fields['mass']);
 
         $attributeRepository->remove($attribute);
         $entityManager->flush();
 
-        $fields = $this->numericFields($loader->load()->indexes[ProductIndex::NAME]->fields);
+        $fields = $this->numericFields($loader->load()->indexes['website']->fields);
         $this->assertArrayNotHasKey('mass', $fields);
+    }
+
+    public function testKeyThatCannotBeAFieldNameGetsNoField(): void
+    {
+        self::purgeDatabase();
+        $this->createNumericAttribute('1st_size');
+
+        /** @var LoaderInterface $loader */
+        $loader = self::getContainer()->get('sulu_product.product_schema_loader');
+
+        $this->assertSame([], $this->numericFields($loader->load()->indexes['website']->fields), 'A field name must start with a letter.');
+    }
+
+    public function testSchemaWithoutNumericValuesFieldIsReturnedUnchanged(): void
+    {
+        $original = new Schema(['website' => new Index('website', [
+            'id' => new Field\IdentifierField('id'),
+            'product' => new Field\ObjectField('product', [
+                'productFamilyId' => new Field\TextField('productFamilyId', searchable: false, filterable: true),
+            ]),
+        ])]);
+
+        $this->assertSame($original, $this->createLoader($original)->load());
     }
 
     public function testStaticFieldWinsOverNumericFieldOfSameName(): void
@@ -138,18 +159,18 @@ class ProductSchemaTest extends SuluTestCase
         $this->createNumericAttribute('weight');
 
         $loader = $this->createLoader(new Schema([
-            ProductIndex::NAME => new Index(ProductIndex::NAME, $this->websiteFields([
+            'website' => new Index('website', $this->websiteFields([
                 'weight' => new Field\TextField('weight', searchable: false, filterable: true),
             ])),
         ]));
 
-        $fields = $this->numericFields($loader->load()->indexes[ProductIndex::NAME]->fields);
+        $fields = $this->numericFields($loader->load()->indexes['website']->fields);
         $this->assertInstanceOf(Field\TextField::class, $fields['weight']);
     }
 
     public function testSchemaWithoutProductFieldIsReturnedUnchanged(): void
     {
-        $original = new Schema([ProductIndex::NAME => new Index(ProductIndex::NAME, ['id' => new Field\IdentifierField('id')])]);
+        $original = new Schema(['website' => new Index('website', ['id' => new Field\IdentifierField('id')])]);
 
         $this->assertSame($original, $this->createLoader($original)->load());
     }
@@ -201,9 +222,9 @@ class ProductSchemaTest extends SuluTestCase
     {
         return [
             'id' => new Field\IdentifierField('id'),
-            ProductIndex::FIELD => new Field\ObjectField(ProductIndex::FIELD, [
-                ProductIndex::TEXT_VALUES_FIELD => new Field\TextField(ProductIndex::TEXT_VALUES_FIELD, multiple: true, searchable: false, filterable: true, facet: true),
-                ProductIndex::NUMERIC_VALUES_FIELD => new Field\ObjectField(ProductIndex::NUMERIC_VALUES_FIELD, $numericFields),
+            'product' => new Field\ObjectField('product', [
+                'attributes_text_values' => new Field\TextField('attributes_text_values', multiple: true, searchable: false, filterable: true, facet: true),
+                'attributes_numeric_values' => new Field\ObjectField('attributes_numeric_values', $numericFields),
             ]),
         ];
     }
@@ -215,9 +236,9 @@ class ProductSchemaTest extends SuluTestCase
      */
     private function numericFields(array $indexFields): array
     {
-        $product = $indexFields[ProductIndex::FIELD];
+        $product = $indexFields['product'];
         $this->assertInstanceOf(Field\ObjectField::class, $product);
-        $numericValues = $product->fields[ProductIndex::NUMERIC_VALUES_FIELD];
+        $numericValues = $product->fields['attributes_numeric_values'];
         $this->assertInstanceOf(Field\ObjectField::class, $numericValues);
 
         return $numericValues->fields;

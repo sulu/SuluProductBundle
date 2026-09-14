@@ -39,13 +39,13 @@ final class WebsiteProductIndexListener
     public function onProductChanged(ProductWorkflowTransitionAppliedEvent|ProductRemovedEvent|ProductTranslationRemovedEvent $event): void
     {
         $productIds = $event instanceof ProductRemovedEvent
-            ? \array_values(\array_unique([$event->getResourceId(), ...$event->getRelatedProductIds()]))
+            ? \array_values(\array_unique([$event->getResourceId(), ...$event->getVariantUuids()]))
             : $this->relatedProductIds($event->getProduct());
 
         $identifiers = [];
         foreach ($this->getLocales($event) as $locale) {
             foreach ($productIds as $productId) {
-                $identifiers[] = ProductIndex::documentId($productId, $locale);
+                $identifiers[] = ProductInterface::RESOURCE_KEY . '__' . $productId . '__' . $locale;
             }
         }
 
@@ -55,7 +55,7 @@ final class WebsiteProductIndexListener
 
         $this->messageBus->dispatch(
             ReindexConfig::create()
-                ->withIndex(ProductIndex::NAME)
+                ->withIndex('website')
                 ->withIdentifiers($identifiers),
         );
     }

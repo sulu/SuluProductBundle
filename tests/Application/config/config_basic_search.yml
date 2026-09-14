@@ -1,0 +1,4 @@
+sulu_product:
+    search:
+        website:
+            additional_product_filters: false

@@ -22,7 +22,7 @@ class ProductRemovedEvent extends DomainEvent
     /**
      * @param array{
      *     locales?: string[],
-     *     relatedIds?: string[]
+     *     variantUuids?: string[]
      * } $context
      */
     public function __construct(
@@ -77,8 +77,8 @@ class ProductRemovedEvent extends DomainEvent
      *
      * @return string[]
      */
-    public function getRelatedProductIds(): array
+    public function getVariantUuids(): array
     {
-        return $this->context['relatedIds'] ?? [];
+        return $this->context['variantUuids'] ?? [];
     }
 }

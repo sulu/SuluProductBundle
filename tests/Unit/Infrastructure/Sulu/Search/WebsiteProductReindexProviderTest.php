@@ -135,11 +135,8 @@ class WebsiteProductReindexProviderTest extends TestCase
                     'productId' => '42',
                     'type' => ProductInterface::TYPE_PRODUCT,
                     'parentId' => null,
+                    'position' => 0,
                     'code' => 'NC3',
-                    'productFamilyId' => 'family-uuid',
-                    'productFamilyName' => 'XLR',
-                    'detailsData' => [],
-                    'unlocalizedDetailsData' => [],
                     'authored' => new \DateTimeImmutable('2024-01-01'),
                     'changed' => new \DateTimeImmutable('2024-01-02'),
                     'title' => 'Sample',
@@ -166,10 +163,8 @@ class WebsiteProductReindexProviderTest extends TestCase
         $this->assertSame('/sample', $results[0]['url']);
         $this->assertSame(['main', 'extra'], $results[0]['webspaces']);
         $this->assertSame(ProductInterface::RESOURCE_KEY, $results[0]['resourceKey']);
-        $product = $results[0]['product'];
-        $this->assertIsArray($product);
-        $this->assertSame('NC3', $product['code']);
-        $this->assertSame('family-uuid', $product['productFamilyId']);
+        $this->assertSame(['NC3'], $results[0]['content'], 'The code is only searchable, not a field of its own.');
+        $this->assertArrayNotHasKey('product', $results[0], 'The product field belongs to the details enhancer.');
     }
 
     public function testProvideRunsEnhancers(): void
@@ -180,11 +175,8 @@ class WebsiteProductReindexProviderTest extends TestCase
                     'productId' => '1',
                     'type' => ProductInterface::TYPE_PRODUCT,
                     'parentId' => null,
+                    'position' => 0,
                     'code' => 'CODE-1',
-                    'productFamilyId' => null,
-                    'productFamilyName' => null,
-                    'detailsData' => [],
-                    'unlocalizedDetailsData' => [],
                     'authored' => null,
                     'changed' => new \DateTimeImmutable('2024-01-02'),
                     'title' => 'T',
@@ -235,11 +227,8 @@ class WebsiteProductReindexProviderTest extends TestCase
                     'productId' => '99',
                     'type' => ProductInterface::TYPE_PRODUCT,
                     'parentId' => null,
+                    'position' => 0,
                     'code' => 'CODE-99',
-                    'productFamilyId' => null,
-                    'productFamilyName' => null,
-                    'detailsData' => [],
-                    'unlocalizedDetailsData' => [],
                     'authored' => new \DateTimeImmutable('2024-01-01'),
                     'changed' => new \DateTimeImmutable('2024-01-02'),
                     'title' => 'Match',
@@ -270,11 +259,8 @@ class WebsiteProductReindexProviderTest extends TestCase
                     'productId' => '7',
                     'type' => ProductInterface::TYPE_PRODUCT,
                     'parentId' => null,
+                    'position' => 0,
                     'code' => 'CODE-7',
-                    'productFamilyId' => null,
-                    'productFamilyName' => null,
-                    'detailsData' => [],
-                    'unlocalizedDetailsData' => [],
                     'authored' => new \DateTimeImmutable('2024-01-01'),
                     'changed' => new \DateTimeImmutable('2024-01-02'),
                     'title' => 'Only main',
@@ -294,38 +280,5 @@ class WebsiteProductReindexProviderTest extends TestCase
 
         $this->assertCount(1, $results);
         $this->assertSame(['main'], $results[0]['webspaces']);
-    }
-
-    public function testProvideTakesTheImageFromTheMergedDetails(): void
-    {
-        $this->dimensionQuery->getResult()->willReturn(
-            [
-                [
-                    'productId' => '8',
-                    'type' => ProductInterface::TYPE_PRODUCT,
-                    'parentId' => null,
-                    'code' => 'CODE-8',
-                    'productFamilyId' => null,
-                    'productFamilyName' => null,
-                    'detailsData' => [],
-                    'unlocalizedDetailsData' => ['image' => ['id' => 3]],
-                    'authored' => null,
-                    'changed' => new \DateTimeImmutable('2024-01-02'),
-                    'title' => 'With image',
-                    'locale' => 'en',
-                    'mainWebspace' => 'main',
-                    'dimensionContentId' => 12,
-                    'slug' => '/with-image',
-                ],
-            ],
-            [],
-        );
-        $this->additionalQuery->getResult()->willReturn([]);
-
-        $provider = new WebsiteProductReindexProvider($this->entityManager->reveal());
-
-        $results = \iterator_to_array($provider->provide(new ReindexConfig()));
-
-        $this->assertSame('3', $results[0]['mediaId']);
     }
 }

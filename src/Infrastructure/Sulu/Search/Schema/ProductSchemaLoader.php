@@ -20,7 +20,7 @@ use CmsIg\Seal\Schema\Schema;
 use Doctrine\ORM\EntityManagerInterface;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeInterface;
-use Sulu\Product\Infrastructure\Sulu\Search\ProductIndex;
+use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductDetailsReindexProviderEnhancer;
 
 /**
  * Appends one field per number and date attribute to the product object field of the website
@@ -46,19 +46,19 @@ final class ProductSchemaLoader implements LoaderInterface
     {
         $schema = $this->inner->load();
 
-        $index = $schema->indexes[ProductIndex::NAME] ?? null;
-        $product = $index?->fields[ProductIndex::FIELD] ?? null;
+        $index = $schema->indexes['website'] ?? null;
+        $product = $index?->fields[WebsiteProductDetailsReindexProviderEnhancer::FIELD] ?? null;
         if (null === $index || !$product instanceof Field\ObjectField) {
             return $schema;
         }
 
-        $numericValues = $product->fields[ProductIndex::NUMERIC_VALUES_FIELD] ?? null;
+        $numericValues = $product->fields[WebsiteProductDetailsReindexProviderEnhancer::NUMERIC_VALUES_FIELD] ?? null;
         if (!$numericValues instanceof Field\ObjectField) {
             return $schema;
         }
 
         $productFields = $product->fields;
-        $productFields[ProductIndex::NUMERIC_VALUES_FIELD] = new Field\ObjectField(
+        $productFields[WebsiteProductDetailsReindexProviderEnhancer::NUMERIC_VALUES_FIELD] = new Field\ObjectField(
             $numericValues->name,
             \array_merge($this->loadNumericFields(), $numericValues->fields),
             $numericValues->multiple,
@@ -66,7 +66,7 @@ final class ProductSchemaLoader implements LoaderInterface
         );
 
         $fields = $index->fields;
-        $fields[ProductIndex::FIELD] = new Field\ObjectField(
+        $fields[WebsiteProductDetailsReindexProviderEnhancer::FIELD] = new Field\ObjectField(
             $product->name,
             $productFields,
             $product->multiple,
@@ -74,7 +74,7 @@ final class ProductSchemaLoader implements LoaderInterface
         );
 
         $indexes = $schema->indexes;
-        $indexes[ProductIndex::NAME] = new Index($index->name, $fields, $index->options);
+        $indexes['website'] = new Index($index->name, $fields, $index->options);
 
         return new Schema($indexes);
     }
@@ -96,7 +96,7 @@ final class ProductSchemaLoader implements LoaderInterface
 
         $fields = [];
         foreach (\array_column($rows, 'key') as $attributeKey) {
-            $name = ProductIndex::numericField($attributeKey);
+            $name = WebsiteProductDetailsReindexProviderEnhancer::numericField($attributeKey);
 
             // A field name must start with a letter and hold word characters only.
             if (1 !== \preg_match('/^[A-Za-z]\w*$/', $name)) {
