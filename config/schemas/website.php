@@ -16,7 +16,6 @@ use CmsIg\Seal\Schema\Index;
 
 return new Index('website', [
     'product' => new Field\ObjectField('product', [
-        'code' => new Field\TextField('code', searchable: false, filterable: true),
         // TODO rename to `productFamilyKey` and write the family key instead of the uuid.
         'productFamilyId' => new Field\TextField('productFamilyId', searchable: false, filterable: true, facet: true),
         'attributes_text_values' => new Field\TextField('attributes_text_values', multiple: true, searchable: false, filterable: true, facet: true),

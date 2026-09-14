@@ -23,7 +23,6 @@ use Sulu\Product\Domain\Event\ProductTranslationRemovedEvent;
 use Sulu\Product\Domain\Event\ProductWorkflowTransitionAppliedEvent;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductInterface;
-use Sulu\Product\Infrastructure\Sulu\Search\ProductIndex;
 use Sulu\Product\Infrastructure\Sulu\Search\WebsiteProductIndexListener;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -44,10 +43,10 @@ class WebsiteProductIndexListenerTest extends TestCase
 
         $messageBus = $this->prophesize(MessageBusInterface::class);
         $messageBus->dispatch(Argument::that(function(ReindexConfig $config): bool {
-            $this->assertSame(ProductIndex::NAME, $config->getIndex());
+            $this->assertSame('website', $config->getIndex());
             $this->assertEqualsCanonicalizing([
-                ProductIndex::documentId('parent-uuid', 'en'),
-                ProductIndex::documentId('variant-uuid', 'en'),
+                'products__parent-uuid__en',
+                'products__variant-uuid__en',
             ], $config->getIdentifiers());
 
             return true;
@@ -67,8 +66,8 @@ class WebsiteProductIndexListenerTest extends TestCase
         $messageBus = $this->prophesize(MessageBusInterface::class);
         $messageBus->dispatch(Argument::that(function(ReindexConfig $config): bool {
             $this->assertEqualsCanonicalizing([
-                ProductIndex::documentId('variant-uuid', 'de'),
-                ProductIndex::documentId('parent-uuid', 'de'),
+                'products__variant-uuid__de',
+                'products__parent-uuid__de',
             ], $config->getIdentifiers());
 
             return true;
@@ -83,8 +82,8 @@ class WebsiteProductIndexListenerTest extends TestCase
         $messageBus = $this->prophesize(MessageBusInterface::class);
         $messageBus->dispatch(Argument::that(function(ReindexConfig $config): bool {
             $this->assertEqualsCanonicalizing([
-                ProductIndex::documentId('gone-uuid', 'en'),
-                ProductIndex::documentId('gone-uuid', 'de'),
+                'products__gone-uuid__en',
+                'products__gone-uuid__de',
             ], $config->getIdentifiers());
 
             return true;
@@ -103,9 +102,9 @@ class WebsiteProductIndexListenerTest extends TestCase
         $messageBus = $this->prophesize(MessageBusInterface::class);
         $messageBus->dispatch(Argument::that(function(ReindexConfig $config): bool {
             $this->assertEqualsCanonicalizing([
-                ProductIndex::documentId('parent-uuid', 'en'),
-                ProductIndex::documentId('variant-one-uuid', 'en'),
-                ProductIndex::documentId('variant-two-uuid', 'en'),
+                'products__parent-uuid__en',
+                'products__variant-one-uuid__en',
+                'products__variant-two-uuid__en',
             ], $config->getIdentifiers());
 
             return true;
@@ -114,7 +113,7 @@ class WebsiteProductIndexListenerTest extends TestCase
         $listener = new WebsiteProductIndexListener($messageBus->reveal());
         $listener->onProductChanged(new ProductRemovedEvent('parent-uuid', 'Gone', [
             'locales' => ['en'],
-            'relatedIds' => ['variant-one-uuid', 'variant-two-uuid'],
+            'variantUuids' => ['variant-one-uuid', 'variant-two-uuid'],
         ]));
     }
 
@@ -134,8 +133,8 @@ class WebsiteProductIndexListenerTest extends TestCase
         $messageBus = $this->prophesize(MessageBusInterface::class);
         $messageBus->dispatch(Argument::that(function(ReindexConfig $config): bool {
             $this->assertEqualsCanonicalizing([
-                ProductIndex::documentId('parent-uuid', 'de'),
-                ProductIndex::documentId('variant-uuid', 'de'),
+                'products__parent-uuid__de',
+                'products__variant-uuid__de',
             ], $config->getIdentifiers());
 
             return true;
@@ -155,8 +154,8 @@ class WebsiteProductIndexListenerTest extends TestCase
         $messageBus = $this->prophesize(MessageBusInterface::class);
         $messageBus->dispatch(Argument::that(function(ReindexConfig $config): bool {
             $this->assertEqualsCanonicalizing([
-                ProductIndex::documentId('variant-uuid', 'de'),
-                ProductIndex::documentId('parent-uuid', 'de'),
+                'products__variant-uuid__de',
+                'products__parent-uuid__de',
             ], $config->getIdentifiers());
 
             return true;
@@ -179,8 +178,8 @@ class WebsiteProductIndexListenerTest extends TestCase
     {
         $messageBus = $this->prophesize(MessageBusInterface::class);
         $messageBus->dispatch(Argument::that(function(ReindexConfig $config): bool {
-            $this->assertSame(ProductIndex::NAME, $config->getIndex());
-            $this->assertSame([ProductIndex::documentId('123', 'en')], $config->getIdentifiers());
+            $this->assertSame('website', $config->getIndex());
+            $this->assertSame(['products__123__en'], $config->getIdentifiers());
 
             return true;
         }))->willReturn(new Envelope(new \stdClass()))->shouldBeCalledOnce();

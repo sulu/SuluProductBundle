@@ -40,7 +40,7 @@ final class RemoveProductMessageHandler
 
         // The cascade-removed variants are only reachable before the flush, so their uuids travel
         // with the event.
-        $relatedIds = [];
+        $variantUuids = [];
         if ($product->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS)) {
             foreach ($this->productRepository->findBy(['parent' => $product->getUuid()]) as $variant) {
                 /** @var string $variantResourceKey */
@@ -50,7 +50,7 @@ final class RemoveProductMessageHandler
                 // $this->productRepository->remove($product) below is flushed.
                 $this->trashManager?->store($variantResourceKey, $variant);
 
-                $relatedIds[] = $variant->getUuid();
+                $variantUuids[] = $variant->getUuid();
             }
         }
 
@@ -65,8 +65,8 @@ final class RemoveProductMessageHandler
         $localizedDimensionContent = $dimensionContentCollection->getDimensionContent(['locale' => $message->getLocale()]);
         $unlocalizedDimensionContent = $dimensionContentCollection->getDimensionContent(['locale' => null, 'stage' => 'draft']);
         $context = $unlocalizedDimensionContent?->getAvailableLocales() ? ['locales' => $unlocalizedDimensionContent->getAvailableLocales()] : [];
-        if ([] !== $relatedIds) {
-            $context['relatedIds'] = $relatedIds;
+        if ([] !== $variantUuids) {
+            $context['variantUuids'] = $variantUuids;
         }
 
         // Try to get title from the removed locale first, fallback to any available locale if null

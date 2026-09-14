@@ -180,7 +180,7 @@ class RemoveProductMessageHandlerTest extends TestCase
      * The variants go with the parent through ON DELETE CASCADE, so their uuids have to leave the
      * handler with the event.
      */
-    public function testRemoveProductWithVariantsPutsTheVariantIdsIntoTheEvent(): void
+    public function testRemoveProductWithVariantsPutsTheVariantUuidsIntoTheEvent(): void
     {
         $product = new Product('parent-uuid');
         $product->setType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
@@ -194,7 +194,7 @@ class RemoveProductMessageHandlerTest extends TestCase
         $this->productRepository->remove($product)->shouldBeCalledOnce();
 
         $this->domainEventCollector->collect(Argument::that(function(ProductRemovedEvent $event): bool {
-            $this->assertSame(['variant-one-uuid', 'variant-two-uuid'], $event->getRelatedProductIds());
+            $this->assertSame(['variant-one-uuid', 'variant-two-uuid'], $event->getVariantUuids());
 
             return true;
         }))->shouldBeCalledOnce();
@@ -212,7 +212,7 @@ class RemoveProductMessageHandlerTest extends TestCase
      * A parent is represented by its variants and has no document of its own, so removing a variant
      * leaves nothing of the parent to update.
      */
-    public function testRemoveVariantPutsNoRelatedIdsIntoTheEvent(): void
+    public function testRemoveVariantPutsNoVariantUuidsIntoTheEvent(): void
     {
         $parent = new Product('parent-uuid');
         $variant = new Product('variant-uuid');
@@ -225,7 +225,7 @@ class RemoveProductMessageHandlerTest extends TestCase
         $this->productRepository->remove($variant)->shouldBeCalledOnce();
 
         $this->domainEventCollector->collect(Argument::that(function(ProductRemovedEvent $event): bool {
-            $this->assertArrayNotHasKey('relatedIds', $event->getEventContext());
+            $this->assertArrayNotHasKey('variantUuids', $event->getEventContext());
 
             return true;
         }))->shouldBeCalledOnce();

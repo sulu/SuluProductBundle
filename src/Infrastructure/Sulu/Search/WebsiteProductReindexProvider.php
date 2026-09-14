@@ -21,48 +21,25 @@ use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentAdditionalWebspace;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
-use Sulu\Product\Infrastructure\Sulu\Search\Visitor\BatchAwareReindexEnhancerInterface;
 use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductReindexProviderEnhancerInterface;
 
 /**
  * One document per published leaf: a product without variants, or a variant. A product that has
- * variants is represented by them, so it gets no document of its own. A variant is shown on its
- * parent's page, so its document carries the parent's slug and webspaces.
+ * variants is represented by them, so it gets no document of its own.
  *
  * @phpstan-type Product array{
  *     productId: string,
  *     type: string,
  *     parentId: string|null,
+ *     position: int,
  *     dimensionContentId: int,
  *     locale: string,
  *     title: string|null,
  *     code: string|null,
- *     externalIdentifier: string|null,
- *     productFamilyId: string|null,
- *     productFamilyName: string|null,
  *     mainWebspace: string|null,
  *     slug: string|null,
  *     authored: \DateTimeImmutable|null,
  *     changed: \DateTimeImmutable,
- *     detailsData: array<string, mixed>,
- * }
- * @phpstan-type RawProduct array{
- *     productId: string,
- *     type: string,
- *     parentId: string|null,
- *     dimensionContentId: int,
- *     locale: string,
- *     title: string|null,
- *     code: string|null,
- *     externalIdentifier: string|null,
- *     productFamilyId: string|null,
- *     productFamilyName: string|null,
- *     mainWebspace: string|null,
- *     slug: string|null,
- *     authored: \DateTimeImmutable|null,
- *     changed: \DateTimeImmutable,
- *     detailsData: array<string, mixed>,
- *     unlocalizedDetailsData: array<string, mixed>,
  * }
  *
  * @internal this class is internal no backwards compatibility promise is given for this class
@@ -88,6 +65,7 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
     public function __construct(
         EntityManagerInterface $entityManager,
         private readonly iterable $enhancers = [],
+        private readonly string $variantQueryParameter = 'variant',
     ) {
         $this->dimensionContentRepository = $entityManager->getRepository(ProductDimensionContentInterface::class);
         $this->additionalWebspacesRepository = $entityManager->getRepository(ProductDimensionContentAdditionalWebspace::class);
@@ -108,12 +86,6 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
             $webspaces = $this->loadWebspaces($batch);
             $parentSlugs = $this->loadParentSlugs($batch);
 
-            foreach ($this->enhancers as $enhancer) {
-                if ($enhancer instanceof BatchAwareReindexEnhancerInterface) {
-                    $enhancer->prepareBatch($batch);
-                }
-            }
-
             foreach ($batch as $row) {
                 $data = $this->createDocument($row, $webspaces, $parentSlugs);
 
@@ -123,6 +95,11 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
 
                 if ('' === $data['title']) {
                     $data['title'] = (string) $row['title'];
+                }
+
+                // The content enhancer resets `content`, so the code is appended after the enhancers.
+                if (null !== $row['code'] && '' !== $row['code'] && \is_array($data['content'])) {
+                    $data['content'][] = $row['code'];
                 }
 
                 yield $data;
@@ -142,36 +119,38 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
      */
     private function createDocument(array $row, array $webspaces, array $parentSlugs): array
     {
-        $key = $row['productId'] . '__' . $row['locale'];
-        $isVariant = ProductInterface::TYPE_VARIANT === $row['type'];
-        $webspaceKey = $isVariant && null !== $row['parentId'] ? $row['parentId'] . '__' . $row['locale'] : $key;
-        $url = $isVariant && null !== $row['parentId']
-            ? ($parentSlugs[$row['parentId'] . '__' . $row['locale']] ?? '')
-            : (string) $row['slug'];
-
-        // A variant keeps its own image; an empty one is not filled from the parent.
-        $image = $row['detailsData']['image'] ?? null;
-        $mediaId = \is_array($image) && isset($image['id']) && \is_numeric($image['id']) ? (string) $image['id'] : '';
+        $isVariant = ProductInterface::TYPE_VARIANT === $row['type'] && null !== $row['parentId'];
+        $webspaceKey = ($isVariant ? $row['parentId'] : $row['productId']) . '__' . $row['locale'];
 
         return [
-            'id' => ProductIndex::documentId($row['productId'], $row['locale']),
+            'id' => ProductInterface::RESOURCE_KEY . '__' . $row['productId'] . '__' . $row['locale'],
             'resourceKey' => ProductInterface::RESOURCE_KEY,
             'resourceId' => $row['productId'],
             'locale' => $row['locale'],
             'webspaces' => $webspaces[$webspaceKey] ?? [],
             'title' => '',
-            'url' => $url,
+            'url' => $isVariant ? $this->variantUrl($row, $parentSlugs) : (string) $row['slug'],
             'content' => [],
-            'mediaId' => $mediaId,
+            'mediaId' => '',
             'authoredAt' => ($row['authored'] ?? $row['changed'])->format('c'),
             'metadata' => [],
-            ProductIndex::FIELD => [
-                'code' => (string) $row['code'],
-                'productFamilyId' => (string) $row['productFamilyId'],
-                ProductIndex::TEXT_VALUES_FIELD => [],
-                ProductIndex::NUMERIC_VALUES_FIELD => [],
-            ],
         ];
+    }
+
+    /**
+     * The same URL ProductResourceLoader gives a variant: the first one is what the bare parent URL shows.
+     *
+     * @param Product $row
+     * @param array<string, string> $parentSlugs keyed by "<parentId>__<locale>"
+     */
+    private function variantUrl(array $row, array $parentSlugs): string
+    {
+        $slug = $parentSlugs[$row['parentId'] . '__' . $row['locale']] ?? '';
+        if ('' === $slug || 0 === $row['position'] || null === $row['code'] || '' === $row['code']) {
+            return $slug;
+        }
+
+        return $slug . '?' . \http_build_query([$this->variantQueryParameter => $row['code']]);
     }
 
     /**
@@ -181,7 +160,7 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
      */
     private function loadBatch(array $identifiers, int $offset): array
     {
-        // Code and the product family are stored once per product, on the unlocalized dimension content.
+        // The code is stored once per product, on the unlocalized dimension content.
         $queryBuilder = $this->dimensionContentRepository->createQueryBuilder('dimensionContent')
             ->innerJoin('dimensionContent.product', 'product')
             ->innerJoin(
@@ -194,24 +173,18 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
                 . ' AND unlocalizedDimensionContent.version = dimensionContent.version',
             )
             ->leftJoin('dimensionContent.route', 'route')
-            ->leftJoin('unlocalizedDimensionContent.productFamily', 'productFamily')
-            ->leftJoin('productFamily.translations', 'productFamilyTranslation', 'WITH', 'productFamilyTranslation.locale = dimensionContent.locale')
             ->select('product.uuid AS productId')
             ->addSelect('product.type AS type')
             ->addSelect('IDENTITY(product.parent) AS parentId')
+            ->addSelect('product.position AS position')
             ->addSelect('dimensionContent.id AS dimensionContentId')
             ->addSelect('dimensionContent.locale')
             ->addSelect('dimensionContent.title')
             ->addSelect('unlocalizedDimensionContent.code')
-            ->addSelect('unlocalizedDimensionContent.externalIdentifier')
-            ->addSelect('productFamily.uuid AS productFamilyId')
-            ->addSelect('productFamilyTranslation.name AS productFamilyName')
             ->addSelect('dimensionContent.mainWebspace')
             ->addSelect('route.slug')
             ->addSelect('dimensionContent.authored')
             ->addSelect('dimensionContent.changed')
-            ->addSelect('dimensionContent.detailsData')
-            ->addSelect('unlocalizedDimensionContent.detailsData AS unlocalizedDetailsData')
             ->where('dimensionContent.stage = :stage')
             ->andWhere('dimensionContent.locale IS NOT NULL')
             ->andWhere('dimensionContent.version = :version')
@@ -257,31 +230,8 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
             ->setFirstResult($offset)
             ->setMaxResults(self::BATCH_SIZE);
 
-        /** @var array<int, RawProduct> $rows */
-        $rows = $queryBuilder->getQuery()->getResult();
-
-        return $this->mergeDetailsData($rows);
-    }
-
-    /**
-     * Details are split over both dimension contents by multilinguality, so a row carries the
-     * merged bag, localized winning, the same precedence ProductDetailsMerger applies.
-     *
-     * @param array<int, RawProduct> $rows
-     *
-     * @return array<int, Product>
-     */
-    private function mergeDetailsData(array $rows): array
-    {
-        $merged = [];
-        foreach ($rows as $row) {
-            $unlocalizedDetailsData = $row['unlocalizedDetailsData'];
-            unset($row['unlocalizedDetailsData']);
-            $row['detailsData'] = \array_merge($unlocalizedDetailsData, $row['detailsData']);
-            $merged[] = $row;
-        }
-
-        return $merged;
+        /** @var array<int, Product> */
+        return $queryBuilder->getQuery()->getResult();
     }
 
     /**
@@ -306,10 +256,6 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
             $key = $parentRow['productId'] . '__' . $parentRow['locale'];
             $webspaces[$key] ??= $parentRow['mainWebspace'] ? [$parentRow['mainWebspace']] : [];
             $byDimensionContentId[$parentRow['dimensionContentId']] = $key;
-        }
-
-        if ([] === $byDimensionContentId) {
-            return $webspaces;
         }
 
         foreach ($this->loadAdditionalWebspaceRows(\array_keys($byDimensionContentId)) as $additionalRow) {
@@ -417,6 +363,6 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
 
     public static function getIndex(): string
     {
-        return ProductIndex::NAME;
+        return 'website';
     }
 }
