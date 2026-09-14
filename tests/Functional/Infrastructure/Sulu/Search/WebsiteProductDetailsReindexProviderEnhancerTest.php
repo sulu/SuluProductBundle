@@ -128,6 +128,38 @@ class WebsiteProductDetailsReindexProviderEnhancerTest extends SuluTestCase
     }
 
     /**
+     * MySQL cuts GROUP_CONCAT at 1024 bytes by default; the values are loaded with it, so a product
+     * whose packed values exceed that must still be indexed completely.
+     */
+    public function testProductWithMoreThanAKilobyteOfValuesIsIndexedCompletely(): void
+    {
+        self::purgeDatabase();
+
+        $attributes = [];
+        $values = [];
+        for ($i = 1; $i <= 6; ++$i) {
+            $attributeId = $this->createAttribute('note' . $i, 'Note ' . $i, AttributeInterface::TYPE_TEXT, true);
+            $attributes[$attributeId] = [];
+            $values[$attributeId] = \str_repeat((string) $i, 250);
+        }
+
+        $familyId = $this->createProductFamily($attributes);
+        $productId = $this->createProduct($familyId, 'Long', ProductInterface::TYPE_PRODUCT);
+        $this->putAttributes($productId, $values);
+        $this->publish($productId);
+
+        /** @var EngineInterface $engine */
+        $engine = self::getContainer()->get('cmsig_seal.engine.default');
+
+        $document = $engine->getDocument('website', 'products__' . $productId . '__en');
+        $product = $document['product'];
+        $this->assertIsArray($product);
+        $this->assertIsArray($product['attributes_text_values']);
+        $this->assertCount(6, $product['attributes_text_values']);
+        $this->assertContains('note6:' . \str_repeat('6', 250), $product['attributes_text_values']);
+    }
+
+    /**
      * @param array<string, string> $options option key => english name
      */
     private function createAttribute(string $key, string $name, string $type, bool $localized, array $options = []): int
