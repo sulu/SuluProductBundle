@@ -188,6 +188,7 @@ class ProductAdmin extends Admin
                 ->setFormKey(ProductInterface::FORM_KEY)
                 ->setTabTitle('sulu_admin.details')
                 ->setTabOrder(10)
+                // the details schema needs the product to scope itself to its own family
                 ->addRouterAttributesToFormMetadata(['id'])
                 ->addToolbarActions($editToolbarActions)
                 ->setParent(static::EDIT_TABS_VIEW),

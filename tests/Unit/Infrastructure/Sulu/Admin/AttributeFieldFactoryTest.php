@@ -21,6 +21,8 @@ use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataLoaderInterface;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\OptionMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadataMapper\NumberPropertyMetadataMapper;
+use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadataMapperRegistry;
 use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
 use Sulu\Product\Application\AttributeType\NumberAttributeType;
 use Sulu\Product\Domain\Measurement\MeasurementRegistry;
@@ -28,7 +30,7 @@ use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeTranslationInterface;
 use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeFieldFactory;
-use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Component\DependencyInjection\Container;
 
 #[CoversClass(AttributeFieldFactory::class)]
 class AttributeFieldFactoryTest extends TestCase
@@ -45,14 +47,14 @@ class AttributeFieldFactoryTest extends TestCase
 
     private function factory(): AttributeFieldFactory
     {
-        $translator = $this->createStub(TranslatorInterface::class);
-        $translator->method('trans')->willReturn('Unit');
+        $mapperContainer = new Container();
+        $mapperContainer->set('number', new NumberPropertyMetadataMapper());
 
         return new AttributeFieldFactory(
             new AttributeTypeRegistry([new NumberAttributeType()]),
             $this->formMetadataLoader->reveal(),
             new MeasurementRegistry(),
-            $translator,
+            new PropertyMetadataMapperRegistry($mapperContainer),
         );
     }
 
@@ -170,6 +172,29 @@ class AttributeFieldFactoryTest extends TestCase
         self::assertNull($this->factory()->build($familyAttribute->reveal(), 'en'));
     }
 
+    public function testBuildsSchemaPropertyKeyedByAttributeId(): void
+    {
+        $attribute = $this->attribute(7, 'weight', AttributeInterface::TYPE_NUMBER, ['min' => 0, 'max' => 10], 'Weight');
+        $familyAttribute = $this->familyAttribute($attribute->reveal(), true);
+        $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
+            ->willReturn($this->fragmentWithValueField());
+
+        $property = $this->factory()->buildSchemaProperty($familyAttribute->reveal(), 'en');
+
+        self::assertNotNull($property);
+        self::assertSame('7', $property->getName());
+        self::assertTrue($property->isMandatory());
+        self::assertSame(['type' => 'number', 'minimum' => 0.0, 'maximum' => 10.0], $property->toJsonSchema());
+    }
+
+    public function testSchemaPropertyIsNullWithoutField(): void
+    {
+        $attribute = $this->attribute(7, 'weight', 'unknown', [], 'Weight');
+        $familyAttribute = $this->familyAttribute($attribute->reveal());
+
+        self::assertNull($this->factory()->buildSchemaProperty($familyAttribute->reveal(), 'en'));
+    }
+
     public function testBuildsFieldWithTranslationForRequestedLocaleAndNoUnit(): void
     {
         $attribute = $this->attribute(7, 'weight', AttributeInterface::TYPE_NUMBER, [], 'Weight', '<b>Heavy</b> item');
@@ -178,17 +203,19 @@ class AttributeFieldFactoryTest extends TestCase
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
             ->willReturn($this->fragmentWithValueField());
 
-        $result = $this->factory()->build($familyAttribute->reveal(), 'en');
+        $field = $this->factory()->build($familyAttribute->reveal(), 'en');
 
-        self::assertNotNull($result);
-        [$field, $unitField] = $result;
-
-        self::assertSame('attributes/7', $field->getName());
+        self::assertNotNull($field);
+        self::assertSame('attribute_7', $field->getName());
+        self::assertSame('number', $field->getType());
         self::assertSame('Weight', $field->getLabel('en'));
         self::assertTrue($field->isRequired());
         self::assertSame('Heavy item', $field->getDescription('en'));
         self::assertSame(12, $field->getColSpan());
-        self::assertNull($unitField);
+
+        $step = $field->findOption('step');
+        self::assertNotNull($step);
+        self::assertSame('1', $step->getValue());
     }
 
     public function testFallsBackToDefaultLocaleTranslationWhenRequestedLocaleHasNone(): void
@@ -208,10 +235,9 @@ class AttributeFieldFactoryTest extends TestCase
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
             ->willReturn($this->fragmentWithValueField());
 
-        $result = $this->factory()->build($familyAttribute->reveal(), 'en');
+        $field = $this->factory()->build($familyAttribute->reveal(), 'en');
 
-        self::assertNotNull($result);
-        [$field] = $result;
+        self::assertNotNull($field);
 
         self::assertSame('Gewicht', $field->getLabel('en'));
         self::assertNull($field->getDescription('en'));
@@ -225,15 +251,14 @@ class AttributeFieldFactoryTest extends TestCase
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
             ->willReturn($this->fragmentWithValueField());
 
-        $result = $this->factory()->build($familyAttribute->reveal(), 'en');
+        $field = $this->factory()->build($familyAttribute->reveal(), 'en');
 
-        self::assertNotNull($result);
-        [$field] = $result;
+        self::assertNotNull($field);
 
         self::assertSame('weight', $field->getLabel('en'));
     }
 
-    public function testBuildsUnitFieldWhenAttributeHasUnitConfigured(): void
+    public function testAppendsUnitSymbolToLabelWhenAttributeHasUnitConfigured(): void
     {
         $attribute = $this->attribute(4, 'length', AttributeInterface::TYPE_NUMBER, ['unit' => 'MILLIMETER'], 'Length');
         $familyAttribute = $this->familyAttribute($attribute->reveal());
@@ -241,28 +266,25 @@ class AttributeFieldFactoryTest extends TestCase
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
             ->willReturn($this->fragmentWithValueField());
 
-        $result = $this->factory()->build($familyAttribute->reveal(), 'en');
+        $field = $this->factory()->build($familyAttribute->reveal(), 'en');
 
-        self::assertNotNull($result);
-        [$field, $unitField] = $result;
+        self::assertNotNull($field);
+        self::assertSame('attribute_4', $field->getName());
+        self::assertSame('Length (mm)', $field->getLabel('en'));
+        self::assertSame(12, $field->getColSpan());
+    }
 
-        self::assertSame(8, $field->getColSpan());
+    public function testIgnoresUnknownUnitKey(): void
+    {
+        $attribute = $this->attribute(5, 'length', AttributeInterface::TYPE_NUMBER, ['unit' => 'NOPE'], 'Length');
+        $familyAttribute = $this->familyAttribute($attribute->reveal());
 
-        self::assertNotNull($unitField);
-        self::assertSame('attributes/4_unit', $unitField->getName());
-        self::assertSame('single_select', $unitField->getType());
-        self::assertSame('true', $unitField->getDisabledCondition());
+        $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
+            ->willReturn($this->fragmentWithValueField());
 
-        $values = $unitField->findOption('values');
-        self::assertNotNull($values);
-        self::assertSame(OptionMetadata::TYPE_COLLECTION, $values->getType());
+        $field = $this->factory()->build($familyAttribute->reveal(), 'en');
 
-        $valueOptions = $values->getValue();
-        self::assertIsArray($valueOptions);
-        self::assertCount(1, $valueOptions);
-        $valueOption = $valueOptions[0];
-        self::assertSame('MILLIMETER', $valueOption->getName());
-        self::assertSame('MILLIMETER', $valueOption->getValue());
-        self::assertSame('mm', $valueOption->getTitle('en'));
+        self::assertNotNull($field);
+        self::assertSame('Length', $field->getLabel('en'));
     }
 }

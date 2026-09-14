@@ -74,7 +74,7 @@ class OptionsAttributeTypeTest extends TestCase
         $attribute = $this->prophesize(AttributeInterface::class);
         $attribute->getOptions()->willReturn([$option->reveal()]);
 
-        $field = new FieldMetadata('attributes/1');
+        $field = new FieldMetadata('attribute_1');
         $field->setType('single_select');
 
         (new OptionsAttributeType())->configureField($field, $attribute->reveal(), 'en');
@@ -95,7 +95,7 @@ class OptionsAttributeTypeTest extends TestCase
         $attribute = $this->prophesize(AttributeInterface::class);
         $attribute->getOptions()->willReturn([$option->reveal()]);
 
-        $field = new FieldMetadata('attributes/1');
+        $field = new FieldMetadata('attribute_1');
         $field->setType('single_select');
 
         (new OptionsAttributeType())->configureField($field, $attribute->reveal(), 'en');

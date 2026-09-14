@@ -144,10 +144,8 @@ class ProductDetailsDataMapper implements DataMapperInterface
             $unlocalizedDetails[$field] = $details[$field];
         }
 
-        if ($localizedDimensionContent instanceof ProductDimensionContentInterface) {
-            $localizedDimensionContent->setDetailsData($localizedDetails);
-        }
-
+        // The locale guard above already returned for anything that is not a product content.
+        $localizedDimensionContent->setDetailsData($localizedDetails);
         $unlocalizedDimensionContent->setDetailsData($unlocalizedDetails);
     }
 }

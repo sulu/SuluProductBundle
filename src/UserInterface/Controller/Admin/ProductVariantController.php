@@ -163,8 +163,15 @@ final class ProductVariantController implements SecuredControllerInterface
         $data = $this->buildData($request, $parentId, $parent);
 
         $message = new CreateProductMessage($data);
-        /** @var ProductInterface $variant */
-        $variant = $this->handle(new Envelope($message, [new EnableFlushStamp()]));
+
+        try {
+            /** @var ProductInterface $variant */
+            $variant = $this->handle(new Envelope($message, [new EnableFlushStamp()]));
+        } catch (RequiredProductAttributeMissingException $e) {
+            return new JsonResponse(['detail' => $e->getMessage()], 422);
+        } catch (InvalidArgumentException $e) {
+            return new JsonResponse(['detail' => 'Invalid attribute value provided.'], 400);
+        }
 
         $response = $this->getAction($request, $parentId, $variant->getUuid());
         $response->setStatusCode(201);
@@ -265,11 +272,12 @@ final class ProductVariantController implements SecuredControllerInterface
             ],
         );
 
-        if (isset($data['attributes']) && \is_array($data['attributes'])) {
-            /** @var array<int, mixed> $attributes */
-            $attributes = $data['attributes'];
-            $data['attributes'] = $this->stripInheritedAttributes($family, $attributes);
-        }
+        // `attributes` is always sent: the mapper skips an absent key, which would let an
+        // untouched required axis attribute through.
+        $attributes = $data['attributes'] ?? [];
+        /** @var array<int, mixed> $attributes */
+        $attributes = \is_array($attributes) ? $attributes : [];
+        $data['attributes'] = $this->stripInheritedAttributes($family, $attributes);
 
         return $data;
     }

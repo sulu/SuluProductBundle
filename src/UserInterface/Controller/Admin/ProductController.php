@@ -155,15 +155,30 @@ final class ProductController implements SecuredControllerInterface
 
     public function postAction(Request $request): Response
     {
+        $submitted = $request->request->all();
+        $attributes = $submitted['attributes'] ?? [];
+
+        // `attributes` is always sent: the mapper skips an absent key, which would let an
+        // untouched required attribute through.
         /** @var CreateProductMessageData $data */
         $data = \array_replace(
-            $request->request->all(),
-            ['locale' => $this->getLocale($request)],
+            $submitted,
+            [
+                'attributes' => \is_array($attributes) ? $attributes : [],
+                'locale' => $this->getLocale($request),
+            ],
         );
 
         $message = new CreateProductMessage($data);
-        /** @var ProductInterface $product */
-        $product = $this->handle(new Envelope($message, [new EnableFlushStamp()]));
+
+        try {
+            /** @var ProductInterface $product */
+            $product = $this->handle(new Envelope($message, [new EnableFlushStamp()]));
+        } catch (RequiredProductAttributeMissingException $e) {
+            return new JsonResponse(['detail' => $e->getMessage()], 422);
+        } catch (InvalidArgumentException $e) {
+            return new JsonResponse(['detail' => 'Invalid attribute value provided.'], 400);
+        }
 
         $response = $this->getAction($request, $product->getUuid());
         $response->setStatusCode(201);

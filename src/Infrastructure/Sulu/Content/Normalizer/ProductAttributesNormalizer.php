@@ -52,15 +52,7 @@ class ProductAttributesNormalizer implements NormalizerInterface
         $productFamily = $object->getProductFamily();
         if (null !== $productFamily) {
             foreach ($productFamily->getFamilyAttributes() as $familyAttribute) {
-                $attribute = $familyAttribute->getAttribute();
-                $attributesMap[$attribute->getId()] = null;
-
-                $config = $attribute->getConfig();
-                $measurementFamily = $config['measurementFamily'] ?? null;
-                $unit = $config['unit'] ?? null;
-                if (\is_string($measurementFamily) && \is_string($unit)) {
-                    $attributesMap[$attribute->getId() . '_unit'] = $unit;
-                }
+                $attributesMap[$familyAttribute->getAttribute()->getId()] = null;
             }
         }
 

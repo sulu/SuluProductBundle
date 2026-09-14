@@ -112,5 +112,15 @@
                 </property>
             </properties>
         </section>
+
+        <section name="attributes" colspan="12" visibleCondition="!!productFamily">
+            <meta>
+                <title>sulu_product.attributes</title>
+            </meta>
+
+            <properties>
+                <property name="attributes" type="product_attributes" colspan="12"/>
+            </properties>
+        </section>
     </properties>
 </form>

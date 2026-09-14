@@ -45,7 +45,6 @@
     "sulu_product.published": "Veröffentlicht",
     "sulu_product.not_published": "Nicht Veröffentlicht",
     "sulu_product.route": "Route",
-    "sulu_product.last_modified_or_authored": "Zuletzt geändert oder verfasst",
     "sulu_product.last_modified_enabled": "Aktualisierungsdatum aktivieren",
     "sulu_product.last_modified_date": "Datum der Aktualisierung",
     "sulu_product.code_already_used": "Der Code \"{code}\" ist bereits einem anderen Produkt zugeordnet.",

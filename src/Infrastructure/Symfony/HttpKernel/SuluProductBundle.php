@@ -104,7 +104,8 @@ use Sulu\Product\Infrastructure\Sulu\Admin\AttributeGroupAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAssociationsFieldMetadataValidator;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAssociationsFormMetadataVisitor;
-use Sulu\Product\Infrastructure\Sulu\Admin\ProductAttributeFormMetadataVisitor;
+use Sulu\Product\Infrastructure\Sulu\Admin\ProductAttributesFormMetadataVisitor;
+use Sulu\Product\Infrastructure\Sulu\Admin\ProductAttributesSchemaFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductCodeFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductContentAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductContentFormMetadataVisitor;
@@ -113,7 +114,6 @@ use Sulu\Product\Infrastructure\Sulu\Admin\ProductFamilyAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductRouteFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductsListMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductStatusFormMetadataVisitor;
-use Sulu\Product\Infrastructure\Sulu\Admin\ProductVariantAttributeFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\AdditionalWebspacesDataMapper;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductAssociationsDataMapper;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductAttributesDataMapper;
@@ -860,26 +860,23 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.attribute_type_registry'),
                 new Reference('sulu_admin.xml_form_metadata_loader'),
                 new Reference('sulu_product.measurement_registry'),
-                new Reference('translator'),
+                new Reference('sulu_admin.property_metadata_mapper_registry'),
             ]);
 
-        $services->set('sulu_product.product_attribute_form_metadata_visitor')
-            ->class(ProductAttributeFormMetadataVisitor::class)
+        $services->set('sulu_product.product_attributes_form_metadata_visitor')
+            ->class(ProductAttributesFormMetadataVisitor::class)
             ->args([
                 new Reference('sulu_product.product_family_repository'),
                 new Reference('sulu_product.attribute_field_factory'),
-                new Reference('sulu_admin.property_metadata_mapper_registry'),
                 new Reference('translator'),
             ])
             ->tag('sulu_admin.form_metadata_visitor');
 
-        $services->set('sulu_product.product_variant_attribute_form_metadata_visitor')
-            ->class(ProductVariantAttributeFormMetadataVisitor::class)
+        $services->set('sulu_product.product_attributes_schema_form_metadata_visitor')
+            ->class(ProductAttributesSchemaFormMetadataVisitor::class)
             ->args([
                 new Reference('sulu_product.product_family_repository'),
                 new Reference('sulu_product.attribute_field_factory'),
-                new Reference('sulu_admin.property_metadata_mapper_registry'),
-                new Reference('translator'),
             ])
             ->tag('sulu_admin.form_metadata_visitor');
 

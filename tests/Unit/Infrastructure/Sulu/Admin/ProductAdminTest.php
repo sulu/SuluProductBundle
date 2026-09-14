@@ -248,6 +248,11 @@ class ProductAdminTest extends TestCase
         // needs no separate preview resource key
         $this->assertNull($editView->getOption('previewResourceKey'));
         $this->assertSame('workflowPlace != null', $editView->getOption('previewCondition'));
+        $this->assertSame(
+            ['id'],
+            $editView->getOption('routerAttributesToFormMetadata'),
+            'the details schema scopes itself to the product\'s own family',
+        );
 
         // nothing to preview before the product exists
         $addView = $viewCollection->get(ProductAdmin::ADD_TABS_VIEW . '.details')->getView();
@@ -276,7 +281,11 @@ class ProductAdminTest extends TestCase
         $this->assertSame("type == 'product_with_variants'", $view->getOption('tabCondition'));
         $this->assertSame(['id' => 'parentId'], $view->getOption('routerAttributesToListRequest'));
         $this->assertSame(['id' => 'parentId'], $view->getOption('routerAttributesToFormRequest'));
-        $this->assertSame(['id' => 'parentId'], $view->getOption('routerAttributesToFormMetadata'));
+        $this->assertSame(
+            ['id' => 'parentId'],
+            $view->getOption('routerAttributesToFormMetadata'),
+            "the variant form's JSON schema needs the parent to know the family",
+        );
         $this->assertSame(ProductAdmin::EDIT_TABS_VIEW, $view->getParent());
     }
 

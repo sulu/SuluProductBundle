@@ -109,8 +109,7 @@ class ProductAttributesDataMapperTest extends TestCase
     {
         $fixture = $this->makeProductFixture(1, false);
 
-        // "1_unit" is submitted alongside a number attribute value (unit selector); it must be ignored
-        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [1 => 7.5, '1_unit' => 'KILOGRAM']]);
+        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [1 => 7.5, '1_extra' => 'KILOGRAM']]);
 
         $fixture['unloc_prophecy']->addAttribute(Argument::that(
             static fn ($v): bool => $v instanceof ProductAttributeValueInterface && 7.5 === $v->getNumber()

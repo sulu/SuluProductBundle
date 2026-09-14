@@ -83,7 +83,7 @@ class NumberAttributeTypeTest extends TestCase
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setConfig(['min' => 0, 'max' => 100, 'step' => 0.5]);
 
-        $field = new FieldMetadata('attributes/1');
+        $field = new FieldMetadata('attribute_1');
         $type->configureField($field, $attribute, 'en');
 
         $options = $field->getOptions();
@@ -101,7 +101,7 @@ class NumberAttributeTypeTest extends TestCase
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setConfig(['min' => 0]);
 
-        $field = new FieldMetadata('attributes/1');
+        $field = new FieldMetadata('attribute_1');
         $type->configureField($field, $attribute, 'en');
 
         $options = $field->getOptions();
