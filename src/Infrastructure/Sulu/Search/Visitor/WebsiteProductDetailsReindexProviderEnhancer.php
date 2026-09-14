@@ -17,7 +17,9 @@ use CmsIg\Seal\Converter\HtmlToTextConverter;
 use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
-use Sulu\Product\Domain\Model\AttributeOption;
+use Sulu\Product\Application\AttributeType\DateAttributeType;
+use Sulu\Product\Domain\Measurement\MeasurementRegistry;
+use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
 
 /**
@@ -29,10 +31,13 @@ use Sulu\Product\Domain\Model\ProductAttributeValue;
  * variant-specific.
  *
  * @phpstan-type ValueRow array{
+ *     type: string,
+ *     label: string|null,
  *     optionKey: string|null,
  *     optionLabel: string|null,
  *     number: float|null,
  *     text: string|null,
+ *     config: string,
  * }
  *
  * @internal this class is internal no backwards compatibility promise is given for this class
@@ -46,8 +51,13 @@ final class WebsiteProductDetailsReindexProviderEnhancer implements WebsiteProdu
 
     private const UNIT_SEPARATOR = "\x1F";
     private const RECORD_SEPARATOR = "\x1E";
-    private const FIELD_COUNT = 5;
+    private const FIELD_COUNT = 8;
     private const GROUP_CONCAT_MAX_LEN = 1048576;
+
+    public function __construct(
+        private readonly MeasurementRegistry $measurementRegistry,
+    ) {
+    }
 
     /**
      * One entry of the text values field: the attribute an option key or text value belongs to is
@@ -110,18 +120,26 @@ final class WebsiteProductDetailsReindexProviderEnhancer implements WebsiteProdu
             ->select(
                 'GROUP_CONCAT('
                 . "{$alias}Value.attributeKey, {$u}, "
+                . "{$alias}Attribute.type, {$u}, "
+                . "COALESCE({$alias}AttributeTranslation.name, {$alias}AttributeDefaultTranslation.name, ''), {$u}, "
                 . "COALESCE({$alias}Value.attributeOptionKey, ''), {$u}, "
-                . "COALESCE({$alias}OptionTranslation.name, ''), {$u}, "
+                . "COALESCE({$alias}OptionTranslation.name, {$alias}OptionDefaultTranslation.name, ''), {$u}, "
                 . "COALESCE(CONCAT({$alias}Value.number, ''), ''), {$u}, "
-                . "COALESCE({$alias}Value.text, ''), {$r}"
+                . "COALESCE({$alias}Value.text, ''), {$u}, "
+                . "CAST({$alias}Attribute.config AS string), {$r}"
                 . " ORDER BY CASE WHEN {$alias}DimensionContent.locale IS NULL THEN 0 ELSE 1 END ASC"
                 . " SEPARATOR '')",
             )
             ->from(ProductAttributeValue::class, "{$alias}Value")
             ->innerJoin("{$alias}Value.productDimensionContent", "{$alias}DimensionContent")
+            ->innerJoin("{$alias}Value.attribute", "{$alias}Attribute")
+            // Labels fall back to the attribute's default locale, as the admin shows them.
+            ->leftJoin("{$alias}Attribute.translations", "{$alias}AttributeTranslation", Join::WITH, "{$alias}AttributeTranslation.locale = dimensionContent.locale")
+            ->leftJoin("{$alias}Attribute.translations", "{$alias}AttributeDefaultTranslation", Join::WITH, "{$alias}AttributeDefaultTranslation.locale = {$alias}Attribute.defaultLocale")
             // The option relation of a value is not written, so its label is looked up by key.
-            ->leftJoin(AttributeOption::class, "{$alias}Option", Join::WITH, "{$alias}Option.attribute = {$alias}Value.attribute AND {$alias}Option.key = {$alias}Value.attributeOptionKey")
+            ->leftJoin("{$alias}Attribute.options", "{$alias}Option", Join::WITH, "{$alias}Option.key = {$alias}Value.attributeOptionKey")
             ->leftJoin("{$alias}Option.translations", "{$alias}OptionTranslation", Join::WITH, "{$alias}OptionTranslation.locale = dimensionContent.locale")
+            ->leftJoin("{$alias}Option.translations", "{$alias}OptionDefaultTranslation", Join::WITH, "{$alias}OptionDefaultTranslation.locale = {$alias}Attribute.defaultLocale")
             ->where("{$alias}DimensionContent.product = {$productExpression}")
             ->andWhere("{$alias}DimensionContent.stage = dimensionContent.stage")
             ->andWhere("{$alias}DimensionContent.version = dimensionContent.version")
@@ -170,21 +188,43 @@ final class WebsiteProductDetailsReindexProviderEnhancer implements WebsiteProdu
         $textValues = [];
         $numericValues = [];
 
-        // The product's own value wins over the parent's. An attribute type writes exactly one
-        // column, so the set column tells the type.
         $values = \array_replace(
             $this->decodeValues($queryResult['parentAttributeValues'] ?? null),
             $this->decodeValues($queryResult['ownAttributeValues'] ?? null),
         );
         foreach ($values as $key => $valueRow) {
-            if (null !== $valueRow['number']) {
-                $numericValues[self::numericField($key)] = [$valueRow['number']];
-            } elseif (null !== $valueRow['optionKey']) {
-                $textValues[] = self::textValue($key, $valueRow['optionKey']);
-                $content[] = $valueRow['optionLabel'] ?? $valueRow['optionKey'];
-            } elseif (null !== $valueRow['text']) {
-                $textValues[] = self::textValue($key, $valueRow['text']);
-                $content[] = $valueRow['text'];
+            $display = null;
+            switch ($valueRow['type']) {
+                case AttributeInterface::TYPE_NUMBER:
+                    if (null !== $valueRow['number']) {
+                        $numericValues[self::numericField($key)] = [$valueRow['number']];
+                        $display = \rtrim(\rtrim(\number_format($valueRow['number'], 10, '.', ''), '0'), '.');
+                        $unit = $this->unitSymbol($valueRow['config']);
+                        $display .= null !== $unit ? ' ' . $unit : '';
+                    }
+                    break;
+                case AttributeInterface::TYPE_DATE:
+                    if (null !== $valueRow['number']) {
+                        $numericValues[self::numericField($key)] = [$valueRow['number']];
+                        $display = (new \DateTimeImmutable('@' . (int) $valueRow['number']))->format(DateAttributeType::FORMAT);
+                    }
+                    break;
+                case AttributeInterface::TYPE_OPTIONS:
+                    if (null !== $valueRow['optionKey']) {
+                        $textValues[] = self::textValue($key, $valueRow['optionKey']);
+                        $display = $valueRow['optionLabel'] ?? $valueRow['optionKey'];
+                    }
+                    break;
+                case AttributeInterface::TYPE_TEXT:
+                    if (null !== $valueRow['text']) {
+                        $textValues[] = self::textValue($key, $valueRow['text']);
+                        $display = $valueRow['text'];
+                    }
+                    break;
+            }
+
+            if (null !== $display) {
+                $content[] = ($valueRow['label'] ?? $key) . ': ' . $display;
             }
         }
 
@@ -221,17 +261,31 @@ final class WebsiteProductDetailsReindexProviderEnhancer implements WebsiteProdu
                 throw new \RuntimeException('An attribute value contains a separator control character and cannot be indexed.');
             }
 
-            [$key, $optionKey, $optionLabel, $number, $text] = $fields;
+            [$key, $type, $label, $optionKey, $optionLabel, $number, $text, $config] = $fields;
             $text = \trim($text);
 
             $values[$key] = [
+                'type' => $type,
+                'label' => '' !== $label ? $label : null,
                 'optionKey' => '' !== $optionKey ? $optionKey : null,
                 'optionLabel' => '' !== $optionLabel ? $optionLabel : null,
                 'number' => '' !== $number ? (float) $number : null,
                 'text' => '' !== $text ? $text : null,
+                'config' => $config,
             ];
         }
 
         return $values;
+    }
+
+    /**
+     * @param string $config the attribute's config as JSON
+     */
+    private function unitSymbol(string $config): ?string
+    {
+        $decoded = \json_decode($config, true);
+        $unitKey = \is_array($decoded) ? ($decoded['unit'] ?? null) : null;
+
+        return \is_string($unitKey) ? $this->measurementRegistry->findUnit($unitKey)?->getSymbol() : null;
     }
 }

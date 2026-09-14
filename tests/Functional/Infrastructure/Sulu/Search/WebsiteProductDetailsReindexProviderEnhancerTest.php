@@ -71,9 +71,10 @@ class WebsiteProductDetailsReindexProviderEnhancerTest extends SuluTestCase
         $this->assertIsArray($redProduct['attributes_text_values']);
         $this->assertEqualsCanonicalizing(['colour:red', 'note:Gold plated'], $redProduct['attributes_text_values']);
         $this->assertIsArray($red['content']);
-        $this->assertContains('Red', $red['content']);
-        $this->assertNotContains('Blue', $red['content']);
-        $this->assertContains('Gold plated', $red['content']);
+        $this->assertContains('Colour: Red', $red['content'], 'The option label, not its key, is searchable.');
+        $this->assertNotContains('Colour: Blue', $red['content']);
+        $this->assertContains('Note: Gold plated', $red['content']);
+        $this->assertContains('Weight: 2.5', $red['content']);
 
         $blue = $engine->getDocument('website', 'products__' . $blueId . '__en');
         $blueProduct = $blue['product'];
@@ -88,17 +89,21 @@ class WebsiteProductDetailsReindexProviderEnhancerTest extends SuluTestCase
         self::purgeDatabase();
 
         $weightId = $this->createAttribute('weight', 'Weight', AttributeInterface::TYPE_NUMBER, false);
+        $resistanceId = $this->createAttribute('resistance', 'Resistance', AttributeInterface::TYPE_NUMBER, false, [], ['unit' => 'OHM']);
+        $sinceId = $this->createAttribute('since', 'Since', AttributeInterface::TYPE_DATE, false);
         $noteId = $this->createAttribute('note', 'Note', AttributeInterface::TYPE_TEXT, true);
 
         $familyId = $this->createProductFamily([
             $weightId => [],
+            $resistanceId => [],
+            $sinceId => [],
             $noteId => [],
         ]);
         $firstId = $this->createProduct($familyId, 'First', ProductInterface::TYPE_PRODUCT, [
             'image' => ['id' => 42],
             'shortDescription' => '<p>Gold plated</p><p>Contacts &amp; shell</p>',
         ], ['description' => 'Excerpt text']);
-        $this->putAttributes($firstId, [$weightId => 1.5, $noteId => 'First note']);
+        $this->putAttributes($firstId, [$weightId => 1.5, $resistanceId => 5, $sinceId => '2024-03-01', $noteId => 'First note']);
         $secondId = $this->createProduct($familyId, 'Second', ProductInterface::TYPE_PRODUCT);
         $this->putAttributes($secondId, [$weightId => 3.0]);
         $this->publish($firstId);
@@ -110,10 +115,15 @@ class WebsiteProductDetailsReindexProviderEnhancerTest extends SuluTestCase
         $first = $engine->getDocument('website', 'products__' . $firstId . '__en');
         $firstProduct = $first['product'];
         $this->assertIsArray($firstProduct);
-        $this->assertSame(['weight' => [1.5]], $firstProduct['attributes_numeric_values']);
+        $this->assertIsArray($firstProduct['attributes_numeric_values']);
+        $this->assertSame([1.5], $firstProduct['attributes_numeric_values']['weight']);
+        $this->assertSame([5.0], $firstProduct['attributes_numeric_values']['resistance']);
         $this->assertSame(['note:First note'], $firstProduct['attributes_text_values']);
         $this->assertIsArray($first['content']);
-        $this->assertContains('First note', $first['content']);
+        $this->assertContains('Note: First note', $first['content']);
+        $this->assertContains('Weight: 1.5', $first['content']);
+        $this->assertContains('Resistance: 5 Ω', $first['content'], 'A number is shown with the symbol of the attribute\'s unit.');
+        $this->assertContains('Since: 2024-03-01', $first['content'], 'A date is shown as the admin shows it, not as its timestamp.');
         $this->assertContains('Excerpt text', $first['content'], 'The details are appended to the content of the enhancers before.');
         $this->assertContains("Gold plated\nContacts & shell", $first['content'], 'The short description is rich text, converted like an editor field.');
         $this->assertSame('42', $first['mediaId'], 'Without a template or excerpt image, the details image is used.');
@@ -124,7 +134,7 @@ class WebsiteProductDetailsReindexProviderEnhancerTest extends SuluTestCase
         $this->assertSame(['weight' => [3.0]], $secondProduct['attributes_numeric_values']);
         $this->assertSame([], $secondProduct['attributes_text_values']);
         $this->assertIsArray($second['content']);
-        $this->assertNotContains('First note', $second['content']);
+        $this->assertNotContains('Note: First note', $second['content']);
     }
 
     /**
@@ -161,8 +171,9 @@ class WebsiteProductDetailsReindexProviderEnhancerTest extends SuluTestCase
 
     /**
      * @param array<string, string> $options option key => english name
+     * @param array<string, mixed> $config
      */
-    private function createAttribute(string $key, string $name, string $type, bool $localized, array $options = []): int
+    private function createAttribute(string $key, string $name, string $type, bool $localized, array $options = [], array $config = []): int
     {
         $container = self::getContainer();
         /** @var AttributeGroupRepositoryInterface $groupRepository */
@@ -179,6 +190,7 @@ class WebsiteProductDetailsReindexProviderEnhancerTest extends SuluTestCase
         $attribute->setKey($key);
         $attribute->setType($type);
         $attribute->setLocalized($localized);
+        $attribute->setConfig($config);
         $attribute->addTranslation(new AttributeTranslation($attribute, 'en', $name));
         foreach ($options as $optionKey => $optionName) {
             $option = new AttributeOption($attribute, $optionKey);
