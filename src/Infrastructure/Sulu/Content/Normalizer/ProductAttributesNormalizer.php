@@ -52,14 +52,14 @@ class ProductAttributesNormalizer implements NormalizerInterface
         $productFamily = $object->getProductFamily();
         if (null !== $productFamily) {
             foreach ($productFamily->getFamilyAttributes() as $familyAttribute) {
-                $attributesMap[$familyAttribute->getAttribute()->getId()] = null;
+                $attributesMap[$familyAttribute->getAttribute()->getUuid()] = null;
             }
         }
 
         foreach ($object->getAttributes() as $attrValue) {
             $attribute = $attrValue->getAttribute();
             $type = $this->attributeTypeRegistry->get($attribute->getType());
-            $attributesMap[$attribute->getId()] = $type->readValue($attrValue);
+            $attributesMap[$attribute->getUuid()] = $type->readValue($attrValue);
         }
 
         $normalizedData['attributes'] = $attributesMap;

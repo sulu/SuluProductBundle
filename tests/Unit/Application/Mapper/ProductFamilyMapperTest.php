@@ -14,11 +14,13 @@ declare(strict_types=1);
 namespace Sulu\Product\Tests\Unit\Application\Mapper;
 
 use PHPUnit\Framework\TestCase;
+use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Product\Application\Mapper\ProductFamilyMapper;
 use Sulu\Product\Application\Message\CreateProductFamilyMessage;
 use Sulu\Product\Application\Message\ModifyProductFamilyMessage;
+use Sulu\Product\Domain\Exception\ProductFamilyKeyNotUniqueException;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
@@ -26,6 +28,7 @@ use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductFamilyAttribute;
 use Sulu\Product\Domain\Model\ProductFamilyTranslation;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
+use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 
 class ProductFamilyMapperTest extends TestCase
 {
@@ -34,20 +37,23 @@ class ProductFamilyMapperTest extends TestCase
     /** @var ObjectProphecy<AttributeRepositoryInterface> */
     private ObjectProphecy $attributeRepository;
 
+    /** @var ObjectProphecy<ProductFamilyRepositoryInterface> */
+    private ObjectProphecy $productFamilyRepository;
+
     protected function setUp(): void
     {
         $this->attributeRepository = $this->prophesize(AttributeRepositoryInterface::class);
+        $this->productFamilyRepository = $this->prophesize(ProductFamilyRepositoryInterface::class);
     }
 
     private function createMapper(): ProductFamilyMapper
     {
-        return new ProductFamilyMapper($this->attributeRepository->reveal());
+        return new ProductFamilyMapper($this->attributeRepository->reveal(), $this->productFamilyRepository->reveal());
     }
 
     private function attributeWithUuid(string $uuid): Attribute
     {
-        $attribute = new Attribute(new AttributeGroup());
-        $attribute->setUuid($uuid);
+        $attribute = new Attribute(new AttributeGroup(), $uuid);
         $attribute->setKey('attr-' . $uuid);
 
         return $attribute;
@@ -160,26 +166,6 @@ class ProductFamilyMapperTest extends TestCase
         self::assertCount(0, $family->getFamilyAttributes());
     }
 
-    public function testMapAttributesKeepsExistingAttributeWithoutUuid(): void
-    {
-        $attribute = $this->prophesize(AttributeInterface::class);
-        $attribute->getUuid()->willReturn(null);
-
-        $family = new ProductFamily();
-        $existing = new ProductFamilyAttribute($family, $attribute->reveal());
-        $family->addFamilyAttribute($existing);
-
-        $message = new ModifyProductFamilyMessage(
-            ['uuid' => 'family-uuid'],
-            ['locale' => 'en', 'name' => 'Family'],
-        );
-
-        $this->createMapper()->mapProductFamilyData($family, $message);
-
-        self::assertCount(1, $family->getFamilyAttributes());
-        self::assertSame($existing, $family->getFamilyAttributes()[0]);
-    }
-
     public function testMapAttributesSkipsUuidUnknownToRepository(): void
     {
         $family = new ProductFamily();
@@ -260,7 +246,7 @@ class ProductFamilyMapperTest extends TestCase
             ]
         );
 
-        (new ProductFamilyMapper($repository->reveal()))->mapProductFamilyData($family, $message);
+        (new ProductFamilyMapper($repository->reveal(), $this->productFamilyRepository->reveal()))->mapProductFamilyData($family, $message);
 
         // ArrayCollection keeps whatever integer keys elements were inserted under, so a
         // remove-then-add leaves a gap; reindex before asserting by position.
@@ -273,5 +259,58 @@ class ProductFamilyMapperTest extends TestCase
         self::assertFalse($familyAttributes[0]->isVariantSpecific());
         self::assertFalse($familyAttributes[1]->isRequired());
         self::assertTrue($familyAttributes[1]->isVariantSpecific());
+    }
+
+    public function testMapKeySetsKeyWhenUnused(): void
+    {
+        $family = new ProductFamily('family-1');
+        $this->productFamilyRepository->findOneBy(['key' => 'shoes'])->willReturn(null);
+
+        $this->createMapper()->mapProductFamilyData($family, new CreateProductFamilyMessage(['locale' => 'en', 'name' => 'Shoes', 'key' => 'shoes']));
+
+        $this->assertSame('shoes', $family->getKey());
+    }
+
+    public function testMapKeyAllowsTheFamilysOwnKey(): void
+    {
+        $family = new ProductFamily('family-1');
+        $family->setKey('shoes');
+        $this->productFamilyRepository->findOneBy(['key' => 'shoes'])->willReturn($family);
+
+        $this->createMapper()->mapProductFamilyData($family, new ModifyProductFamilyMessage(['uuid' => 'family-1'], ['locale' => 'en', 'name' => 'Shoes', 'key' => 'shoes']));
+
+        $this->assertSame('shoes', $family->getKey());
+    }
+
+    public function testMapKeyThrowsWhenAnotherFamilyUsesTheKey(): void
+    {
+        $family = new ProductFamily('family-1');
+        $this->productFamilyRepository->findOneBy(['key' => 'shoes'])->willReturn(new ProductFamily('family-2'));
+
+        $this->expectException(ProductFamilyKeyNotUniqueException::class);
+
+        $this->createMapper()->mapProductFamilyData($family, new CreateProductFamilyMessage(['locale' => 'en', 'name' => 'Shoes', 'key' => 'shoes']));
+    }
+
+    public function testMapKeyClearsKeyWithoutLookup(): void
+    {
+        $family = new ProductFamily('family-1');
+        $family->setKey('shoes');
+        $this->productFamilyRepository->findOneBy(Argument::any())->shouldNotBeCalled();
+
+        $this->createMapper()->mapProductFamilyData($family, new ModifyProductFamilyMessage(['uuid' => 'family-1'], ['locale' => 'en', 'name' => 'Shoes', 'key' => null]));
+
+        $this->assertNull($family->getKey());
+    }
+
+    public function testMapKeyLeavesKeyWhenNotSubmitted(): void
+    {
+        $family = new ProductFamily('family-1');
+        $family->setKey('shoes');
+        $this->productFamilyRepository->findOneBy(Argument::any())->shouldNotBeCalled();
+
+        $this->createMapper()->mapProductFamilyData($family, new ModifyProductFamilyMessage(['uuid' => 'family-1'], ['locale' => 'en', 'name' => 'Shoes']));
+
+        $this->assertSame('shoes', $family->getKey());
     }
 }

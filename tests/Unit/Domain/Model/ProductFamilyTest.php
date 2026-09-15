@@ -21,6 +21,8 @@ use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductFamilyAttribute;
 use Sulu\Product\Domain\Model\ProductFamilyTranslation;
+use Symfony\Component\Uid\Uuid;
+use Symfony\Component\Uid\UuidV7;
 
 #[CoversClass(ProductFamily::class)]
 class ProductFamilyTest extends TestCase
@@ -28,16 +30,24 @@ class ProductFamilyTest extends TestCase
     public function testConstructorDefaults(): void
     {
         $family = new ProductFamily();
-        $this->assertNull($family->getUuid());
+        $this->assertTrue(Uuid::isValid($family->getUuid()));
         $this->assertSame([], $family->getFamilyAttributes());
         $this->assertNull($family->getTranslation('en'));
     }
 
-    public function testSetUuidIsFluentAndStores(): void
+    public function testConstructorGeneratesUuidV7WhenNoneProvided(): void
     {
         $family = new ProductFamily();
-        $this->assertSame($family, $family->setUuid('uuid-val'));
-        $this->assertSame('uuid-val', $family->getUuid());
+
+        $this->assertTrue(Uuid::isValid($family->getUuid()));
+        $this->assertInstanceOf(UuidV7::class, Uuid::fromString($family->getUuid()));
+    }
+
+    public function testConstructorAcceptsProvidedUuid(): void
+    {
+        $uuid = Uuid::v7()->toRfc4122();
+
+        $this->assertSame($uuid, (new ProductFamily($uuid))->getUuid());
     }
 
     public function testSetExternalIdentifierIsFluentAndStores(): void
@@ -80,12 +90,16 @@ class ProductFamilyTest extends TestCase
         $this->assertCount(0, $family->getFamilyAttributes());
     }
 
-    public function testGetIdReturnsDoctrineGeneratedId(): void
+    public function testKeyDefaultsToNullAndIsSettable(): void
     {
         $family = new ProductFamily();
-        $ref = new \ReflectionProperty(ProductFamily::class, 'id');
-        $ref->setValue($family, 9);
-        $this->assertSame(9, $family->getId());
+        $this->assertNull($family->getKey());
+
+        $this->assertSame($family, $family->setKey('shoes'));
+        $this->assertSame('shoes', $family->getKey());
+
+        $family->setKey(null);
+        $this->assertNull($family->getKey());
     }
 
     public function testImplementsAuditableInterface(): void

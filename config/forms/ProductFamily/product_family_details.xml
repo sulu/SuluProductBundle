@@ -16,6 +16,12 @@
             </params>
         </property>
 
+        <property name="key" type="text_line">
+            <meta>
+                <title>sulu_admin.key</title>
+            </meta>
+        </property>
+
         <property name="externalIdentifier" type="text_line"
                   visibleCondition="!!externalIdentifier"
                   disabledCondition="true">

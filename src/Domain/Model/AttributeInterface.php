@@ -26,11 +26,7 @@ interface AttributeInterface extends AuditableInterface
     public const FORM_KEY = 'attribute_details';
     public const LIST_KEY = 'attributes';
 
-    public function getId(): int;
-
-    public function getUuid(): ?string;
-
-    public function setUuid(string $uuid): self;
+    public function getUuid(): string;
 
     public function getExternalIdentifier(): ?string;
 

@@ -3,11 +3,10 @@
                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
     <entity name="Sulu\Product\Domain\Model\Attribute" table="pr_attributes">
-        <id name="id" type="integer" column="id">
-            <generator strategy="AUTO"/>
+        <id name="uuid" type="string" column="uuid" length="36">
+            <generator strategy="NONE"/>
         </id>
 
-        <field name="uuid" type="guid" nullable="true" unique="true"/>
         <field name="externalIdentifier" type="string" length="255" nullable="true" column="external_identifier"/>
         <field name="key" type="string" length="255" nullable="false" column="attribute_key" unique="true"/>
         <field name="type" type="string" length="32" nullable="false">
@@ -47,7 +46,7 @@
 
         <many-to-one field="group"
                      target-entity="Sulu\Product\Domain\Model\AttributeGroupInterface">
-            <join-column name="idAttributeGroups" referenced-column-name="id" nullable="false"/>
+            <join-column name="attributeGroupUuid" referenced-column-name="uuid" nullable="false"/>
         </many-to-one>
     </entity>
 </doctrine-mapping>

@@ -48,7 +48,8 @@ final class ProductFamilyNormalizer implements NormalizerInterface
         }
 
         return [
-            'id' => $data->getUuid() ?? '',
+            'id' => $data->getUuid(),
+            'key' => $data->getKey(),
             'name' => $translation?->getName() ?? '',
             'description' => $translation?->getDescription(),
             'externalIdentifier' => $data->getExternalIdentifier(),

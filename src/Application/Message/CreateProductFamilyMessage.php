@@ -22,6 +22,7 @@ namespace Sulu\Product\Application\Message;
  * @phpstan-type CreateProductFamilyMessageData array{
  *     locale: string,
  *     name: string,
+ *     key?: string|null,
  *     description?: string|null,
  *     attributes?: list<ProductFamilyAttributeMessageData>|null,
  * }
@@ -48,6 +49,11 @@ class CreateProductFamilyMessage
     public function getDescription(): ?string
     {
         return $this->data['description'] ?? null;
+    }
+
+    public function getKey(): ?string
+    {
+        return $this->data['key'] ?? null;
     }
 
     /**

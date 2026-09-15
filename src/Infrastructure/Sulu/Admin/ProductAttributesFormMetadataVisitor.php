@@ -62,7 +62,7 @@ class ProductAttributesFormMetadataVisitor implements FormMetadataVisitorInterfa
 
         $variant = \filter_var($metadataOptions['variant'] ?? false, \FILTER_VALIDATE_BOOLEAN);
 
-        /** @var array<int, SectionMetadata> $sections */
+        /** @var array<string, SectionMetadata> $sections */
         $sections = [];
 
         foreach ($family->getFamilyAttributes() as $familyAttribute) {
@@ -76,9 +76,9 @@ class ProductAttributesFormMetadataVisitor implements FormMetadataVisitorInterfa
             }
 
             $group = $familyAttribute->getAttribute()->getGroup();
-            $groupId = $group->getId();
-            $sections[$groupId] ??= $this->createGroupSection($group, $locale);
-            $sections[$groupId]->addItem($field);
+            $groupUuid = $group->getUuid();
+            $sections[$groupUuid] ??= $this->createGroupSection($group, $locale);
+            $sections[$groupUuid]->addItem($field);
         }
 
         $items = $formMetadata->getItems();
@@ -115,7 +115,7 @@ class ProductAttributesFormMetadataVisitor implements FormMetadataVisitorInterfa
         $name = $translation?->getName()
             ?: $this->translator->trans('sulu_product.attributes', [], 'admin', $locale);
 
-        $section = new SectionMetadata('attribute_group_' . $group->getId());
+        $section = new SectionMetadata('attribute_group_' . $group->getUuid());
         $section->setLabel($name, $locale);
 
         return $section;

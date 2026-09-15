@@ -30,21 +30,14 @@ class CreateAttributeGroupMessageTest extends TestCase
         $this->assertSame('en', $message->getLocale());
         $this->assertSame('Test Group', $message->getName());
         $this->assertNull($message->getDescription());
-        $this->assertSame([], $message->getAttributes());
     }
 
     public function testGettersWithAllFields(): void
     {
-        $attributes = [
-            ['attribute' => 'uuid-1'],
-            ['attribute' => 'uuid-2'],
-        ];
-
         $data = [
             'locale' => 'de',
             'name' => 'Advanced Group',
             'description' => 'A test description',
-            'attributes' => $attributes,
         ];
 
         $message = new CreateAttributeGroupMessage($data);
@@ -52,7 +45,6 @@ class CreateAttributeGroupMessageTest extends TestCase
         $this->assertSame('de', $message->getLocale());
         $this->assertSame('Advanced Group', $message->getName());
         $this->assertSame('A test description', $message->getDescription());
-        $this->assertSame($attributes, $message->getAttributes());
     }
 
     public function testGetDataReturnsFullArray(): void
@@ -76,15 +68,5 @@ class CreateAttributeGroupMessageTest extends TestCase
         ]);
 
         $this->assertNull($message->getDescription());
-    }
-
-    public function testGetAttributesReturnsEmptyArrayWhenMissing(): void
-    {
-        $message = new CreateAttributeGroupMessage([
-            'locale' => 'en',
-            'name' => 'Test Group',
-        ]);
-
-        $this->assertSame([], $message->getAttributes());
     }
 }

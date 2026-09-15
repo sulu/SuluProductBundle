@@ -17,14 +17,13 @@ use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Product\Domain\Exception\AttributeGroupNotFoundException;
-use Sulu\Product\Domain\Model\AttributeGroupAttribute;
 use Sulu\Product\Domain\Model\AttributeGroupInterface;
 use Sulu\Product\Domain\Model\AttributeGroupTranslation;
 use Sulu\Product\Domain\Model\AttributeInterface;
-use Sulu\Product\Domain\Model\AttributeTranslation;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Infrastructure\Doctrine\Repository\AttributeGroupRepository;
+use Symfony\Component\Uid\Uuid;
 
 #[CoversClass(AttributeGroupRepository::class)]
 class AttributeGroupRepositoryTest extends SuluTestCase
@@ -61,17 +60,37 @@ class AttributeGroupRepositoryTest extends SuluTestCase
         \restore_exception_handler();
     }
 
-    public function testCreateReturnsFreshAttributeGroupWithUuid(): void
+    public function testCreateNewGeneratesUuidAndAcceptsPinnedUuid(): void
     {
-        $group = $this->repository->create();
-        $this->assertNotNull($group->getUuid());
-        $this->assertNotSame('', $group->getUuid());
+        $this->assertTrue(Uuid::isValid($this->repository->createNew()->getUuid()));
+
+        $uuid = Uuid::v7()->toRfc4122();
+        $this->assertSame($uuid, $this->repository->createNew($uuid)->getUuid());
+    }
+
+    public function testFindBySortsByUuidInCreationOrder(): void
+    {
+        $first = $this->repository->createNew();
+        $first->addTranslation(new AttributeGroupTranslation($first, 'en', 'First'));
+        $second = $this->repository->createNew();
+        $second->addTranslation(new AttributeGroupTranslation($second, 'en', 'Second'));
+        $this->repository->save($second);
+        $this->repository->save($first);
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        $uuids = \array_map(
+            static fn (AttributeGroupInterface $group): string => $group->getUuid(),
+            [...$this->repository->findBy([], ['uuid' => 'desc'])],
+        );
+
+        $this->assertSame([$second->getUuid(), $first->getUuid()], $uuids);
     }
 
     public function testCreateGeneratesUniqueUuids(): void
     {
-        $a = $this->repository->create();
-        $b = $this->repository->create();
+        $a = $this->repository->createNew();
+        $b = $this->repository->createNew();
         $this->assertNotSame($a->getUuid(), $b->getUuid());
     }
 
@@ -79,8 +98,8 @@ class AttributeGroupRepositoryTest extends SuluTestCase
     {
         $this->assertSame([], [...$this->repository->findBy()]);
 
-        $a = $this->repository->create();
-        $b = $this->repository->create();
+        $a = $this->repository->createNew();
+        $b = $this->repository->createNew();
         $this->repository->save($a);
         $this->repository->save($b);
         $this->entityManager->flush();
@@ -90,9 +109,9 @@ class AttributeGroupRepositoryTest extends SuluTestCase
 
     public function testFindByFiltersAndSorts(): void
     {
-        $a = $this->repository->create();
+        $a = $this->repository->createNew();
         $a->setExternalIdentifier('group-a');
-        $b = $this->repository->create();
+        $b = $this->repository->createNew();
         $b->setExternalIdentifier('group-b');
         $this->repository->save($a);
         $this->repository->save($b);
@@ -109,82 +128,47 @@ class AttributeGroupRepositoryTest extends SuluTestCase
         }
         $this->assertSame(['group-b', 'group-a'], $identifiers);
 
-        $byId = [...$this->repository->findBy([], ['id' => 'desc'])];
-        $this->assertSame([$b->getId(), $a->getId()], [$byId[0]->getId(), $byId[1]->getId()]);
-    }
-
-    public function testFindByWithAttributesSelectLeavesTheGroupTranslationsUnloaded(): void
-    {
-        $this->createGroupWithTranslatedAttribute();
-        $this->entityManager->clear();
-
-        $groups = [...$this->repository->findBy(
-            [],
-            [],
-            [AttributeGroupRepositoryInterface::SELECT_GROUP_ATTRIBUTES => true],
-        )];
-        $this->assertCount(1, $groups);
-
-        $queriesBefore = $this->countQueries();
-        $this->assertCount(1, [...$groups[0]->getGroupAttributes()]);
-        $this->assertSame($queriesBefore, $this->countQueries(), 'the attributes come with the group');
-
-        // The group translations are not part of this select.
-        $this->assertNotNull($groups[0]->getTranslation('de'));
-        $this->assertGreaterThan($queriesBefore, $this->countQueries());
+        $byUuid = [...$this->repository->findBy([], ['uuid' => 'desc'])];
+        $this->assertSame([$b->getUuid(), $a->getUuid()], [$byUuid[0]->getUuid(), $byUuid[1]->getUuid()]);
     }
 
     public function testFindByIgnoresUnknownSortFields(): void
     {
-        $group = $this->repository->create();
+        $group = $this->repository->createNew();
         $this->repository->save($group);
         $this->entityManager->flush();
 
         $this->assertCount(1, [...$this->repository->findBy([], ['name; DROP' => 'desc'])]);
     }
 
-    public function testFindByWithFormGroupLoadsTheAttributeGraph(): void
+    public function testFindByWithGroupTranslationsSelectPreloadsTranslations(): void
     {
-        $this->createGroupWithTranslatedAttribute();
+        $group = $this->repository->createNew();
+        $group->addTranslation(new AttributeGroupTranslation($group, 'en', 'My Group'));
+        $group->addTranslation(new AttributeGroupTranslation($group, 'de', 'Meine Gruppe'));
+        $this->repository->save($group);
+        $this->entityManager->flush();
         $this->entityManager->clear();
 
-        $groups = [...$this->repository->findBy(
+        $loaded = [...$this->repository->findBy(
             [],
             [],
-            [AttributeGroupRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true],
-        )];
-        $this->assertCount(1, $groups);
+            [AttributeGroupRepositoryInterface::SELECT_GROUP_TRANSLATIONS => true],
+        )][0];
 
         $queriesBefore = $this->countQueries();
-        $names = $this->walkGroup($groups[0], 'de');
-
-        $this->assertSame($queriesBefore, $this->countQueries(), 'walking the group must not query');
-        $this->assertSame(['Farbe & Form', 'Farbe'], $names);
-    }
-
-    public function testFindByWithoutSelectsLeavesTheAttributeGraphUnloaded(): void
-    {
-        $this->createGroupWithTranslatedAttribute();
-        $this->entityManager->clear();
-
-        $groups = [...$this->repository->findBy()];
-        $this->assertCount(1, $groups);
-
-        $queriesBefore = $this->countQueries();
-        $this->walkGroup($groups[0], 'de');
-
-        // Without the select group the walk goes back to the database.
-        $this->assertGreaterThan($queriesBefore, $this->countQueries());
+        $this->assertSame('Meine Gruppe', $loaded->getTranslation('de')?->getName());
+        $this->assertSame('My Group', $loaded->getTranslation('en')?->getName());
+        $this->assertSame($queriesBefore, $this->countQueries(), 'the translations come preloaded with the group');
     }
 
     public function testSavePersistsAndCanBeFoundByUuid(): void
     {
-        $group = $this->repository->create();
+        $group = $this->repository->createNew();
         $this->repository->save($group);
         $this->entityManager->flush();
 
         $uuid = $group->getUuid();
-        $this->assertNotNull($uuid);
         $this->entityManager->clear();
 
         $loaded = $this->repository->findOneBy(['uuid' => $uuid]);
@@ -194,7 +178,7 @@ class AttributeGroupRepositoryTest extends SuluTestCase
 
     public function testFindOneByExternalIdentifierReturnsGroup(): void
     {
-        $group = $this->repository->create();
+        $group = $this->repository->createNew();
         $group->setExternalIdentifier('ext-group-1');
         $this->repository->save($group);
         $this->entityManager->flush();
@@ -212,7 +196,7 @@ class AttributeGroupRepositoryTest extends SuluTestCase
 
     public function testFindOneByLoadsTranslation(): void
     {
-        $group = $this->repository->create();
+        $group = $this->repository->createNew();
         $translation = new AttributeGroupTranslation($group, 'en', 'My Group');
         $translation->setDescription('A description');
         $group->addTranslation($translation);
@@ -220,7 +204,6 @@ class AttributeGroupRepositoryTest extends SuluTestCase
         $this->entityManager->flush();
 
         $uuid = $group->getUuid();
-        $this->assertNotNull($uuid);
         $this->entityManager->clear();
 
         $loaded = $this->repository->findOneBy(['uuid' => $uuid]);
@@ -233,12 +216,11 @@ class AttributeGroupRepositoryTest extends SuluTestCase
 
     public function testRemoveDeletesFromDatabase(): void
     {
-        $group = $this->repository->create();
+        $group = $this->repository->createNew();
         $this->repository->save($group);
         $this->entityManager->flush();
 
         $uuid = $group->getUuid();
-        $this->assertNotNull($uuid);
 
         $loaded = $this->repository->findOneBy(['uuid' => $uuid]);
         $this->assertNotNull($loaded);
@@ -252,12 +234,11 @@ class AttributeGroupRepositoryTest extends SuluTestCase
 
     public function testGetOneByReturnsGroupWhenFound(): void
     {
-        $group = $this->repository->create();
+        $group = $this->repository->createNew();
         $this->repository->save($group);
         $this->entityManager->flush();
 
         $uuid = $group->getUuid();
-        $this->assertNotNull($uuid);
         $this->entityManager->clear();
 
         $loaded = $this->repository->getOneBy(['uuid' => $uuid]);
@@ -273,7 +254,7 @@ class AttributeGroupRepositoryTest extends SuluTestCase
 
     public function testCountByReturnsZeroForEmptyGroup(): void
     {
-        $group = $this->repository->create();
+        $group = $this->repository->createNew();
         $this->repository->save($group);
         $this->entityManager->flush();
 
@@ -282,64 +263,19 @@ class AttributeGroupRepositoryTest extends SuluTestCase
 
     public function testCountByCountsLinkedAttributes(): void
     {
-        $group = $this->repository->create();
+        $group = $this->repository->createNew();
         $this->repository->save($group);
 
-        foreach (['count-attr-a', 'count-attr-b'] as $i => $key) {
-            $attribute = $this->attributeRepository->create($group);
+        foreach (['count-attr-a', 'count-attr-b'] as $key) {
+            $attribute = $this->attributeRepository->createNew($group);
             $attribute->setKey($key);
             $attribute->setType(AttributeInterface::TYPE_TEXT);
             $this->attributeRepository->save($attribute);
-
-            $ga = new AttributeGroupAttribute($group, $attribute);
-            $ga->setPosition($i);
-            $group->addGroupAttribute($ga);
         }
 
-        $this->repository->save($group);
         $this->entityManager->flush();
 
         $this->assertSame(2, $this->attributeRepository->countBy(['group' => $group]));
-    }
-
-    private function createGroupWithTranslatedAttribute(): void
-    {
-        $group = $this->repository->create();
-        $group->setDefaultLocale('de');
-        $group->addTranslation(new AttributeGroupTranslation($group, 'de', 'Farbe & Form'));
-        $this->repository->save($group);
-
-        $attribute = $this->attributeRepository->create($group);
-        $attribute->setKey('color');
-        $attribute->setType(AttributeInterface::TYPE_TEXT);
-        $attribute->setDefaultLocale('de');
-        $attribute->addTranslation(new AttributeTranslation($attribute, 'de', 'Farbe'));
-        $this->attributeRepository->save($attribute);
-
-        $group->addGroupAttribute(new AttributeGroupAttribute($group, $attribute));
-        $this->repository->save($group);
-        $this->entityManager->flush();
-    }
-
-    /**
-     * Walks the group the way the product family form metadata visitor does.
-     *
-     * @return list<string>
-     */
-    private function walkGroup(AttributeGroupInterface $group, string $locale): array
-    {
-        $groupTranslation = $group->getTranslation($locale)
-            ?? (($defaultLocale = $group->getDefaultLocale()) !== null ? $group->getTranslation($defaultLocale) : null);
-        $names = [$groupTranslation?->getName() ?? ''];
-
-        foreach ($group->getGroupAttributes() as $groupAttribute) {
-            $attribute = $groupAttribute->getAttribute();
-            $attributeTranslation = $attribute->getTranslation($locale)
-                ?? (($defaultLocale = $attribute->getDefaultLocale()) !== null ? $attribute->getTranslation($defaultLocale) : null);
-            $names[] = $attributeTranslation?->getName() ?? $attribute->getKey();
-        }
-
-        return $names;
     }
 
     private function countQueries(): int

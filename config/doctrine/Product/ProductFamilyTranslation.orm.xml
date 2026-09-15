@@ -14,7 +14,7 @@
         <many-to-one field="family"
                      target-entity="Sulu\Product\Domain\Model\ProductFamilyInterface"
                      inversed-by="translations">
-            <join-column name="idProductFamilies" referenced-column-name="id"
+            <join-column name="productFamilyUuid" referenced-column-name="uuid"
                          nullable="false" on-delete="CASCADE"/>
         </many-to-one>
 

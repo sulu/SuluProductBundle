@@ -162,6 +162,7 @@ final class ProductFamilyController implements SecuredControllerInterface
      * @return array{
      *   locale: string,
      *   name: string,
+     *   key?: string|null,
      *   description: string|null,
      *   attributes: list<array{id: string, required: bool, variantSpecific: bool}>,
      * }
@@ -171,12 +172,20 @@ final class ProductFamilyController implements SecuredControllerInterface
         /** @var string|null $description */
         $description = $request->request->get('description');
 
-        return [
+        $data = [
             'name' => (string) $request->request->get('name', ''),
             'description' => $description,
             'attributes' => $this->extractAttributes($request),
             'locale' => $this->getLocale($request),
         ];
+
+        // An absent key keeps the stored one; a blank key clears it.
+        if ($request->request->has('key')) {
+            $key = \trim((string) $request->request->get('key'));
+            $data['key'] = '' === $key ? null : $key;
+        }
+
+        return $data;
     }
 
     /**

@@ -27,7 +27,6 @@ use Sulu\Product\Application\Message\ModifyAttributeGroupMessage;
 use Sulu\Product\Application\Message\RemoveAttributeGroupMessage;
 use Sulu\Product\Domain\Exception\AttributeGroupNotEmptyException;
 use Sulu\Product\Domain\Exception\AttributeGroupNotFoundException;
-use Sulu\Product\Domain\Model\AttributeGroupAttributeInterface;
 use Sulu\Product\Domain\Model\AttributeGroupInterface;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -156,7 +155,6 @@ final class AttributeGroupController implements SecuredControllerInterface
      *   locale: string,
      *   name: string,
      *   description: string|null,
-     *   attributes: list<array{attribute: string, position: int}>,
      * }
      */
     private function getData(Request $request): array
@@ -165,12 +163,10 @@ final class AttributeGroupController implements SecuredControllerInterface
          *     locale: string,
          *     name: string,
          *     description: string|null,
-         *     attributes: list<array{attribute: string, position: int}>,
          * } $data */
         $data = [
             'name' => $request->request->get('name', ''),
             'description' => $request->request->get('description'),
-            'attributes' => $request->request->all('attributes'),
             'locale' => $this->getLocale($request),
         ];
 
@@ -189,17 +185,10 @@ final class AttributeGroupController implements SecuredControllerInterface
         }
 
         return [
-            'id' => $group->getUuid() ?? '',
+            'id' => $group->getUuid(),
             'name' => $translation?->getName() ?? '',
             'description' => $translation?->getDescription(),
             'externalIdentifier' => $group->getExternalIdentifier(),
-            'attributes' => \array_map(
-                static fn (AttributeGroupAttributeInterface $ga) => [
-                    'type' => 'attribute_item',
-                    'attribute' => $ga->getAttribute()->getUuid(),
-                ],
-                $group->getGroupAttributes(),
-            ),
         ];
     }
 }

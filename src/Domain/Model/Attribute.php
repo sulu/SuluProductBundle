@@ -17,14 +17,13 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Sulu\Component\Persistence\Model\AuditableTrait;
+use Symfony\Component\Uid\Uuid;
 
 class Attribute implements AttributeInterface
 {
     use AuditableTrait;
 
-    protected int $id;
-
-    protected ?string $uuid = null;
+    protected string $uuid;
 
     protected ?string $externalIdentifier = null;
 
@@ -49,28 +48,17 @@ class Attribute implements AttributeInterface
 
     protected ?string $defaultLocale = null;
 
-    public function __construct(AttributeGroupInterface $group)
+    public function __construct(AttributeGroupInterface $group, ?string $uuid = null)
     {
+        $this->uuid = $uuid ?: Uuid::v7()->toRfc4122();
         $this->translations = new ArrayCollection();
         $this->options = new ArrayCollection();
         $this->group = $group;
     }
 
-    public function getId(): int
-    {
-        return $this->id;
-    }
-
-    public function getUuid(): ?string
+    public function getUuid(): string
     {
         return $this->uuid;
-    }
-
-    public function setUuid(string $uuid): self
-    {
-        $this->uuid = $uuid;
-
-        return $this;
     }
 
     public function getExternalIdentifier(): ?string

@@ -42,7 +42,7 @@
         <many-to-one field="productFamily"
                      target-entity="Sulu\Product\Domain\Model\ProductFamilyInterface">
             <join-columns>
-                <join-column name="idProductFamilies" referenced-column-name="id"
+                <join-column name="productFamilyUuid" referenced-column-name="uuid"
                              nullable="true" on-delete="RESTRICT"/>
             </join-columns>
         </many-to-one>

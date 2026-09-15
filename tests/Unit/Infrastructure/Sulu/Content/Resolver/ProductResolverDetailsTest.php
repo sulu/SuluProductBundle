@@ -127,8 +127,7 @@ class ProductResolverDetailsTest extends ProductResolverTestCase
 
     public function testResolvesEntityOwnedFields(): void
     {
-        $family = new ProductFamily();
-        $family->setUuid('fam-uuid');
+        $family = new ProductFamily('fam-uuid');
 
         $dc = $this->makeDimensionContent();
         $dc->setCode('SKU-1');

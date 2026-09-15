@@ -22,25 +22,16 @@ use Sulu\Product\Domain\Model\AttributeGroupInterface;
  *     externalIdentifier?: string,
  * }
  * @phpstan-type AttributeGroupRepositorySortBy array{
- *     id?: 'asc'|'desc',
+ *     uuid?: 'asc'|'desc',
  *     externalIdentifier?: 'asc'|'desc',
  * }
- * @phpstan-type AttributeGroupRepositorySelects array{
- *     product_family_form?: bool,
- *     with-group-attributes?: bool,
- *     with-group-attribute-translations?: bool,
- *     with-group-translations?: bool,
- * }|array<string, mixed>
+ * @phpstan-type AttributeGroupRepositorySelects array{with-group-translations?: bool}|array<string, mixed>
  */
 interface AttributeGroupRepositoryInterface
 {
-    public const GROUP_SELECT_PRODUCT_FAMILY_FORM = 'product_family_form';
-
-    public const SELECT_GROUP_ATTRIBUTES = 'with-group-attributes';
-    public const SELECT_GROUP_ATTRIBUTE_TRANSLATIONS = 'with-group-attribute-translations';
     public const SELECT_GROUP_TRANSLATIONS = 'with-group-translations';
 
-    public function create(): AttributeGroupInterface;
+    public function createNew(?string $uuid = null): AttributeGroupInterface;
 
     /**
      * @param AttributeGroupRepositoryFilters $filters

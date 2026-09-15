@@ -39,6 +39,8 @@ class ProductAttributesDataMapperTest extends TestCase
 {
     use ProphecyTrait;
 
+    private const UUID = '0198c3e2-0000-7000-8000-000000000001';
+
     private ProductAttributesDataMapper $mapper;
 
     protected function setUp(): void
@@ -52,7 +54,7 @@ class ProductAttributesDataMapperTest extends TestCase
     {
         $other = $this->prophesize(DimensionContentInterface::class);
 
-        $this->mapper->map($other->reveal(), $other->reveal(), ['attributes' => [1 => 5.0]]);
+        $this->mapper->map($other->reveal(), $other->reveal(), ['attributes' => [self::UUID => 5.0]]);
 
         $this->addToAssertionCount(1);
     }
@@ -63,7 +65,7 @@ class ProductAttributesDataMapperTest extends TestCase
         $unloc = $this->prophesize(ProductDimensionContentInterface::class);
         $locOther = $this->prophesize(DimensionContentInterface::class);
 
-        $this->mapper->map($unloc->reveal(), $locOther->reveal(), ['attributes' => [1 => 5.0]]);
+        $this->mapper->map($unloc->reveal(), $locOther->reveal(), ['attributes' => [self::UUID => 5.0]]);
 
         $this->addToAssertionCount(1);
     }
@@ -89,41 +91,44 @@ class ProductAttributesDataMapperTest extends TestCase
         /** @var ObjectProphecy<ProductDimensionContentInterface> $loc */
         $loc = $this->prophesize(ProductDimensionContentInterface::class);
 
-        $this->mapper->map($unloc->reveal(), $loc->reveal(), ['attributes' => [1 => 5.0]]);
+        $this->mapper->map($unloc->reveal(), $loc->reveal(), ['attributes' => [self::UUID => 5.0]]);
 
         $unloc->getAttributes()->shouldNotHaveBeenCalled();
         $this->addToAssertionCount(1);
     }
 
-    public function testSkipsAttributeNotInFamily(): void
+    public function testUnknownAttributeUuidIsSkipped(): void
     {
-        $fixture = $this->makeProductFixture(1, false);
+        $fixture = $this->makeProductFixture('attr-known', false);
 
-        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [99 => 5.0]]);
+        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => ['attr-unknown' => 5]]);
 
         $fixture['unloc_prophecy']->addAttribute(Argument::cetera())->shouldNotHaveBeenCalled();
-        $this->addToAssertionCount(1);
+        $fixture['loc_prophecy']->addAttribute(Argument::cetera())->shouldNotHaveBeenCalled();
+        $this->assertCount(0, $fixture['unloc']->getAttributes());
+        $this->assertCount(0, $fixture['loc']->getAttributes());
     }
 
-    public function testSkipsNonIntegerKeys(): void
+    public function testNumericAttributeKeyIsSkipped(): void
     {
-        $fixture = $this->makeProductFixture(1, false);
+        $fixture = $this->makeProductFixture('attr-known', false);
 
-        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [1 => 7.5, '1_extra' => 'KILOGRAM']]);
+        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [0 => 5]]);
 
-        $fixture['unloc_prophecy']->addAttribute(Argument::that(
-            static fn ($v): bool => $v instanceof ProductAttributeValueInterface && 7.5 === $v->getNumber()
-        ))->shouldHaveBeenCalledOnce();
+        $fixture['unloc_prophecy']->addAttribute(Argument::cetera())->shouldNotHaveBeenCalled();
+        $fixture['loc_prophecy']->addAttribute(Argument::cetera())->shouldNotHaveBeenCalled();
+        $this->assertCount(0, $fixture['unloc']->getAttributes());
+        $this->assertCount(0, $fixture['loc']->getAttributes());
     }
 
     public function testCreatesNewAttributeValue(): void
     {
-        $fixture = $this->makeProductFixture(1, false);
+        $fixture = $this->makeProductFixture(self::UUID, false);
         $fixture['unloc_prophecy']->addAttribute(Argument::that(
             static fn ($v): bool => $v instanceof ProductAttributeValueInterface && 7.5 === $v->getNumber()
         ))->shouldBeCalled()->willReturn($fixture['unloc_prophecy']->reveal());
 
-        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [1 => 7.5]]);
+        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [self::UUID => 7.5]]);
     }
 
     public function testRemovesValueWhenNull(): void
@@ -132,7 +137,7 @@ class ProductAttributesDataMapperTest extends TestCase
 
         /** @var ObjectProphecy<AttributeInterface> $attribute */
         $attribute = $this->prophesize(AttributeInterface::class);
-        $attribute->getId()->willReturn(1);
+        $attribute->getUuid()->willReturn(self::UUID);
         $attribute->getKey()->willReturn('attr-1');
         $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
         $attribute->isLocalized()->willReturn(false);
@@ -160,7 +165,7 @@ class ProductAttributesDataMapperTest extends TestCase
         $loc = $this->prophesize(ProductDimensionContentInterface::class);
         $loc->getAttributes()->willReturn(new ArrayCollection());
 
-        $this->mapper->map($unloc->reveal(), $loc->reveal(), ['attributes' => [1 => null]]);
+        $this->mapper->map($unloc->reveal(), $loc->reveal(), ['attributes' => [self::UUID => null]]);
     }
 
     public function testIsEmptyForEmptyString(): void
@@ -169,7 +174,7 @@ class ProductAttributesDataMapperTest extends TestCase
 
         /** @var ObjectProphecy<AttributeInterface> $attribute */
         $attribute = $this->prophesize(AttributeInterface::class);
-        $attribute->getId()->willReturn(1);
+        $attribute->getUuid()->willReturn(self::UUID);
         $attribute->getKey()->willReturn('attr-1');
         $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
         $attribute->isLocalized()->willReturn(false);
@@ -196,28 +201,28 @@ class ProductAttributesDataMapperTest extends TestCase
         $loc = $this->prophesize(ProductDimensionContentInterface::class);
         $loc->getAttributes()->willReturn(new ArrayCollection());
 
-        $this->mapper->map($unloc->reveal(), $loc->reveal(), ['attributes' => [1 => '']]);
+        $this->mapper->map($unloc->reveal(), $loc->reveal(), ['attributes' => [self::UUID => '']]);
     }
 
     public function testRequiredMissingThrows(): void
     {
-        $fixture = $this->makeProductFixture(1, true);
+        $fixture = $this->makeProductFixture(self::UUID, true);
         $fixture['unloc_prophecy']->addAttribute(Argument::cetera())->shouldNotBeCalled();
 
         $this->expectException(RequiredProductAttributeMissingException::class);
         $this->expectExceptionMessage('attr-1');
 
-        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [1 => null]]);
+        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [self::UUID => null]]);
     }
 
     public function testRequiredWithValuePasses(): void
     {
-        $fixture = $this->makeProductFixture(1, true);
+        $fixture = $this->makeProductFixture(self::UUID, true);
         $fixture['unloc_prophecy']->addAttribute(Argument::that(
             static fn ($v): bool => $v instanceof ProductAttributeValueInterface && 10.0 === $v->getNumber()
         ))->shouldBeCalled()->willReturn($fixture['unloc_prophecy']->reveal());
 
-        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [1 => 10.0]]);
+        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [self::UUID => 10.0]]);
 
         $this->addToAssertionCount(1);
     }
@@ -228,7 +233,7 @@ class ProductAttributesDataMapperTest extends TestCase
 
         /** @var ObjectProphecy<AttributeInterface> $attribute */
         $attribute = $this->prophesize(AttributeInterface::class);
-        $attribute->getId()->willReturn(1);
+        $attribute->getUuid()->willReturn(self::UUID);
         $attribute->getKey()->willReturn('attr-1');
         $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
         $attribute->isLocalized()->willReturn(false);
@@ -255,20 +260,20 @@ class ProductAttributesDataMapperTest extends TestCase
         $loc = $this->prophesize(ProductDimensionContentInterface::class);
         $loc->getAttributes()->willReturn(new ArrayCollection());
 
-        $this->mapper->map($unloc->reveal(), $loc->reveal(), ['attributes' => [1 => 99.0]]);
+        $this->mapper->map($unloc->reveal(), $loc->reveal(), ['attributes' => [self::UUID => 99.0]]);
 
         $this->assertSame(99.0, $existingValue->getNumber());
     }
 
     public function testCreatesLocalizedAttributeOnLocalizedDimensionContent(): void
     {
-        $fixture = $this->makeProductFixture(1, false, true);
+        $fixture = $this->makeProductFixture(self::UUID, false, true);
 
         $fixture['loc_prophecy']->addAttribute(Argument::that(
             static fn ($v): bool => $v instanceof ProductAttributeValueInterface && 7.5 === $v->getNumber()
         ))->shouldBeCalledOnce()->willReturn($fixture['loc_prophecy']->reveal());
 
-        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [1 => 7.5]]);
+        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [self::UUID => 7.5]]);
 
         $fixture['unloc_prophecy']->addAttribute(Argument::cetera())->shouldNotHaveBeenCalled();
     }
@@ -279,7 +284,7 @@ class ProductAttributesDataMapperTest extends TestCase
 
         /** @var ObjectProphecy<AttributeInterface> $attribute */
         $attribute = $this->prophesize(AttributeInterface::class);
-        $attribute->getId()->willReturn(1);
+        $attribute->getUuid()->willReturn(self::UUID);
         $attribute->getKey()->willReturn('attr-1');
         $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
         $attribute->isLocalized()->willReturn(true);
@@ -307,39 +312,39 @@ class ProductAttributesDataMapperTest extends TestCase
         $loc->getAttributes()->willReturn(new ArrayCollection([$existingValue]));
         $loc->removeAttribute($existingValue)->shouldBeCalled()->willReturn($loc->reveal());
 
-        $this->mapper->map($unloc->reveal(), $loc->reveal(), ['attributes' => [1 => null]]);
+        $this->mapper->map($unloc->reveal(), $loc->reveal(), ['attributes' => [self::UUID => null]]);
     }
 
     public function testVariantSkipsRequiredNonVariantAttribute(): void
     {
-        $fixture = $this->makeProductFixture(1, required: true, isVariantAttribute: false, isVariantResource: true);
+        $fixture = $this->makeProductFixture(self::UUID, required: true, isVariantAttribute: false, isVariantResource: true);
         $fixture['unloc_prophecy']->addAttribute(Argument::cetera())->shouldNotBeCalled();
 
-        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [1 => null]]);
+        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [self::UUID => null]]);
 
         $this->addToAssertionCount(1);
     }
 
     public function testVariantStillEnforcesRequiredVariantAttribute(): void
     {
-        $fixture = $this->makeProductFixture(1, required: true, isVariantAttribute: true, isVariantResource: true);
+        $fixture = $this->makeProductFixture(self::UUID, required: true, isVariantAttribute: true, isVariantResource: true);
         $fixture['unloc_prophecy']->addAttribute(Argument::cetera())->shouldNotBeCalled();
 
         $this->expectException(RequiredProductAttributeMissingException::class);
         $this->expectExceptionMessage('attr-1');
 
-        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [1 => null]]);
+        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [self::UUID => null]]);
     }
 
     public function testNonVariantProductStillEnforcesRequiredNonVariantAttribute(): void
     {
-        $fixture = $this->makeProductFixture(1, required: true, isVariantAttribute: false, isVariantResource: false);
+        $fixture = $this->makeProductFixture(self::UUID, required: true, isVariantAttribute: false, isVariantResource: false);
         $fixture['unloc_prophecy']->addAttribute(Argument::cetera())->shouldNotBeCalled();
 
         $this->expectException(RequiredProductAttributeMissingException::class);
         $this->expectExceptionMessage('attr-1');
 
-        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [1 => null]]);
+        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [self::UUID => null]]);
     }
 
     /**
@@ -348,10 +353,10 @@ class ProductAttributesDataMapperTest extends TestCase
      */
     public function testProductSkipsRequiredVariantAttribute(): void
     {
-        $fixture = $this->makeProductFixture(1, required: true, isVariantAttribute: true, isVariantResource: false);
+        $fixture = $this->makeProductFixture(self::UUID, required: true, isVariantAttribute: true, isVariantResource: false);
         $fixture['unloc_prophecy']->addAttribute(Argument::cetera())->shouldNotBeCalled();
 
-        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [1 => null]]);
+        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [self::UUID => null]]);
 
         $this->addToAssertionCount(1);
     }
@@ -376,7 +381,7 @@ class ProductAttributesDataMapperTest extends TestCase
      * }
      */
     private function makeProductFixture(
-        int $attributeId,
+        string $attributeUuid,
         bool $required,
         bool $localized = false,
         bool $isVariantAttribute = false,
@@ -384,8 +389,8 @@ class ProductAttributesDataMapperTest extends TestCase
     ): array {
         /** @var ObjectProphecy<AttributeInterface> $attribute */
         $attribute = $this->prophesize(AttributeInterface::class);
-        $attribute->getId()->willReturn($attributeId);
-        $attribute->getKey()->willReturn('attr-' . $attributeId);
+        $attribute->getUuid()->willReturn($attributeUuid);
+        $attribute->getKey()->willReturn('attr-1');
         $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
         $attribute->isLocalized()->willReturn($localized);
 

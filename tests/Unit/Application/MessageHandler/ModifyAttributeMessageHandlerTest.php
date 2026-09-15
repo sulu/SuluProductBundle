@@ -298,8 +298,7 @@ class ModifyAttributeMessageHandlerTest extends TestCase
 
     public function testModifyAttributePositionChangeShiftsOthersInGroup(): void
     {
-        $group = new AttributeGroup();
-        $group->setUuid('group-uuid-1');
+        $group = new AttributeGroup('group-uuid-1');
         $attribute = new Attribute($group);
         $attribute->setPosition(5);
 
@@ -384,8 +383,7 @@ class ModifyAttributeMessageHandlerTest extends TestCase
 
     public function testModifyAttributeSamePositionDoesNotShift(): void
     {
-        $group = new AttributeGroup();
-        $group->setUuid('group-uuid-1');
+        $group = new AttributeGroup('group-uuid-1');
         $attribute = new Attribute($group);
         $attribute->setPosition(3);
 

@@ -94,8 +94,7 @@ class ProductResolverDetailsTest extends SuluTestCase
 
     public function testProductFamilyResolvesWithItsLocalisedName(): void
     {
-        $family = new ProductFamily();
-        $family->setUuid('family-uuid-fe');
+        $family = new ProductFamily('family-uuid-fe');
         $family->addTranslation(new ProductFamilyTranslation($family, 'de', 'XLR'));
         $this->entityManager->persist($family);
 
