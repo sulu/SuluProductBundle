@@ -208,10 +208,16 @@ class WebsiteProductDetailsReindexProviderEnhancerTest extends SuluTestCase
      */
     private function createProductFamily(array $attributes = []): string
     {
+        /** @var AttributeRepositoryInterface $attributeRepository */
+        $attributeRepository = self::getContainer()->get(AttributeRepositoryInterface::class);
+
         $normalized = [];
         foreach ($attributes as $attributeId => $entry) {
-            $normalized[$attributeId] = [
-                'enabled' => true,
+            $attribute = $attributeRepository->findOneBy(['id' => $attributeId]);
+            $this->assertNotNull($attribute);
+
+            $normalized[] = [
+                'id' => $attribute->getUuid(),
                 'required' => $entry['required'] ?? false,
                 'variantSpecific' => $entry['variantSpecific'] ?? false,
             ];

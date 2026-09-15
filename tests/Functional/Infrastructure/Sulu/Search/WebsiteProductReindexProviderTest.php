@@ -67,13 +67,15 @@ class WebsiteProductReindexProviderTest extends SuluTestCase
         $firstVariant = $engine->getDocument('website', 'products__' . $firstVariantId . '__en');
         $this->assertSame($firstVariantId, $firstVariant['resourceId']);
         $this->assertSame(['sulu-io'], $firstVariant['webspaces']);
-        $parentUrl = $firstVariant['url'];
-        $this->assertIsString($parentUrl);
-        $this->assertStringStartsWith('/search-product-', $parentUrl);
-        $this->assertStringNotContainsString('?', $parentUrl, 'The first variant is what the bare parent URL shows.');
+        $firstVariantUrl = $firstVariant['url'];
+        $this->assertIsString($firstVariantUrl);
+        $this->assertStringStartsWith('/search-variant-', $firstVariantUrl, 'A variant is indexed with its own route.');
 
         $secondVariant = $engine->getDocument('website', 'products__' . $secondVariantId . '__en');
-        $this->assertSame($parentUrl . '?variant=SEARCH-SECOND-VARIANT', $secondVariant['url']);
+        $secondVariantUrl = $secondVariant['url'];
+        $this->assertIsString($secondVariantUrl);
+        $this->assertStringStartsWith('/search-variant-', $secondVariantUrl);
+        $this->assertNotSame($firstVariantUrl, $secondVariantUrl);
         $content = $secondVariant['content'];
         $this->assertIsArray($content);
         $this->assertContains('SEARCH-SECOND-VARIANT', $content, 'The code is searchable through the content.');

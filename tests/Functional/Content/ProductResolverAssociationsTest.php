@@ -23,6 +23,7 @@ use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductResolver;
 use Sulu\Product\Infrastructure\Sulu\Content\ResourceLoader\ProductResourceLoader;
+use Sulu\Route\Domain\Model\Route;
 
 #[CoversClass(ProductResolver::class)]
 class ProductResolverAssociationsTest extends SuluTestCase
@@ -212,5 +213,63 @@ class ProductResolverAssociationsTest extends SuluTestCase
         self::assertIsArray($content);
         self::assertSame('Suitable Target', $content['title'] ?? null);
         self::assertSame('A very suitable product', $content['description'] ?? null);
+    }
+
+    public function testAssociatedVariantLinksToItsOwnUrl(): void
+    {
+        $parent = $this->productRepository->createNew();
+        $parent->setType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $this->productRepository->add($parent);
+
+        $variant = $this->productRepository->createNew();
+        $variant->setType(ProductInterface::TYPE_VARIANT);
+        $variant->setPosition(1);
+        $variant->setParent($parent);
+
+        $variantUnlocalizedLive = $variant->createDimensionContent();
+        $variantUnlocalizedLive->setStage('live');
+        $variantUnlocalizedLive->setCode('VARIANT-1');
+        $variant->addDimensionContent($variantUnlocalizedLive);
+
+        $variantLocalizedLive = $variant->createDimensionContent();
+        $variantLocalizedLive->setLocale('en');
+        $variantLocalizedLive->setStage('live');
+        $variantLocalizedLive->setTemplateKey('product');
+        $variantLocalizedLive->setTemplateData(['title' => 'Variant']);
+        $variantRoute = new Route(ProductInterface::RESOURCE_KEY, $variant->getUuid(), 'en', '/variant-url');
+        $variantLocalizedLive->setRoute($variantRoute);
+        $variant->addDimensionContent($variantLocalizedLive);
+
+        $this->productRepository->add($variant);
+        $this->entityManager->persist($variantUnlocalizedLive);
+        $this->entityManager->persist($variantLocalizedLive);
+        $this->entityManager->persist($variantRoute);
+
+        $product = $this->productRepository->createNew();
+
+        $dimensionContent = $product->createDimensionContent();
+        $dimensionContent->setLocale('en');
+        $dimensionContent->setStage('draft');
+        $dimensionContent->setTemplateKey('product');
+        $dimensionContent->addAssociation(new ProductAssociation($dimensionContent, $variant, 'suitable'));
+        $product->addDimensionContent($dimensionContent);
+
+        $this->productRepository->add($product);
+        $this->entityManager->persist($dimensionContent);
+        $this->entityManager->flush();
+
+        $result = $this->contentResolver->resolve($dimensionContent);
+
+        $productData = $result['product'] ?? null;
+        self::assertIsArray($productData);
+        $associationsData = $productData['associations'];
+        self::assertIsArray($associationsData);
+        $suitable = $associationsData['suitable'];
+        self::assertIsArray($suitable);
+        $resolved = $suitable[0] ?? null;
+        self::assertIsArray($resolved);
+        $content = $resolved['content'] ?? null;
+        self::assertIsArray($content);
+        self::assertSame('/variant-url', $content['url'] ?? null);
     }
 }

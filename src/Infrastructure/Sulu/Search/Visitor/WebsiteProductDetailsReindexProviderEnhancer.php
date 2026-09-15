@@ -14,54 +14,76 @@ declare(strict_types=1);
 namespace Sulu\Product\Infrastructure\Sulu\Search\Visitor;
 
 use CmsIg\Seal\Converter\HtmlToTextConverter;
-use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
+use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Application\AttributeType\DateAttributeType;
 use Sulu\Product\Domain\Measurement\MeasurementRegistry;
+use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeInterface;
+use Sulu\Product\Domain\Model\AttributeOption;
+use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
+use Sulu\Product\Domain\Model\ProductInterface;
+use Symfony\Contracts\Service\ResetInterface;
 
 /**
- * Indexes the details tab: the product family and the attribute values as filter fields of the
- * `product` object field, their text as searchable content, and the details image where neither
- * the template nor the excerpt has one.
+ * Indexes the details tab: family and attribute values as filter fields, their text as content,
+ * and the details image as fallback. A variant also gets its parent's non-variant-specific values.
  *
- * A variant carries its own values plus those of its parent that the family does not mark
- * variant-specific.
+ * Attributes and values are loaded once per run, so the query count does not grow with the
+ * products; the cache lives until the kernel resets the service.
  *
  * @phpstan-type ValueRow array{
- *     type: string,
- *     label: string|null,
  *     optionKey: string|null,
- *     optionLabel: string|null,
  *     number: float|null,
  *     text: string|null,
- *     config: string,
+ *     variantSpecific: bool,
+ * }
+ * @phpstan-type AttributeDefinition array{
+ *     key: string,
+ *     type: string,
+ *     labels: array<string, string>,
+ *     defaultLocale: string|null,
+ *     unit: string|null,
+ *     options: array<string, array<string, string>>,
  * }
  *
  * @internal this class is internal no backwards compatibility promise is given for this class
  *           use Symfony Dependency Injection to override or create your own enhancer instead
  */
-final class WebsiteProductDetailsReindexProviderEnhancer implements WebsiteProductReindexProviderEnhancerInterface
+final class WebsiteProductDetailsReindexProviderEnhancer implements WebsiteProductReindexProviderEnhancerInterface, ResetInterface
 {
     public const FIELD = 'product';
     public const TEXT_VALUES_FIELD = 'attributes_text_values';
     public const NUMERIC_VALUES_FIELD = 'attributes_numeric_values';
 
-    private const UNIT_SEPARATOR = "\x1F";
-    private const RECORD_SEPARATOR = "\x1E";
-    private const FIELD_COUNT = 8;
-    private const GROUP_CONCAT_MAX_LEN = 1048576;
+    private const UNLOCALIZED = '';
+
+    /**
+     * @var array<string, array<string, array<int, ValueRow>>>|null product id => locale => attribute id => row
+     */
+    private ?array $attributeValues = null;
+
+    /**
+     * @var array<int, AttributeDefinition>|null attribute id => definition
+     */
+    private ?array $attributeDefinitions = null;
+
+    /**
+     * @var list<string>|null the product ids the reindex is limited to, null for all
+     */
+    private ?array $scope = null;
 
     public function __construct(
+        private readonly EntityManagerInterface $entityManager,
         private readonly MeasurementRegistry $measurementRegistry,
     ) {
     }
 
     /**
-     * One entry of the text values field: the attribute an option key or text value belongs to is
-     * part of the value, so text attributes need no field of their own.
+     * Prefixes the value with its attribute key, so text attributes share one field.
      */
     public static function textValue(string $attributeKey, string $value): string
     {
@@ -74,21 +96,37 @@ final class WebsiteProductDetailsReindexProviderEnhancer implements WebsiteProdu
     }
 
     /**
-     * Search engines only accept word characters in field names, and a value of the text field
-     * must stay parseable, so the attribute key is reduced to them in both.
+     * Reduces the key to word characters, the only ones search engines accept in field names.
      */
     private static function sanitize(string $key): string
     {
         return (string) \preg_replace('/[^A-Za-z0-9_]/', '_', $key);
     }
 
+    public function reset(): void
+    {
+        $this->attributeValues = null;
+        $this->attributeDefinitions = null;
+        $this->scope = null;
+    }
+
     public function enhanceQuery(QueryBuilder $queryBuilder): void
     {
-        // MySQL and MariaDB cut GROUP_CONCAT at group_concat_max_len with only a warning, so the
-        // session limit is raised for every batch; Postgres aggregates without a limit.
-        $connection = $queryBuilder->getEntityManager()->getConnection();
-        if ($connection->getDatabasePlatform() instanceof AbstractMySQLPlatform) {
-            $connection->executeStatement('SET SESSION group_concat_max_len = ' . self::GROUP_CONCAT_MAX_LEN);
+        // The provider binds the reindexed product ids as :id<n>.
+        $scope = [];
+        foreach ($queryBuilder->getParameters() as $parameter) {
+            $value = $parameter->getValue();
+            if (\is_string($value) && 1 === \preg_match('/^id\d+$/', $parameter->getName())) {
+                $scope[] = $value;
+            }
+        }
+        $scope = [] !== $scope ? \array_values(\array_unique($scope)) : null;
+        if (null !== $scope) {
+            \sort($scope);
+        }
+        if ($scope !== $this->scope) {
+            $this->attributeValues = null;
+            $this->scope = $scope;
         }
 
         $queryBuilder
@@ -98,64 +136,19 @@ final class WebsiteProductDetailsReindexProviderEnhancer implements WebsiteProdu
             ->addSelect('productFamily.uuid AS productFamilyId')
             ->addSelect('productFamilyTranslation.name AS productFamilyName')
             ->addSelect('dimensionContent.detailsData')
-            ->addSelect('unlocalizedDimensionContent.detailsData AS unlocalizedDetailsData')
-            ->addSelect('(' . $this->valuesSubquery($queryBuilder, 'own', 'product') . ') AS ownAttributeValues')
-            ->addSelect('(' . $this->valuesSubquery($queryBuilder, 'parent', 'product.parent') . ') AS parentAttributeValues');
-    }
-
-    /**
-     * The live values of one product, packed into one string so the batch query carries them and
-     * no query runs per document. A localized value is ordered after the unlocalized one, so the
-     * last record of an attribute wins. The parent's variant-specific attributes are not inherited.
-     *
-     * The product and its parent get a subquery each: with both in one `OR`, MySQL no longer uses
-     * the product index and scans every dimension content of the locale per row.
-     */
-    private function valuesSubquery(QueryBuilder $queryBuilder, string $alias, string $productExpression): string
-    {
-        $u = "'" . self::UNIT_SEPARATOR . "'";
-        $r = "'" . self::RECORD_SEPARATOR . "'";
-
-        $subquery = $queryBuilder->getEntityManager()->createQueryBuilder()
-            ->select(
-                'GROUP_CONCAT('
-                . "{$alias}Value.attributeKey, {$u}, "
-                . "{$alias}Attribute.type, {$u}, "
-                . "COALESCE({$alias}AttributeTranslation.name, {$alias}AttributeDefaultTranslation.name, ''), {$u}, "
-                . "COALESCE({$alias}Value.attributeOptionKey, ''), {$u}, "
-                . "COALESCE({$alias}OptionTranslation.name, {$alias}OptionDefaultTranslation.name, ''), {$u}, "
-                . "COALESCE(CONCAT({$alias}Value.number, ''), ''), {$u}, "
-                . "COALESCE({$alias}Value.text, ''), {$u}, "
-                . "CAST({$alias}Attribute.config AS string), {$r}"
-                . " ORDER BY CASE WHEN {$alias}DimensionContent.locale IS NULL THEN 0 ELSE 1 END ASC"
-                . " SEPARATOR '')",
-            )
-            ->from(ProductAttributeValue::class, "{$alias}Value")
-            ->innerJoin("{$alias}Value.productDimensionContent", "{$alias}DimensionContent")
-            ->innerJoin("{$alias}Value.attribute", "{$alias}Attribute")
-            // Labels fall back to the attribute's default locale, as the admin shows them.
-            ->leftJoin("{$alias}Attribute.translations", "{$alias}AttributeTranslation", Join::WITH, "{$alias}AttributeTranslation.locale = dimensionContent.locale")
-            ->leftJoin("{$alias}Attribute.translations", "{$alias}AttributeDefaultTranslation", Join::WITH, "{$alias}AttributeDefaultTranslation.locale = {$alias}Attribute.defaultLocale")
-            // The option relation of a value is not written, so its label is looked up by key.
-            ->leftJoin("{$alias}Attribute.options", "{$alias}Option", Join::WITH, "{$alias}Option.key = {$alias}Value.attributeOptionKey")
-            ->leftJoin("{$alias}Option.translations", "{$alias}OptionTranslation", Join::WITH, "{$alias}OptionTranslation.locale = dimensionContent.locale")
-            ->leftJoin("{$alias}Option.translations", "{$alias}OptionDefaultTranslation", Join::WITH, "{$alias}OptionDefaultTranslation.locale = {$alias}Attribute.defaultLocale")
-            ->where("{$alias}DimensionContent.product = {$productExpression}")
-            ->andWhere("{$alias}DimensionContent.stage = dimensionContent.stage")
-            ->andWhere("{$alias}DimensionContent.version = dimensionContent.version")
-            ->andWhere("{$alias}DimensionContent.locale = dimensionContent.locale OR {$alias}DimensionContent.locale IS NULL");
-
-        if ('parent' === $alias) {
-            $subquery
-                ->leftJoin("{$alias}Value.productFamilyAttribute", "{$alias}FamilyAttribute")
-                ->andWhere("{$alias}FamilyAttribute.variantSpecific = false OR {$alias}FamilyAttribute.variantSpecific IS NULL");
-        }
-
-        return $subquery->getDQL();
+            ->addSelect('unlocalizedDimensionContent.detailsData AS unlocalizedDetailsData');
     }
 
     public function enhanceDocument(array $queryResult, array $document): array
     {
+        /** @var string $productId */
+        $productId = $queryResult['productId'];
+        /** @var string $locale */
+        $locale = $queryResult['locale'];
+        /** @var string $type */
+        $type = $queryResult['type'];
+        /** @var string|null $parentId */
+        $parentId = $queryResult['parentId'];
         /** @var list<string> $content */
         $content = $document['content'];
 
@@ -166,7 +159,7 @@ final class WebsiteProductDetailsReindexProviderEnhancer implements WebsiteProdu
             }
         }
 
-        // Details are split over both dimension contents by multilinguality; the localized ones win.
+        // Localized details win over unlocalized ones.
         $detailsData = \array_merge(
             \is_array($queryResult['unlocalizedDetailsData'] ?? null) ? $queryResult['unlocalizedDetailsData'] : [],
             \is_array($queryResult['detailsData'] ?? null) ? $queryResult['detailsData'] : [],
@@ -188,19 +181,21 @@ final class WebsiteProductDetailsReindexProviderEnhancer implements WebsiteProdu
         $textValues = [];
         $numericValues = [];
 
-        $values = \array_replace(
-            $this->decodeValues($queryResult['parentAttributeValues'] ?? null),
-            $this->decodeValues($queryResult['ownAttributeValues'] ?? null),
-        );
-        foreach ($values as $key => $valueRow) {
+        $isVariant = ProductInterface::TYPE_VARIANT === $type && null !== $parentId;
+        foreach ($this->mergedAttributeValues($productId, $isVariant ? $parentId : null, $locale) as $attributeId => $valueRow) {
+            $attribute = $this->getAttributeDefinitions()[$attributeId] ?? null;
+            if (null === $attribute) {
+                continue;
+            }
+
+            $key = $attribute['key'];
             $display = null;
-            switch ($valueRow['type']) {
+            switch ($attribute['type']) {
                 case AttributeInterface::TYPE_NUMBER:
                     if (null !== $valueRow['number']) {
                         $numericValues[self::numericField($key)] = [$valueRow['number']];
                         $display = \rtrim(\rtrim(\number_format($valueRow['number'], 10, '.', ''), '0'), '.');
-                        $unit = $this->unitSymbol($valueRow['config']);
-                        $display .= null !== $unit ? ' ' . $unit : '';
+                        $display .= null !== $attribute['unit'] ? ' ' . $attribute['unit'] : '';
                     }
                     break;
                 case AttributeInterface::TYPE_DATE:
@@ -212,7 +207,7 @@ final class WebsiteProductDetailsReindexProviderEnhancer implements WebsiteProdu
                 case AttributeInterface::TYPE_OPTIONS:
                     if (null !== $valueRow['optionKey']) {
                         $textValues[] = self::textValue($key, $valueRow['optionKey']);
-                        $display = $valueRow['optionLabel'] ?? $valueRow['optionKey'];
+                        $display = $this->translate($attribute['options'][$valueRow['optionKey']] ?? [], $locale, $attribute['defaultLocale']) ?? $valueRow['optionKey'];
                     }
                     break;
                 case AttributeInterface::TYPE_TEXT:
@@ -223,8 +218,10 @@ final class WebsiteProductDetailsReindexProviderEnhancer implements WebsiteProdu
                     break;
             }
 
+            // "Widerstand: 5 Ω", so both label and value are searchable.
             if (null !== $display) {
-                $content[] = ($valueRow['label'] ?? $key) . ': ' . $display;
+                $label = $this->translate($attribute['labels'], $locale, $attribute['defaultLocale']) ?? $key;
+                $content[] = $label . ': ' . $display;
             }
         }
 
@@ -241,51 +238,154 @@ final class WebsiteProductDetailsReindexProviderEnhancer implements WebsiteProdu
     }
 
     /**
-     * @return array<string, ValueRow> attribute key => the winning row
+     * Own values win; the parent's variant-specific values are not inherited.
+     *
+     * @return array<int, ValueRow> attribute id => row
      */
-    private function decodeValues(mixed $packed): array
+    private function mergedAttributeValues(string $productId, ?string $parentId, string $locale): array
     {
-        if (!\is_string($packed) || '' === $packed) {
-            return [];
-        }
-
-        // Every complete record ends with the record separator, so a cut string is detected.
-        if (!\str_ends_with($packed, self::RECORD_SEPARATOR)) {
-            throw new \RuntimeException('The packed attribute values were truncated, raise the "group_concat_max_len" of the MySQL connection.');
-        }
-
-        $values = [];
-        foreach (\explode(self::RECORD_SEPARATOR, \substr($packed, 0, -1)) as $record) {
-            $fields = \explode(self::UNIT_SEPARATOR, $record);
-            if (self::FIELD_COUNT !== \count($fields)) {
-                throw new \RuntimeException('An attribute value contains a separator control character and cannot be indexed.');
+        $merged = $this->productAttributeValues($productId, $locale);
+        foreach (null !== $parentId ? $this->productAttributeValues($parentId, $locale) : [] as $attributeId => $valueRow) {
+            if (!$valueRow['variantSpecific'] && !isset($merged[$attributeId])) {
+                $merged[$attributeId] = $valueRow;
             }
-
-            [$key, $type, $label, $optionKey, $optionLabel, $number, $text, $config] = $fields;
-            $text = \trim($text);
-
-            $values[$key] = [
-                'type' => $type,
-                'label' => '' !== $label ? $label : null,
-                'optionKey' => '' !== $optionKey ? $optionKey : null,
-                'optionLabel' => '' !== $optionLabel ? $optionLabel : null,
-                'number' => '' !== $number ? (float) $number : null,
-                'text' => '' !== $text ? $text : null,
-                'config' => $config,
-            ];
         }
 
-        return $values;
+        return $merged;
     }
 
     /**
-     * @param string $config the attribute's config as JSON
+     * Localized values win over unlocalized ones.
+     *
+     * @return array<int, ValueRow> attribute id => row
      */
-    private function unitSymbol(string $config): ?string
+    private function productAttributeValues(string $productId, string $locale): array
     {
-        $decoded = \json_decode($config, true);
-        $unitKey = \is_array($decoded) ? ($decoded['unit'] ?? null) : null;
+        $attributeValues = $this->getAttributeValues()[$productId] ?? [];
 
-        return \is_string($unitKey) ? $this->measurementRegistry->findUnit($unitKey)?->getSymbol() : null;
+        return \array_replace($attributeValues[self::UNLOCALIZED] ?? [], $attributeValues[$locale] ?? []);
+    }
+
+    /**
+     * Falls back to the attribute's default locale.
+     *
+     * @param array<string, string> $translations locale => text
+     */
+    private function translate(array $translations, string $locale, ?string $defaultLocale): ?string
+    {
+        return $translations[$locale] ?? (null !== $defaultLocale ? $translations[$defaultLocale] ?? null : null);
+    }
+
+    /**
+     * Live values of all products, or of those in scope and their parents.
+     *
+     * @return array<string, array<string, array<int, ValueRow>>> product id => locale => attribute id => row
+     */
+    private function getAttributeValues(): array
+    {
+        if (null !== $this->attributeValues) {
+            return $this->attributeValues;
+        }
+
+        $queryBuilder = $this->entityManager->createQueryBuilder()
+            ->from(ProductAttributeValue::class, 'value')
+            ->innerJoin('value.productDimensionContent', 'dimensionContent')
+            ->leftJoin('value.productFamilyAttribute', 'familyAttribute')
+            ->select('IDENTITY(dimensionContent.product) AS productId')
+            ->addSelect('dimensionContent.locale')
+            ->addSelect('IDENTITY(value.attribute) AS attributeId')
+            ->addSelect('value.attributeOptionKey AS optionKey')
+            ->addSelect('value.number')
+            ->addSelect('value.text')
+            ->addSelect('familyAttribute.variantSpecific')
+            ->where('dimensionContent.stage = :stage')
+            ->andWhere('dimensionContent.version = :version')
+            ->setParameter('stage', DimensionContentInterface::STAGE_LIVE)
+            ->setParameter('version', DimensionContentInterface::CURRENT_VERSION);
+
+        if (null !== $this->scope) {
+            $parents = $this->entityManager->createQueryBuilder()
+                ->from(Product::class, 'variant')
+                ->select('IDENTITY(variant.parent)')
+                ->where('variant.uuid IN (:scope)')
+                ->getDQL();
+            $queryBuilder
+                ->andWhere('dimensionContent.product IN (:scope) OR dimensionContent.product IN (' . $parents . ')')
+                ->setParameter('scope', $this->scope);
+        }
+
+        /** @var iterable<array{productId: string, locale: string|null, attributeId: int, optionKey: string|null, number: float|null, text: string|null, variantSpecific: bool|null}> $rows */
+        $rows = $queryBuilder->getQuery()->toIterable();
+
+        $this->attributeValues = [];
+        foreach ($rows as $row) {
+            $text = \is_string($row['text']) ? \trim($row['text']) : '';
+            $this->attributeValues[$row['productId']][$row['locale'] ?? self::UNLOCALIZED][(int) $row['attributeId']] = [
+                'optionKey' => $row['optionKey'],
+                'number' => $row['number'],
+                'text' => '' !== $text ? $text : null,
+                'variantSpecific' => true === $row['variantSpecific'],
+            ];
+        }
+
+        return $this->attributeValues;
+    }
+
+    /**
+     * All attributes with type, labels, options and unit.
+     *
+     * @return array<int, AttributeDefinition> attribute id => definition
+     */
+    private function getAttributeDefinitions(): array
+    {
+        if (null !== $this->attributeDefinitions) {
+            return $this->attributeDefinitions;
+        }
+
+        /** @var list<array{attributeId: int, locale: string, name: string}> $labelRows */
+        $labelRows = $this->entityManager->createQueryBuilder()
+            ->from(Attribute::class, 'attribute')
+            ->innerJoin('attribute.translations', 'translation')
+            ->select('attribute.id AS attributeId', 'translation.locale', 'translation.name')
+            ->getQuery()
+            ->getArrayResult();
+        $labels = [];
+        foreach ($labelRows as $row) {
+            $labels[$row['attributeId']][$row['locale']] = $row['name'];
+        }
+
+        /** @var list<array{attributeId: int, optionKey: string, locale: string, name: string}> $optionRows */
+        $optionRows = $this->entityManager->createQueryBuilder()
+            ->from(AttributeOption::class, 'option')
+            ->innerJoin('option.translations', 'translation')
+            ->select('IDENTITY(option.attribute) AS attributeId', 'option.key AS optionKey', 'translation.locale', 'translation.name')
+            ->getQuery()
+            ->getArrayResult();
+        $options = [];
+        foreach ($optionRows as $row) {
+            $options[(int) $row['attributeId']][$row['optionKey']][$row['locale']] = $row['name'];
+        }
+
+        /** @var list<array{id: int, key: string, type: string, config: array<string, mixed>, defaultLocale: string|null}> $attributeRows */
+        $attributeRows = $this->entityManager->createQueryBuilder()
+            ->from(Attribute::class, 'attribute')
+            ->select('attribute.id', 'attribute.key', 'attribute.type', 'attribute.config', 'attribute.defaultLocale')
+            ->getQuery()
+            ->getArrayResult();
+
+        $this->attributeDefinitions = [];
+        foreach ($attributeRows as $row) {
+            $unitKey = $row['config']['unit'] ?? null;
+            $this->attributeDefinitions[$row['id']] = [
+                'key' => $row['key'],
+                'type' => $row['type'],
+                'labels' => $labels[$row['id']] ?? [],
+                'defaultLocale' => $row['defaultLocale'],
+                'unit' => \is_string($unitKey) ? $this->measurementRegistry->findUnit($unitKey)?->getSymbol() : null,
+                'options' => $options[$row['id']] ?? [],
+            ];
+        }
+
+        return $this->attributeDefinitions;
     }
 }

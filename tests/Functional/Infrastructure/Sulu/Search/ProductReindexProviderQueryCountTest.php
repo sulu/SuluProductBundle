@@ -62,6 +62,10 @@ class ProductReindexProviderQueryCountTest extends SuluTestCase
 
     private function assertQueryCountDoesNotGrow(string $providerId, string $index): void
     {
+        if (!self::getContainer()->has('doctrine.debug_data_holder')) {
+            $this->markTestSkipped('Counting queries needs the debug data holder of DoctrineBundle 2.7 or later.');
+        }
+
         self::purgeDatabase();
         $this->createAttributesAndFamily();
 
@@ -116,10 +120,16 @@ class ProductReindexProviderQueryCountTest extends SuluTestCase
             'note' => $this->createAttribute('note', 'Note', AttributeInterface::TYPE_TEXT, true),
         ];
 
+        /** @var AttributeRepositoryInterface $attributeRepository */
+        $attributeRepository = self::getContainer()->get(AttributeRepositoryInterface::class);
+
         $attributes = [];
         foreach ($this->attributeIds as $key => $attributeId) {
-            $attributes[$attributeId] = [
-                'enabled' => true,
+            $attribute = $attributeRepository->findOneBy(['id' => $attributeId]);
+            $this->assertNotNull($attribute);
+
+            $attributes[] = [
+                'id' => $attribute->getUuid(),
                 'required' => false,
                 'variantSpecific' => 'colour' === $key,
             ];
