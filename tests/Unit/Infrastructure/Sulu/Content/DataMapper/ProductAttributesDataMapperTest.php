@@ -312,7 +312,7 @@ class ProductAttributesDataMapperTest extends TestCase
 
     public function testVariantSkipsRequiredNonVariantAttribute(): void
     {
-        $fixture = $this->makeProductFixture(1, required: true, isVariantAttribute: false, isVariantResource: true);
+        $fixture = $this->makeProductFixture(1, required: true, isVariantAttribute: false, productType: ProductInterface::TYPE_VARIANT);
         $fixture['unloc_prophecy']->addAttribute(Argument::cetera())->shouldNotBeCalled();
 
         $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [1 => null]]);
@@ -322,7 +322,18 @@ class ProductAttributesDataMapperTest extends TestCase
 
     public function testVariantStillEnforcesRequiredVariantAttribute(): void
     {
-        $fixture = $this->makeProductFixture(1, required: true, isVariantAttribute: true, isVariantResource: true);
+        $fixture = $this->makeProductFixture(1, required: true, isVariantAttribute: true, productType: ProductInterface::TYPE_VARIANT);
+        $fixture['unloc_prophecy']->addAttribute(Argument::cetera())->shouldNotBeCalled();
+
+        $this->expectException(RequiredProductAttributeMissingException::class);
+        $this->expectExceptionMessage('attr-1');
+
+        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [1 => null]]);
+    }
+
+    public function testProductWithoutVariantsEnforcesRequiredVariantAttribute(): void
+    {
+        $fixture = $this->makeProductFixture(1, required: true, isVariantAttribute: true, productType: ProductInterface::TYPE_PRODUCT);
         $fixture['unloc_prophecy']->addAttribute(Argument::cetera())->shouldNotBeCalled();
 
         $this->expectException(RequiredProductAttributeMissingException::class);
@@ -333,7 +344,7 @@ class ProductAttributesDataMapperTest extends TestCase
 
     public function testNonVariantProductStillEnforcesRequiredNonVariantAttribute(): void
     {
-        $fixture = $this->makeProductFixture(1, required: true, isVariantAttribute: false, isVariantResource: false);
+        $fixture = $this->makeProductFixture(1, required: true, isVariantAttribute: false, productType: ProductInterface::TYPE_PRODUCT);
         $fixture['unloc_prophecy']->addAttribute(Argument::cetera())->shouldNotBeCalled();
 
         $this->expectException(RequiredProductAttributeMissingException::class);
@@ -346,9 +357,9 @@ class ProductAttributesDataMapperTest extends TestCase
      * Regression: enforcing a variant axis against the product made a product with variants
      * impossible to save.
      */
-    public function testProductSkipsRequiredVariantAttribute(): void
+    public function testProductWithVariantsSkipsRequiredVariantAttribute(): void
     {
-        $fixture = $this->makeProductFixture(1, required: true, isVariantAttribute: true, isVariantResource: false);
+        $fixture = $this->makeProductFixture(1, required: true, isVariantAttribute: true, productType: ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
         $fixture['unloc_prophecy']->addAttribute(Argument::cetera())->shouldNotBeCalled();
 
         $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [1 => null]]);
@@ -360,7 +371,7 @@ class ProductAttributesDataMapperTest extends TestCase
     {
         /** @var ObjectProphecy<ProductInterface> $resource */
         $resource = $this->prophesize(ProductInterface::class);
-        $resource->isType(ProductInterface::TYPE_VARIANT)->willReturn(false);
+        $resource->getType()->willReturn(ProductInterface::TYPE_PRODUCT);
 
         return $resource->reveal();
     }
@@ -380,7 +391,7 @@ class ProductAttributesDataMapperTest extends TestCase
         bool $required,
         bool $localized = false,
         bool $isVariantAttribute = false,
-        bool $isVariantResource = false,
+        string $productType = ProductInterface::TYPE_PRODUCT,
     ): array {
         /** @var ObjectProphecy<AttributeInterface> $attribute */
         $attribute = $this->prophesize(AttributeInterface::class);
@@ -401,7 +412,7 @@ class ProductAttributesDataMapperTest extends TestCase
 
         /** @var ObjectProphecy<ProductInterface> $resource */
         $resource = $this->prophesize(ProductInterface::class);
-        $resource->isType(ProductInterface::TYPE_VARIANT)->willReturn($isVariantResource);
+        $resource->getType()->willReturn($productType);
 
         /** @var ObjectProphecy<ProductDimensionContentInterface> $unloc */
         $unloc = $this->prophesize(ProductDimensionContentInterface::class);

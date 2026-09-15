@@ -53,7 +53,7 @@ final class ProductParentMapper implements ProductMapperInterface
 
         $product->setParent($this->productRepository->getOneBy(['uuid' => $parent]));
 
-        if (\array_key_exists('position', $data)) {
+        if (null !== ($data['position'] ?? null)) {
             Assert::integerish($data['position']);
             $product->setPosition((int) $data['position']);
         }

@@ -226,32 +226,6 @@ final class ProductRepository implements ProductRepositoryInterface
         return \array_column($result, 'uuid');
     }
 
-    public function findSlugsBy(array $filters): array
-    {
-        if ([] === $filters['uuids']) {
-            return [];
-        }
-
-        /** @var list<array{uuid: string, slug: string|null}> $rows */
-        $rows = $this->entityManager->createQueryBuilder()
-            ->select('product.uuid', 'route.slug')
-            ->from($this->productDimensionContentClassName, 'dimensionContent')
-            ->join('dimensionContent.product', 'product')
-            ->leftJoin('dimensionContent.route', 'route')
-            ->where('product.uuid IN (:uuids)')
-            ->andWhere('dimensionContent.locale = :locale')
-            ->andWhere('dimensionContent.stage = :stage')
-            ->andWhere('dimensionContent.version = :version')
-            ->setParameter('uuids', $filters['uuids'])
-            ->setParameter('locale', $filters['locale'])
-            ->setParameter('stage', $filters['stage'])
-            ->setParameter('version', DimensionContentInterface::CURRENT_VERSION)
-            ->getQuery()
-            ->getArrayResult();
-
-        return \array_column($rows, 'slug', 'uuid');
-    }
-
     public function add(ProductInterface $product): void
     {
         $this->entityManager->persist($product);

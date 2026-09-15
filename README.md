@@ -34,6 +34,45 @@ carries an address of its own. A product with variants owns none, it is reached 
 variants, which is why the field is hidden for that type and the route guard drops one that
 reaches such a product programmatically.
 
+## Variant attributes
+
+A family attribute with the "variant" toggle is held by the product that carries the article: a
+variant, or a product without variants. A product with variants holds only the shared attributes,
+a variant only the variant attributes. The details form, its schema and the required check follow
+the product type.
+
+## Product in the website
+
+A variant is a page of its own route but has no content of its own: a dimension content enhancer
+resolves it with the parent's template, excerpt and SEO data, so `content` and `extension` are the
+parent's content tab. Its `product` namespace carries:
+
+- `product`: the parent, with `product.title`, the master data (`code`, `status`, ...),
+  `product.attributes` (its own values), `product.associations` and `product.variants`. A product
+  with variants owns no route, so it has no `product.url`.
+- `product.currentVariant`: the variant itself: `title`, `url`, `code`, ..., `attributes` (the
+  variant's own values), `associations`.
+- `product.variants`: every published variant of the parent with `title`, `url`, `code`, `status`
+  and `position`. A project adds properties, which are merged into these defaults:
+
+```yaml
+sulu_product:
+    variants:
+        properties:
+            image: product.image
+```
+
+A product without variants resolves as itself, with `product.url` and without `variants` or
+`currentVariant`. A variant resolved as a reference (a product selection) resolves as itself.
+
+To show a variant's attributes together with its product's, merge them in the template; the
+variant's value wins on the same attribute:
+
+```twig
+{% set attributes = sulu_product_merge_attributes(product.attributes, product.currentVariant.attributes|default({})) %}
+{% set groups = attributes|sulu_product_attribute_groups %}
+```
+
 ## Association form overrides
 
 The bundle generates a `product_associations` form with one field per configured

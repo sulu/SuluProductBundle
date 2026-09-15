@@ -17,6 +17,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Component\Localization\Localization;
 use Sulu\Component\Webspace\Analyzer\RequestAnalyzerInterface;
+use Sulu\Product\Application\Attribute\ProductVariantAttributesMerger;
 use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
@@ -29,6 +30,7 @@ use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Infrastructure\Symfony\Twig\ProductAttributeTwigExtension;
+use Twig\TwigFunction;
 
 #[CoversClass(ProductAttributeTwigExtension::class)]
 class ProductAttributeTwigExtensionTest extends TestCase
@@ -40,7 +42,7 @@ class ProductAttributeTwigExtensionTest extends TestCase
             null === $currentLocale ? null : new Localization($currentLocale),
         );
 
-        return new ProductAttributeTwigExtension(new MeasurementRegistry(), $requestAnalyzer);
+        return new ProductAttributeTwigExtension(new MeasurementRegistry(), $requestAnalyzer, new ProductVariantAttributesMerger());
     }
 
     /**
@@ -92,6 +94,41 @@ class ProductAttributeTwigExtensionTest extends TestCase
         $value = new ProductAttributeValue($content, $attribute, $attribute->getKey());
         $value->setText($text);
         $content->addAttribute($value);
+    }
+
+    public function testMergeAttributesAddsTheVariantsValuesOverTheProducts(): void
+    {
+        $product = $this->contentWithValues(['housing' => 'Zink', 'colour' => 'stale']);
+        $variant = $this->contentWithValues(['colour' => 'black']);
+
+        $merged = $this->extension()->mergeAttributes($product->getAttributes(), $variant->getAttributes());
+
+        $this->assertSame(['housing', 'colour'], \array_keys($merged));
+        $this->assertSame('black', $merged['colour']->getText());
+        $this->assertSame(['housing', 'colour'], \array_keys($this->extension()->mergeAttributes($product->getAttributes())));
+        $this->assertSame(['sulu_product_merge_attributes'], \array_map(
+            static fn (TwigFunction $function): string => $function->getName(),
+            $this->extension()->getFunctions(),
+        ));
+    }
+
+    /**
+     * @param array<string, string> $values
+     */
+    private function contentWithValues(array $values): ProductDimensionContent
+    {
+        $content = new ProductDimensionContent(new Product());
+        foreach ($values as $key => $text) {
+            $attribute = new Attribute(new AttributeGroup());
+            $attribute->setKey($key);
+            $attribute->setType(AttributeInterface::TYPE_TEXT);
+
+            $value = new ProductAttributeValue($content, $attribute, $key);
+            $value->setText($text);
+            $content->addAttribute($value);
+        }
+
+        return $content;
     }
 
     public function testGroupsAttributesByTheirGroup(): void
@@ -375,5 +412,31 @@ class ProductAttributeTwigExtensionTest extends TestCase
         );
 
         self::assertContains('sulu_product_attribute_groups', $names);
+        self::assertContains('sulu_product_format_attribute_value', $names);
+    }
+
+    public function testFormatValueFormatsASingleValue(): void
+    {
+        $content = $this->createContent();
+        $attribute = $this->createAttribute('voltage', 'Spannung', $this->createGroup(1, 'Elektrisch'), 1);
+        $attribute->setConfig(['displayFormat' => '< %value% V']);
+        $this->addTextValue($content, $attribute, '50');
+
+        $productAttributeValue = $content->getAttributes()->first();
+        self::assertInstanceOf(ProductAttributeValue::class, $productAttributeValue);
+
+        self::assertSame('< 50 V', $this->extension()->formatValue($productAttributeValue, 'de'));
+    }
+
+    public function testFormatValueFallsBackToTheCurrentRequestsLocale(): void
+    {
+        $content = $this->createContent();
+        $this->addTextValue($content, $this->createAttribute('weight', 'Gewicht', $this->createGroup(1, 'Mechanisch'), 1), '48 g');
+
+        $productAttributeValue = $content->getAttributes()->first();
+        self::assertInstanceOf(ProductAttributeValue::class, $productAttributeValue);
+
+        self::assertSame('48 g', $this->extension('de')->formatValue($productAttributeValue));
+        self::assertNull($this->extension()->formatValue($productAttributeValue), 'no locale to format with');
     }
 }

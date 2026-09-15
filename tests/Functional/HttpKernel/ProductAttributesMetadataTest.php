@@ -125,11 +125,14 @@ class ProductAttributesMetadataTest extends SuluTestCase
 
         // Visitors merge by nesting `allOf`, so the branch sits at no fixed depth, hence the text match.
         $encoded = \json_encode($details['schema']) ?: '';
-        $this->assertStringContainsString(
-            '"if":{"type":"object","properties":{"productFamily":{"const":"' . $family['id'] . '"}},"required":["productFamily"]},'
-            . '"then":{"type":"object","properties":{"attributes":{"type":"object","properties":{"' . $weightId . '":{"type":"string","minLength":1}},"required":["' . $weightId . '"]}},"required":["attributes"]}',
-            $encoded,
-        );
+        foreach (['product', 'product_with_variants'] as $productType) {
+            $this->assertStringContainsString(
+                '"if":{"type":"object","properties":{"productFamily":{"const":"' . $family['id'] . '"},"type":{"const":"' . $productType . '"}},"required":["productFamily","type"]},'
+                . '"then":{"type":"object","properties":{"attributes":{"type":"object","properties":{"' . $weightId . '":{"type":"string","minLength":1}},"required":["' . $weightId . '"]}},"required":["attributes"]}',
+                $encoded,
+                'a shared attribute is validated for both product types',
+            );
+        }
     }
 
     public function testMetadataWithoutSelectorIsEmpty(): void

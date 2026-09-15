@@ -112,7 +112,9 @@ class ProductDimensionContent implements ProductDimensionContentInterface
 
     public function setTemplateData(array $templateData): void
     {
-        if (\array_key_exists('title', $templateData)
+        // Merged content keeps the title ProductDetailsMerger gave it.
+        if (!$this->isMerged()
+            && \array_key_exists('title', $templateData)
             && \is_string($templateData['title'])
         ) {
             $this->title = $templateData['title'];

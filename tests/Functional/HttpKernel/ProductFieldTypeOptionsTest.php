@@ -18,10 +18,12 @@ use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Component\Rest\ListBuilder\Metadata\FieldDescriptorFactoryInterface;
 use Sulu\Product\Infrastructure\Symfony\HttpKernel\SuluProductBundle;
 use Symfony\Component\Config\FileLocator;
+use Symfony\Component\Config\Loader\LoaderResolver;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\ExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
+use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 
 #[CoversClass(SuluProductBundle::class)]
 class ProductFieldTypeOptionsTest extends SuluTestCase
@@ -119,6 +121,8 @@ class ProductFieldTypeOptionsTest extends SuluTestCase
 
         $instanceof = [];
         $loader = new PhpFileLoader($builder, new FileLocator());
+        // the bundle imports its own config file, which the kernel's loader reads in prepend mode
+        $loader->setResolver(new LoaderResolver([new YamlFileLoader($builder, new FileLocator(), null, true), $loader]));
 
         (new SuluProductBundle())->prependExtension(
             new ContainerConfigurator($builder, $loader, $instanceof, __FILE__, __FILE__),

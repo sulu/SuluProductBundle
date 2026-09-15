@@ -79,6 +79,18 @@ class ProductDimensionContentTest extends TestCase
         $this->assertSame('My Product', $dimensionContent->getTitle());
     }
 
+    public function testSetTemplateDataKeepsTheTitleOfMergedContent(): void
+    {
+        $dimensionContent = new ProductDimensionContent(new Product());
+        $dimensionContent->markAsMerged();
+        $dimensionContent->setTitle('NC3FX-B');
+
+        $dimensionContent->setTemplateData(['title' => 'NC3FX']);
+
+        $this->assertSame('NC3FX-B', $dimensionContent->getTitle());
+        $this->assertSame(['title' => 'NC3FX'], $dimensionContent->getTemplateData());
+    }
+
     public function testSetTemplateDataIgnoresMissingTitle(): void
     {
         $dimensionContent = new ProductDimensionContent(new Product());

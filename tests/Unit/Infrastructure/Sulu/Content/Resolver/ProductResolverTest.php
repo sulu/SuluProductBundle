@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Sulu\Product\Tests\Unit\Infrastructure\Sulu\Content\Resolver;
 
 use PHPUnit\Framework\Attributes\CoversClass;
+use Sulu\Content\Application\ContentAggregator\ContentAggregatorInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
@@ -39,17 +40,23 @@ class ProductResolverTest extends ProductResolverTestCase
 
     public function testAPageCarriesTheMasterDataAndEverySection(): void
     {
+        $variant = new ProductDimensionContent(new Product('variant-uuid-1'));
+        $variant->setLocale('de');
+
         $productRepository = $this->createStub(ProductRepositoryInterface::class);
-        $productRepository->method('findBy')->willReturn([new Product('variant-uuid-1')]);
+        $productRepository->method('findBy')->willReturn([$variant->getResource()]);
+
+        $contentAggregator = $this->createStub(ContentAggregatorInterface::class);
+        $contentAggregator->method('aggregate')->willReturn($variant);
 
         $content = $this->resolveContent(
             $this->createContent(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS),
             null,
-            $this->createResolver(productRepository: $productRepository),
+            $this->createResolver(productRepository: $productRepository, contentAggregator: $contentAggregator),
         );
 
         self::assertSame(
-            ['code', 'externalIdentifier', 'productFamily', 'status', 'position', 'attributes', 'associations', 'variants'],
+            ['title', 'code', 'externalIdentifier', 'productFamily', 'status', 'position', 'attributes', 'associations', 'variants'],
             \array_keys($content),
         );
     }
@@ -72,15 +79,41 @@ class ProductResolverTest extends ProductResolverTestCase
         );
     }
 
+    /** A property of another resolver under the same key must not drop the product's own field. */
+    public function testAPropertyOfAnotherResolverDoesNotDropAnAlwaysOnField(): void
+    {
+        $content = $this->resolveContent(
+            $this->createContent(ProductInterface::TYPE_PRODUCT),
+            ['code' => 'code'],
+            $this->createResolver(),
+        );
+
+        self::assertArrayHasKey('code', $content);
+    }
+
+    /** A product with variants owns no route; a simple product and a variant carry their URL. */
+    public function testOnlyAProductWithVariantsHasNoUrl(): void
+    {
+        self::assertArrayNotHasKey('url', $this->resolveContent($this->createContent(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS)));
+        self::assertArrayHasKey('url', $this->resolveContent($this->createContent(ProductInterface::TYPE_PRODUCT)));
+        self::assertArrayHasKey('url', $this->resolveContent($this->createContent(ProductInterface::TYPE_VARIANT)));
+    }
+
     public function testAReferenceResolvesVariantsWhenItAsksForThem(): void
     {
+        $variant = new ProductDimensionContent(new Product('variant-uuid'));
+        $variant->setLocale('de');
+
         $productRepository = $this->createMock(ProductRepositoryInterface::class);
-        $productRepository->expects(self::once())->method('findBy')->willReturn([new Product('variant-uuid')]);
+        $productRepository->expects(self::once())->method('findBy')->willReturn([$variant->getResource()]);
+
+        $contentAggregator = $this->createStub(ContentAggregatorInterface::class);
+        $contentAggregator->method('aggregate')->willReturn($variant);
 
         $content = $this->resolveContent(
             $this->createContent(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS),
             ['variants' => 'product.variants'],
-            $this->createResolver(productRepository: $productRepository),
+            $this->createResolver(productRepository: $productRepository, contentAggregator: $contentAggregator),
         );
 
         self::assertArrayHasKey('variants', $content);
@@ -109,7 +142,7 @@ class ProductResolverTest extends ProductResolverTestCase
         $content = $this->resolveContent($this->createContent(ProductInterface::TYPE_PRODUCT));
 
         self::assertSame(
-            ['code', 'externalIdentifier', 'productFamily', 'status', 'position', 'attributes', 'associations'],
+            ['title', 'url', 'code', 'externalIdentifier', 'productFamily', 'status', 'position', 'attributes', 'associations'],
             \array_keys($content),
         );
     }

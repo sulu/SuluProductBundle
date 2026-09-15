@@ -28,7 +28,6 @@ use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Doctrine\Repository\ProductRepository;
-use Sulu\Route\Domain\Model\Route;
 
 #[CoversClass(ProductRepository::class)]
 class ProductRepositoryTest extends SuluTestCase
@@ -752,57 +751,10 @@ class ProductRepositoryTest extends SuluTestCase
         $qb->getQuery()->getResult();
     }
 
-    public function testFindSlugsByReturnsTheSlugOfEveryRequestedProduct(): void
-    {
-        $withRoute = $this->createLiveProduct('en', 'Routed', 0, '/routed');
-        $withoutRoute = $this->createLiveProduct('en', 'Unrouted', 1);
-        $this->entityManager->clear();
-
-        $slugs = $this->repository->findSlugsBy([
-            'uuids' => [$withRoute->getUuid(), $withoutRoute->getUuid()],
-            'locale' => 'en',
-            'stage' => 'live',
-        ]);
-
-        $this->assertSame(
-            [$withRoute->getUuid() => '/routed', $withoutRoute->getUuid() => null],
-            $slugs,
-        );
-    }
-
-    /** No dimension content in that locale and stage means no entry, which is not the same as null. */
-    public function testFindSlugsByOmitsProductsWithoutContentInTheRequestedDimension(): void
-    {
-        $product = $this->createLiveProduct('en', 'Routed', 0, '/routed');
-        $this->entityManager->clear();
-
-        $this->assertSame([], $this->repository->findSlugsBy([
-            'uuids' => [$product->getUuid()],
-            'locale' => 'de',
-            'stage' => 'live',
-        ]));
-
-        $this->assertSame([], $this->repository->findSlugsBy([
-            'uuids' => [$product->getUuid()],
-            'locale' => 'en',
-            'stage' => 'draft',
-        ]));
-    }
-
-    public function testFindSlugsByWithoutUuidsDoesNotQuery(): void
-    {
-        $this->assertSame([], $this->repository->findSlugsBy([
-            'uuids' => [],
-            'locale' => 'en',
-            'stage' => 'live',
-        ]));
-    }
-
     private function createLiveProduct(
         string $locale,
         string $title,
         int $position,
-        ?string $slug = null,
     ): ProductInterface {
         $product = $this->repository->createNew();
         $product->setPosition($position);
@@ -811,13 +763,6 @@ class ProductRepositoryTest extends SuluTestCase
         $dimensionContent->setLocale($locale);
         $dimensionContent->setStage('live');
         $dimensionContent->setTitle($title);
-
-        // The route association carries no cascade, so it is persisted on its own.
-        if (null !== $slug) {
-            $route = new Route(ProductInterface::RESOURCE_KEY, $product->getUuid(), $locale, $slug);
-            $dimensionContent->setRoute($route);
-            $this->entityManager->persist($route);
-        }
 
         $product->addDimensionContent($dimensionContent);
         $this->repository->add($product);

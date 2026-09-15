@@ -35,6 +35,7 @@ use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductResolver;
+use Sulu\Route\Domain\Model\Route;
 
 #[CoversClass(ProductResolver::class)]
 class ProductResolverDetailsTest extends ProductResolverTestCase
@@ -135,7 +136,11 @@ class ProductResolverDetailsTest extends ProductResolverTestCase
         $dc->setExternalIdentifier('EXT-1');
         $dc->setProductFamily($family);
         $dc->setStatus('available');
+        $dc->setTitle('NC3FXX');
+        $dc->setRoute(new Route(ProductInterface::RESOURCE_KEY, 'product-uuid', 'en', '/product/nc3fxx'));
 
+        self::assertSame('NC3FXX', $this->contentViewAt($dc, 'title')->getContent());
+        self::assertSame('/product/nc3fxx', $this->contentViewAt($dc, 'url')->getContent());
         self::assertSame('SKU-1', $this->contentViewAt($dc, 'code')->getContent());
         self::assertSame('EXT-1', $this->contentViewAt($dc, 'externalIdentifier')->getContent());
         self::assertSame('available', $this->contentViewAt($dc, 'status')->getContent());
@@ -320,10 +325,15 @@ class ProductResolverDetailsTest extends ProductResolverTestCase
             'details/shortDescription' => 'text_editor',
         ]);
 
-        $content = $this->resolveProduct($this->makeDimensionContent(['shortDescription' => '<p>hi</p>']));
+        $dimensionContent = $this->makeDimensionContent(['shortDescription' => '<p>hi</p>']);
+        $dimensionContent->setTitle('NC3FXX');
+
+        $content = $this->resolveProduct($dimensionContent);
 
         self::assertArrayHasKey('shortDescription', $content);
-        self::assertArrayNotHasKey('title', $content);
+        self::assertArrayNotHasKey('details', $content);
+        self::assertInstanceOf(ContentView::class, $content['title']);
+        self::assertSame('NC3FXX', $content['title']->getContent(), 'the title is the entity field, not the form property');
     }
 
     public function testResolvesWithoutDetailsWhenFormMetadataIsMissing(): void

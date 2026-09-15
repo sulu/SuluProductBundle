@@ -259,6 +259,65 @@ class ProductAttributesFormMetadataVisitorTest extends TestCase
         self::assertSame(['attribute_8'], \array_keys($section->getItems()));
     }
 
+    public function testProductWithoutVariantsKeepsSharedAndAxisAttributes(): void
+    {
+        $group = $this->group();
+        $this->productFamilyRepository->findOneBy(['uuid' => 'family-1'], self::FAMILY_SELECT)->willReturn($this->family([
+            $this->familyAttribute(7, 'Weight', $group),
+            $this->familyAttribute(8, 'Colour', $group, true),
+        ]));
+        $form = $this->form();
+
+        $this->visitor()->visitFormMetadata($form, 'en', ['productFamily' => 'family-1', 'productType' => 'product']);
+
+        $section = $form->getItems()['attribute_group_1'];
+        self::assertInstanceOf(SectionMetadata::class, $section);
+        self::assertSame(['attribute_7', 'attribute_8'], \array_keys($section->getItems()));
+    }
+
+    /**
+     * @return iterable<string, array{0: mixed}>
+     */
+    public static function provideSharedOnlyTypes(): iterable
+    {
+        yield 'product with variants' => ['product_with_variants'];
+        yield 'unknown type' => ['something'];
+        yield 'no type' => [null];
+    }
+
+    #[DataProvider('provideSharedOnlyTypes')]
+    public function testOtherTypesKeepOnlySharedAttributes(mixed $type): void
+    {
+        $group = $this->group();
+        $this->productFamilyRepository->findOneBy(['uuid' => 'family-1'], self::FAMILY_SELECT)->willReturn($this->family([
+            $this->familyAttribute(7, 'Weight', $group),
+            $this->familyAttribute(8, 'Colour', $group, true),
+        ]));
+        $form = $this->form();
+
+        $this->visitor()->visitFormMetadata($form, 'en', ['productFamily' => 'family-1', 'productType' => $type]);
+
+        $section = $form->getItems()['attribute_group_1'];
+        self::assertInstanceOf(SectionMetadata::class, $section);
+        self::assertSame(['attribute_7'], \array_keys($section->getItems()));
+    }
+
+    public function testVariantFlagWinsOverType(): void
+    {
+        $group = $this->group();
+        $this->productFamilyRepository->findOneBy(['uuid' => 'family-1'], self::FAMILY_SELECT)->willReturn($this->family([
+            $this->familyAttribute(7, 'Weight', $group),
+            $this->familyAttribute(8, 'Colour', $group, true),
+        ]));
+        $form = $this->form();
+
+        $this->visitor()->visitFormMetadata($form, 'en', ['productFamily' => 'family-1', 'productType' => 'product', 'variant' => true]);
+
+        $section = $form->getItems()['attribute_group_1'];
+        self::assertInstanceOf(SectionMetadata::class, $section);
+        self::assertSame(['attribute_8'], \array_keys($section->getItems()));
+    }
+
     public function testResolvesFamilyThroughProductOption(): void
     {
         $group = $this->group();

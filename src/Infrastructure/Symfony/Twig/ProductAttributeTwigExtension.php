@@ -14,14 +14,17 @@ declare(strict_types=1);
 namespace Sulu\Product\Infrastructure\Symfony\Twig;
 
 use Sulu\Component\Webspace\Analyzer\RequestAnalyzerInterface;
+use Sulu\Product\Application\Attribute\ProductVariantAttributesMerger;
 use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
+use Twig\TwigFunction;
 
 /**
- * Formats the resolved attribute values and folds them into their attribute groups for display.
+ * Combines a product's and a variant's attribute values, formats them and folds them into their
+ * attribute groups for display.
  *
  * @phpstan-type ResolvedAttribute array{key: string, label: string, type: string, value: mixed, formattedValue: string, position: int, group: array{key: string, label: string}}
  */
@@ -30,22 +33,42 @@ class ProductAttributeTwigExtension extends AbstractExtension
     public function __construct(
         private readonly MeasurementRegistry $measurementRegistry,
         private readonly RequestAnalyzerInterface $requestAnalyzer,
+        private readonly ProductVariantAttributesMerger $attributesMerger,
     ) {
+    }
+
+    public function getFunctions(): array
+    {
+        return [
+            new TwigFunction('sulu_product_merge_attributes', [$this, 'mergeAttributes']),
+        ];
     }
 
     public function getFilters(): array
     {
         return [
             new TwigFilter('sulu_product_attribute_groups', [$this, 'groupAttributes']),
+            new TwigFilter('sulu_product_format_attribute_value', [$this, 'formatValue']),
         ];
     }
 
     /**
-     * @param iterable<ProductAttributeValueInterface> $attributes keys are ignored; re-keyed by attribute key
+     * @param iterable<ProductAttributeValueInterface> $productAttributes
+     * @param iterable<ProductAttributeValueInterface> $variantAttributes
+     *
+     * @return array<string, ProductAttributeValueInterface>
+     */
+    public function mergeAttributes(iterable $productAttributes, iterable $variantAttributes = []): array
+    {
+        return $this->attributesMerger->merge($productAttributes, $variantAttributes);
+    }
+
+    /**
+     * @param iterable<ProductAttributeValueInterface> $productAttributes keys are ignored; re-keyed by attribute key
      *
      * @return list<array{key: string, label: string, attributes: array<string, ResolvedAttribute>}>
      */
-    public function groupAttributes(iterable $attributes, ?string $locale = null): array
+    public function groupAttributes(iterable $productAttributes, ?string $locale = null): array
     {
         $locale ??= $this->requestAnalyzer->getCurrentLocalization()?->getLocale();
 
@@ -56,9 +79,9 @@ class ProductAttributeTwigExtension extends AbstractExtension
         /** @var array<string, array{key: string, label: string, attributes: array<string, ResolvedAttribute>}> $groups */
         $groups = [];
 
-        foreach ($attributes as $value) {
-            $attribute = $value->getAttribute();
-            $formatted = $this->formatValue($value, $attribute, $locale);
+        foreach ($productAttributes as $productAttributeValue) {
+            $attribute = $productAttributeValue->getAttribute();
+            $formatted = $this->formatValue($productAttributeValue, $locale);
 
             if (null === $formatted || '' === $formatted) {
                 continue;
@@ -75,9 +98,9 @@ class ProductAttributeTwigExtension extends AbstractExtension
 
             $groups[$groupKey]['attributes'][$attribute->getKey()] = [
                 'key' => $attribute->getKey(),
-                'label' => $attribute->getTranslation($locale)?->getName() ?? $value->getAttributeKey(),
+                'label' => $attribute->getTranslation($locale)?->getName() ?? $productAttributeValue->getAttributeKey(),
                 'type' => $attribute->getType(),
-                'value' => $value->getValue(),
+                'value' => $productAttributeValue->getValue(),
                 'formattedValue' => $formatted,
                 'position' => $attribute->getPosition(),
                 'group' => [
@@ -103,17 +126,26 @@ class ProductAttributeTwigExtension extends AbstractExtension
         return $result;
     }
 
-    private function formatValue(
-        ProductAttributeValueInterface $value,
-        AttributeInterface $attribute,
-        string $locale,
-    ): ?string {
+    /**
+     * The value as displayed: option name, text or number with its display format, date per locale.
+     * Without a locale the request's; null for an empty value or without any locale.
+     */
+    public function formatValue(ProductAttributeValueInterface $productAttributeValue, ?string $locale = null): ?string
+    {
+        $locale ??= $this->requestAnalyzer->getCurrentLocalization()?->getLocale();
+
+        if (null === $locale) {
+            return null;
+        }
+
+        $attribute = $productAttributeValue->getAttribute();
+
         return match ($attribute->getType()) {
-            AttributeInterface::TYPE_OPTIONS => $value->getAttributeOption()?->getTranslation($locale)?->getName()
-                ?? $value->getAttributeOptionKey(),
-            AttributeInterface::TYPE_TEXT => $this->applyDisplayFormat($attribute, $value->getText()),
-            AttributeInterface::TYPE_NUMBER => $this->applyDisplayFormat($attribute, $value->getNumber()),
-            AttributeInterface::TYPE_DATE => $this->formatDate($value->getNumber(), $locale),
+            AttributeInterface::TYPE_OPTIONS => $productAttributeValue->getAttributeOption()?->getTranslation($locale)?->getName()
+                ?? $productAttributeValue->getAttributeOptionKey(),
+            AttributeInterface::TYPE_TEXT => $this->applyDisplayFormat($attribute, $productAttributeValue->getText()),
+            AttributeInterface::TYPE_NUMBER => $this->applyDisplayFormat($attribute, $productAttributeValue->getNumber()),
+            AttributeInterface::TYPE_DATE => $this->formatDate($productAttributeValue->getNumber(), $locale),
             default => null,
         };
     }

@@ -16,20 +16,29 @@ namespace Sulu\Product\Infrastructure\Sulu\Content\Resolver;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataLoaderInterface;
 use Sulu\Bundle\AdminBundle\Metadata\MetadataProviderInterface;
+use Sulu\Bundle\HttpCacheBundle\ReferenceStore\ReferenceStoreInterface;
+use Sulu\Content\Application\ContentAggregator\ContentAggregatorInterface;
 use Sulu\Content\Application\ContentResolver\Resolver\ResolverInterface;
 use Sulu\Content\Application\ContentResolver\Value\ContentView;
+use Sulu\Content\Application\ContentResolver\Value\Reference;
 use Sulu\Content\Application\MetadataResolver\MetadataResolver;
+use Sulu\Content\Domain\Exception\ContentNotFoundException;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductAssociationInterface;
 use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
-use Sulu\Product\Infrastructure\Sulu\Content\ResourceLoader\ProductResourceLoader;
+use Sulu\Product\Infrastructure\Sulu\Content\ProductParentContentLoader;
 
 /**
  * Assembles the root-level `product` namespace. A reference passes `$properties` and gets the
  * always-on set plus what it asked for under `product.`, so a listing builds no full payload.
+ *
+ * A variant resolved in full, as the page of its route, resolves its parent as `product` and itself
+ * as `product.currentVariant`. Its content comes from the parent too, see
+ * ProductVariantDimensionContentEnhancer. Every product carries its own attribute values only; the
+ * `sulu_product_merge_attributes` Twig function combines a parent's and a variant's.
  *
  * @internal
  *
@@ -41,11 +50,18 @@ class ProductResolver implements ResolverInterface
 
     private const ASSOCIATIONS_FIELD_PREFIX = 'associations/';
 
+    /**
+     * @param array<string, string> $variantProperties the properties each entry of `variants` carries
+     */
     public function __construct(
         private readonly FormMetadataLoaderInterface $formMetadataLoader,
         private readonly MetadataProviderInterface $formMetadataProvider,
         private readonly MetadataResolver $metadataResolver,
         private readonly ProductRepositoryInterface $productRepository,
+        private readonly ContentAggregatorInterface $contentAggregator,
+        private readonly ProductParentContentLoader $parentContentLoader,
+        private readonly ReferenceStoreInterface $referenceStore,
+        private readonly array $variantProperties = [],
     ) {
     }
 
@@ -65,13 +81,39 @@ class ProductResolver implements ResolverInterface
 
         $requested = null === $properties
             ? null
-            : $this->filterProperties(\array_merge($this->getDefaultProperties(), $properties));
+            : [...$this->filterProperties($this->getDefaultProperties()), ...$this->filterProperties($properties)];
 
+        // A reference, such as a product selection, resolves a variant as itself.
+        $parentContent = null === $requested ? $this->parentContentLoader->load($dimensionContent) : null;
+
+        if (null === $parentContent) {
+            return ContentView::create($this->resolveProduct($dimensionContent, $locale, $requested), []);
+        }
+
+        // Tagged, so publishing the parent clears the variant's cached page.
+        $this->referenceStore->add($parentContent->getResource()->getUuid(), ProductInterface::RESOURCE_KEY);
+
+        $content = $this->resolveProduct($parentContent, $locale, null);
+        $content['currentVariant'] = ContentView::create($this->resolveProduct($dimensionContent, $locale, null), []);
+
+        return ContentView::create($content, []);
+    }
+
+    /**
+     * @param array<string, string>|null $requested
+     *
+     * @return array<string, ContentView>
+     */
+    private function resolveProduct(
+        ProductDimensionContentInterface $dimensionContent,
+        string $locale,
+        ?array $requested,
+    ): array {
         $content = $this->resolveDetails($dimensionContent, $locale, $requested);
 
         if ($this->isRequested($requested, 'attributes')) {
             $content[$this->outputKey($requested, 'attributes')] = ContentView::create(
-                $this->resolveAttributes($dimensionContent),
+                $this->keyAttributes($dimensionContent),
                 [],
             );
         }
@@ -83,15 +125,16 @@ class ProductResolver implements ResolverInterface
             );
         }
 
-        if ($this->isRequested($requested, 'variants')) {
-            $variants = $this->resolveVariants($dimensionContent, $locale);
+        $product = $dimensionContent->getResource();
+        if ($product->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS) && $this->isRequested($requested, 'variants')) {
+            $variants = $this->resolveVariants($product, $locale);
 
             if (null !== $variants) {
                 $content[$this->outputKey($requested, 'variants')] = $variants;
             }
         }
 
-        return ContentView::create($content, []);
+        return $content;
     }
 
     /** The prefix a referencing block addresses this resolver by. */
@@ -114,6 +157,8 @@ class ProductResolver implements ResolverInterface
      * Always resolved for a reference; everything else is opt-in. `image` and `shortDescription`
      * are template fields rather than fixed columns, so a project whose template drops them
      * resolves without them: resolveDetailsData() skips a requested field the form does not declare.
+     *
+     * TODO use the prepended `sulu_product.variants.properties` map here too
      *
      * @return array<string, string>
      */
@@ -182,12 +227,19 @@ class ProductResolver implements ResolverInterface
         ?array $requested,
     ): array {
         $fixed = [
+            'title' => ContentView::create($dimensionContent->getTitle(), []),
+            'url' => ContentView::create($dimensionContent->getRoute()?->getSlug(), []),
             'code' => ContentView::create($dimensionContent->getCode(), []),
             'externalIdentifier' => ContentView::create($dimensionContent->getExternalIdentifier(), []),
             'productFamily' => $this->resolveProductFamily($dimensionContent, $locale),
             'status' => ContentView::create($dimensionContent->getStatus(), []),
             'position' => ContentView::create($dimensionContent->getResource()->getPosition(), []),
         ];
+
+        // A product with variants owns no route, it is reached through its variants.
+        if ($dimensionContent->getResource()->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS)) {
+            unset($fixed['url']);
+        }
 
         if (null !== $requested) {
             $selected = [];
@@ -279,7 +331,7 @@ class ProductResolver implements ResolverInterface
      *
      * @return array<string, ProductAttributeValueInterface>
      */
-    private function resolveAttributes(ProductDimensionContentInterface $dimensionContent): array
+    private function keyAttributes(ProductDimensionContentInterface $dimensionContent): array
     {
         $attributes = [];
 
@@ -321,49 +373,46 @@ class ProductResolver implements ResolverInterface
     }
 
     /**
-     * No property projection, so a variant reads like the page it sits on (`variant.product.image`).
-     * A variant is not itself `product_with_variants`, so this does not nest.
+     * Each variant as flat product fields (`title`, `url`, `code`, `status`, `position` plus the
+     * configured fields), the shape of `currentVariant`. Built here rather than as references: a projected
+     * reference moves its fields under `content`. A variant is not itself `product_with_variants`, so
+     * this does not nest.
      */
-    private function resolveVariants(ProductDimensionContentInterface $dimensionContent, string $locale): ?ContentView
+    private function resolveVariants(ProductInterface $product, string $locale): ?ContentView
     {
-        $product = $dimensionContent->getResource();
+        $requested = $this->filterProperties($this->variantProperties);
 
-        if (!$product->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS)) {
-            return null;
-        }
-
-        $uuids = $this->findVariantUuids($product, $locale, DimensionContentInterface::STAGE_LIVE);
-
-        if ([] === $uuids) {
-            return null;
-        }
-
-        return ContentView::createResolvablesWithReferences(
-            ids: $uuids,
-            resourceLoaderKey: ProductResourceLoader::getKey(),
-            resourceKey: ProductInterface::RESOURCE_KEY,
-            view: [],
-            priority: 100,
-        );
-    }
-
-    /**
-     * Without SELECT_PRODUCT_CONTENT: selecting the dimension contents hydrates them filtered by
-     * this stage, and a later aggregate() at another stage finds nothing on the same entity.
-     *
-     * @return list<string>
-     */
-    private function findVariantUuids(ProductInterface $product, string $locale, string $stage): array
-    {
-        $uuids = [];
-        foreach ($this->productRepository->findBy(
-            ['parent' => $product->getUuid(), 'locale' => $locale, 'stage' => $stage],
-            // by position: a bare product URL shows the first variant; `created` and `uuid` break ties
+        $variants = [...$this->productRepository->findBy(
+            ['parent' => $product->getUuid(), 'locale' => $locale, 'stage' => DimensionContentInterface::STAGE_LIVE],
+            // by position, `created` and `uuid` break ties
             ['position' => 'asc', 'created' => 'asc', 'uuid' => 'asc'],
-        ) as $variant) {
-            $uuids[] = $variant->getUuid();
+            [ProductRepositoryInterface::GROUP_SELECT_PRODUCT_WEBSITE => true],
+        )];
+
+        if ([] === $variants) {
+            return null;
         }
 
-        return $uuids;
+        $entries = [];
+        $references = [];
+        foreach ($variants as $variant) {
+            $uuid = $variant->getUuid();
+
+            try {
+                $variantContent = $this->contentAggregator->aggregate(
+                    $variant,
+                    ['locale' => $locale, 'stage' => DimensionContentInterface::STAGE_LIVE, 'version' => DimensionContentInterface::CURRENT_VERSION],
+                );
+            } catch (ContentNotFoundException) {
+                continue;
+            }
+
+            $entries[] = ContentView::create($this->resolveProduct($variantContent, $locale, $requested), []);
+            $references[] = new Reference($uuid, ProductInterface::RESOURCE_KEY);
+            // Tagged, so publishing a variant clears every page that lists it.
+            $this->referenceStore->add($uuid, ProductInterface::RESOURCE_KEY);
+        }
+
+        return ContentView::createWithReferences($entries, [], $references);
     }
 }
