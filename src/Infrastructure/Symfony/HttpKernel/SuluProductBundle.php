@@ -51,6 +51,7 @@ use Sulu\Product\Application\Webspace\WebspaceSettingsConfigurationResolver;
 use Sulu\Product\Application\Workflow\VariantParentPublishStateUpdater;
 use Sulu\Product\Application\Workflow\VariantWorkflowCascader;
 use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
+use Sulu\Product\Domain\Event\AttributeCreatedEvent;
 use Sulu\Product\Domain\Event\ProductCreatedEvent;
 use Sulu\Product\Domain\Event\ProductModifiedEvent;
 use Sulu\Product\Domain\Event\ProductRemovedEvent;
@@ -141,13 +142,17 @@ use Sulu\Product\Infrastructure\Sulu\Reference\ProductReferenceRefresher;
 use Sulu\Product\Infrastructure\Sulu\Route\ProductRouteDefaultsProvider;
 use Sulu\Product\Infrastructure\Sulu\Search\AdminProductIndexListener;
 use Sulu\Product\Infrastructure\Sulu\Search\AdminProductReindexProvider;
+use Sulu\Product\Infrastructure\Sulu\Search\RebuildWebsiteIndexMessageHandler;
+use Sulu\Product\Infrastructure\Sulu\Search\Schema\ProductSchemaLoader;
 use Sulu\Product\Infrastructure\Sulu\Search\Visitor\AdminProductReindexProviderEnhancerInterface;
+use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductDetailsReindexProviderEnhancer;
 use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductReindexContentEnhancer;
 use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductReindexExcerptEnhancer;
 use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductReindexProviderEnhancerInterface;
 use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductReindexTaxonomyEnhancer;
 use Sulu\Product\Infrastructure\Sulu\Search\WebsiteProductIndexListener;
 use Sulu\Product\Infrastructure\Sulu\Search\WebsiteProductReindexProvider;
+use Sulu\Product\Infrastructure\Sulu\Search\WebsiteProductSchemaListener;
 use Sulu\Product\Infrastructure\Sulu\Sitemap\ProductsSitemapProvider;
 use Sulu\Product\Infrastructure\Sulu\Trash\ProductTrashItemHandler;
 use Sulu\Product\Infrastructure\Symfony\Serializer\Normalizer\ProductFamilyNormalizer;
@@ -264,6 +269,20 @@ final class SuluProductBundle extends AbstractBundle
                         ->end()
                     ->end()
                 ->end()
+                ->arrayNode('search')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->arrayNode('website')
+                            ->addDefaultsIfNotSet()
+                            ->children()
+                                ->booleanNode('additional_product_filters')
+                                    ->info('Indexes the product family and the attribute values as filter fields of the website index.')
+                                    ->defaultTrue()
+                                ->end()
+                            ->end()
+                        ->end()
+                    ->end()
+                ->end()
                 ->arrayNode('association_types')
                     ->info('Custom product association types (e.g. "alternative", "suitable"). Omit the whole section to disable association types.')
                     ->useAttributeAsKey('key')
@@ -309,6 +328,23 @@ final class SuluProductBundle extends AbstractBundle
                     ->end()
                 ->end()
             ->end();
+    }
+
+    /**
+     * Prepending runs before the configuration is processed, so the raw configs are read, last one winning.
+     */
+    private function isAdditionalProductFiltersEnabled(ContainerBuilder $builder): bool
+    {
+        $enabled = true;
+        /** @var array{search?: array{website?: array{additional_product_filters?: bool|null}}} $config */
+        foreach ($builder->getExtensionConfig('sulu_product') as $config) {
+            $value = $config['search']['website']['additional_product_filters'] ?? null;
+            if (null !== $value) {
+                $enabled = (bool) $value;
+            }
+        }
+
+        return $enabled;
     }
 
     /**
@@ -405,6 +441,9 @@ final class SuluProductBundle extends AbstractBundle
         $route = $config['route'];
         $builder->setParameter('sulu_product.route.type', $route['type']);
         $builder->setParameter('sulu_product.route.params', $route['params']);
+
+        /** @var array{website: array{additional_product_filters: bool}} $search */
+        $search = $config['search'];
 
         $services = $container->services();
 
@@ -710,6 +749,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.attribute_repository'),
                 tagged_iterator('sulu_product.attribute_mapper'),
                 new Reference('sulu_product.attribute_group_repository'),
+                new Reference('sulu_activity.domain_event_collector'),
             ])
             ->tag('messenger.message_handler');
 
@@ -1017,9 +1057,7 @@ final class SuluProductBundle extends AbstractBundle
             ->class(ProductResourceLoader::class)
             ->args([
                 new Reference('sulu_product.product_repository'),
-                '%sulu_product.variant_query_parameter%',
             ])
-            ->tag('kernel.reset', ['method' => 'reset'])
             ->tag('sulu_content.resource_loader', ['type' => ProductResourceLoader::RESOURCE_LOADER_KEY]);
 
         $services->set('sulu_product.website_product_controller')
@@ -1247,6 +1285,42 @@ final class SuluProductBundle extends AbstractBundle
                 tagged_iterator('sulu_product.website_product_reindex_provider_enhancer'),
             ])
             ->tag('cmsig_seal.reindex_provider');
+
+        if ($search['website']['additional_product_filters']) {
+            // Runs after the content enhancer, which resets the `content` its text is appended to.
+            $services->set('sulu_product.website_product_details_reindex_provider_enhancer')
+                ->class(WebsiteProductDetailsReindexProviderEnhancer::class)
+                ->args([
+                    new Reference('doctrine.orm.entity_manager'),
+                    new Reference('sulu_product.measurement_registry'),
+                ])
+                ->tag('sulu_product.website_product_reindex_provider_enhancer', ['priority' => -10])
+                ->tag('kernel.reset', ['method' => 'reset']);
+
+            $services->set('sulu_product.product_schema_loader')
+                ->class(ProductSchemaLoader::class)
+                ->decorate('cmsig_seal.schema_loader.default')
+                ->args([
+                    new Reference('.inner'),
+                    new Reference('doctrine.orm.entity_manager'),
+                ]);
+
+            $services->set('sulu_product.website_product_schema_listener')
+                ->class(WebsiteProductSchemaListener::class)
+                ->args([
+                    new Reference('sulu_message_bus'),
+                ])
+                ->tag('kernel.event_listener', ['event' => AttributeCreatedEvent::class, 'method' => 'onAttributeCreated']);
+
+            $services->set('sulu_product.rebuild_website_index_message_handler')
+                ->class(RebuildWebsiteIndexMessageHandler::class)
+                ->args([
+                    new Reference('cmsig_seal.adapter.default'),
+                    new Reference('cmsig_seal.schema_loader.default'),
+                    tagged_iterator('cmsig_seal.reindex_provider'),
+                ])
+                ->tag('messenger.message_handler');
+        }
     }
 
     /**
@@ -1489,6 +1563,20 @@ final class SuluProductBundle extends AbstractBundle
                                 ],
                                 'securityContext' => ProductAdmin::SECURITY_CONTEXT,
                             ],
+                        ],
+                    ],
+                ],
+            );
+        }
+
+        if ($builder->hasExtension('cmsig_seal') && $this->isAdditionalProductFiltersEnabled($builder)) {
+            $builder->prependExtensionConfig(
+                'cmsig_seal',
+                [
+                    'schemas' => [
+                        'sulu_product' => [
+                            'dir' => \dirname(__DIR__, 4) . '/config/schemas',
+                            'engine' => 'default',
                         ],
                     ],
                 ],

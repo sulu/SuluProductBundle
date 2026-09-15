@@ -1,0 +1,316 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of Sulu.
+ *
+ * (c) Sulu GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
+namespace Sulu\Product\Tests\Functional\Infrastructure\Sulu\Search;
+
+use CmsIg\Seal\EngineInterface;
+use Doctrine\ORM\EntityManagerInterface;
+use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
+use Sulu\Product\Domain\Model\AttributeInterface;
+use Sulu\Product\Domain\Model\AttributeOption;
+use Sulu\Product\Domain\Model\AttributeOptionTranslation;
+use Sulu\Product\Domain\Model\AttributeTranslation;
+use Sulu\Product\Domain\Model\ProductInterface;
+use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
+use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
+
+class WebsiteProductDetailsReindexProviderEnhancerTest extends SuluTestCase
+{
+    private KernelBrowser $client;
+
+    protected function setUp(): void
+    {
+        $this->client = $this->createAuthenticatedClient(
+            [],
+            ['CONTENT_TYPE' => 'application/json', 'HTTP_ACCEPT' => 'application/json'],
+        );
+    }
+
+    public function testAVariantInheritsTheSharedValuesOfItsParent(): void
+    {
+        self::purgeDatabase();
+
+        // `note` is localized and `weight`/`colour` are not, so values land on both the localized
+        // and the unlocalized dimension content row.
+        $weightId = $this->createAttribute('weight', 'Weight', AttributeInterface::TYPE_NUMBER, false);
+        $colourId = $this->createAttribute('colour', 'Colour', AttributeInterface::TYPE_OPTIONS, false, ['red' => 'Red', 'blue' => 'Blue']);
+        $noteId = $this->createAttribute('note', 'Note', AttributeInterface::TYPE_TEXT, true);
+
+        $familyId = $this->createProductFamily([
+            $weightId => [],
+            $colourId => ['variantSpecific' => true],
+            $noteId => [],
+        ]);
+        $parentId = $this->createProduct($familyId, 'Cable', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $this->putAttributes($parentId, [$weightId => 2.5, $noteId => 'Gold plated']);
+        $redId = $this->createVariant($parentId);
+        $this->putVariantAttributes($parentId, $redId, [$colourId => 'red']);
+        $blueId = $this->createVariant($parentId);
+        $this->putVariantAttributes($parentId, $blueId, [$colourId => 'blue']);
+        $this->publish($parentId);
+
+        /** @var EngineInterface $engine */
+        $engine = self::getContainer()->get('cmsig_seal.engine.default');
+
+        // A variant shows its own axis value plus the parent's shared values.
+        $red = $engine->getDocument('website', 'products__' . $redId . '__en');
+        $redProduct = $red['product'];
+        $this->assertIsArray($redProduct);
+        $this->assertSame(['weight' => [2.5]], $redProduct['attributes_numeric_values']);
+        $this->assertIsArray($redProduct['attributes_text_values']);
+        $this->assertEqualsCanonicalizing(['colour:red', 'note:Gold plated'], $redProduct['attributes_text_values']);
+        $this->assertIsArray($red['content']);
+        $this->assertContains('Colour: Red', $red['content'], 'The option label, not its key, is searchable.');
+        $this->assertNotContains('Colour: Blue', $red['content']);
+        $this->assertContains('Note: Gold plated', $red['content']);
+        $this->assertContains('Weight: 2.5', $red['content']);
+
+        $blue = $engine->getDocument('website', 'products__' . $blueId . '__en');
+        $blueProduct = $blue['product'];
+        $this->assertIsArray($blueProduct);
+        $this->assertIsArray($blueProduct['attributes_text_values']);
+        $this->assertContains('colour:blue', $blueProduct['attributes_text_values']);
+        $this->assertNotContains('colour:red', $blueProduct['attributes_text_values']);
+    }
+
+    public function testProductWithoutVariantsShowsOnlyItsOwnValues(): void
+    {
+        self::purgeDatabase();
+
+        $weightId = $this->createAttribute('weight', 'Weight', AttributeInterface::TYPE_NUMBER, false);
+        $resistanceId = $this->createAttribute('resistance', 'Resistance', AttributeInterface::TYPE_NUMBER, false, [], ['unit' => 'OHM']);
+        $sinceId = $this->createAttribute('since', 'Since', AttributeInterface::TYPE_DATE, false);
+        $noteId = $this->createAttribute('note', 'Note', AttributeInterface::TYPE_TEXT, true);
+
+        $familyId = $this->createProductFamily([
+            $weightId => [],
+            $resistanceId => [],
+            $sinceId => [],
+            $noteId => [],
+        ]);
+        $firstId = $this->createProduct($familyId, 'First', ProductInterface::TYPE_PRODUCT, [
+            'image' => ['id' => 42],
+            'shortDescription' => '<p>Gold plated</p><p>Contacts &amp; shell</p>',
+        ], ['description' => 'Excerpt text']);
+        $this->putAttributes($firstId, [$weightId => 1.5, $resistanceId => 5, $sinceId => '2024-03-01', $noteId => 'First note']);
+        $secondId = $this->createProduct($familyId, 'Second', ProductInterface::TYPE_PRODUCT);
+        $this->putAttributes($secondId, [$weightId => 3.0]);
+        $this->publish($firstId);
+        $this->publish($secondId);
+
+        /** @var EngineInterface $engine */
+        $engine = self::getContainer()->get('cmsig_seal.engine.default');
+
+        $first = $engine->getDocument('website', 'products__' . $firstId . '__en');
+        $firstProduct = $first['product'];
+        $this->assertIsArray($firstProduct);
+        $this->assertIsArray($firstProduct['attributes_numeric_values']);
+        $this->assertSame([1.5], $firstProduct['attributes_numeric_values']['weight']);
+        $this->assertSame([5.0], $firstProduct['attributes_numeric_values']['resistance']);
+        $this->assertSame(['note:First note'], $firstProduct['attributes_text_values']);
+        $this->assertIsArray($first['content']);
+        $this->assertContains('Note: First note', $first['content']);
+        $this->assertContains('Weight: 1.5', $first['content']);
+        $this->assertContains('Resistance: 5 Ω', $first['content'], 'A number is shown with the symbol of the attribute\'s unit.');
+        $this->assertContains('Since: 2024-03-01', $first['content'], 'A date is shown as the admin shows it, not as its timestamp.');
+        $this->assertContains('Excerpt text', $first['content'], 'The details are appended to the content of the enhancers before.');
+        $this->assertContains("Gold plated\nContacts & shell", $first['content'], 'The short description is rich text, converted like an editor field.');
+        $this->assertSame('42', $first['mediaId'], 'Without a template or excerpt image, the details image is used.');
+
+        $second = $engine->getDocument('website', 'products__' . $secondId . '__en');
+        $secondProduct = $second['product'];
+        $this->assertIsArray($secondProduct);
+        $this->assertSame(['weight' => [3.0]], $secondProduct['attributes_numeric_values']);
+        $this->assertSame([], $secondProduct['attributes_text_values']);
+        $this->assertIsArray($second['content']);
+        $this->assertNotContains('Note: First note', $second['content']);
+    }
+
+    /**
+     * MySQL cuts GROUP_CONCAT at 1024 bytes by default; the values are loaded with it, so a product
+     * whose packed values exceed that must still be indexed completely.
+     */
+    public function testProductWithMoreThanAKilobyteOfValuesIsIndexedCompletely(): void
+    {
+        self::purgeDatabase();
+
+        $attributes = [];
+        $values = [];
+        for ($i = 1; $i <= 6; ++$i) {
+            $attributeId = $this->createAttribute('note' . $i, 'Note ' . $i, AttributeInterface::TYPE_TEXT, true);
+            $attributes[$attributeId] = [];
+            $values[$attributeId] = \str_repeat((string) $i, 250);
+        }
+
+        $familyId = $this->createProductFamily($attributes);
+        $productId = $this->createProduct($familyId, 'Long', ProductInterface::TYPE_PRODUCT);
+        $this->putAttributes($productId, $values);
+        $this->publish($productId);
+
+        /** @var EngineInterface $engine */
+        $engine = self::getContainer()->get('cmsig_seal.engine.default');
+
+        $document = $engine->getDocument('website', 'products__' . $productId . '__en');
+        $product = $document['product'];
+        $this->assertIsArray($product);
+        $this->assertIsArray($product['attributes_text_values']);
+        $this->assertCount(6, $product['attributes_text_values']);
+        $this->assertContains('note6:' . \str_repeat('6', 250), $product['attributes_text_values']);
+    }
+
+    /**
+     * @param array<string, string> $options option key => english name
+     * @param array<string, mixed> $config
+     */
+    private function createAttribute(string $key, string $name, string $type, bool $localized, array $options = [], array $config = []): int
+    {
+        $container = self::getContainer();
+        /** @var AttributeGroupRepositoryInterface $groupRepository */
+        $groupRepository = $container->get(AttributeGroupRepositoryInterface::class);
+        /** @var AttributeRepositoryInterface $attributeRepository */
+        $attributeRepository = $container->get(AttributeRepositoryInterface::class);
+        /** @var EntityManagerInterface $entityManager */
+        $entityManager = $container->get('doctrine.orm.entity_manager');
+
+        $group = $groupRepository->create();
+        $groupRepository->save($group);
+
+        $attribute = $attributeRepository->create($group);
+        $attribute->setKey($key);
+        $attribute->setType($type);
+        $attribute->setLocalized($localized);
+        $attribute->setConfig($config);
+        $attribute->addTranslation(new AttributeTranslation($attribute, 'en', $name));
+        foreach ($options as $optionKey => $optionName) {
+            $option = new AttributeOption($attribute, $optionKey);
+            $option->addTranslation(new AttributeOptionTranslation($option, 'en', $optionName));
+            $attribute->addOption($option);
+        }
+        $attributeRepository->save($attribute);
+        $entityManager->flush();
+
+        return $attribute->getId();
+    }
+
+    /**
+     * @param array<int, array{required?: bool, variantSpecific?: bool}> $attributes keyed by attribute id
+     */
+    private function createProductFamily(array $attributes = []): string
+    {
+        /** @var AttributeRepositoryInterface $attributeRepository */
+        $attributeRepository = self::getContainer()->get(AttributeRepositoryInterface::class);
+
+        $normalized = [];
+        foreach ($attributes as $attributeId => $entry) {
+            $attribute = $attributeRepository->findOneBy(['id' => $attributeId]);
+            $this->assertNotNull($attribute);
+
+            $normalized[] = [
+                'id' => $attribute->getUuid(),
+                'required' => $entry['required'] ?? false,
+                'variantSpecific' => $entry['variantSpecific'] ?? false,
+            ];
+        }
+
+        $this->client->request('POST', '/admin/api/product-families.json?locale=en', [], [], [], \json_encode(\array_filter([
+            'locale' => 'en',
+            'name' => 'Test Family',
+            'attributes' => $normalized ?: null,
+        ], static fn ($value) => null !== $value)) ?: null);
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($data);
+        $familyId = $data['id'];
+        $this->assertIsString($familyId);
+
+        return $familyId;
+    }
+
+    /**
+     * @param array<string, mixed> $details
+     * @param array<string, mixed> $excerpt
+     */
+    private function createProduct(string $familyId, string $title, string $type, array $details = [], array $excerpt = []): string
+    {
+        /** @var int $counter */
+        static $counter = 0;
+        ++$counter;
+
+        $this->client->request('POST', '/admin/api/products.json?locale=en', [], [], [], \json_encode([
+            'locale' => 'en',
+            'title' => $title,
+            'url' => '/attribute-product-' . $counter,
+            'productFamily' => $familyId,
+            'type' => $type,
+        ] + ([] !== $details ? ['details' => $details] : []) + ([] !== $excerpt ? ['excerpt' => $excerpt] : [])) ?: null);
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($data);
+        $id = $data['id'];
+        $this->assertIsString($id);
+
+        return $id;
+    }
+
+    private function createVariant(string $parentId): string
+    {
+        /** @var int $counter */
+        static $counter = 0;
+        ++$counter;
+
+        $this->client->request('POST', '/admin/api/products/' . $parentId . '/variants.json?locale=en', [], [], [], \json_encode([
+            'locale' => 'en',
+            'code' => 'ATTRIBUTE-VARIANT-' . $counter,
+            'title' => 'Variant ' . $counter,
+            'url' => '/attribute-variant-' . $counter,
+        ]) ?: null);
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($data);
+        $id = $data['id'];
+        $this->assertIsString($id);
+
+        return $id;
+    }
+
+    /**
+     * @param array<int, mixed> $attributes attribute id => value
+     */
+    private function putAttributes(string $id, array $attributes): void
+    {
+        $this->client->request('PUT', '/admin/api/products/' . $id . '.json?locale=en', [], [], [], \json_encode([
+            'locale' => 'en',
+            'attributes' => $attributes,
+        ]) ?: null);
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+    }
+
+    /**
+     * @param array<int, mixed> $attributes attribute id => value
+     */
+    private function putVariantAttributes(string $parentId, string $id, array $attributes): void
+    {
+        $this->client->request('PUT', '/admin/api/products/' . $parentId . '/variants/' . $id . '.json?locale=en', [], [], [], \json_encode([
+            'locale' => 'en',
+            'attributes' => $attributes,
+        ]) ?: null);
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+    }
+
+    private function publish(string $id): void
+    {
+        $this->client->request('POST', '/admin/api/products/' . $id . '.json?locale=en&action=publish');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+    }
+}

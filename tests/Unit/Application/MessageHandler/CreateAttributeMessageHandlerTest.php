@@ -14,11 +14,14 @@ declare(strict_types=1);
 namespace Sulu\Product\Tests\Unit\Application\MessageHandler;
 
 use PHPUnit\Framework\TestCase;
+use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
+use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
 use Sulu\Product\Application\Mapper\AttributeMapper;
 use Sulu\Product\Application\Message\CreateAttributeMessage;
 use Sulu\Product\Application\MessageHandler\CreateAttributeMessageHandler;
+use Sulu\Product\Domain\Event\AttributeCreatedEvent;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
@@ -34,10 +37,14 @@ class CreateAttributeMessageHandlerTest extends TestCase
     /** @var ObjectProphecy<AttributeGroupRepositoryInterface> */
     private ObjectProphecy $attributeGroupRepository;
 
+    /** @var ObjectProphecy<DomainEventCollectorInterface> */
+    private ObjectProphecy $domainEventCollector;
+
     protected function setUp(): void
     {
         $this->attributeRepository = $this->prophesize(AttributeRepositoryInterface::class);
         $this->attributeGroupRepository = $this->prophesize(AttributeGroupRepositoryInterface::class);
+        $this->domainEventCollector = $this->prophesize(DomainEventCollectorInterface::class);
     }
 
     private function createHandler(): CreateAttributeMessageHandler
@@ -46,6 +53,7 @@ class CreateAttributeMessageHandlerTest extends TestCase
             $this->attributeRepository->reveal(),
             [new AttributeMapper($this->attributeRepository->reveal())],
             $this->attributeGroupRepository->reveal(),
+            $this->domainEventCollector->reveal(),
         );
     }
 
@@ -67,6 +75,7 @@ class CreateAttributeMessageHandlerTest extends TestCase
         $this->attributeRepository->create($group)->shouldBeCalledOnce()->willReturn($attribute);
         $this->attributeRepository->findNextPositionInGroup($group)->willReturn(0);
         $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
+        $this->domainEventCollector->collect(Argument::type(AttributeCreatedEvent::class))->shouldBeCalledOnce();
 
         $result = ($this->createHandler())(new CreateAttributeMessage([
             'locale' => 'en',

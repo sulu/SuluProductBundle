@@ -21,6 +21,9 @@ use Sulu\Product\Domain\Model\ProductInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 
 /**
+ * Reindexes a product with its parent and variants, since variants inherit the parent's values and
+ * webspaces. The product itself is always included, so a stale document gets dropped.
+ *
  * @internal this class is internal no backwards compatibility promise is given for this class
  *           use Symfony Dependency Injection to override or create your own Listener instead
  */
@@ -33,12 +36,16 @@ final class WebsiteProductIndexListener
 
     public function onProductChanged(ProductWorkflowTransitionAppliedEvent|ProductRemovedEvent|ProductTranslationRemovedEvent $event): void
     {
-        $resourceId = $event->getResourceId();
+        $productIds = $event instanceof ProductRemovedEvent
+            ? \array_values(\array_unique([$event->getResourceId(), ...$event->getVariantUuids()]))
+            : $this->relatedProductIds($event->getProduct());
 
-        $identifiers = \array_map(
-            fn (string $locale) => ProductInterface::RESOURCE_KEY . '__' . $resourceId . '__' . $locale,
-            $this->getLocales($event),
-        );
+        $identifiers = [];
+        foreach ($this->getLocales($event) as $locale) {
+            foreach ($productIds as $productId) {
+                $identifiers[] = ProductInterface::RESOURCE_KEY . '__' . $productId . '__' . $locale;
+            }
+        }
 
         if ([] === $identifiers) {
             return;
@@ -49,6 +56,25 @@ final class WebsiteProductIndexListener
                 ->withIndex('website')
                 ->withIdentifiers($identifiers),
         );
+    }
+
+    /**
+     * @return string[]
+     */
+    private function relatedProductIds(ProductInterface $product): array
+    {
+        $ids = [$product->getUuid()];
+
+        $parent = $product->getParent();
+        if (null !== $parent) {
+            $ids[] = $parent->getUuid();
+        }
+
+        foreach ($product->getVariants() as $variant) {
+            $ids[] = $variant->getUuid();
+        }
+
+        return \array_values(\array_unique($ids));
     }
 
     /**

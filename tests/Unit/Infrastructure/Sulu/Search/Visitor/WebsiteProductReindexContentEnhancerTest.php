@@ -174,6 +174,46 @@ class WebsiteProductReindexContentEnhancerTest extends TestCase
         $this->assertSame(['Hello world'], $returnedData['content']);
     }
 
+    public function testVisitConvertsHtmlOnlyForTextEditorFields(): void
+    {
+        $lineField = new FieldMetadata('line');
+        $lineField->setType('text_line');
+        $lineField->addTag($this->createTag(TagMetadata::SEARCH_FIELD_TAG));
+
+        $editorField = new FieldMetadata('editor');
+        $editorField->setType('text_editor');
+        $editorField->addTag($this->createTag(TagMetadata::SEARCH_FIELD_TAG));
+
+        $formMetadata = new FormMetadata();
+        $formMetadata->setKey('default');
+        $formMetadata->addItem($lineField);
+        $formMetadata->addItem($editorField);
+
+        $typedFormMetadata = new TypedFormMetadata();
+        $typedFormMetadata->addForm('default', $formMetadata);
+
+        $this->formMetadataProvider->getMetadata('product', 'en', [])
+            ->willReturn($typedFormMetadata)
+            ->shouldBeCalledOnce();
+
+        $result = [
+            'templateKey' => 'default',
+            'locale' => 'en',
+            'templateData' => [
+                'line' => 'a < b <notatag>',
+                'editor' => '<p>first<br>second</p><p>third &amp; fourth</p>',
+            ],
+        ];
+
+        $returnedData = $this->enhancer->enhanceDocument($result, ['content' => []]);
+
+        $this->assertSame(
+            ['a < b <notatag>', "first\nsecond\nthird & fourth"],
+            $returnedData['content'],
+            'A plain text field is kept as is; an editor field keeps its words apart across block elements.',
+        );
+    }
+
     public function testVisitFiltersNonTextFieldTypes(): void
     {
         $titleField = new FieldMetadata('title');

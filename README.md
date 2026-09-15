@@ -34,6 +34,95 @@ carries an address of its own. A product with variants owns none, it is reached 
 variants, which is why the field is hidden for that type and the route guard drops one that
 reaches such a product programmatically.
 
+## Product documents in the `website` index
+
+A product is indexed into Sulu's shared `website` index, next to pages and articles. Only leaves
+become documents: a product without variants, and the variants of a product that has them. A product
+with variants is represented by its variants and gets no document of its own. A variant document
+carries its own title and its parent's webspaces, and the `url` the "Variant URLs" section above
+describes. The product code is searchable through the document's `content`.
+
+The admin index keeps the opposite rule: it holds the parent, because the edit view belongs to it,
+and skips variants.
+
+### Product filters
+
+By default the product family and the attribute values are indexed as filter fields of an object
+field `product` (schema in `config/schemas/website.php`, merged into the index Sulu ships). A project
+that only needs the plain site search turns them off, which leaves the schema file, the enhancer that
+fills the field and the schema loader below unregistered:
+
+```yaml
+sulu_product:
+    search:
+        website:
+            additional_product_filters: false # default: true
+```
+
+| field | use |
+|---|---|
+| `productFamilyId` | filterable and facet |
+| `attributes_text_values` | one `<attributeKey>:<value>` entry per option key and text value, filterable and facet |
+| `attributes_numeric_values.<attributeKey>` | the values of a number or date attribute, filterable and facet |
+
+An attribute key is reduced to letters, digits and `_` in both. A variant carries its own values plus
+those of its parent that the family does not mark variant-specific. The same enhancer adds the product
+family name, external identifier, short description and attribute texts to the searchable `content`,
+and the details image where neither the template nor the excerpt has one.
+
+Option and text attributes need no field of their own, so adding one changes no schema. A number or
+date attribute does: `ProductSchemaLoader` reads the attribute table and appends its field to
+`attributes_numeric_values`. The live index only learns it when it is recreated, which is never
+automatic:
+
+    bin/console cmsig:seal:reindex --index website --drop
+
+Run it before a product with a value for the new attribute is published. An engine with a strict
+mapping, such as Elasticsearch, rejects a document that carries a field its index does not know, so
+until the recreation such a product does not index at all. The schema is read once per container, so
+a long-running process such as a Messenger worker sees a new attribute only after a restart.
+
+### Searching products
+
+The bundle ships no route, controller or template for a catalogue page. A project builds its own
+overview controller on SEAL's `EngineInterface`, which is autowirable, and restricts the search to
+the product documents of the current locale and webspace:
+
+```php
+use CmsIg\Seal\Search\Condition\Condition;
+use CmsIg\Seal\Search\Facet\Facet;
+use Sulu\Product\Domain\Model\ProductInterface;
+
+$result = $engine->createSearchBuilder('website')
+    ->addFilter(Condition::equal('resourceKey', ProductInterface::RESOURCE_KEY))
+    ->addFilter(Condition::equal('locale', $locale))
+    ->addFilter(Condition::equal('webspaces', $webspaceKey))
+    ->addFilter(Condition::search($term))
+    ->addFilter(Condition::equal('product.attributes_text_values', 'colour:black'))
+    ->addFilter(Condition::greaterThanEqual('product.attributes_numeric_values.weight', 20.0))
+    ->addFacet(Facet::count('product.attributes_numeric_values.weight'))
+    ->limit(24)
+    ->offset(0)
+    ->getResult();
+```
+
+A controller that takes field names from the request checks them against the index schema
+(`filterableFields`, `facetFields`, `sortableFields` of `Schema::$indexes['website']`) before they
+reach a condition, because an adapter either fails the request on an unknown field or takes the name
+into its own filter syntax. It also caps the page size and the page number: Elasticsearch rejects an
+offset beyond `index.max_result_window` (10000 by default) with a search-phase exception.
+
+One count facet on `attributes_text_values` returns the values of every option and text attribute in
+a single bucket list, which the Elasticsearch adapter caps at 100 values, so it is meant for a result
+set already narrowed by a family or a term.
+
+Nested fields need an adapter that resolves a dotted path. Elasticsearch and Loupe do; the memory
+adapter of a Sulu test setup does not, and throws on such a filter, so a project that wants to test
+its catalogue filters runs its tests on Loupe.
+
+Sulu's own site search needs none of this: products are documents of the shared `website` index, so
+the `sulu_search.website_search` route finds them next to pages and articles.
+
 ## Association form overrides
 
 The bundle generates a `product_associations` form with one field per configured
