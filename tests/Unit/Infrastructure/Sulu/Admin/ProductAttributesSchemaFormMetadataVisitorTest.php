@@ -153,47 +153,56 @@ class ProductAttributesSchemaFormMetadataVisitorTest extends TestCase
 
         $this->visitor()->visitFormMetadata($form, 'en');
 
+        $seven = ['type' => 'number', 'minimum' => 0.0, 'maximum' => 10.0];
+        $nullableNumber = ['anyOf' => [['type' => 'null'], ['type' => 'number']]];
+
         self::assertFalse($form->isCacheable());
         self::assertSame([
             'allOf' => [
                 self::ANY,
                 [
                     'allOf' => [
-                        [
-                            'if' => ['type' => 'object', 'properties' => ['productFamily' => ['const' => 'family-1']], 'required' => ['productFamily']],
-                            'then' => [
-                                'type' => 'object',
-                                'properties' => [
-                                    'attributes' => [
-                                        'type' => 'object',
-                                        'properties' => [
-                                            '7' => ['type' => 'number', 'minimum' => 0.0, 'maximum' => 10.0],
-                                            '9' => ['anyOf' => [['type' => 'null'], ['type' => 'number']]],
-                                        ],
-                                        'required' => ['7'],
-                                    ],
-                                ],
-                                'required' => ['attributes'],
-                            ],
-                        ],
-                        [
-                            'if' => ['type' => 'object', 'properties' => ['productFamily' => ['const' => 'family-2']], 'required' => ['productFamily']],
-                            'then' => [
-                                'type' => 'object',
-                                'properties' => [
-                                    'attributes' => [
-                                        'type' => 'object',
-                                        'properties' => [
-                                            '10' => ['anyOf' => [['type' => 'null'], ['type' => 'number']]],
-                                        ],
-                                    ],
-                                ],
-                            ],
-                        ],
+                        self::branch('family-1', 'product', [
+                            'type' => 'object',
+                            'properties' => ['7' => $seven, '8' => $nullableNumber, '9' => $nullableNumber],
+                            'required' => ['7'],
+                        ], true),
+                        self::branch('family-1', 'product_with_variants', [
+                            'type' => 'object',
+                            'properties' => ['7' => $seven, '9' => $nullableNumber],
+                            'required' => ['7'],
+                        ], true),
+                        self::branch('family-2', 'product', ['type' => 'object', 'properties' => ['10' => $nullableNumber]]),
+                        self::branch('family-2', 'product_with_variants', ['type' => 'object', 'properties' => ['10' => $nullableNumber]]),
                     ],
                 ],
             ],
         ], $form->getSchema()->toJsonSchema());
+    }
+
+    public function testDetailsFormRequiresAVariantAttributeOnlyOnAProductWithoutVariants(): void
+    {
+        $this->productFamilyRepository->findBy([], self::FAMILY_SELECT)->willReturn([
+            $this->family('family-1', [$this->familyAttribute(8, true, true)]),
+        ]);
+        $form = $this->form('product_details');
+
+        $this->visitor()->visitFormMetadata($form, 'en');
+
+        self::assertSame([
+            'allOf' => [
+                self::ANY,
+                [
+                    'allOf' => [
+                        self::branch('family-1', 'product', [
+                            'type' => 'object',
+                            'properties' => ['8' => ['type' => 'number']],
+                            'required' => ['8'],
+                        ], true),
+                    ],
+                ],
+            ],
+        ], $form->getSchema()->toJsonSchema(), 'a product with variants holds no variant attribute, so it gets no branch');
     }
 
     public function testDetailsFormScopesTheSchemaToTheProductsOwnFamily(): void
@@ -206,25 +215,15 @@ class ProductAttributesSchemaFormMetadataVisitorTest extends TestCase
 
         $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'product-1']);
 
+        $attributes = ['type' => 'object', 'properties' => ['10' => ['anyOf' => [['type' => 'null'], ['type' => 'number']]]]];
+
         self::assertSame([
             'allOf' => [
                 self::ANY,
                 [
                     'allOf' => [
-                        [
-                            'if' => ['type' => 'object', 'properties' => ['productFamily' => ['const' => 'family-1']], 'required' => ['productFamily']],
-                            'then' => [
-                                'type' => 'object',
-                                'properties' => [
-                                    'attributes' => [
-                                        'type' => 'object',
-                                        'properties' => [
-                                            '10' => ['anyOf' => [['type' => 'null'], ['type' => 'number']]],
-                                        ],
-                                    ],
-                                ],
-                            ],
-                        ],
+                        self::branch('family-1', 'product', $attributes),
+                        self::branch('family-1', 'product_with_variants', $attributes),
                     ],
                 ],
             ],
@@ -305,7 +304,7 @@ class ProductAttributesSchemaFormMetadataVisitorTest extends TestCase
         self::assertEquals(new SchemaMetadata(), $form->getSchema());
     }
 
-    public function testDetailsFormSkipsAFamilyWithoutSharedAttributes(): void
+    public function testDetailsFormSkipsTheProductWithVariantsBranchOfAFamilyWithoutSharedAttributes(): void
     {
         $this->productFamilyRepository->findBy([], self::FAMILY_SELECT)->willReturn([
             $this->family('family-axis-only', [$this->familyAttribute(7, true)]),
@@ -315,29 +314,20 @@ class ProductAttributesSchemaFormMetadataVisitorTest extends TestCase
 
         $this->visitor()->visitFormMetadata($form, 'en');
 
+        $nullableNumber = ['anyOf' => [['type' => 'null'], ['type' => 'number']]];
+
         self::assertSame([
             'allOf' => [
                 self::ANY,
                 [
                     'allOf' => [
-                        [
-                            'if' => ['type' => 'object', 'properties' => ['productFamily' => ['const' => 'family-2']], 'required' => ['productFamily']],
-                            'then' => [
-                                'type' => 'object',
-                                'properties' => [
-                                    'attributes' => [
-                                        'type' => 'object',
-                                        'properties' => [
-                                            '10' => ['anyOf' => [['type' => 'null'], ['type' => 'number']]],
-                                        ],
-                                    ],
-                                ],
-                            ],
-                        ],
+                        self::branch('family-axis-only', 'product', ['type' => 'object', 'properties' => ['7' => $nullableNumber]]),
+                        self::branch('family-2', 'product', ['type' => 'object', 'properties' => ['10' => $nullableNumber]]),
+                        self::branch('family-2', 'product_with_variants', ['type' => 'object', 'properties' => ['10' => $nullableNumber]]),
                     ],
                 ],
             ],
-        ], $form->getSchema()->toJsonSchema(), 'a family whose attributes are all axis attributes gets no details branch');
+        ], $form->getSchema()->toJsonSchema(), 'a family whose attributes are all axis attributes gets no product with variants branch');
     }
 
     public function testSkipsAnAttributeWhoseTypeHasNoField(): void
@@ -352,28 +342,40 @@ class ProductAttributesSchemaFormMetadataVisitorTest extends TestCase
 
         $this->visitor()->visitFormMetadata($form, 'en');
 
+        $attributes = ['type' => 'object', 'properties' => ['10' => ['anyOf' => [['type' => 'null'], ['type' => 'number']]]]];
+
         self::assertSame([
             'allOf' => [
                 self::ANY,
                 [
                     'allOf' => [
-                        [
-                            'if' => ['type' => 'object', 'properties' => ['productFamily' => ['const' => 'family-1']], 'required' => ['productFamily']],
-                            'then' => [
-                                'type' => 'object',
-                                'properties' => [
-                                    'attributes' => [
-                                        'type' => 'object',
-                                        'properties' => [
-                                            '10' => ['anyOf' => [['type' => 'null'], ['type' => 'number']]],
-                                        ],
-                                    ],
-                                ],
-                            ],
-                        ],
+                        self::branch('family-1', 'product', $attributes),
+                        self::branch('family-1', 'product_with_variants', $attributes),
                     ],
                 ],
             ],
         ], $form->getSchema()->toJsonSchema(), 'an attribute whose type has no form fragment is left out of the schema');
+    }
+
+    /**
+     * @param array<string, mixed> $attributes the schema of the "attributes" property
+     *
+     * @return array<string, mixed>
+     */
+    private static function branch(string $family, string $productType, array $attributes, bool $mandatory = false): array
+    {
+        $then = ['type' => 'object', 'properties' => ['attributes' => $attributes]];
+        if ($mandatory) {
+            $then['required'] = ['attributes'];
+        }
+
+        return [
+            'if' => [
+                'type' => 'object',
+                'properties' => ['productFamily' => ['const' => $family], 'type' => ['const' => $productType]],
+                'required' => ['productFamily', 'type'],
+            ],
+            'then' => $then,
+        ];
     }
 }

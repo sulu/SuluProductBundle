@@ -35,7 +35,7 @@ class ProductDetailsFieldMetadataValidatorTest extends TestCase
     /** @return \Generator<string, array{string}> */
     public static function reservedNames(): \Generator
     {
-        foreach (['attributes', 'associations', 'variants', 'code', 'externalIdentifier', 'productFamily', 'status'] as $name) {
+        foreach (['attributes', 'associations', 'variants', 'currentVariant', 'title', 'url', 'code', 'externalIdentifier', 'productFamily', 'status'] as $name) {
             yield $name => [$name];
         }
     }

@@ -17,7 +17,9 @@ use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataVisitorInterface;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\SectionMetadata;
 use Sulu\Product\Domain\Model\AttributeGroupInterface;
+use Sulu\Product\Domain\Model\ProductAttributeScope;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
+use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -27,8 +29,8 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * {@see ProductAttributesSchemaFormMetadataVisitor}.
  *
  * Options: "productFamily" (family uuid), so the form can be requested before the product is saved,
- * or "product" (product uuid, resolved to its family); "variant" truthy keeps only axis attributes,
- * otherwise only shared ones.
+ * or "product" (product uuid, resolved to its family); "variant" truthy or "productType"
+ * selects the attributes by {@see ProductAttributeScope}.
  *
  * @internal
  */
@@ -60,13 +62,13 @@ class ProductAttributesFormMetadataVisitor implements FormMetadataVisitorInterfa
             return;
         }
 
-        $variant = \filter_var($metadataOptions['variant'] ?? false, \FILTER_VALIDATE_BOOLEAN);
+        $productType = $this->resolveProductType($metadataOptions);
 
         /** @var array<int, SectionMetadata> $sections */
         $sections = [];
 
         foreach ($family->getFamilyAttributes() as $familyAttribute) {
-            if ($familyAttribute->isVariantSpecific() !== $variant) {
+            if (!ProductAttributeScope::holds($productType, $familyAttribute)) {
                 continue;
             }
 
@@ -86,6 +88,24 @@ class ProductAttributesFormMetadataVisitor implements FormMetadataVisitorInterfa
             $items[$section->getName()] = $section;
         }
         $formMetadata->setItems($items);
+    }
+
+    /**
+     * Without a type only shared attributes, as for a product with variants.
+     *
+     * @param array<string, mixed> $metadataOptions
+     */
+    private function resolveProductType(array $metadataOptions): string
+    {
+        if (\filter_var($metadataOptions['variant'] ?? false, \FILTER_VALIDATE_BOOLEAN)) {
+            return ProductInterface::TYPE_VARIANT;
+        }
+
+        $productType = $metadataOptions['productType'] ?? null;
+
+        return ProductInterface::TYPE_PRODUCT === $productType
+            ? ProductInterface::TYPE_PRODUCT
+            : ProductInterface::TYPE_PRODUCT_WITH_VARIANTS;
     }
 
     /**

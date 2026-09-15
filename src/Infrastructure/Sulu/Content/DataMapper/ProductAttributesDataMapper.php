@@ -17,11 +17,11 @@ use Sulu\Content\Application\ContentDataMapper\DataMapper\DataMapperInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
 use Sulu\Product\Domain\Exception\RequiredProductAttributeMissingException;
+use Sulu\Product\Domain\Model\ProductAttributeScope;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
-use Sulu\Product\Domain\Model\ProductInterface;
 
 class ProductAttributesDataMapper implements DataMapperInterface
 {
@@ -112,9 +112,9 @@ class ProductAttributesDataMapper implements DataMapperInterface
             }
         }
 
-        $isVariant = $unlocalizedDimensionContent->getResource()->isType(ProductInterface::TYPE_VARIANT);
+        $productType = $unlocalizedDimensionContent->getResource()->getType();
 
-        $this->assertRequiredSatisfied($familyAttributes, $allExisting, $isVariant);
+        $this->assertRequiredSatisfied($familyAttributes, $allExisting, $productType);
     }
 
     /**
@@ -123,15 +123,14 @@ class ProductAttributesDataMapper implements DataMapperInterface
      *
      * @throws RequiredProductAttributeMissingException
      */
-    private function assertRequiredSatisfied(array $familyAttributes, array $values, bool $isVariant): void
+    private function assertRequiredSatisfied(array $familyAttributes, array $values, string $productType): void
     {
         foreach ($familyAttributes as $attributeId => $familyAttribute) {
             if (!$familyAttribute->isRequired()) {
                 continue;
             }
 
-            if ($familyAttribute->isVariantSpecific() !== $isVariant) {
-                // variant axes are required on the variant, shared attributes on the product
+            if (!ProductAttributeScope::holds($productType, $familyAttribute)) {
                 continue;
             }
 

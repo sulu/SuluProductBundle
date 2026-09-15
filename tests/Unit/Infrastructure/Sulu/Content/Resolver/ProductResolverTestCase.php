@@ -17,10 +17,16 @@ use PHPUnit\Framework\TestCase;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataLoaderInterface;
 use Sulu\Bundle\AdminBundle\Metadata\MetadataProviderInterface;
+use Sulu\Bundle\HttpCacheBundle\ReferenceStore\ReferenceStore;
+use Sulu\Bundle\HttpCacheBundle\ReferenceStore\ReferenceStoreInterface;
+use Sulu\Content\Application\ContentAggregator\ContentAggregatorInterface;
 use Sulu\Content\Application\ContentResolver\Value\ContentView;
 use Sulu\Content\Application\MetadataResolver\MetadataResolver;
+use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
+use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Infrastructure\Sulu\Content\ProductParentContentLoader;
 use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductResolver;
 
 /**
@@ -29,17 +35,30 @@ use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductResolver;
  */
 abstract class ProductResolverTestCase extends TestCase
 {
+    /**
+     * @param array<string, string> $variantProperties
+     */
     protected function createResolver(
         ?FormMetadataLoaderInterface $formMetadataLoader = null,
         ?MetadataProviderInterface $formMetadataProvider = null,
         ?MetadataResolver $metadataResolver = null,
         ?ProductRepositoryInterface $productRepository = null,
+        ?ContentAggregatorInterface $contentAggregator = null,
+        ?ReferenceStoreInterface $referenceStore = null,
+        array $variantProperties = ['title' => 'product.title', 'url' => 'product.url', 'code' => 'product.code', 'status' => 'product.status', 'position' => 'product.position'],
     ): ProductResolver {
+        $productRepository ??= $this->noVariants();
+        $contentAggregator ??= $this->emptyContents();
+
         return new ProductResolver(
             $formMetadataLoader ?? $this->noDetailFields(),
             $formMetadataProvider ?? $this->noAssociationFields(),
             $metadataResolver ?? $this->noResolvedItems(),
-            $productRepository ?? $this->noVariants(),
+            $productRepository,
+            $contentAggregator,
+            new ProductParentContentLoader($productRepository, $contentAggregator),
+            $referenceStore ?? new ReferenceStore(),
+            $variantProperties,
         );
     }
 
@@ -62,6 +81,17 @@ abstract class ProductResolverTestCase extends TestCase
         self::assertIsArray($content);
 
         return $content;
+    }
+
+    /** Every product aggregates to an empty dimension content of its own. */
+    protected function emptyContents(): ContentAggregatorInterface
+    {
+        $contentAggregator = $this->createStub(ContentAggregatorInterface::class);
+        $contentAggregator->method('aggregate')->willReturnCallback(
+            static fn (ProductInterface $product): ProductDimensionContent => new ProductDimensionContent($product),
+        );
+
+        return $contentAggregator;
     }
 
     protected function noDetailFields(): FormMetadataLoaderInterface

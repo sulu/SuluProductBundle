@@ -16,15 +16,22 @@ namespace Sulu\Product\Tests\Functional\Content;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
+use Sulu\Content\Application\ContentAggregator\ContentAggregatorInterface;
 use Sulu\Content\Application\ContentResolver\ContentResolverInterface;
+use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Infrastructure\Sulu\Content\ContentEnhancer\ProductVariantDimensionContentEnhancer;
 use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductResolver;
+use Sulu\Route\Domain\Model\Route;
 
 #[CoversClass(ProductResolver::class)]
+#[CoversClass(ProductVariantDimensionContentEnhancer::class)]
 class ProductResolverVariantsTest extends SuluTestCase
 {
     private ContentResolverInterface $contentResolver;
+
+    private ContentAggregatorInterface $contentAggregator;
 
     private EntityManagerInterface $entityManager;
 
@@ -38,6 +45,10 @@ class ProductResolverVariantsTest extends SuluTestCase
         /** @var ContentResolverInterface $contentResolver */
         $contentResolver = $container->get('sulu_content.content_resolver');
         $this->contentResolver = $contentResolver;
+
+        /** @var ContentAggregatorInterface $contentAggregator */
+        $contentAggregator = $container->get('sulu_content.content_aggregator');
+        $this->contentAggregator = $contentAggregator;
 
         /** @var EntityManagerInterface $entityManager */
         $entityManager = $container->get('doctrine.orm.entity_manager');
@@ -56,7 +67,85 @@ class ProductResolverVariantsTest extends SuluTestCase
         \restore_exception_handler();
     }
 
-    public function testVariantsAppearUnderRootProductVariantsWithCodeAndTitle(): void
+    public function testVariantsAppearUnderRootProductVariantsAsFlatFieldsInPositionOrder(): void
+    {
+        $parent = $this->createParent();
+        $this->createVariant($parent, 'NL4FX-5', 1);
+        $this->createVariant($parent, 'NL4FX-4', 0, '/products/nl4fx-4');
+        $this->entityManager->flush();
+
+        $productData = $this->resolveProduct($this->aggregate($parent));
+
+        self::assertArrayNotHasKey('url', $productData, 'a product with variants owns no route');
+        self::assertArrayNotHasKey('currentVariant', $productData);
+
+        $variants = $productData['variants'] ?? null;
+        self::assertIsArray($variants);
+        self::assertCount(2, $variants);
+
+        $first = $variants[0] ?? null;
+        $second = $variants[1] ?? null;
+        self::assertIsArray($first);
+        self::assertIsArray($second);
+
+        self::assertSame(['title', 'url', 'code', 'status', 'position'], \array_keys($first), 'the bundle defaults as flat fields, no content envelope');
+        self::assertSame('NL4FX-4 Variant', $first['title']);
+        self::assertSame('/products/nl4fx-4', $first['url']);
+        self::assertSame('NL4FX-4', $first['code']);
+        self::assertSame(0, $first['position']);
+        self::assertSame('NL4FX-5', $second['code']);
+        self::assertNull($second['url'], 'a variant without a route has no url');
+    }
+
+    /** A variant page renders its parent's content tab, with the parent as `product` and itself as `currentVariant`. */
+    public function testAVariantResolvesItsParentAndItselfAsCurrentVariant(): void
+    {
+        $parent = $this->createParent();
+        $variant = $this->createVariant($parent, 'NL4FX-4', 0, '/products/nl4fx-4');
+        $this->createVariant($parent, 'NL4FX-5', 1);
+        $this->entityManager->flush();
+
+        $result = $this->contentResolver->resolve($this->aggregate($variant));
+
+        $content = $result['content'];
+        self::assertSame('NL4FX', $content['title'] ?? null, 'the content tab is the parent\'s');
+        self::assertSame('Parent description', $content['description'] ?? null);
+
+        $productData = $result['product'] ?? null;
+        self::assertIsArray($productData);
+        self::assertSame('NL4FX', $productData['title']);
+        self::assertIsArray($productData['variants'] ?? null);
+        self::assertCount(2, $productData['variants'], 'the parent lists every variant, the page\'s own included');
+
+        $currentVariant = $productData['currentVariant'] ?? null;
+        self::assertIsArray($currentVariant);
+        self::assertSame('NL4FX-4 Variant', $currentVariant['title']);
+        self::assertSame('NL4FX-4', $currentVariant['code']);
+        self::assertSame('/products/nl4fx-4', $currentVariant['url']);
+        self::assertArrayHasKey('attributes', $currentVariant);
+        self::assertArrayNotHasKey('variants', $currentVariant, 'a variant is not itself a product with variants');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function resolveProduct(ProductDimensionContentInterface $dimensionContent): array
+    {
+        $result = $this->contentResolver->resolve($dimensionContent);
+
+        $productData = $result['product'] ?? null;
+        self::assertIsArray($productData);
+
+        /** @var array<string, mixed> $productData */
+        return $productData;
+    }
+
+    private function aggregate(ProductInterface $product): ProductDimensionContentInterface
+    {
+        return $this->contentAggregator->aggregate($product, ['locale' => 'de', 'stage' => 'live']);
+    }
+
+    private function createParent(): ProductInterface
     {
         $parent = $this->productRepository->createNew();
         $parent->setType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
@@ -66,79 +155,41 @@ class ProductResolverVariantsTest extends SuluTestCase
         $parentContent->setStage('live');
         // TemplateResolver needs a registered template key to resolve the template section
         $parentContent->setTemplateKey('product');
+        $parentContent->setTemplateData(['title' => 'NL4FX', 'description' => 'Parent description']);
         $parent->addDimensionContent($parentContent);
 
         $this->productRepository->add($parent);
         $this->entityManager->persist($parentContent);
 
-        $variant1 = $this->productRepository->createNew();
-        $variant1->setType(ProductInterface::TYPE_VARIANT);
-        $variant1->setParent($parent);
+        return $parent;
+    }
 
-        $variant1Content = $variant1->createDimensionContent();
-        $variant1Content->setLocale('de');
-        $variant1Content->setStage('live');
-        $variant1Content->setTemplateKey('product');
-        $variant1Content->setCode('NL4FX-4');
-        $variant1Content->setTemplateData(['title' => 'NL4FX-4 Variant']);
-        $variant1->addDimensionContent($variant1Content);
+    private function createVariant(ProductInterface $parent, string $code, int $position, ?string $slug = null): ProductInterface
+    {
+        $variant = $this->productRepository->createNew();
+        $variant->setType(ProductInterface::TYPE_VARIANT);
+        $variant->setParent($parent);
+        $variant->setPosition($position);
 
-        $this->productRepository->add($variant1);
-        $this->entityManager->persist($variant1Content);
+        $variantContent = $variant->createDimensionContent();
+        $variantContent->setLocale('de');
+        $variantContent->setStage('live');
+        $variantContent->setTemplateKey('product');
+        $variantContent->setCode($code);
+        $variantContent->setTemplateData(['title' => $code . ' Variant']);
 
-        $variant2 = $this->productRepository->createNew();
-        $variant2->setType(ProductInterface::TYPE_VARIANT);
-        $variant2->setParent($parent);
+        // The route association carries no cascade, so it is persisted on its own.
+        if (null !== $slug) {
+            $route = new Route(ProductInterface::RESOURCE_KEY, $variant->getUuid(), 'de', $slug);
+            $variantContent->setRoute($route);
+            $this->entityManager->persist($route);
+        }
 
-        $variant2Content = $variant2->createDimensionContent();
-        $variant2Content->setLocale('de');
-        $variant2Content->setStage('live');
-        $variant2Content->setTemplateKey('product');
-        $variant2Content->setCode('NL4FX-5');
-        $variant2->addDimensionContent($variant2Content);
+        $variant->addDimensionContent($variantContent);
 
-        $this->productRepository->add($variant2);
-        $this->entityManager->persist($variant2Content);
+        $this->productRepository->add($variant);
+        $this->entityManager->persist($variantContent);
 
-        $this->entityManager->flush();
-
-        $result = $this->contentResolver->resolve($parentContent);
-
-        self::assertArrayHasKey('product', $result);
-        $productData = $result['product'];
-        self::assertIsArray($productData);
-        self::assertArrayHasKey('variants', $productData);
-
-        $variants = $productData['variants'];
-        self::assertIsArray($variants);
-        self::assertCount(2, $variants);
-
-        // product.variants is a list at runtime but typed `array<string, mixed>`;
-        // array_values() gives PHPStan a genuine list to index into.
-        $orderedVariants = \array_values($variants);
-        $variant1Data = $orderedVariants[0];
-        $variant2Data = $orderedVariants[1];
-        self::assertIsArray($variant1Data);
-        self::assertIsArray($variant2Data);
-
-        $variant1Content = $variant1Data['content'];
-        $variant2Product = $variant2Data['product'];
-        $variant1Product = $variant1Data['product'];
-        self::assertIsArray($variant1Content);
-        self::assertIsArray($variant1Product);
-        self::assertIsArray($variant2Product);
-
-        // No property projection, so a variant keeps the page's own shape: the template data under
-        // `content`, the master data under `product`. `product.variants` is a top-level root key,
-        // so each resolved variant also keeps its `{resource, content, view, extension}` wrapper.
-        self::assertSame('NL4FX-4', $variant1Product['code']);
-        self::assertSame('NL4FX-4 Variant', $variant1Content['title']);
-        self::assertSame('NL4FX-5', $variant2Product['code']);
-
-        // Attributes resolve for a variant — the product page reads them for the selected one.
-        self::assertArrayHasKey('attributes', $variant1Product);
-
-        // A variant is not itself `product_with_variants`, so the resolve does not nest.
-        self::assertArrayNotHasKey('variants', $variant1Product);
+        return $variant;
     }
 }

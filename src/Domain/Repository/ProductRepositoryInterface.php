@@ -181,16 +181,6 @@ interface ProductRepositoryInterface
      */
     public function countBy(array $filters = []): int;
 
-    /**
-     * The route lives on the dimension content, so a product without one in that locale and stage
-     * is absent from the result, and one whose dimension content carries no route maps to null.
-     *
-     * @param array{uuids: string[], locale: string, stage: string} $filters
-     *
-     * @return array<string, string|null> slug by product uuid
-     */
-    public function findSlugsBy(array $filters): array;
-
     public function add(ProductInterface $product): void;
 
     public function remove(ProductInterface $product): void;

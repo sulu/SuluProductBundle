@@ -28,8 +28,8 @@ class ProductDetailsFieldMetadataValidator implements FieldMetadataValidatorInte
     private const NAME_PREFIX = 'details/';
 
     private const RESERVED_NAMES = [
-        'attributes', 'associations', 'variants',
-        'code', 'externalIdentifier', 'productFamily', 'status', 'position',
+        'attributes', 'associations', 'variants', 'currentVariant',
+        'title', 'url', 'code', 'externalIdentifier', 'productFamily', 'status', 'position',
     ];
 
     public function validate(FieldMetadata $fieldMetadata, string $formKey): void

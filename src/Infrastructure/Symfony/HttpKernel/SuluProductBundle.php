@@ -13,11 +13,11 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Infrastructure\Symfony\HttpKernel;
 
-use Psr\Container\ContainerInterface as PsrContainerInterface;
 use Sulu\Bundle\HttpCacheBundle\ReferenceStore\ReferenceStore;
 use Sulu\Bundle\PersistenceBundle\DependencyInjection\PersistenceExtensionTrait;
 use Sulu\Bundle\PersistenceBundle\PersistenceBundleTrait;
 use Sulu\Content\Infrastructure\Sulu\Preview\ContentObjectProvider;
+use Sulu\Product\Application\Attribute\ProductVariantAttributesMerger;
 use Sulu\Product\Application\AttributeType\AttributeTypeInterface;
 use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
 use Sulu\Product\Application\AttributeType\DateAttributeType;
@@ -114,6 +114,7 @@ use Sulu\Product\Infrastructure\Sulu\Admin\ProductFamilyAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductRouteFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductsListMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductStatusFormMetadataVisitor;
+use Sulu\Product\Infrastructure\Sulu\Content\ContentEnhancer\ProductVariantDimensionContentEnhancer;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\AdditionalWebspacesDataMapper;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductAssociationsDataMapper;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductAttributesDataMapper;
@@ -127,6 +128,7 @@ use Sulu\Product\Infrastructure\Sulu\Content\Normalizer\ProductAttributesNormali
 use Sulu\Product\Infrastructure\Sulu\Content\Normalizer\ProductDetailsNormalizer;
 use Sulu\Product\Infrastructure\Sulu\Content\PageTreeProductSmartContentProvider;
 use Sulu\Product\Infrastructure\Sulu\Content\ProductLinkProvider;
+use Sulu\Product\Infrastructure\Sulu\Content\ProductParentContentLoader;
 use Sulu\Product\Infrastructure\Sulu\Content\ProductSmartContentProvider;
 use Sulu\Product\Infrastructure\Sulu\Content\ProductTeaserProvider;
 use Sulu\Product\Infrastructure\Sulu\Content\PropertyResolver\ProductSelectionPropertyResolver;
@@ -161,7 +163,6 @@ use Sulu\Product\UserInterface\Controller\Admin\MeasurementUnitController;
 use Sulu\Product\UserInterface\Controller\Admin\ProductController;
 use Sulu\Product\UserInterface\Controller\Admin\ProductFamilyController;
 use Sulu\Product\UserInterface\Controller\Admin\ProductVariantController;
-use Sulu\Product\UserInterface\Controller\Website\ProductController as WebsiteProductController;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -238,10 +239,16 @@ final class SuluProductBundle extends AbstractBundle
                         ->end()
                     ->end()
                 ->end()
-                ->scalarNode('variant_query_parameter')
-                    ->info('Query parameter a variant URL carries, e.g. /product/xy?variant=XY-2.')
-                    ->defaultValue('variant')
-                    ->cannotBeEmpty()
+                ->arrayNode('variants')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->arrayNode('properties')
+                            ->info('Properties each entry of "product.variants" carries, as output key => property, e.g. {documents: product.documents}. Merged into the defaults of a product selection.')
+                            ->normalizeKeys(false)
+                            ->useAttributeAsKey('name')
+                            ->scalarPrototype()->end()
+                        ->end()
+                    ->end()
                 ->end()
                 ->arrayNode('route')
                     ->info('Field type and params of the route field in the "product_details" and "product_variant" forms.')
@@ -397,9 +404,9 @@ final class SuluProductBundle extends AbstractBundle
         $productStatuses = $config['product_statuses'] ?? [];
         $builder->setParameter('sulu_product.product_statuses', $productStatuses);
 
-        /** @var string $variantQueryParameter */
-        $variantQueryParameter = $config['variant_query_parameter'] ?? 'variant';
-        $builder->setParameter('sulu_product.variant_query_parameter', $variantQueryParameter);
+        /** @var array{properties: array<string, string>} $variants */
+        $variants = $config['variants'];
+        $builder->setParameter('sulu_product.variants.properties', $variants['properties']);
 
         /** @var array{type: string, params: array<string, scalar|null>} $route */
         $route = $config['route'];
@@ -1010,6 +1017,10 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_admin.form_metadata_provider'),
                 new Reference('sulu_content.metadata_resolver'),
                 new Reference('sulu_product.product_repository'),
+                new Reference('sulu_content.content_aggregator'),
+                new Reference('sulu_product.product_parent_content_loader'),
+                new Reference('sulu_http_cache.reference_store'),
+                '%sulu_product.variants.properties%',
             ])
             ->tag('sulu_content.content_resolver');
 
@@ -1017,24 +1028,23 @@ final class SuluProductBundle extends AbstractBundle
             ->class(ProductResourceLoader::class)
             ->args([
                 new Reference('sulu_product.product_repository'),
-                '%sulu_product.variant_query_parameter%',
             ])
-            ->tag('kernel.reset', ['method' => 'reset'])
             ->tag('sulu_content.resource_loader', ['type' => ProductResourceLoader::RESOURCE_LOADER_KEY]);
 
-        $services->set('sulu_product.website_product_controller')
-            ->class(WebsiteProductController::class)
-            ->public()
+        $services->set('sulu_product.product_parent_content_loader')
+            ->class(ProductParentContentLoader::class)
             ->args([
-                new Reference('request_stack'),
-                '%sulu_product.variant_query_parameter%',
+                new Reference('sulu_product.product_repository'),
+                new Reference('sulu_content.content_aggregator'),
             ])
-            ->tag('container.service_subscriber')
-            ->tag('controller.service_arguments')
-            ->call('setContainer', [new Reference(PsrContainerInterface::class)]);
+            ->tag('kernel.reset', ['method' => 'reset']);
 
-        $services->alias(WebsiteProductController::class, 'sulu_product.website_product_controller')
-            ->public();
+        $services->set('sulu_product.product_variant_dimension_content_enhancer')
+            ->class(ProductVariantDimensionContentEnhancer::class)
+            ->args([
+                new Reference('sulu_product.product_parent_content_loader'),
+            ])
+            ->tag('sulu_content.dimension_content_enhancer');
 
         $services->set('sulu_product.product_preview_provider')
             ->class(ContentObjectProvider::class)
@@ -1107,11 +1117,17 @@ final class SuluProductBundle extends AbstractBundle
             ])
             ->tag('twig.extension');
 
+        $services->set('sulu_product.product_variant_attributes_merger')
+            ->class(ProductVariantAttributesMerger::class);
+
+        $services->alias(ProductVariantAttributesMerger::class, 'sulu_product.product_variant_attributes_merger');
+
         $services->set('sulu_product.product_attribute_twig_extension')
             ->class(ProductAttributeTwigExtension::class)
             ->args([
                 new Reference('sulu_product.measurement_registry'),
                 new Reference('sulu_core.webspace.request_analyzer'),
+                new Reference('sulu_product.product_variant_attributes_merger'),
             ])
             ->tag('twig.extension');
 
@@ -1254,6 +1270,8 @@ final class SuluProductBundle extends AbstractBundle
      */
     public function prependExtension(ContainerConfigurator $container, ContainerBuilder $builder): void
     {
+        $container->import(\dirname(__DIR__, 4) . '/config/packages/sulu_product.yaml');
+
         if ($builder->hasExtension('sulu_admin')) {
             $builder->prependExtensionConfig(
                 'sulu_admin',

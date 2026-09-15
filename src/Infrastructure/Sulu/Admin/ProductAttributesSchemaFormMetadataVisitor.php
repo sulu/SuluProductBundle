@@ -19,14 +19,16 @@ use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\ConstMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\IfThenElseMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\SchemaMetadata;
+use Sulu\Product\Domain\Model\ProductAttributeScope;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 
 /**
  * Puts the validation of the attribute values into the JSON schema of the product forms, the way
- * block types are validated: the details form carries one "if productFamily is X then attributes
- * match X" branch per family, the variant form the axis attributes of the parent's family.
+ * block types are validated: the details form carries one "if productFamily is X and type is Y then
+ * attributes match X for Y" branch per family and type, the variant form the axis attributes of the
+ * parent's family.
  *
  * @internal
  */
@@ -60,6 +62,8 @@ class ProductAttributesSchemaFormMetadataVisitor implements FormMetadataVisitorI
     }
 
     /**
+     * One branch per family and product type, so the attributes follow the type select live.
+     *
      * @param array<string, mixed> $metadataOptions
      */
     private function buildDetailsSchema(array $metadataOptions, string $locale): ?SchemaMetadata
@@ -73,15 +77,20 @@ class ProductAttributesSchemaFormMetadataVisitor implements FormMetadataVisitorI
                 continue;
             }
 
-            $attributes = $this->buildAttributesProperty($family, false, $locale);
-            if (null === $attributes) {
-                continue;
-            }
+            foreach ([ProductInterface::TYPE_PRODUCT, ProductInterface::TYPE_PRODUCT_WITH_VARIANTS] as $productType) {
+                $attributes = $this->buildAttributesProperty($family, $productType, $locale);
+                if (null === $attributes) {
+                    continue;
+                }
 
-            $branches[] = new IfThenElseMetadata(
-                new SchemaMetadata([new PropertyMetadata('productFamily', true, new ConstMetadata($uuid))]),
-                new SchemaMetadata([$attributes]),
-            );
+                $branches[] = new IfThenElseMetadata(
+                    new SchemaMetadata([
+                        new PropertyMetadata('productFamily', true, new ConstMetadata($uuid)),
+                        new PropertyMetadata('type', true, new ConstMetadata($productType)),
+                    ]),
+                    new SchemaMetadata([$attributes]),
+                );
+            }
         }
 
         return [] === $branches ? null : new SchemaMetadata([], [], $branches);
@@ -127,7 +136,7 @@ class ProductAttributesSchemaFormMetadataVisitor implements FormMetadataVisitorI
             return null;
         }
 
-        $attributes = $this->buildAttributesProperty($family, true, $locale);
+        $attributes = $this->buildAttributesProperty($family, ProductInterface::TYPE_VARIANT, $locale);
 
         return null === $attributes ? null : new SchemaMetadata([$attributes]);
     }
@@ -136,13 +145,13 @@ class ProductAttributesSchemaFormMetadataVisitor implements FormMetadataVisitorI
      * The "attributes" object is mandatory as soon as one of its attributes is, so an untouched
      * form fails the same way a form with an emptied value does.
      */
-    private function buildAttributesProperty(ProductFamilyInterface $family, bool $variant, string $locale): ?PropertyMetadata
+    private function buildAttributesProperty(ProductFamilyInterface $family, string $productType, string $locale): ?PropertyMetadata
     {
         $properties = [];
         $mandatory = false;
 
         foreach ($family->getFamilyAttributes() as $familyAttribute) {
-            if ($familyAttribute->isVariantSpecific() !== $variant) {
+            if (!ProductAttributeScope::holds($productType, $familyAttribute)) {
                 continue;
             }
 
