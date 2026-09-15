@@ -48,6 +48,7 @@
     "sulu_product.last_modified_enabled": "Aktualisierungsdatum aktivieren",
     "sulu_product.last_modified_date": "Datum der Aktualisierung",
     "sulu_product.code_already_used": "Der Code \"{code}\" ist bereits einem anderen Produkt zugeordnet.",
+    "sulu_product.product_family_key_already_used": "Der Schlüssel \"{key}\" ist bereits einer anderen Produktfamilie zugeordnet.",
     "sulu_activity.resource.products": "Produkt",
     "sulu_activity.resource.products.translation": "Übersetzung",
     "sulu_activity.description.products.created": "{userFullName} hat das Produkt \"{resourceTitle}\" erstellt",

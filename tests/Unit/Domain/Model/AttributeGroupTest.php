@@ -16,10 +16,10 @@ namespace Sulu\Product\Tests\Unit\Domain\Model;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Component\Persistence\Model\AuditableInterface;
-use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
-use Sulu\Product\Domain\Model\AttributeGroupAttribute;
 use Sulu\Product\Domain\Model\AttributeGroupTranslation;
+use Symfony\Component\Uid\Uuid;
+use Symfony\Component\Uid\UuidV7;
 
 #[CoversClass(AttributeGroup::class)]
 class AttributeGroupTest extends TestCase
@@ -27,16 +27,23 @@ class AttributeGroupTest extends TestCase
     public function testConstructorDefaults(): void
     {
         $group = new AttributeGroup();
-        $this->assertNull($group->getUuid());
-        $this->assertSame([], $group->getGroupAttributes());
+        $this->assertTrue(Uuid::isValid($group->getUuid()));
         $this->assertNull($group->getTranslation('en'));
     }
 
-    public function testSetUuidIsFluentAndStores(): void
+    public function testConstructorGeneratesUuidV7WhenNoneProvided(): void
     {
         $group = new AttributeGroup();
-        $this->assertSame($group, $group->setUuid('uuid-val'));
-        $this->assertSame('uuid-val', $group->getUuid());
+
+        $this->assertTrue(Uuid::isValid($group->getUuid()));
+        $this->assertInstanceOf(UuidV7::class, Uuid::fromString($group->getUuid()));
+    }
+
+    public function testConstructorAcceptsProvidedUuid(): void
+    {
+        $uuid = Uuid::v7()->toRfc4122();
+
+        $this->assertSame($uuid, (new AttributeGroup($uuid))->getUuid());
     }
 
     public function testSetExternalIdentifierIsFluentAndStores(): void
@@ -76,52 +83,6 @@ class AttributeGroupTest extends TestCase
         $group->addTranslation($t);
         $this->assertSame($group, $group->removeTranslation($t));
         $this->assertNull($group->getTranslation('en'));
-    }
-
-    public function testGetGroupAttributesSortedByPosition(): void
-    {
-        $group = new AttributeGroup();
-
-        $attrA = new Attribute(new AttributeGroup());
-        $attrA->setPosition(1);
-        $a = new AttributeGroupAttribute($group, $attrA);
-
-        $attrB = new Attribute(new AttributeGroup());
-        $attrB->setPosition(0);
-        $b = new AttributeGroupAttribute($group, $attrB);
-
-        $group->addGroupAttribute($a);
-        $group->addGroupAttribute($b);
-
-        $sorted = $group->getGroupAttributes();
-        $this->assertSame($b, $sorted[0]);
-        $this->assertSame($a, $sorted[1]);
-    }
-
-    public function testAddGroupAttributeDeduplicates(): void
-    {
-        $group = new AttributeGroup();
-        $a = new AttributeGroupAttribute($group, new Attribute(new AttributeGroup()));
-        $group->addGroupAttribute($a);
-        $group->addGroupAttribute($a);
-        $this->assertCount(1, $group->getGroupAttributes());
-    }
-
-    public function testRemoveGroupAttributeIsFluent(): void
-    {
-        $group = new AttributeGroup();
-        $a = new AttributeGroupAttribute($group, new Attribute(new AttributeGroup()));
-        $group->addGroupAttribute($a);
-        $this->assertSame($group, $group->removeGroupAttribute($a));
-        $this->assertCount(0, $group->getGroupAttributes());
-    }
-
-    public function testGetIdReturnsDoctrineGeneratedId(): void
-    {
-        $group = new AttributeGroup();
-        $ref = new \ReflectionProperty(AttributeGroup::class, 'id');
-        $ref->setValue($group, 7);
-        $this->assertSame(7, $group->getId());
     }
 
     public function testImplementsAuditableInterface(): void

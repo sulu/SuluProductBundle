@@ -66,11 +66,9 @@ class ProductAttributeTwigExtensionTest extends TestCase
         return $content;
     }
 
-    private function createGroup(int $id, string $name): AttributeGroup
+    private function createGroup(string $uuid, string $name): AttributeGroup
     {
-        $group = new AttributeGroup();
-        // ids are database-generated; the filter renders them, so tests must set them
-        (new \ReflectionProperty(AttributeGroup::class, 'id'))->setValue($group, $id);
+        $group = new AttributeGroup($uuid);
         $group->addTranslation(new AttributeGroupTranslation($group, 'de', $name));
 
         return $group;
@@ -97,36 +95,36 @@ class ProductAttributeTwigExtensionTest extends TestCase
     public function testGroupsAttributesByTheirGroup(): void
     {
         $content = $this->createContent();
-        $technical = $this->createGroup(1, 'Technische Daten');
-        $mechanical = $this->createGroup(2, 'Mechanische Daten');
+        $technical = $this->createGroup('0198c3e2-0000-7000-8000-000000000001', 'Technische Daten');
+        $mechanical = $this->createGroup('0198c3e2-0000-7000-8000-000000000002', 'Mechanische Daten');
 
         $this->addTextValue($content, $this->createAttribute('impedance', 'Impedanz', $technical, 1), '50 Ohm');
         $this->addTextValue($content, $this->createAttribute('weight', 'Gewicht', $mechanical, 1), '48 g');
 
         $groups = $this->extension()->groupAttributes($content->getAttributes(), 'de');
 
-        self::assertSame(['1', '2'], \array_column($groups, 'key'));
+        self::assertSame(['0198c3e2-0000-7000-8000-000000000001', '0198c3e2-0000-7000-8000-000000000002'], \array_column($groups, 'key'));
         self::assertSame('Technische Daten', $groups[0]['label']);
         self::assertSame(['impedance'], \array_keys($groups[0]['attributes']));
         self::assertSame(['weight'], \array_keys($groups[1]['attributes']));
     }
 
-    public function testGroupsSortNumericallyByKey(): void
+    public function testGroupsSortByUuid(): void
     {
         $content = $this->createContent();
 
-        $this->addTextValue($content, $this->createAttribute('a', 'A', $this->createGroup(10, 'Ten'), 1), 'x');
-        $this->addTextValue($content, $this->createAttribute('b', 'B', $this->createGroup(9, 'Nine'), 1), 'y');
+        $this->addTextValue($content, $this->createAttribute('a', 'A', $this->createGroup('0198c3e2-0000-7000-8000-00000000000b', 'Later'), 1), 'x');
+        $this->addTextValue($content, $this->createAttribute('b', 'B', $this->createGroup('0198c3e2-0000-7000-8000-00000000000a', 'Earlier'), 1), 'y');
 
         $groups = $this->extension()->groupAttributes($content->getAttributes(), 'de');
 
-        self::assertSame(['9', '10'], \array_column($groups, 'key'));
+        self::assertSame(['Earlier', 'Later'], \array_column($groups, 'label'));
     }
 
     public function testAttributesSortByPositionWithinAGroup(): void
     {
         $content = $this->createContent();
-        $group = $this->createGroup(1, 'Technische Daten');
+        $group = $this->createGroup('0198c3e2-0000-7000-8000-000000000001', 'Technische Daten');
 
         $this->addTextValue($content, $this->createAttribute('housing', 'Gehäuse', $group, 2), 'Zink');
         $this->addTextValue($content, $this->createAttribute('weight', 'Gewicht', $group, 1), '48 g');
@@ -144,7 +142,7 @@ class ProductAttributeTwigExtensionTest extends TestCase
     public function testEachAttributeCarriesItsGroupAndMetadata(): void
     {
         $content = $this->createContent();
-        $group = $this->createGroup(7, 'Mechanische Daten');
+        $group = $this->createGroup('0198c3e2-0000-7000-8000-000000000007', 'Mechanische Daten');
 
         $this->addTextValue($content, $this->createAttribute('weight', 'Gewicht', $group, 1), '48 g');
 
@@ -154,13 +152,13 @@ class ProductAttributeTwigExtensionTest extends TestCase
         self::assertSame('Gewicht', $weight['label']);
         self::assertSame(AttributeInterface::TYPE_TEXT, $weight['type']);
         self::assertSame(1, $weight['position']);
-        self::assertSame(['key' => '7', 'label' => 'Mechanische Daten'], $weight['group']);
+        self::assertSame(['key' => '0198c3e2-0000-7000-8000-000000000007', 'label' => 'Mechanische Daten'], $weight['group']);
     }
 
     public function testAttributesFormattingToNothingAreDropped(): void
     {
         $content = $this->createContent();
-        $group = $this->createGroup(1, 'Mechanische Daten');
+        $group = $this->createGroup('0198c3e2-0000-7000-8000-000000000001', 'Mechanische Daten');
 
         $this->addTextValue($content, $this->createAttribute('weight', 'Gewicht', $group, 1), '48 g');
         $this->addTextValue($content, $this->createAttribute('housing', 'Gehäuse', $group, 2), '');
@@ -171,7 +169,7 @@ class ProductAttributeTwigExtensionTest extends TestCase
     public function testOptionValuesResolveToTheTranslatedOptionName(): void
     {
         $content = $this->createContent();
-        $attribute = $this->createAttribute('colour', 'Farbe', $this->createGroup(1, 'Eins'), 1);
+        $attribute = $this->createAttribute('colour', 'Farbe', $this->createGroup('0198c3e2-0000-7000-8000-000000000001', 'Eins'), 1);
         $attribute->setType(AttributeInterface::TYPE_OPTIONS);
 
         $option = new AttributeOption($attribute, 'black');
@@ -190,7 +188,7 @@ class ProductAttributeTwigExtensionTest extends TestCase
     public function testDisplayFormatIgnoredForOptionsAttribute(): void
     {
         $content = $this->createContent();
-        $attribute = $this->createAttribute('colour', 'Farbe', $this->createGroup(1, 'Eins'), 1);
+        $attribute = $this->createAttribute('colour', 'Farbe', $this->createGroup('0198c3e2-0000-7000-8000-000000000001', 'Eins'), 1);
         $attribute->setType(AttributeInterface::TYPE_OPTIONS);
         $attribute->setConfig(['displayFormat' => 'ca. %value%']);
 
@@ -208,7 +206,7 @@ class ProductAttributeTwigExtensionTest extends TestCase
     public function testNumbersUseTheAttributesDisplayFormatAndUnit(): void
     {
         $content = $this->createContent();
-        $attribute = $this->createAttribute('diameter', 'Durchmesser', $this->createGroup(1, 'Eins'), 1);
+        $attribute = $this->createAttribute('diameter', 'Durchmesser', $this->createGroup('0198c3e2-0000-7000-8000-000000000001', 'Eins'), 1);
         $attribute->setType(AttributeInterface::TYPE_NUMBER);
         $attribute->setConfig(['displayFormat' => '%value% %unit%', 'unit' => 'MILLIMETER']);
 
@@ -222,7 +220,7 @@ class ProductAttributeTwigExtensionTest extends TestCase
     public function testDisplayFormatAppliesToTextAttributes(): void
     {
         $content = $this->createContent();
-        $attribute = $this->createAttribute('colour', 'Farbe', $this->createGroup(1, 'Eins'), 1);
+        $attribute = $this->createAttribute('colour', 'Farbe', $this->createGroup('0198c3e2-0000-7000-8000-000000000001', 'Eins'), 1);
         $attribute->setConfig(['displayFormat' => 'ca. %value%']);
 
         $this->addTextValue($content, $attribute, 'Rot');
@@ -235,7 +233,7 @@ class ProductAttributeTwigExtensionTest extends TestCase
     public function testUnitPlaceholderRemovedWithoutConfiguredUnit(): void
     {
         $content = $this->createContent();
-        $attribute = $this->createAttribute('weight', 'Gewicht', $this->createGroup(1, 'Eins'), 1);
+        $attribute = $this->createAttribute('weight', 'Gewicht', $this->createGroup('0198c3e2-0000-7000-8000-000000000001', 'Eins'), 1);
         $attribute->setType(AttributeInterface::TYPE_NUMBER);
         $attribute->setConfig(['displayFormat' => '%value% %unit%']);
 
@@ -249,7 +247,7 @@ class ProductAttributeTwigExtensionTest extends TestCase
     public function testUnitPlaceholderRemovedForUnresolvableUnitKey(): void
     {
         $content = $this->createContent();
-        $attribute = $this->createAttribute('weight', 'Gewicht', $this->createGroup(1, 'Eins'), 1);
+        $attribute = $this->createAttribute('weight', 'Gewicht', $this->createGroup('0198c3e2-0000-7000-8000-000000000001', 'Eins'), 1);
         $attribute->setType(AttributeInterface::TYPE_NUMBER);
         $attribute->setConfig(['displayFormat' => '%value% %unit%', 'unit' => 'NOT_A_UNIT']);
 
@@ -263,7 +261,7 @@ class ProductAttributeTwigExtensionTest extends TestCase
     public function testDisplayFormatWithoutValueTokenIsReturnedLiterally(): void
     {
         $content = $this->createContent();
-        $attribute = $this->createAttribute('weight', 'Gewicht', $this->createGroup(1, 'Eins'), 1);
+        $attribute = $this->createAttribute('weight', 'Gewicht', $this->createGroup('0198c3e2-0000-7000-8000-000000000001', 'Eins'), 1);
         $attribute->setType(AttributeInterface::TYPE_NUMBER);
         $attribute->setConfig(['displayFormat' => 'on request']);
 
@@ -277,7 +275,7 @@ class ProductAttributeTwigExtensionTest extends TestCase
     public function testDatesAreFormattedForTheRequestedLocale(): void
     {
         $content = $this->createContent();
-        $attribute = $this->createAttribute('released', 'Erschienen', $this->createGroup(1, 'Eins'), 1);
+        $attribute = $this->createAttribute('released', 'Erschienen', $this->createGroup('0198c3e2-0000-7000-8000-000000000001', 'Eins'), 1);
         $attribute->setType(AttributeInterface::TYPE_DATE);
 
         $value = new ProductAttributeValue($content, $attribute, $attribute->getKey());
@@ -290,7 +288,7 @@ class ProductAttributeTwigExtensionTest extends TestCase
     public function testDateValueWithoutATimestampIsDropped(): void
     {
         $content = $this->createContent();
-        $attribute = $this->createAttribute('released', 'Erschienen', $this->createGroup(1, 'Eins'), 1);
+        $attribute = $this->createAttribute('released', 'Erschienen', $this->createGroup('0198c3e2-0000-7000-8000-000000000001', 'Eins'), 1);
         $attribute->setType(AttributeInterface::TYPE_DATE);
 
         // no setNumber() call: getNumber() stays null, so formatDate() has nothing to format
@@ -302,7 +300,7 @@ class ProductAttributeTwigExtensionTest extends TestCase
     public function testUnrecognisedAttributeTypeIsDropped(): void
     {
         $content = $this->createContent();
-        $attribute = $this->createAttribute('custom', 'Individuell', $this->createGroup(1, 'Eins'), 1);
+        $attribute = $this->createAttribute('custom', 'Individuell', $this->createGroup('0198c3e2-0000-7000-8000-000000000001', 'Eins'), 1);
         $attribute->setType('unknown_type');
 
         $this->addTextValue($content, $attribute, 'some-value');
@@ -310,20 +308,20 @@ class ProductAttributeTwigExtensionTest extends TestCase
         self::assertSame([], $this->attributesOf($content));
     }
 
-    public function testGroupLabelFallsBackToTheGroupIdWithoutATranslationInTheLocale(): void
+    public function testGroupLabelFallsBackToTheGroupUuidWithoutATranslationInTheLocale(): void
     {
         $content = $this->createContent('en');
-        $group = $this->createGroup(3, 'Mechanische Daten'); // translated only in 'de'
+        $group = $this->createGroup('0198c3e2-0000-7000-8000-000000000003', 'Mechanische Daten'); // translated only in 'de'
 
         $this->addTextValue($content, $this->createAttribute('weight', 'Gewicht', $group, 1), '48 g');
 
-        self::assertSame('3', $this->attributesOf($content, 'en')['weight']['group']['label']);
+        self::assertSame('0198c3e2-0000-7000-8000-000000000003', $this->attributesOf($content, 'en')['weight']['group']['label']);
     }
 
     public function testAttributeLabelFallsBackToTheAttributeKeyWithoutATranslationInTheLocale(): void
     {
         $content = $this->createContent('en');
-        $attribute = $this->createAttribute('weight', 'Gewicht', $this->createGroup(1, 'Eins'), 1); // 'de' only
+        $attribute = $this->createAttribute('weight', 'Gewicht', $this->createGroup('0198c3e2-0000-7000-8000-000000000001', 'Eins'), 1); // 'de' only
 
         $this->addTextValue($content, $attribute, '48 g');
 
@@ -333,7 +331,7 @@ class ProductAttributeTwigExtensionTest extends TestCase
     public function testOptionNameFallsBackToTheOptionKeyWithoutATranslationInTheLocale(): void
     {
         $content = $this->createContent('en');
-        $attribute = $this->createAttribute('colour', 'Farbe', $this->createGroup(1, 'Eins'), 1);
+        $attribute = $this->createAttribute('colour', 'Farbe', $this->createGroup('0198c3e2-0000-7000-8000-000000000001', 'Eins'), 1);
         $attribute->setType(AttributeInterface::TYPE_OPTIONS);
 
         $option = new AttributeOption($attribute, 'black');
@@ -350,7 +348,7 @@ class ProductAttributeTwigExtensionTest extends TestCase
     public function testLocaleFallsBackToTheCurrentRequestWhenNoneIsGiven(): void
     {
         $content = $this->createContent();
-        $group = $this->createGroup(1, 'Mechanische Daten');
+        $group = $this->createGroup('0198c3e2-0000-7000-8000-000000000001', 'Mechanische Daten');
         $this->addTextValue($content, $this->createAttribute('weight', 'Gewicht', $group, 1), '48 g');
 
         $groups = $this->extension('de')->groupAttributes($content->getAttributes());
@@ -361,7 +359,7 @@ class ProductAttributeTwigExtensionTest extends TestCase
     public function testYieldsNoGroupsWithoutALocaleToTranslateWith(): void
     {
         $content = $this->createContent();
-        $group = $this->createGroup(1, 'Mechanische Daten');
+        $group = $this->createGroup('0198c3e2-0000-7000-8000-000000000001', 'Mechanische Daten');
         $this->addTextValue($content, $this->createAttribute('weight', 'Gewicht', $group, 1), '48 g');
 
         self::assertSame([], $this->extension()->groupAttributes($content->getAttributes()));

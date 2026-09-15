@@ -21,6 +21,8 @@ use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeOption;
 use Sulu\Product\Domain\Model\AttributeTranslation;
+use Symfony\Component\Uid\Uuid;
+use Symfony\Component\Uid\UuidV7;
 
 #[CoversClass(Attribute::class)]
 class AttributeTest extends TestCase
@@ -28,17 +30,25 @@ class AttributeTest extends TestCase
     public function testConstructorDefaults(): void
     {
         $attribute = new Attribute(new AttributeGroup());
-        $this->assertNull($attribute->getUuid());
+        $this->assertTrue(Uuid::isValid($attribute->getUuid()));
         $this->assertSame(AttributeInterface::TYPE_NUMBER, $attribute->getType());
         $this->assertSame([], $attribute->getOptions());
         $this->assertNull($attribute->getTranslation('en'));
     }
 
-    public function testSetUuidIsFluentAndStores(): void
+    public function testConstructorGeneratesUuidV7WhenNoneProvided(): void
     {
         $attribute = new Attribute(new AttributeGroup());
-        $this->assertSame($attribute, $attribute->setUuid('uuid-value'));
-        $this->assertSame('uuid-value', $attribute->getUuid());
+
+        $this->assertTrue(Uuid::isValid($attribute->getUuid()));
+        $this->assertInstanceOf(UuidV7::class, Uuid::fromString($attribute->getUuid()));
+    }
+
+    public function testConstructorAcceptsProvidedUuid(): void
+    {
+        $uuid = Uuid::v7()->toRfc4122();
+
+        $this->assertSame($uuid, (new Attribute(new AttributeGroup(), $uuid))->getUuid());
     }
 
     public function testSetExternalIdentifierIsFluentAndStores(): void
@@ -173,14 +183,6 @@ class AttributeTest extends TestCase
 
         $this->assertSame($attribute, $attribute->setGroup($newGroup));
         $this->assertSame($newGroup, $attribute->getGroup());
-    }
-
-    public function testGetIdReturnsDoctrineGeneratedId(): void
-    {
-        $model = new Attribute(new AttributeGroup());
-        $ref = new \ReflectionProperty(Attribute::class, 'id');
-        $ref->setValue($model, 42);
-        $this->assertSame(42, $model->getId());
     }
 
     public function testImplementsAuditableInterface(): void

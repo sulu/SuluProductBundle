@@ -22,18 +22,18 @@
         <many-to-one field="family"
                      target-entity="Sulu\Product\Domain\Model\ProductFamilyInterface"
                      inversed-by="familyAttributes">
-            <join-column name="idProductFamilies" referenced-column-name="id"
+            <join-column name="productFamilyUuid" referenced-column-name="uuid"
                          nullable="false" on-delete="CASCADE"/>
         </many-to-one>
 
         <many-to-one field="attribute"
                      target-entity="Sulu\Product\Domain\Model\AttributeInterface">
-            <join-column name="idAttributes" referenced-column-name="id"
+            <join-column name="attributeUuid" referenced-column-name="uuid"
                          nullable="false" on-delete="CASCADE"/>
         </many-to-one>
 
         <unique-constraints>
-            <unique-constraint columns="idProductFamilies,idAttributes"
+            <unique-constraint columns="productFamilyUuid,attributeUuid"
                                name="UNIQ_pr_product_family_attributes_family_attr"/>
         </unique-constraints>
     </entity>

@@ -22,6 +22,7 @@ use Sulu\Product\Domain\Model\ProductFamilyInterface;
  *     uuids?: string[],
  *     externalIdentifier?: string,
  *     productUuid?: string,
+ *     key?: string,
  * }
  * @phpstan-type ProductFamilyRepositorySelects array{
  *     product_family_form?: bool,
@@ -45,7 +46,7 @@ interface ProductFamilyRepositoryInterface
     public const SELECT_FAMILY_ATTRIBUTE_GROUPS = 'with-family-attribute-groups';
     public const SELECT_FAMILY_ATTRIBUTE_OPTIONS = 'with-family-attribute-options';
 
-    public function create(): ProductFamilyInterface;
+    public function createNew(?string $uuid = null): ProductFamilyInterface;
 
     /**
      * @param ProductFamilyRepositoryFilters $filters

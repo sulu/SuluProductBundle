@@ -19,6 +19,8 @@ use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeOption;
 use Sulu\Product\Domain\Model\AttributeOptionTranslation;
+use Symfony\Component\Uid\Uuid;
+use Symfony\Component\Uid\UuidV7;
 
 #[CoversClass(AttributeOption::class)]
 class AttributeOptionTest extends TestCase
@@ -37,9 +39,24 @@ class AttributeOptionTest extends TestCase
         $attribute = new Attribute(new AttributeGroup());
         $option = new AttributeOption($attribute, 'red');
 
-        $this->assertNull($option->getUuid());
+        $this->assertTrue(Uuid::isValid($option->getUuid()));
         $this->assertSame(0, $option->getPosition());
         $this->assertNull($option->getTranslation('en'));
+    }
+
+    public function testConstructorGeneratesUuidV7WhenNoneProvided(): void
+    {
+        $option = new AttributeOption(new Attribute(new AttributeGroup()), 'red');
+
+        $this->assertTrue(Uuid::isValid($option->getUuid()));
+        $this->assertInstanceOf(UuidV7::class, Uuid::fromString($option->getUuid()));
+    }
+
+    public function testConstructorAcceptsProvidedUuid(): void
+    {
+        $uuid = Uuid::v7()->toRfc4122();
+
+        $this->assertSame($uuid, (new AttributeOption(new Attribute(new AttributeGroup()), 'red', $uuid))->getUuid());
     }
 
     public function testSetKeyIsFluentAndStores(): void
@@ -92,13 +109,5 @@ class AttributeOptionTest extends TestCase
 
         $this->assertSame($option, $option->removeTranslation($translation));
         $this->assertNull($option->getTranslation('en'));
-    }
-
-    public function testGetIdReturnsDoctrineGeneratedId(): void
-    {
-        $model = new AttributeOption(new Attribute(new AttributeGroup()), 'red');
-        $ref = new \ReflectionProperty(AttributeOption::class, 'id');
-        $ref->setValue($model, 42);
-        $this->assertSame(42, $model->getId());
     }
 }

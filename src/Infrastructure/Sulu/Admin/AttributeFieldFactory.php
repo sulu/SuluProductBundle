@@ -29,7 +29,7 @@ use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
  */
 class AttributeFieldFactory
 {
-    // The admin's ProductAttributes container strips this prefix to recover the attribute id.
+    // The admin's ProductAttributes container strips this prefix to recover the attribute uuid.
     private const NAME_PREFIX = 'attribute_';
 
     public function __construct(
@@ -41,13 +41,13 @@ class AttributeFieldFactory
     }
 
     /**
-     * The JSON schema of the attribute's value, keyed by attribute id like the submitted values.
+     * The JSON schema of the attribute's value, keyed by attribute uuid like the submitted values.
      *
      * @return PropertyMetadata|null null when the attribute has no field
      */
     public function buildSchemaProperty(ProductFamilyAttributeInterface $familyAttribute, string $locale): ?PropertyMetadata
     {
-        $field = $this->buildField($familyAttribute, $locale, (string) $familyAttribute->getAttribute()->getId());
+        $field = $this->buildField($familyAttribute, $locale, $familyAttribute->getAttribute()->getUuid());
         if (null === $field) {
             return null;
         }
@@ -65,7 +65,7 @@ class AttributeFieldFactory
         return $this->buildField(
             $familyAttribute,
             $locale,
-            self::NAME_PREFIX . $familyAttribute->getAttribute()->getId(),
+            self::NAME_PREFIX . $familyAttribute->getAttribute()->getUuid(),
         );
     }
 

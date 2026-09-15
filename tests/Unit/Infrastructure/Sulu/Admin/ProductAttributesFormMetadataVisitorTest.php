@@ -101,10 +101,10 @@ class ProductAttributesFormMetadataVisitorTest extends TestCase
         return $fragment;
     }
 
-    private function group(int $id = 1, ?string $name = 'Dimensions', ?string $defaultLocale = null): AttributeGroupInterface
+    private function group(string $uuid = 'group-uuid-1', ?string $name = 'Dimensions', ?string $defaultLocale = null): AttributeGroupInterface
     {
         $group = $this->prophesize(AttributeGroupInterface::class);
-        $group->getId()->willReturn($id);
+        $group->getUuid()->willReturn($uuid);
         $group->getDefaultLocale()->willReturn($defaultLocale);
 
         $translation = null;
@@ -126,7 +126,7 @@ class ProductAttributesFormMetadataVisitorTest extends TestCase
      * @param array<string, mixed> $config
      */
     private function familyAttribute(
-        int $id,
+        string $uuid,
         string $name,
         AttributeGroupInterface $group,
         bool $variantSpecific = false,
@@ -138,7 +138,7 @@ class ProductAttributesFormMetadataVisitorTest extends TestCase
         $translation->getDescription()->willReturn(null);
 
         $attribute = $this->prophesize(AttributeInterface::class);
-        $attribute->getId()->willReturn($id);
+        $attribute->getUuid()->willReturn($uuid);
         $attribute->getKey()->willReturn(\strtolower($name));
         $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
         $attribute->getConfig()->willReturn($config);
@@ -199,33 +199,33 @@ class ProductAttributesFormMetadataVisitorTest extends TestCase
 
     public function testInjectsSharedAttributesGroupedBySection(): void
     {
-        $dimensions = $this->group(1, 'Dimensions');
-        $electrical = $this->group(2, 'Electrical');
+        $dimensions = $this->group('group-uuid-1', 'Dimensions');
+        $electrical = $this->group('group-uuid-2', 'Electrical');
         $this->productFamilyRepository->findOneBy(['uuid' => 'family-1'], self::FAMILY_SELECT)->willReturn($this->family([
-            $this->familyAttribute(7, 'Weight', $dimensions, false, true),
-            $this->familyAttribute(8, 'Colour', $dimensions, true),
-            $this->familyAttribute(9, 'Voltage', $electrical, false, false, ['unit' => 'VOLT']),
+            $this->familyAttribute('0198c3e2-0000-7000-8000-000000000007', 'Weight', $dimensions, false, true),
+            $this->familyAttribute('0198c3e2-0000-7000-8000-000000000008', 'Colour', $dimensions, true),
+            $this->familyAttribute('0198c3e2-0000-7000-8000-000000000009', 'Voltage', $electrical, false, false, ['unit' => 'VOLT']),
         ]));
         $form = $this->form();
 
         $this->visitor()->visitFormMetadata($form, 'en', ['productFamily' => 'family-1']);
 
         $items = $form->getItems();
-        self::assertSame(['attribute_group_1', 'attribute_group_2'], \array_keys($items));
+        self::assertSame(['attribute_group_group-uuid-1', 'attribute_group_group-uuid-2'], \array_keys($items));
 
-        $dimensionsSection = $items['attribute_group_1'];
+        $dimensionsSection = $items['attribute_group_group-uuid-1'];
         self::assertInstanceOf(SectionMetadata::class, $dimensionsSection);
         self::assertSame('Dimensions', $dimensionsSection->getLabel('en'));
-        self::assertSame(['attribute_7'], \array_keys($dimensionsSection->getItems()));
-        $weight = $dimensionsSection->getItems()['attribute_7'];
+        self::assertSame(['attribute_0198c3e2-0000-7000-8000-000000000007'], \array_keys($dimensionsSection->getItems()));
+        $weight = $dimensionsSection->getItems()['attribute_0198c3e2-0000-7000-8000-000000000007'];
         self::assertInstanceOf(FieldMetadata::class, $weight);
         self::assertSame('number', $weight->getType());
         self::assertSame('Weight', $weight->getLabel('en'));
         self::assertTrue($weight->isRequired());
 
-        $electricalSection = $items['attribute_group_2'];
+        $electricalSection = $items['attribute_group_group-uuid-2'];
         self::assertInstanceOf(SectionMetadata::class, $electricalSection);
-        $voltage = $electricalSection->getItems()['attribute_9'];
+        $voltage = $electricalSection->getItems()['attribute_0198c3e2-0000-7000-8000-000000000009'];
         self::assertInstanceOf(FieldMetadata::class, $voltage);
         self::assertSame('Voltage (V)', $voltage->getLabel('en'));
 
@@ -247,43 +247,43 @@ class ProductAttributesFormMetadataVisitorTest extends TestCase
     {
         $group = $this->group();
         $this->productFamilyRepository->findOneBy(['uuid' => 'family-1'], self::FAMILY_SELECT)->willReturn($this->family([
-            $this->familyAttribute(7, 'Weight', $group),
-            $this->familyAttribute(8, 'Colour', $group, true),
+            $this->familyAttribute('0198c3e2-0000-7000-8000-000000000007', 'Weight', $group),
+            $this->familyAttribute('0198c3e2-0000-7000-8000-000000000008', 'Colour', $group, true),
         ]));
         $form = $this->form();
 
         $this->visitor()->visitFormMetadata($form, 'en', ['productFamily' => 'family-1', 'variant' => $variant]);
 
-        $section = $form->getItems()['attribute_group_1'];
+        $section = $form->getItems()['attribute_group_group-uuid-1'];
         self::assertInstanceOf(SectionMetadata::class, $section);
-        self::assertSame(['attribute_8'], \array_keys($section->getItems()));
+        self::assertSame(['attribute_0198c3e2-0000-7000-8000-000000000008'], \array_keys($section->getItems()));
     }
 
     public function testResolvesFamilyThroughProductOption(): void
     {
         $group = $this->group();
         $this->productFamilyRepository->findOneBy(['productUuid' => 'product-1'], self::FAMILY_SELECT)->willReturn($this->family([
-            $this->familyAttribute(7, 'Weight', $group),
+            $this->familyAttribute('0198c3e2-0000-7000-8000-000000000007', 'Weight', $group),
         ]));
         $form = $this->form();
 
         $this->visitor()->visitFormMetadata($form, 'en', ['product' => 'product-1']);
 
-        self::assertSame(['attribute_group_1'], \array_keys($form->getItems()));
+        self::assertSame(['attribute_group_group-uuid-1'], \array_keys($form->getItems()));
     }
 
     public function testProductFamilyOptionWinsOverProductOption(): void
     {
         $group = $this->group();
         $this->productFamilyRepository->findOneBy(['uuid' => 'family-1'], self::FAMILY_SELECT)->willReturn($this->family([
-            $this->familyAttribute(7, 'Weight', $group),
+            $this->familyAttribute('0198c3e2-0000-7000-8000-000000000007', 'Weight', $group),
         ]));
         $this->productFamilyRepository->findOneBy(['productUuid' => 'product-1'], self::FAMILY_SELECT)->shouldNotBeCalled();
         $form = $this->form();
 
         $this->visitor()->visitFormMetadata($form, 'en', ['productFamily' => 'family-1', 'product' => 'product-1']);
 
-        self::assertSame(['attribute_group_1'], \array_keys($form->getItems()));
+        self::assertSame(['attribute_group_group-uuid-1'], \array_keys($form->getItems()));
     }
 
     /**
@@ -299,13 +299,13 @@ class ProductAttributesFormMetadataVisitorTest extends TestCase
     public function testUsesGenericSectionLabelWhenGroupNameMissing(?string $groupName): void
     {
         $this->productFamilyRepository->findOneBy(['uuid' => 'family-1'], self::FAMILY_SELECT)->willReturn($this->family([
-            $this->familyAttribute(7, 'Weight', $this->group(9, $groupName)),
+            $this->familyAttribute('0198c3e2-0000-7000-8000-000000000007', 'Weight', $this->group('group-uuid-9', $groupName)),
         ]));
         $form = $this->form();
 
         $this->visitor()->visitFormMetadata($form, 'en', ['productFamily' => 'family-1']);
 
-        $section = $form->getItems()['attribute_group_9'];
+        $section = $form->getItems()['attribute_group_group-uuid-9'];
         self::assertInstanceOf(SectionMetadata::class, $section);
         self::assertSame('Attributes', $section->getLabel('en'));
     }
@@ -316,19 +316,19 @@ class ProductAttributesFormMetadataVisitorTest extends TestCase
         $groupTranslation->getName()->willReturn('Abmessungen');
 
         $group = $this->prophesize(AttributeGroupInterface::class);
-        $group->getId()->willReturn(3);
+        $group->getUuid()->willReturn('group-uuid-3');
         $group->getTranslation('en')->willReturn(null);
         $group->getDefaultLocale()->willReturn('de');
         $group->getTranslation('de')->willReturn($groupTranslation->reveal());
 
         $this->productFamilyRepository->findOneBy(['uuid' => 'family-1'], self::FAMILY_SELECT)->willReturn($this->family([
-            $this->familyAttribute(7, 'Weight', $group->reveal()),
+            $this->familyAttribute('0198c3e2-0000-7000-8000-000000000007', 'Weight', $group->reveal()),
         ]));
         $form = $this->form();
 
         $this->visitor()->visitFormMetadata($form, 'en', ['productFamily' => 'family-1']);
 
-        $section = $form->getItems()['attribute_group_3'];
+        $section = $form->getItems()['attribute_group_group-uuid-3'];
         self::assertInstanceOf(SectionMetadata::class, $section);
         self::assertSame('Abmessungen', $section->getLabel('en'));
     }
@@ -337,7 +337,7 @@ class ProductAttributesFormMetadataVisitorTest extends TestCase
     {
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])->willReturn(null);
         $this->productFamilyRepository->findOneBy(['uuid' => 'family-1'], self::FAMILY_SELECT)->willReturn($this->family([
-            $this->familyAttribute(7, 'Weight', $this->group()),
+            $this->familyAttribute('0198c3e2-0000-7000-8000-000000000007', 'Weight', $this->group()),
         ]));
         $form = $this->form();
 

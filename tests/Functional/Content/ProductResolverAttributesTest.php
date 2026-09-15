@@ -76,11 +76,11 @@ class ProductResolverAttributesTest extends SuluTestCase
 
     public function testAttributesAppearUnderRootProductAttributes(): void
     {
-        $group = $this->attributeGroupRepository->create();
+        $group = $this->attributeGroupRepository->createNew();
         $group->addTranslation(new AttributeGroupTranslation($group, 'de', 'Mechanische Daten'));
         $this->attributeGroupRepository->save($group);
 
-        $attribute = $this->attributeRepository->create($group);
+        $attribute = $this->attributeRepository->createNew($group);
         $attribute->setKey('housing');
         $attribute->setType(AttributeInterface::TYPE_TEXT);
         $attribute->setPosition(1);

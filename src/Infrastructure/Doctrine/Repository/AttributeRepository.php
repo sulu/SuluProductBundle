@@ -22,7 +22,6 @@ use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroupInterface;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
-use Symfony\Component\Uid\Uuid;
 use Webmozart\Assert\Assert;
 
 /**
@@ -40,12 +39,9 @@ final class AttributeRepository implements AttributeRepositoryInterface
         $this->entityRepository = $repo;
     }
 
-    public function create(AttributeGroupInterface $group): AttributeInterface
+    public function createNew(AttributeGroupInterface $group, ?string $uuid = null): AttributeInterface
     {
-        $attribute = new Attribute($group);
-        $attribute->setUuid(Uuid::v7()->toRfc4122());
-
-        return $attribute;
+        return new Attribute($group, $uuid);
     }
 
     public function findOneBy(array $filters): ?AttributeInterface
@@ -95,13 +91,6 @@ final class AttributeRepository implements AttributeRepositoryInterface
             Assert::string($key); // @phpstan-ignore staticMethod.alreadyNarrowedType
             $queryBuilder->andWhere('attribute.key = :key')
                 ->setParameter('key', $key);
-        }
-
-        $id = $filters['id'] ?? null;
-        if (null !== $id) {
-            Assert::integer($id); // @phpstan-ignore staticMethod.alreadyNarrowedType
-            $queryBuilder->andWhere('attribute.id = :id')
-                ->setParameter('id', $id);
         }
 
         $externalIdentifier = $filters['externalIdentifier'] ?? null;

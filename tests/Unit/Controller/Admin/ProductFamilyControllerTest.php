@@ -24,6 +24,7 @@ use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescri
 use Sulu\Component\Rest\ListBuilder\Metadata\FieldDescriptorFactoryInterface;
 use Sulu\Component\Rest\RestHelperInterface;
 use Sulu\Product\Application\Message\CreateProductFamilyMessage;
+use Sulu\Product\Application\Message\ModifyProductFamilyMessage;
 use Sulu\Product\Application\Message\RemoveProductFamilyMessage;
 use Sulu\Product\Domain\Exception\ProductFamilyHasProductsException;
 use Sulu\Product\Domain\Exception\ProductFamilyNotFoundException;
@@ -110,8 +111,7 @@ class ProductFamilyControllerTest extends TestCase
 
     public function testGetActionReturnsNormalizedFamily(): void
     {
-        $family = new ProductFamily();
-        $family->setUuid('family-uuid-1');
+        $family = new ProductFamily('family-uuid-1');
 
         $this->productFamilyRepository->findOneBy(['uuid' => 'family-uuid-1'])
             ->shouldBeCalledOnce()
@@ -133,8 +133,7 @@ class ProductFamilyControllerTest extends TestCase
 
     public function testPostActionReturns201AndExtractsAttributes(): void
     {
-        $family = new ProductFamily();
-        $family->setUuid('created-uuid');
+        $family = new ProductFamily('created-uuid');
 
         $this->messageBus->dispatch(
             Argument::that(function(Envelope $envelope): bool {
@@ -180,8 +179,7 @@ class ProductFamilyControllerTest extends TestCase
 
     public function testPostActionExtractsVariantFlag(): void
     {
-        $family = new ProductFamily();
-        $family->setUuid('created-uuid');
+        $family = new ProductFamily('created-uuid');
 
         $this->messageBus->dispatch(
             Argument::that(function(Envelope $envelope): bool {
@@ -215,6 +213,81 @@ class ProductFamilyControllerTest extends TestCase
         $this->assertSame(201, $response->getStatusCode());
     }
 
+    public function testPostActionTrimsKey(): void
+    {
+        $family = new ProductFamily('created-uuid');
+
+        $this->messageBus->dispatch(
+            Argument::that(function(Envelope $envelope): bool {
+                $message = $envelope->getMessage();
+
+                return $message instanceof CreateProductFamilyMessage && 'shoes' === $message->getKey();
+            }),
+            Argument::any(),
+        )
+            ->shouldBeCalledOnce()
+            ->willReturn($this->handledEnvelope($family));
+
+        $this->normalizer->normalize($family, null, ['locale' => 'en'])
+            ->willReturn(['id' => 'created-uuid']);
+
+        $request = new Request(['locale' => 'en'], ['name' => 'Shoes', 'key' => '  shoes  ']);
+
+        $response = $this->createController()->postAction($request);
+
+        $this->assertSame(201, $response->getStatusCode());
+    }
+
+    public function testPostActionTurnsBlankKeyIntoNull(): void
+    {
+        $family = new ProductFamily('created-uuid');
+
+        $this->messageBus->dispatch(
+            Argument::that(function(Envelope $envelope): bool {
+                $message = $envelope->getMessage();
+
+                return $message instanceof CreateProductFamilyMessage
+                    && null === $message->getKey()
+                    && \array_key_exists('key', $message->getData());
+            }),
+            Argument::any(),
+        )
+            ->shouldBeCalledOnce()
+            ->willReturn($this->handledEnvelope($family));
+
+        $this->normalizer->normalize($family, null, ['locale' => 'en'])
+            ->willReturn(['id' => 'created-uuid']);
+
+        $request = new Request(['locale' => 'en'], ['name' => 'Shoes', 'key' => '   ']);
+
+        $response = $this->createController()->postAction($request);
+
+        $this->assertSame(201, $response->getStatusCode());
+    }
+
+    public function testPutActionOmitsKeyWhenNotSent(): void
+    {
+        $family = new ProductFamily('put-uuid');
+
+        $this->messageBus->dispatch(
+            Argument::that(function(Envelope $envelope): bool {
+                $message = $envelope->getMessage();
+
+                return $message instanceof ModifyProductFamilyMessage && !\array_key_exists('key', $message->getData());
+            }),
+            Argument::any(),
+        )
+            ->shouldBeCalledOnce()
+            ->willReturn($this->handledEnvelope($family));
+
+        $this->normalizer->normalize($family, null, ['locale' => 'en'])
+            ->willReturn(['id' => 'put-uuid']);
+
+        $response = $this->createController()->putAction(new Request(['locale' => 'en'], ['name' => 'Shoes']), 'put-uuid');
+
+        $this->assertSame(200, $response->getStatusCode());
+    }
+
     public function testPostActionReturns409OnUniqueConstraintViolation(): void
     {
         $exception = $this->createMock(UniqueConstraintViolationException::class);
@@ -231,8 +304,7 @@ class ProductFamilyControllerTest extends TestCase
 
     public function testPutActionReturns200OnSuccess(): void
     {
-        $family = new ProductFamily();
-        $family->setUuid('put-uuid');
+        $family = new ProductFamily('put-uuid');
 
         $this->messageBus->dispatch(Argument::any(), Argument::any())
             ->shouldBeCalledOnce()

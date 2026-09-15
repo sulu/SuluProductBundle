@@ -16,12 +16,11 @@ namespace Sulu\Product\Domain\Model;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
+use Symfony\Component\Uid\Uuid;
 
 class AttributeOption implements AttributeOptionInterface
 {
-    protected int $id;
-
-    protected ?string $uuid = null;
+    protected string $uuid;
 
     protected string $key;
 
@@ -32,19 +31,15 @@ class AttributeOption implements AttributeOptionInterface
     /** @var Collection<int, AttributeOptionTranslationInterface> */
     protected Collection $translations;
 
-    public function __construct(AttributeInterface $attribute, string $key)
+    public function __construct(AttributeInterface $attribute, string $key, ?string $uuid = null)
     {
+        $this->uuid = $uuid ?: Uuid::v7()->toRfc4122();
         $this->attribute = $attribute;
         $this->key = $key;
         $this->translations = new ArrayCollection();
     }
 
-    public function getId(): int
-    {
-        return $this->id;
-    }
-
-    public function getUuid(): ?string
+    public function getUuid(): string
     {
         return $this->uuid;
     }

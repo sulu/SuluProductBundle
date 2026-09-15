@@ -15,7 +15,6 @@ namespace Sulu\Product\Application\Mapper;
 
 use Sulu\Product\Application\Message\CreateAttributeMessage;
 use Sulu\Product\Application\Message\ModifyAttributeMessage;
-use Sulu\Product\Domain\Model\AttributeGroupAttribute;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeOption;
 use Sulu\Product\Domain\Model\AttributeOptionTranslation;
@@ -67,10 +66,6 @@ final class AttributeMapper implements AttributeMapperInterface
         } else {
             $attribute->setPosition($this->attributeRepository->findNextPositionInGroup($attributeGroup));
         }
-
-        $groupAttr = new AttributeGroupAttribute($attributeGroup, $attribute);
-        $groupAttr->setPosition($attribute->getPosition());
-        $attributeGroup->addGroupAttribute($groupAttr);
     }
 
     private function syncPosition(AttributeInterface $attribute, ?int $newPosition): void

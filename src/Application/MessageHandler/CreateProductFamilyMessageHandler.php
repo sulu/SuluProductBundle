@@ -33,7 +33,7 @@ final class CreateProductFamilyMessageHandler
 
     public function __invoke(CreateProductFamilyMessage $message): ProductFamilyInterface
     {
-        $family = $this->productFamilyRepository->create();
+        $family = $this->productFamilyRepository->createNew();
 
         foreach ($this->productFamilyMappers as $productFamilyMapper) {
             $productFamilyMapper->mapProductFamilyData($family, $message);

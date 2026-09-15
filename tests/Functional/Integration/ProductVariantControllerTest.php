@@ -53,20 +53,14 @@ class ProductVariantControllerTest extends SuluTestCase
     /**
      * Membership in $attributes is the family assignment; there is no separate "enabled" flag.
      *
-     * @param array<int, array{required?: bool, variantSpecific?: bool}> $attributes
+     * @param array<string, array{required?: bool, variantSpecific?: bool}> $attributes
      */
     private function createProductFamily(array $attributes = []): string
     {
-        /** @var AttributeRepositoryInterface $attributeRepository */
-        $attributeRepository = self::getContainer()->get(AttributeRepositoryInterface::class);
-
         $normalized = [];
-        foreach ($attributes as $attributeId => $entry) {
-            $attribute = $attributeRepository->findOneBy(['id' => $attributeId]);
-            $this->assertNotNull($attribute);
-
+        foreach ($attributes as $attributeUuid => $entry) {
             $normalized[] = [
-                'id' => $attribute->getUuid(),
+                'id' => $attributeUuid,
                 'required' => $entry['required'] ?? false,
                 'variantSpecific' => $entry['variantSpecific'] ?? false,
             ];
@@ -95,7 +89,7 @@ class ProductVariantControllerTest extends SuluTestCase
     }
 
     /**
-     * @param array<int, mixed> $attributes values for the family's required shared attributes, which create enforces
+     * @param array<string, mixed> $attributes values for the family's required shared attributes, which create enforces
      */
     private function createProduct(
         string $familyId,
@@ -166,7 +160,7 @@ class ProductVariantControllerTest extends SuluTestCase
         return $id;
     }
 
-    private function createAttribute(string $key, string $name, string $type = AttributeInterface::TYPE_TEXT): int
+    private function createAttribute(string $key, string $name, string $type = AttributeInterface::TYPE_TEXT): string
     {
         $container = self::getContainer();
 
@@ -177,10 +171,10 @@ class ProductVariantControllerTest extends SuluTestCase
         /** @var EntityManagerInterface $em */
         $em = $container->get('doctrine.orm.entity_manager');
 
-        $group = $groupRepository->create();
+        $group = $groupRepository->createNew();
         $groupRepository->save($group);
 
-        $attribute = $attributeRepository->create($group);
+        $attribute = $attributeRepository->createNew($group);
         $attribute->setKey($key);
         $attribute->setType($type);
         $attribute->addTranslation(new AttributeTranslation($attribute, 'en', $name));
@@ -188,13 +182,13 @@ class ProductVariantControllerTest extends SuluTestCase
 
         $em->flush();
 
-        return $attribute->getId();
+        return $attribute->getUuid();
     }
 
     /**
-     * @return int[]
+     * @return string[]
      */
-    private function getPersistedAttributeIds(string $productId): array
+    private function getPersistedAttributeUuids(string $productId): array
     {
         $container = self::getContainer();
         /** @var ProductRepositoryInterface $productRepository */
@@ -218,20 +212,20 @@ class ProductVariantControllerTest extends SuluTestCase
 
         $dimensionContent = $contentManager->resolve($product, $dimensionAttributes);
 
-        $ids = [];
+        $uuids = [];
         foreach ($dimensionContent->getAttributes() as $attributeValue) {
-            $ids[] = $attributeValue->getAttribute()->getId();
+            $uuids[] = $attributeValue->getAttribute()->getUuid();
         }
 
-        return $ids;
+        return $uuids;
     }
 
     public function testPostCreatesVariantUnderParentAndIsExcludedFromMainList(): void
     {
         self::purgeDatabase();
 
-        $axisId = $this->createAttribute('size', 'Size');
-        $familyId = $this->createProductFamily([$axisId => ['variantSpecific' => true]]);
+        $axisUuid = $this->createAttribute('size', 'Size');
+        $familyId = $this->createProductFamily([$axisUuid => ['variantSpecific' => true]]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         $this->client->request(
@@ -244,7 +238,7 @@ class ProductVariantControllerTest extends SuluTestCase
                 'locale' => 'en',
                 'code' => 'CX3-RD-L',
                 'title' => 'Variant L',
-                'attributes' => [$axisId => 'L'],
+                'attributes' => [$axisUuid => 'L'],
             ]) ?: null,
         );
 
@@ -396,11 +390,11 @@ class ProductVariantControllerTest extends SuluTestCase
     {
         self::purgeDatabase();
 
-        $sharedId = $this->createAttribute('color', 'Color');
-        $axisId = $this->createAttribute('size', 'Size');
+        $sharedUuid = $this->createAttribute('color', 'Color');
+        $axisUuid = $this->createAttribute('size', 'Size');
         $familyId = $this->createProductFamily([
-            $sharedId => ['variantSpecific' => false],
-            $axisId => ['variantSpecific' => true],
+            $sharedUuid => ['variantSpecific' => false],
+            $axisUuid => ['variantSpecific' => true],
         ]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
@@ -414,7 +408,7 @@ class ProductVariantControllerTest extends SuluTestCase
             \json_encode([
                 'locale' => 'en',
                 'title' => 'Parent Product',
-                'attributes' => [$sharedId => 'Red'],
+                'attributes' => [$sharedUuid => 'Red'],
             ]) ?: null,
         );
         $this->assertHttpStatusCode(200, $this->client->getResponse());
@@ -431,7 +425,7 @@ class ProductVariantControllerTest extends SuluTestCase
                 'locale' => 'en',
                 'code' => 'CX3-RD-L',
                 'title' => 'Variant L',
-                'attributes' => [$axisId => 'L', $sharedId => 'Green'],
+                'attributes' => [$axisUuid => 'L', $sharedUuid => 'Green'],
             ]) ?: null,
         );
         $this->assertHttpStatusCode(201, $this->client->getResponse());
@@ -441,20 +435,20 @@ class ProductVariantControllerTest extends SuluTestCase
         $this->assertIsString($childId);
 
         // The inherited attribute submitted on create must not be persisted on the variant.
-        $this->assertSame([$axisId], $this->getPersistedAttributeIds($childId));
+        $this->assertSame([$axisUuid], $this->getPersistedAttributeUuids($childId));
 
         // The shared attribute is never merged in from the parent for display.
         $this->assertIsArray($created['attributes']);
-        $this->assertSame('L', $created['attributes'][$axisId]);
-        $this->assertNull($created['attributes'][$sharedId]);
+        $this->assertSame('L', $created['attributes'][$axisUuid]);
+        $this->assertNull($created['attributes'][$sharedUuid]);
 
         $this->client->request('GET', '/admin/api/products/' . $parentId . '/variants/' . $childId . '.json?locale=en');
         $this->assertHttpStatusCode(200, $this->client->getResponse());
         $fetched = \json_decode((string) $this->client->getResponse()->getContent(), true);
         $this->assertIsArray($fetched);
         $this->assertIsArray($fetched['attributes']);
-        $this->assertSame('L', $fetched['attributes'][$axisId]);
-        $this->assertNull($fetched['attributes'][$sharedId]);
+        $this->assertSame('L', $fetched['attributes'][$axisUuid]);
+        $this->assertNull($fetched['attributes'][$sharedUuid]);
 
         // PUT attempting to submit the shared attribute must also be stripped.
         $this->client->request(
@@ -467,18 +461,18 @@ class ProductVariantControllerTest extends SuluTestCase
                 'locale' => 'en',
                 'code' => 'CX3-RD-L',
                 'title' => 'Variant L',
-                'attributes' => [$axisId => 'XL', $sharedId => 'Blue'],
+                'attributes' => [$axisUuid => 'XL', $sharedUuid => 'Blue'],
             ]) ?: null,
         );
         $this->assertHttpStatusCode(200, $this->client->getResponse());
         $updated = \json_decode((string) $this->client->getResponse()->getContent(), true);
         $this->assertIsArray($updated);
 
-        $this->assertSame([$axisId], $this->getPersistedAttributeIds($childId));
+        $this->assertSame([$axisUuid], $this->getPersistedAttributeUuids($childId));
 
         $this->assertIsArray($updated['attributes']);
-        $this->assertSame('XL', $updated['attributes'][$axisId]);
-        $this->assertNull($updated['attributes'][$sharedId]);
+        $this->assertSame('XL', $updated['attributes'][$axisUuid]);
+        $this->assertNull($updated['attributes'][$sharedUuid]);
 
         // The parent's own value is untouched by anything submitted on the variant.
         $this->client->request('GET', '/admin/api/products/' . $parentId . '.json?locale=en');
@@ -486,7 +480,7 @@ class ProductVariantControllerTest extends SuluTestCase
         $parentFetched = \json_decode((string) $this->client->getResponse()->getContent(), true);
         $this->assertIsArray($parentFetched);
         $this->assertIsArray($parentFetched['attributes']);
-        $this->assertSame('Red', $parentFetched['attributes'][$sharedId]);
+        $this->assertSame('Red', $parentFetched['attributes'][$sharedUuid]);
     }
 
     public function testCgetListsVariantsOfParent(): void
@@ -843,18 +837,18 @@ class ProductVariantControllerTest extends SuluTestCase
     {
         self::purgeDatabase();
 
-        $sharedId = $this->createAttribute('color', 'Color');
-        $axisId = $this->createAttribute('size', 'Size');
+        $sharedUuid = $this->createAttribute('color', 'Color');
+        $axisUuid = $this->createAttribute('size', 'Size');
         $familyId = $this->createProductFamily([
-            $sharedId => ['required' => true, 'variantSpecific' => false],
-            $axisId => ['variantSpecific' => true],
+            $sharedUuid => ['required' => true, 'variantSpecific' => false],
+            $axisUuid => ['variantSpecific' => true],
         ]);
         // The parent carries the required shared (non-variant) attribute value.
         $parentId = $this->createProduct(
             $familyId,
             'Parent Product',
             ProductInterface::TYPE_PRODUCT_WITH_VARIANTS,
-            [$sharedId => 'Red'],
+            [$sharedUuid => 'Red'],
         );
 
         // Creating a variant with only its own axis value must succeed, even
@@ -870,7 +864,7 @@ class ProductVariantControllerTest extends SuluTestCase
                 'locale' => 'en',
                 'code' => 'CX3-RD-L',
                 'title' => 'Variant L',
-                'attributes' => [$axisId => 'L'],
+                'attributes' => [$axisUuid => 'L'],
             ]) ?: null,
         );
         $this->assertHttpStatusCode(201, $this->client->getResponse());
@@ -891,7 +885,7 @@ class ProductVariantControllerTest extends SuluTestCase
                 'locale' => 'en',
                 'code' => 'CX3-RD-L',
                 'title' => 'Variant L',
-                'attributes' => [$axisId => 'XL'],
+                'attributes' => [$axisUuid => 'XL'],
             ]) ?: null,
         );
         $this->assertHttpStatusCode(200, $this->client->getResponse());
@@ -901,11 +895,11 @@ class ProductVariantControllerTest extends SuluTestCase
     {
         self::purgeDatabase();
 
-        $sharedId = $this->createAttribute('color', 'Color');
+        $sharedUuid = $this->createAttribute('color', 'Color');
         $familyId = $this->createProductFamily([
-            $sharedId => ['required' => true, 'variantSpecific' => false],
+            $sharedUuid => ['required' => true, 'variantSpecific' => false],
         ]);
-        $parentId = $this->createProduct($familyId, 'Simple Product', attributes: [$sharedId => 'Red']);
+        $parentId = $this->createProduct($familyId, 'Simple Product', attributes: [$sharedUuid => 'Red']);
 
         // A non-variant (parent/simple) product must still be rejected when the
         // required attribute is missing; the variant exemption must not weaken
@@ -919,7 +913,7 @@ class ProductVariantControllerTest extends SuluTestCase
             \json_encode([
                 'locale' => 'en',
                 'title' => 'Simple Product',
-                'attributes' => [$sharedId => null],
+                'attributes' => [$sharedUuid => null],
             ]) ?: null,
         );
         $this->assertHttpStatusCode(422, $this->client->getResponse());
@@ -930,9 +924,9 @@ class ProductVariantControllerTest extends SuluTestCase
         self::purgeDatabase();
 
         // the axis is only rendered on the variant overlay, so the parent cannot satisfy it
-        $axisId = $this->createAttribute('size', 'Size');
+        $axisUuid = $this->createAttribute('size', 'Size');
         $familyId = $this->createProductFamily([
-            $axisId => ['required' => true, 'variantSpecific' => true],
+            $axisUuid => ['required' => true, 'variantSpecific' => true],
         ]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
@@ -956,9 +950,9 @@ class ProductVariantControllerTest extends SuluTestCase
     {
         self::purgeDatabase();
 
-        $axisId = $this->createAttribute('size', 'Size');
+        $axisUuid = $this->createAttribute('size', 'Size');
         $familyId = $this->createProductFamily([
-            $axisId => ['required' => true, 'variantSpecific' => true],
+            $axisUuid => ['required' => true, 'variantSpecific' => true],
         ]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
@@ -994,7 +988,7 @@ class ProductVariantControllerTest extends SuluTestCase
                 'locale' => 'en',
                 'code' => 'CX3-RD-M',
                 'title' => 'Variant M',
-                'attributes' => [$axisId => 'M'],
+                'attributes' => [$axisUuid => 'M'],
             ]) ?: null,
         );
         $this->assertHttpStatusCode(201, $this->client->getResponse());
@@ -1004,9 +998,9 @@ class ProductVariantControllerTest extends SuluTestCase
     {
         self::purgeDatabase();
 
-        $axisId = $this->createAttribute('size', 'Size');
+        $axisUuid = $this->createAttribute('size', 'Size');
         $familyId = $this->createProductFamily([
-            $axisId => ['required' => false, 'variantSpecific' => true],
+            $axisUuid => ['required' => false, 'variantSpecific' => true],
         ]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
@@ -1020,7 +1014,7 @@ class ProductVariantControllerTest extends SuluTestCase
                 'locale' => 'en',
                 'code' => 'CX3-RD-S',
                 'title' => 'Variant S',
-                'attributes' => [$axisId => 12345],
+                'attributes' => [$axisUuid => 12345],
             ]) ?: null,
         );
 
@@ -1326,8 +1320,8 @@ class ProductVariantControllerTest extends SuluTestCase
     {
         self::purgeDatabase();
 
-        $axisId = $this->createAttribute('size', 'Size');
-        $familyId = $this->createProductFamily([$axisId => ['required' => true, 'variantSpecific' => true]]);
+        $axisUuid = $this->createAttribute('size', 'Size');
+        $familyId = $this->createProductFamily([$axisUuid => ['required' => true, 'variantSpecific' => true]]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         $this->client->request(
@@ -1340,7 +1334,7 @@ class ProductVariantControllerTest extends SuluTestCase
                 'locale' => 'en',
                 'code' => 'CX3-RD-L',
                 'title' => 'Variant L',
-                'attributes' => [$axisId => 'L'],
+                'attributes' => [$axisUuid => 'L'],
             ]) ?: null,
         );
         $this->assertHttpStatusCode(201, $this->client->getResponse());
@@ -1360,7 +1354,7 @@ class ProductVariantControllerTest extends SuluTestCase
                 'locale' => 'en',
                 'code' => 'CX3-RD-L',
                 'title' => 'Variant L',
-                'attributes' => [$axisId => null],
+                'attributes' => [$axisUuid => null],
             ]) ?: null,
         );
         $response = $this->client->getResponse();
@@ -1374,8 +1368,8 @@ class ProductVariantControllerTest extends SuluTestCase
     {
         self::purgeDatabase();
 
-        $axisId = $this->createAttribute('weight', 'Weight', AttributeInterface::TYPE_NUMBER);
-        $familyId = $this->createProductFamily([$axisId => ['variantSpecific' => true]]);
+        $axisUuid = $this->createAttribute('weight', 'Weight', AttributeInterface::TYPE_NUMBER);
+        $familyId = $this->createProductFamily([$axisUuid => ['variantSpecific' => true]]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         $this->client->request(
@@ -1388,7 +1382,7 @@ class ProductVariantControllerTest extends SuluTestCase
                 'locale' => 'en',
                 'code' => 'CX3-RD-L',
                 'title' => 'Variant L',
-                'attributes' => [$axisId => '10'],
+                'attributes' => [$axisUuid => '10'],
             ]) ?: null,
         );
         $this->assertHttpStatusCode(201, $this->client->getResponse());
@@ -1407,7 +1401,7 @@ class ProductVariantControllerTest extends SuluTestCase
                 'locale' => 'en',
                 'code' => 'CX3-RD-L',
                 'title' => 'Variant L',
-                'attributes' => [$axisId => 'not-a-number'],
+                'attributes' => [$axisUuid => 'not-a-number'],
             ]) ?: null,
         );
         $response = $this->client->getResponse();

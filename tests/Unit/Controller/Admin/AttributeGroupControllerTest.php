@@ -23,9 +23,7 @@ use Sulu\Component\Rest\ListBuilder\Metadata\FieldDescriptorFactoryInterface;
 use Sulu\Component\Rest\RestHelperInterface;
 use Sulu\Product\Application\Message\RemoveAttributeGroupMessage;
 use Sulu\Product\Domain\Exception\AttributeGroupNotFoundException;
-use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
-use Sulu\Product\Domain\Model\AttributeGroupAttribute;
 use Sulu\Product\Domain\Model\AttributeGroupTranslation;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\UserInterface\Controller\Admin\AttributeGroupController;
@@ -106,8 +104,7 @@ class AttributeGroupControllerTest extends TestCase
 
     public function testGetActionReturnsSerializedGroupWithNoTranslation(): void
     {
-        $attributeGroup = new AttributeGroup();
-        $attributeGroup->setUuid('test-uuid-1234');
+        $attributeGroup = new AttributeGroup('test-uuid-1234');
 
         $this->attributeGroupRepository->findOneBy(['uuid' => 'test-uuid-1234'])
             ->shouldBeCalledOnce()
@@ -125,13 +122,11 @@ class AttributeGroupControllerTest extends TestCase
         $this->assertSame('test-uuid-1234', $data['id']);
         $this->assertSame('', $data['name']);
         $this->assertNull($data['description']);
-        $this->assertSame([], $data['attributes']);
     }
 
     public function testGetActionReturnsSerializedGroupWithTranslation(): void
     {
-        $attributeGroup = new AttributeGroup();
-        $attributeGroup->setUuid('test-uuid-5678');
+        $attributeGroup = new AttributeGroup('test-uuid-5678');
         $translation = new AttributeGroupTranslation($attributeGroup, 'en', 'My Group');
         $translation->setDescription('A description');
         $attributeGroup->addTranslation($translation);
@@ -152,42 +147,6 @@ class AttributeGroupControllerTest extends TestCase
         $this->assertSame('test-uuid-5678', $data['id']);
         $this->assertSame('My Group', $data['name']);
         $this->assertSame('A description', $data['description']);
-        $this->assertSame([], $data['attributes']);
-    }
-
-    public function testGetActionReturnsSerializedGroupAttributes(): void
-    {
-        $attributeGroup = new AttributeGroup();
-        $attributeGroup->setUuid('test-uuid-with-attrs');
-
-        $attribute = new Attribute(new AttributeGroup());
-        $attribute->setUuid('attr-uuid-1');
-        $attribute->setKey('color');
-        $attribute->setType('text');
-
-        $groupAttr = new AttributeGroupAttribute($attributeGroup, $attribute);
-        $groupAttr->setPosition(0);
-        $attributeGroup->addGroupAttribute($groupAttr);
-
-        $this->attributeGroupRepository->findOneBy(['uuid' => 'test-uuid-with-attrs'])
-            ->shouldBeCalledOnce()
-            ->willReturn($attributeGroup);
-
-        $controller = $this->createController();
-        $request = new Request(['locale' => 'en']);
-        $response = $controller->getAction($request, 'test-uuid-with-attrs');
-
-        $this->assertSame(200, $response->getStatusCode());
-
-        $data = \json_decode((string) $response->getContent(), true);
-        $this->assertIsArray($data);
-        /** @var array<string, mixed> $data */
-        $attributes = $data['attributes'];
-        $this->assertIsArray($attributes);
-        /** @var list<array{attribute: string}> $attributes */
-        $this->assertCount(1, $attributes);
-        $this->assertSame('attr-uuid-1', $attributes[0]['attribute']);
-        $this->assertArrayNotHasKey('required', $attributes[0]);
     }
 
     public function testPostActionReturns409OnUniqueConstraintViolation(): void

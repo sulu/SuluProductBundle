@@ -5,7 +5,6 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
-        "ext-ctype": "*",
         "ext-filter": "*",
         "ext-intl": "*",
         "cmsig/seal": "^0.12",

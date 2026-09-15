@@ -90,15 +90,15 @@ class ProductFamilyCascadeTest extends SuluTestCase
      */
     private function createFixture(): array
     {
-        $group = $this->groupRepository->create();
+        $group = $this->groupRepository->createNew();
         $this->groupRepository->save($group);
 
-        $attribute = $this->attributeRepository->create($group);
+        $attribute = $this->attributeRepository->createNew($group);
         $attribute->setKey('color');
         $attribute->setType(AttributeInterface::TYPE_TEXT);
         $this->attributeRepository->save($attribute);
 
-        $family = $this->familyRepository->create();
+        $family = $this->familyRepository->createNew();
         $familyAttribute = new ProductFamilyAttribute($family, $attribute);
         $family->addFamilyAttribute($familyAttribute);
         $this->familyRepository->save($family);
@@ -138,7 +138,6 @@ class ProductFamilyCascadeTest extends SuluTestCase
     {
         $fixture = $this->createFixture();
         $uuid = $fixture['family']->getUuid();
-        $this->assertNotNull($uuid);
         $this->assertSame(1, $this->countProductValues());
 
         // The product family FK is NOT NULL with on-delete RESTRICT, so the database

@@ -275,7 +275,7 @@ final class ProductVariantController implements SecuredControllerInterface
         // `attributes` is always sent: the mapper skips an absent key, which would let an
         // untouched required axis attribute through.
         $attributes = $data['attributes'] ?? [];
-        /** @var array<int, mixed> $attributes */
+        /** @var array<string, mixed> $attributes */
         $attributes = \is_array($attributes) ? $attributes : [];
         $data['attributes'] = $this->stripInheritedAttributes($family, $attributes);
 
@@ -300,15 +300,15 @@ final class ProductVariantController implements SecuredControllerInterface
      * Only per-variant axis values may be persisted on the variant's own dimension content;
      * shared/inherited attribute values are stripped even if a client submits them directly.
      *
-     * @param array<int, mixed> $attributes
+     * @param array<string, mixed> $attributes
      *
-     * @return array<int, mixed>
+     * @return array<string, mixed>
      */
     private function stripInheritedAttributes(ProductFamilyInterface $family, array $attributes): array
     {
         foreach ($family->getFamilyAttributes() as $familyAttribute) {
             if (!$familyAttribute->isVariantSpecific()) {
-                unset($attributes[$familyAttribute->getAttribute()->getId()]);
+                unset($attributes[$familyAttribute->getAttribute()->getUuid()]);
             }
         }
 
