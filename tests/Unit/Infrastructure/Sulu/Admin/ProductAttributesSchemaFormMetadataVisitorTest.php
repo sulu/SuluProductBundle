@@ -21,6 +21,7 @@ use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataLoaderInterface;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\SectionMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadataMapper\NumberPropertyMetadataMapper;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadataMapperRegistry;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\SchemaMetadata;
@@ -283,25 +284,63 @@ class ProductAttributesSchemaFormMetadataVisitorTest extends TestCase
         ], $form->getSchema()->toJsonSchema());
     }
 
+    public function testVariantFormKeepsTheAttributesSectionForAxisAttributes(): void
+    {
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'product-1'], self::FAMILY_SELECT)->willReturn(
+            $this->family('family-1', [$this->familyAttribute(8, true)]),
+        );
+        $form = $this->variantFormWithAttributesSection();
+
+        $this->visitor()->visitFormMetadata($form, 'en', ['parentId' => 'product-1']);
+
+        self::assertSame(['title', 'attributes'], \array_keys($form->getItems()));
+    }
+
+    public function testVariantFormDropsTheAttributesSectionWithoutAxisAttributes(): void
+    {
+        $this->productFamilyRepository->findOneBy(['productUuid' => 'product-1'], self::FAMILY_SELECT)->willReturn(
+            $this->family('family-1', [$this->familyAttribute(7)]),
+        );
+        $form = $this->variantFormWithAttributesSection();
+
+        $this->visitor()->visitFormMetadata($form, 'en', ['parentId' => 'product-1']);
+
+        self::assertSame(['title'], \array_keys($form->getItems()));
+        self::assertEquals(new SchemaMetadata(), $form->getSchema());
+    }
+
     public function testVariantFormWithoutParentKeepsTheSchema(): void
     {
-        $form = $this->form('product_variant');
+        $form = $this->variantFormWithAttributesSection();
 
         $this->visitor()->visitFormMetadata($form, 'en');
 
         self::assertFalse($form->isCacheable());
         self::assertEquals(new SchemaMetadata(), $form->getSchema());
+        self::assertSame(['title', 'attributes'], \array_keys($form->getItems()));
     }
 
     public function testVariantFormWithUnknownParentKeepsTheSchema(): void
     {
         $this->productFamilyRepository->findOneBy(['productUuid' => 'product-1'], self::FAMILY_SELECT)->willReturn(null);
-        $form = $this->form('product_variant');
+        $form = $this->variantFormWithAttributesSection();
 
         $this->visitor()->visitFormMetadata($form, 'en', ['parentId' => 'product-1']);
 
         self::assertFalse($form->isCacheable());
         self::assertEquals(new SchemaMetadata(), $form->getSchema());
+        self::assertSame(['title', 'attributes'], \array_keys($form->getItems()));
+    }
+
+    private function variantFormWithAttributesSection(): FormMetadata
+    {
+        $form = $this->form('product_variant');
+        $form->setItems([
+            'title' => new FieldMetadata('title'),
+            'attributes' => new SectionMetadata('attributes'),
+        ]);
+
+        return $form;
     }
 
     public function testDetailsFormSkipsTheProductWithVariantsBranchOfAFamilyWithoutSharedAttributes(): void

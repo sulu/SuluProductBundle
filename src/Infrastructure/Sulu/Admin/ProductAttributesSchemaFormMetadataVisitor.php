@@ -30,10 +30,15 @@ use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
  * attributes match X for Y" branch per family and type, the variant form the axis attributes of the
  * parent's family.
  *
+ * The variant form drops its attributes section when the parent's family has no axis attribute,
+ * as it would stay empty.
+ *
  * @internal
  */
 class ProductAttributesSchemaFormMetadataVisitor implements FormMetadataVisitorInterface
 {
+    private const SECTION_NAME = 'attributes';
+
     public function __construct(
         private readonly ProductFamilyRepositoryInterface $productFamilyRepository,
         private readonly AttributeFieldFactory $attributeFieldFactory,
@@ -54,11 +59,34 @@ class ProductAttributesSchemaFormMetadataVisitor implements FormMetadataVisitorI
 
         $schema = ProductInterface::FORM_KEY === $key
             ? $this->buildDetailsSchema($metadataOptions, $locale)
-            : $this->buildVariantSchema($metadataOptions, $locale);
+            : $this->visitVariantForm($formMetadata, $metadataOptions, $locale);
 
         if (null !== $schema) {
             $formMetadata->setSchema($formMetadata->getSchema()->merge($schema));
         }
+    }
+
+    /**
+     * @param array<string, mixed> $metadataOptions
+     */
+    private function visitVariantForm(FormMetadata $formMetadata, array $metadataOptions, string $locale): ?SchemaMetadata
+    {
+        $family = $this->resolveParentFamily($metadataOptions);
+        if (null === $family) {
+            return null;
+        }
+
+        $attributes = $this->buildAttributesProperty($family, ProductInterface::TYPE_VARIANT, $locale);
+
+        if (null === $attributes) {
+            $items = $formMetadata->getItems();
+            unset($items[self::SECTION_NAME]);
+            $formMetadata->setItems($items);
+
+            return null;
+        }
+
+        return new SchemaMetadata([$attributes]);
     }
 
     /**
@@ -121,24 +149,17 @@ class ProductAttributesSchemaFormMetadataVisitor implements FormMetadataVisitorI
     /**
      * @param array<string, mixed> $metadataOptions
      */
-    private function buildVariantSchema(array $metadataOptions, string $locale): ?SchemaMetadata
+    private function resolveParentFamily(array $metadataOptions): ?ProductFamilyInterface
     {
         $parentUuid = $metadataOptions['parentId'] ?? null;
         if (!\is_string($parentUuid) || '' === $parentUuid) {
             return null;
         }
 
-        $family = $this->productFamilyRepository->findOneBy(
+        return $this->productFamilyRepository->findOneBy(
             ['productUuid' => $parentUuid],
             [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true],
         );
-        if (null === $family) {
-            return null;
-        }
-
-        $attributes = $this->buildAttributesProperty($family, ProductInterface::TYPE_VARIANT, $locale);
-
-        return null === $attributes ? null : new SchemaMetadata([$attributes]);
     }
 
     /**
