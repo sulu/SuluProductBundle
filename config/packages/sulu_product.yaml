@@ -1,8 +1,0 @@
-sulu_product:
-    variants:
-        properties:
-            title: product.title
-            url: product.url
-            code: product.code
-            status: product.status
-            position: product.position

@@ -6,7 +6,6 @@
     "require": {
         "php": "^8.2",
         "ext-ctype": "*",
-        "ext-filter": "*",
         "ext-intl": "*",
         "cmsig/seal": "^0.12",
         "doctrine/collections": "^1.6 || ^2.0",
@@ -33,6 +32,7 @@
         "doctrine/orm": "3.7.x-dev"
     },
     "require-dev": {
+        "ext-filter": "*",
         "handcraftedinthealps/code-coverage-checker": "^0.2.1",
         "jangregor/phpstan-prophecy": "^2.0",
         "php-cs-fixer/shim": "^3.14",

@@ -19,7 +19,6 @@ use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\ConstMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\IfThenElseMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\SchemaMetadata;
-use Sulu\Product\Domain\Model\ProductAttributeScope;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
@@ -90,8 +89,6 @@ class ProductAttributesSchemaFormMetadataVisitor implements FormMetadataVisitorI
     }
 
     /**
-     * One branch per family and product type, so the attributes follow the type select live.
-     *
      * @param array<string, mixed> $metadataOptions
      */
     private function buildDetailsSchema(array $metadataOptions, string $locale): ?SchemaMetadata
@@ -172,7 +169,7 @@ class ProductAttributesSchemaFormMetadataVisitor implements FormMetadataVisitorI
         $mandatory = false;
 
         foreach ($family->getFamilyAttributes() as $familyAttribute) {
-            if (!ProductAttributeScope::holds($productType, $familyAttribute)) {
+            if (!$familyAttribute->isAvailable($productType)) {
                 continue;
             }
 

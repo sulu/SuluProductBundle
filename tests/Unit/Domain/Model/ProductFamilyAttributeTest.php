@@ -14,11 +14,13 @@ declare(strict_types=1);
 namespace Sulu\Product\Tests\Unit\Domain\Model;
 
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductFamilyAttribute;
+use Sulu\Product\Domain\Model\ProductInterface;
 
 #[CoversClass(ProductFamilyAttribute::class)]
 class ProductFamilyAttributeTest extends TestCase
@@ -62,5 +64,27 @@ class ProductFamilyAttributeTest extends TestCase
         $ref = new \ReflectionProperty(ProductFamilyAttribute::class, 'id');
         $ref->setValue($fa, 5);
         $this->assertSame(5, $fa->getId());
+    }
+
+    /**
+     * @return iterable<string, array{0: string, 1: bool, 2: bool}>
+     */
+    public static function provideAvailability(): iterable
+    {
+        yield 'product holds shared' => [ProductInterface::TYPE_PRODUCT, false, true];
+        yield 'product holds variant' => [ProductInterface::TYPE_PRODUCT, true, true];
+        yield 'product with variants holds shared' => [ProductInterface::TYPE_PRODUCT_WITH_VARIANTS, false, true];
+        yield 'product with variants leaves variant' => [ProductInterface::TYPE_PRODUCT_WITH_VARIANTS, true, false];
+        yield 'variant leaves shared' => [ProductInterface::TYPE_VARIANT, false, false];
+        yield 'variant holds variant' => [ProductInterface::TYPE_VARIANT, true, true];
+    }
+
+    #[DataProvider('provideAvailability')]
+    public function testIsAvailable(string $productType, bool $variantSpecific, bool $expected): void
+    {
+        $fa = new ProductFamilyAttribute(new ProductFamily(), new Attribute(new AttributeGroup()));
+        $fa->setVariantSpecific($variantSpecific);
+
+        $this->assertSame($expected, $fa->isAvailable($productType));
     }
 }

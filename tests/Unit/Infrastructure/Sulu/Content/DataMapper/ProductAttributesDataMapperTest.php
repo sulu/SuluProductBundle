@@ -29,6 +29,7 @@ use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
+use Sulu\Product\Domain\Model\ProductFamilyAttribute;
 use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
@@ -400,15 +401,17 @@ class ProductAttributesDataMapperTest extends TestCase
         $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
         $attribute->isLocalized()->willReturn($localized);
 
-        /** @var ObjectProphecy<ProductFamilyAttributeInterface> $familyAttribute */
-        $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
-        $familyAttribute->getAttribute()->willReturn($attribute->reveal());
-        $familyAttribute->isRequired()->willReturn($required);
-        $familyAttribute->isVariantSpecific()->willReturn($isVariantAttribute);
+        // A real family attribute, so the tests run against its own availability rule.
+        $familyAttribute = new ProductFamilyAttribute(
+            $this->prophesize(ProductFamilyInterface::class)->reveal(),
+            $attribute->reveal(),
+        );
+        $familyAttribute->setVariantSpecific($isVariantAttribute);
+        $familyAttribute->setRequired($required);
 
         /** @var ObjectProphecy<ProductFamilyInterface> $family */
         $family = $this->prophesize(ProductFamilyInterface::class);
-        $family->getFamilyAttributes()->willReturn([$familyAttribute->reveal()]);
+        $family->getFamilyAttributes()->willReturn([$familyAttribute]);
 
         /** @var ObjectProphecy<ProductInterface> $resource */
         $resource = $this->prophesize(ProductInterface::class);
@@ -433,7 +436,7 @@ class ProductAttributesDataMapperTest extends TestCase
             'unloc' => $unloc->reveal(),
             'loc' => $loc->reveal(),
             'attribute' => $attribute->reveal(),
-            'familyAttribute' => $familyAttribute->reveal(),
+            'familyAttribute' => $familyAttribute,
         ];
     }
 }

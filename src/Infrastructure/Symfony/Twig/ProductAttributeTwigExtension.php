@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Sulu\Product\Infrastructure\Symfony\Twig;
 
 use Sulu\Component\Webspace\Analyzer\RequestAnalyzerInterface;
-use Sulu\Product\Application\Attribute\ProductVariantAttributesMerger;
 use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
@@ -33,7 +32,6 @@ class ProductAttributeTwigExtension extends AbstractExtension
     public function __construct(
         private readonly MeasurementRegistry $measurementRegistry,
         private readonly RequestAnalyzerInterface $requestAnalyzer,
-        private readonly ProductVariantAttributesMerger $attributesMerger,
     ) {
     }
 
@@ -53,6 +51,9 @@ class ProductAttributeTwigExtension extends AbstractExtension
     }
 
     /**
+     * Combines a product's attribute values with those of one of its variants, keyed by attribute
+     * key; a variant's value wins over the product's.
+     *
      * @param iterable<ProductAttributeValueInterface> $productAttributes
      * @param iterable<ProductAttributeValueInterface> $variantAttributes
      *
@@ -60,15 +61,23 @@ class ProductAttributeTwigExtension extends AbstractExtension
      */
     public function mergeAttributes(iterable $productAttributes, iterable $variantAttributes = []): array
     {
-        return $this->attributesMerger->merge($productAttributes, $variantAttributes);
+        $merged = [];
+
+        foreach ([$productAttributes, $variantAttributes] as $attributes) {
+            foreach ($attributes as $value) {
+                $merged[$value->getAttribute()->getKey()] = $value;
+            }
+        }
+
+        return $merged;
     }
 
     /**
-     * @param iterable<ProductAttributeValueInterface> $productAttributes keys are ignored; re-keyed by attribute key
+     * @param iterable<ProductAttributeValueInterface> $productAttributeValues keys are ignored; re-keyed by attribute key
      *
      * @return list<array{key: string, label: string, attributes: array<string, ResolvedAttribute>}>
      */
-    public function groupAttributes(iterable $productAttributes, ?string $locale = null): array
+    public function groupAttributes(iterable $productAttributeValues, ?string $locale = null): array
     {
         $locale ??= $this->requestAnalyzer->getCurrentLocalization()?->getLocale();
 
@@ -79,7 +88,7 @@ class ProductAttributeTwigExtension extends AbstractExtension
         /** @var array<string, array{key: string, label: string, attributes: array<string, ResolvedAttribute>}> $groups */
         $groups = [];
 
-        foreach ($productAttributes as $productAttributeValue) {
+        foreach ($productAttributeValues as $productAttributeValue) {
             $attribute = $productAttributeValue->getAttribute();
             $formatted = $this->formatValue($productAttributeValue, $locale);
 

@@ -35,11 +35,6 @@ use Sulu\Product\Infrastructure\Sulu\Content\ProductParentContentLoader;
  * Assembles the root-level `product` namespace. A reference passes `$properties` and gets the
  * always-on set plus what it asked for under `product.`, so a listing builds no full payload.
  *
- * A variant resolved in full, as the page of its route, resolves its parent as `product` and itself
- * as `product.currentVariant`. Its content comes from the parent too, see
- * ProductVariantDimensionContentEnhancer. Every product carries its own attribute values only; the
- * `sulu_product_merge_attributes` Twig function combines a parent's and a variant's.
- *
  * @internal
  *
  * @final
@@ -113,7 +108,7 @@ class ProductResolver implements ResolverInterface
 
         if ($this->isRequested($requested, 'attributes')) {
             $content[$this->outputKey($requested, 'attributes')] = ContentView::create(
-                $this->keyAttributes($dimensionContent),
+                $this->getAttributesMapByKey($dimensionContent),
                 [],
             );
         }
@@ -226,7 +221,7 @@ class ProductResolver implements ResolverInterface
         string $locale,
         ?array $requested,
     ): array {
-        $fixed = [
+        $masterData = [
             'title' => ContentView::create($dimensionContent->getTitle(), []),
             'url' => ContentView::create($dimensionContent->getRoute()?->getSlug(), []),
             'code' => ContentView::create($dimensionContent->getCode(), []),
@@ -238,20 +233,20 @@ class ProductResolver implements ResolverInterface
 
         // A product with variants owns no route, it is reached through its variants.
         if ($dimensionContent->getResource()->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS)) {
-            unset($fixed['url']);
+            unset($masterData['url']);
         }
 
         if (null !== $requested) {
             $selected = [];
             foreach ($requested as $key => $name) {
-                if (isset($fixed[$name])) {
-                    $selected[$key] = $fixed[$name];
+                if (isset($masterData[$name])) {
+                    $selected[$key] = $masterData[$name];
                 }
             }
-            $fixed = $selected;
+            $masterData = $selected;
         }
 
-        return \array_merge($fixed, $this->resolveDetailsData($dimensionContent, $locale, $requested));
+        return \array_merge($masterData, $this->resolveDetailsData($dimensionContent, $locale, $requested));
     }
 
     /** The family is already on the dimension content, so it is read here rather than re-loaded. */
@@ -331,7 +326,7 @@ class ProductResolver implements ResolverInterface
      *
      * @return array<string, ProductAttributeValueInterface>
      */
-    private function keyAttributes(ProductDimensionContentInterface $dimensionContent): array
+    private function getAttributesMapByKey(ProductDimensionContentInterface $dimensionContent): array
     {
         $attributes = [];
 
@@ -373,10 +368,8 @@ class ProductResolver implements ResolverInterface
     }
 
     /**
-     * Each variant as flat product fields (`title`, `url`, `code`, `status`, `position` plus the
-     * configured fields), the shape of `currentVariant`. Built here rather than as references: a projected
-     * reference moves its fields under `content`. A variant is not itself `product_with_variants`, so
-     * this does not nest.
+     * Each variant as flat product fields, the shape of `currentVariant`. Built here rather than as
+     * references: a projected reference moves its fields under `content`.
      */
     private function resolveVariants(ProductInterface $product, string $locale): ?ContentView
     {

@@ -17,7 +17,6 @@ use Sulu\Bundle\HttpCacheBundle\ReferenceStore\ReferenceStore;
 use Sulu\Bundle\PersistenceBundle\DependencyInjection\PersistenceExtensionTrait;
 use Sulu\Bundle\PersistenceBundle\PersistenceBundleTrait;
 use Sulu\Content\Infrastructure\Sulu\Preview\ContentObjectProvider;
-use Sulu\Product\Application\Attribute\ProductVariantAttributesMerger;
 use Sulu\Product\Application\AttributeType\AttributeTypeInterface;
 use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
 use Sulu\Product\Application\AttributeType\DateAttributeType;
@@ -188,6 +187,17 @@ final class SuluProductBundle extends AbstractBundle
      */
     private const DEFAULT_ROUTE_PARAMS = [
         'route_schema' => "/products/{implode('-', object)}",
+    ];
+
+    /**
+     * Prepended, so a project's map is merged into these instead of replacing them.
+     */
+    private const DEFAULT_VARIANT_PROPERTIES = [
+        'title' => 'product.title',
+        'url' => 'product.url',
+        'code' => 'product.code',
+        'status' => 'product.status',
+        'position' => 'product.position',
     ];
 
     /**
@@ -1117,17 +1127,11 @@ final class SuluProductBundle extends AbstractBundle
             ])
             ->tag('twig.extension');
 
-        $services->set('sulu_product.product_variant_attributes_merger')
-            ->class(ProductVariantAttributesMerger::class);
-
-        $services->alias(ProductVariantAttributesMerger::class, 'sulu_product.product_variant_attributes_merger');
-
         $services->set('sulu_product.product_attribute_twig_extension')
             ->class(ProductAttributeTwigExtension::class)
             ->args([
                 new Reference('sulu_product.measurement_registry'),
                 new Reference('sulu_core.webspace.request_analyzer'),
-                new Reference('sulu_product.product_variant_attributes_merger'),
             ])
             ->tag('twig.extension');
 
@@ -1270,7 +1274,14 @@ final class SuluProductBundle extends AbstractBundle
      */
     public function prependExtension(ContainerConfigurator $container, ContainerBuilder $builder): void
     {
-        $container->import(\dirname(__DIR__, 4) . '/config/packages/sulu_product.yaml');
+        $builder->prependExtensionConfig(
+            'sulu_product',
+            [
+                'variants' => [
+                    'properties' => self::DEFAULT_VARIANT_PROPERTIES,
+                ],
+            ],
+        );
 
         if ($builder->hasExtension('sulu_admin')) {
             $builder->prependExtensionConfig(

@@ -17,7 +17,6 @@ use Sulu\Content\Application\ContentDataMapper\DataMapper\DataMapperInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
 use Sulu\Product\Domain\Exception\RequiredProductAttributeMissingException;
-use Sulu\Product\Domain\Model\ProductAttributeScope;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
@@ -130,7 +129,7 @@ class ProductAttributesDataMapper implements DataMapperInterface
                 continue;
             }
 
-            if (!ProductAttributeScope::holds($productType, $familyAttribute)) {
+            if (!$familyAttribute->isAvailable($productType)) {
                 continue;
             }
 
