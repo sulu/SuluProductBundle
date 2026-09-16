@@ -60,6 +60,15 @@ class ProductFamilyAttribute implements ProductFamilyAttributeInterface
         return $this;
     }
 
+    public function isAvailable(string $productType): bool
+    {
+        return match ($productType) {
+            ProductInterface::TYPE_VARIANT => $this->variantSpecific,
+            ProductInterface::TYPE_PRODUCT_WITH_VARIANTS => !$this->variantSpecific,
+            default => true,
+        };
+    }
+
     public function getFamily(): ProductFamilyInterface
     {
         return $this->family;

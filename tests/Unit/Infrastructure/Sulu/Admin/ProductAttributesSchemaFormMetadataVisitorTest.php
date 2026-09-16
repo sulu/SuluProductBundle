@@ -30,6 +30,7 @@ use Sulu\Product\Application\AttributeType\NumberAttributeType;
 use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeTranslationInterface;
+use Sulu\Product\Domain\Model\ProductFamilyAttribute;
 use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
@@ -109,12 +110,15 @@ class ProductAttributesSchemaFormMetadataVisitorTest extends TestCase
         $attribute->getDefaultLocale()->willReturn(null);
         $attribute->getTranslation('en')->willReturn($translation->reveal());
 
-        $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
-        $familyAttribute->isVariantSpecific()->willReturn($variantSpecific);
-        $familyAttribute->isRequired()->willReturn($required);
-        $familyAttribute->getAttribute()->willReturn($attribute->reveal());
+        // A real family attribute, so the tests run against its own availability rule.
+        $familyAttribute = new ProductFamilyAttribute(
+            $this->prophesize(ProductFamilyInterface::class)->reveal(),
+            $attribute->reveal(),
+        );
+        $familyAttribute->setVariantSpecific($variantSpecific);
+        $familyAttribute->setRequired($required);
 
-        return $familyAttribute->reveal();
+        return $familyAttribute;
     }
 
     /**

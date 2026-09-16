@@ -17,7 +17,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Component\Localization\Localization;
 use Sulu\Component\Webspace\Analyzer\RequestAnalyzerInterface;
-use Sulu\Product\Application\Attribute\ProductVariantAttributesMerger;
 use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
@@ -42,7 +41,7 @@ class ProductAttributeTwigExtensionTest extends TestCase
             null === $currentLocale ? null : new Localization($currentLocale),
         );
 
-        return new ProductAttributeTwigExtension(new MeasurementRegistry(), $requestAnalyzer, new ProductVariantAttributesMerger());
+        return new ProductAttributeTwigExtension(new MeasurementRegistry(), $requestAnalyzer);
     }
 
     /**
@@ -106,6 +105,8 @@ class ProductAttributeTwigExtensionTest extends TestCase
         $this->assertSame(['housing', 'colour'], \array_keys($merged));
         $this->assertSame('black', $merged['colour']->getText());
         $this->assertSame(['housing', 'colour'], \array_keys($this->extension()->mergeAttributes($product->getAttributes())));
+        $this->assertSame(['colour'], \array_keys($this->extension()->mergeAttributes([], $variant->getAttributes())));
+        $this->assertSame([], $this->extension()->mergeAttributes([], []));
         $this->assertSame(['sulu_product_merge_attributes'], \array_map(
             static fn (TwigFunction $function): string => $function->getName(),
             $this->extension()->getFunctions(),

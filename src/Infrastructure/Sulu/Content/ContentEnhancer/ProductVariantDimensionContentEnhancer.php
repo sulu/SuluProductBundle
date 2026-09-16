@@ -19,11 +19,7 @@ use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\ProductParentContentLoader;
 
 /**
- * A variant owns its route and product fields but no content: it is resolved with its parent's
- * template, excerpt and SEO data, so `content` is the parent's content tab. Its own title stays on the
- * product (`product.currentVariant.title`), its URL comes from its own route.
- *
- * Only merged content is changed, which is never persisted.
+ * Resolves a variant with its parent's template, excerpt and SEO data, since a variant has no content of its own.
  *
  * @internal
  */
@@ -36,7 +32,7 @@ class ProductVariantDimensionContentEnhancer implements DimensionContentEnhancer
 
     public function enhance(DimensionContentInterface $dimensionContent): DimensionContentInterface
     {
-        if (!$dimensionContent instanceof ProductDimensionContentInterface || !$dimensionContent->isMerged()) {
+        if (!$dimensionContent instanceof ProductDimensionContentInterface) {
             return $dimensionContent;
         }
 

@@ -83,7 +83,7 @@ class ProductAttributesMetadataTest extends SuluTestCase
         $this->assertStringStartsWith('attribute_', $fieldName);
         $this->assertSame(['type' => ['number', 'string', 'boolean', 'object', 'array', 'null']], $shared['schema']);
 
-        $this->client->request('GET', '/admin/metadata/form/product_attributes?productFamily=' . $family['id'] . '&variant=true');
+        $this->client->request('GET', '/admin/metadata/form/product_attributes?productFamily=' . $family['id'] . '&productType=variant');
         $this->assertHttpStatusCode(200, $this->client->getResponse());
         /** @var array{form: array<string, array{label: string, items: array<string, array{label: string}>}>} $axis */
         $axis = \json_decode((string) $this->client->getResponse()->getContent(), true);

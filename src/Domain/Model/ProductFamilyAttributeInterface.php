@@ -25,6 +25,9 @@ interface ProductFamilyAttributeInterface
 
     public function setVariantSpecific(bool $variantSpecific): self;
 
+    /** Whether a product of that type holds this attribute. */
+    public function isAvailable(string $productType): bool;
+
     public function getFamily(): ProductFamilyInterface;
 
     public function getAttribute(): AttributeInterface;

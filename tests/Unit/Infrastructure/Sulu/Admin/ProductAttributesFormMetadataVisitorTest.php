@@ -31,6 +31,7 @@ use Sulu\Product\Domain\Model\AttributeGroupInterface;
 use Sulu\Product\Domain\Model\AttributeGroupTranslationInterface;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeTranslationInterface;
+use Sulu\Product\Domain\Model\ProductFamilyAttribute;
 use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
@@ -146,12 +147,15 @@ class ProductAttributesFormMetadataVisitorTest extends TestCase
         $attribute->getTranslation('en')->willReturn($translation->reveal());
         $attribute->getGroup()->willReturn($group);
 
-        $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
-        $familyAttribute->isVariantSpecific()->willReturn($variantSpecific);
-        $familyAttribute->isRequired()->willReturn($required);
-        $familyAttribute->getAttribute()->willReturn($attribute->reveal());
+        // A real family attribute, so the tests run against its own availability rule.
+        $familyAttribute = new ProductFamilyAttribute(
+            $this->prophesize(ProductFamilyInterface::class)->reveal(),
+            $attribute->reveal(),
+        );
+        $familyAttribute->setVariantSpecific($variantSpecific);
+        $familyAttribute->setRequired($required);
 
-        return $familyAttribute->reveal();
+        return $familyAttribute;
     }
 
     /**
@@ -232,18 +236,7 @@ class ProductAttributesFormMetadataVisitorTest extends TestCase
         self::assertFalse($form->isCacheable());
     }
 
-    /**
-     * @return iterable<string, array{0: mixed}>
-     */
-    public static function provideVariantFlags(): iterable
-    {
-        yield 'string true' => ['true'];
-        yield 'string 1' => ['1'];
-        yield 'bool true' => [true];
-    }
-
-    #[DataProvider('provideVariantFlags')]
-    public function testVariantFlagKeepsOnlyAxisAttributes(mixed $variant): void
+    public function testVariantTypeKeepsOnlyAxisAttributes(): void
     {
         $group = $this->group();
         $this->productFamilyRepository->findOneBy(['uuid' => 'family-1'], self::FAMILY_SELECT)->willReturn($this->family([
@@ -252,7 +245,7 @@ class ProductAttributesFormMetadataVisitorTest extends TestCase
         ]));
         $form = $this->form();
 
-        $this->visitor()->visitFormMetadata($form, 'en', ['productFamily' => 'family-1', 'variant' => $variant]);
+        $this->visitor()->visitFormMetadata($form, 'en', ['productFamily' => 'family-1', 'productType' => 'variant']);
 
         $section = $form->getItems()['attribute_group_1'];
         self::assertInstanceOf(SectionMetadata::class, $section);
@@ -300,22 +293,6 @@ class ProductAttributesFormMetadataVisitorTest extends TestCase
         $section = $form->getItems()['attribute_group_1'];
         self::assertInstanceOf(SectionMetadata::class, $section);
         self::assertSame(['attribute_7'], \array_keys($section->getItems()));
-    }
-
-    public function testVariantFlagWinsOverType(): void
-    {
-        $group = $this->group();
-        $this->productFamilyRepository->findOneBy(['uuid' => 'family-1'], self::FAMILY_SELECT)->willReturn($this->family([
-            $this->familyAttribute(7, 'Weight', $group),
-            $this->familyAttribute(8, 'Colour', $group, true),
-        ]));
-        $form = $this->form();
-
-        $this->visitor()->visitFormMetadata($form, 'en', ['productFamily' => 'family-1', 'productType' => 'product', 'variant' => true]);
-
-        $section = $form->getItems()['attribute_group_1'];
-        self::assertInstanceOf(SectionMetadata::class, $section);
-        self::assertSame(['attribute_8'], \array_keys($section->getItems()));
     }
 
     public function testResolvesFamilyThroughProductOption(): void

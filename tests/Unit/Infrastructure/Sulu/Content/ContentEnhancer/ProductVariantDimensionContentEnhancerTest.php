@@ -64,25 +64,17 @@ class ProductVariantDimensionContentEnhancerTest extends TestCase
         self::assertTrue($variantContent->getSeoNoIndex());
     }
 
-    /** Only merged content is changed, so nothing the enhancer does can be flushed. */
-    public function testContentThatIsNotMergedIsLeftAlone(): void
+    public function testContentOfAnotherResourceIsLeftAlone(): void
     {
-        $parent = new Product('parent-uuid');
-        $variant = new Product('variant-uuid');
-        $variant->setType(ProductInterface::TYPE_VARIANT);
-        $variant->setParent($parent);
-
-        $variantContent = new ProductDimensionContent($variant);
-        $variantContent->setLocale('en');
-        $variantContent->setTemplateData(['title' => 'NC3FX-B']);
+        $content = $this->createStub(DimensionContentInterface::class);
 
         $productRepository = $this->createMock(ProductRepositoryInterface::class);
         $productRepository->expects(self::never())->method('findOneBy');
 
-        (new ProductVariantDimensionContentEnhancer(new ProductParentContentLoader($productRepository, $this->createStub(ContentAggregatorInterface::class))))
-            ->enhance($variantContent);
+        $enhanced = (new ProductVariantDimensionContentEnhancer(new ProductParentContentLoader($productRepository, $this->createStub(ContentAggregatorInterface::class))))
+            ->enhance($content);
 
-        self::assertSame(['title' => 'NC3FX-B'], $variantContent->getTemplateData());
+        self::assertSame($content, $enhanced);
     }
 
     public function testAProductWithoutParentIsLeftAlone(): void

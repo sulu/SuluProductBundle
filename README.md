@@ -73,6 +73,13 @@ variant's value wins on the same attribute:
 {% set groups = attributes|sulu_product_attribute_groups %}
 ```
 
+To render a single attribute value outside those groups, for example an option value in a variant
+switcher, format it with `sulu_product_format_attribute_value`:
+
+```twig
+{{ attributeValue|sulu_product_format_attribute_value }}
+```
+
 ## Association form overrides
 
 The bundle generates a `product_associations` form with one field per configured
