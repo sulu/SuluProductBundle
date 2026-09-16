@@ -605,6 +605,53 @@ class ProductVariantControllerTest extends SuluTestCase
         $this->assertSame(7, $row['position']);
     }
 
+    public function testCgetExposesPublishAndGhostIndicators(): void
+    {
+        self::purgeDatabase();
+        $familyId = $this->createProductFamily();
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $publishedId = $this->createVariant($parentId, 'Published', 1);
+        $draftId = $this->createVariant($parentId, 'Draft', 2);
+
+        $this->client->request('POST', '/admin/api/products/' . $parentId . '/variants/' . $publishedId . '.json?locale=en&action=publish');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        $this->client->request('GET', '/admin/api/products/' . $parentId . '/variants.json?locale=en&fields=name');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+        $rows = $this->getListedVariantRows();
+
+        $this->assertTrue($rows[$publishedId]['publishedState']);
+        $this->assertNotNull($rows[$publishedId]['published']);
+        $this->assertNull($rows[$publishedId]['ghostLocale']);
+        $this->assertFalse($rows[$draftId]['publishedState']);
+        $this->assertNull($rows[$draftId]['published']);
+
+        // untranslated variants fall back to their ghost locale
+        $this->client->request('GET', '/admin/api/products/' . $parentId . '/variants.json?locale=de&fields=name');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+        $rows = $this->getListedVariantRows();
+
+        $this->assertSame('en', $rows[$publishedId]['ghostLocale']);
+        $this->assertFalse($rows[$publishedId]['publishedState']);
+        $this->assertSame('Published', $rows[$publishedId]['name']);
+    }
+
+    /**
+     * @return array<string, array<string, mixed>>
+     */
+    private function getListedVariantRows(): array
+    {
+        $list = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($list);
+        $this->assertIsArray($list['_embedded']);
+        $this->assertIsArray($list['_embedded']['product_variants']);
+
+        /** @var array<string, array<string, mixed>> $rows */
+        $rows = \array_column($list['_embedded']['product_variants'], null, 'id');
+
+        return $rows;
+    }
+
     /**
      * @return string[]
      */
@@ -793,20 +840,65 @@ class ProductVariantControllerTest extends SuluTestCase
         $this->assertSame($parentId, $restored->getParent()->getUuid());
     }
 
-    public function testWorkflowTriggerRouteIsGoneForVariants(): void
+    public function testPostTriggerPublishesAndUnpublishesTheVariantOnly(): void
+    {
+        self::purgeDatabase();
+        $familyId = $this->createProductFamily();
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $variantId = $this->createVariant($parentId, 'Variant L');
+        $siblingId = $this->createVariant($parentId, 'Variant M');
+
+        $this->client->request('POST', '/admin/api/products/' . $parentId . '/variants/' . $variantId . '.json?locale=en&action=publish');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertTrue($data['publishedState']);
+
+        $this->assertTrue($this->getVariantPublishedState($parentId, $variantId));
+        $this->assertFalse($this->getVariantPublishedState($parentId, $siblingId));
+        $this->assertFalse($this->getProductPublishedState($parentId));
+
+        $this->client->request('POST', '/admin/api/products/' . $parentId . '/variants/' . $variantId . '.json?locale=en&action=unpublish');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+        $this->assertFalse($this->getVariantPublishedState($parentId, $variantId));
+    }
+
+    public function testPostTriggerRejectsAnUnsupportedAction(): void
     {
         self::purgeDatabase();
         $familyId = $this->createProductFamily();
         $parentId = $this->createProduct($familyId, type: ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
         $variantId = $this->createVariant($parentId, 'Variant L');
 
-        $this->client->request(
-            'POST',
-            '/admin/api/products/' . $parentId . '/variants/' . $variantId . '.json?locale=en&action=publish',
-        );
+        $this->client->request('POST', '/admin/api/products/' . $parentId . '/variants/' . $variantId . '.json?locale=en&action=remove_draft');
 
-        // POST is no longer a defined method on this path (only GET/PUT/DELETE remain).
-        $this->assertHttpStatusCode(405, $this->client->getResponse());
+        $this->assertHttpStatusCode(400, $this->client->getResponse());
+    }
+
+    public function testPostTriggerUnpublishingANeverPublishedVariantReturns409(): void
+    {
+        self::purgeDatabase();
+        $familyId = $this->createProductFamily();
+        $parentId = $this->createProduct($familyId, type: ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $variantId = $this->createVariant($parentId, 'Variant L');
+
+        $this->client->request('POST', '/admin/api/products/' . $parentId . '/variants/' . $variantId . '.json?locale=en&action=unpublish');
+
+        $this->assertHttpStatusCode(409, $this->client->getResponse());
+    }
+
+    public function testPostTriggerWithMismatchedParentReturns404AndDoesNotPublish(): void
+    {
+        self::purgeDatabase();
+        $familyId = $this->createProductFamily();
+        $parentId = $this->createProduct($familyId, type: ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $otherParentId = $this->createProduct($familyId, 'Other', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $variantId = $this->createVariant($parentId, 'Variant L');
+
+        $this->client->request('POST', '/admin/api/products/' . $otherParentId . '/variants/' . $variantId . '.json?locale=en&action=publish');
+
+        $this->assertHttpStatusCode(404, $this->client->getResponse());
+        $this->assertFalse($this->getVariantPublishedState($parentId, $variantId));
     }
 
     public function testPutDoesNotPublishAVariant(): void
@@ -1068,7 +1160,7 @@ class ProductVariantControllerTest extends SuluTestCase
         $this->assertSame('<p>Variant blurb</p>', $data['details']['shortDescription']);
     }
 
-    public function testCreatingAVariantMarksParentAsHavingUnpublishedChanges(): void
+    public function testCreatingAVariantLeavesTheParentPublished(): void
     {
         self::purgeDatabase();
         $familyId = $this->createProductFamily();
@@ -1079,11 +1171,7 @@ class ProductVariantControllerTest extends SuluTestCase
 
         $this->createVariant($parentId, 'Variant L');
 
-        $this->client->request('GET', '/admin/api/products/' . $parentId . '.json?locale=en');
-        $this->assertHttpStatusCode(200, $this->client->getResponse());
-        $parent = \json_decode((string) $this->client->getResponse()->getContent(), true);
-        $this->assertIsArray($parent);
-        self::assertFalse($parent['publishedState']); // published, but now has unpublished changes
+        $this->assertTrue($this->getProductPublishedState($parentId));
     }
 
     public function testClientSubmittedTypeIsIgnored(): void
@@ -1139,88 +1227,21 @@ class ProductVariantControllerTest extends SuluTestCase
         $this->assertSame(ProductInterface::TYPE_VARIANT, $variant->getType());
     }
 
-    public function testPublishingParentPublishesItsVariants(): void
+    public function testPublishingParentLeavesItsVariantsUnpublished(): void
     {
         self::purgeDatabase();
         $familyId = $this->createProductFamily();
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
         $variantId = $this->createVariant($parentId, 'Variant L');
 
-        // Before publish: variant is draft-only.
+        $this->client->request('POST', '/admin/api/products/' . $parentId . '.json?locale=en&action=publish');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        $this->assertTrue($this->getProductPublishedState($parentId));
         $this->assertFalse($this->getVariantPublishedState($parentId, $variantId));
-
-        $this->client->request('POST', '/admin/api/products/' . $parentId . '.json?locale=en&action=publish');
-        $this->assertHttpStatusCode(200, $this->client->getResponse());
-
-        // After parent publish: the variant now has a live (published) dimension content.
-        $this->assertTrue($this->getVariantPublishedState($parentId, $variantId));
     }
 
-    /**
-     * A variant untranslated into the locale being published is a normal state; the cascade must
-     * skip it without failing the parent's own publish or its translated siblings' cascade.
-     */
-    public function testPublishingParentInASecondLocaleSkipsAVariantWithNoContentInThatLocale(): void
-    {
-        self::purgeDatabase();
-        $familyId = $this->createProductFamily();
-        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
-
-        // Give the parent a second locale.
-        $this->client->request(
-            'PUT',
-            '/admin/api/products/' . $parentId . '.json?locale=de',
-            [],
-            [],
-            [],
-            \json_encode(['locale' => 'de', 'title' => 'Elternprodukt', 'url' => '/de-parent-product']) ?: null,
-        );
-        $this->assertHttpStatusCode(200, $this->client->getResponse());
-
-        // A variant that only ever exists in 'en' — a normal, unremarkable state.
-        $variantEnOnlyId = $this->createVariant($parentId, 'Variant EN Only');
-
-        // A second variant that IS translated into 'de'.
-        $variantTranslatedId = $this->createVariant($parentId, 'Variant Translated');
-        $this->client->request(
-            'PUT',
-            '/admin/api/products/' . $parentId . '/variants/' . $variantTranslatedId . '.json?locale=de',
-            [],
-            [],
-            [],
-            \json_encode(['locale' => 'de', 'title' => 'Variante DE', 'url' => '/de-variant-translated']) ?: null,
-        );
-        $this->assertHttpStatusCode(200, $this->client->getResponse());
-
-        // Must succeed even though $variantEnOnlyId has no 'de' content at all.
-        $this->client->request('POST', '/admin/api/products/' . $parentId . '.json?locale=de&action=publish');
-        $this->assertHttpStatusCode(200, $this->client->getResponse());
-
-        // The parent itself published successfully in 'de'.
-        $this->client->request('GET', '/admin/api/products/' . $parentId . '.json?locale=de');
-        $this->assertHttpStatusCode(200, $this->client->getResponse());
-        $parentData = \json_decode((string) $this->client->getResponse()->getContent(), true);
-        $this->assertIsArray($parentData);
-        $this->assertTrue($parentData['publishedState']);
-
-        // The other, translated variant's cascade still went through — it is live in 'de'.
-        $this->client->request('GET', '/admin/api/products/' . $parentId . '/variants/' . $variantTranslatedId . '.json?locale=de');
-        $this->assertHttpStatusCode(200, $this->client->getResponse());
-        $translatedData = \json_decode((string) $this->client->getResponse()->getContent(), true);
-        $this->assertIsArray($translatedData);
-        $this->assertTrue($translatedData['publishedState']);
-
-        // Skipped by the cascade; the GET below still works via Sulu's ghost-locale fallback to
-        // 'en' — a fallback ContentWorkflow::apply() doesn't have, hence the cascade's skip.
-        $this->client->request('GET', '/admin/api/products/' . $parentId . '/variants/' . $variantEnOnlyId . '.json?locale=de');
-        $this->assertHttpStatusCode(200, $this->client->getResponse());
-        $enOnlyData = \json_decode((string) $this->client->getResponse()->getContent(), true);
-        $this->assertIsArray($enOnlyData);
-        $this->assertSame('en', $enOnlyData['ghostLocale']);
-        $this->assertFalse($enOnlyData['publishedState']);
-    }
-
-    public function testUnpublishingParentUnpublishesItsVariants(): void
+    public function testUnpublishingParentLeavesItsVariantsPublished(): void
     {
         self::purgeDatabase();
         $familyId = $this->createProductFamily();
@@ -1229,11 +1250,25 @@ class ProductVariantControllerTest extends SuluTestCase
 
         $this->client->request('POST', '/admin/api/products/' . $parentId . '.json?locale=en&action=publish');
         $this->assertHttpStatusCode(200, $this->client->getResponse());
-        $this->assertTrue($this->getVariantPublishedState($parentId, $variantId));
+        $this->client->request('POST', '/admin/api/products/' . $parentId . '/variants/' . $variantId . '.json?locale=en&action=publish');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
 
         $this->client->request('POST', '/admin/api/products/' . $parentId . '.json?locale=en&action=unpublish');
         $this->assertHttpStatusCode(200, $this->client->getResponse());
-        $this->assertFalse($this->getVariantPublishedState($parentId, $variantId));
+
+        $this->assertFalse($this->getProductPublishedState($parentId));
+        $this->assertTrue($this->getVariantPublishedState($parentId, $variantId));
+    }
+
+    private function getProductPublishedState(string $productId): bool
+    {
+        $this->client->request('GET', '/admin/api/products/' . $productId . '.json?locale=en');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertIsBool($data['publishedState']);
+
+        return $data['publishedState'];
     }
 
     private function getVariantPublishedState(string $parentId, string $variantId): bool
@@ -1250,7 +1285,7 @@ class ProductVariantControllerTest extends SuluTestCase
     /**
      * A plain locale mismatch (GET with a locale the variant was never translated into) does not
      * reach this branch — Sulu's ghost-locale fallback still resolves content via the always-present
-     * unlocalized dimension content row (see testPublishingParentInASecondLocaleSkipsAVariantWithNoContentInThatLocale).
+     * unlocalized dimension content row (see testCgetExposesPublishAndGhostIndicators).
      * ContentNotFoundException is only raised once every dimension content row is gone, so — mirroring
      * ProductControllerTest::testGetReturnsTemplateOnlyWhenContentMissing() — the rows are deleted directly.
      */

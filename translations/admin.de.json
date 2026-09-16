@@ -102,5 +102,8 @@
     "sulu_product.product_status.available": "Verfügbar",
     "sulu_product.product_status.discontinued": "Eingestellt",
     "sulu_product.invalid_status": "Der Status \"{status}\" ist kein gültiger Produktstatus.",
-    "sulu_product.associations": "Verknüpfungen"
+    "sulu_product.associations": "Verknüpfungen",
+    "sulu_product.publishing": "Veröffentlichung",
+    "sulu_product.unpublish_selection_warning_title": "Veröffentlichung aufheben?",
+    "sulu_product.unpublish_selection_warning_text": "Wollen Sie die Veröffentlichung der ausgewählten Einträge wirklich aufheben? Sie sind danach nicht mehr auf der Website sichtbar. Das kann jederzeit ohne Datenverlust rückgängig gemacht werden."
 }

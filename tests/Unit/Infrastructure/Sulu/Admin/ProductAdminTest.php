@@ -22,6 +22,7 @@ use Sulu\Bundle\ActivityBundle\Infrastructure\Sulu\Admin\View\ActivityViewBuilde
 use Sulu\Bundle\AdminBundle\Admin\Navigation\NavigationItemCollection;
 use Sulu\Bundle\AdminBundle\Admin\View\FormViewBuilder;
 use Sulu\Bundle\AdminBundle\Admin\View\PreviewFormViewBuilder;
+use Sulu\Bundle\AdminBundle\Admin\View\ToolbarAction;
 use Sulu\Bundle\AdminBundle\Admin\View\ViewBuilderFactory;
 use Sulu\Bundle\AdminBundle\Admin\View\ViewCollection;
 use Sulu\Component\Localization\Manager\LocalizationManagerInterface;
@@ -302,6 +303,33 @@ class ProductAdminTest extends TestCase
         $this->admin->configureViews($viewCollection);
 
         $this->assertTrue($viewCollection->has(ProductAdmin::EDIT_TABS_VIEW . '.details'));
+        $this->assertContains('sulu_product.publishing', $this->getVariantsToolbarActionTypes($viewCollection));
+    }
+
+    public function testConfigureViewsHidesVariantPublishingWithoutLivePermission(): void
+    {
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(true);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::ADD)->willReturn(true);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::DELETE)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::LIVE)->willReturn(false);
+        $this->securityChecker->hasPermission(ActivityAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(false);
+
+        $viewCollection = new ViewCollection();
+        $this->admin->configureViews($viewCollection);
+
+        $this->assertSame(['sulu_admin.add'], $this->getVariantsToolbarActionTypes($viewCollection));
+    }
+
+    /**
+     * @return string[]
+     */
+    private function getVariantsToolbarActionTypes(ViewCollection $viewCollection): array
+    {
+        /** @var ToolbarAction[] $toolbarActions */
+        $toolbarActions = $viewCollection->get(ProductAdmin::EDIT_TABS_VIEW . '.variants')->getView()->getOption('toolbarActions');
+
+        return \array_map(static fn (ToolbarAction $toolbarAction): string => $toolbarAction->getType(), $toolbarActions);
     }
 
     public function testConfigureViewsDoesNotRegisterAssociationsTabWithoutConfiguredTypes(): void

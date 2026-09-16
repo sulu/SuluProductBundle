@@ -13,9 +13,12 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Infrastructure\Sulu\Content;
 
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\PersistentCollection;
 use Sulu\Content\Application\ContentAggregator\ContentAggregatorInterface;
 use Sulu\Content\Domain\Exception\ContentNotFoundException;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
+use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Symfony\Contracts\Service\ResetInterface;
 
@@ -35,6 +38,7 @@ class ProductParentContentLoader implements ResetInterface
     public function __construct(
         private readonly ProductRepositoryInterface $productRepository,
         private readonly ContentAggregatorInterface $contentAggregator,
+        private readonly EntityManagerInterface $entityManager,
     ) {
     }
 
@@ -54,6 +58,7 @@ class ProductParentContentLoader implements ResetInterface
         $key = $parent->getUuid() . '/' . $locale . '/' . $dimensionAttributes['stage'];
 
         if (!\array_key_exists($key, $this->parentContents)) {
+            $this->dropLoadedDimensionContents($parent);
             $this->parentContents[$key] = $this->loadContent($parent->getUuid(), $dimensionAttributes);
         }
 
@@ -63,6 +68,19 @@ class ProductParentContentLoader implements ResetInterface
     public function reset(): void
     {
         $this->parentContents = [];
+    }
+
+    /**
+     * A managed parent keeps the dimension contents an earlier query loaded, and a fetch join does not
+     * replace them, so another locale or stage would resolve against the wrong rows.
+     */
+    private function dropLoadedDimensionContents(ProductInterface $parent): void
+    {
+        $dimensionContents = $parent->getDimensionContents();
+
+        if ($dimensionContents instanceof PersistentCollection && $dimensionContents->isInitialized()) {
+            $this->entityManager->refresh($parent);
+        }
     }
 
     /**
