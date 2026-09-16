@@ -21,6 +21,8 @@ class ProductFamilyAttribute implements ProductFamilyAttributeInterface
 
     protected bool $variantSpecific = false;
 
+    protected bool $filterable = false;
+
     protected ProductFamilyInterface $family;
 
     protected AttributeInterface $attribute;
@@ -56,6 +58,18 @@ class ProductFamilyAttribute implements ProductFamilyAttributeInterface
     public function setVariantSpecific(bool $variantSpecific): self
     {
         $this->variantSpecific = $variantSpecific;
+
+        return $this;
+    }
+
+    public function isFilterable(): bool
+    {
+        return $this->filterable;
+    }
+
+    public function setFilterable(bool $filterable): self
+    {
+        $this->filterable = $filterable;
 
         return $this;
     }

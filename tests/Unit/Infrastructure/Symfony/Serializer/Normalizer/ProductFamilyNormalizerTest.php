@@ -98,13 +98,14 @@ class ProductFamilyNormalizerTest extends TestCase
 
         $familyAttributeSize = new ProductFamilyAttribute($family, $attributeSize);
         $familyAttributeSize->setVariantSpecific(true);
+        $familyAttributeSize->setFilterable(true);
         $family->addFamilyAttribute($familyAttributeSize);
 
         $result = $this->normalizer()->normalize($family, null, ['locale' => 'en']);
 
         $this->assertSame([
-            ['id' => 'uuid-1', 'required' => true, 'variantSpecific' => false],
-            ['id' => 'uuid-2', 'required' => false, 'variantSpecific' => true],
+            ['id' => 'uuid-1', 'required' => true, 'variantSpecific' => false, 'filterable' => false],
+            ['id' => 'uuid-2', 'required' => false, 'variantSpecific' => true, 'filterable' => true],
         ], $result['attributes']);
     }
 

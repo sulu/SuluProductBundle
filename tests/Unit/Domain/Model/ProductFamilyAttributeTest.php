@@ -34,6 +34,7 @@ class ProductFamilyAttributeTest extends TestCase
         $this->assertSame($attribute, $fa->getAttribute());
         $this->assertFalse($fa->isRequired());
         $this->assertFalse($fa->isVariantSpecific());
+        $this->assertFalse($fa->isFilterable());
     }
 
     public function testSetRequiredIsFluent(): void
@@ -48,6 +49,13 @@ class ProductFamilyAttributeTest extends TestCase
         $fa = new ProductFamilyAttribute(new ProductFamily(), new Attribute(new AttributeGroup()));
         $this->assertSame($fa, $fa->setVariantSpecific(true));
         $this->assertTrue($fa->isVariantSpecific());
+    }
+
+    public function testSetFilterableIsFluent(): void
+    {
+        $fa = new ProductFamilyAttribute(new ProductFamily(), new Attribute(new AttributeGroup()));
+        $this->assertSame($fa, $fa->setFilterable(true));
+        $this->assertTrue($fa->isFilterable());
     }
 
     public function testSetAttributeIsFluent(): void

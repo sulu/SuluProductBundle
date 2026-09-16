@@ -53,7 +53,7 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
     }
 
     /**
-     * @param list<array{id: string, required: bool, variantSpecific: bool}> $attributes
+     * @param list<array{id: string, required: bool, variantSpecific: bool, filterable: bool}> $attributes
      */
     private function message(string $uuid, string $name, ?string $description = null, array $attributes = []): ModifyProductFamilyMessage
     {
@@ -126,7 +126,7 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
         $this->attributeRepository->findOneBy(['uuid' => 'uuid-7'])->willReturn($attribute);
 
         ($this->createHandler())($this->message('f', 'Name', null, [
-            ['id' => 'uuid-7', 'required' => true, 'variantSpecific' => false],
+            ['id' => 'uuid-7', 'required' => true, 'variantSpecific' => false, 'filterable' => false],
         ]));
 
         $familyAttributes = $family->getFamilyAttributes();
@@ -148,7 +148,7 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
         $this->attributeRepository->findOneBy(['uuid' => 'uuid-7'])->shouldNotBeCalled();
 
         ($this->createHandler())($this->message('f', 'Name', null, [
-            ['id' => 'uuid-7', 'required' => true, 'variantSpecific' => false],
+            ['id' => 'uuid-7', 'required' => true, 'variantSpecific' => false, 'filterable' => false],
         ]));
 
         $this->assertCount(1, $family->getFamilyAttributes());
@@ -166,7 +166,7 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
         $this->familyRepository->save($family)->shouldBeCalledOnce();
 
         ($this->createHandler())($this->message('f', 'Name', null, [
-            ['id' => 'uuid-1', 'required' => false, 'variantSpecific' => false],
+            ['id' => 'uuid-1', 'required' => false, 'variantSpecific' => false, 'filterable' => false],
         ]));
 
         $familyAttributes = $family->getFamilyAttributes();
@@ -197,7 +197,7 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
         $this->attributeRepository->findOneBy(['uuid' => 'uuid-99'])->willReturn(null);
 
         ($this->createHandler())($this->message('f', 'Name', null, [
-            ['id' => 'uuid-99', 'required' => false, 'variantSpecific' => false],
+            ['id' => 'uuid-99', 'required' => false, 'variantSpecific' => false, 'filterable' => false],
         ]));
 
         $this->assertCount(0, $family->getFamilyAttributes());
@@ -213,7 +213,7 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
         $this->attributeRepository->findOneBy(['uuid' => 'uuid-7'])->willReturn($attribute);
 
         ($this->createHandler())($this->message('f', 'Name', null, [
-            ['id' => 'uuid-7', 'required' => false, 'variantSpecific' => true],
+            ['id' => 'uuid-7', 'required' => false, 'variantSpecific' => true, 'filterable' => false],
         ]));
 
         $familyAttributes = $family->getFamilyAttributes();
@@ -234,7 +234,7 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
         $this->attributeRepository->findOneBy(['uuid' => 'uuid-7'])->shouldNotBeCalled();
 
         ($this->createHandler())($this->message('f', 'Name', null, [
-            ['id' => 'uuid-7', 'required' => false, 'variantSpecific' => true],
+            ['id' => 'uuid-7', 'required' => false, 'variantSpecific' => true, 'filterable' => false],
         ]));
 
         $this->assertTrue($existing->isVariantSpecific());

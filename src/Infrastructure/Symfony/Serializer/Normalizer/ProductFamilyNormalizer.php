@@ -44,6 +44,7 @@ final class ProductFamilyNormalizer implements NormalizerInterface
                 'id' => $familyAttribute->getAttribute()->getUuid(),
                 'required' => $familyAttribute->isRequired(),
                 'variantSpecific' => $familyAttribute->isVariantSpecific(),
+                'filterable' => $familyAttribute->isFilterable(),
             ];
         }
 

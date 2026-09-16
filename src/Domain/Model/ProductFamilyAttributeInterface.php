@@ -25,6 +25,10 @@ interface ProductFamilyAttributeInterface
 
     public function setVariantSpecific(bool $variantSpecific): self;
 
+    public function isFilterable(): bool;
+
+    public function setFilterable(bool $filterable): self;
+
     /** Whether a product of that type holds this attribute. */
     public function isAvailable(string $productType): bool;
 

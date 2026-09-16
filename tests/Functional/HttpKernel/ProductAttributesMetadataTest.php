@@ -56,8 +56,8 @@ class ProductAttributesMetadataTest extends SuluTestCase
             'name' => 'Shoes',
             'description' => null,
             'attributes' => [
-                ['id' => $weight, 'required' => true, 'variantSpecific' => false],
-                ['id' => $colour, 'required' => false, 'variantSpecific' => true],
+                ['id' => $weight, 'required' => true, 'variantSpecific' => false, 'filterable' => false],
+                ['id' => $colour, 'required' => false, 'variantSpecific' => true, 'filterable' => false],
             ],
         ]) ?: null);
         $this->assertHttpStatusCode(201, $this->client->getResponse());
@@ -103,7 +103,7 @@ class ProductAttributesMetadataTest extends SuluTestCase
             'locale' => 'en',
             'name' => 'Shoes',
             'description' => null,
-            'attributes' => [['id' => $weight, 'required' => true, 'variantSpecific' => false]],
+            'attributes' => [['id' => $weight, 'required' => true, 'variantSpecific' => false, 'filterable' => false]],
         ]) ?: null);
         $this->assertHttpStatusCode(201, $this->client->getResponse());
         /** @var array{id: string} $family */

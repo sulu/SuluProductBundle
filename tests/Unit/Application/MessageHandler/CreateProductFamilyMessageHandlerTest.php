@@ -73,7 +73,7 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
             'name' => 'My Family',
             'description' => 'desc',
             'attributes' => [
-                ['id' => 'uuid-7', 'required' => true, 'variantSpecific' => false],
+                ['id' => 'uuid-7', 'required' => true, 'variantSpecific' => false, 'filterable' => false],
             ],
         ]));
 
@@ -101,7 +101,7 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
             'locale' => 'en',
             'name' => 'My Family',
             'attributes' => [
-                ['id' => 'uuid-99', 'required' => false, 'variantSpecific' => false],
+                ['id' => 'uuid-99', 'required' => false, 'variantSpecific' => false, 'filterable' => false],
             ],
         ]));
 
@@ -122,7 +122,7 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
             'locale' => 'en',
             'name' => 'My Family',
             'attributes' => [
-                ['id' => 'uuid-7', 'required' => false, 'variantSpecific' => true],
+                ['id' => 'uuid-7', 'required' => false, 'variantSpecific' => true, 'filterable' => false],
             ],
         ]));
 

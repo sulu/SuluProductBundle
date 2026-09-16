@@ -97,6 +97,7 @@ final class ProductFamilyMapper implements ProductFamilyMapperInterface
 
             $familyAttribute->setRequired($entry['required']);
             $familyAttribute->setVariantSpecific($entry['variantSpecific']);
+            $familyAttribute->setFilterable($entry['filterable']);
         }
     }
 }

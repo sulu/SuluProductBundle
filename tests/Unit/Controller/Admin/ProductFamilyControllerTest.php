@@ -143,8 +143,8 @@ class ProductFamilyControllerTest extends TestCase
                 // The submitted list is normalised as-is; entries without an id are dropped.
                 return $message instanceof CreateProductFamilyMessage
                     && [
-                        ['id' => 'uuid-9', 'required' => false, 'variantSpecific' => false],
-                        ['id' => 'uuid-10', 'required' => false, 'variantSpecific' => false],
+                        ['id' => 'uuid-9', 'required' => false, 'variantSpecific' => false, 'filterable' => false],
+                        ['id' => 'uuid-10', 'required' => false, 'variantSpecific' => false, 'filterable' => false],
                     ] === $message->getAttributes();
             }),
             Argument::any(),
@@ -178,7 +178,7 @@ class ProductFamilyControllerTest extends TestCase
         $this->assertSame('created-uuid', $data['id']);
     }
 
-    public function testPostActionExtractsVariantFlag(): void
+    public function testPostActionExtractsAttributeFlags(): void
     {
         $family = new ProductFamily();
         $family->setUuid('created-uuid');
@@ -188,7 +188,7 @@ class ProductFamilyControllerTest extends TestCase
                 $message = $envelope->getMessage();
 
                 return $message instanceof CreateProductFamilyMessage
-                    && [['id' => 'uuid-9', 'required' => false, 'variantSpecific' => true]] === $message->getAttributes();
+                    && [['id' => 'uuid-9', 'required' => false, 'variantSpecific' => true, 'filterable' => true]] === $message->getAttributes();
             }),
             Argument::any(),
         )
@@ -205,7 +205,7 @@ class ProductFamilyControllerTest extends TestCase
                 'name' => 'New Family',
                 'description' => null,
                 'attributes' => [
-                    ['id' => 'uuid-9', 'required' => false, 'variantSpecific' => true],
+                    ['id' => 'uuid-9', 'required' => false, 'variantSpecific' => true, 'filterable' => true],
                 ],
             ],
         );

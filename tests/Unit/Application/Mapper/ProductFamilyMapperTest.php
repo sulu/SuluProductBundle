@@ -103,7 +103,7 @@ class ProductFamilyMapperTest extends TestCase
                 'locale' => 'en',
                 'name' => 'Family',
                 'attributes' => [
-                    ['id' => 'uuid-1', 'required' => true, 'variantSpecific' => false],
+                    ['id' => 'uuid-1', 'required' => true, 'variantSpecific' => false, 'filterable' => false],
                 ],
             ],
         );
@@ -132,7 +132,7 @@ class ProductFamilyMapperTest extends TestCase
                 'locale' => 'en',
                 'name' => 'Family',
                 'attributes' => [
-                    ['id' => 'uuid-1', 'required' => true, 'variantSpecific' => false],
+                    ['id' => 'uuid-1', 'required' => true, 'variantSpecific' => false, 'filterable' => false],
                 ],
             ],
         );
@@ -192,7 +192,7 @@ class ProductFamilyMapperTest extends TestCase
                 'locale' => 'en',
                 'name' => 'Family',
                 'attributes' => [
-                    ['id' => 'missing-uuid', 'required' => false, 'variantSpecific' => false],
+                    ['id' => 'missing-uuid', 'required' => false, 'variantSpecific' => false, 'filterable' => false],
                 ],
             ],
         );
@@ -215,7 +215,7 @@ class ProductFamilyMapperTest extends TestCase
                 'locale' => 'en',
                 'name' => 'Family',
                 'attributes' => [
-                    ['id' => 'uuid-1', 'required' => false, 'variantSpecific' => true],
+                    ['id' => 'uuid-1', 'required' => false, 'variantSpecific' => true, 'filterable' => false],
                 ],
             ],
         );
@@ -254,8 +254,8 @@ class ProductFamilyMapperTest extends TestCase
                 'locale' => 'en',
                 'name' => 'Family',
                 'attributes' => [
-                    ['id' => 'uuid-kept', 'required' => true, 'variantSpecific' => false],
-                    ['id' => 'uuid-added', 'required' => false, 'variantSpecific' => true],
+                    ['id' => 'uuid-kept', 'required' => true, 'variantSpecific' => false, 'filterable' => false],
+                    ['id' => 'uuid-added', 'required' => false, 'variantSpecific' => true, 'filterable' => true],
                 ],
             ]
         );
@@ -273,5 +273,7 @@ class ProductFamilyMapperTest extends TestCase
         self::assertFalse($familyAttributes[0]->isVariantSpecific());
         self::assertFalse($familyAttributes[1]->isRequired());
         self::assertTrue($familyAttributes[1]->isVariantSpecific());
+        self::assertFalse($familyAttributes[0]->isFilterable());
+        self::assertTrue($familyAttributes[1]->isFilterable());
     }
 }

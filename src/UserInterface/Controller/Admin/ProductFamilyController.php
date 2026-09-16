@@ -163,7 +163,7 @@ final class ProductFamilyController implements SecuredControllerInterface
      *   locale: string,
      *   name: string,
      *   description: string|null,
-     *   attributes: list<array{id: string, required: bool, variantSpecific: bool}>,
+     *   attributes: list<array{id: string, required: bool, variantSpecific: bool, filterable: bool}>,
      * }
      */
     private function getData(Request $request): array
@@ -180,7 +180,7 @@ final class ProductFamilyController implements SecuredControllerInterface
     }
 
     /**
-     * @return list<array{id: string, required: bool, variantSpecific: bool}>
+     * @return list<array{id: string, required: bool, variantSpecific: bool, filterable: bool}>
      */
     private function extractAttributes(Request $request): array
     {
@@ -195,6 +195,7 @@ final class ProductFamilyController implements SecuredControllerInterface
                 'id' => $attribute['id'],
                 'required' => (bool) ($attribute['required'] ?? false),
                 'variantSpecific' => (bool) ($attribute['variantSpecific'] ?? false),
+                'filterable' => (bool) ($attribute['filterable'] ?? false),
             ];
         }
 

@@ -26,14 +26,14 @@ class CreateProductFamilyMessageTest extends TestCase
             'locale' => 'en',
             'name' => 'My Family',
             'description' => 'desc',
-            'attributes' => [['id' => 'uuid-5', 'required' => true, 'variantSpecific' => false]],
+            'attributes' => [['id' => 'uuid-5', 'required' => true, 'variantSpecific' => false, 'filterable' => false]],
         ];
         $message = new CreateProductFamilyMessage($data);
 
         $this->assertSame('en', $message->getLocale());
         $this->assertSame('My Family', $message->getName());
         $this->assertSame('desc', $message->getDescription());
-        $this->assertSame([['id' => 'uuid-5', 'required' => true, 'variantSpecific' => false]], $message->getAttributes());
+        $this->assertSame([['id' => 'uuid-5', 'required' => true, 'variantSpecific' => false, 'filterable' => false]], $message->getAttributes());
         $this->assertSame($data, $message->getData());
     }
 

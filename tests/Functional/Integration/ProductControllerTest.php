@@ -55,7 +55,7 @@ class ProductControllerTest extends SuluTestCase
             $attribute = $attributeRepository->findOneBy(['id' => $attributeId]);
             $this->assertNotNull($attribute);
 
-            $attributes[] = ['id' => $attribute->getUuid(), 'required' => $required, 'variantSpecific' => false];
+            $attributes[] = ['id' => $attribute->getUuid(), 'required' => $required, 'variantSpecific' => false, 'filterable' => false];
         }
 
         $this->client->request(
