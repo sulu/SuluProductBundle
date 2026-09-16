@@ -70,6 +70,12 @@ sulu_product.delete_product_variant:
     controller: sulu_product.admin_product_variant_controller::deleteAction
     format: json
 
+sulu_product.post_product_variant_trigger:
+    path: /products/{parentId}/variants/{id}.{_format}
+    methods: POST
+    controller: sulu_product.admin_product_variant_controller::postTriggerAction
+    format: json
+
 sulu_product.get_measurement_families:
     path: /measurement-families.{_format}
     methods: GET

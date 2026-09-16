@@ -1,5 +1,24 @@
 # Sulu Product Bundle
 
+## Admin build
+
+The bundle ships admin JavaScript, for example the publishing action of the variants list. Add
+its package to the admin build of the project and import it:
+
+```json
+// assets/admin/package.json
+"dependencies": {
+    "sulu-product-bundle": "file:../../vendor/sulu/product-bundle/assets/js"
+}
+```
+
+```js
+// assets/admin/app.js
+import 'sulu-product-bundle';
+```
+
+Then run `npm install` and `npm run build` in `assets/admin`.
+
 ## Product route
 
 The route field of a product lives in the `product_details` form and in the `product_variant`
@@ -33,6 +52,23 @@ A variant owns its route: the URL field is mandatory on the variant overlay, so 
 carries an address of its own. A product with variants owns none, it is reached through its
 variants, which is why the field is hidden for that type and the route guard drops one that
 reaches such a product programmatically.
+
+## Variant publishing
+
+A variant is published on its own, from the variants tab of its product: select variants in the
+list and use "Publishing" in the toolbar, which needs the live permission. Publish skips variants
+without content in the current locale, unpublish only acts on published ones. The list marks
+unpublished variants and variants shown in a fallback locale, the same way the article list does.
+
+A product with variants and its variants never change each other's publish state: publishing or
+unpublishing the product leaves its variants as they are, and saving a variant does not mark its
+product as changed. The website lists and routes only published variants. A published variant
+whose product is not published has no product content to inherit, so publish the product as
+well.
+
+The action calls `POST /admin/api/products/{parentId}/variants/{id}?action=publish` (or
+`unpublish`), which answers `409` when the transition is not available, for example unpublishing
+a variant that was never published.
 
 ## Variant attributes
 

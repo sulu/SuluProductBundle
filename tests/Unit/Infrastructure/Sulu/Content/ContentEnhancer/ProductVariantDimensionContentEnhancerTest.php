@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Tests\Unit\Infrastructure\Sulu\Content\ContentEnhancer;
 
+use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Content\Application\ContentAggregator\ContentAggregatorInterface;
@@ -53,7 +54,7 @@ class ProductVariantDimensionContentEnhancerTest extends TestCase
             ->with($parent, ['locale' => 'en', 'stage' => DimensionContentInterface::STAGE_DRAFT])
             ->willReturn($parentContent);
 
-        $enhanced = (new ProductVariantDimensionContentEnhancer(new ProductParentContentLoader($productRepository, $contentAggregator)))->enhance($variantContent);
+        $enhanced = (new ProductVariantDimensionContentEnhancer(new ProductParentContentLoader($productRepository, $contentAggregator, $this->createStub(EntityManagerInterface::class))))->enhance($variantContent);
 
         self::assertSame($variantContent, $enhanced);
         self::assertSame('NC3FX-B', $variantContent->getTitle(), 'the variant keeps its title for product.currentVariant.title');
@@ -71,7 +72,7 @@ class ProductVariantDimensionContentEnhancerTest extends TestCase
         $productRepository = $this->createMock(ProductRepositoryInterface::class);
         $productRepository->expects(self::never())->method('findOneBy');
 
-        $enhanced = (new ProductVariantDimensionContentEnhancer(new ProductParentContentLoader($productRepository, $this->createStub(ContentAggregatorInterface::class))))
+        $enhanced = (new ProductVariantDimensionContentEnhancer(new ProductParentContentLoader($productRepository, $this->createStub(ContentAggregatorInterface::class), $this->createStub(EntityManagerInterface::class))))
             ->enhance($content);
 
         self::assertSame($content, $enhanced);
@@ -87,7 +88,7 @@ class ProductVariantDimensionContentEnhancerTest extends TestCase
         $productRepository = $this->createMock(ProductRepositoryInterface::class);
         $productRepository->expects(self::never())->method('findOneBy');
 
-        (new ProductVariantDimensionContentEnhancer(new ProductParentContentLoader($productRepository, $this->createStub(ContentAggregatorInterface::class))))
+        (new ProductVariantDimensionContentEnhancer(new ProductParentContentLoader($productRepository, $this->createStub(ContentAggregatorInterface::class), $this->createStub(EntityManagerInterface::class))))
             ->enhance($content);
 
         self::assertSame(['title' => 'CQ2M'], $content->getTemplateData());
@@ -105,7 +106,7 @@ class ProductVariantDimensionContentEnhancerTest extends TestCase
         $contentAggregator = $this->createStub(ContentAggregatorInterface::class);
         $contentAggregator->method('aggregate')->willThrowException(new ContentNotFoundException($parent, []));
 
-        (new ProductVariantDimensionContentEnhancer(new ProductParentContentLoader($productRepository, $contentAggregator)))->enhance($variantContent);
+        (new ProductVariantDimensionContentEnhancer(new ProductParentContentLoader($productRepository, $contentAggregator, $this->createStub(EntityManagerInterface::class))))->enhance($variantContent);
 
         self::assertSame(['title' => 'NC3FX-B', 'blocks' => ['own block']], $variantContent->getTemplateData());
     }
