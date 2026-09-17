@@ -17,6 +17,8 @@ use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataLoaderInterface;
 use Sulu\Bundle\AdminBundle\Metadata\MetadataProviderInterface;
 use Sulu\Bundle\HttpCacheBundle\ReferenceStore\ReferenceStoreInterface;
+use Sulu\Bundle\MediaBundle\Entity\MediaInterface;
+use Sulu\Bundle\MediaBundle\Infrastructure\Sulu\Content\ResourceLoader\MediaResourceLoader;
 use Sulu\Content\Application\ContentResolver\Resolver\ResolverInterface;
 use Sulu\Content\Application\ContentResolver\Value\ContentView;
 use Sulu\Content\Application\MetadataResolver\MetadataResolver;
@@ -257,10 +259,20 @@ class ProductResolver implements ResolverInterface
             return ContentView::create(null, []);
         }
 
+        $image = $family->getImage();
+
         return ContentView::create([
             'uuid' => $family->getUuid(),
             'externalIdentifier' => $family->getExternalIdentifier(),
             'name' => $family->getTranslation($locale)?->getName(),
+            'image' => null === $image
+                ? ContentView::create(null, [])
+                : ContentView::createResolvableWithReferences(
+                    id: $image->getId(),
+                    resourceLoaderKey: MediaResourceLoader::getKey(),
+                    resourceKey: MediaInterface::RESOURCE_KEY,
+                    view: [],
+                ),
         ], []);
     }
 

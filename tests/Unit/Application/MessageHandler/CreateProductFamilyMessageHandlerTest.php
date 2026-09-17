@@ -16,6 +16,7 @@ namespace Sulu\Product\Tests\Unit\Application\MessageHandler;
 use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
+use Sulu\Bundle\MediaBundle\Entity\MediaRepositoryInterface;
 use Sulu\Product\Application\Mapper\ProductFamilyMapper;
 use Sulu\Product\Application\Message\CreateProductFamilyMessage;
 use Sulu\Product\Application\MessageHandler\CreateProductFamilyMessageHandler;
@@ -45,7 +46,7 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
     {
         return new CreateProductFamilyMessageHandler(
             $this->familyRepository->reveal(),
-            [new ProductFamilyMapper($this->attributeRepository->reveal())],
+            [new ProductFamilyMapper($this->attributeRepository->reveal(), $this->prophesize(MediaRepositoryInterface::class)->reveal())],
         );
     }
 
