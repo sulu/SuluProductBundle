@@ -498,6 +498,44 @@ class AttributeControllerTest extends SuluTestCase
         $this->assertSame('> %value% GΩ', $config['displayFormat']);
     }
 
+    public function testFilterableRoundTripsAndIsRejectedForText(): void
+    {
+        self::purgeDatabase();
+        $groupId = $this->createGroup();
+
+        foreach (['number' => true, 'text' => false] as $type => $expected) {
+            $this->client->request(
+                'POST',
+                '/admin/api/attributes.json?locale=en',
+                [],
+                [],
+                [],
+                \json_encode([
+                    'locale' => 'en',
+                    'key' => 'filterable-' . $type,
+                    'name' => 'Filterable ' . $type,
+                    'type' => $type,
+                    'group' => $groupId,
+                    'filterable' => true,
+                ]) ?: null,
+            );
+            $postResponse = $this->client->getResponse();
+            $this->assertHttpStatusCode(201, $postResponse);
+            $postData = \json_decode((string) $postResponse->getContent(), true);
+            $this->assertIsArray($postData);
+            $id = $postData['id'];
+            $this->assertIsString($id);
+
+            $this->client->request('GET', '/admin/api/attributes/' . $id . '.json?locale=en');
+            $response = $this->client->getResponse();
+            $this->assertHttpStatusCode(200, $response);
+
+            $data = \json_decode((string) $response->getContent(), true);
+            $this->assertIsArray($data);
+            $this->assertSame($expected, $data['filterable']);
+        }
+    }
+
     public function testGetNotFound(): void
     {
         $this->client->request('GET', '/admin/api/attributes/non-existent-uuid.json?locale=en');

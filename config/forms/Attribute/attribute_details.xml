@@ -30,7 +30,7 @@
             </meta>
         </property>
 
-        <property name="type" type="single_select" mandatory="true" colspan="4" disabledCondition="!!id">
+        <property name="type" type="single_select" mandatory="true" colspan="2" disabledCondition="!!id">
             <meta>
                 <title>sulu_product.type</title>
             </meta>
@@ -44,6 +44,17 @@
                   disabledCondition='type != "text" || !!id'>
             <meta>
                 <title>sulu_product.localized</title>
+            </meta>
+
+            <params>
+                <param name="type" value="toggler"/>
+            </params>
+        </property>
+
+        <property name="filterable" type="checkbox" colspan="2"
+                  disabledCondition='type != "number" &amp;&amp; type != "date" &amp;&amp; type != "options"'>
+            <meta>
+                <title>sulu_product.filterable</title>
             </meta>
 
             <params>
@@ -83,29 +94,29 @@
             </params>
         </property>
 
-        <property name="config/min" type="number" colspan="6"
+        <property name="config/min" type="number" colspan="4"
                   visibleCondition='type == "number"'>
             <meta>
                 <title>sulu_product.min</title>
             </meta>
         </property>
 
-        <property name="config/max" type="number" colspan="6"
+        <property name="config/max" type="number" colspan="4"
                   visibleCondition='type == "number"'>
             <meta>
                 <title>sulu_product.max</title>
             </meta>
         </property>
 
-        <property name="config/step" type="number" colspan="6"
+        <property name="config/step" type="number" colspan="4"
                   visibleCondition='type == "number"'>
             <meta>
                 <title>sulu_product.step</title>
             </meta>
         </property>
 
-        <property name="config/displayFormat" type="text_line" colspan="6"
-                  visibleCondition='type == "text" || type == "number"'>
+        <property name="config/displayFormat" type="text_line"
+                  visibleCondition='type == "text" || type == "number" || type == "date"'>
             <meta>
                 <title>sulu_product.display_format</title>
                 <info_text>sulu_product.display_format_info_text</info_text>

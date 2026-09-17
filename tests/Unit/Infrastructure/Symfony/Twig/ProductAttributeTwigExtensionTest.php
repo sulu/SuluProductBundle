@@ -325,6 +325,20 @@ class ProductAttributeTwigExtensionTest extends TestCase
         self::assertSame('05.03.2024', $this->attributesOf($content)['released']['formattedValue']);
     }
 
+    public function testDatesUseTheAttributesDisplayFormatInTheRequestedLocale(): void
+    {
+        $content = $this->createContent();
+        $attribute = $this->createAttribute('released', 'Erschienen', $this->createGroup(1, 'Eins'), 1);
+        $attribute->setType(AttributeInterface::TYPE_DATE);
+        $attribute->setConfig(['displayFormat' => 'MMMM yyyy']);
+
+        $value = new ProductAttributeValue($content, $attribute, $attribute->getKey());
+        $value->setNumber((float) (new \DateTimeImmutable('2024-03-05'))->getTimestamp());
+        $content->addAttribute($value);
+
+        self::assertSame('März 2024', $this->attributesOf($content)['released']['formattedValue']);
+    }
+
     public function testDateValueWithoutATimestampIsDropped(): void
     {
         $content = $this->createContent();
