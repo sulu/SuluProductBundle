@@ -8,7 +8,6 @@
         </id>
 
         <field name="attributeKey" column="attributeKey" type="string" length="255" nullable="false"/>
-        <field name="attributeOptionKey" column="attributeOptionKey" type="string" length="255" nullable="true"/>
         <field name="number" type="float" nullable="true"/>
         <field name="text" type="string" length="255" nullable="true"/>
 
@@ -41,7 +40,6 @@
 
         <indexes>
             <index name="IDX_pr_product_attributes_key" columns="attributeKey"/>
-            <index name="IDX_pr_product_attributes_opt_key" columns="attributeOptionKey"/>
         </indexes>
     </entity>
 </doctrine-mapping>

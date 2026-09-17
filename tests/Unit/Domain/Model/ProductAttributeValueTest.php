@@ -44,15 +44,14 @@ class ProductAttributeValueTest extends TestCase
         $this->assertNull($productAttributeValue->getValue());
     }
 
-    public function testSetAttributeOptionKeyIsFluentAndStores(): void
+    public function testConstructorAssignsAttributeOption(): void
     {
-        $productAttributeValue = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'color');
+        $attribute = new Attribute(new AttributeGroup());
+        $option = new AttributeOption($attribute, 'red');
+        $productAttributeValue = new ProductAttributeValue(new ProductDimensionContent(new Product()), $attribute, 'color', $option);
 
-        $this->assertSame($productAttributeValue, $productAttributeValue->setAttributeOptionKey('red'));
+        $this->assertSame($option, $productAttributeValue->getAttributeOption());
         $this->assertSame('red', $productAttributeValue->getAttributeOptionKey());
-
-        $productAttributeValue->setAttributeOptionKey(null);
-        $this->assertNull($productAttributeValue->getAttributeOptionKey());
     }
 
     public function testSetNumberIsFluentAndStores(): void
@@ -85,15 +84,17 @@ class ProductAttributeValueTest extends TestCase
 
         $this->assertSame($productAttributeValue, $productAttributeValue->setAttributeOption($option));
         $this->assertSame($option, $productAttributeValue->getAttributeOption());
+        $this->assertSame('red', $productAttributeValue->getAttributeOptionKey());
 
         $productAttributeValue->setAttributeOption(null);
         $this->assertNull($productAttributeValue->getAttributeOption());
+        $this->assertNull($productAttributeValue->getAttributeOptionKey());
     }
 
     public function testGetValuePrefersAttributeOptionKey(): void
     {
-        $productAttributeValue = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'color');
-        $productAttributeValue->setAttributeOptionKey('red');
+        $attribute = new Attribute(new AttributeGroup());
+        $productAttributeValue = new ProductAttributeValue(new ProductDimensionContent(new Product()), $attribute, 'color', new AttributeOption($attribute, 'red'));
         $productAttributeValue->setNumber(1.0);
         $productAttributeValue->setText('text');
 

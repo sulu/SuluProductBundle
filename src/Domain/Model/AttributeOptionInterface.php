@@ -17,8 +17,6 @@ interface AttributeOptionInterface
 {
     public function getId(): int;
 
-    public function getUuid(): ?string;
-
     public function getKey(): string;
 
     public function setKey(string $key): self;

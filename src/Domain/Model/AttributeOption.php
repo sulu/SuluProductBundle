@@ -21,8 +21,6 @@ class AttributeOption implements AttributeOptionInterface
 {
     protected int $id;
 
-    protected ?string $uuid = null;
-
     protected string $key;
 
     protected int $position = 0;
@@ -42,11 +40,6 @@ class AttributeOption implements AttributeOptionInterface
     public function getId(): int
     {
         return $this->id;
-    }
-
-    public function getUuid(): ?string
-    {
-        return $this->uuid;
     }
 
     public function getKey(): string

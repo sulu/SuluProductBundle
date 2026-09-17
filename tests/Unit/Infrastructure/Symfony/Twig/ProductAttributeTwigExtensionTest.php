@@ -215,9 +215,7 @@ class ProductAttributeTwigExtensionTest extends TestCase
         $option = new AttributeOption($attribute, 'black');
         $option->addTranslation(new AttributeOptionTranslation($option, 'de', 'Schwarz'));
 
-        $value = new ProductAttributeValue($content, $attribute, $attribute->getKey());
-        $value->setAttributeOptionKey('black');
-        $value->setAttributeOption($option);
+        $value = new ProductAttributeValue($content, $attribute, $attribute->getKey(), $option);
         $content->addAttribute($value);
 
         $colour = $this->attributesOf($content)['colour'];
@@ -235,9 +233,7 @@ class ProductAttributeTwigExtensionTest extends TestCase
         $option = new AttributeOption($attribute, 'black');
         $option->addTranslation(new AttributeOptionTranslation($option, 'de', 'Schwarz'));
 
-        $value = new ProductAttributeValue($content, $attribute, $attribute->getKey());
-        $value->setAttributeOptionKey('black');
-        $value->setAttributeOption($option);
+        $value = new ProductAttributeValue($content, $attribute, $attribute->getKey(), $option);
         $content->addAttribute($value);
 
         self::assertSame('Schwarz', $this->attributesOf($content)['colour']['formattedValue']);
@@ -377,9 +373,7 @@ class ProductAttributeTwigExtensionTest extends TestCase
         $option = new AttributeOption($attribute, 'black');
         $option->addTranslation(new AttributeOptionTranslation($option, 'de', 'Schwarz')); // 'de' only
 
-        $value = new ProductAttributeValue($content, $attribute, $attribute->getKey());
-        $value->setAttributeOptionKey('black');
-        $value->setAttributeOption($option);
+        $value = new ProductAttributeValue($content, $attribute, $attribute->getKey(), $option);
         $content->addAttribute($value);
 
         self::assertSame('black', $this->attributesOf($content, 'en')['colour']['formattedValue']);

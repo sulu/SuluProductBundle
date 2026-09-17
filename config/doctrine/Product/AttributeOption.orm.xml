@@ -7,7 +7,6 @@
             <generator strategy="AUTO"/>
         </id>
 
-        <field name="uuid" type="guid" nullable="true" unique="true"/>
         <field name="key" type="string" length="255" nullable="false" column="attribute_option_key"/>
         <field name="position" type="integer" nullable="false">
             <options>

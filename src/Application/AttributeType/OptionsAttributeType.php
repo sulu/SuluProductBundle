@@ -56,13 +56,16 @@ final class OptionsAttributeType extends AbstractAttributeType
     public function writeValue(ProductAttributeValueInterface $value, mixed $raw): void
     {
         if (null === $raw || '' === $raw) {
-            $value->setAttributeOptionKey(null);
+            $value->setAttributeOption(null);
 
             return;
         }
 
         Assert::string($raw);
 
-        $value->setAttributeOptionKey($raw);
+        $option = $value->getAttribute()->getOption($raw);
+        Assert::notNull($option, \sprintf('Attribute "%s" has no option "%s".', $value->getAttributeKey(), $raw));
+
+        $value->setAttributeOption($option);
     }
 }
