@@ -211,6 +211,7 @@ final class AttributeController implements SecuredControllerInterface
             'measurementFamily' => $measurementFamily,
             'type' => $attribute->getType(),
             'localized' => $attribute->isLocalized(),
+            'filterable' => $attribute->isFilterable(),
             'position' => $attribute->getPosition(),
             'externalIdentifier' => $attribute->getExternalIdentifier(),
             'group' => $attribute->getGroup()->getUuid(),

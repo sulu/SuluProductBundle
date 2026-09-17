@@ -24,6 +24,13 @@ use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 
 final class AttributeMapper implements AttributeMapperInterface
 {
+    /** Free text has no discrete values to filter by. */
+    private const FILTERABLE_TYPES = [
+        AttributeInterface::TYPE_NUMBER,
+        AttributeInterface::TYPE_DATE,
+        AttributeInterface::TYPE_OPTIONS,
+    ];
+
     public function __construct(private AttributeRepositoryInterface $attributeRepository)
     {
     }
@@ -36,6 +43,11 @@ final class AttributeMapper implements AttributeMapperInterface
         $data = $message->getData();
         if (\array_key_exists('localized', $data)) {
             $attribute->setLocalized((bool) $data['localized']);
+        }
+
+        if (\array_key_exists('filterable', $data)) {
+            $type = $message instanceof CreateAttributeMessage ? $message->getType() : $attribute->getType();
+            $attribute->setFilterable((bool) $data['filterable'] && \in_array($type, self::FILTERABLE_TYPES, true));
         }
 
         if (null === $attribute->getDefaultLocale()) {

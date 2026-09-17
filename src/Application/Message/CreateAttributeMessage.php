@@ -30,6 +30,7 @@ namespace Sulu\Product\Application\Message;
  *     position?: int|null,
  *     config?: array<string, mixed>,
  *     localized?: bool|null,
+ *     filterable?: bool|null,
  * }
  */
 class CreateAttributeMessage

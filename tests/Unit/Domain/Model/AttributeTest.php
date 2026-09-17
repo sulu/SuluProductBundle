@@ -204,4 +204,19 @@ class AttributeTest extends TestCase
         $attribute->setLocalized(false);
         $this->assertFalse($attribute->isLocalized());
     }
+
+    public function testIsFilterableDefaultsFalse(): void
+    {
+        $attribute = new Attribute(new AttributeGroup());
+        $this->assertFalse($attribute->isFilterable());
+    }
+
+    public function testSetFilterableIsFluentAndStores(): void
+    {
+        $attribute = new Attribute(new AttributeGroup());
+        $this->assertSame($attribute, $attribute->setFilterable(true));
+        $this->assertTrue($attribute->isFilterable());
+        $attribute->setFilterable(false);
+        $this->assertFalse($attribute->isFilterable());
+    }
 }
