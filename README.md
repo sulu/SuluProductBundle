@@ -1,24 +1,5 @@
 # Sulu Product Bundle
 
-## Admin build
-
-The bundle ships admin JavaScript, for example the publishing action of the variants list. Add
-its package to the admin build of the project and import it:
-
-```json
-// assets/admin/package.json
-"dependencies": {
-    "sulu-product-bundle": "file:../../vendor/sulu/product-bundle/assets/js"
-}
-```
-
-```js
-// assets/admin/app.js
-import 'sulu-product-bundle';
-```
-
-Then run `npm install` and `npm run build` in `assets/admin`.
-
 ## Product route
 
 The route field of a product lives in the `product_details` form and in the `product_variant`

@@ -102,8 +102,5 @@
     "sulu_product.product_status.available": "Available",
     "sulu_product.product_status.discontinued": "Discontinued",
     "sulu_product.invalid_status": "The status \"{status}\" is not a valid product status.",
-    "sulu_product.associations": "Associations",
-    "sulu_product.publishing": "Publishing",
-    "sulu_product.unpublish_selection_warning_title": "Set to unpublished?",
-    "sulu_product.unpublish_selection_warning_text": "Do you really want to unpublish the selected items? They will no longer be visible on the website. This can be changed at any time without data loss."
+    "sulu_product.associations": "Associations"
 }

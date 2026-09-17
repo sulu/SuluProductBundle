@@ -303,7 +303,7 @@ class ProductAdminTest extends TestCase
         $this->admin->configureViews($viewCollection);
 
         $this->assertTrue($viewCollection->has(ProductAdmin::EDIT_TABS_VIEW . '.details'));
-        $this->assertContains('sulu_product.publishing', $this->getVariantsToolbarActionTypes($viewCollection));
+        $this->assertContains('sulu_admin.publishing', $this->getVariantsToolbarActionTypes($viewCollection));
     }
 
     public function testConfigureViewsHidesVariantPublishingWithoutLivePermission(): void
