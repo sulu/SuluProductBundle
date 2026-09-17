@@ -23,6 +23,7 @@ namespace Sulu\Product\Application\Message;
  *     locale: string,
  *     name: string,
  *     description?: string|null,
+ *     image?: array{id: int}|null,
  *     attributes?: list<ProductFamilyAttributeMessageData>|null,
  * }
  */
@@ -64,6 +65,11 @@ class ModifyProductFamilyMessage
     public function getDescription(): ?string
     {
         return $this->data['description'] ?? null;
+    }
+
+    public function getImageId(): ?int
+    {
+        return $this->data['image']['id'] ?? null;
     }
 
     /**

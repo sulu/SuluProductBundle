@@ -15,6 +15,7 @@ namespace Sulu\Product\Tests\Unit\Infrastructure\Symfony\Serializer\Normalizer;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Sulu\Bundle\MediaBundle\Entity\MediaInterface;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\ProductFamily;
@@ -48,6 +49,20 @@ class ProductFamilyNormalizerTest extends TestCase
         $this->assertFalse($normalizer->supportsNormalization(new \stdClass()));
     }
 
+    /** The admin's single media selection reads and writes `{id}`. */
+    public function testNormalizesTheImageAsItsId(): void
+    {
+        $image = $this->createStub(MediaInterface::class);
+        $image->method('getId')->willReturn(5);
+
+        $family = new ProductFamily();
+        $family->setImage($image);
+
+        $result = $this->normalizer()->normalize($family, null, ['locale' => 'en']);
+
+        $this->assertSame(['id' => 5], $result['image']);
+    }
+
     public function testGetSupportedTypes(): void
     {
         $supported = $this->normalizer()->getSupportedTypes(null);
@@ -67,6 +82,7 @@ class ProductFamilyNormalizerTest extends TestCase
         $this->assertSame('', $result['name']);
         $this->assertNull($result['description']);
         $this->assertNull($result['externalIdentifier']);
+        $this->assertNull($result['image']);
         $this->assertSame([], $result['attributes']);
     }
 
