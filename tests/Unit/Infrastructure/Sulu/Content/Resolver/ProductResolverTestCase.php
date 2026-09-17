@@ -37,6 +37,7 @@ abstract class ProductResolverTestCase extends TestCase
 {
     /**
      * @param array<string, string> $variantProperties
+     * @param ProductDimensionContentInterface|null $enhanced content the variant enhancer has run for
      */
     protected function createResolver(
         ?FormMetadataLoaderInterface $formMetadataLoader = null,
@@ -46,17 +47,22 @@ abstract class ProductResolverTestCase extends TestCase
         ?ContentAggregatorInterface $contentAggregator = null,
         ?ReferenceStoreInterface $referenceStore = null,
         array $variantProperties = ['title' => 'product.title', 'url' => 'product.url', 'code' => 'product.code', 'status' => 'product.status', 'position' => 'product.position'],
+        ?ProductDimensionContentInterface $enhanced = null,
     ): ProductResolver {
         $productRepository ??= $this->noVariants();
         $contentAggregator ??= $this->emptyContents();
+
+        $parentContentLoader = new ProductParentContentLoader($productRepository, $contentAggregator);
+        if (null !== $enhanced) {
+            $parentContentLoader->load($enhanced);
+        }
 
         return new ProductResolver(
             $formMetadataLoader ?? $this->noDetailFields(),
             $formMetadataProvider ?? $this->noAssociationFields(),
             $metadataResolver ?? $this->noResolvedItems(),
             $productRepository,
-            $contentAggregator,
-            new ProductParentContentLoader($productRepository, $contentAggregator),
+            $parentContentLoader,
             $referenceStore ?? new ReferenceStore(),
             $variantProperties,
         );
@@ -122,6 +128,7 @@ abstract class ProductResolverTestCase extends TestCase
     {
         $repository = $this->createStub(ProductRepositoryInterface::class);
         $repository->method('findBy')->willReturn([]);
+        $repository->method('findIdentifiersBy')->willReturn([]);
 
         return $repository;
     }

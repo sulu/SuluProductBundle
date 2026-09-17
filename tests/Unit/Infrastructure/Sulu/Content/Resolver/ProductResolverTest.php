@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Sulu\Product\Tests\Unit\Infrastructure\Sulu\Content\Resolver;
 
 use PHPUnit\Framework\Attributes\CoversClass;
-use Sulu\Content\Application\ContentAggregator\ContentAggregatorInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
@@ -40,19 +39,13 @@ class ProductResolverTest extends ProductResolverTestCase
 
     public function testAPageCarriesTheMasterDataAndEverySection(): void
     {
-        $variant = new ProductDimensionContent(new Product('variant-uuid-1'));
-        $variant->setLocale('de');
-
         $productRepository = $this->createStub(ProductRepositoryInterface::class);
-        $productRepository->method('findBy')->willReturn([$variant->getResource()]);
-
-        $contentAggregator = $this->createStub(ContentAggregatorInterface::class);
-        $contentAggregator->method('aggregate')->willReturn($variant);
+        $productRepository->method('findIdentifiersBy')->willReturn(['variant-uuid-1']);
 
         $content = $this->resolveContent(
             $this->createContent(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS),
             null,
-            $this->createResolver(productRepository: $productRepository, contentAggregator: $contentAggregator),
+            $this->createResolver(productRepository: $productRepository),
         );
 
         self::assertSame(
@@ -65,7 +58,7 @@ class ProductResolverTest extends ProductResolverTestCase
     public function testAReferenceCarriesTheAlwaysOnMasterDataOnly(): void
     {
         $productRepository = $this->createMock(ProductRepositoryInterface::class);
-        $productRepository->expects(self::never())->method('findBy');
+        $productRepository->expects(self::never())->method('findIdentifiersBy');
 
         $content = $this->resolveContent(
             $this->createContent(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS),
@@ -101,19 +94,13 @@ class ProductResolverTest extends ProductResolverTestCase
 
     public function testAReferenceResolvesVariantsWhenItAsksForThem(): void
     {
-        $variant = new ProductDimensionContent(new Product('variant-uuid'));
-        $variant->setLocale('de');
-
         $productRepository = $this->createMock(ProductRepositoryInterface::class);
-        $productRepository->expects(self::once())->method('findBy')->willReturn([$variant->getResource()]);
-
-        $contentAggregator = $this->createStub(ContentAggregatorInterface::class);
-        $contentAggregator->method('aggregate')->willReturn($variant);
+        $productRepository->expects(self::once())->method('findIdentifiersBy')->willReturn(['variant-uuid']);
 
         $content = $this->resolveContent(
             $this->createContent(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS),
             ['variants' => 'product.variants'],
-            $this->createResolver(productRepository: $productRepository, contentAggregator: $contentAggregator),
+            $this->createResolver(productRepository: $productRepository),
         );
 
         self::assertArrayHasKey('variants', $content);
