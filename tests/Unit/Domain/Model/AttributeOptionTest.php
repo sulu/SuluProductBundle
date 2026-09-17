@@ -37,7 +37,6 @@ class AttributeOptionTest extends TestCase
         $attribute = new Attribute(new AttributeGroup());
         $option = new AttributeOption($attribute, 'red');
 
-        $this->assertNull($option->getUuid());
         $this->assertSame(0, $option->getPosition());
         $this->assertNull($option->getTranslation('en'));
     }

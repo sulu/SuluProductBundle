@@ -21,8 +21,6 @@ interface ProductAttributeValueInterface
 
     public function getAttributeOptionKey(): ?string;
 
-    public function setAttributeOptionKey(?string $key): self;
-
     public function getNumber(): ?float;
 
     public function setNumber(?float $number): self;
