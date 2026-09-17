@@ -21,7 +21,7 @@ use Symfony\Contracts\Service\ResetInterface;
 
 /**
  * Loads the parent content of a variant in the variant's locale and stage, once per request: the
- * content enhancer and the resolver both need it for the same page.
+ * content enhancer loads it and the resolver reads what the enhancer loaded for the same page.
  *
  * @internal
  */
@@ -32,10 +32,16 @@ class ProductParentContentLoader implements ResetInterface
      */
     private array $parentContents = [];
 
+    /**
+     * @var \WeakMap<ProductDimensionContentInterface, ProductDimensionContentInterface|null>
+     */
+    private \WeakMap $loadedFor;
+
     public function __construct(
         private readonly ProductRepositoryInterface $productRepository,
         private readonly ContentAggregatorInterface $contentAggregator,
     ) {
+        $this->loadedFor = new \WeakMap();
     }
 
     /**
@@ -57,12 +63,22 @@ class ProductParentContentLoader implements ResetInterface
             $this->parentContents[$key] = $this->loadContent($parent->getUuid(), $dimensionAttributes);
         }
 
-        return $this->parentContents[$key];
+        return $this->loadedFor[$dimensionContent] = $this->parentContents[$key];
+    }
+
+    /**
+     * Only content that went through load() has a parent here. Resolving without the enhancers,
+     * as the reference index does, keeps a variant as itself.
+     */
+    public function getLoaded(ProductDimensionContentInterface $dimensionContent): ?ProductDimensionContentInterface
+    {
+        return $this->loadedFor[$dimensionContent] ?? null;
     }
 
     public function reset(): void
     {
         $this->parentContents = [];
+        $this->loadedFor = new \WeakMap();
     }
 
     /**

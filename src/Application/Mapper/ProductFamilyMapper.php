@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Application\Mapper;
 
+use Sulu\Bundle\MediaBundle\Entity\MediaInterface;
+use Sulu\Bundle\MediaBundle\Entity\MediaRepositoryInterface;
 use Sulu\Product\Application\Message\CreateProductFamilyMessage;
 use Sulu\Product\Application\Message\ModifyProductFamilyMessage;
 use Sulu\Product\Domain\Model\ProductFamilyAttribute;
@@ -24,6 +26,7 @@ final class ProductFamilyMapper implements ProductFamilyMapperInterface
 {
     public function __construct(
         private AttributeRepositoryInterface $attributeRepository,
+        private MediaRepositoryInterface $mediaRepository,
     ) {
     }
 
@@ -32,7 +35,20 @@ final class ProductFamilyMapper implements ProductFamilyMapperInterface
         CreateProductFamilyMessage|ModifyProductFamilyMessage $message,
     ): void {
         $this->mapTranslation($family, $message);
+        $this->mapImage($family, $message);
         $this->mapAttributes($family, $message);
+    }
+
+    /** An unknown media id clears the image, like an absent one. */
+    private function mapImage(
+        ProductFamilyInterface $family,
+        CreateProductFamilyMessage|ModifyProductFamilyMessage $message,
+    ): void {
+        $imageId = $message->getImageId();
+
+        /** @var MediaInterface|null $image */
+        $image = null === $imageId ? null : $this->mediaRepository->findMediaById($imageId);
+        $family->setImage($image);
     }
 
     private function mapTranslation(

@@ -171,9 +171,13 @@ final class ProductFamilyController implements SecuredControllerInterface
         /** @var string|null $description */
         $description = $request->request->get('description');
 
+        $image = $request->request->all()['image'] ?? null;
+        $imageId = \is_array($image) && \is_numeric($image['id'] ?? null) ? (int) $image['id'] : null;
+
         return [
             'name' => (string) $request->request->get('name', ''),
             'description' => $description,
+            'image' => null === $imageId ? null : ['id' => $imageId],
             'attributes' => $this->extractAttributes($request),
             'locale' => $this->getLocale($request),
         ];

@@ -25,6 +25,7 @@ use Sulu\Bundle\MediaBundle\Infrastructure\Sulu\Content\PropertyResolver\MediaSe
 use Sulu\Bundle\MediaBundle\Infrastructure\Sulu\Content\PropertyResolver\SingleMediaSelectionPropertyResolver;
 use Sulu\Bundle\MediaBundle\Infrastructure\Sulu\Content\ResourceLoader\MediaResourceLoader;
 use Sulu\Content\Application\ContentResolver\Value\ContentView;
+use Sulu\Content\Application\ContentResolver\Value\Reference;
 use Sulu\Content\Application\ContentResolver\Value\ResolvableResource;
 use Sulu\Content\Application\MetadataResolver\MetadataResolver;
 use Sulu\Content\Application\PropertyResolver\PropertyResolverProvider;
@@ -145,10 +146,37 @@ class ProductResolverDetailsTest extends ProductResolverTestCase
         self::assertSame('EXT-1', $this->contentViewAt($dc, 'externalIdentifier')->getContent());
         self::assertSame('available', $this->contentViewAt($dc, 'status')->getContent());
 
-        self::assertSame(
-            ['uuid' => 'fam-uuid', 'externalIdentifier' => null, 'name' => null],
-            $this->contentViewAt($dc, 'productFamily')->getContent(),
-        );
+        $familyData = $this->contentViewAt($dc, 'productFamily')->getContent();
+        self::assertIsArray($familyData);
+        self::assertSame(['uuid', 'externalIdentifier', 'name', 'image'], \array_keys($familyData));
+        self::assertSame('fam-uuid', $familyData['uuid']);
+        self::assertNull($familyData['name']);
+        self::assertInstanceOf(ContentView::class, $familyData['image']);
+        self::assertNull($familyData['image']->getContent());
+    }
+
+    /** Core loads the family image as a media, so it arrives with its formats and tags the page. */
+    public function testResolvesTheFamilyImageAsMediaReference(): void
+    {
+        $image = $this->createStub(MediaInterface::class);
+        $image->method('getId')->willReturn(5);
+
+        $family = new ProductFamily();
+        $family->setImage($image);
+
+        $dc = $this->makeDimensionContent();
+        $dc->setProductFamily($family);
+
+        $familyData = $this->contentViewAt($dc, 'productFamily')->getContent();
+        self::assertIsArray($familyData);
+        $imageView = $familyData['image'];
+        self::assertInstanceOf(ContentView::class, $imageView);
+
+        $resource = $imageView->getContent();
+        self::assertInstanceOf(ResolvableResource::class, $resource);
+        self::assertSame(5, $resource->getId());
+        self::assertSame(MediaResourceLoader::getKey(), $resource->getResourceLoaderKey());
+        self::assertEquals([new Reference(5, MediaInterface::RESOURCE_KEY)], $imageView->getReferences());
     }
 
     public function testResolvesNullEntityOwnedFields(): void

@@ -30,6 +30,16 @@
             </meta>
         </property>
 
+        <property name="image" type="single_media_selection">
+            <meta>
+                <title>sulu_media.image</title>
+            </meta>
+
+            <params>
+                <param name="types" value="image"/>
+            </params>
+        </property>
+
         <property name="attributes" type="product_family_attributes">
             <meta>
                 <title>sulu_product.attributes</title>

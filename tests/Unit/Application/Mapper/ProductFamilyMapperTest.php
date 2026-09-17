@@ -16,6 +16,8 @@ namespace Sulu\Product\Tests\Unit\Application\Mapper;
 use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
+use Sulu\Bundle\MediaBundle\Entity\Media;
+use Sulu\Bundle\MediaBundle\Entity\MediaRepositoryInterface;
 use Sulu\Product\Application\Mapper\ProductFamilyMapper;
 use Sulu\Product\Application\Message\CreateProductFamilyMessage;
 use Sulu\Product\Application\Message\ModifyProductFamilyMessage;
@@ -34,14 +36,63 @@ class ProductFamilyMapperTest extends TestCase
     /** @var ObjectProphecy<AttributeRepositoryInterface> */
     private ObjectProphecy $attributeRepository;
 
+    /** @var ObjectProphecy<MediaRepositoryInterface> */
+    private ObjectProphecy $mediaRepository;
+
     protected function setUp(): void
     {
         $this->attributeRepository = $this->prophesize(AttributeRepositoryInterface::class);
+        $this->mediaRepository = $this->prophesize(MediaRepositoryInterface::class);
     }
 
     private function createMapper(): ProductFamilyMapper
     {
-        return new ProductFamilyMapper($this->attributeRepository->reveal());
+        return new ProductFamilyMapper($this->attributeRepository->reveal(), $this->mediaRepository->reveal());
+    }
+
+    public function testMapImageSetsTheSubmittedMedia(): void
+    {
+        $media = new Media();
+        $this->mediaRepository->findMediaById(5)->willReturn($media);
+
+        $family = new ProductFamily();
+        $this->createMapper()->mapProductFamilyData($family, new CreateProductFamilyMessage([
+            'locale' => 'en',
+            'name' => 'Family',
+            'image' => ['id' => 5],
+        ]));
+
+        self::assertSame($media, $family->getImage());
+    }
+
+    public function testMapImageClearsTheImageWhenNoneIsSubmitted(): void
+    {
+        $this->mediaRepository->findMediaById()->shouldNotBeCalled();
+
+        $family = new ProductFamily();
+        $family->setImage(new Media());
+
+        $this->createMapper()->mapProductFamilyData($family, new ModifyProductFamilyMessage(
+            ['uuid' => 'family-uuid'],
+            ['locale' => 'en', 'name' => 'Family', 'image' => null],
+        ));
+
+        self::assertNull($family->getImage());
+    }
+
+    public function testMapImageClearsTheImageForAnUnknownMedia(): void
+    {
+        $this->mediaRepository->findMediaById(404)->willReturn(null);
+
+        $family = new ProductFamily();
+        $family->setImage(new Media());
+
+        $this->createMapper()->mapProductFamilyData($family, new ModifyProductFamilyMessage(
+            ['uuid' => 'family-uuid'],
+            ['locale' => 'en', 'name' => 'Family', 'image' => ['id' => 404]],
+        ));
+
+        self::assertNull($family->getImage());
     }
 
     private function attributeWithUuid(string $uuid): Attribute
@@ -260,7 +311,7 @@ class ProductFamilyMapperTest extends TestCase
             ]
         );
 
-        (new ProductFamilyMapper($repository->reveal()))->mapProductFamilyData($family, $message);
+        (new ProductFamilyMapper($repository->reveal(), $this->mediaRepository->reveal()))->mapProductFamilyData($family, $message);
 
         // ArrayCollection keeps whatever integer keys elements were inserted under, so a
         // remove-then-add leaves a gap; reindex before asserting by position.

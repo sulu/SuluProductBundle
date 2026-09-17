@@ -18,6 +18,8 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Content\Application\ContentAggregator\ContentAggregatorInterface;
 use Sulu\Content\Application\ContentResolver\ContentResolverInterface;
+use Sulu\Content\Application\ContentResolver\ContentViewResolver\ContentViewResolverInterface;
+use Sulu\Content\Application\ContentResolver\Value\ContentView;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
@@ -124,6 +126,29 @@ class ProductResolverVariantsTest extends SuluTestCase
         self::assertSame('/products/nl4fx-4', $currentVariant['url']);
         self::assertArrayHasKey('attributes', $currentVariant);
         self::assertArrayNotHasKey('variants', $currentVariant, 'a variant is not itself a product with variants');
+    }
+
+    /** The reference index resolves without the enhancers, so a variant does not index its parent's associations and siblings. */
+    public function testTheReferenceIndexResolvesAVariantAsItself(): void
+    {
+        $parent = $this->createParent();
+        $variant = $this->createVariant($parent, 'NL4FX-4', 0);
+        $this->createVariant($parent, 'NL4FX-5', 1);
+        $this->entityManager->flush();
+
+        /** @var ContentViewResolverInterface $contentViewResolver */
+        $contentViewResolver = self::getContainer()->get('sulu_content.content_view_resolver');
+        $productView = $contentViewResolver->getContentViews($this->aggregate($variant))['product'] ?? null;
+
+        self::assertInstanceOf(ContentView::class, $productView);
+        $productData = $productView->getContent();
+        self::assertIsArray($productData);
+        self::assertArrayNotHasKey('currentVariant', $productData);
+        self::assertArrayNotHasKey('variants', $productData);
+
+        $title = $productData['title'] ?? null;
+        self::assertInstanceOf(ContentView::class, $title);
+        self::assertSame('NL4FX-4 Variant', $title->getContent());
     }
 
     /**

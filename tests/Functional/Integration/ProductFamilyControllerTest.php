@@ -17,6 +17,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Depends;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
+use Sulu\Content\Tests\Functional\Traits\CreateMediaTrait;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeTranslation;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
@@ -27,6 +28,8 @@ use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 #[CoversClass(ProductFamilyController::class)]
 class ProductFamilyControllerTest extends SuluTestCase
 {
+    use CreateMediaTrait;
+
     protected KernelBrowser $client;
 
     protected function setUp(): void
@@ -228,6 +231,45 @@ class ProductFamilyControllerTest extends SuluTestCase
             [['id' => $attributeUuid, 'required' => true, 'variantSpecific' => false]],
             $data['attributes'],
         );
+    }
+
+    public function testImageRoundTripAndClear(): void
+    {
+        self::purgeDatabase();
+
+        $media = self::createMedia(self::createCollection());
+        /** @var EntityManagerInterface $entityManager */
+        $entityManager = self::getContainer()->get('doctrine.orm.entity_manager');
+        $entityManager->flush();
+        $mediaId = $media->getId();
+
+        $this->client->request('POST', '/admin/api/product-families.json?locale=en', [], [], [], \json_encode([
+            'locale' => 'en',
+            'name' => 'Apparel',
+            'image' => ['id' => $mediaId],
+        ]) ?: null);
+
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+        $created = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($created);
+        $familyId = $created['id'];
+        $this->assertIsString($familyId);
+
+        $this->client->request('GET', '/admin/api/product-families/' . $familyId . '.json?locale=en');
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertSame(['id' => $mediaId], $data['image']);
+
+        $this->client->request('PUT', '/admin/api/product-families/' . $familyId . '.json?locale=en', [], [], [], \json_encode([
+            'locale' => 'en',
+            'name' => 'Apparel',
+            'image' => null,
+        ]) ?: null);
+
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertNull($data['image']);
     }
 
     private function createAttribute(string $key, string $name): string

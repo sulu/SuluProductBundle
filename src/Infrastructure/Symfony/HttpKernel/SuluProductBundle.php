@@ -787,6 +787,7 @@ final class SuluProductBundle extends AbstractBundle
             ->class(ProductFamilyMapper::class)
             ->args([
                 new Reference('sulu_product.attribute_repository'),
+                new Reference('sulu.repository.media'),
             ])
             ->tag('sulu_product.product_family_mapper');
 
@@ -1027,7 +1028,6 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_admin.form_metadata_provider'),
                 new Reference('sulu_content.metadata_resolver'),
                 new Reference('sulu_product.product_repository'),
-                new Reference('sulu_content.content_aggregator'),
                 new Reference('sulu_product.product_parent_content_loader'),
                 new Reference('sulu_http_cache.reference_store'),
                 '%sulu_product.variants.properties%',
