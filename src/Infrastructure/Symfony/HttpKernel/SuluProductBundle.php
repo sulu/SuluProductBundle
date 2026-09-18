@@ -1187,6 +1187,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_content.content_aggregator'),
                 new Reference('sulu_admin.metadata_provider_registry'),
                 new Reference('sulu_http_cache.cache_lifetime.resolver'),
+                new Reference('sulu_product.product_parent_content_loader'),
             ])
             ->tag('sulu_route.route_defaults_provider', ['resource_key' => ProductInterface::RESOURCE_KEY]);
 
@@ -1216,6 +1217,7 @@ final class SuluProductBundle extends AbstractBundle
             ->class(WebsiteProductIndexListener::class)
             ->args([
                 new Reference('sulu_message_bus'),
+                new Reference('sulu_product.product_repository'),
             ])
             ->tag('kernel.event_listener', ['event' => ProductWorkflowTransitionAppliedEvent::class, 'method' => 'onProductChanged'])
             ->tag('kernel.event_listener', ['event' => ProductRemovedEvent::class, 'method' => 'onProductChanged'])

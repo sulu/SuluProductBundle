@@ -613,6 +613,8 @@ class ProductVariantControllerTest extends SuluTestCase
         $publishedId = $this->createVariant($parentId, 'Published', 1);
         $draftId = $this->createVariant($parentId, 'Draft', 2);
 
+        $this->client->request('POST', '/admin/api/products/' . $parentId . '.json?locale=en&action=publish');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
         $this->client->request('POST', '/admin/api/products/' . $parentId . '/variants/' . $publishedId . '.json?locale=en&action=publish');
         $this->assertHttpStatusCode(200, $this->client->getResponse());
 
@@ -848,6 +850,9 @@ class ProductVariantControllerTest extends SuluTestCase
         $variantId = $this->createVariant($parentId, 'Variant L');
         $siblingId = $this->createVariant($parentId, 'Variant M');
 
+        $this->client->request('POST', '/admin/api/products/' . $parentId . '.json?locale=en&action=publish');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
         $this->client->request('POST', '/admin/api/products/' . $parentId . '/variants/' . $variantId . '.json?locale=en&action=publish');
         $this->assertHttpStatusCode(200, $this->client->getResponse());
         $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
@@ -856,10 +861,26 @@ class ProductVariantControllerTest extends SuluTestCase
 
         $this->assertTrue($this->getVariantPublishedState($parentId, $variantId));
         $this->assertFalse($this->getVariantPublishedState($parentId, $siblingId));
-        $this->assertFalse($this->getProductPublishedState($parentId));
 
         $this->client->request('POST', '/admin/api/products/' . $parentId . '/variants/' . $variantId . '.json?locale=en&action=unpublish');
         $this->assertHttpStatusCode(200, $this->client->getResponse());
+        $this->assertFalse($this->getVariantPublishedState($parentId, $variantId));
+        $this->assertTrue($this->getProductPublishedState($parentId));
+    }
+
+    public function testPostTriggerPublishingAVariantOfAnUnpublishedProductReturns409(): void
+    {
+        self::purgeDatabase();
+        $familyId = $this->createProductFamily();
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $variantId = $this->createVariant($parentId, 'Variant L');
+
+        $this->client->request('POST', '/admin/api/products/' . $parentId . '/variants/' . $variantId . '.json?locale=en&action=publish');
+
+        $this->assertHttpStatusCode(409, $this->client->getResponse());
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertSame('A variant can only be published while its product is published in locale "en".', $data['detail']);
         $this->assertFalse($this->getVariantPublishedState($parentId, $variantId));
     }
 
@@ -1241,12 +1262,13 @@ class ProductVariantControllerTest extends SuluTestCase
         $this->assertFalse($this->getVariantPublishedState($parentId, $variantId));
     }
 
-    public function testUnpublishingParentLeavesItsVariantsPublished(): void
+    public function testUnpublishingParentUnpublishesItsVariants(): void
     {
         self::purgeDatabase();
         $familyId = $this->createProductFamily();
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
         $variantId = $this->createVariant($parentId, 'Variant L');
+        $unpublishedVariantId = $this->createVariant($parentId, 'Variant XL');
 
         $this->client->request('POST', '/admin/api/products/' . $parentId . '.json?locale=en&action=publish');
         $this->assertHttpStatusCode(200, $this->client->getResponse());
@@ -1257,7 +1279,15 @@ class ProductVariantControllerTest extends SuluTestCase
         $this->assertHttpStatusCode(200, $this->client->getResponse());
 
         $this->assertFalse($this->getProductPublishedState($parentId));
-        $this->assertTrue($this->getVariantPublishedState($parentId, $variantId));
+        $this->assertFalse($this->getVariantPublishedState($parentId, $variantId));
+        $this->assertFalse($this->getVariantPublishedState($parentId, $unpublishedVariantId));
+
+        // publishing the product again leaves its variants unpublished
+        $this->client->request('POST', '/admin/api/products/' . $parentId . '.json?locale=en&action=publish');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        $this->assertTrue($this->getProductPublishedState($parentId));
+        $this->assertFalse($this->getVariantPublishedState($parentId, $variantId));
     }
 
     private function getProductPublishedState(string $productId): bool

@@ -44,6 +44,17 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
     private const BATCH_SIZE = 100;
 
     /**
+     * A variant renders its product's content, so it is only indexed where that product is live in the same locale.
+     */
+    private const HAS_LIVE_PARENT_CONDITION = 'product.parent IS NULL OR EXISTS (
+        SELECT parentContent.id FROM ' . ProductDimensionContentInterface::class . ' parentContent
+        WHERE IDENTITY(parentContent.product) = IDENTITY(product.parent)
+        AND parentContent.locale = dimensionContent.locale
+        AND parentContent.stage = :stage
+        AND parentContent.version = :version
+    )';
+
+    /**
      * @var EntityRepository<ProductDimensionContentInterface>
      */
     private EntityRepository $dimensionContentRepository;
@@ -131,6 +142,7 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
     private function loadBatch(array $identifiers, int $offset): array
     {
         $queryBuilder = $this->dimensionContentRepository->createQueryBuilder('dimensionContent')
+            ->innerJoin('dimensionContent.product', 'product')
             ->leftJoin('dimensionContent.route', 'route')
             ->select('IDENTITY(dimensionContent.product) AS productId')
             ->addSelect('dimensionContent.authored')
@@ -142,7 +154,8 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
             ->addSelect('route.slug')
             ->where('dimensionContent.stage = :stage')
             ->andWhere('dimensionContent.locale IS NOT NULL')
-            ->andWhere('dimensionContent.version = :version');
+            ->andWhere('dimensionContent.version = :version')
+            ->andWhere(self::HAS_LIVE_PARENT_CONDITION);
 
         $parameters = [
             'stage' => DimensionContentInterface::STAGE_LIVE,
