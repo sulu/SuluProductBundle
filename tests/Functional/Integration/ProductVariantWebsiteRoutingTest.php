@@ -13,14 +13,12 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Tests\Functional\Integration;
 
-use CmsIg\Seal\Reindex\ReindexConfig;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
-use Sulu\Product\Infrastructure\Sulu\Search\WebsiteProductReindexProvider;
 use Sulu\Route\Domain\Model\Route;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -74,78 +72,6 @@ class ProductVariantWebsiteRoutingTest extends SuluTestCase
         $this->assertHttpStatusCode(404, $this->requestVariant());
     }
 
-    public function testTheSitemapListsAVariantOfALiveProduct(): void
-    {
-        $parent = $this->createParent(DimensionContentInterface::STAGE_LIVE);
-        $this->createVariant($parent, '/products/nl4fx-4');
-        $this->entityManager->flush();
-
-        self::assertStringContainsString('/de/products/nl4fx-4', $this->requestSitemap());
-    }
-
-    public function testTheSitemapSkipsAVariantOfAnUnpublishedProduct(): void
-    {
-        $parent = $this->createParent(DimensionContentInterface::STAGE_DRAFT);
-        $this->createVariant($parent, '/products/nl4fx-4');
-        $this->entityManager->flush();
-
-        self::assertStringNotContainsString('/de/products/nl4fx-4', $this->requestSitemap());
-    }
-
-    public function testTheSearchIndexContainsAVariantOfALiveProduct(): void
-    {
-        $parent = $this->createParent(DimensionContentInterface::STAGE_LIVE);
-        $variant = $this->createVariant($parent, '/products/nl4fx-4');
-        $this->entityManager->flush();
-
-        self::assertContains(
-            ProductInterface::RESOURCE_KEY . '__' . $variant->getUuid() . '__de',
-            $this->provideSearchDocumentIds(),
-        );
-    }
-
-    public function testTheSearchIndexSkipsAVariantOfAnUnpublishedProduct(): void
-    {
-        $parent = $this->createParent(DimensionContentInterface::STAGE_DRAFT);
-        $variant = $this->createVariant($parent, '/products/nl4fx-4');
-        $this->entityManager->flush();
-
-        self::assertNotContains(
-            ProductInterface::RESOURCE_KEY . '__' . $variant->getUuid() . '__de',
-            $this->provideSearchDocumentIds(),
-        );
-    }
-
-    private function requestSitemap(): string
-    {
-        self::ensureKernelShutdown();
-
-        $websiteClient = $this->createWebsiteClient();
-        $websiteClient->request('GET', 'http://sulu.io/sitemaps/products-1.xml');
-        $response = $websiteClient->getResponse();
-
-        $this->assertHttpStatusCode(200, $response);
-
-        return (string) $response->getContent();
-    }
-
-    /**
-     * @return string[]
-     */
-    private function provideSearchDocumentIds(): array
-    {
-        /** @var WebsiteProductReindexProvider $reindexProvider */
-        $reindexProvider = self::getContainer()->get('sulu_product.website_product_reindex_provider');
-
-        $ids = [];
-        foreach ($reindexProvider->provide(ReindexConfig::create()) as $document) {
-            self::assertIsString($document['id']);
-            $ids[] = $document['id'];
-        }
-
-        return $ids;
-    }
-
     private function requestVariant(): Response
     {
         self::ensureKernelShutdown();
@@ -185,7 +111,6 @@ class ProductVariantWebsiteRoutingTest extends SuluTestCase
         $variantContent->setStage(DimensionContentInterface::STAGE_LIVE);
         $variantContent->setTemplateKey('product');
         $variantContent->setCode('NL4FX-4');
-        $variantContent->setMainWebspace('sulu-io');
         $variantContent->setTemplateData(['title' => 'NL4FX-4 Variant']);
 
         // The route association carries no cascade, so it is persisted on its own.

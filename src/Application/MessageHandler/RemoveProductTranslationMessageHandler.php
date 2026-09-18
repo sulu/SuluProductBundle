@@ -14,6 +14,7 @@ namespace Sulu\Product\Application\MessageHandler;
 use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
 use Sulu\Bundle\TrashBundle\Application\TrashManager\TrashManagerInterface;
 use Sulu\Product\Application\Message\RemoveProductTranslationMessage;
+use Sulu\Product\Application\Workflow\ProductVariantUnpublisher;
 use Sulu\Product\Domain\Event\ProductTranslationRemovedEvent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
@@ -28,6 +29,7 @@ final class RemoveProductTranslationMessageHandler
     public function __construct(
         private ProductRepositoryInterface $productRepository,
         private DomainEventCollectorInterface $domainEventCollector,
+        private ProductVariantUnpublisher $variantUnpublisher,
         private ?TrashManagerInterface $trashManager = null,
     ) {
     }
@@ -64,6 +66,9 @@ final class RemoveProductTranslationMessageHandler
             $product,
             $locale
         ));
+
+        // the variants lost the content they render in this locale
+        $this->variantUnpublisher->unpublish($product, $locale);
 
         return $product;
     }

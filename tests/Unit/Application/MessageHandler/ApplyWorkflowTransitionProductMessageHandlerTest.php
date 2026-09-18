@@ -23,6 +23,7 @@ use Sulu\Content\Domain\Exception\UnavailableContentTransitionException;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Application\Message\ApplyWorkflowTransitionProductMessage;
 use Sulu\Product\Application\MessageHandler\ApplyWorkflowTransitionProductMessageHandler;
+use Sulu\Product\Application\Workflow\ProductVariantUnpublisher;
 use Sulu\Product\Domain\Event\ProductWorkflowTransitionAppliedEvent;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
@@ -54,6 +55,11 @@ class ApplyWorkflowTransitionProductMessageHandlerTest extends TestCase
             $this->productRepository->reveal(),
             $this->contentWorkflow->reveal(),
             $this->domainEventCollector->reveal(),
+            new ProductVariantUnpublisher(
+                $this->productRepository->reveal(),
+                $this->contentWorkflow->reveal(),
+                $this->domainEventCollector->reveal(),
+            ),
         );
     }
 

@@ -13,12 +13,12 @@ namespace Sulu\Product\Application\MessageHandler;
 
 use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
 use Sulu\Content\Application\ContentWorkflow\ContentWorkflowInterface;
-use Sulu\Content\Domain\Exception\ContentNotFoundException;
 use Sulu\Content\Domain\Exception\UnavailableContentTransitionException;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Content\Domain\Model\WorkflowInterface;
 use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
 use Sulu\Product\Application\Message\ApplyWorkflowTransitionProductMessage;
+use Sulu\Product\Application\Workflow\ProductVariantUnpublisher;
 use Sulu\Product\Domain\Event\ProductWorkflowTransitionAppliedEvent;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
@@ -33,46 +33,42 @@ final class ApplyWorkflowTransitionProductMessageHandler
         private ProductRepositoryInterface $productRepository,
         private ContentWorkflowInterface $contentWorkflow,
         private DomainEventCollectorInterface $domainEventCollector,
+        private ProductVariantUnpublisher $variantUnpublisher,
     ) {
     }
 
     public function __invoke(ApplyWorkflowTransitionProductMessage $message): ProductInterface
     {
+        $locale = $message->getLocale();
+        $transitionName = $message->getTransitionName();
+
         $product = $this->productRepository->getOneBy(
             $message->getIdentifier(),
-            $this->getSelects($message->getLocale()),
+            [
+                ProductRepositoryInterface::SELECT_PRODUCT_CONTENT => [
+                    'selects' => [DimensionContentQueryEnhancer::GROUP_SELECT_CONTENT_ADMIN => true],
+                    'dimensionAttributes' => [
+                        'locale' => $locale,
+                        'stage' => [DimensionContentInterface::STAGE_DRAFT, DimensionContentInterface::STAGE_LIVE],
+                    ],
+                ],
+            ]
         );
 
-        if (WorkflowInterface::WORKFLOW_TRANSITION_PUBLISH === $message->getTransitionName()) {
-            $this->assertParentIsPublished($product, $message->getLocale());
+        if (WorkflowInterface::WORKFLOW_TRANSITION_PUBLISH === $transitionName) {
+            $this->assertParentIsPublished($product, $locale);
         }
 
-        $this->applyTransition($product, $message->getLocale(), $message->getTransitionName());
+        $this->contentWorkflow->apply($product, ['locale' => $locale], $transitionName);
 
-        if (WorkflowInterface::WORKFLOW_TRANSITION_UNPUBLISH === $message->getTransitionName()
-            && $product->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS)
-        ) {
-            $this->unpublishVariants($product, $message->getLocale());
+        $this->domainEventCollector->collect(new ProductWorkflowTransitionAppliedEvent($product, $transitionName, $locale));
+
+        // publishing the product leaves its variants as they are
+        if (WorkflowInterface::WORKFLOW_TRANSITION_UNPUBLISH === $transitionName) {
+            $this->variantUnpublisher->unpublish($product, $locale);
         }
 
         return $product;
-    }
-
-    /**
-     * A variant renders its product's content, so it goes offline with its product; publishing the
-     * product leaves its variants as they are.
-     */
-    private function unpublishVariants(ProductInterface $product, string $locale): void
-    {
-        $variants = $this->productRepository->findBy(['parent' => $product->getUuid()], [], $this->getSelects($locale));
-
-        foreach ($variants as $variant) {
-            try {
-                $this->applyTransition($variant, $locale, WorkflowInterface::WORKFLOW_TRANSITION_UNPUBLISH);
-            } catch (UnavailableContentTransitionException|ContentNotFoundException) {
-                // not published in this locale
-            }
-        }
     }
 
     /**
@@ -95,28 +91,5 @@ final class ApplyWorkflowTransitionProductMessageHandler
         if (0 === $publishedParents) {
             throw new UnavailableContentTransitionException(\sprintf('A variant can only be published while its product is published in locale "%s".', $locale));
         }
-    }
-
-    private function applyTransition(ProductInterface $product, string $locale, string $transitionName): void
-    {
-        $this->contentWorkflow->apply($product, ['locale' => $locale], $transitionName);
-
-        $this->domainEventCollector->collect(new ProductWorkflowTransitionAppliedEvent($product, $transitionName, $locale));
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function getSelects(string $locale): array
-    {
-        return [
-            ProductRepositoryInterface::SELECT_PRODUCT_CONTENT => [
-                'selects' => [DimensionContentQueryEnhancer::GROUP_SELECT_CONTENT_ADMIN => true],
-                'dimensionAttributes' => [
-                    'locale' => $locale,
-                    'stage' => [DimensionContentInterface::STAGE_DRAFT, DimensionContentInterface::STAGE_LIVE],
-                ],
-            ],
-        ];
     }
 }
