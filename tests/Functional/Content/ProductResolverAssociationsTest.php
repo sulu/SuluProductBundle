@@ -205,12 +205,11 @@ class ProductResolverAssociationsTest extends SuluTestCase
         self::assertIsArray($suitable);
         self::assertCount(1, $suitable);
 
+        // the `product` output path is flat, so a target's content is not wrapped in `content`
         $resolved = $suitable[0];
         self::assertIsArray($resolved);
-
-        $content = $resolved['content'] ?? null;
-        self::assertIsArray($content);
-        self::assertSame('Suitable Target', $content['title'] ?? null);
-        self::assertSame('A very suitable product', $content['description'] ?? null);
+        self::assertArrayNotHasKey('content', $resolved);
+        self::assertSame('Suitable Target', $resolved['title'] ?? null);
+        self::assertSame('A very suitable product', $resolved['description'] ?? null);
     }
 }

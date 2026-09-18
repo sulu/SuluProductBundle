@@ -47,8 +47,7 @@ use Sulu\Product\Application\MessageHandler\RemoveProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\RemoveProductTranslationMessageHandler;
 use Sulu\Product\Application\MessageHandler\RestoreProductVersionMessageHandler;
 use Sulu\Product\Application\Webspace\WebspaceSettingsConfigurationResolver;
-use Sulu\Product\Application\Workflow\VariantParentPublishStateUpdater;
-use Sulu\Product\Application\Workflow\VariantWorkflowCascader;
+use Sulu\Product\Application\Workflow\ProductVariantUnpublisher;
 use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
 use Sulu\Product\Domain\Event\ProductCreatedEvent;
 use Sulu\Product\Domain\Event\ProductModifiedEvent;
@@ -472,20 +471,6 @@ final class SuluProductBundle extends AbstractBundle
             ])
             ->tag('sulu_product.product_mapper', ['priority' => 10]);
 
-        $services->set('sulu_product.variant_parent_publish_state_updater')
-            ->class(VariantParentPublishStateUpdater::class)
-            ->args([
-                new Reference('sulu_product.product_repository'),
-                new Reference('sulu_content.content_workflow'),
-            ]);
-
-        $services->set('sulu_product.variant_workflow_cascader')
-            ->class(VariantWorkflowCascader::class)
-            ->args([
-                new Reference('sulu_product.product_repository'),
-                new Reference('sulu_content.content_workflow'),
-            ]);
-
         // Message Handler services
         $services->set('sulu_product.create_product_handler')
             ->class(CreateProductMessageHandler::class)
@@ -493,7 +478,6 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.product_repository'),
                 tagged_iterator('sulu_product.product_mapper'),
                 new Reference('sulu_activity.domain_event_collector'),
-                new Reference('sulu_product.variant_parent_publish_state_updater'),
                 new Reference('security.token_storage', ContainerInterface::NULL_ON_INVALID_REFERENCE),
             ])
             ->tag('messenger.message_handler');
@@ -504,7 +488,6 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.product_repository'),
                 tagged_iterator('sulu_product.product_mapper'),
                 new Reference('sulu_activity.domain_event_collector'),
-                new Reference('sulu_product.variant_parent_publish_state_updater'),
             ])
             ->tag('messenger.message_handler');
 
@@ -522,9 +505,18 @@ final class SuluProductBundle extends AbstractBundle
             ->args([
                 new Reference('sulu_product.product_repository'),
                 new Reference('sulu_activity.domain_event_collector'),
+                new Reference('sulu_product.product_variant_unpublisher'),
                 new Reference('sulu_trash.trash_manager', ContainerInterface::NULL_ON_INVALID_REFERENCE),
             ])
             ->tag('messenger.message_handler');
+
+        $services->set('sulu_product.product_variant_unpublisher')
+            ->class(ProductVariantUnpublisher::class)
+            ->args([
+                new Reference('sulu_product.product_repository'),
+                new Reference('sulu_content.content_workflow'),
+                new Reference('sulu_activity.domain_event_collector'),
+            ]);
 
         $services->set('sulu_product.apply_workflow_transition_product_handler')
             ->class(ApplyWorkflowTransitionProductMessageHandler::class)
@@ -532,7 +524,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.product_repository'),
                 new Reference('sulu_content.content_workflow'),
                 new Reference('sulu_activity.domain_event_collector'),
-                new Reference('sulu_product.variant_workflow_cascader'),
+                new Reference('sulu_product.product_variant_unpublisher'),
             ])
             ->tag('messenger.message_handler');
 
@@ -1046,6 +1038,7 @@ final class SuluProductBundle extends AbstractBundle
             ->args([
                 new Reference('sulu_product.product_repository'),
                 new Reference('sulu_content.content_aggregator'),
+                new Reference('doctrine.orm.entity_manager'),
             ])
             ->tag('kernel.reset', ['method' => 'reset']);
 
@@ -1205,6 +1198,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_content.content_aggregator'),
                 new Reference('sulu_admin.metadata_provider_registry'),
                 new Reference('sulu_http_cache.cache_lifetime.resolver'),
+                new Reference('sulu_product.product_parent_content_loader'),
             ])
             ->tag('sulu_route.route_defaults_provider', ['resource_key' => ProductInterface::RESOURCE_KEY]);
 

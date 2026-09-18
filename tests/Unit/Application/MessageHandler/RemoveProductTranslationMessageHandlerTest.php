@@ -18,9 +18,11 @@ use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
+use Sulu\Content\Application\ContentWorkflow\ContentWorkflowInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Application\Message\RemoveProductTranslationMessage;
 use Sulu\Product\Application\MessageHandler\RemoveProductTranslationMessageHandler;
+use Sulu\Product\Application\Workflow\ProductVariantUnpublisher;
 use Sulu\Product\Domain\Event\ProductTranslationRemovedEvent;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
@@ -46,6 +48,11 @@ class RemoveProductTranslationMessageHandlerTest extends TestCase
         $this->handler = new RemoveProductTranslationMessageHandler(
             $this->productRepository->reveal(),
             $this->domainEventCollector->reveal(),
+            new ProductVariantUnpublisher(
+                $this->productRepository->reveal(),
+                $this->prophesize(ContentWorkflowInterface::class)->reveal(),
+                $this->domainEventCollector->reveal(),
+            ),
             null,
         );
     }

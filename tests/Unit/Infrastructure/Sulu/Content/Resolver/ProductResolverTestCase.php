@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Tests\Unit\Infrastructure\Sulu\Content\Resolver;
 
+use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataLoaderInterface;
@@ -56,7 +57,7 @@ abstract class ProductResolverTestCase extends TestCase
             $metadataResolver ?? $this->noResolvedItems(),
             $productRepository,
             $contentAggregator,
-            new ProductParentContentLoader($productRepository, $contentAggregator),
+            new ProductParentContentLoader($productRepository, $contentAggregator, $this->createStub(EntityManagerInterface::class)),
             $referenceStore ?? new ReferenceStore(),
             $variantProperties,
         );
