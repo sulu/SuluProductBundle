@@ -24,11 +24,13 @@ use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\ContentEnhancer\ProductVariantDimensionContentEnhancer;
+use Sulu\Product\Infrastructure\Sulu\Content\ProductParentContentLoader;
 use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductResolver;
 use Sulu\Route\Domain\Model\Route;
 
 #[CoversClass(ProductResolver::class)]
 #[CoversClass(ProductVariantDimensionContentEnhancer::class)]
+#[CoversClass(ProductParentContentLoader::class)]
 class ProductResolverVariantsTest extends SuluTestCase
 {
     private ContentResolverInterface $contentResolver;
@@ -151,6 +153,39 @@ class ProductResolverVariantsTest extends SuluTestCase
         self::assertSame('NL4FX-4 Variant', $title->getContent());
     }
 
+    /** A parent whose draft was loaded earlier in the same request still resolves with its live content. */
+    public function testAVariantResolvesItsParentsLiveContentAfterTheParentDraftWasLoaded(): void
+    {
+        $parent = $this->createParent();
+        $draftContent = $parent->createDimensionContent();
+        $draftContent->setLocale('de');
+        $draftContent->setStage('draft');
+        $draftContent->setTemplateKey('product');
+        $draftContent->setTemplateData(['title' => 'NL4FX draft', 'description' => 'Draft description']);
+        $parent->addDimensionContent($draftContent);
+        $this->entityManager->persist($draftContent);
+        $variant = $this->createVariant($parent, 'NL4FX-4', 0);
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+        // flushing already loaded the parent content, a new request starts without it
+        $this->getParentContentLoader()->reset();
+
+        $loadedParent = $this->productRepository->findOneBy(
+            ['uuid' => $parent->getUuid(), 'locale' => 'de', 'stage' => 'draft'],
+            [ProductRepositoryInterface::GROUP_SELECT_PRODUCT_WEBSITE => true],
+        );
+        self::assertNotNull($loadedParent);
+
+        $loadedVariant = $this->productRepository->getOneBy(
+            ['uuid' => $variant->getUuid(), 'locale' => 'de', 'stage' => 'live'],
+            [ProductRepositoryInterface::GROUP_SELECT_PRODUCT_WEBSITE => true],
+        );
+
+        $result = $this->contentResolver->resolve($this->aggregate($loadedVariant));
+
+        self::assertSame('NL4FX', $result['content']['title'] ?? null);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -163,6 +198,14 @@ class ProductResolverVariantsTest extends SuluTestCase
 
         /** @var array<string, mixed> $productData */
         return $productData;
+    }
+
+    private function getParentContentLoader(): ProductParentContentLoader
+    {
+        /** @var ProductParentContentLoader $parentContentLoader */
+        $parentContentLoader = self::getContainer()->get('sulu_product.product_parent_content_loader');
+
+        return $parentContentLoader;
     }
 
     private function aggregate(ProductInterface $product): ProductDimensionContentInterface

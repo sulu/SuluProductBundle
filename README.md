@@ -38,18 +38,20 @@ reaches such a product programmatically.
 
 A variant is published on its own, from the variants tab of its product: select variants in the
 list and use "Publishing" in the toolbar, which needs the live permission. Publish skips variants
-without content in the current locale, unpublish only acts on published ones. The list marks
-unpublished variants and variants shown in a fallback locale, the same way the article list does.
+without content in the current locale and variants already published without changes, unpublish
+only acts on published ones. The list marks unpublished variants and variants shown in a fallback
+locale, the same way the article list does.
 
-A product with variants and its variants never change each other's publish state: publishing or
-unpublishing the product leaves its variants as they are, and saving a variant does not mark its
-product as changed. The website lists and routes only published variants. A published variant
-whose product is not published has no product content to inherit, so publish the product as
-well.
+A variant renders its product's content, so it is only live together with its product: publishing
+a variant is refused while its product is not published in that locale, and unpublishing the
+product unpublishes its variants there. Publishing the product leaves its variants as they are,
+and saving a variant does not mark its product as changed. The website lists and routes only
+published variants whose product is published in that locale.
 
 The action calls `POST /admin/api/products/{parentId}/variants/{id}?action=publish` (or
 `unpublish`), which answers `409` when the transition is not available, for example unpublishing
-a variant that was never published.
+a variant that was never published or publishing one whose product is not published. The list
+shows the reason for each variant it could not change.
 
 ## Variant attributes
 

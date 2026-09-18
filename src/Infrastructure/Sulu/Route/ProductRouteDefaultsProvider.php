@@ -25,6 +25,7 @@ use Sulu\Content\Domain\Exception\ContentNotFoundException;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Infrastructure\Sulu\Content\ProductParentContentLoader;
 use Sulu\Route\Application\Routing\Matcher\RouteDefaultsProviderInterface;
 use Sulu\Route\Domain\Model\Route;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -39,6 +40,7 @@ class ProductRouteDefaultsProvider implements RouteDefaultsProviderInterface
         private ContentAggregatorInterface $contentAggregator,
         private MetadataProviderRegistry $metadataProviderRegistry,
         private CacheLifetimeResolverInterface $cacheLifetimeResolver,
+        private ProductParentContentLoader $parentContentLoader,
     ) {
     }
 
@@ -76,6 +78,11 @@ class ProductRouteDefaultsProvider implements RouteDefaultsProviderInterface
             $dimensionContent = $this->contentAggregator->aggregate($product, $dimensionAttributes);
         } catch (ContentNotFoundException $exception) {
             throw new NotFoundHttpException(\sprintf('No product found for id "%s" and locale "%s"', $id, $locale), $exception);
+        }
+
+        // a variant renders its product's content, so it is only reachable while that product is live
+        if (null !== $product->getParent() && null === $this->parentContentLoader->load($dimensionContent)) {
+            throw new NotFoundHttpException(\sprintf('No published parent product found for variant id "%s" and locale "%s"', $id, $locale));
         }
 
         $contentLocale = $dimensionContent->getLocale();

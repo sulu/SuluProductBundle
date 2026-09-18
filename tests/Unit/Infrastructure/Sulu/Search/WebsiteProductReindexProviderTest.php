@@ -84,7 +84,7 @@ class WebsiteProductReindexProviderTest extends TestCase
         $this->additionalWebspacesRepository->createQueryBuilder('additionalWebspace')
             ->willReturn($this->additionalQb->reveal());
 
-        foreach (['select', 'addSelect', 'where', 'andWhere', 'leftJoin', 'orderBy'] as $method) {
+        foreach (['select', 'addSelect', 'where', 'andWhere', 'innerJoin', 'leftJoin', 'orderBy'] as $method) {
             $this->dimensionContentQb->$method(Argument::cetera())->willReturn($this->dimensionContentQb->reveal());
             $this->additionalQb->$method(Argument::cetera())->willReturn($this->additionalQb->reveal());
         }
