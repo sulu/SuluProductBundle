@@ -22,7 +22,6 @@ use Sulu\Component\Localization\Localization;
 use Sulu\Component\Webspace\Manager\WebspaceManagerInterface;
 use Sulu\Component\Webspace\PortalInformation;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
-use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 
 /**
@@ -46,17 +45,6 @@ use Sulu\Product\Domain\Model\ProductInterface;
  */
 class ProductsSitemapProvider extends AbstractSitemapProvider
 {
-    /**
-     * A variant renders its product's content, so it is only listed where that product is live in the same locale.
-     */
-    private const HAS_LIVE_PARENT_CONDITION = 'product.parent IS NULL OR EXISTS (
-        SELECT parentContent.id FROM ' . ProductDimensionContentInterface::class . ' parentContent
-        WHERE IDENTITY(parentContent.product) = IDENTITY(product.parent)
-        AND parentContent.locale = dimensionContent.locale
-        AND parentContent.stage = :stage
-        AND parentContent.version = :version
-    )';
-
     /**
      * @var EntityRepository<ProductInterface>
      */
@@ -180,7 +168,6 @@ class ProductsSitemapProvider extends AbstractSitemapProvider
         ')
             ->leftJoin('dimensionContent.route', 'route')
             ->andWhere('dimensionContent.mainWebspace = :webspaceKey OR additionalWebspace.additionalWebspace = :webspaceKey')
-            ->andWhere(self::HAS_LIVE_PARENT_CONDITION)
             ->setParameter('locale', $locale)
             ->setParameter('stage', DimensionContentInterface::STAGE_LIVE)
             ->setParameter('webspaceKey', $webspaceKey)
@@ -222,7 +209,6 @@ class ProductsSitemapProvider extends AbstractSitemapProvider
             ->leftJoin('dimensionContent.additionalWebspaces', 'additionalWebspace')
             ->leftJoin('dimensionContent.route', 'route')
             ->andWhere('dimensionContent.mainWebspace = :webspaceKey OR additionalWebspace.additionalWebspace = :webspaceKey')
-            ->andWhere(self::HAS_LIVE_PARENT_CONDITION)
             ->setParameter('locale', $locale)
             ->setParameter('stage', DimensionContentInterface::STAGE_LIVE)
             ->setParameter('webspaceKey', $webspaceKey)

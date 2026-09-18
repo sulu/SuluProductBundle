@@ -44,9 +44,8 @@ locale, the same way the article list does.
 
 A variant renders its product's content, so it is only live together with its product: publishing
 a variant is refused while its product is not published in that locale, and unpublishing the
-product unpublishes its variants there. Publishing the product leaves its variants as they are,
-and saving a variant does not mark its product as changed. The website lists and routes only
-published variants whose product is published in that locale.
+product or removing its translation unpublishes its variants there. Publishing the product leaves
+its variants as they are, and saving a variant does not mark its product as changed.
 
 The action calls `POST /admin/api/products/{parentId}/variants/{id}?action=publish` (or
 `unpublish`), which answers `409` when the transition is not available, for example unpublishing

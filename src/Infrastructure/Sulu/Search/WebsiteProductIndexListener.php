@@ -18,7 +18,6 @@ use Sulu\Product\Domain\Event\ProductRemovedEvent;
 use Sulu\Product\Domain\Event\ProductTranslationRemovedEvent;
 use Sulu\Product\Domain\Event\ProductWorkflowTransitionAppliedEvent;
 use Sulu\Product\Domain\Model\ProductInterface;
-use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 
 /**
@@ -29,19 +28,17 @@ final class WebsiteProductIndexListener
 {
     public function __construct(
         private readonly MessageBusInterface $messageBus,
-        private readonly ProductRepositoryInterface $productRepository,
     ) {
     }
 
     public function onProductChanged(ProductWorkflowTransitionAppliedEvent|ProductRemovedEvent|ProductTranslationRemovedEvent $event): void
     {
-        $identifiers = [];
+        $resourceId = $event->getResourceId();
 
-        foreach ($this->getResourceIds($event) as $resourceId) {
-            foreach ($this->getLocales($event) as $locale) {
-                $identifiers[] = ProductInterface::RESOURCE_KEY . '__' . $resourceId . '__' . $locale;
-            }
-        }
+        $identifiers = \array_map(
+            fn (string $locale) => ProductInterface::RESOURCE_KEY . '__' . $resourceId . '__' . $locale,
+            $this->getLocales($event),
+        );
 
         if ([] === $identifiers) {
             return;
@@ -52,26 +49,6 @@ final class WebsiteProductIndexListener
                 ->withIndex('website')
                 ->withIdentifiers($identifiers),
         );
-    }
-
-    /**
-     * A variant renders its product's content, so it is reindexed with its product.
-     *
-     * @return string[]
-     */
-    private function getResourceIds(ProductWorkflowTransitionAppliedEvent|ProductRemovedEvent|ProductTranslationRemovedEvent $event): array
-    {
-        $resourceIds = [$event->getResourceId()];
-
-        if ($event instanceof ProductRemovedEvent) {
-            return $resourceIds;
-        }
-
-        foreach ($this->productRepository->findBy(['parent' => $event->getResourceId()]) as $variant) {
-            $resourceIds[] = $variant->getUuid();
-        }
-
-        return $resourceIds;
     }
 
     /**

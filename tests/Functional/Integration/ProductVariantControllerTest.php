@@ -868,6 +868,24 @@ class ProductVariantControllerTest extends SuluTestCase
         $this->assertTrue($this->getProductPublishedState($parentId));
     }
 
+    public function testRemovingTheProductTranslationUnpublishesItsVariants(): void
+    {
+        self::purgeDatabase();
+        $familyId = $this->createProductFamily();
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $variantId = $this->createVariant($parentId, 'Variant L');
+
+        $this->client->request('POST', '/admin/api/products/' . $parentId . '.json?locale=en&action=publish');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+        $this->client->request('POST', '/admin/api/products/' . $parentId . '/variants/' . $variantId . '.json?locale=en&action=publish');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        $this->client->request('DELETE', '/admin/api/products/' . $parentId . '.json?locale=en&deleteLocale=true');
+        $this->assertHttpStatusCode(204, $this->client->getResponse());
+
+        $this->assertFalse($this->getVariantPublishedState($parentId, $variantId));
+    }
+
     public function testPostTriggerPublishingAVariantOfAnUnpublishedProductReturns409(): void
     {
         self::purgeDatabase();
