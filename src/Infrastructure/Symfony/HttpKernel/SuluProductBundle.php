@@ -17,6 +17,7 @@ use Sulu\Bundle\HttpCacheBundle\ReferenceStore\ReferenceStore;
 use Sulu\Bundle\PersistenceBundle\DependencyInjection\PersistenceExtensionTrait;
 use Sulu\Bundle\PersistenceBundle\PersistenceBundleTrait;
 use Sulu\Content\Infrastructure\Sulu\Preview\ContentObjectProvider;
+use Sulu\Content\Infrastructure\Sulu\Security\ResourceSecurityContextProvider;
 use Sulu\Product\Application\AttributeType\AttributeTypeInterface;
 use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
 use Sulu\Product\Application\AttributeType\DateAttributeType;
@@ -1091,6 +1092,19 @@ final class SuluProductBundle extends AbstractBundle
                 '%sulu.model.product_content.class%',
             ])
             ->tag('sulu.link.provider', ['alias' => 'product']);
+
+        // Security services
+        // A workflow transition on a product is authorized against the product security context,
+        // which is fixed for every product, so the provider never has to load the entity.
+        $services->set('sulu_product.workflow_transition_request_security_context_provider')
+            ->class(ResourceSecurityContextProvider::class)
+            ->args([
+                new Reference('doctrine.orm.entity_manager'),
+                '%sulu.model.product.class%',
+                ProductAdmin::SECURITY_CONTEXT,
+            ])
+            ->tag('sulu_content.workflow_transition_request_security_context_provider', ['resource-key' => ProductInterface::RESOURCE_KEY])
+            ->tag('sulu.context', ['context' => 'admin']);
 
         // Smart Content services
         $services->set('sulu_product.product_smart_content_provider')
