@@ -79,5 +79,38 @@
             <field-name>parent</field-name>
             <entity-name>Sulu\Product\Domain\Model\ProductInterface</entity-name>
         </property>
+
+        <property name="published" translation="sulu_admin.published" type="date" visibility="never">
+            <field-name>workflowPublished</field-name>
+            <entity-name>dimensionContent</entity-name>
+
+            <joins ref="dimensionContent"/>
+
+            <transformer type="datetime"/>
+        </property>
+
+        <property name="publishedState" translation="sulu_content.published_state" visibility="never">
+            <field-name>workflowPlace</field-name>
+            <entity-name>dimensionContent</entity-name>
+
+            <joins ref="dimensionContent"/>
+
+            <filter type="select">
+                <params>
+                    <param name="options" type="collection">
+                        <param name="published" value="sulu_content.state_published"/>
+                        <param name="unpublished" value="sulu_content.state_not_published"/>
+                        <param name="draft" value="sulu_admin.draft"/>
+                    </param>
+                </params>
+            </filter>
+        </property>
+
+        <property name="ghostLocale" translation="sulu_admin.ghost_locale" visibility="never">
+            <field-name>locale</field-name>
+            <entity-name>ghostDimensionContent</entity-name>
+
+            <joins ref="ghostDimensionContent"/>
+        </property>
     </properties>
 </list>

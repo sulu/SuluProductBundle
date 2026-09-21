@@ -34,6 +34,24 @@ carries an address of its own. A product with variants owns none, it is reached 
 variants, which is why the field is hidden for that type and the route guard drops one that
 reaches such a product programmatically.
 
+## Variant publishing
+
+A variant is published on its own, from the variants tab of its product: select variants in the
+list and use "Publishing" in the toolbar, which needs the live permission. Publish skips variants
+without content in the current locale and variants already published without changes, unpublish
+only acts on published ones. The list marks unpublished variants and variants shown in a fallback
+locale, the same way the article list does.
+
+A variant renders its product's content, so it is only live together with its product: publishing
+a variant is refused while its product is not published in that locale, and unpublishing the
+product or removing its translation unpublishes its variants there. Publishing the product leaves
+its variants as they are, and saving a variant does not mark its product as changed.
+
+The action calls `POST /admin/api/products/{parentId}/variants/{id}?action=publish` (or
+`unpublish`), which answers `409` when the transition is not available, for example unpublishing
+a variant that was never published or publishing one whose product is not published. The list
+shows the reason for each variant it could not change.
+
 ## Variant attributes
 
 A family attribute with the "variant" toggle is held by the product that carries the article: a

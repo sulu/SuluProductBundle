@@ -19,10 +19,11 @@ use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
 use Sulu\Content\Application\ContentWorkflow\ContentWorkflowInterface;
+use Sulu\Content\Domain\Exception\UnavailableContentTransitionException;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Application\Message\ApplyWorkflowTransitionProductMessage;
 use Sulu\Product\Application\MessageHandler\ApplyWorkflowTransitionProductMessageHandler;
-use Sulu\Product\Application\Workflow\VariantWorkflowCascader;
+use Sulu\Product\Application\Workflow\ProductVariantUnpublisher;
 use Sulu\Product\Domain\Event\ProductWorkflowTransitionAppliedEvent;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
@@ -50,18 +51,15 @@ class ApplyWorkflowTransitionProductMessageHandlerTest extends TestCase
         $this->contentWorkflow = $this->prophesize(ContentWorkflowInterface::class);
         $this->domainEventCollector = $this->prophesize(DomainEventCollectorInterface::class);
 
-        // VariantWorkflowCascader is final (cannot be prophesized); its own dependencies are
-        // never exercised here since the test product is a plain (non-variant-parent) product.
-        $variantWorkflowCascader = new VariantWorkflowCascader(
-            $this->prophesize(ProductRepositoryInterface::class)->reveal(),
-            $this->prophesize(ContentWorkflowInterface::class)->reveal(),
-        );
-
         $this->handler = new ApplyWorkflowTransitionProductMessageHandler(
             $this->productRepository->reveal(),
             $this->contentWorkflow->reveal(),
             $this->domainEventCollector->reveal(),
-            $variantWorkflowCascader,
+            new ProductVariantUnpublisher(
+                $this->productRepository->reveal(),
+                $this->contentWorkflow->reveal(),
+                $this->domainEventCollector->reveal(),
+            ),
         );
     }
 
@@ -98,7 +96,7 @@ class ApplyWorkflowTransitionProductMessageHandlerTest extends TestCase
         $this->assertSame($product, $result);
     }
 
-    public function testApplyWorkflowTransitionCascadesToVariants(): void
+    public function testApplyWorkflowTransitionOnAParentLeavesItsVariantsAlone(): void
     {
         $product = new Product('parent-uuid');
         $product->setType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
@@ -110,6 +108,8 @@ class ApplyWorkflowTransitionProductMessageHandlerTest extends TestCase
         $this->productRepository->getOneBy(Argument::cetera())
             ->shouldBeCalledOnce()
             ->willReturn($product);
+        $this->productRepository->findBy(Argument::cetera())
+            ->shouldNotBeCalled();
 
         $this->contentWorkflow->apply($product, ['locale' => 'en'], 'publish')
             ->shouldBeCalledOnce()
@@ -118,27 +118,87 @@ class ApplyWorkflowTransitionProductMessageHandlerTest extends TestCase
         $this->domainEventCollector->collect(Argument::type(ProductWorkflowTransitionAppliedEvent::class))
             ->shouldBeCalledOnce();
 
-        // A dedicated cascader whose repository reports no variants, so the cascade is invoked
-        // (covering the parent-with-variants branch) without applying transitions to children.
-        $cascaderRepository = $this->prophesize(ProductRepositoryInterface::class);
-        $cascaderRepository->findBy(['parent' => 'parent-uuid'], Argument::cetera())
-            ->shouldBeCalledOnce()
-            ->willReturn([]);
-
-        $handler = new ApplyWorkflowTransitionProductMessageHandler(
-            $this->productRepository->reveal(),
-            $this->contentWorkflow->reveal(),
-            $this->domainEventCollector->reveal(),
-            new VariantWorkflowCascader(
-                $cascaderRepository->reveal(),
-                $this->prophesize(ContentWorkflowInterface::class)->reveal(),
-            ),
-        );
-
         $message = new ApplyWorkflowTransitionProductMessage(['uuid' => 'parent-uuid'], 'en', 'publish');
 
-        $result = ($handler)($message);
+        $this->assertSame($product, ($this->handler)($message));
+    }
 
-        $this->assertSame($product, $result);
+    public function testUnpublishingAParentUnpublishesItsVariants(): void
+    {
+        $product = new Product('parent-uuid');
+        $product->setType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $publishedVariant = new Product('published-variant-uuid');
+        $unpublishedVariant = new Product('unpublished-variant-uuid');
+
+        $this->productRepository->getOneBy(['uuid' => 'parent-uuid'], Argument::type('array'))
+            ->shouldBeCalledOnce()
+            ->willReturn($product);
+        $this->productRepository->findBy(['parent' => 'parent-uuid'], [], Argument::type('array'))
+            ->shouldBeCalledOnce()
+            ->willReturn([$publishedVariant, $unpublishedVariant]);
+
+        $this->contentWorkflow->apply($product, ['locale' => 'en'], 'unpublish')
+            ->shouldBeCalledOnce()
+            ->willReturn(new ProductDimensionContent($product));
+        $this->contentWorkflow->apply($publishedVariant, ['locale' => 'en'], 'unpublish')
+            ->shouldBeCalledOnce()
+            ->willReturn(new ProductDimensionContent($publishedVariant));
+        $this->contentWorkflow->apply($unpublishedVariant, ['locale' => 'en'], 'unpublish')
+            ->shouldBeCalledOnce()
+            ->willThrow(new UnavailableContentTransitionException());
+
+        $this->domainEventCollector->collect(Argument::that(
+            fn (ProductWorkflowTransitionAppliedEvent $event) => 'parent-uuid' === $event->getResourceId(),
+        ))->shouldBeCalledOnce();
+        $this->domainEventCollector->collect(Argument::that(
+            fn (ProductWorkflowTransitionAppliedEvent $event) => 'published-variant-uuid' === $event->getResourceId(),
+        ))->shouldBeCalledOnce();
+        $this->domainEventCollector->collect(Argument::that(
+            fn (ProductWorkflowTransitionAppliedEvent $event) => 'unpublished-variant-uuid' === $event->getResourceId(),
+        ))->shouldNotBeCalled();
+
+        $message = new ApplyWorkflowTransitionProductMessage(['uuid' => 'parent-uuid'], 'en', 'unpublish');
+
+        $this->assertSame($product, ($this->handler)($message));
+    }
+
+    public function testPublishingAVariantOfAnUnpublishedProductIsRefused(): void
+    {
+        $parent = new Product('parent-uuid');
+        $variant = new Product('variant-uuid');
+        $variant->setParent($parent);
+
+        $this->productRepository->getOneBy(['uuid' => 'variant-uuid'], Argument::type('array'))
+            ->willReturn($variant);
+        $this->productRepository->countBy(['uuid' => 'parent-uuid', 'locale' => 'en', 'stage' => 'live'])
+            ->shouldBeCalledOnce()
+            ->willReturn(0);
+
+        $this->contentWorkflow->apply(Argument::cetera())->shouldNotBeCalled();
+        $this->domainEventCollector->collect(Argument::cetera())->shouldNotBeCalled();
+
+        $this->expectException(UnavailableContentTransitionException::class);
+
+        ($this->handler)(new ApplyWorkflowTransitionProductMessage(['uuid' => 'variant-uuid'], 'en', 'publish'));
+    }
+
+    public function testPublishingAVariantOfAPublishedProduct(): void
+    {
+        $parent = new Product('parent-uuid');
+        $variant = new Product('variant-uuid');
+        $variant->setParent($parent);
+
+        $this->productRepository->getOneBy(['uuid' => 'variant-uuid'], Argument::type('array'))
+            ->willReturn($variant);
+        $this->productRepository->countBy(['uuid' => 'parent-uuid', 'locale' => 'en', 'stage' => 'live'])
+            ->willReturn(1);
+
+        $this->contentWorkflow->apply($variant, ['locale' => 'en'], 'publish')
+            ->shouldBeCalledOnce()
+            ->willReturn(new ProductDimensionContent($variant));
+        $this->domainEventCollector->collect(Argument::type(ProductWorkflowTransitionAppliedEvent::class))
+            ->shouldBeCalledOnce();
+
+        $this->assertSame($variant, ($this->handler)(new ApplyWorkflowTransitionProductMessage(['uuid' => 'variant-uuid'], 'en', 'publish')));
     }
 }

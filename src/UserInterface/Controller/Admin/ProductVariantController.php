@@ -23,9 +23,12 @@ use Sulu\Component\Rest\RestHelperInterface;
 use Sulu\Component\Security\SecuredControllerInterface;
 use Sulu\Content\Application\ContentManager\ContentManagerInterface;
 use Sulu\Content\Domain\Exception\ContentNotFoundException;
+use Sulu\Content\Domain\Exception\UnavailableContentTransitionException;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Content\Domain\Model\WorkflowInterface;
 use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
 use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushStamp;
+use Sulu\Product\Application\Message\ApplyWorkflowTransitionProductMessage;
 use Sulu\Product\Application\Message\CreateProductMessage;
 use Sulu\Product\Application\Message\ModifyProductMessage;
 use Sulu\Product\Application\Message\RemoveProductMessage;
@@ -82,6 +85,10 @@ final class ProductVariantController implements SecuredControllerInterface
         $listBuilder = $this->listBuilderFactory->create(ProductInterface::class);
         $listBuilder->setIdField($fieldDescriptors['id']);
         $this->restHelper->initializeListBuilder($listBuilder, $fieldDescriptors);
+        // the publish and ghost indicators are rendered from these, whether or not the list requests them
+        $listBuilder->addSelectField($fieldDescriptors['published']);
+        $listBuilder->addSelectField($fieldDescriptors['publishedState']);
+        $listBuilder->addSelectField($fieldDescriptors['ghostLocale']);
         $listBuilder->setParameter('locale', $locale);
         $listBuilder->where($fieldDescriptors['parent'], $parentId);
 
@@ -98,7 +105,14 @@ final class ProductVariantController implements SecuredControllerInterface
             $listBuilder->count(),
         );
 
-        return new JsonResponse($this->normalizer->normalize($listRepresentation->toArray(), 'json'));
+        /** @var array{_embedded: array{product_variants: array<int, array<string, mixed>>}} $list */
+        $list = $listRepresentation->toArray();
+        foreach ($list['_embedded'][ProductInterface::LIST_KEY_VARIANTS] as &$item) {
+            // the admin expects a boolean, the list builder returns the raw workflow place
+            $item['publishedState'] = WorkflowInterface::WORKFLOW_PLACE_PUBLISHED === ($item['publishedState'] ?? null);
+        }
+
+        return new JsonResponse($this->normalizer->normalize($list, 'json'));
     }
 
     public function getAction(Request $request, string $parentId, string $id): Response
@@ -210,6 +224,33 @@ final class ProductVariantController implements SecuredControllerInterface
         $this->handle(new Envelope($message, [new EnableFlushStamp()]));
 
         return new Response('', 204);
+    }
+
+    /**
+     * Publishes or unpublishes a single variant; its parent is never touched.
+     */
+    public function postTriggerAction(Request $request, string $parentId, string $id): Response
+    {
+        $this->assertVariantOwnedByParent($parentId, $id);
+
+        $action = $request->query->getString('action');
+        $transitions = [WorkflowInterface::WORKFLOW_TRANSITION_PUBLISH, WorkflowInterface::WORKFLOW_TRANSITION_UNPUBLISH];
+
+        if (!\in_array($action, $transitions, true)) {
+            return new JsonResponse([
+                'detail' => \sprintf('Unsupported action "%s", expected one of "%s".', $action, \implode('", "', $transitions)),
+            ], 400);
+        }
+
+        $message = new ApplyWorkflowTransitionProductMessage(['uuid' => $id], $this->getLocale($request), $action);
+
+        try {
+            $this->handle(new Envelope($message, [new EnableFlushStamp()]));
+        } catch (UnavailableContentTransitionException|ContentNotFoundException $e) {
+            return new JsonResponse(['detail' => $e->getMessage()], 409);
+        }
+
+        return $this->getAction($request, $parentId, $id);
     }
 
     public function getSecurityContext(): string
