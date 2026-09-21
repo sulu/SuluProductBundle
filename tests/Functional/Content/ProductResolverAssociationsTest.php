@@ -17,12 +17,10 @@ use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Content\Application\ContentResolver\ContentResolverInterface;
-use Sulu\Content\Application\ContentResolver\Value\ResolvableResource;
 use Sulu\Product\Domain\Model\ProductAssociation;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductResolver;
-use Sulu\Product\Infrastructure\Sulu\Content\ResourceLoader\ProductResourceLoader;
 
 #[CoversClass(ProductResolver::class)]
 class ProductResolverAssociationsTest extends SuluTestCase
@@ -60,16 +58,14 @@ class ProductResolverAssociationsTest extends SuluTestCase
     }
 
     /**
-     * The associated target product is intentionally left without a "live" dimension content:
-     * fully resolving it recursively (title/url) would require route generation/publishing
-     * setup unrelated to this resolver. Asserting on the still-unresolved ResolvableResource
-     * is sufficient to prove the resolver + DI wiring (`type => associations`) produce a
-     * `product_selection`-shaped resolvable, limited to `title`/`url`, under `product.associations`.
+     * Proves the resolver + DI wiring (`type => associations`) produce a `product_selection`
+     * under `product.associations`, keyed by the bare type. A target below the flat `[product]`
+     * path is flattened to its content bag, so the declared properties sit directly on the item
+     * rather than under a `content` key.
      */
     public function testProductAssociationsAppearUnderRootProductAssociations(): void
     {
-        $target = $this->productRepository->createNew();
-        $this->productRepository->add($target);
+        $target = $this->publishedTarget('Alternative Target', '/alternative-target');
 
         $product = $this->productRepository->createNew();
 
@@ -101,19 +97,23 @@ class ProductResolverAssociationsTest extends SuluTestCase
         $alternative = $associationsData['alternative'];
         self::assertIsArray($alternative);
         self::assertCount(1, $alternative);
-        $resolvable = $alternative[0];
-        self::assertInstanceOf(ResolvableResource::class, $resolvable);
-        self::assertSame($target->getUuid(), $resolvable->getId());
-        self::assertSame(ProductResourceLoader::getKey(), $resolvable->getResourceLoaderKey());
-        self::assertSame(ProductInterface::RESOURCE_KEY, $resolvable->getResourceKey());
-        self::assertSame(100, $resolvable->getPriority());
-        self::assertSame(['title' => 'title', 'url' => 'url'], $resolvable->getMetadata()['properties'] ?? null);
+        $resolved = $alternative[0];
+        self::assertIsArray($resolved);
+        // `alternative` declares no properties of its own, so only the forced title/url remain.
+        self::assertSame(['title', 'url'], \array_keys($resolved));
+        self::assertSame('Alternative Target', $resolved['title']);
     }
 
-    public function testDeclaredFieldParamsAppearInResolvableMetadata(): void
+    /**
+     * A target that cannot be resolved, here one without any published content, is dropped from
+     * the list instead of reaching the template as a raw ResolvableResource (sulu/sulu#9105).
+     * The resolvable target next to it stays, so the drop is selective and not an empty list.
+     */
+    public function testAssociationWithAnUnresolvableTargetIsDropped(): void
     {
-        $target = $this->productRepository->createNew();
-        $this->productRepository->add($target);
+        $unpublishedTarget = $this->productRepository->createNew();
+        $this->productRepository->add($unpublishedTarget);
+        $publishedTarget = $this->publishedTarget('Suitable Target', '/suitable-target');
 
         $product = $this->productRepository->createNew();
 
@@ -121,7 +121,8 @@ class ProductResolverAssociationsTest extends SuluTestCase
         $dimensionContent->setLocale('en');
         $dimensionContent->setStage('draft');
         $dimensionContent->setTemplateKey('product');
-        $dimensionContent->addAssociation(new ProductAssociation($dimensionContent, $target, 'suitable'));
+        $dimensionContent->addAssociation(new ProductAssociation($dimensionContent, $unpublishedTarget, 'alternative'));
+        $dimensionContent->addAssociation(new ProductAssociation($dimensionContent, $publishedTarget, 'suitable'));
         $product->addDimensionContent($dimensionContent);
 
         $this->productRepository->add($product);
@@ -136,20 +137,14 @@ class ProductResolverAssociationsTest extends SuluTestCase
         $associationsData = $productData['associations'];
         self::assertIsArray($associationsData);
 
+        self::assertSame([], $associationsData['alternative']);
+
         $suitable = $associationsData['suitable'];
         self::assertIsArray($suitable);
         self::assertCount(1, $suitable);
-        $resolvable = $suitable[0];
-        self::assertInstanceOf(ResolvableResource::class, $resolvable);
-        self::assertSame($target->getUuid(), $resolvable->getId());
-        // declared property resolves alongside the forced title/url
-        self::assertSame(
-            ['description' => 'description', 'title' => 'title', 'url' => 'url'],
-            $resolvable->getMetadata()['properties'] ?? null,
-        );
-
-        // no alternative association was stored
-        self::assertSame([], $associationsData['alternative']);
+        $resolved = $suitable[0];
+        self::assertIsArray($resolved);
+        self::assertSame('Suitable Target', $resolved['title'] ?? null);
     }
 
     /**
@@ -159,26 +154,7 @@ class ProductResolverAssociationsTest extends SuluTestCase
      */
     public function testPublishedTargetResolvesDeclaredProperties(): void
     {
-        $target = $this->productRepository->createNew();
-
-        $targetUnlocalizedLive = $target->createDimensionContent();
-        $targetUnlocalizedLive->setStage('live');
-        $target->addDimensionContent($targetUnlocalizedLive);
-
-        $targetLocalizedLive = $target->createDimensionContent();
-        $targetLocalizedLive->setLocale('en');
-        $targetLocalizedLive->setStage('live');
-        $targetLocalizedLive->setTemplateKey('product');
-        $targetLocalizedLive->setTemplateData([
-            'title' => 'Suitable Target',
-            'url' => '/suitable-target',
-            'description' => 'A very suitable product',
-        ]);
-        $target->addDimensionContent($targetLocalizedLive);
-
-        $this->productRepository->add($target);
-        $this->entityManager->persist($targetUnlocalizedLive);
-        $this->entityManager->persist($targetLocalizedLive);
+        $target = $this->publishedTarget('Suitable Target', '/suitable-target', 'A very suitable product');
 
         $product = $this->productRepository->createNew();
 
@@ -210,5 +186,34 @@ class ProductResolverAssociationsTest extends SuluTestCase
         self::assertIsArray($resolved);
         self::assertSame('Suitable Target', $resolved['title'] ?? null);
         self::assertSame('A very suitable product', $resolved['description'] ?? null);
+    }
+
+    /**
+     * A target with a published English content, the minimum for the association to resolve.
+     */
+    private function publishedTarget(string $title, string $url, ?string $description = null): ProductInterface
+    {
+        $target = $this->productRepository->createNew();
+
+        $unlocalizedLive = $target->createDimensionContent();
+        $unlocalizedLive->setStage('live');
+        $target->addDimensionContent($unlocalizedLive);
+
+        $localizedLive = $target->createDimensionContent();
+        $localizedLive->setLocale('en');
+        $localizedLive->setStage('live');
+        $localizedLive->setTemplateKey('product');
+        $localizedLive->setTemplateData(\array_filter([
+            'title' => $title,
+            'url' => $url,
+            'description' => $description,
+        ], static fn (?string $value): bool => null !== $value));
+        $target->addDimensionContent($localizedLive);
+
+        $this->productRepository->add($target);
+        $this->entityManager->persist($unlocalizedLive);
+        $this->entityManager->persist($localizedLive);
+
+        return $target;
     }
 }
