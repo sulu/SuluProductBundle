@@ -18,14 +18,15 @@ use PHPUnit\Framework\MockObject\Stub;
 use Sulu\Bundle\HttpCacheBundle\ReferenceStore\ReferenceStore;
 use Sulu\Content\Application\ContentAggregator\ContentAggregatorInterface;
 use Sulu\Content\Application\ContentResolver\Value\ContentView;
-use Sulu\Content\Domain\Exception\ContentNotFoundException;
+use Sulu\Content\Application\ContentResolver\Value\Reference;
+use Sulu\Content\Application\ContentResolver\Value\ResolvableResource;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductResolver;
-use Sulu\Route\Domain\Model\Route;
+use Sulu\Product\Infrastructure\Sulu\Content\ResourceLoader\ProductResourceLoader;
 
 #[CoversClass(ProductResolver::class)]
 class ProductResolverVariantsTest extends ProductResolverTestCase
@@ -33,7 +34,7 @@ class ProductResolverVariantsTest extends ProductResolverTestCase
     public function testOmitsVariantsWhenResolvedAsAReference(): void
     {
         $productRepository = $this->createMock(ProductRepositoryInterface::class);
-        $productRepository->expects(self::never())->method('findBy');
+        $productRepository->expects(self::never())->method('findIdentifiersBy');
 
         $content = $this->resolveContent(
             $this->createVariantParentContent(),
@@ -47,7 +48,7 @@ class ProductResolverVariantsTest extends ProductResolverTestCase
     public function testOmitsVariantsForAProductThatHasNone(): void
     {
         $productRepository = $this->createMock(ProductRepositoryInterface::class);
-        $productRepository->expects(self::never())->method('findBy');
+        $productRepository->expects(self::never())->method('findIdentifiersBy');
 
         $product = new ProductDimensionContent(new Product());
         $product->setLocale('de');
@@ -58,90 +59,60 @@ class ProductResolverVariantsTest extends ProductResolverTestCase
         self::assertArrayNotHasKey('variants', $content);
     }
 
-    public function testOmitsVariantsWhenTheLoaderFindsNone(): void
+    public function testOmitsVariantsWhenTheRepositoryFindsNone(): void
     {
         $content = $this->resolveContent($this->createVariantParentContent());
 
         self::assertArrayNotHasKey('variants', $content);
     }
 
-    /** One query loads the variants with their content, in position order. */
-    public function testEmitsOneFlatEntryPerVariantInTheRepositorysOrder(): void
+    /** Published variants only, whatever stage the page is on, in position order. */
+    public function testResolvesThePublishedVariantsAsReferencesInPositionOrder(): void
     {
-        $variant1 = $this->createVariant('variant-uuid-1', 'NC3FX');
-        $variant2 = $this->createVariant('variant-uuid-2', 'NC3FX-B');
-
         $productRepository = $this->createMock(ProductRepositoryInterface::class);
         $productRepository->expects(self::once())
-            ->method('findBy')
+            ->method('findIdentifiersBy')
             ->with(
                 ['parent' => 'parent-uuid', 'locale' => 'de', 'stage' => DimensionContentInterface::STAGE_LIVE],
                 ['position' => 'asc', 'created' => 'asc', 'uuid' => 'asc'],
-                [ProductRepositoryInterface::GROUP_SELECT_PRODUCT_WEBSITE => true],
             )
-            ->willReturn([$variant1->getResource(), $variant2->getResource()]);
+            ->willReturn(['variant-uuid-1', 'variant-uuid-2']);
 
-        $content = $this->resolveContent(
+        $variants = $this->resolveContent(
             $this->createVariantParentContent(),
             null,
-            $this->createResolver(productRepository: $productRepository, contentAggregator: $this->aggregatorFor($variant1, $variant2)),
-        );
+            $this->createResolver(productRepository: $productRepository),
+        )['variants'];
 
-        $entries = $this->variantEntries($content);
-        self::assertCount(2, $entries);
-        self::assertSame('NC3FX', $this->contentOf($entries[0]['title']));
-        self::assertSame('NC3FX-B', $this->contentOf($entries[1]['title']));
-        self::assertSame('/product/nc3fx-b', $this->contentOf($entries[1]['url']));
-        self::assertSame('NC3FX-B', $this->contentOf($entries[1]['code']));
-        self::assertSame(['title', 'url', 'code', 'status', 'position'], \array_keys($entries[1]));
-        self::assertArrayNotHasKey('variants', $entries[1]);
-
-        $variants = $content['variants'];
         self::assertInstanceOf(ContentView::class, $variants);
-        self::assertCount(2, $variants->getReferences());
+        self::assertSame(['variant-uuid-1', 'variant-uuid-2'], \array_map(
+            static fn (ResolvableResource $resource): string|int => $resource->getId(),
+            $this->resolvablesOf($variants),
+        ));
+        self::assertEquals(
+            [new Reference('variant-uuid-1', ProductInterface::RESOURCE_KEY), new Reference('variant-uuid-2', ProductInterface::RESOURCE_KEY)],
+            $variants->getReferences(),
+        );
     }
 
-    public function testEntriesCarryTheConfiguredProperties(): void
+    public function testVariantsCarryTheConfiguredProperties(): void
     {
-        $variant = $this->createVariant('variant-uuid-1', 'NC3FX');
-
         $productRepository = $this->createStub(ProductRepositoryInterface::class);
-        $productRepository->method('findBy')->willReturn([$variant->getResource()]);
+        $productRepository->method('findIdentifiersBy')->willReturn(['variant-uuid-1']);
 
-        $entries = $this->variantEntries($this->resolveContent(
+        $variants = $this->resolveContent(
             $this->createVariantParentContent(),
             null,
             $this->createResolver(
                 productRepository: $productRepository,
-                contentAggregator: $this->aggregatorFor($variant),
-                variantProperties: ['code' => 'product.code', 'attributes' => 'product.attributes', 'subtitle' => 'subtitle'],
+                variantProperties: ['code' => 'product.code', 'image' => 'product.image'],
             ),
-        ));
+        )['variants'];
 
-        self::assertSame(['code', 'attributes'], \array_keys($entries[0]), 'only product properties resolve here');
-    }
-
-    public function testSkipsAVariantWithoutContentInTheLocale(): void
-    {
-        $variant = $this->createVariant('variant-uuid-1', 'NC3FX');
-
-        $productRepository = $this->createStub(ProductRepositoryInterface::class);
-        $productRepository->method('findBy')->willReturn([$variant->getResource(), new Product('variant-uuid-2')]);
-
-        $contentAggregator = $this->createStub(ContentAggregatorInterface::class);
-        $contentAggregator->method('aggregate')->willReturnCallback(
-            static fn (ProductInterface $product): ProductDimensionContent => 'variant-uuid-1' === $product->getUuid()
-                ? $variant
-                : throw new ContentNotFoundException($product, []),
-        );
-
-        $entries = $this->variantEntries($this->resolveContent(
-            $this->createVariantParentContent(),
-            null,
-            $this->createResolver(productRepository: $productRepository, contentAggregator: $contentAggregator),
-        ));
-
-        self::assertCount(1, $entries);
+        self::assertInstanceOf(ContentView::class, $variants);
+        $resource = $this->resolvablesOf($variants)[0];
+        self::assertSame(ProductResourceLoader::getKey(), $resource->getResourceLoaderKey());
+        self::assertSame(['properties' => ['code' => 'product.code', 'image' => 'product.image']], $resource->getMetadata());
     }
 
     /** A variant page resolves its parent as `product` and itself as `currentVariant`. */
@@ -161,7 +132,7 @@ class ProductResolverVariantsTest extends ProductResolverTestCase
         $content = $this->resolveContent(
             $variantContent,
             null,
-            $this->createResolver(productRepository: $productRepository, contentAggregator: $contentAggregator),
+            $this->createResolver(productRepository: $productRepository, contentAggregator: $contentAggregator, enhanced: $variantContent),
         );
 
         self::assertSame('NC3FX', $this->contentOf($content['title']));
@@ -185,45 +156,44 @@ class ProductResolverVariantsTest extends ProductResolverTestCase
 
         $productRepository = $this->createStub(ProductRepositoryInterface::class);
         $productRepository->method('findOneBy')->willReturn($parent);
-        $productRepository->method('findBy')->willReturn([]);
+        $productRepository->method('findIdentifiersBy')->willReturn([]);
 
         $contentAggregator = $this->createStub(ContentAggregatorInterface::class);
         $contentAggregator->method('aggregate')->willReturn($parentContent);
 
+        $variantContent = $this->createVariantContent($parent);
+
         $referenceStore = new ReferenceStore();
         $this->resolveContent(
-            $this->createVariantContent($parent),
+            $variantContent,
             null,
-            $this->createResolver(productRepository: $productRepository, contentAggregator: $contentAggregator, referenceStore: $referenceStore),
+            $this->createResolver(productRepository: $productRepository, contentAggregator: $contentAggregator, referenceStore: $referenceStore, enhanced: $variantContent),
         );
 
         self::assertContains('01a0a3fe-4a32-77dc-bbce-312e6926f731', $referenceStore->getAll());
     }
 
-    /** A page lists its variants' titles, urls and images, so publishing one of them must clear it. */
-    public function testEveryListedVariantIsTagged(): void
+    /** The reference index resolves without the enhancers, so a variant does not index its parent's references. */
+    public function testAVariantTheEnhancerHasNotRunForResolvesAsItself(): void
     {
-        $variant1 = $this->createVariant('01a0a3fe-5504-74cd-b9aa-2296395bb1b1', 'NC3FX');
-        $variant2 = $this->createVariant('01a0a3fe-5504-74cd-b9aa-2296395bb1b2', 'NC3FX-B');
+        $parentContent = $this->createVariantParentContent();
 
-        $productRepository = $this->createStub(ProductRepositoryInterface::class);
-        $productRepository->method('findBy')->willReturn([$variant1->getResource(), $variant2->getResource()]);
+        $productRepository = $this->createMock(ProductRepositoryInterface::class);
+        $productRepository->expects(self::never())->method('findOneBy');
+        $productRepository->expects(self::never())->method('findIdentifiersBy');
 
-        $referenceStore = new ReferenceStore();
-        $this->resolveContent(
-            $this->createVariantParentContent(),
+        $contentAggregator = $this->createStub(ContentAggregatorInterface::class);
+        $contentAggregator->method('aggregate')->willReturn($parentContent);
+
+        $content = $this->resolveContent(
+            $this->createVariantContent($parentContent->getResource()),
             null,
-            $this->createResolver(
-                productRepository: $productRepository,
-                contentAggregator: $this->aggregatorFor($variant1, $variant2),
-                referenceStore: $referenceStore,
-            ),
+            $this->createResolver(productRepository: $productRepository, contentAggregator: $contentAggregator),
         );
 
-        self::assertEqualsCanonicalizing(
-            ['01a0a3fe-5504-74cd-b9aa-2296395bb1b1', '01a0a3fe-5504-74cd-b9aa-2296395bb1b2'],
-            \array_values($referenceStore->getAll()),
-        );
+        self::assertSame('NC3FX-B', $this->contentOf($content['title']));
+        self::assertArrayNotHasKey('currentVariant', $content);
+        self::assertArrayNotHasKey('variants', $content);
     }
 
     public function testAReferenceTagsNoParent(): void
@@ -264,87 +234,30 @@ class ProductResolverVariantsTest extends ProductResolverTestCase
 
     public function testAProductWithVariantsHasNoCurrentVariant(): void
     {
-        $variant = $this->createVariant('variant-uuid-1', 'NC3FX');
-
         $productRepository = $this->createStub(ProductRepositoryInterface::class);
-        $productRepository->method('findBy')->willReturn([$variant->getResource()]);
+        $productRepository->method('findIdentifiersBy')->willReturn(['variant-uuid-1']);
 
         $content = $this->resolveContent(
             $this->createVariantParentContent(),
             null,
-            $this->createResolver(productRepository: $productRepository, contentAggregator: $this->aggregatorFor($variant)),
+            $this->createResolver(productRepository: $productRepository),
         );
 
         self::assertArrayHasKey('variants', $content);
         self::assertArrayNotHasKey('currentVariant', $content);
     }
 
-    /** Live whatever the page is on, so the list only shows published variants. */
-    public function testAsksForTheLiveStageWhateverThePageIsOn(): void
-    {
-        $content = $this->createVariantParentContent();
-        $content->setStage(DimensionContentInterface::STAGE_DRAFT);
-
-        $productRepository = $this->createMock(ProductRepositoryInterface::class);
-        $productRepository->expects(self::once())
-            ->method('findBy')
-            ->with(
-                self::callback(static fn (array $filters): bool => 'de' === $filters['locale']
-                    && DimensionContentInterface::STAGE_LIVE === $filters['stage']),
-            )
-            ->willReturn([new Product('variant-uuid-1')]);
-
-        $this->resolveContent($content, null, $this->createResolver(productRepository: $productRepository));
-    }
-
     /**
-     * @param mixed[] $content
-     *
-     * @return list<array<string, ContentView>>
+     * @return list<ResolvableResource>
      */
-    private function variantEntries(array $content): array
+    private function resolvablesOf(ContentView $view): array
     {
-        $variants = $this->contentOf($content['variants']);
-        self::assertIsArray($variants);
+        $resources = $view->getContent();
+        self::assertIsArray($resources);
+        self::assertContainsOnlyInstancesOf(ResolvableResource::class, $resources);
 
-        $entries = [];
-        foreach ($variants as $entry) {
-            $fields = $this->contentOf($entry);
-            self::assertIsArray($fields);
-            /** @var array<string, ContentView> $fields */
-            $entries[] = $fields;
-        }
-
-        return $entries;
-    }
-
-    private function createVariant(string $uuid, string $code): ProductDimensionContent
-    {
-        $variant = new Product($uuid);
-        $variant->setType(ProductInterface::TYPE_VARIANT);
-
-        $content = new ProductDimensionContent($variant);
-        $content->setLocale('de');
-        $content->setTitle($code);
-        $content->setCode($code);
-        $content->setRoute(new Route(ProductInterface::RESOURCE_KEY, $uuid, 'de', '/product/' . \strtolower($code)));
-
-        return $content;
-    }
-
-    private function aggregatorFor(ProductDimensionContent ...$contents): ContentAggregatorInterface
-    {
-        $byUuid = [];
-        foreach ($contents as $content) {
-            $byUuid[$content->getResource()->getUuid()] = $content;
-        }
-
-        $contentAggregator = $this->createStub(ContentAggregatorInterface::class);
-        $contentAggregator->method('aggregate')->willReturnCallback(
-            static fn (ProductInterface $product): ProductDimensionContent => $byUuid[$product->getUuid()],
-        );
-
-        return $contentAggregator;
+        /** @var list<ResolvableResource> $resources */
+        return $resources;
     }
 
     private function contentOf(mixed $view): mixed
@@ -360,7 +273,7 @@ class ProductResolverVariantsTest extends ProductResolverTestCase
     private function createVariantRepository(): ProductRepositoryInterface
     {
         $productRepository = $this->createStub(ProductRepositoryInterface::class);
-        $productRepository->method('findBy')->willReturn([new Product('variant-uuid-1'), new Product('variant-uuid-2')]);
+        $productRepository->method('findIdentifiersBy')->willReturn(['variant-uuid-1', 'variant-uuid-2']);
 
         return $productRepository;
     }

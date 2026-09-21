@@ -73,6 +73,30 @@ class ProductParentContentLoaderTest extends TestCase
         self::assertNotSame($first, $loader->load($live), 'another stage is another load');
     }
 
+    /** The resolver swaps to the parent only for content the enhancer loaded one for. */
+    public function testGetLoadedReturnsOnlyWhatWasLoadedForThatContent(): void
+    {
+        $parent = new Product('parent-uuid');
+        $parentContent = new ProductDimensionContent($parent);
+
+        $productRepository = $this->createStub(ProductRepositoryInterface::class);
+        $productRepository->method('findOneBy')->willReturn($parent);
+
+        $contentAggregator = $this->createStub(ContentAggregatorInterface::class);
+        $contentAggregator->method('aggregate')->willReturn($parentContent);
+
+        $loader = new ProductParentContentLoader($productRepository, $contentAggregator);
+
+        $enhanced = $this->createVariantContent($parent);
+        $loader->load($enhanced);
+
+        self::assertSame($parentContent, $loader->getLoaded($enhanced));
+        self::assertNull($loader->getLoaded($this->createVariantContent($parent)), 'same variant, but not enhanced');
+
+        $loader->reset();
+        self::assertNull($loader->getLoaded($enhanced));
+    }
+
     public function testResetForgetsTheLoadedParents(): void
     {
         $parent = new Product('parent-uuid');

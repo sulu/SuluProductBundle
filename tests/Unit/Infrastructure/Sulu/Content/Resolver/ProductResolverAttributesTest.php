@@ -93,6 +93,7 @@ class ProductResolverAttributesTest extends ProductResolverTestCase
         $resolved = $this->resolveContent($content, null, $this->createResolver(
             productRepository: $productRepository,
             contentAggregator: $this->aggregatorReturning($parentContent),
+            enhanced: $content,
         ));
 
         self::assertSame(['housing'], \array_keys($this->resolveAttributesOf($resolved)));
