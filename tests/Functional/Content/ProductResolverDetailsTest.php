@@ -122,6 +122,39 @@ class ProductResolverDetailsTest extends SuluTestCase
         self::assertSame('XLR', $family['name']);
     }
 
+    public function testProductFamilyImageResolvesAsMedia(): void
+    {
+        $media = self::createMedia(self::createCollection());
+
+        $family = new ProductFamily();
+        $family->setUuid('family-uuid-image');
+        $family->addTranslation(new ProductFamilyTranslation($family, 'en', 'XLR'));
+        $family->setImage($media);
+        $this->entityManager->persist($family);
+
+        $product = $this->productRepository->createNew();
+
+        $dimensionContent = $product->createDimensionContent();
+        $dimensionContent->setLocale('en');
+        $dimensionContent->setStage('draft');
+        $dimensionContent->setTemplateKey('product');
+        $dimensionContent->setProductFamily($family);
+        $product->addDimensionContent($dimensionContent);
+
+        $this->productRepository->add($product);
+        $this->entityManager->persist($dimensionContent);
+        $this->entityManager->flush();
+
+        $productData = $this->contentResolver->resolve($dimensionContent)['product'] ?? null;
+        self::assertIsArray($productData);
+        $familyData = $productData['productFamily'];
+        self::assertIsArray($familyData);
+
+        $image = $familyData['image'];
+        self::assertInstanceOf(Media::class, $image);
+        self::assertSame($media->getId(), $image->getId());
+    }
+
     public function testDetailsMediaResolvesThroughItsPropertyResolver(): void
     {
         $collection = self::createCollection();

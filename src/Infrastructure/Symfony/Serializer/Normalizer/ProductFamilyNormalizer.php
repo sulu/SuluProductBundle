@@ -47,11 +47,14 @@ final class ProductFamilyNormalizer implements NormalizerInterface
             ];
         }
 
+        $image = $data->getImage();
+
         return [
             'id' => $data->getUuid() ?? '',
             'name' => $translation?->getName() ?? '',
             'description' => $translation?->getDescription(),
             'externalIdentifier' => $data->getExternalIdentifier(),
+            'image' => null === $image ? null : ['id' => $image->getId()],
             'attributes' => $attributes,
         ];
     }

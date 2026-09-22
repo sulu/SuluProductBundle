@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Domain\Model;
 
+use Sulu\Bundle\MediaBundle\Entity\MediaInterface;
 use Sulu\Component\Persistence\Model\AuditableInterface;
 
 interface ProductFamilyInterface extends AuditableInterface
@@ -30,6 +31,10 @@ interface ProductFamilyInterface extends AuditableInterface
     public function getExternalIdentifier(): ?string;
 
     public function setExternalIdentifier(?string $externalIdentifier): self;
+
+    public function getImage(): ?MediaInterface;
+
+    public function setImage(?MediaInterface $image): self;
 
     public function getDefaultLocale(): ?string;
 

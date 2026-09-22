@@ -16,6 +16,7 @@ namespace Sulu\Product\Domain\Model;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
+use Sulu\Bundle\MediaBundle\Entity\MediaInterface;
 use Sulu\Component\Persistence\Model\AuditableTrait;
 
 class ProductFamily implements ProductFamilyInterface
@@ -29,6 +30,8 @@ class ProductFamily implements ProductFamilyInterface
     protected ?string $externalIdentifier = null;
 
     protected ?string $defaultLocale = null;
+
+    protected ?MediaInterface $image = null;
 
     /** @var Collection<int, ProductFamilyTranslationInterface> */
     protected Collection $translations;
@@ -67,6 +70,18 @@ class ProductFamily implements ProductFamilyInterface
     public function setExternalIdentifier(?string $externalIdentifier): self
     {
         $this->externalIdentifier = $externalIdentifier;
+
+        return $this;
+    }
+
+    public function getImage(): ?MediaInterface
+    {
+        return $this->image;
+    }
+
+    public function setImage(?MediaInterface $image): self
+    {
+        $this->image = $image;
 
         return $this;
     }
