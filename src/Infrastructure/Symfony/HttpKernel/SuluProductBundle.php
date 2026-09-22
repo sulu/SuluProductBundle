@@ -142,8 +142,8 @@ use Sulu\Product\Infrastructure\Sulu\Reference\ProductFamilyReferenceDoctrineEve
 use Sulu\Product\Infrastructure\Sulu\Reference\ProductFamilyReferenceRefresher;
 use Sulu\Product\Infrastructure\Sulu\Reference\ProductReferenceRefresher;
 use Sulu\Product\Infrastructure\Sulu\Route\CurrentVariantProvider;
+use Sulu\Product\Infrastructure\Sulu\Route\ProductLocalizationsResolver;
 use Sulu\Product\Infrastructure\Sulu\Route\ProductRouteDefaultsProvider;
-use Sulu\Product\Infrastructure\Sulu\Route\ProductVariantLocalizationsResolver;
 use Sulu\Product\Infrastructure\Sulu\Search\AdminProductIndexListener;
 use Sulu\Product\Infrastructure\Sulu\Search\AdminProductReindexProvider;
 use Sulu\Product\Infrastructure\Sulu\Search\Visitor\AdminProductReindexProviderEnhancerInterface;
@@ -1229,13 +1229,13 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('request_stack'),
             ]);
 
-        $services->set('sulu_product.product_variant_localizations_resolver')
-            ->class(ProductVariantLocalizationsResolver::class)
-            ->decorate('sulu_content.content_localizations_resolver')
+        $services->set('sulu_product.product_localizations_resolver')
+            ->class(ProductLocalizationsResolver::class)
             ->args([
-                new Reference('.inner'),
+                new Reference('sulu_content.route_localizations_resolver'),
                 new Reference('sulu_product.current_variant_provider'),
-            ]);
+            ])
+            ->tag('sulu_content.content_localizations_resolver', ['resource_key' => ProductInterface::RESOURCE_KEY]);
 
         $services->set('sulu_product.admin_product_index_listener')
             ->class(AdminProductIndexListener::class)

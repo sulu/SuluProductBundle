@@ -64,7 +64,8 @@ the product type.
 A variant has a route but no content of its own, so its URL renders its product: the route passes
 the product as the page's `object` and the variant as the `variant` route default. `resource`,
 `content` and `extension` are the product's, `localizations` link the variant's own URLs in the
-other locales. The `product` namespace carries:
+other locales. `sulu_product.product_localizations_resolver` builds them for the `products`
+resource key; a project changes them by decorating that service. The `product` namespace carries:
 
 - `product`: the parent, with `product.title`, the master data (`code`, `status`, ...),
   `product.attributes` (its own values), `product.associations` and `product.variants`. A product

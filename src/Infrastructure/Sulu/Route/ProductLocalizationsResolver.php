@@ -18,14 +18,15 @@ use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 
 /**
- * A variant URL renders its product, but links the other locales to the variant's own URLs.
+ * The localizations of a product page. A variant URL renders its product, but links the other
+ * locales to the variant's own URLs.
  *
  * @internal
  */
-class ProductVariantLocalizationsResolver implements ContentLocalizationsResolverInterface
+class ProductLocalizationsResolver implements ContentLocalizationsResolverInterface
 {
     public function __construct(
-        private readonly ContentLocalizationsResolverInterface $inner,
+        private readonly ContentLocalizationsResolverInterface $routeLocalizationsResolver,
         private readonly CurrentVariantProvider $currentVariantProvider,
     ) {
     }
@@ -37,9 +38,9 @@ class ProductVariantLocalizationsResolver implements ContentLocalizationsResolve
             : null;
 
         if (null !== $variantContent) {
-            return $this->inner->resolve($variantContent, $webspaceKey);
+            return $this->routeLocalizationsResolver->resolve($variantContent, $webspaceKey);
         }
 
-        return $this->inner->resolve($dimensionContent, $webspaceKey);
+        return $this->routeLocalizationsResolver->resolve($dimensionContent, $webspaceKey);
     }
 }

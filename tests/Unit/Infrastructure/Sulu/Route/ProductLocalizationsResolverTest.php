@@ -20,13 +20,13 @@ use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Infrastructure\Sulu\Route\CurrentVariantProvider;
+use Sulu\Product\Infrastructure\Sulu\Route\ProductLocalizationsResolver;
 use Sulu\Product\Infrastructure\Sulu\Route\ProductRouteDefaultsProvider;
-use Sulu\Product\Infrastructure\Sulu\Route\ProductVariantLocalizationsResolver;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
-#[CoversClass(ProductVariantLocalizationsResolver::class)]
-class ProductVariantLocalizationsResolverTest extends TestCase
+#[CoversClass(ProductLocalizationsResolver::class)]
+class ProductLocalizationsResolverTest extends TestCase
 {
     private const LOCALIZATIONS = ['de' => ['url' => '/de/nc3fx-b', 'locale' => 'de', 'alternate' => true]];
 
@@ -37,10 +37,10 @@ class ProductVariantLocalizationsResolverTest extends TestCase
         $variant->setParent($parentContent->getResource());
         $variantContent = new ProductDimensionContent($variant);
 
-        $inner = $this->createMock(ContentLocalizationsResolverInterface::class);
-        $inner->expects(self::once())->method('resolve')->with($variantContent, 'sulu-io')->willReturn(self::LOCALIZATIONS);
+        $routeLocalizationsResolver = $this->createMock(ContentLocalizationsResolverInterface::class);
+        $routeLocalizationsResolver->expects(self::once())->method('resolve')->with($variantContent, 'sulu-io')->willReturn(self::LOCALIZATIONS);
 
-        $resolver = $this->createResolver($inner, new Request(attributes: [ProductRouteDefaultsProvider::VARIANT_ATTRIBUTE => $variantContent]));
+        $resolver = $this->createResolver($routeLocalizationsResolver, new Request(attributes: [ProductRouteDefaultsProvider::VARIANT_ATTRIBUTE => $variantContent]));
 
         self::assertSame(self::LOCALIZATIONS, $resolver->resolve($parentContent, 'sulu-io'));
     }
@@ -49,10 +49,10 @@ class ProductVariantLocalizationsResolverTest extends TestCase
     {
         $productContent = new ProductDimensionContent(new Product('product-uuid'));
 
-        $inner = $this->createMock(ContentLocalizationsResolverInterface::class);
-        $inner->expects(self::once())->method('resolve')->with($productContent, 'sulu-io')->willReturn(self::LOCALIZATIONS);
+        $routeLocalizationsResolver = $this->createMock(ContentLocalizationsResolverInterface::class);
+        $routeLocalizationsResolver->expects(self::once())->method('resolve')->with($productContent, 'sulu-io')->willReturn(self::LOCALIZATIONS);
 
-        $resolver = $this->createResolver($inner, new Request());
+        $resolver = $this->createResolver($routeLocalizationsResolver, new Request());
 
         self::assertSame(self::LOCALIZATIONS, $resolver->resolve($productContent, 'sulu-io'));
     }
@@ -65,19 +65,19 @@ class ProductVariantLocalizationsResolverTest extends TestCase
 
         $dimensionContent = $this->createStub(DimensionContentInterface::class);
 
-        $inner = $this->createMock(ContentLocalizationsResolverInterface::class);
-        $inner->expects(self::once())->method('resolve')->with($dimensionContent, 'sulu-io')->willReturn(self::LOCALIZATIONS);
+        $routeLocalizationsResolver = $this->createMock(ContentLocalizationsResolverInterface::class);
+        $routeLocalizationsResolver->expects(self::once())->method('resolve')->with($dimensionContent, 'sulu-io')->willReturn(self::LOCALIZATIONS);
 
-        $resolver = $this->createResolver($inner, new Request(attributes: [ProductRouteDefaultsProvider::VARIANT_ATTRIBUTE => new ProductDimensionContent($variant)]));
+        $resolver = $this->createResolver($routeLocalizationsResolver, new Request(attributes: [ProductRouteDefaultsProvider::VARIANT_ATTRIBUTE => new ProductDimensionContent($variant)]));
 
         self::assertSame(self::LOCALIZATIONS, $resolver->resolve($dimensionContent, 'sulu-io'));
     }
 
-    private function createResolver(ContentLocalizationsResolverInterface $inner, Request $request): ProductVariantLocalizationsResolver
+    private function createResolver(ContentLocalizationsResolverInterface $routeLocalizationsResolver, Request $request): ProductLocalizationsResolver
     {
         $requestStack = new RequestStack();
         $requestStack->push($request);
 
-        return new ProductVariantLocalizationsResolver($inner, new CurrentVariantProvider($requestStack));
+        return new ProductLocalizationsResolver($routeLocalizationsResolver, new CurrentVariantProvider($requestStack));
     }
 }
