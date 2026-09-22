@@ -15,6 +15,7 @@ namespace Sulu\Product\Application\Mapper;
 
 use Sulu\Product\Application\Message\CreateAttributeMessage;
 use Sulu\Product\Application\Message\ModifyAttributeMessage;
+use Sulu\Product\Domain\Exception\AttributeOptionKeyNotUniqueException;
 use Sulu\Product\Domain\Model\AttributeGroupAttribute;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeOption;
@@ -123,24 +124,45 @@ final class AttributeMapper implements AttributeMapperInterface
             return;
         }
 
-        $submittedKeys = \array_map(static fn (array $option): string => $option['key'], $submittedOptions);
+        $submittedKeys = [];
+        foreach ($submittedOptions as $optionData) {
+            if (isset($submittedKeys[$optionData['key']])) {
+                throw new AttributeOptionKeyNotUniqueException($optionData['key']);
+            }
 
+            $submittedKeys[$optionData['key']] = true;
+        }
+
+        $existingOptions = [];
         foreach ($attribute->getOptions() as $option) {
-            if (!\in_array($option->getKey(), $submittedKeys, true)) {
-                $attribute->removeOption($option);
+            $existingOptions[$option->getId()] = $option;
+        }
+
+        // An option keeps its id when its key changes; a duplicated block carries its source's id, so only the first claims it.
+        $matchedOptions = [];
+        foreach ($submittedOptions as $index => $optionData) {
+            $optionId = $optionData['id'] ?? null;
+            if (null !== $optionId && isset($existingOptions[$optionId])) {
+                $matchedOptions[$index] = $existingOptions[$optionId];
+                unset($existingOptions[$optionId]);
             }
         }
 
+        foreach ($existingOptions as $option) {
+            $attribute->removeOption($option);
+        }
+
         $position = 0;
-        foreach ($submittedOptions as $optionData) {
+        foreach ($submittedOptions as $index => $optionData) {
             $optionKey = $optionData['key'];
-            $option = $attribute->getOption($optionKey);
+            $option = $matchedOptions[$index] ?? null;
 
             if (null === $option) {
                 $option = new AttributeOption($attribute, $optionKey);
                 $attribute->addOption($option);
             }
 
+            $option->setKey($optionKey);
             $option->setPosition($position++);
 
             $optionTranslation = $option->getTranslation($message->getLocale());

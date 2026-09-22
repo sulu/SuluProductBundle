@@ -26,6 +26,7 @@ use Sulu\Product\Application\Message\CreateAttributeMessage;
 use Sulu\Product\Application\Message\ModifyAttributeMessage;
 use Sulu\Product\Application\Message\RemoveAttributeMessage;
 use Sulu\Product\Domain\Exception\AttributeNotFoundException;
+use Sulu\Product\Domain\Exception\AttributeOptionKeyNotUniqueException;
 use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeOptionInterface;
@@ -124,6 +125,8 @@ final class AttributeController implements SecuredControllerInterface
             $attribute = $this->handle(new Envelope($message, [new EnableFlushStamp()]));
         } catch (UniqueConstraintViolationException $e) {
             return new JsonResponse(['detail' => \sprintf('Attribute with key "%s" already exists.', $data['key'])], 409);
+        } catch (AttributeOptionKeyNotUniqueException $e) {
+            return new JsonResponse(['detail' => $e->getMessage()], 409);
         }
 
         return new JsonResponse($this->serializeAttribute($attribute, $this->getLocale($request)), 201);
@@ -139,6 +142,8 @@ final class AttributeController implements SecuredControllerInterface
             $attribute = $this->handle(new Envelope($message, [new EnableFlushStamp()]));
         } catch (UniqueConstraintViolationException $e) {
             return new JsonResponse(['detail' => \sprintf('Attribute with key "%s" already exists.', $data['key'])], 409);
+        } catch (AttributeOptionKeyNotUniqueException $e) {
+            return new JsonResponse(['detail' => $e->getMessage()], 409);
         } catch (AttributeNotFoundException $e) {
             return new JsonResponse(['detail' => $e->getMessage()], 404);
         }
@@ -225,6 +230,7 @@ final class AttributeController implements SecuredControllerInterface
                     }
 
                     return [
+                        'id' => $option->getId(),
                         'type' => 'option',
                         'key' => $option->getKey(),
                         'name' => $optionTranslation?->getName() ?? '',

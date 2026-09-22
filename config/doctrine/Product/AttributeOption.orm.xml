@@ -7,7 +7,6 @@
             <generator strategy="AUTO"/>
         </id>
 
-        <field name="uuid" type="guid" nullable="true" unique="true"/>
         <field name="key" type="string" length="255" nullable="false" column="attribute_option_key"/>
         <field name="position" type="integer" nullable="false">
             <options>
@@ -30,10 +29,5 @@
                 <cascade-persist/>
             </cascade>
         </one-to-many>
-
-        <unique-constraints>
-            <unique-constraint columns="idAttributes,attribute_option_key"
-                               name="UNIQ_pr_attr_opt_key"/>
-        </unique-constraints>
     </entity>
 </doctrine-mapping>

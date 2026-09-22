@@ -22,6 +22,7 @@ use Sulu\Product\Application\AttributeType\OptionsAttributeType;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
+use Sulu\Product\Domain\Model\AttributeOption;
 use Sulu\Product\Domain\Model\AttributeOptionInterface;
 use Sulu\Product\Domain\Model\AttributeOptionTranslationInterface;
 use Sulu\Product\Domain\Model\Product;
@@ -40,29 +41,39 @@ class OptionsAttributeTypeTest extends TestCase
         self::assertSame('product_attribute_options', $type->getFormKey());
     }
 
-    public function testValueRoundTripUsesOptionKeyColumn(): void
+    public function testValueRoundTripResolvesTheAttributeOption(): void
     {
         $type = new OptionsAttributeType();
-        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
+        $attribute = $this->createAttributeWithOptions('red');
+        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), $attribute, 'k');
 
         $type->writeValue($value, 'red');
 
-        self::assertSame('red', $value->getAttributeOptionKey());
+        self::assertSame($attribute->getOption('red'), $value->getAttributeOption());
         self::assertSame('red', $type->readValue($value));
     }
 
-    public function testWriteEmptyValueClearsOptionKey(): void
+    public function testWriteEmptyValueClearsOption(): void
     {
         $type = new OptionsAttributeType();
-        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
+        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), $this->createAttributeWithOptions('red', 'green'), 'k');
         $type->writeValue($value, 'red');
 
         $type->writeValue($value, null);
-        self::assertNull($value->getAttributeOptionKey());
+        self::assertNull($value->getAttributeOption());
 
         $type->writeValue($value, 'green');
         $type->writeValue($value, '');
-        self::assertNull($value->getAttributeOptionKey());
+        self::assertNull($value->getAttributeOption());
+    }
+
+    public function testWriteUnknownOptionKeyThrows(): void
+    {
+        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), $this->createAttributeWithOptions('red'), 'k');
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        (new OptionsAttributeType())->writeValue($value, 'blue');
     }
 
     public function testConfigureFieldFallsBackToOptionKeyWithoutTranslation(): void
@@ -109,5 +120,15 @@ class OptionsAttributeTypeTest extends TestCase
         self::assertCount(1, $valueOptions);
         self::assertSame('red', $valueOptions[0]->getName());
         self::assertSame('Red', $valueOptions[0]->getTitle('en'));
+    }
+
+    private function createAttributeWithOptions(string ...$keys): Attribute
+    {
+        $attribute = new Attribute(new AttributeGroup());
+        foreach ($keys as $key) {
+            $attribute->addOption(new AttributeOption($attribute, $key));
+        }
+
+        return $attribute;
     }
 }

@@ -375,11 +375,142 @@ class AttributeControllerTest extends SuluTestCase
 
         $data = \json_decode((string) $response->getContent(), true);
         $this->assertIsArray($data);
-        /** @var array{options: list<array{type: string, key: string, name: string}>} $data */
+        /** @var array{options: list<array{id: int, type: string, key: string, name: string}>} $data */
         $this->assertCount(2, $data['options']);
+        $this->assertGreaterThan(0, $data['options'][0]['id']);
         $this->assertSame('option', $data['options'][0]['type']);
         $this->assertSame('small', $data['options'][0]['key']);
         $this->assertSame('Small', $data['options'][0]['name']);
+    }
+
+    public function testPutSwapsOptionKeys(): void
+    {
+        self::purgeDatabase();
+        $id = $this->createOptionsAttribute(['red' => 'Red', 'blue' => 'Blue']);
+        $options = $this->getOptions($id);
+
+        $this->putOptions($id, [
+            ['id' => $options[0]['id'], 'key' => 'blue', 'name' => 'Red'],
+            ['id' => $options[1]['id'], 'key' => 'red', 'name' => 'Blue'],
+        ]);
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        $swapped = $this->getOptions($id);
+        $this->assertSame($options[0]['id'], $swapped[0]['id']);
+        $this->assertSame('blue', $swapped[0]['key']);
+        $this->assertSame($options[1]['id'], $swapped[1]['id']);
+        $this->assertSame('red', $swapped[1]['key']);
+    }
+
+    public function testPutRejectsDuplicateOptionKeys(): void
+    {
+        self::purgeDatabase();
+        $id = $this->createOptionsAttribute(['red' => 'Red']);
+
+        $this->putOptions($id, [
+            ['key' => 'red', 'name' => 'Red'],
+            ['key' => 'red', 'name' => 'Another red'],
+        ]);
+
+        $this->assertHttpStatusCode(409, $this->client->getResponse());
+    }
+
+    public function testPostRejectsDuplicateOptionKeys(): void
+    {
+        self::purgeDatabase();
+
+        $this->client->request(
+            'POST',
+            '/admin/api/attributes.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'key' => 'color',
+                'name' => 'Color',
+                'type' => 'options',
+                'group' => $this->createGroup(),
+                'options' => [
+                    ['key' => 'red', 'name' => 'Red'],
+                    ['key' => 'red', 'name' => 'Another red'],
+                ],
+            ]) ?: null,
+        );
+
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(409, $response);
+
+        /** @var array{detail: string} $data */
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertSame('The option key "red" is used more than once.', $data['detail']);
+    }
+
+    /**
+     * @param array<string, string> $options
+     */
+    private function createOptionsAttribute(array $options): string
+    {
+        $this->client->request(
+            'POST',
+            '/admin/api/attributes.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'key' => 'color',
+                'name' => 'Color',
+                'type' => 'options',
+                'group' => $this->createGroup(),
+                'options' => \array_map(
+                    static fn (string $key, string $name): array => ['key' => $key, 'name' => $name],
+                    \array_keys($options),
+                    $options,
+                ),
+            ]) ?: null,
+        );
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+
+        /** @var array{id: string} $data */
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+
+        return $data['id'];
+    }
+
+    /**
+     * @return list<array{id: int, key: string, name: string}>
+     */
+    private function getOptions(string $id): array
+    {
+        $this->client->request('GET', '/admin/api/attributes/' . $id . '.json?locale=en');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        /** @var array{options: list<array{id: int, key: string, name: string}>} $data */
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+
+        return $data['options'];
+    }
+
+    /**
+     * @param list<array{id?: int, key: string, name: string}> $options
+     */
+    private function putOptions(string $id, array $options): void
+    {
+        $this->client->request(
+            'PUT',
+            '/admin/api/attributes/' . $id . '.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'key' => 'color',
+                'name' => 'Color',
+                'type' => 'options',
+                'options' => $options,
+            ]) ?: null,
+        );
     }
 
     public function testDerivesMeasurementFamilyFromStoredUnitAndDoesNotPersistIt(): void
