@@ -16,8 +16,12 @@ namespace Sulu\Product\Tests\Functional\Integration;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
+use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Model\AttributeInterface;
+use Sulu\Product\Domain\Model\AttributeOption;
+use Sulu\Product\Domain\Model\AttributeOptionTranslation;
 use Sulu\Product\Domain\Model\AttributeTranslation;
+use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
@@ -187,6 +191,36 @@ class ProductControllerTest extends SuluTestCase
         $attribute->setKey('description');
         $attribute->setType(AttributeInterface::TYPE_TEXT);
         $attribute->addTranslation(new AttributeTranslation($attribute, 'en', 'Description'));
+        $attributeRepository->save($attribute);
+
+        $em->flush();
+
+        return $attribute->getId();
+    }
+
+    private function createOptionsAttribute(): int
+    {
+        $container = self::getContainer();
+
+        /** @var AttributeGroupRepositoryInterface $groupRepository */
+        $groupRepository = $container->get(AttributeGroupRepositoryInterface::class);
+        /** @var AttributeRepositoryInterface $attributeRepository */
+        $attributeRepository = $container->get(AttributeRepositoryInterface::class);
+        /** @var EntityManagerInterface $em */
+        $em = $container->get('doctrine.orm.entity_manager');
+
+        $group = $groupRepository->create();
+        $groupRepository->save($group);
+
+        $attribute = $attributeRepository->create($group);
+        $attribute->setKey('color');
+        $attribute->setType(AttributeInterface::TYPE_OPTIONS);
+        $attribute->addTranslation(new AttributeTranslation($attribute, 'en', 'Color'));
+        foreach (['red' => 'Red', 'blue' => 'Blue'] as $key => $name) {
+            $option = new AttributeOption($attribute, $key);
+            $option->addTranslation(new AttributeOptionTranslation($option, 'en', $name));
+            $attribute->addOption($option);
+        }
         $attributeRepository->save($attribute);
 
         $em->flush();
@@ -486,6 +520,106 @@ class ProductControllerTest extends SuluTestCase
 
         $this->assertEqualsWithDelta(100.0, $this->getAttributeValue($id, 'en', $attributeId), 0.0001);
         $this->assertEqualsWithDelta(200.0, $this->getAttributeValue($id, 'de', $attributeId), 0.0001);
+    }
+
+    public function testOptionsAttributeValueIsStoredAsOptionRelation(): void
+    {
+        self::purgeDatabase();
+        $attributeId = $this->createOptionsAttribute();
+        $familyId = $this->createProductFamily($attributeId, false);
+        $id = $this->createProduct($familyId);
+
+        $this->putAttributes($id, 'en', [$attributeId => 'blue']);
+
+        /** @var EntityManagerInterface $em */
+        $em = self::getContainer()->get('doctrine.orm.entity_manager');
+        $em->clear();
+
+        $this->assertSame('blue', $this->getAttributeValue($id, 'en', $attributeId));
+        $this->assertNull($this->getStoredOptionKey($id, $attributeId, DimensionContentInterface::STAGE_LIVE));
+
+        $this->client->request('POST', '/admin/api/products/' . $id . '.json?locale=en&action=publish');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+        $em->clear();
+
+        $this->assertSame('blue', $this->getStoredOptionKey($id, $attributeId, DimensionContentInterface::STAGE_DRAFT));
+        $this->assertSame('blue', $this->getStoredOptionKey($id, $attributeId, DimensionContentInterface::STAGE_LIVE));
+    }
+
+    public function testRenamingOptionKeyKeepsProductValues(): void
+    {
+        self::purgeDatabase();
+        $attributeId = $this->createOptionsAttribute();
+        $familyId = $this->createProductFamily($attributeId, false);
+        $id = $this->createProduct($familyId);
+
+        $this->putAttributes($id, 'en', [$attributeId => 'blue']);
+        $this->client->request('POST', '/admin/api/products/' . $id . '.json?locale=en&action=publish');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        /** @var AttributeRepositoryInterface $attributeRepository */
+        $attributeRepository = self::getContainer()->get(AttributeRepositoryInterface::class);
+        $attribute = $attributeRepository->findOneBy(['id' => $attributeId]);
+        $this->assertNotNull($attribute);
+        $attributeUuid = $attribute->getUuid();
+
+        $this->client->request('GET', '/admin/api/attributes/' . $attributeUuid . '.json?locale=en');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+        /** @var array{key: string, name: string, type: string, options: list<array{id: int, key: string, name: string}>} $data */
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        foreach ($data['options'] as $index => $option) {
+            if ('blue' === $option['key']) {
+                $data['options'][$index]['key'] = 'navy';
+            }
+        }
+
+        $this->client->request(
+            'PUT',
+            '/admin/api/attributes/' . $attributeUuid . '.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'key' => $data['key'],
+                'name' => $data['name'],
+                'type' => $data['type'],
+                'options' => $data['options'],
+            ]) ?: null,
+        );
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        /** @var EntityManagerInterface $em */
+        $em = self::getContainer()->get('doctrine.orm.entity_manager');
+        $em->clear();
+
+        $this->assertSame('navy', $this->getStoredOptionKey($id, $attributeId, DimensionContentInterface::STAGE_DRAFT));
+        $this->assertSame('navy', $this->getStoredOptionKey($id, $attributeId, DimensionContentInterface::STAGE_LIVE));
+    }
+
+    private function getStoredOptionKey(string $id, int $attributeId, string $stage): ?string
+    {
+        /** @var EntityManagerInterface $em */
+        $em = self::getContainer()->get('doctrine.orm.entity_manager');
+
+        /** @var list<array{optionKey: string}> $rows */
+        $rows = $em->createQueryBuilder()
+            ->select('attributeOption.key AS optionKey')
+            ->from(ProductAttributeValue::class, 'attributeValue')
+            ->innerJoin('attributeValue.productDimensionContent', 'dimensionContent')
+            ->innerJoin('dimensionContent.product', 'product')
+            ->innerJoin('attributeValue.attributeOption', 'attributeOption')
+            ->where('product.uuid = :uuid')
+            ->andWhere('dimensionContent.stage = :stage')
+            ->andWhere('dimensionContent.locale IS NULL')
+            ->andWhere('IDENTITY(attributeValue.attribute) = :attributeId')
+            ->setParameter('uuid', $id)
+            ->setParameter('stage', $stage)
+            ->setParameter('attributeId', $attributeId)
+            ->getQuery()
+            ->getArrayResult();
+
+        return $rows[0]['optionKey'] ?? null;
     }
 
     /**

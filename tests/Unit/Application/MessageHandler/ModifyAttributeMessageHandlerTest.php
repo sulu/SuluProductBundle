@@ -167,6 +167,7 @@ class ModifyAttributeMessageHandlerTest extends TestCase
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setPosition(0);
         $option = new AttributeOption($attribute, 'small');
+        (new \ReflectionProperty(AttributeOption::class, 'id'))->setValue($option, 1);
         $optionTranslation = new AttributeOptionTranslation($option, 'en', 'Small');
         $option->addTranslation($optionTranslation);
         $attribute->addOption($option);
@@ -183,7 +184,7 @@ class ModifyAttributeMessageHandlerTest extends TestCase
             'name' => 'Size',
             'position' => 0,
             'options' => [
-                ['type' => 'option', 'key' => 'small', 'name' => 'Petit'],
+                ['id' => 1, 'type' => 'option', 'key' => 'small', 'name' => 'Petit'],
             ],
         ]));
 
@@ -196,6 +197,8 @@ class ModifyAttributeMessageHandlerTest extends TestCase
         $attribute->setPosition(0);
         $optionToKeep = new AttributeOption($attribute, 'large');
         $optionToRemove = new AttributeOption($attribute, 'small');
+        (new \ReflectionProperty(AttributeOption::class, 'id'))->setValue($optionToKeep, 1);
+        (new \ReflectionProperty(AttributeOption::class, 'id'))->setValue($optionToRemove, 2);
         $attribute->addOption($optionToKeep);
         $attribute->addOption($optionToRemove);
 
@@ -211,13 +214,11 @@ class ModifyAttributeMessageHandlerTest extends TestCase
             'name' => 'Size',
             'position' => 0,
             'options' => [
-                ['type' => 'option', 'key' => 'large', 'name' => 'Large'],
+                ['id' => 1, 'type' => 'option', 'key' => 'large', 'name' => 'Large'],
             ],
         ]));
 
-        $options = $attribute->getOptions();
-        $this->assertCount(1, $options);
-        $this->assertSame('large', \reset($options)->getKey());
+        $this->assertSame([$optionToKeep], $attribute->getOptions());
     }
 
     public function testModifyAttributeSetsConfig(): void

@@ -20,6 +20,7 @@ use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Product\Application\Mapper\AttributeMapper;
 use Sulu\Product\Application\Message\CreateAttributeMessage;
 use Sulu\Product\Application\Message\ModifyAttributeMessage;
+use Sulu\Product\Domain\Exception\AttributeOptionKeyNotUniqueException;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeOption;
@@ -91,13 +92,8 @@ class AttributeMapperTest extends TestCase
         $translation->setDescription('Old description');
         $attribute->addTranslation($translation);
 
-        $red = new AttributeOption($attribute, 'red');
-        $red->addTranslation(new AttributeOptionTranslation($red, 'en', 'Red'));
-        $attribute->addOption($red);
-
-        $blue = new AttributeOption($attribute, 'blue');
-        $blue->addTranslation(new AttributeOptionTranslation($blue, 'en', 'Blue'));
-        $attribute->addOption($blue);
+        $this->createOption($attribute, 1, 'red', 'Red');
+        $blue = $this->createOption($attribute, 2, 'blue', 'Blue');
 
         // position = 0 (default), findNextPositionInGroup returns 1 → newPosition = 0 = oldPosition → no change
         $this->attributeRepository->findNextPositionInGroup($group)->willReturn(1);
@@ -109,7 +105,7 @@ class AttributeMapperTest extends TestCase
             'name' => 'Color',
             'description' => 'Updated description',
             'options' => [
-                ['type' => 'option', 'key' => 'blue', 'name' => 'Azure'],
+                ['id' => 2, 'type' => 'option', 'key' => 'blue', 'name' => 'Azure'],
                 ['type' => 'option', 'key' => 'green', 'name' => 'Green'],
             ],
         ]));
@@ -121,12 +117,126 @@ class AttributeMapperTest extends TestCase
 
         $options = $attribute->getOptions();
         $this->assertCount(2, $options);
+        $this->assertSame($blue, $options[0]);
         $this->assertSame('blue', $options[0]->getKey());
         $this->assertSame(0, $options[0]->getPosition());
         $this->assertSame('Azure', $options[0]->getTranslation('en')?->getName());
         $this->assertSame('green', $options[1]->getKey());
         $this->assertSame(1, $options[1]->getPosition());
         $this->assertSame('Green', $options[1]->getTranslation('en')?->getName());
+    }
+
+    public function testMapModifyAttributeMessageRenamesOptionMatchedById(): void
+    {
+        $group = new AttributeGroup();
+        $attribute = new Attribute($group);
+        $attribute->setType('options');
+
+        $blue = $this->createOption($attribute, 7, 'blue', 'Blue');
+        $this->attributeRepository->findNextPositionInGroup($group)->willReturn(1);
+
+        $this->mapper->mapAttributeData($attribute, new ModifyAttributeMessage(['uuid' => 'attribute-uuid'], [
+            'locale' => 'en',
+            'key' => 'color',
+            'type' => 'options',
+            'name' => 'Color',
+            'options' => [
+                ['id' => 7, 'type' => 'option', 'key' => 'navy', 'name' => 'Navy'],
+            ],
+        ]));
+
+        $options = $attribute->getOptions();
+        $this->assertCount(1, $options);
+        $this->assertSame($blue, $options[0]);
+        $this->assertSame('navy', $blue->getKey());
+        $this->assertSame('Navy', $blue->getTranslation('en')?->getName());
+    }
+
+    public function testMapModifyAttributeMessageCreatesNewOptionForDuplicatedId(): void
+    {
+        $group = new AttributeGroup();
+        $attribute = new Attribute($group);
+        $attribute->setType('options');
+
+        $blue = $this->createOption($attribute, 7, 'blue', 'Blue');
+        $this->attributeRepository->findNextPositionInGroup($group)->willReturn(1);
+
+        $this->mapper->mapAttributeData($attribute, new ModifyAttributeMessage(['uuid' => 'attribute-uuid'], [
+            'locale' => 'en',
+            'key' => 'color',
+            'type' => 'options',
+            'name' => 'Color',
+            'options' => [
+                ['id' => 7, 'type' => 'option', 'key' => 'blue', 'name' => 'Blue'],
+                ['id' => 7, 'type' => 'option', 'key' => 'navy', 'name' => 'Navy'],
+            ],
+        ]));
+
+        $options = $attribute->getOptions();
+        $this->assertCount(2, $options);
+        $this->assertSame($blue, $options[0]);
+        $this->assertSame('blue', $blue->getKey());
+        $this->assertNotSame($blue, $options[1]);
+        $this->assertSame('navy', $options[1]->getKey());
+    }
+
+    public function testMapModifyAttributeMessageSwapsOptionKeys(): void
+    {
+        $group = new AttributeGroup();
+        $attribute = new Attribute($group);
+        $attribute->setType('options');
+
+        $red = $this->createOption($attribute, 1, 'red', 'Red');
+        $blue = $this->createOption($attribute, 2, 'blue', 'Blue');
+        $this->attributeRepository->findNextPositionInGroup($group)->willReturn(1);
+
+        $this->mapper->mapAttributeData($attribute, new ModifyAttributeMessage(['uuid' => 'attribute-uuid'], [
+            'locale' => 'en',
+            'key' => 'color',
+            'type' => 'options',
+            'name' => 'Color',
+            'options' => [
+                ['id' => 1, 'type' => 'option', 'key' => 'blue', 'name' => 'Red'],
+                ['id' => 2, 'type' => 'option', 'key' => 'red', 'name' => 'Blue'],
+            ],
+        ]));
+
+        $this->assertSame([$red, $blue], $attribute->getOptions());
+        $this->assertSame('blue', $red->getKey());
+        $this->assertSame('red', $blue->getKey());
+    }
+
+    public function testMapModifyAttributeMessageRejectsDuplicateOptionKeys(): void
+    {
+        $group = new AttributeGroup();
+        $attribute = new Attribute($group);
+        $attribute->setType('options');
+
+        $this->createOption($attribute, 1, 'red', 'Red');
+        $this->attributeRepository->findNextPositionInGroup($group)->willReturn(1);
+
+        $this->expectException(AttributeOptionKeyNotUniqueException::class);
+
+        $this->mapper->mapAttributeData($attribute, new ModifyAttributeMessage(['uuid' => 'attribute-uuid'], [
+            'locale' => 'en',
+            'key' => 'color',
+            'type' => 'options',
+            'name' => 'Color',
+            'options' => [
+                ['id' => 1, 'type' => 'option', 'key' => 'red', 'name' => 'Red'],
+                ['type' => 'option', 'key' => 'red', 'name' => 'Another red'],
+            ],
+        ]));
+    }
+
+    private function createOption(Attribute $attribute, int $id, string $key, string $name): AttributeOption
+    {
+        $option = new AttributeOption($attribute, $key);
+        (new \ReflectionProperty(AttributeOption::class, 'id'))->setValue($option, $id);
+        $option->addTranslation(new AttributeOptionTranslation($option, 'en', $name));
+        $attribute->addOption($option);
+
+        return $option;
     }
 
     public function testMapAttributeDataWithLocalizedFlag(): void

@@ -15,6 +15,7 @@ namespace Sulu\Product\Application\Message;
 
 /**
  * @phpstan-type AttributeOptionMessageData array{
+ *     id?: int|null,
  *     type?: string,
  *     key: string,
  *     name: string,
