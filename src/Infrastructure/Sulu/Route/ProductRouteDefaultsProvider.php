@@ -24,8 +24,8 @@ use Sulu\Content\Application\ContentAggregator\ContentAggregatorInterface;
 use Sulu\Content\Domain\Exception\ContentNotFoundException;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
+use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
-use Sulu\Product\Infrastructure\Sulu\Content\ProductParentContentLoader;
 use Sulu\Route\Application\Routing\Matcher\RouteDefaultsProviderInterface;
 use Sulu\Route\Domain\Model\Route;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -35,12 +35,14 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  */
 class ProductRouteDefaultsProvider implements RouteDefaultsProviderInterface
 {
+    /** The route default holding the variant whose URL renders its product. */
+    public const VARIANT_ATTRIBUTE = 'variant';
+
     public function __construct(
         private ProductRepositoryInterface $productRepository,
         private ContentAggregatorInterface $contentAggregator,
         private MetadataProviderRegistry $metadataProviderRegistry,
         private CacheLifetimeResolverInterface $cacheLifetimeResolver,
-        private ProductParentContentLoader $parentContentLoader,
     ) {
     }
 
@@ -48,6 +50,48 @@ class ProductRouteDefaultsProvider implements RouteDefaultsProviderInterface
     {
         $id = $route->getResourceId();
         $locale = $route->getLocale();
+
+        $dimensionContent = $this->loadContent($id, $locale)
+            ?? throw new NotFoundHttpException(\sprintf('No product found for id "%s" and locale "%s"', $id, $locale));
+
+        $variantDefaults = [];
+        $parent = $dimensionContent->getResource()->getParent();
+        if (null !== $parent) {
+            // a variant has no content of its own, its URL renders its product
+            $variantDefaults[self::VARIANT_ATTRIBUTE] = $dimensionContent;
+            $dimensionContent = $this->loadContent($parent->getUuid(), $locale)
+                ?? throw new NotFoundHttpException(\sprintf('No published parent product found for variant id "%s" and locale "%s"', $id, $locale));
+        }
+
+        $contentLocale = $dimensionContent->getLocale();
+        if (!$contentLocale) {
+            throw new NotFoundHttpException(\sprintf('No product found for id "%s" and locale "%s"', $id, $locale));
+        }
+
+        $templateKey = $dimensionContent->getTemplateKey();
+        if (!$templateKey) {
+            throw new NotFoundHttpException(\sprintf('No template found for id "%s" and locale "%s"', $id, $locale));
+        }
+
+        $templateMetadata = $this->resolveTemplateMetadata($dimensionContent::getTemplateType(), $templateKey, $contentLocale);
+
+        $defaults = [
+            'object' => $dimensionContent,
+            'view' => $templateMetadata->getView(),
+            '_controller' => $templateMetadata->getController(),
+            ...$variantDefaults,
+        ];
+
+        $cacheLifetime = $this->getCacheLifetime($templateMetadata);
+        if (null !== $cacheLifetime) {
+            $defaults[CacheLifetimeRequestStore::ATTRIBUTE_KEY] = $cacheLifetime;
+        }
+
+        return $defaults;
+    }
+
+    private function loadContent(string $id, string $locale): ?ProductDimensionContentInterface
+    {
         $dimensionAttributes = [
             'locale' => $locale,
             'stage' => DimensionContentInterface::STAGE_LIVE,
@@ -71,44 +115,14 @@ class ProductRouteDefaultsProvider implements RouteDefaultsProviderInterface
         );
 
         if (null === $product) {
-            throw new NotFoundHttpException(\sprintf('No product found for id "%s" and locale "%s"', $id, $locale));
+            return null;
         }
 
         try {
-            $dimensionContent = $this->contentAggregator->aggregate($product, $dimensionAttributes);
-        } catch (ContentNotFoundException $exception) {
-            throw new NotFoundHttpException(\sprintf('No product found for id "%s" and locale "%s"', $id, $locale), $exception);
+            return $this->contentAggregator->aggregate($product, $dimensionAttributes);
+        } catch (ContentNotFoundException) {
+            return null;
         }
-
-        // a variant renders its product's content, so it is only reachable while that product is live
-        if (null !== $product->getParent() && null === $this->parentContentLoader->load($dimensionContent)) {
-            throw new NotFoundHttpException(\sprintf('No published parent product found for variant id "%s" and locale "%s"', $id, $locale));
-        }
-
-        $contentLocale = $dimensionContent->getLocale();
-        if (!$contentLocale) {
-            throw new NotFoundHttpException(\sprintf('No product found for id "%s" and locale "%s"', $id, $locale));
-        }
-
-        $templateKey = $dimensionContent->getTemplateKey();
-        if (!$templateKey) {
-            throw new NotFoundHttpException(\sprintf('No template found for id "%s" and locale "%s"', $id, $locale));
-        }
-
-        $templateMetadata = $this->resolveTemplateMetadata($dimensionContent::getTemplateType(), $templateKey, $contentLocale);
-
-        $defaults = [
-            'object' => $dimensionContent,
-            'view' => $templateMetadata->getView(),
-            '_controller' => $templateMetadata->getController(),
-        ];
-
-        $cacheLifetime = $this->getCacheLifetime($templateMetadata);
-        if (null !== $cacheLifetime) {
-            $defaults[CacheLifetimeRequestStore::ATTRIBUTE_KEY] = $cacheLifetime;
-        }
-
-        return $defaults;
     }
 
     private function getCacheLifetime(TemplateMetadata $templateMetadata): ?int

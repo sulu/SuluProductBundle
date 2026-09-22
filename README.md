@@ -61,15 +61,16 @@ the product type.
 
 ## Product in the website
 
-A variant is a page of its own route but has no content of its own: a dimension content enhancer
-resolves it with the parent's template, excerpt and SEO data, so `content` and `extension` are the
-parent's content tab. Its `product` namespace carries:
+A variant has a route but no content of its own, so its URL renders its product: the route passes
+the product as the page's `object` and the variant as the `variant` route default. `resource`,
+`content` and `extension` are the product's, `localizations` link the variant's own URLs in the
+other locales. The `product` namespace carries:
 
 - `product`: the parent, with `product.title`, the master data (`code`, `status`, ...),
   `product.attributes` (its own values), `product.associations` and `product.variants`. A product
   with variants owns no route, so it has no `product.url`.
-- `product.currentVariant`: the variant itself: `title`, `url`, `code`, ..., `attributes` (the
-  variant's own values), `associations`.
+- `product.currentVariant`: the variant the URL asked for: `title`, `url`, `code`, ...,
+  `attributes` (the variant's own values), `associations`.
 - `product.variants`: every published variant of the parent with `title`, `url`, `code`, `status`
   and `position`. A project adds properties, which are merged into these defaults:
 
@@ -81,7 +82,8 @@ sulu_product:
 ```
 
 A product without variants resolves as itself, with `product.url` and without `variants` or
-`currentVariant`. A variant resolved as a reference (a product selection) resolves as itself.
+`currentVariant`. A variant resolved as a reference (a product selection) or as a teaser resolves
+as itself, without its product's content.
 
 To show a variant's attributes together with its product's, merge them in the template; the
 variant's value wins on the same attribute:

@@ -21,7 +21,6 @@ use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Bundle\AdminBundle\Teaser\Configuration\TeaserConfiguration;
 use Sulu\Bundle\AdminBundle\Teaser\TeaserTagPropertyExtractor;
 use Sulu\Content\Application\ContentAggregator\ContentAggregatorInterface;
-use Sulu\Content\Application\ContentEnhancer\ContentEnhancerInterface;
 use Sulu\Content\Domain\Exception\ContentNotFoundException;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
@@ -42,9 +41,6 @@ class ProductTeaserProviderTest extends TestCase
     /** @var ObjectProphecy<ContentAggregatorInterface> */
     private ObjectProphecy $contentAggregator;
 
-    /** @var ObjectProphecy<ContentEnhancerInterface> */
-    private ObjectProphecy $contentEnhancer;
-
     /** @var ObjectProphecy<TranslatorInterface> */
     private ObjectProphecy $translator;
 
@@ -57,7 +53,6 @@ class ProductTeaserProviderTest extends TestCase
     {
         $this->productRepository = $this->prophesize(ProductRepositoryInterface::class);
         $this->contentAggregator = $this->prophesize(ContentAggregatorInterface::class);
-        $this->contentEnhancer = $this->prophesize(ContentEnhancerInterface::class);
         $this->translator = $this->prophesize(TranslatorInterface::class);
         $this->translator->trans(Argument::cetera())->willReturnArgument(0);
         $this->teaserTagPropertyExtractor = $this->prophesize(TeaserTagPropertyExtractor::class);
@@ -65,7 +60,6 @@ class ProductTeaserProviderTest extends TestCase
         $this->provider = new ProductTeaserProvider(
             $this->productRepository->reveal(),
             $this->contentAggregator->reveal(),
-            $this->contentEnhancer->reveal(),
             $this->translator->reveal(),
             $this->teaserTagPropertyExtractor->reveal(),
         );
@@ -107,8 +101,6 @@ class ProductTeaserProviderTest extends TestCase
         $this->contentAggregator->aggregate($product, Argument::type('array'))
             ->willReturn($revealed);
 
-        $this->contentEnhancer->enhance($revealed)->willReturn($revealed);
-
         $teasers = $this->provider->find(['uuid-1'], 'en');
 
         $this->assertCount(1, $teasers);
@@ -145,8 +137,6 @@ class ProductTeaserProviderTest extends TestCase
 
         $this->contentAggregator->aggregate($product, Argument::type('array'))
             ->willReturn($revealed);
-
-        $this->contentEnhancer->enhance($revealed)->willReturn($revealed);
 
         $teasers = $this->provider->find(['uuid-1'], 'en');
 
@@ -185,8 +175,6 @@ class ProductTeaserProviderTest extends TestCase
         $this->contentAggregator->aggregate($product, Argument::type('array'))
             ->willReturn($revealed);
 
-        $this->contentEnhancer->enhance($revealed)->willReturn($revealed);
-
         $this->assertSame([], $this->provider->find(['uuid-1'], 'en'));
     }
 
@@ -216,8 +204,6 @@ class ProductTeaserProviderTest extends TestCase
         $this->contentAggregator->aggregate($product, Argument::type('array'))
             ->willReturn($revealed);
 
-        $this->contentEnhancer->enhance($revealed)->willReturn($revealed);
-
         $this->teaserTagPropertyExtractor->extractDescription(
             ProductInterface::TEMPLATE_TYPE,
             'default',
@@ -236,6 +222,44 @@ class ProductTeaserProviderTest extends TestCase
 
         $this->assertSame('Summary', $teasers[0]->getDescription());
         $this->assertSame(99, $teasers[0]->getMediaId());
+    }
+
+    /** A variant has no content of its own, so its teaser carries its own title and URL only. */
+    public function testFindReturnsVariantTeaserWithItsOwnFields(): void
+    {
+        $parent = new Product('parent-uuid');
+        $variant = new Product('variant-uuid');
+        $variant->setParent($parent);
+
+        $variantContent = $this->createDimensionContent($variant);
+        $variantContent->getRoute()->willReturn($this->makeRoute('/products/nc3fx-b'));
+        $variantContent->getExcerptTitle()->willReturn(null);
+        $variantContent->getTitle()->willReturn('NC3FX-B');
+        $variantContent->getExcerptDescription()->willReturn(null);
+        $variantContent->getExcerptMore()->willReturn(null);
+        $variantContent->getExcerptImage()->willReturn([]);
+        $variantContent->getResourceId()->willReturn('variant-uuid');
+        $variantContent->getMainWebspace()->willReturn('main');
+        $variantContent->getAdditionalWebspaces()->willReturn([]);
+        $variantContent->getTemplateKey()->willReturn(null);
+        $variantContent->getLocale()->willReturn(null);
+
+        $this->productRepository->findBy(Argument::cetera())
+            ->willReturn((static function() use ($variant) {
+                yield $variant;
+            })());
+
+        $this->contentAggregator->aggregate($variant, Argument::type('array'))
+            ->willReturn($variantContent->reveal());
+
+        $teasers = $this->provider->find(['variant-uuid'], 'en');
+
+        $this->assertCount(1, $teasers);
+        $this->assertSame('variant-uuid', $teasers[0]->getId());
+        $this->assertSame('NC3FX-B', $teasers[0]->getTitle());
+        $this->assertSame('/products/nc3fx-b', $teasers[0]->getUrl());
+        $this->assertSame('', $teasers[0]->getDescription());
+        $this->assertNull($teasers[0]->getMediaId());
     }
 
     /**
