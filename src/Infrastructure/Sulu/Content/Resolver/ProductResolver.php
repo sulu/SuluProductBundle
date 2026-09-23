@@ -21,6 +21,7 @@ use Sulu\Bundle\MediaBundle\Entity\MediaInterface;
 use Sulu\Bundle\MediaBundle\Infrastructure\Sulu\Content\ResourceLoader\MediaResourceLoader;
 use Sulu\Content\Application\ContentResolver\Resolver\ResolverInterface;
 use Sulu\Content\Application\ContentResolver\Value\ContentView;
+use Sulu\Content\Application\ContentResolver\Value\ResolvableResource;
 use Sulu\Content\Application\MetadataResolver\MetadataResolver;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductAssociationInterface;
@@ -267,12 +268,12 @@ class ProductResolver implements ResolverInterface
             'name' => $family->getTranslation($locale)?->getName(),
             'image' => null === $image
                 ? ContentView::create(null, [])
-                : ContentView::createResolvableWithReferences(
+                : ContentView::create(new ResolvableResource(
                     id: $image->getId(),
                     resourceLoaderKey: MediaResourceLoader::getKey(),
+                    priority: 0,
                     resourceKey: MediaInterface::RESOURCE_KEY,
-                    view: [],
-                ),
+                ), []),
         ], []);
     }
 
