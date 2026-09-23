@@ -98,6 +98,21 @@ switcher, format it with `sulu_product_format_attribute_value`:
 {{ attributeValue|sulu_product_format_attribute_value }}
 ```
 
+## Product family selection
+
+`product_family_selection` (a list) and `single_product_family_selection` store family uuids. In
+the website each family resolves to the shape of a product's `productFamily`:
+`{uuid, externalIdentifier, name, image}`, with `name` in the requested locale or `null` and
+`image` resolved as media or `null`. A family that no longer exists is left out of the list.
+
+```xml
+<property name="productFamilies" type="product_family_selection">
+    <meta>
+        <title lang="en">Product families</title>
+    </meta>
+</property>
+```
+
 ## Association form overrides
 
 The bundle generates a `product_associations` form with one field per configured

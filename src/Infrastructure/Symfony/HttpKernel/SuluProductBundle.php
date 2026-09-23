@@ -129,9 +129,12 @@ use Sulu\Product\Infrastructure\Sulu\Content\ProductLinkProvider;
 use Sulu\Product\Infrastructure\Sulu\Content\ProductParentContentLoader;
 use Sulu\Product\Infrastructure\Sulu\Content\ProductSmartContentProvider;
 use Sulu\Product\Infrastructure\Sulu\Content\ProductTeaserProvider;
+use Sulu\Product\Infrastructure\Sulu\Content\PropertyResolver\ProductFamilySelectionPropertyResolver;
 use Sulu\Product\Infrastructure\Sulu\Content\PropertyResolver\ProductSelectionPropertyResolver;
+use Sulu\Product\Infrastructure\Sulu\Content\PropertyResolver\SingleProductFamilySelectionPropertyResolver;
 use Sulu\Product\Infrastructure\Sulu\Content\PropertyResolver\SingleProductSelectionPropertyResolver;
 use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductResolver;
+use Sulu\Product\Infrastructure\Sulu\Content\ResourceLoader\ProductFamilyResourceLoader;
 use Sulu\Product\Infrastructure\Sulu\Content\ResourceLoader\ProductResourceLoader;
 use Sulu\Product\Infrastructure\Sulu\Content\Select\AttributeSelectService;
 use Sulu\Product\Infrastructure\Sulu\Content\Select\AttributeTypeSelectService;
@@ -1015,6 +1018,14 @@ final class SuluProductBundle extends AbstractBundle
             ->class(ProductSelectionPropertyResolver::class)
             ->tag('sulu_content.property_resolver');
 
+        $services->set('sulu_product.single_product_family_selection_property_resolver')
+            ->class(SingleProductFamilySelectionPropertyResolver::class)
+            ->tag('sulu_content.property_resolver');
+
+        $services->set('sulu_product.product_family_selection_property_resolver')
+            ->class(ProductFamilySelectionPropertyResolver::class)
+            ->tag('sulu_content.property_resolver');
+
         $services->set('sulu_product.product_resolver')
             ->class(ProductResolver::class)
             ->args([
@@ -1034,6 +1045,13 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.product_repository'),
             ])
             ->tag('sulu_content.resource_loader', ['type' => ProductResourceLoader::RESOURCE_LOADER_KEY]);
+
+        $services->set('sulu_product.product_family_resource_loader')
+            ->class(ProductFamilyResourceLoader::class)
+            ->args([
+                new Reference('sulu_product.product_family_repository'),
+            ])
+            ->tag('sulu_content.resource_loader', ['type' => ProductFamilyResourceLoader::RESOURCE_LOADER_KEY]);
 
         $services->set('sulu_product.product_parent_content_loader')
             ->class(ProductParentContentLoader::class)
@@ -1383,6 +1401,20 @@ final class SuluProductBundle extends AbstractBundle
                                         'icon' => 'su-industry',
                                         'label' => 'sulu_product.selection_label',
                                         'overlay_title' => 'sulu_product.selection_overlay_title',
+                                    ],
+                                ],
+                            ],
+                            'product_family_selection' => [
+                                'default_type' => 'list_overlay',
+                                'resource_key' => 'product_families',
+                                'types' => [
+                                    'list_overlay' => [
+                                        'adapter' => 'table',
+                                        'list_key' => 'product_families',
+                                        'display_properties' => ['name'],
+                                        'icon' => 'su-tag',
+                                        'label' => 'sulu_product.product_family_selection_label',
+                                        'overlay_title' => 'sulu_product.select_product_families',
                                     ],
                                 ],
                             ],

@@ -46,5 +46,12 @@
 
             <tag name="sulu.search.field" role="image"/>
         </property>
+
+        <property name="productFamilies" type="product_family_selection">
+            <meta>
+                <title lang="en">Product families</title>
+                <title lang="de">Produktfamilien</title>
+            </meta>
+        </property>
     </properties>
 </template>
