@@ -25,7 +25,6 @@ use Sulu\Bundle\MediaBundle\Infrastructure\Sulu\Content\PropertyResolver\MediaSe
 use Sulu\Bundle\MediaBundle\Infrastructure\Sulu\Content\PropertyResolver\SingleMediaSelectionPropertyResolver;
 use Sulu\Bundle\MediaBundle\Infrastructure\Sulu\Content\ResourceLoader\MediaResourceLoader;
 use Sulu\Content\Application\ContentResolver\Value\ContentView;
-use Sulu\Content\Application\ContentResolver\Value\Reference;
 use Sulu\Content\Application\ContentResolver\Value\ResolvableResource;
 use Sulu\Content\Application\MetadataResolver\MetadataResolver;
 use Sulu\Content\Application\PropertyResolver\PropertyResolverProvider;
@@ -155,8 +154,11 @@ class ProductResolverDetailsTest extends ProductResolverTestCase
         self::assertNull($familyData['image']->getContent());
     }
 
-    /** Core loads the family image as a media, so it arrives with its formats and tags the page. */
-    public function testResolvesTheFamilyImageAsMediaReference(): void
+    /**
+     * Core loads the family image as a media, so it arrives with its formats and tags the page. The
+     * image belongs to the family, so the product does not reference it.
+     */
+    public function testResolvesTheFamilyImageAsMediaWithCacheTagButNoReference(): void
     {
         $image = $this->createStub(MediaInterface::class);
         $image->method('getId')->willReturn(5);
@@ -176,7 +178,8 @@ class ProductResolverDetailsTest extends ProductResolverTestCase
         self::assertInstanceOf(ResolvableResource::class, $resource);
         self::assertSame(5, $resource->getId());
         self::assertSame(MediaResourceLoader::getKey(), $resource->getResourceLoaderKey());
-        self::assertEquals([new Reference(5, MediaInterface::RESOURCE_KEY)], $imageView->getReferences());
+        self::assertSame(MediaInterface::RESOURCE_KEY, $resource->getResourceKey());
+        self::assertSame([], $imageView->getReferences());
     }
 
     public function testResolvesNullEntityOwnedFields(): void

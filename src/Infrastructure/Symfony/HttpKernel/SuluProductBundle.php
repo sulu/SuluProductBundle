@@ -137,6 +137,8 @@ use Sulu\Product\Infrastructure\Sulu\Content\Select\AttributeSelectService;
 use Sulu\Product\Infrastructure\Sulu\Content\Select\AttributeTypeSelectService;
 use Sulu\Product\Infrastructure\Sulu\HttpCache\EventSubscriber\ProductCacheInvalidationSubscriber;
 use Sulu\Product\Infrastructure\Sulu\Reference\ProductAssociationReferenceCleanupSubscriber;
+use Sulu\Product\Infrastructure\Sulu\Reference\ProductFamilyReferenceDoctrineEventListener;
+use Sulu\Product\Infrastructure\Sulu\Reference\ProductFamilyReferenceRefresher;
 use Sulu\Product\Infrastructure\Sulu\Reference\ProductReferenceRefresher;
 use Sulu\Product\Infrastructure\Sulu\Route\ProductRouteDefaultsProvider;
 use Sulu\Product\Infrastructure\Sulu\Search\AdminProductIndexListener;
@@ -1138,6 +1140,25 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_content.content_merger'),
             ])
             ->tag('sulu_reference.refresher');
+
+        $services->set('sulu_product.product_family_reference_refresher')
+            ->class(ProductFamilyReferenceRefresher::class)
+            ->args([
+                new Reference('sulu_product.product_family_repository'),
+                new Reference('sulu_reference.reference_repository'),
+                new Reference('sulu.core.localization_manager'),
+            ])
+            ->tag('sulu_reference.refresher');
+
+        $services->set('sulu_product.product_family_reference_doctrine_event_listener')
+            ->class(ProductFamilyReferenceDoctrineEventListener::class)
+            ->args([
+                new Reference('sulu_message_bus'),
+                new Reference('sulu_reference.reference_repository'),
+            ])
+            ->tag('doctrine.event_listener', ['event' => 'onFlush', 'lazy' => true, 'method' => 'onFlush'])
+            ->tag('doctrine.event_listener', ['event' => 'postFlush', 'lazy' => true, 'method' => 'postFlush'])
+            ->tag('doctrine.event_listener', ['event' => 'onClear', 'lazy' => true, 'method' => 'onClear']);
 
         $services->set('sulu_product.product_association_reference_cleanup_subscriber')
             ->class(ProductAssociationReferenceCleanupSubscriber::class)
