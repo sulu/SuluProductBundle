@@ -81,6 +81,10 @@ interface AttributeInterface extends AuditableInterface
 
     public function setLocalized(bool $localized): self;
 
+    public function isFilterable(): bool;
+
+    public function setFilterable(bool $filterable): self;
+
     public function getDefaultLocale(): ?string;
 
     public function setDefaultLocale(string $defaultLocale): self;

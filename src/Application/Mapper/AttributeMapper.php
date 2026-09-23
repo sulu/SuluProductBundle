@@ -16,6 +16,7 @@ namespace Sulu\Product\Application\Mapper;
 use Sulu\Product\Application\Message\CreateAttributeMessage;
 use Sulu\Product\Application\Message\ModifyAttributeMessage;
 use Sulu\Product\Domain\Exception\AttributeOptionKeyNotUniqueException;
+use Sulu\Product\Domain\Exception\InvalidDateDisplayFormatException;
 use Sulu\Product\Domain\Model\AttributeGroupAttribute;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeOption;
@@ -25,18 +26,34 @@ use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 
 final class AttributeMapper implements AttributeMapperInterface
 {
+    /** Free text has no discrete values to filter by. */
+    private const FILTERABLE_TYPES = [
+        AttributeInterface::TYPE_NUMBER,
+        AttributeInterface::TYPE_DATE,
+        AttributeInterface::TYPE_OPTIONS,
+    ];
+
     public function __construct(private AttributeRepositoryInterface $attributeRepository)
     {
     }
 
     public function mapAttributeData(AttributeInterface $attribute, CreateAttributeMessage|ModifyAttributeMessage $message): void
     {
+        $type = $message instanceof CreateAttributeMessage ? $message->getType() : $attribute->getType();
+        if (AttributeInterface::TYPE_DATE === $type) {
+            $this->assertDateDisplayFormatRendersADate($message->getConfig()['displayFormat'] ?? null);
+        }
+
         $attribute->setKey($message->getKey());
         $attribute->setConfig($message->getConfig());
 
         $data = $message->getData();
         if (\array_key_exists('localized', $data)) {
             $attribute->setLocalized((bool) $data['localized']);
+        }
+
+        if (\array_key_exists('filterable', $data)) {
+            $attribute->setFilterable((bool) $data['filterable'] && \in_array($type, self::FILTERABLE_TYPES, true));
         }
 
         if (null === $attribute->getDefaultLocale()) {
@@ -52,6 +69,20 @@ final class AttributeMapper implements AttributeMapperInterface
             $this->mapCreatePosition($attribute, $message);
         } else {
             $this->syncPosition($attribute, $message->getPosition());
+        }
+    }
+
+    /** ICU renders unquoted words as an empty string, which hides the value on the website without an error. */
+    private function assertDateDisplayFormatRendersADate(mixed $displayFormat): void
+    {
+        if (!\is_string($displayFormat) || '' === $displayFormat) {
+            return;
+        }
+
+        $formatter = new \IntlDateFormatter('en', \IntlDateFormatter::MEDIUM, \IntlDateFormatter::NONE, 'UTC', null, $displayFormat);
+
+        if (!$formatter->format(0)) {
+            throw new InvalidDateDisplayFormatException($displayFormat);
         }
     }
 

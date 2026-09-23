@@ -321,6 +321,41 @@ class ProductAttributeTwigExtensionTest extends TestCase
         self::assertSame('05.03.2024', $this->attributesOf($content)['released']['formattedValue']);
     }
 
+    public function testDatesUseTheAttributesDisplayFormatInTheRequestedLocale(): void
+    {
+        $content = $this->createContent();
+        $attribute = $this->createAttribute('released', 'Erschienen', $this->createGroup(1, 'Eins'), 1);
+        $attribute->setType(AttributeInterface::TYPE_DATE);
+        $attribute->setConfig(['displayFormat' => 'MMMM yyyy']);
+
+        $value = new ProductAttributeValue($content, $attribute, $attribute->getKey());
+        $value->setNumber((float) (new \DateTimeImmutable('2024-03-05'))->getTimestamp());
+        $content->addAttribute($value);
+
+        self::assertSame('März 2024', $this->attributesOf($content)['released']['formattedValue']);
+    }
+
+    public function testDatesRenderTheStoredUtcDayWhateverTheServerTimezone(): void
+    {
+        $content = $this->createContent();
+        $attribute = $this->createAttribute('released', 'Erschienen', $this->createGroup(1, 'Eins'), 1);
+        $attribute->setType(AttributeInterface::TYPE_DATE);
+        $attribute->setConfig(['displayFormat' => 'MMMM yyyy']);
+
+        $value = new ProductAttributeValue($content, $attribute, $attribute->getKey());
+        $value->setNumber((float) (new \DateTimeImmutable('2024-03-01', new \DateTimeZone('UTC')))->getTimestamp());
+        $content->addAttribute($value);
+
+        $defaultTimezone = \date_default_timezone_get();
+        \date_default_timezone_set('America/New_York');
+
+        try {
+            self::assertSame('März 2024', $this->attributesOf($content)['released']['formattedValue']);
+        } finally {
+            \date_default_timezone_set($defaultTimezone);
+        }
+    }
+
     public function testDateValueWithoutATimestampIsDropped(): void
     {
         $content = $this->createContent();
