@@ -8,6 +8,8 @@
     "sulu_product.product_families": "Product families",
     "sulu_product.no_product_family_selected": "No product family selected",
     "sulu_product.select_product_family": "Select product family",
+    "sulu_product.select_product_families": "Select product families",
+    "sulu_product.product_family_selection_label": "{count} {count, plural, =1 {product family} other {product families}} selected",
     "sulu_product.product_family_has_products": "This product family cannot be removed because products are still assigned to it.",
     "sulu_product.required": "Required",
     "sulu_product.no_attribute_selected": "No attribute selected",

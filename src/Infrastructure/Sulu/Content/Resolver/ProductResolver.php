@@ -17,11 +17,8 @@ use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataLoaderInterface;
 use Sulu\Bundle\AdminBundle\Metadata\MetadataProviderInterface;
 use Sulu\Bundle\HttpCacheBundle\ReferenceStore\ReferenceStoreInterface;
-use Sulu\Bundle\MediaBundle\Entity\MediaInterface;
-use Sulu\Bundle\MediaBundle\Infrastructure\Sulu\Content\ResourceLoader\MediaResourceLoader;
 use Sulu\Content\Application\ContentResolver\Resolver\ResolverInterface;
 use Sulu\Content\Application\ContentResolver\Value\ContentView;
-use Sulu\Content\Application\ContentResolver\Value\ResolvableResource;
 use Sulu\Content\Application\MetadataResolver\MetadataResolver;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductAssociationInterface;
@@ -29,6 +26,7 @@ use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Infrastructure\Sulu\Content\ProductFamilyContentViewFactory;
 use Sulu\Product\Infrastructure\Sulu\Content\ProductParentContentLoader;
 use Sulu\Product\Infrastructure\Sulu\Content\ResourceLoader\ProductResourceLoader;
 
@@ -260,21 +258,7 @@ class ProductResolver implements ResolverInterface
             return ContentView::create(null, []);
         }
 
-        $image = $family->getImage();
-
-        return ContentView::create([
-            'uuid' => $family->getUuid(),
-            'externalIdentifier' => $family->getExternalIdentifier(),
-            'name' => $family->getTranslation($locale)?->getName(),
-            'image' => null === $image
-                ? ContentView::create(null, [])
-                : ContentView::create(new ResolvableResource(
-                    id: $image->getId(),
-                    resourceLoaderKey: MediaResourceLoader::getKey(),
-                    priority: 0,
-                    resourceKey: MediaInterface::RESOURCE_KEY,
-                ), []),
-        ], []);
+        return ProductFamilyContentViewFactory::create($family, $locale);
     }
 
     /**
