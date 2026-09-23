@@ -27,6 +27,10 @@
             <options><option name="default">0</option></options>
         </field>
 
+        <field name="filterable" type="boolean" nullable="false">
+            <options><option name="default">0</option></options>
+        </field>
+
         <one-to-many field="translations"
                      target-entity="Sulu\Product\Domain\Model\AttributeTranslationInterface"
                      mapped-by="attribute"

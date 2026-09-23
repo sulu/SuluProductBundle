@@ -47,6 +47,8 @@ class Attribute implements AttributeInterface
 
     protected bool $localized = false;
 
+    protected bool $filterable = false;
+
     protected ?string $defaultLocale = null;
 
     public function __construct(AttributeGroupInterface $group)
@@ -221,6 +223,18 @@ class Attribute implements AttributeInterface
     public function setLocalized(bool $localized): self
     {
         $this->localized = $localized;
+
+        return $this;
+    }
+
+    public function isFilterable(): bool
+    {
+        return $this->filterable;
+    }
+
+    public function setFilterable(bool $filterable): self
+    {
+        $this->filterable = $filterable;
 
         return $this;
     }

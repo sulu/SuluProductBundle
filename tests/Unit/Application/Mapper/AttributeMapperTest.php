@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Sulu\Product\Tests\Unit\Application\Mapper;
 
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
@@ -21,6 +22,7 @@ use Sulu\Product\Application\Mapper\AttributeMapper;
 use Sulu\Product\Application\Message\CreateAttributeMessage;
 use Sulu\Product\Application\Message\ModifyAttributeMessage;
 use Sulu\Product\Domain\Exception\AttributeOptionKeyNotUniqueException;
+use Sulu\Product\Domain\Exception\InvalidDateDisplayFormatException;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeOption;
@@ -256,6 +258,128 @@ class AttributeMapperTest extends TestCase
         ]));
 
         $this->assertTrue($attribute->isLocalized());
+    }
+
+    /**
+     * @return iterable<string, array{string, bool}>
+     */
+    public static function provideFilterableByType(): iterable
+    {
+        yield 'number' => ['number', true];
+        yield 'date' => ['date', true];
+        yield 'options' => ['options', true];
+        yield 'text' => ['text', false];
+    }
+
+    #[DataProvider('provideFilterableByType')]
+    public function testMapAttributeDataFilterableOnlyForFilterableTypes(string $type, bool $expected): void
+    {
+        $group = new AttributeGroup();
+        $attribute = new Attribute($group);
+
+        $this->attributeRepository->findNextPositionInGroup($group)->willReturn(0);
+
+        $this->mapper->mapAttributeData($attribute, new CreateAttributeMessage([
+            'locale' => 'en',
+            'key' => 'attr',
+            'type' => $type,
+            'name' => 'Attr',
+            'filterable' => true,
+            'group' => 'group-uuid',
+        ]));
+
+        $this->assertSame($expected, $attribute->isFilterable());
+    }
+
+    public function testMapModifyKeepsFilterableWhenNotSubmitted(): void
+    {
+        $group = new AttributeGroup();
+        $attribute = new Attribute($group);
+        $attribute->setType('number');
+        $attribute->setFilterable(true);
+
+        $this->attributeRepository->findNextPositionInGroup($group)->willReturn(1);
+
+        $this->mapper->mapAttributeData($attribute, new ModifyAttributeMessage(['uuid' => 'uuid-1'], [
+            'locale' => 'en',
+            'key' => 'attr',
+            'type' => 'number',
+            'name' => 'Attr',
+        ]));
+
+        $this->assertTrue($attribute->isFilterable());
+    }
+
+    public function testMapRejectsADateDisplayFormatThatRendersNoDate(): void
+    {
+        $group = new AttributeGroup();
+        $attribute = new Attribute($group);
+
+        $this->expectException(InvalidDateDisplayFormatException::class);
+
+        $this->mapper->mapAttributeData($attribute, new CreateAttributeMessage([
+            'locale' => 'en',
+            'key' => 'released',
+            'type' => 'date',
+            'name' => 'Released',
+            'config' => ['displayFormat' => 'Released MMMM yyyy'],
+            'group' => 'group-uuid',
+        ]));
+    }
+
+    public function testMapModifyRejectsADateDisplayFormatThatRendersNoDate(): void
+    {
+        $group = new AttributeGroup();
+        $attribute = new Attribute($group);
+        $attribute->setType('date');
+
+        $this->expectException(InvalidDateDisplayFormatException::class);
+
+        $this->mapper->mapAttributeData($attribute, new ModifyAttributeMessage(['uuid' => 'uuid-1'], [
+            'locale' => 'en',
+            'key' => 'released',
+            'type' => 'date',
+            'name' => 'Released',
+            'config' => ['displayFormat' => 'Released MMMM yyyy'],
+        ]));
+    }
+
+    public function testMapAcceptsQuotedWordsInADateDisplayFormat(): void
+    {
+        $group = new AttributeGroup();
+        $attribute = new Attribute($group);
+
+        $this->attributeRepository->findNextPositionInGroup($group)->willReturn(0);
+
+        $this->mapper->mapAttributeData($attribute, new CreateAttributeMessage([
+            'locale' => 'en',
+            'key' => 'released',
+            'type' => 'date',
+            'name' => 'Released',
+            'config' => ['displayFormat' => "'Released' MMMM yyyy"],
+            'group' => 'group-uuid',
+        ]));
+
+        $this->assertSame(['displayFormat' => "'Released' MMMM yyyy"], $attribute->getConfig());
+    }
+
+    public function testMapLeavesTheDisplayFormatOfTextUnchecked(): void
+    {
+        $group = new AttributeGroup();
+        $attribute = new Attribute($group);
+
+        $this->attributeRepository->findNextPositionInGroup($group)->willReturn(0);
+
+        $this->mapper->mapAttributeData($attribute, new CreateAttributeMessage([
+            'locale' => 'en',
+            'key' => 'note',
+            'type' => 'text',
+            'name' => 'Note',
+            'config' => ['displayFormat' => 'Released %value%'],
+            'group' => 'group-uuid',
+        ]));
+
+        $this->assertSame(['displayFormat' => 'Released %value%'], $attribute->getConfig());
     }
 
     public function testMapPersistsUnitInConfig(): void
