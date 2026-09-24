@@ -23,6 +23,7 @@ use Sulu\Product\Application\AttributeType\AttributeValueViewFactory;
 use Sulu\Product\Application\AttributeType\DateAttributeType;
 use Sulu\Product\Application\AttributeType\NumberAttributeType;
 use Sulu\Product\Application\AttributeType\OptionsAttributeType;
+use Sulu\Product\Application\AttributeType\RangeAttributeType;
 use Sulu\Product\Application\AttributeType\TextAttributeType;
 use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Model\Attribute;
@@ -76,6 +77,7 @@ class ProductAttributeTwigExtensionTest extends TestCase
             new TextAttributeType(),
             new DateAttributeType(),
             new OptionsAttributeType(),
+            new RangeAttributeType(),
         ]));
 
         return $factory->createMap($content->getAttributes());
@@ -342,6 +344,57 @@ class ProductAttributeTwigExtensionTest extends TestCase
         $content->addAttribute($value);
 
         self::assertSame('on request', $this->attributesOf($content)['weight']['formattedValue']);
+    }
+
+    private function addRangeValue(ProductDimensionContent $content, Attribute $attribute, ?float $from, ?float $to): void
+    {
+        $attribute->setType(AttributeInterface::TYPE_RANGE);
+
+        foreach (['from' => $from, 'to' => $to] as $valueKey => $number) {
+            $row = new ProductAttributeValue($content, $attribute, $attribute->getKey(), valueKey: $valueKey);
+            $row->setNumber($number);
+            $content->addAttribute($row);
+        }
+    }
+
+    public function testRangesRenderBothBoundsWithoutADisplayFormat(): void
+    {
+        $content = $this->createContent();
+        $attribute = $this->createAttribute('temperature', 'Temperatur', $this->createGroup(1, 'Eins'), 1);
+        $this->addRangeValue($content, $attribute, -20.0, 60.5);
+
+        $temperature = $this->attributesOf($content)['temperature'];
+        self::assertSame(['from' => -20.0, 'to' => 60.5], $temperature['value']);
+        self::assertSame('-20 – 60.5', $temperature['formattedValue']);
+    }
+
+    public function testRangesUseTheAttributesDisplayFormatAndUnit(): void
+    {
+        $content = $this->createContent();
+        $attribute = $this->createAttribute('temperature', 'Temperatur', $this->createGroup(1, 'Eins'), 1);
+        $attribute->setConfig(['displayFormat' => '%value% %unit%', 'unit' => 'CELSIUS']);
+        $this->addRangeValue($content, $attribute, -20.0, 60.0);
+
+        self::assertSame('-20 – 60 °C', $this->attributesOf($content)['temperature']['formattedValue']);
+    }
+
+    public function testRangeDisplayFormatPlacesEachBound(): void
+    {
+        $content = $this->createContent();
+        $attribute = $this->createAttribute('voltage', 'Spannung', $this->createGroup(1, 'Eins'), 1);
+        $attribute->setConfig(['displayFormat' => 'from %from% %unit% up to %to% %unit%', 'unit' => 'VOLT']);
+        $this->addRangeValue($content, $attribute, 100.0, 240.0);
+
+        self::assertSame('from 100 V up to 240 V', $this->attributesOf($content)['voltage']['formattedValue']);
+    }
+
+    public function testRangeMissingABoundIsDropped(): void
+    {
+        $content = $this->createContent();
+        $attribute = $this->createAttribute('temperature', 'Temperatur', $this->createGroup(1, 'Eins'), 1);
+        $this->addRangeValue($content, $attribute, -20.0, null);
+
+        self::assertSame([], $this->attributesOf($content));
     }
 
     public function testDatesAreFormattedForTheRequestedLocale(): void
