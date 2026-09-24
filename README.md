@@ -86,6 +86,15 @@ A product without variants resolves as itself, with `product.url` and without `v
 `currentVariant`. A variant resolved as a reference (a product selection) or as a teaser resolves
 as itself, without its product's content.
 
+`product.attributes` maps each attribute key to its `attribute` and its `value`. The value has the
+shape the admin API uses: a number, a text, a `Y-m-d` date or an option key, however many rows the
+attribute's type stores it in:
+
+```twig
+{{ product.attributes.weight.value }}
+{{ product.attributes.weight.attribute.key }}
+```
+
 To show a variant's attributes together with its product's, merge them in the template; the
 variant's value wins on the same attribute:
 

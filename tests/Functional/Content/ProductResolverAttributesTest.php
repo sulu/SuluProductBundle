@@ -17,11 +17,11 @@ use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Content\Application\ContentResolver\ContentResolverInterface;
+use Sulu\Product\Application\AttributeType\AttributeValueView;
 use Sulu\Product\Domain\Model\AttributeGroupTranslation;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeTranslation;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
-use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
@@ -119,8 +119,8 @@ class ProductResolverAttributesTest extends SuluTestCase
 
         // the values pass through unformatted; the Twig filter renders them
         $attribute = $attributes['housing'];
-        self::assertInstanceOf(ProductAttributeValueInterface::class, $attribute);
-        self::assertSame('Zink', $attribute->getText());
+        self::assertInstanceOf(AttributeValueView::class, $attribute);
+        self::assertSame('Zink', $attribute->getValue());
         self::assertSame('Mechanische Daten', $attribute->getAttribute()->getGroup()->getTranslation('de')?->getName());
     }
 }

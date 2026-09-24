@@ -21,6 +21,12 @@ use Sulu\Bundle\HttpCacheBundle\ReferenceStore\ReferenceStore;
 use Sulu\Bundle\HttpCacheBundle\ReferenceStore\ReferenceStoreInterface;
 use Sulu\Content\Application\ContentResolver\Value\ContentView;
 use Sulu\Content\Application\MetadataResolver\MetadataResolver;
+use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
+use Sulu\Product\Application\AttributeType\AttributeValueViewFactory;
+use Sulu\Product\Application\AttributeType\DateAttributeType;
+use Sulu\Product\Application\AttributeType\NumberAttributeType;
+use Sulu\Product\Application\AttributeType\OptionsAttributeType;
+use Sulu\Product\Application\AttributeType\TextAttributeType;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductResolver;
@@ -58,6 +64,12 @@ abstract class ProductResolverTestCase extends TestCase
             $productRepository ?? $this->noVariants(),
             new CurrentVariantProvider($requestStack),
             $referenceStore ?? new ReferenceStore(),
+            new AttributeValueViewFactory(new AttributeTypeRegistry([
+                new NumberAttributeType(),
+                new TextAttributeType(),
+                new DateAttributeType(),
+                new OptionsAttributeType(),
+            ])),
             $variantProperties,
         );
     }
