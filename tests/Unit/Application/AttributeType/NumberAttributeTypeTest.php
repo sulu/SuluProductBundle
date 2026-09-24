@@ -39,19 +39,19 @@ class NumberAttributeTypeTest extends TestCase
         $type = new NumberAttributeType();
         $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
 
-        $type->writeValue($value, 42.5);
+        $type->writeValue(['value' => $value], 42.5);
 
         self::assertSame(42.5, $value->getNumber());
-        self::assertSame(42.5, $type->readValue($value));
+        self::assertSame(42.5, $type->readValue(['value' => $value]));
     }
 
     public function testWriteNullClearsNumber(): void
     {
         $type = new NumberAttributeType();
         $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
-        $type->writeValue($value, 1.0);
+        $type->writeValue(['value' => $value], 1.0);
 
-        $type->writeValue($value, null);
+        $type->writeValue(['value' => $value], null);
 
         self::assertNull($value->getNumber());
     }
@@ -61,7 +61,7 @@ class NumberAttributeTypeTest extends TestCase
         $type = new NumberAttributeType();
         $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
 
-        $type->writeValue($value, '42.5');
+        $type->writeValue(['value' => $value], '42.5');
 
         self::assertSame(42.5, $value->getNumber());
     }
@@ -70,9 +70,9 @@ class NumberAttributeTypeTest extends TestCase
     {
         $type = new NumberAttributeType();
         $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
-        $type->writeValue($value, 1.0);
+        $type->writeValue(['value' => $value], 1.0);
 
-        $type->writeValue($value, '');
+        $type->writeValue(['value' => $value], '');
 
         self::assertNull($value->getNumber());
     }

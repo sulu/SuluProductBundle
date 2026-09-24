@@ -15,6 +15,8 @@ namespace Sulu\Product\Infrastructure\Sulu\Content\Normalizer;
 
 use Sulu\Content\Application\ContentNormalizer\Normalizer\NormalizerInterface;
 use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
+use Sulu\Product\Domain\Model\AttributeInterface;
+use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 
 class ProductAttributesNormalizer implements NormalizerInterface
@@ -56,10 +58,16 @@ class ProductAttributesNormalizer implements NormalizerInterface
             }
         }
 
-        foreach ($object->getAttributes() as $attrValue) {
-            $attribute = $attrValue->getAttribute();
-            $type = $this->attributeTypeRegistry->get($attribute->getType());
-            $attributesMap[$attribute->getId()] = $type->readValue($attrValue);
+        /** @var array<int, array{attribute: AttributeInterface, rows: array<string, ProductAttributeValueInterface>}> $rowsByAttribute */
+        $rowsByAttribute = [];
+        foreach ($object->getAttributes() as $row) {
+            $attribute = $row->getAttribute();
+            $rowsByAttribute[$attribute->getId()]['attribute'] = $attribute;
+            $rowsByAttribute[$attribute->getId()]['rows'][$row->getValueKey()] = $row;
+        }
+
+        foreach ($rowsByAttribute as $attributeId => ['attribute' => $attribute, 'rows' => $rows]) {
+            $attributesMap[$attributeId] = $this->attributeTypeRegistry->get($attribute->getType())->readValue($rows);
         }
 
         $normalizedData['attributes'] = $attributesMap;
