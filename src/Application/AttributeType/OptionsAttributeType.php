@@ -48,13 +48,15 @@ final class OptionsAttributeType extends AbstractAttributeType
         $field->addOption($values);
     }
 
-    public function readValue(ProductAttributeValueInterface $value): mixed
+    public function readValue(array $rows): mixed
     {
-        return $value->getAttributeOptionKey();
+        return ($rows[ProductAttributeValueInterface::DEFAULT_VALUE_KEY] ?? null)?->getAttributeOptionKey();
     }
 
-    public function writeValue(ProductAttributeValueInterface $value, mixed $raw): void
+    public function writeValue(array $rows, mixed $raw): void
     {
+        $value = $rows[ProductAttributeValueInterface::DEFAULT_VALUE_KEY];
+
         if (null === $raw || '' === $raw) {
             $value->setAttributeOption(null);
 

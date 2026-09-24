@@ -18,6 +18,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
+use Sulu\Product\Application\AttributeType\AttributeTypeInterface;
 use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
 use Sulu\Product\Application\AttributeType\NumberAttributeType;
 use Sulu\Product\Domain\Model\AttributeInterface;
@@ -162,5 +163,33 @@ class ProductAttributesNormalizerTest extends TestCase
         $attributes = $result['attributes'];
         $this->assertIsArray($attributes);
         $this->assertSame(3.14, $attributes[7]);
+    }
+
+    public function testEnhanceReadsAllRowsOfAnAttributeAsOneValue(): void
+    {
+        $pdc = new ProductDimensionContent(new Product());
+
+        /** @var ObjectProphecy<AttributeInterface> $attribute */
+        $attribute = $this->prophesize(AttributeInterface::class);
+        $attribute->getId()->willReturn(7);
+        $attribute->getType()->willReturn('parts');
+
+        $from = new ProductAttributeValue($pdc, $attribute->reveal(), 'attr-7', valueKey: 'from');
+        $to = new ProductAttributeValue($pdc, $attribute->reveal(), 'attr-7', valueKey: 'to');
+
+        /** @var ObjectProphecy<AttributeTypeInterface> $type */
+        $type = $this->prophesize(AttributeTypeInterface::class);
+        $type->getKey()->willReturn('parts');
+        $type->readValue(['from' => $from, 'to' => $to])->willReturn(['from' => -20.0, 'to' => 60.0]);
+
+        /** @var ObjectProphecy<ProductDimensionContentInterface> $dc */
+        $dc = $this->prophesize(ProductDimensionContentInterface::class);
+        $dc->getProductFamily()->willReturn(null);
+        $dc->getAttributes()->willReturn(new ArrayCollection([$from, $to]));
+
+        $normalizer = new ProductAttributesNormalizer(new AttributeTypeRegistry([$type->reveal()]));
+        $result = $normalizer->enhance($dc->reveal(), []);
+
+        $this->assertSame([7 => ['from' => -20.0, 'to' => 60.0]], $result['attributes']);
     }
 }

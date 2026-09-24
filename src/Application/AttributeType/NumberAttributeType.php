@@ -50,13 +50,15 @@ final class NumberAttributeType extends AbstractAttributeType
         }
     }
 
-    public function readValue(ProductAttributeValueInterface $value): mixed
+    public function readValue(array $rows): mixed
     {
-        return $value->getNumber();
+        return ($rows[ProductAttributeValueInterface::DEFAULT_VALUE_KEY] ?? null)?->getNumber();
     }
 
-    public function writeValue(ProductAttributeValueInterface $value, mixed $raw): void
+    public function writeValue(array $rows, mixed $raw): void
     {
+        $value = $rows[ProductAttributeValueInterface::DEFAULT_VALUE_KEY];
+
         if (null === $raw || '' === $raw) {
             $value->setNumber(null);
 

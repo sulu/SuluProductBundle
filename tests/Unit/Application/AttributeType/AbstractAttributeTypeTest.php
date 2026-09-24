@@ -37,12 +37,12 @@ class AbstractAttributeTypeTest extends TestCase
                 return 'product_attribute_stub';
             }
 
-            public function readValue(ProductAttributeValueInterface $value): mixed
+            public function readValue(array $rows): mixed
             {
                 return null;
             }
 
-            public function writeValue(ProductAttributeValueInterface $value, mixed $raw): void
+            public function writeValue(array $rows, mixed $raw): void
             {
             }
         };
@@ -57,5 +57,13 @@ class AbstractAttributeTypeTest extends TestCase
 
         self::assertSame('text_line', $field->getType());
         self::assertSame([], $field->getOptions());
+    }
+
+    public function testSingleRowValueKeyByDefault(): void
+    {
+        self::assertSame(
+            [ProductAttributeValueInterface::DEFAULT_VALUE_KEY],
+            $this->type()->getValueKeys(new Attribute(new AttributeGroup()), 42),
+        );
     }
 }
