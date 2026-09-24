@@ -39,8 +39,6 @@ interface ProductAttributeValueInterface
 
     public function setText(?string $text): self;
 
-    public function getValue(): mixed;
-
     public function getProductDimensionContent(): ProductDimensionContentInterface;
 
     public function getAttribute(): AttributeInterface;

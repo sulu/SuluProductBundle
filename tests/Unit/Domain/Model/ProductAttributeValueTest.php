@@ -43,7 +43,6 @@ class ProductAttributeValueTest extends TestCase
         $this->assertNull($productAttributeValue->getNumber());
         $this->assertNull($productAttributeValue->getText());
         $this->assertNull($productAttributeValue->getAttributeOption());
-        $this->assertNull($productAttributeValue->getValue());
     }
 
     public function testConstructorAssignsValueKey(): void
@@ -103,33 +102,6 @@ class ProductAttributeValueTest extends TestCase
         $productAttributeValue->setAttributeOption(null);
         $this->assertNull($productAttributeValue->getAttributeOption());
         $this->assertNull($productAttributeValue->getAttributeOptionKey());
-    }
-
-    public function testGetValuePrefersAttributeOptionKey(): void
-    {
-        $attribute = new Attribute(new AttributeGroup());
-        $productAttributeValue = new ProductAttributeValue(new ProductDimensionContent(new Product()), $attribute, 'color', new AttributeOption($attribute, 'red'));
-        $productAttributeValue->setNumber(1.0);
-        $productAttributeValue->setText('text');
-
-        $this->assertSame('red', $productAttributeValue->getValue());
-    }
-
-    public function testGetValueFallsBackToNumber(): void
-    {
-        $productAttributeValue = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'weight');
-        $productAttributeValue->setNumber(2.5);
-        $productAttributeValue->setText('text');
-
-        $this->assertSame(2.5, $productAttributeValue->getValue());
-    }
-
-    public function testGetValueFallsBackToText(): void
-    {
-        $productAttributeValue = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'description');
-        $productAttributeValue->setText('Hello');
-
-        $this->assertSame('Hello', $productAttributeValue->getValue());
     }
 
     public function testGetIdReturnsDoctrineGeneratedId(): void

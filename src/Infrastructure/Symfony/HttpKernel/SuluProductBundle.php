@@ -19,6 +19,7 @@ use Sulu\Bundle\PersistenceBundle\PersistenceBundleTrait;
 use Sulu\Content\Infrastructure\Sulu\Preview\ContentObjectProvider;
 use Sulu\Product\Application\AttributeType\AttributeTypeInterface;
 use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
+use Sulu\Product\Application\AttributeType\AttributeValueViewFactory;
 use Sulu\Product\Application\AttributeType\DateAttributeType;
 use Sulu\Product\Application\AttributeType\NumberAttributeType;
 use Sulu\Product\Application\AttributeType\OptionsAttributeType;
@@ -665,6 +666,10 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('translator'),
             ]);
 
+        $services->set('sulu_product.attribute_value_view_factory')
+            ->class(AttributeValueViewFactory::class)
+            ->args([new Reference('sulu_product.attribute_type_registry')]);
+
         $services->set('sulu_product.attribute_type_registry')
             ->class(AttributeTypeRegistry::class)
             ->args([
@@ -1035,6 +1040,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.product_repository'),
                 new Reference('sulu_product.product_parent_content_loader'),
                 new Reference('sulu_http_cache.reference_store'),
+                new Reference('sulu_product.attribute_value_view_factory'),
                 '%sulu_product.variants.properties%',
             ])
             ->tag('sulu_content.content_resolver');
