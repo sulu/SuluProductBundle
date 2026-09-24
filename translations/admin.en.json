@@ -23,6 +23,7 @@
     "sulu_product.type_text": "Text",
     "sulu_product.type_options": "Options",
     "sulu_product.type_date": "Date",
+    "sulu_product.type_range": "Range",
     "sulu_product.option": "Option",
     "sulu_product.product": "Product",
     "sulu_product.product_type": "Type",
