@@ -87,8 +87,8 @@ A product without variants resolves as itself, with `product.url` and without `v
 as itself, without its product's content.
 
 `product.attributes` maps each attribute key to its `attribute` and its `value`. The value has the
-shape the admin API uses: a number, a text, a `Y-m-d` date or an option key, however many rows the
-attribute's type stores it in:
+shape the admin API uses, however many rows the attribute's type stores it in: a number, a text, a
+`Y-m-d` date, an option key or a range's `{from, to}`:
 
 ```twig
 {{ product.attributes.weight.value }}
@@ -206,6 +206,22 @@ Nested fields need an adapter that resolves a dotted path, such as Elasticsearch
 memory adapter does not.
 
 Sulu's own site search needs none of this: it finds products next to pages and articles.
+
+## Range attributes
+
+An attribute of type "range" holds two numbers, `from` and `to`, for example an operating
+temperature of -20 to 60 °C. The admin API reads and writes it as `{"from": -20, "to": 60}` under
+the attribute id; both bounds are set or none, and `from` may not exceed `to`. The attribute's
+unit, `min`, `max` and `step` apply to both bounds.
+
+In the website, `product.attributes.<key>.value` is `{from: …, to: …}` and the formatted value
+`from – to`. A display format places the bounds with `%from%` and `%to%`; `%value%` stands for
+`from – to`:
+
+```
+%value% %unit%                        -> -20 – 60 °C
+from %from% %unit% up to %to% %unit%  -> from 100 V up to 240 V
+```
 
 ## Association form overrides
 

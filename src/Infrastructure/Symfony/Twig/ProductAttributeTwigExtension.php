@@ -136,7 +136,7 @@ class ProductAttributeTwigExtension extends AbstractExtension
     }
 
     /**
-     * The value as displayed: option name, text or number with its display format, date in its display
+     * The value as displayed: option name, text, number or range with its display format, date in its display
      * format or the locale's default.
      * Without a locale the request's; null for an empty value or without any locale.
      */
@@ -155,6 +155,7 @@ class ProductAttributeTwigExtension extends AbstractExtension
             AttributeInterface::TYPE_OPTIONS => $this->formatOption($attribute, $value, $locale),
             AttributeInterface::TYPE_TEXT, AttributeInterface::TYPE_NUMBER => $this->applyDisplayFormat($attribute, $value),
             AttributeInterface::TYPE_DATE => $this->formatDate($attribute, $value, $locale),
+            AttributeInterface::TYPE_RANGE => $this->formatRange($attribute, $value),
             default => null,
         };
     }
@@ -168,8 +169,27 @@ class ProductAttributeTwigExtension extends AbstractExtension
         return $attribute->getOption($optionKey)?->getTranslation($locale)?->getName() ?? $optionKey;
     }
 
-    /** An editor can set a unit and a display format per attribute; without them the value renders bare. */
-    private function applyDisplayFormat(AttributeInterface $attribute, mixed $value): ?string
+    /**
+     * A range renders as "from – to"; its display format may also place each bound on its own.
+     */
+    private function formatRange(AttributeInterface $attribute, mixed $range): ?string
+    {
+        $from = \is_array($range) ? $range['from'] ?? null : null;
+        $to = \is_array($range) ? $range['to'] ?? null : null;
+
+        if (!\is_float($from) || !\is_float($to)) {
+            return null;
+        }
+
+        return $this->applyDisplayFormat($attribute, $from . ' – ' . $to, ['%from%' => (string) $from, '%to%' => (string) $to]);
+    }
+
+    /**
+     * An editor can set a unit and a display format per attribute; without them the value renders bare.
+     *
+     * @param array<string, string> $placeholders further placeholders of the type, e.g. a range's bounds
+     */
+    private function applyDisplayFormat(AttributeInterface $attribute, mixed $value, array $placeholders = []): ?string
     {
         if (!\is_string($value) && !\is_int($value) && !\is_float($value) || '' === $value) {
             return null;
@@ -185,7 +205,9 @@ class ProductAttributeTwigExtension extends AbstractExtension
         $unitKey = $config['unit'] ?? null;
         $unit = \is_string($unitKey) ? $this->measurementRegistry->findUnit($unitKey) : null;
 
-        return \trim(\str_replace(['%value%', '%unit%'], [(string) $value, $unit?->getSymbol() ?? ''], $format));
+        $placeholders = ['%value%' => (string) $value, '%unit%' => $unit?->getSymbol() ?? ''] + $placeholders;
+
+        return \trim(\str_replace(\array_keys($placeholders), \array_values($placeholders), $format));
     }
 
     /**
