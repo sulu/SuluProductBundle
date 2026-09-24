@@ -15,6 +15,7 @@ namespace Sulu\Product\Tests\Functional\Integration;
 
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Model\AttributeInterface;
@@ -221,6 +222,32 @@ class ProductControllerTest extends SuluTestCase
             $option->addTranslation(new AttributeOptionTranslation($option, 'en', $name));
             $attribute->addOption($option);
         }
+        $attributeRepository->save($attribute);
+
+        $em->flush();
+
+        return $attribute->getId();
+    }
+
+    private function createRangeAttribute(): int
+    {
+        $container = self::getContainer();
+
+        /** @var AttributeGroupRepositoryInterface $groupRepository */
+        $groupRepository = $container->get(AttributeGroupRepositoryInterface::class);
+        /** @var AttributeRepositoryInterface $attributeRepository */
+        $attributeRepository = $container->get(AttributeRepositoryInterface::class);
+        /** @var EntityManagerInterface $em */
+        $em = $container->get('doctrine.orm.entity_manager');
+
+        $group = $groupRepository->create();
+        $groupRepository->save($group);
+
+        $attribute = $attributeRepository->create($group);
+        $attribute->setKey('operating_temperature');
+        $attribute->setType(AttributeInterface::TYPE_RANGE);
+        $attribute->setConfig(['unit' => 'CELSIUS']);
+        $attribute->addTranslation(new AttributeTranslation($attribute, 'en', 'Operating temperature'));
         $attributeRepository->save($attribute);
 
         $em->flush();
@@ -595,6 +622,121 @@ class ProductControllerTest extends SuluTestCase
 
         $this->assertSame('navy', $this->getStoredOptionKey($id, $attributeId, DimensionContentInterface::STAGE_DRAFT));
         $this->assertSame('navy', $this->getStoredOptionKey($id, $attributeId, DimensionContentInterface::STAGE_LIVE));
+    }
+
+    public function testRangeAttributeValueIsStoredPublishedAndCleared(): void
+    {
+        self::purgeDatabase();
+        $attributeId = $this->createRangeAttribute();
+        $familyId = $this->createProductFamily($attributeId, false);
+        $id = $this->createProduct($familyId);
+
+        $this->putAttributes($id, 'en', [$attributeId => ['from' => -20, 'to' => '60.5']]);
+
+        $this->assertEquals(['from' => -20, 'to' => 60.5], $this->getAttributeValue($id, 'en', $attributeId));
+
+        $this->client->request('POST', '/admin/api/products/' . $id . '.json?locale=en&action=publish');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        /** @var EntityManagerInterface $em */
+        $em = self::getContainer()->get('doctrine.orm.entity_manager');
+        $em->clear();
+
+        $this->assertSame(['from' => -20.0, 'to' => 60.5], $this->getStoredRange($id, $attributeId, DimensionContentInterface::STAGE_LIVE));
+
+        $this->putAttributes($id, 'en', [$attributeId => ['from' => null, 'to' => null]]);
+
+        $this->assertNull($this->getAttributeValue($id, 'en', $attributeId));
+        $this->assertNull($this->getStoredRange($id, $attributeId, DimensionContentInterface::STAGE_DRAFT));
+    }
+
+    /**
+     * @param array<string, mixed> $range
+     */
+    #[DataProvider('provideInvalidRanges')]
+    public function testPutWithInvalidRangeReturns400(array $range): void
+    {
+        self::purgeDatabase();
+        $attributeId = $this->createRangeAttribute();
+        $familyId = $this->createProductFamily($attributeId, false);
+        $id = $this->createProduct($familyId);
+        $this->putAttributes($id, 'en', [$attributeId => ['from' => 1, 'to' => 2]]);
+
+        $this->client->request(
+            'PUT',
+            '/admin/api/products/' . $id . '.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode(['locale' => 'en', 'attributes' => [$attributeId => $range]]) ?: null,
+        );
+
+        $this->assertHttpStatusCode(400, $this->client->getResponse());
+        $this->assertEquals(['from' => 1, 'to' => 2], $this->getAttributeValue($id, 'en', $attributeId));
+    }
+
+    /**
+     * @return iterable<string, array{array<string, mixed>}>
+     */
+    public static function provideInvalidRanges(): iterable
+    {
+        yield 'from exceeds to' => [['from' => 60, 'to' => -20]];
+        yield 'half filled' => [['from' => 1, 'to' => null]];
+    }
+
+    public function testPostWithMissingRequiredRangeReturns422(): void
+    {
+        self::purgeDatabase();
+        $attributeId = $this->createRangeAttribute();
+        $familyId = $this->createProductFamily($attributeId);
+
+        $this->client->request(
+            'POST',
+            '/admin/api/products.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'title' => 'Sensor',
+                'url' => '/sensor',
+                'productFamily' => $familyId,
+                'type' => ProductInterface::TYPE_PRODUCT,
+                'attributes' => [$attributeId => ['from' => null, 'to' => null]],
+            ]) ?: null,
+        );
+
+        $this->assertHttpStatusCode(422, $this->client->getResponse());
+    }
+
+    /**
+     * @return array<string, float|null>|null the stored bounds by value key
+     */
+    private function getStoredRange(string $id, int $attributeId, string $stage): ?array
+    {
+        /** @var EntityManagerInterface $em */
+        $em = self::getContainer()->get('doctrine.orm.entity_manager');
+
+        /** @var list<array{valueKey: string, number: float|null}> $rows */
+        $rows = $em->createQueryBuilder()
+            ->select('attributeValue.valueKey', 'attributeValue.number')
+            ->from(ProductAttributeValue::class, 'attributeValue')
+            ->innerJoin('attributeValue.productDimensionContent', 'dimensionContent')
+            ->innerJoin('dimensionContent.product', 'product')
+            ->where('product.uuid = :uuid')
+            ->andWhere('dimensionContent.stage = :stage')
+            ->andWhere('dimensionContent.locale IS NULL')
+            ->andWhere('dimensionContent.version = :version')
+            ->andWhere('IDENTITY(attributeValue.attribute) = :attributeId')
+            ->orderBy('attributeValue.valueKey')
+            ->setParameter('uuid', $id)
+            ->setParameter('stage', $stage)
+            ->setParameter('version', DimensionContentInterface::CURRENT_VERSION)
+            ->setParameter('attributeId', $attributeId)
+            ->getQuery()
+            ->getArrayResult();
+
+        return [] === $rows ? null : \array_column($rows, 'number', 'valueKey');
     }
 
     private function getStoredOptionKey(string $id, int $attributeId, string $stage): ?string

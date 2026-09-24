@@ -14,9 +14,9 @@ declare(strict_types=1);
 namespace Sulu\Product\Infrastructure\Symfony\Twig;
 
 use Sulu\Component\Webspace\Analyzer\RequestAnalyzerInterface;
+use Sulu\Product\Application\AttributeType\AttributeValueView;
 use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Model\AttributeInterface;
-use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
@@ -54,18 +54,18 @@ class ProductAttributeTwigExtension extends AbstractExtension
      * Combines a product's attribute values with those of one of its variants, keyed by attribute
      * key; a variant's value wins over the product's.
      *
-     * @param iterable<ProductAttributeValueInterface> $productAttributes
-     * @param iterable<ProductAttributeValueInterface> $variantAttributes
+     * @param iterable<AttributeValueView> $productAttributes
+     * @param iterable<AttributeValueView> $variantAttributes
      *
-     * @return array<string, ProductAttributeValueInterface>
+     * @return array<string, AttributeValueView>
      */
     public function mergeAttributes(iterable $productAttributes, iterable $variantAttributes = []): array
     {
         $merged = [];
 
         foreach ([$productAttributes, $variantAttributes] as $attributes) {
-            foreach ($attributes as $value) {
-                $merged[$value->getAttribute()->getKey()] = $value;
+            foreach ($attributes as $attributeValue) {
+                $merged[$attributeValue->getKey()] = $attributeValue;
             }
         }
 
@@ -73,11 +73,11 @@ class ProductAttributeTwigExtension extends AbstractExtension
     }
 
     /**
-     * @param iterable<ProductAttributeValueInterface> $productAttributeValues keys are ignored; re-keyed by attribute key
+     * @param iterable<AttributeValueView> $attributeValues keys are ignored; re-keyed by attribute key
      *
      * @return list<array{key: string, label: string, attributes: array<string, ResolvedAttribute>}>
      */
-    public function groupAttributes(iterable $productAttributeValues, ?string $locale = null): array
+    public function groupAttributes(iterable $attributeValues, ?string $locale = null): array
     {
         $locale ??= $this->requestAnalyzer->getCurrentLocalization()?->getLocale();
 
@@ -88,9 +88,9 @@ class ProductAttributeTwigExtension extends AbstractExtension
         /** @var array<string, array{key: string, label: string, attributes: array<string, ResolvedAttribute>}> $groups */
         $groups = [];
 
-        foreach ($productAttributeValues as $productAttributeValue) {
-            $attribute = $productAttributeValue->getAttribute();
-            $formatted = $this->formatValue($productAttributeValue, $locale);
+        foreach ($attributeValues as $attributeValue) {
+            $attribute = $attributeValue->getAttribute();
+            $formatted = $this->formatValue($attributeValue, $locale);
 
             if (null === $formatted || '' === $formatted) {
                 continue;
@@ -107,9 +107,9 @@ class ProductAttributeTwigExtension extends AbstractExtension
 
             $groups[$groupKey]['attributes'][$attribute->getKey()] = [
                 'key' => $attribute->getKey(),
-                'label' => $attribute->getTranslation($locale)?->getName() ?? $productAttributeValue->getAttributeKey(),
+                'label' => $attribute->getTranslation($locale)?->getName() ?? $attribute->getKey(),
                 'type' => $attribute->getType(),
-                'value' => $productAttributeValue->getValue(),
+                'value' => $attributeValue->getValue(),
                 'formattedValue' => $formatted,
                 'position' => $attribute->getPosition(),
                 'group' => [
@@ -136,11 +136,11 @@ class ProductAttributeTwigExtension extends AbstractExtension
     }
 
     /**
-     * The value as displayed: option name, text or number with its display format, date in its display
+     * The value as displayed: option name, text, number or range with its display format, date in its display
      * format or the locale's default.
      * Without a locale the request's; null for an empty value or without any locale.
      */
-    public function formatValue(ProductAttributeValueInterface $productAttributeValue, ?string $locale = null): ?string
+    public function formatValue(AttributeValueView $attributeValue, ?string $locale = null): ?string
     {
         $locale ??= $this->requestAnalyzer->getCurrentLocalization()?->getLocale();
 
@@ -148,22 +148,50 @@ class ProductAttributeTwigExtension extends AbstractExtension
             return null;
         }
 
-        $attribute = $productAttributeValue->getAttribute();
+        $attribute = $attributeValue->getAttribute();
+        $value = $attributeValue->getValue();
 
         return match ($attribute->getType()) {
-            AttributeInterface::TYPE_OPTIONS => $productAttributeValue->getAttributeOption()?->getTranslation($locale)?->getName()
-                ?? $productAttributeValue->getAttributeOptionKey(),
-            AttributeInterface::TYPE_TEXT => $this->applyDisplayFormat($attribute, $productAttributeValue->getText()),
-            AttributeInterface::TYPE_NUMBER => $this->applyDisplayFormat($attribute, $productAttributeValue->getNumber()),
-            AttributeInterface::TYPE_DATE => $this->formatDate($attribute, $productAttributeValue->getNumber(), $locale),
+            AttributeInterface::TYPE_OPTIONS => $this->formatOption($attribute, $value, $locale),
+            AttributeInterface::TYPE_TEXT, AttributeInterface::TYPE_NUMBER => $this->applyDisplayFormat($attribute, $value),
+            AttributeInterface::TYPE_DATE => $this->formatDate($attribute, $value, $locale),
+            AttributeInterface::TYPE_RANGE => $this->formatRange($attribute, $value),
             default => null,
         };
     }
 
-    /** An editor can set a unit and a display format per attribute; without them the value renders bare. */
-    private function applyDisplayFormat(AttributeInterface $attribute, string|float|null $value): ?string
+    private function formatOption(AttributeInterface $attribute, mixed $optionKey, string $locale): ?string
     {
-        if (null === $value || '' === $value) {
+        if (!\is_string($optionKey)) {
+            return null;
+        }
+
+        return $attribute->getOption($optionKey)?->getTranslation($locale)?->getName() ?? $optionKey;
+    }
+
+    /**
+     * A range renders as "from – to"; its display format may also place each bound on its own.
+     */
+    private function formatRange(AttributeInterface $attribute, mixed $range): ?string
+    {
+        $from = \is_array($range) ? $range['from'] ?? null : null;
+        $to = \is_array($range) ? $range['to'] ?? null : null;
+
+        if (!\is_float($from) || !\is_float($to)) {
+            return null;
+        }
+
+        return $this->applyDisplayFormat($attribute, $from . ' – ' . $to, ['%from%' => (string) $from, '%to%' => (string) $to]);
+    }
+
+    /**
+     * An editor can set a unit and a display format per attribute; without them the value renders bare.
+     *
+     * @param array<string, string> $placeholders further placeholders of the type, e.g. a range's bounds
+     */
+    private function applyDisplayFormat(AttributeInterface $attribute, mixed $value, array $placeholders = []): ?string
+    {
+        if (!\is_string($value) && !\is_int($value) && !\is_float($value) || '' === $value) {
             return null;
         }
 
@@ -177,7 +205,9 @@ class ProductAttributeTwigExtension extends AbstractExtension
         $unitKey = $config['unit'] ?? null;
         $unit = \is_string($unitKey) ? $this->measurementRegistry->findUnit($unitKey) : null;
 
-        return \trim(\str_replace(['%value%', '%unit%'], [(string) $value, $unit?->getSymbol() ?? ''], $format));
+        $placeholders = ['%value%' => (string) $value, '%unit%' => $unit?->getSymbol() ?? ''] + $placeholders;
+
+        return \trim(\str_replace(\array_keys($placeholders), \array_values($placeholders), $format));
     }
 
     /**
@@ -185,9 +215,9 @@ class ProductAttributeTwigExtension extends AbstractExtension
      * without one the locale's medium date, because a bare `05.03.2024` names a different month elsewhere.
      * Rendered in UTC, because a date is stored as midnight UTC.
      */
-    private function formatDate(AttributeInterface $attribute, ?float $timestamp, string $locale): ?string
+    private function formatDate(AttributeInterface $attribute, mixed $date, string $locale): ?string
     {
-        if (null === $timestamp) {
+        if (!\is_string($date)) {
             return null;
         }
 
@@ -202,6 +232,6 @@ class ProductAttributeTwigExtension extends AbstractExtension
             \is_string($format) && '' !== $format ? $format : null,
         );
 
-        return $formatter->format(new \DateTimeImmutable('@' . (int) $timestamp)) ?: null;
+        return $formatter->format(new \DateTimeImmutable($date, new \DateTimeZone('UTC'))) ?: null;
     }
 }

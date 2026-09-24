@@ -17,6 +17,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use Sulu\Content\Application\ContentAggregator\ContentAggregatorInterface;
 use Sulu\Content\Application\ContentResolver\Value\ContentView;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Product\Application\AttributeType\AttributeValueView;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
@@ -27,7 +28,7 @@ use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductResolver;
 
-/** Values pass through untouched; formatting and grouping are the Twig filter's own test. */
+/** Values are read by their type, not formatted; formatting and grouping are the Twig filter's own test. */
 #[CoversClass(ProductResolver::class)]
 class ProductResolverAttributesTest extends ProductResolverTestCase
 {
@@ -55,8 +56,8 @@ class ProductResolverAttributesTest extends ProductResolverTestCase
         $attributes = $this->resolveAttributes($content);
 
         self::assertSame(['housing', 'weight'], \array_keys($attributes));
-        self::assertContainsOnlyInstancesOf(ProductAttributeValue::class, $attributes);
-        self::assertSame('48 g', $attributes['weight']->getText());
+        self::assertContainsOnlyInstancesOf(AttributeValueView::class, $attributes);
+        self::assertSame('48 g', $attributes['weight']->getValue());
     }
 
     public function testPassesEveryValueThroughWithoutFormatting(): void
@@ -151,14 +152,14 @@ class ProductResolverAttributesTest extends ProductResolverTestCase
     }
 
     /**
-     * @return array<string, ProductAttributeValue>
+     * @return array<string, AttributeValueView>
      */
     private function resolveAttributes(ProductDimensionContent $content, ?ProductResolver $resolver = null): array
     {
         $view = $this->resolveContent($content, null, $resolver)['attributes'];
         self::assertInstanceOf(ContentView::class, $view);
 
-        /** @var array<string, ProductAttributeValue> $attributes */
+        /** @var array<string, AttributeValueView> $attributes */
         $attributes = $view->getContent();
 
         return $attributes;

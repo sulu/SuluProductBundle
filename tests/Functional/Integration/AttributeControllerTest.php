@@ -783,6 +783,45 @@ class AttributeControllerTest extends SuluTestCase
         $this->assertHttpStatusCode(400, $this->client->getResponse());
     }
 
+    public function testPostRangeKeepsUnitAndBounds(): void
+    {
+        self::purgeDatabase();
+        $groupId = $this->createGroup();
+
+        $this->client->request(
+            'POST',
+            '/admin/api/attributes.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'key' => 'operating-temperature',
+                'name' => 'Operating temperature',
+                'type' => 'range',
+                'group' => $groupId,
+                'measurementFamily' => 'temperature',
+                'config' => ['unit' => 'CELSIUS', 'min' => -50, 'max' => 150, 'step' => 1],
+            ]) ?: null,
+        );
+        $postResponse = $this->client->getResponse();
+        $this->assertHttpStatusCode(201, $postResponse);
+        $postData = \json_decode((string) $postResponse->getContent(), true);
+        $this->assertIsArray($postData);
+        $id = $postData['id'];
+        $this->assertIsString($id);
+
+        $this->client->request('GET', '/admin/api/attributes/' . $id . '.json?locale=en');
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(200, $response);
+
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertSame('range', $data['type']);
+        $this->assertSame('temperature', $data['measurementFamily']);
+        $this->assertEquals(['unit' => 'CELSIUS', 'min' => -50, 'max' => 150, 'step' => 1], $data['config']);
+    }
+
     public function testGetNotFound(): void
     {
         $this->client->request('GET', '/admin/api/attributes/non-existent-uuid.json?locale=en');

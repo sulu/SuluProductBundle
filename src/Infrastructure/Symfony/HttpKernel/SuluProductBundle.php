@@ -19,9 +19,11 @@ use Sulu\Bundle\PersistenceBundle\PersistenceBundleTrait;
 use Sulu\Content\Infrastructure\Sulu\Preview\ContentObjectProvider;
 use Sulu\Product\Application\AttributeType\AttributeTypeInterface;
 use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
+use Sulu\Product\Application\AttributeType\AttributeValueViewFactory;
 use Sulu\Product\Application\AttributeType\DateAttributeType;
 use Sulu\Product\Application\AttributeType\NumberAttributeType;
 use Sulu\Product\Application\AttributeType\OptionsAttributeType;
+use Sulu\Product\Application\AttributeType\RangeAttributeType;
 use Sulu\Product\Application\AttributeType\TextAttributeType;
 use Sulu\Product\Application\Mapper\AttributeMapper;
 use Sulu\Product\Application\Mapper\AttributeMapperInterface;
@@ -459,6 +461,10 @@ final class SuluProductBundle extends AbstractBundle
             ->class(OptionsAttributeType::class)
             ->tag('sulu_product.attribute_type');
 
+        $services->set('sulu_product.attribute_type_range')
+            ->class(RangeAttributeType::class)
+            ->tag('sulu_product.attribute_type');
+
         // Product mappers
         $services->set('sulu_product.product_content_mapper')
             ->class(ProductContentMapper::class)
@@ -664,6 +670,10 @@ final class SuluProductBundle extends AbstractBundle
                 tagged_iterator('sulu_product.attribute_type'),
                 new Reference('translator'),
             ]);
+
+        $services->set('sulu_product.attribute_value_view_factory')
+            ->class(AttributeValueViewFactory::class)
+            ->args([new Reference('sulu_product.attribute_type_registry')]);
 
         $services->set('sulu_product.attribute_type_registry')
             ->class(AttributeTypeRegistry::class)
@@ -1035,6 +1045,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.product_repository'),
                 new Reference('sulu_product.product_parent_content_loader'),
                 new Reference('sulu_http_cache.reference_store'),
+                new Reference('sulu_product.attribute_value_view_factory'),
                 '%sulu_product.variants.properties%',
             ])
             ->tag('sulu_content.content_resolver');

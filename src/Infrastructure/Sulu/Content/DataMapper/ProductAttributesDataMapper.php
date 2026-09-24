@@ -21,9 +21,13 @@ use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
+use Webmozart\Assert\Assert;
 
 class ProductAttributesDataMapper implements DataMapperInterface
 {
+    // Fits the 32 characters of the valueKey column.
+    private const VALUE_KEY_PATTERN = '/^[A-Za-z0-9_.-]{1,32}$/';
+
     public function __construct(
         private readonly AttributeTypeRegistry $attributeTypeRegistry,
     ) {
@@ -60,13 +64,12 @@ class ProductAttributesDataMapper implements DataMapperInterface
             $familyAttributes[$familyAttribute->getAttribute()->getId()] = $familyAttribute;
         }
 
-        /** @var array<int, ProductAttributeValueInterface> $allExisting */
+        /** @var array<int, array<string, ProductAttributeValueInterface>> $allExisting */
         $allExisting = [];
-        foreach ($unlocalizedDimensionContent->getAttributes() as $value) {
-            $allExisting[$value->getAttribute()->getId()] = $value;
-        }
-        foreach ($localizedDimensionContent->getAttributes() as $value) {
-            $allExisting[$value->getAttribute()->getId()] = $value;
+        foreach ([$unlocalizedDimensionContent, $localizedDimensionContent] as $dimensionContent) {
+            foreach ($dimensionContent->getAttributes() as $row) {
+                $allExisting[$row->getAttribute()->getId()][$row->getValueKey()] = $row;
+            }
         }
 
         foreach ($submitted as $attributeId => $raw) {
@@ -81,34 +84,19 @@ class ProductAttributesDataMapper implements DataMapperInterface
                 continue;
             }
 
-            $attribute = $familyAttribute->getAttribute();
-            $targetDimensionContent = $attribute->isLocalized()
+            $targetDimensionContent = $familyAttribute->getAttribute()->isLocalized()
                 ? $localizedDimensionContent
                 : $unlocalizedDimensionContent;
-            $type = $this->attributeTypeRegistry->get($attribute->getType());
-            $existing = $allExisting[$attributeId] ?? null;
+            $existingRows = $allExisting[$attributeId] ?? [];
+            unset($allExisting[$attributeId]);
 
             if ($this->isEmpty($raw)) {
-                if (null !== $existing) {
-                    $targetDimensionContent->removeAttribute($existing);
-                    unset($allExisting[$attributeId]);
-                }
+                $this->removeRows($targetDimensionContent, $existingRows);
 
                 continue;
             }
 
-            $isNew = null === $existing;
-            if (null === $existing) {
-                $existing = new ProductAttributeValue($targetDimensionContent, $attribute, $attribute->getKey());
-                $existing->setProductFamilyAttribute($familyAttribute);
-            }
-
-            $type->writeValue($existing, $raw);
-
-            if ($isNew) {
-                $targetDimensionContent->addAttribute($existing);
-                $allExisting[$attributeId] = $existing;
-            }
+            $allExisting[$attributeId] = $this->writeRows($familyAttribute, $existingRows, $raw, $targetDimensionContent);
         }
 
         $productType = $unlocalizedDimensionContent->getResource()->getType();
@@ -117,12 +105,65 @@ class ProductAttributesDataMapper implements DataMapperInterface
     }
 
     /**
+     * Keeps the rows the type names for the value, creates the missing ones and removes the rest.
+     * New rows join the dimension content only once the type accepted the value.
+     *
+     * @param array<string, ProductAttributeValueInterface> $existingRows
+     *
+     * @return array<string, ProductAttributeValueInterface>
+     */
+    private function writeRows(
+        ProductFamilyAttributeInterface $familyAttribute,
+        array $existingRows,
+        mixed $raw,
+        ProductDimensionContentInterface $targetDimensionContent,
+    ): array {
+        $attribute = $familyAttribute->getAttribute();
+        $type = $this->attributeTypeRegistry->get($attribute->getType());
+
+        $rows = [];
+        $newRows = [];
+        foreach ($type->getValueKeys($attribute, $raw) as $valueKey) {
+            Assert::regex($valueKey, self::VALUE_KEY_PATTERN, \sprintf('Attribute type "%s" named the invalid value key "%s".', $type->getKey(), $valueKey));
+
+            $row = $existingRows[$valueKey] ?? null;
+            if (null === $row) {
+                $row = new ProductAttributeValue($targetDimensionContent, $attribute, $attribute->getKey(), valueKey: $valueKey);
+                $row->setProductFamilyAttribute($familyAttribute);
+                $newRows[] = $row;
+            }
+
+            $rows[$valueKey] = $row;
+        }
+
+        $type->writeValue($rows, $raw);
+
+        foreach ($newRows as $row) {
+            $targetDimensionContent->addAttribute($row);
+        }
+
+        $this->removeRows($targetDimensionContent, \array_diff_key($existingRows, $rows));
+
+        return $rows;
+    }
+
+    /**
+     * @param array<string, ProductAttributeValueInterface> $rows
+     */
+    private function removeRows(ProductDimensionContentInterface $dimensionContent, array $rows): void
+    {
+        foreach ($rows as $row) {
+            $dimensionContent->removeAttribute($row);
+        }
+    }
+
+    /**
      * @param array<int, ProductFamilyAttributeInterface> $familyAttributes
-     * @param array<int, ProductAttributeValueInterface> $values
+     * @param array<int, array<string, ProductAttributeValueInterface>> $rowsByAttribute
      *
      * @throws RequiredProductAttributeMissingException
      */
-    private function assertRequiredSatisfied(array $familyAttributes, array $values, string $productType): void
+    private function assertRequiredSatisfied(array $familyAttributes, array $rowsByAttribute, string $productType): void
     {
         foreach ($familyAttributes as $attributeId => $familyAttribute) {
             if (!$familyAttribute->isRequired()) {
@@ -133,15 +174,23 @@ class ProductAttributesDataMapper implements DataMapperInterface
                 continue;
             }
 
-            $value = $values[$attributeId] ?? null;
-            if (null === $value || $this->isEmpty($value->getValue())) {
-                throw new RequiredProductAttributeMissingException($familyAttribute->getAttribute()->getKey());
+            $attribute = $familyAttribute->getAttribute();
+            $value = $this->attributeTypeRegistry->get($attribute->getType())->readValue($rowsByAttribute[$attributeId] ?? []);
+            if ($this->isEmpty($value)) {
+                throw new RequiredProductAttributeMissingException($attribute->getKey());
             }
         }
     }
 
+    /**
+     * A structured value like a range or a selection is empty when all of its parts are.
+     */
     private function isEmpty(mixed $raw): bool
     {
+        if (\is_array($raw)) {
+            return [] === \array_filter($raw, fn (mixed $part): bool => !$this->isEmpty($part));
+        }
+
         return null === $raw || '' === $raw;
     }
 }

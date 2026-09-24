@@ -135,6 +135,41 @@ class ProductAttributesMetadataTest extends SuluTestCase
         }
     }
 
+    public function testRangeAttributeIsANumberRangeField(): void
+    {
+        $temperature = $this->createAttribute(
+            'temperature',
+            'Operating temperature',
+            'Environment',
+            ['unit' => 'CELSIUS', 'min' => -50, 'max' => 150],
+            AttributeInterface::TYPE_RANGE,
+        );
+
+        $this->client->request('POST', '/admin/api/product-families.json?locale=en', [], [], [], \json_encode([
+            'locale' => 'en',
+            'name' => 'Sensors',
+            'description' => null,
+            'attributes' => [['id' => $temperature, 'required' => false, 'variantSpecific' => false]],
+        ]) ?: null);
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+        /** @var array{id: string} $family */
+        $family = \json_decode((string) $this->client->getResponse()->getContent(), true);
+
+        $this->client->request('GET', '/admin/metadata/form/product_attributes?productFamily=' . $family['id']);
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+        /** @var array{form: array<string, array{items: array<string, array{type: string, label: string, options: array<string, array{value: mixed}>}>}>} $attributesForm */
+        $attributesForm = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $section = \reset($attributesForm['form']);
+        $this->assertIsArray($section);
+        $this->assertCount(1, $section['items']);
+
+        $field = \reset($section['items']);
+        $this->assertSame('number_range', $field['type']);
+        $this->assertSame('Operating temperature (°C)', $field['label']);
+        $this->assertSame('-50', $field['options']['min']['value']);
+        $this->assertSame('150', $field['options']['max']['value']);
+    }
+
     public function testMetadataWithoutSelectorIsEmpty(): void
     {
         $this->client->request('GET', '/admin/metadata/form/product_attributes');
@@ -147,8 +182,13 @@ class ProductAttributesMetadataTest extends SuluTestCase
     /**
      * @param array<string, mixed> $config
      */
-    private function createAttribute(string $key, string $name, string $groupName, array $config = []): string
-    {
+    private function createAttribute(
+        string $key,
+        string $name,
+        string $groupName,
+        array $config = [],
+        string $type = AttributeInterface::TYPE_TEXT,
+    ): string {
         $container = self::getContainer();
 
         /** @var AttributeGroupRepositoryInterface $groupRepository */
@@ -165,7 +205,7 @@ class ProductAttributesMetadataTest extends SuluTestCase
 
         $attribute = $attributeRepository->create($group);
         $attribute->setKey($key);
-        $attribute->setType(AttributeInterface::TYPE_TEXT);
+        $attribute->setType($type);
         $attribute->setConfig($config);
         $attribute->setDefaultLocale('en');
         $attribute->addTranslation(new AttributeTranslation($attribute, 'en', $name));

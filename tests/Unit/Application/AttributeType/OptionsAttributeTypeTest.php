@@ -47,23 +47,23 @@ class OptionsAttributeTypeTest extends TestCase
         $attribute = $this->createAttributeWithOptions('red');
         $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), $attribute, 'k');
 
-        $type->writeValue($value, 'red');
+        $type->writeValue(['value' => $value], 'red');
 
         self::assertSame($attribute->getOption('red'), $value->getAttributeOption());
-        self::assertSame('red', $type->readValue($value));
+        self::assertSame('red', $type->readValue(['value' => $value]));
     }
 
     public function testWriteEmptyValueClearsOption(): void
     {
         $type = new OptionsAttributeType();
         $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), $this->createAttributeWithOptions('red', 'green'), 'k');
-        $type->writeValue($value, 'red');
+        $type->writeValue(['value' => $value], 'red');
 
-        $type->writeValue($value, null);
+        $type->writeValue(['value' => $value], null);
         self::assertNull($value->getAttributeOption());
 
-        $type->writeValue($value, 'green');
-        $type->writeValue($value, '');
+        $type->writeValue(['value' => $value], 'green');
+        $type->writeValue(['value' => $value], '');
         self::assertNull($value->getAttributeOption());
     }
 
@@ -73,7 +73,7 @@ class OptionsAttributeTypeTest extends TestCase
 
         $this->expectException(\InvalidArgumentException::class);
 
-        (new OptionsAttributeType())->writeValue($value, 'blue');
+        (new OptionsAttributeType())->writeValue(['value' => $value], 'blue');
     }
 
     public function testConfigureFieldFallsBackToOptionKeyWithoutTranslation(): void

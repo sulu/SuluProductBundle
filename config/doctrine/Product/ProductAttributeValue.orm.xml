@@ -8,6 +8,9 @@
         </id>
 
         <field name="attributeKey" column="attributeKey" type="string" length="255" nullable="false"/>
+        <field name="valueKey" column="valueKey" type="string" length="32" nullable="false">
+            <options><option name="default">value</option></options>
+        </field>
         <field name="number" type="float" nullable="true"/>
         <field name="text" type="string" length="255" nullable="true"/>
 
@@ -37,6 +40,11 @@
             <join-column name="idProductFamilyAttributes" referenced-column-name="id"
                          nullable="true" on-delete="CASCADE"/>
         </many-to-one>
+
+        <unique-constraints>
+            <unique-constraint name="UNQ_pr_product_attribute_value"
+                               columns="productDimensionContentId,idAttributes,valueKey"/>
+        </unique-constraints>
 
         <indexes>
             <index name="IDX_pr_product_attributes_key" columns="attributeKey"/>

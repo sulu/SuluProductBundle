@@ -31,9 +31,9 @@ final class DateAttributeType extends AbstractAttributeType
         return 'product_attribute_date';
     }
 
-    public function readValue(ProductAttributeValueInterface $value): mixed
+    public function readValue(array $rows): mixed
     {
-        $timestamp = $value->getNumber();
+        $timestamp = ($rows[ProductAttributeValueInterface::DEFAULT_VALUE_KEY] ?? null)?->getNumber();
 
         if (null === $timestamp) {
             return null;
@@ -42,8 +42,10 @@ final class DateAttributeType extends AbstractAttributeType
         return (new \DateTimeImmutable('@' . (int) $timestamp))->format(self::FORMAT);
     }
 
-    public function writeValue(ProductAttributeValueInterface $value, mixed $raw): void
+    public function writeValue(array $rows, mixed $raw): void
     {
+        $value = $rows[ProductAttributeValueInterface::DEFAULT_VALUE_KEY];
+
         if (null === $raw || '' === $raw) {
             $value->setNumber(null);
 
