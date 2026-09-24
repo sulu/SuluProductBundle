@@ -20,6 +20,7 @@ use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeOption;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
+use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductFamilyAttribute;
@@ -36,12 +37,25 @@ class ProductAttributeValueTest extends TestCase
         $this->assertSame($pdc, $productAttributeValue->getProductDimensionContent());
         $this->assertSame($attribute, $productAttributeValue->getAttribute());
         $this->assertSame('color', $productAttributeValue->getAttributeKey());
+        $this->assertSame(ProductAttributeValueInterface::DEFAULT_VALUE_KEY, $productAttributeValue->getValueKey());
 
         $this->assertNull($productAttributeValue->getAttributeOptionKey());
         $this->assertNull($productAttributeValue->getNumber());
         $this->assertNull($productAttributeValue->getText());
         $this->assertNull($productAttributeValue->getAttributeOption());
         $this->assertNull($productAttributeValue->getValue());
+    }
+
+    public function testConstructorAssignsValueKey(): void
+    {
+        $productAttributeValue = new ProductAttributeValue(
+            new ProductDimensionContent(new Product()),
+            new Attribute(new AttributeGroup()),
+            'temperature',
+            valueKey: 'from',
+        );
+
+        $this->assertSame('from', $productAttributeValue->getValueKey());
     }
 
     public function testConstructorAssignsAttributeOption(): void
