@@ -18,7 +18,6 @@ use Sulu\Bundle\AdminBundle\Teaser\Provider\TeaserProviderInterface;
 use Sulu\Bundle\AdminBundle\Teaser\Teaser;
 use Sulu\Bundle\AdminBundle\Teaser\TeaserTagPropertyExtractor;
 use Sulu\Content\Application\ContentAggregator\ContentAggregatorInterface;
-use Sulu\Content\Application\ContentEnhancer\ContentEnhancerInterface;
 use Sulu\Content\Domain\Exception\ContentNotFoundException;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
@@ -32,7 +31,6 @@ class ProductTeaserProvider implements TeaserProviderInterface
     public function __construct(
         protected ProductRepositoryInterface $productRepository,
         protected ContentAggregatorInterface $contentAggregator,
-        protected ContentEnhancerInterface $contentEnhancer,
         protected TranslatorInterface $translator,
         protected TeaserTagPropertyExtractor $teaserTagPropertyExtractor,
     ) {
@@ -110,9 +108,6 @@ class ProductTeaserProvider implements TeaserProviderInterface
         if (null === $dimensionContent) {
             return null;
         }
-
-        /** @var ProductDimensionContentInterface $dimensionContent */
-        $dimensionContent = $this->contentEnhancer->enhance($dimensionContent);
 
         $url = $this->resolveUrl($dimensionContent);
         if (null === $url) {
