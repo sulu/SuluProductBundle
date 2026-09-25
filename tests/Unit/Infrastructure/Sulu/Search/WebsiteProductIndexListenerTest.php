@@ -118,8 +118,8 @@ class WebsiteProductIndexListenerTest extends TestCase
     }
 
     /**
-     * A variant document holds its parent's url, so removing the parent's translation reindexes
-     * the whole family in that locale.
+     * A variant document carries its parent's webspaces and shared values, so removing the parent's
+     * translation reindexes the whole family in that locale.
      */
     public function testTranslationRemovedReindexesParentAndVariantsInThatLocale(): void
     {

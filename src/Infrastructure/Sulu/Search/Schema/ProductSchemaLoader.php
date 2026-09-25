@@ -20,12 +20,12 @@ use CmsIg\Seal\Schema\Schema;
 use Doctrine\ORM\EntityManagerInterface;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeInterface;
-use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductDetailsReindexProviderEnhancer;
+use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductAttributesReindexProviderEnhancer as Enhancer;
 
 /**
- * Appends one field per number and date attribute to the product object field of the website
- * index; a date is stored in the number column. Text and options attributes need none, their
- * values go into the text values field.
+ * Adds the `product` object field to the website index: the family, the text values of the
+ * filterable options attributes, and one field per filterable number or date attribute; a date is
+ * stored in the number column.
  *
  * @internal
  */
@@ -47,31 +47,16 @@ final class ProductSchemaLoader implements LoaderInterface
         $schema = $this->inner->load();
 
         $index = $schema->indexes['website'] ?? null;
-        $product = $index?->fields[WebsiteProductDetailsReindexProviderEnhancer::FIELD] ?? null;
-        if (null === $index || !$product instanceof Field\ObjectField) {
+        if (null === $index) {
             return $schema;
         }
-
-        $numericValues = $product->fields[WebsiteProductDetailsReindexProviderEnhancer::NUMERIC_VALUES_FIELD] ?? null;
-        if (!$numericValues instanceof Field\ObjectField) {
-            return $schema;
-        }
-
-        $productFields = $product->fields;
-        $productFields[WebsiteProductDetailsReindexProviderEnhancer::NUMERIC_VALUES_FIELD] = new Field\ObjectField(
-            $numericValues->name,
-            \array_merge($this->loadNumericFields(), $numericValues->fields),
-            $numericValues->multiple,
-            $numericValues->options,
-        );
 
         $fields = $index->fields;
-        $fields[WebsiteProductDetailsReindexProviderEnhancer::FIELD] = new Field\ObjectField(
-            $product->name,
-            $productFields,
-            $product->multiple,
-            $product->options,
-        );
+        $fields[Enhancer::FIELD] = new Field\ObjectField(Enhancer::FIELD, [
+            Enhancer::PRODUCT_FAMILY_ID_FIELD => new Field\TextField(Enhancer::PRODUCT_FAMILY_ID_FIELD, searchable: false, filterable: true, facet: true),
+            Enhancer::TEXT_VALUES_FIELD => new Field\TextField(Enhancer::TEXT_VALUES_FIELD, multiple: true, searchable: false, filterable: true, facet: true),
+            Enhancer::NUMERIC_VALUES_FIELD => new Field\ObjectField(Enhancer::NUMERIC_VALUES_FIELD, $this->loadNumericFields()),
+        ]);
 
         $indexes = $schema->indexes;
         $indexes['website'] = new Index($index->name, $fields, $index->options);
@@ -89,6 +74,7 @@ final class ProductSchemaLoader implements LoaderInterface
             ->select('attribute.key AS key')
             ->from(Attribute::class, 'attribute')
             ->where('attribute.type IN (:types)')
+            ->andWhere('attribute.filterable = true')
             ->setParameter('types', self::NUMERIC_TYPES)
             ->orderBy('attribute.key', 'ASC')
             ->getQuery()
@@ -96,13 +82,7 @@ final class ProductSchemaLoader implements LoaderInterface
 
         $fields = [];
         foreach (\array_column($rows, 'key') as $attributeKey) {
-            $name = WebsiteProductDetailsReindexProviderEnhancer::numericField($attributeKey);
-
-            // A field name must start with a letter and hold word characters only.
-            if (1 !== \preg_match('/^[A-Za-z]\w*$/', $name)) {
-                continue;
-            }
-
+            $name = Enhancer::numericField($attributeKey);
             $fields[$name] = new Field\FloatField($name, multiple: true, searchable: false, filterable: true, facet: true);
         }
 

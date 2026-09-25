@@ -51,7 +51,7 @@ class ProductSchemaTest extends SuluTestCase
         $this->assertTrue($product->fields['attributes_text_values']->multiple);
     }
 
-    public function testOnlyNumberAndDateAttributesBecomeIndexFields(): void
+    public function testOnlyFilterableNumberAndDateAttributesBecomeIndexFields(): void
     {
         self::purgeDatabase();
         $container = self::getContainer();
@@ -65,10 +65,17 @@ class ProductSchemaTest extends SuluTestCase
 
         $group = $groupRepository->create();
         $groupRepository->save($group);
-        foreach ([['weight', AttributeInterface::TYPE_NUMBER], ['delivered', AttributeInterface::TYPE_DATE], ['colour', AttributeInterface::TYPE_OPTIONS], ['note', AttributeInterface::TYPE_TEXT]] as [$key, $type]) {
+        foreach ([
+            ['weight', AttributeInterface::TYPE_NUMBER, true],
+            ['delivered', AttributeInterface::TYPE_DATE, true],
+            ['length', AttributeInterface::TYPE_NUMBER, false],
+            ['colour', AttributeInterface::TYPE_OPTIONS, true],
+            ['note', AttributeInterface::TYPE_TEXT, false],
+        ] as [$key, $type, $filterable]) {
             $attribute = $attributeRepository->create($group);
             $attribute->setKey($key);
             $attribute->setType($type);
+            $attribute->setFilterable($filterable);
             $attributeRepository->save($attribute);
         }
         $entityManager->flush();
@@ -81,6 +88,7 @@ class ProductSchemaTest extends SuluTestCase
         $this->assertInstanceOf(Field\FloatField::class, $fields['weight']);
         $this->assertTrue($fields['weight']->filterable);
         $this->assertInstanceOf(Field\FloatField::class, $fields['delivered']);
+        $this->assertArrayNotHasKey('length', $fields, 'A number attribute with Filterable off gets no field.');
         $this->assertArrayNotHasKey('colour', $fields, 'An options attribute is filtered through the text values.');
         $this->assertArrayNotHasKey('note', $fields);
         $this->assertContains('product.attributes_numeric_values.weight', $index->filterableFields);
@@ -109,11 +117,20 @@ class ProductSchemaTest extends SuluTestCase
         $attribute = $attributeRepository->create($group);
         $attribute->setKey('weight');
         $attribute->setType(AttributeInterface::TYPE_NUMBER);
+        $attribute->setFilterable(true);
         $attributeRepository->save($attribute);
         $entityManager->flush();
 
         $fields = $this->numericFields($loader->load()->indexes['website']->fields);
         $this->assertInstanceOf(Field\FloatField::class, $fields['weight']);
+
+        $attribute->setFilterable(false);
+        $attributeRepository->save($attribute);
+        $entityManager->flush();
+
+        $this->assertArrayNotHasKey('weight', $this->numericFields($loader->load()->indexes['website']->fields));
+
+        $attribute->setFilterable(true);
 
         $attribute->setKey('mass');
         $attributeRepository->save($attribute);
@@ -130,7 +147,7 @@ class ProductSchemaTest extends SuluTestCase
         $this->assertArrayNotHasKey('mass', $fields);
     }
 
-    public function testKeyThatCannotBeAFieldNameGetsNoField(): void
+    public function testKeyStartingWithADigitIsPrefixed(): void
     {
         self::purgeDatabase();
         $this->createNumericAttribute('1st_size');
@@ -138,39 +155,24 @@ class ProductSchemaTest extends SuluTestCase
         /** @var LoaderInterface $loader */
         $loader = self::getContainer()->get('sulu_product.product_schema_loader');
 
-        $this->assertSame([], $this->numericFields($loader->load()->indexes['website']->fields), 'A field name must start with a letter.');
+        $this->assertSame(['a_1st_size'], \array_keys($this->numericFields($loader->load()->indexes['website']->fields)));
     }
 
-    public function testSchemaWithoutNumericValuesFieldIsReturnedUnchanged(): void
-    {
-        $original = new Schema(['website' => new Index('website', [
-            'id' => new Field\IdentifierField('id'),
-            'product' => new Field\ObjectField('product', [
-                'productFamilyId' => new Field\TextField('productFamilyId', searchable: false, filterable: true),
-            ]),
-        ])]);
-
-        $this->assertSame($original, $this->createLoader($original)->load());
-    }
-
-    public function testStaticFieldWinsOverNumericFieldOfSameName(): void
+    public function testProductFieldIsAddedToTheWebsiteIndex(): void
     {
         self::purgeDatabase();
-        $this->createNumericAttribute('weight');
 
-        $loader = $this->createLoader(new Schema([
-            'website' => new Index('website', $this->websiteFields([
-                'weight' => new Field\TextField('weight', searchable: false, filterable: true),
-            ])),
-        ]));
+        $original = new Schema(['website' => new Index('website', ['id' => new Field\IdentifierField('id')])]);
+        $index = $this->createLoader($original)->load()->indexes['website'];
 
-        $fields = $this->numericFields($loader->load()->indexes['website']->fields);
-        $this->assertInstanceOf(Field\TextField::class, $fields['weight']);
+        $this->assertArrayHasKey('id', $index->fields);
+        $this->assertSame([], $this->numericFields($index->fields));
+        $this->assertContains('product.productFamilyId', $index->filterableFields);
     }
 
-    public function testSchemaWithoutProductFieldIsReturnedUnchanged(): void
+    public function testSchemaWithoutWebsiteIndexIsReturnedUnchanged(): void
     {
-        $original = new Schema(['website' => new Index('website', ['id' => new Field\IdentifierField('id')])]);
+        $original = new Schema(['admin' => new Index('admin', ['id' => new Field\IdentifierField('id')])]);
 
         $this->assertSame($original, $this->createLoader($original)->load());
     }
@@ -209,24 +211,9 @@ class ProductSchemaTest extends SuluTestCase
         $attribute = $attributeRepository->create($group);
         $attribute->setKey($key);
         $attribute->setType(AttributeInterface::TYPE_NUMBER);
+        $attribute->setFilterable(true);
         $attributeRepository->save($attribute);
         $entityManager->flush();
-    }
-
-    /**
-     * @param array<string, Field\AbstractField> $numericFields
-     *
-     * @return array<string, Field\AbstractField>
-     */
-    private function websiteFields(array $numericFields = []): array
-    {
-        return [
-            'id' => new Field\IdentifierField('id'),
-            'product' => new Field\ObjectField('product', [
-                'attributes_text_values' => new Field\TextField('attributes_text_values', multiple: true, searchable: false, filterable: true, facet: true),
-                'attributes_numeric_values' => new Field\ObjectField('attributes_numeric_values', $numericFields),
-            ]),
-        ];
     }
 
     /**

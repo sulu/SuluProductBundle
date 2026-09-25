@@ -214,6 +214,29 @@ class WebsiteProductReindexContentEnhancerTest extends TestCase
         );
     }
 
+    public function testVisitAppendsToTheContentOfTheDocument(): void
+    {
+        $field = new FieldMetadata('line');
+        $field->setType('text_line');
+        $field->addTag($this->createTag(TagMetadata::SEARCH_FIELD_TAG));
+
+        $formMetadata = new FormMetadata();
+        $formMetadata->setKey('default');
+        $formMetadata->addItem($field);
+
+        $typedFormMetadata = new TypedFormMetadata();
+        $typedFormMetadata->addForm('default', $formMetadata);
+
+        $this->formMetadataProvider->getMetadata('product', 'en', [])->willReturn($typedFormMetadata);
+
+        $returnedData = $this->enhancer->enhanceDocument(
+            ['templateKey' => 'default', 'locale' => 'en', 'templateData' => ['line' => 'Template text']],
+            ['content' => ['NC3']],
+        );
+
+        $this->assertSame(['NC3', 'Template text'], $returnedData['content']);
+    }
+
     public function testVisitFiltersNonTextFieldTypes(): void
     {
         $titleField = new FieldMetadata('title');

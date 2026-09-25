@@ -28,7 +28,8 @@ class BasicWebsiteSearchTest extends SuluTestCase
 
         $this->assertArrayHasKey('website', $schema->indexes);
         $this->assertArrayNotHasKey('product', $schema->indexes['website']->fields);
-        $this->assertFalse($container->has('sulu_product.website_product_details_reindex_provider_enhancer'));
+        $this->assertTrue($container->has('sulu_product.website_product_details_reindex_provider_enhancer'));
+        $this->assertFalse($container->has('sulu_product.website_product_attributes_reindex_provider_enhancer'));
         $this->assertFalse($container->has('sulu_product.product_schema_loader'));
     }
 }

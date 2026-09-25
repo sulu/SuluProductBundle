@@ -62,6 +62,10 @@ class ProductReindexProviderQueryCountTest extends SuluTestCase
 
     private function assertQueryCountDoesNotGrow(string $providerId, string $index): void
     {
+        if (!self::getContainer()->has('doctrine.debug_data_holder')) {
+            $this->markTestSkipped('Counting queries needs the debug data holder of DoctrineBundle 2.7 or later.');
+        }
+
         self::purgeDatabase();
         $this->createAttributesAndFamily();
 
@@ -116,10 +120,16 @@ class ProductReindexProviderQueryCountTest extends SuluTestCase
             'note' => $this->createAttribute('note', 'Note', AttributeInterface::TYPE_TEXT, true),
         ];
 
+        /** @var AttributeRepositoryInterface $attributeRepository */
+        $attributeRepository = self::getContainer()->get(AttributeRepositoryInterface::class);
+
         $attributes = [];
         foreach ($this->attributeIds as $key => $attributeId) {
-            $attributes[$attributeId] = [
-                'enabled' => true,
+            $attribute = $attributeRepository->findOneBy(['id' => $attributeId]);
+            $this->assertNotNull($attribute);
+
+            $attributes[] = [
+                'id' => $attribute->getUuid(),
                 'required' => false,
                 'variantSpecific' => 'colour' === $key,
             ];
@@ -136,7 +146,7 @@ class ProductReindexProviderQueryCountTest extends SuluTestCase
 
     /**
      * A parent is an admin document and its variant a website document; the variant makes the
-     * website provider load the parent's webspaces, slug and shared values.
+     * website provider load the parent's webspaces and shared values.
      */
     private function createProductWithVariant(): void
     {
@@ -178,6 +188,9 @@ class ProductReindexProviderQueryCountTest extends SuluTestCase
         $this->assertHttpStatusCode(200, $this->client->getResponse());
 
         $this->client->request('POST', '/admin/api/products/' . $parentId . '.json?locale=en&action=publish');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        $this->client->request('POST', '/admin/api/products/' . $parentId . '/variants/' . $variantId . '.json?locale=en&action=publish');
         $this->assertHttpStatusCode(200, $this->client->getResponse());
     }
 
