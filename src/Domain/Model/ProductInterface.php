@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Domain\Model;
 
+use Doctrine\Common\Collections\Collection;
 use Sulu\Component\Persistence\Model\AuditableInterface;
 use Sulu\Content\Domain\Model\ContentRichEntityInterface;
 
@@ -51,6 +52,11 @@ interface ProductInterface extends AuditableInterface, ContentRichEntityInterfac
     public function getParent(): ?self;
 
     public function setParent(?self $parent): self;
+
+    /**
+     * @return Collection<int, ProductInterface>
+     */
+    public function getVariants(): Collection;
 
     /** Sort order among its siblings; the first variant is what a bare product URL shows. */
     public function getPosition(): int;

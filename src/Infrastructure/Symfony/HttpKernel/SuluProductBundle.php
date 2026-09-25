@@ -146,7 +146,10 @@ use Sulu\Product\Infrastructure\Sulu\Reference\ProductReferenceRefresher;
 use Sulu\Product\Infrastructure\Sulu\Route\ProductRouteDefaultsProvider;
 use Sulu\Product\Infrastructure\Sulu\Search\AdminProductIndexListener;
 use Sulu\Product\Infrastructure\Sulu\Search\AdminProductReindexProvider;
+use Sulu\Product\Infrastructure\Sulu\Search\Schema\ProductSchemaLoader;
 use Sulu\Product\Infrastructure\Sulu\Search\Visitor\AdminProductReindexProviderEnhancerInterface;
+use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductAttributesReindexProviderEnhancer;
+use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductDetailsReindexProviderEnhancer;
 use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductReindexContentEnhancer;
 use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductReindexExcerptEnhancer;
 use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductReindexProviderEnhancerInterface;
@@ -281,6 +284,20 @@ final class SuluProductBundle extends AbstractBundle
                             ->defaultValue(self::DEFAULT_ROUTE_PARAMS)
                             ->validate()
                                 ->always(static fn (array $params): array => [...self::DEFAULT_ROUTE_PARAMS, ...$params])
+                            ->end()
+                        ->end()
+                    ->end()
+                ->end()
+                ->arrayNode('search')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->arrayNode('website')
+                            ->addDefaultsIfNotSet()
+                            ->children()
+                                ->booleanNode('additional_product_filters')
+                                    ->info('Indexes the product family and the filterable attribute values as filter fields of the website index.')
+                                    ->defaultFalse()
+                                ->end()
                             ->end()
                         ->end()
                     ->end()
@@ -426,6 +443,9 @@ final class SuluProductBundle extends AbstractBundle
         $route = $config['route'];
         $builder->setParameter('sulu_product.route.type', $route['type']);
         $builder->setParameter('sulu_product.route.params', $route['params']);
+
+        /** @var array{website: array{additional_product_filters: bool}} $search */
+        $search = $config['search'];
 
         $services = $container->services();
 
@@ -1293,6 +1313,11 @@ final class SuluProductBundle extends AbstractBundle
             ->class(WebsiteProductReindexTaxonomyEnhancer::class)
             ->tag('sulu_product.website_product_reindex_provider_enhancer');
 
+        // Registered after the content and excerpt enhancers, so its image is only the fallback.
+        $services->set('sulu_product.website_product_details_reindex_provider_enhancer')
+            ->class(WebsiteProductDetailsReindexProviderEnhancer::class)
+            ->tag('sulu_product.website_product_reindex_provider_enhancer');
+
         $services->set('sulu_product.website_product_reindex_provider')
             ->class(WebsiteProductReindexProvider::class)
             ->args([
@@ -1300,6 +1325,25 @@ final class SuluProductBundle extends AbstractBundle
                 tagged_iterator('sulu_product.website_product_reindex_provider_enhancer'),
             ])
             ->tag('cmsig_seal.reindex_provider');
+
+        if ($search['website']['additional_product_filters']) {
+            $services->set('sulu_product.website_product_attributes_reindex_provider_enhancer')
+                ->class(WebsiteProductAttributesReindexProviderEnhancer::class)
+                ->args([
+                    new Reference('doctrine.orm.entity_manager'),
+                    new Reference('sulu_product.measurement_registry'),
+                ])
+                ->tag('sulu_product.website_product_reindex_provider_enhancer')
+                ->tag('kernel.reset', ['method' => 'reset']);
+
+            $services->set('sulu_product.product_schema_loader')
+                ->class(ProductSchemaLoader::class)
+                ->decorate('cmsig_seal.schema_loader.default')
+                ->args([
+                    new Reference('.inner'),
+                    new Reference('doctrine.orm.entity_manager'),
+                ]);
+        }
     }
 
     /**
