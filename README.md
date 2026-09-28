@@ -211,12 +211,12 @@ Sulu's own site search needs none of this: it finds products next to pages and a
 
 An attribute of type "range" holds two numbers, `from` and `to`, for example an operating
 temperature of -20 to 60 °C. The admin API reads and writes it as `{"from": -20, "to": 60}` under
-the attribute id; both bounds are set or none, and `from` may not exceed `to`. The attribute's
-unit, `min`, `max` and `step` apply to both bounds.
+the attribute id. Either bound may be empty, for a range open on one side, and `from` may not
+exceed `to`. The attribute's unit, `min`, `max` and `step` apply to both bounds.
 
-In the website, `product.attributes.<key>.value` is `{from: …, to: …}` and the formatted value
-`from – to`. A display format places the bounds with `%from%` and `%to%`; `%value%` stands for
-`from – to`:
+In the website, `product.attributes.<key>.value` is `{from: …, to: …}`, an empty bound `null`, and
+the formatted value `from – to`, `from –` or `– to`. A display format places the bounds with
+`%from%` and `%to%`, empty when missing; `%value%` stands for the formatted value:
 
 ```
 %value% %unit%                        -> -20 – 60 °C

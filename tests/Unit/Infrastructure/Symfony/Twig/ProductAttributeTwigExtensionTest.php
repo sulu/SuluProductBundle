@@ -388,13 +388,27 @@ class ProductAttributeTwigExtensionTest extends TestCase
         self::assertSame('from 100 V up to 240 V', $this->attributesOf($content)['voltage']['formattedValue']);
     }
 
-    public function testRangeMissingABoundIsDropped(): void
+    public function testRangeWithoutAnyBoundIsDropped(): void
     {
         $content = $this->createContent();
-        $attribute = $this->createAttribute('temperature', 'Temperatur', $this->createGroup(1, 'Eins'), 1);
-        $this->addRangeValue($content, $attribute, -20.0, null);
+        $this->addRangeValue($content, $this->createAttribute('age', 'Alter', $this->createGroup(1, 'Eins'), 1), null, null);
 
         self::assertSame([], $this->attributesOf($content));
+    }
+
+    public function testRangesOpenOnOneSideRenderTheGivenBound(): void
+    {
+        $content = $this->createContent();
+        $group = $this->createGroup(1, 'Eins');
+        $this->addRangeValue($content, $this->createAttribute('age', 'Alter', $group, 1), 18.0, null);
+        $voltage = $this->createAttribute('voltage', 'Spannung', $group, 2);
+        $voltage->setConfig(['displayFormat' => 'bis %to% %unit%%from%', 'unit' => 'VOLT']);
+        $this->addRangeValue($content, $voltage, null, 240.0);
+
+        $attributes = $this->attributesOf($content);
+        self::assertSame(['from' => 18.0, 'to' => null], $attributes['age']['value']);
+        self::assertSame('18 –', $attributes['age']['formattedValue']);
+        self::assertSame('bis 240 V', $attributes['voltage']['formattedValue']);
     }
 
     public function testDatesAreFormattedForTheRequestedLocale(): void

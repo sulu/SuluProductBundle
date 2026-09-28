@@ -77,6 +77,30 @@ class RangeAttributeTypeTest extends TestCase
         self::assertSame(['from' => 5.0, 'to' => 5.0], $type->readValue($rows));
     }
 
+    /**
+     * @param array<string, mixed> $raw
+     * @param array{from: float|null, to: float|null} $expected
+     */
+    #[DataProvider('provideOpenRanges')]
+    public function testWriteAcceptsARangeOpenOnOneSide(array $raw, array $expected): void
+    {
+        $type = new RangeAttributeType();
+        $rows = $this->createRows();
+
+        $type->writeValue($rows, $raw);
+
+        self::assertSame($expected, $type->readValue($rows));
+    }
+
+    /**
+     * @return iterable<string, array{array<string, mixed>, array{from: float|null, to: float|null}}>
+     */
+    public static function provideOpenRanges(): iterable
+    {
+        yield 'from only' => [['from' => 18, 'to' => null], ['from' => 18.0, 'to' => null]];
+        yield 'to only, from missing' => [['to' => '100'], ['from' => null, 'to' => 100.0]];
+    }
+
     public function testReadWithoutRowsReturnsNull(): void
     {
         self::assertNull((new RangeAttributeType())->readValue([]));
@@ -104,9 +128,7 @@ class RangeAttributeTypeTest extends TestCase
     public static function provideInvalidValues(): iterable
     {
         yield 'scalar' => [5];
-        yield 'missing from' => [['to' => 2]];
-        yield 'missing to' => [['from' => 1]];
-        yield 'half filled' => [['from' => 1, 'to' => null]];
+        yield 'no bound' => [['from' => null, 'to' => '']];
         yield 'non numeric from' => [['from' => 'cold', 'to' => 2]];
         yield 'non numeric to' => [['from' => 1, 'to' => 'hot']];
         yield 'from exceeds to' => [['from' => 3, 'to' => 2]];

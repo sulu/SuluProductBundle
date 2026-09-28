@@ -18,7 +18,7 @@ use Sulu\Product\Domain\Model\AttributeInterface;
 use Webmozart\Assert\Assert;
 
 /**
- * Two numbers, "from" and "to", in a row each. A range is set with both bounds or not at all.
+ * Two numbers, "from" and "to", in a row each. Either may be empty, for a range open on one side.
  */
 final class RangeAttributeType extends AbstractAttributeType
 {
@@ -65,17 +65,32 @@ final class RangeAttributeType extends AbstractAttributeType
         $attributeKey = $rows[self::FROM]->getAttributeKey();
 
         Assert::isArray($raw, \sprintf('Expected "from" and "to" for range "%s".', $attributeKey));
-        Assert::keyExists($raw, self::FROM);
-        Assert::keyExists($raw, self::TO);
-        Assert::numeric($raw[self::FROM], \sprintf('Expected a numeric "from" for range "%s".', $attributeKey));
-        Assert::numeric($raw[self::TO], \sprintf('Expected a numeric "to" for range "%s".', $attributeKey));
 
-        $from = (float) $raw[self::FROM];
-        $to = (float) $raw[self::TO];
+        $from = $this->readBound($raw, self::FROM, $attributeKey);
+        $to = $this->readBound($raw, self::TO, $attributeKey);
 
-        Assert::lessThanEq($from, $to, \sprintf('Expected "from" not to exceed "to" for range "%s".', $attributeKey));
+        Assert::false(null === $from && null === $to, \sprintf('Expected "from" or "to" for range "%s".', $attributeKey));
+
+        if (null !== $from && null !== $to) {
+            Assert::lessThanEq($from, $to, \sprintf('Expected "from" not to exceed "to" for range "%s".', $attributeKey));
+        }
 
         $rows[self::FROM]->setNumber($from);
         $rows[self::TO]->setNumber($to);
+    }
+
+    /**
+     * @param array<mixed> $raw
+     */
+    private function readBound(array $raw, string $bound, string $attributeKey): ?float
+    {
+        $value = $raw[$bound] ?? null;
+        if (null === $value || '' === $value) {
+            return null;
+        }
+
+        Assert::numeric($value, \sprintf('Expected a numeric "%s" for range "%s".', $bound, $attributeKey));
+
+        return (float) $value;
     }
 }

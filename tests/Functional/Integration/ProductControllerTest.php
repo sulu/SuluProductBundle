@@ -681,7 +681,19 @@ class ProductControllerTest extends SuluTestCase
     public static function provideInvalidRanges(): iterable
     {
         yield 'from exceeds to' => [['from' => 60, 'to' => -20]];
-        yield 'half filled' => [['from' => 1, 'to' => null]];
+        yield 'non numeric bound' => [['from' => 'cold', 'to' => null]];
+    }
+
+    public function testRangeOpenOnOneSideIsStored(): void
+    {
+        self::purgeDatabase();
+        $attributeId = $this->createRangeAttribute();
+        $familyId = $this->createProductFamily($attributeId, false);
+        $id = $this->createProduct($familyId);
+
+        $this->putAttributes($id, 'en', [$attributeId => ['from' => -20, 'to' => null]]);
+
+        $this->assertEquals(['from' => -20, 'to' => null], $this->getAttributeValue($id, 'en', $attributeId));
     }
 
     public function testPostWithMissingRequiredRangeReturns422(): void
