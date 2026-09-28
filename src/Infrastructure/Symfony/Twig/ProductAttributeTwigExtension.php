@@ -170,19 +170,26 @@ class ProductAttributeTwigExtension extends AbstractExtension
     }
 
     /**
-     * A range renders as "from – to", "from –" or "– to"; its display format may also place each
-     * bound on its own, a missing one as empty.
+     * A range renders as "from – to", open on one side as "≥ from" or "≤ to". Its display format may
+     * also place each bound on its own, a missing one as empty.
      */
     private function formatRange(AttributeInterface $attribute, mixed $range): ?string
     {
         $from = \is_array($range) && \is_float($range['from'] ?? null) ? (string) $range['from'] : '';
         $to = \is_array($range) && \is_float($range['to'] ?? null) ? (string) $range['to'] : '';
 
-        if ('' === $from && '' === $to) {
+        $value = match (true) {
+            '' !== $from && '' !== $to => $from . ' – ' . $to,
+            '' !== $from => '≥ ' . $from,
+            '' !== $to => '≤ ' . $to,
+            default => null,
+        };
+
+        if (null === $value) {
             return null;
         }
 
-        return $this->applyDisplayFormat($attribute, \trim($from . ' – ' . $to), ['%from%' => $from, '%to%' => $to]);
+        return $this->applyDisplayFormat($attribute, $value, ['%from%' => $from, '%to%' => $to]);
     }
 
     /**

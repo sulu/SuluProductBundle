@@ -401,13 +401,17 @@ class ProductAttributeTwigExtensionTest extends TestCase
         $content = $this->createContent();
         $group = $this->createGroup(1, 'Eins');
         $this->addRangeValue($content, $this->createAttribute('age', 'Alter', $group, 1), 18.0, null);
-        $voltage = $this->createAttribute('voltage', 'Spannung', $group, 2);
+        $temperature = $this->createAttribute('temperature', 'Temperatur', $group, 2);
+        $temperature->setConfig(['displayFormat' => '%value% %unit%', 'unit' => 'CELSIUS']);
+        $this->addRangeValue($content, $temperature, null, 60.0);
+        $voltage = $this->createAttribute('voltage', 'Spannung', $group, 3);
         $voltage->setConfig(['displayFormat' => 'bis %to% %unit%%from%', 'unit' => 'VOLT']);
         $this->addRangeValue($content, $voltage, null, 240.0);
 
         $attributes = $this->attributesOf($content);
         self::assertSame(['from' => 18.0, 'to' => null], $attributes['age']['value']);
-        self::assertSame('18 –', $attributes['age']['formattedValue']);
+        self::assertSame('≥ 18', $attributes['age']['formattedValue']);
+        self::assertSame('≤ 60 °C', $attributes['temperature']['formattedValue']);
         self::assertSame('bis 240 V', $attributes['voltage']['formattedValue']);
     }
 

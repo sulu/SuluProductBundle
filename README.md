@@ -215,11 +215,13 @@ the attribute id. Either bound may be empty, for a range open on one side, and `
 exceed `to`. The attribute's unit, `min`, `max` and `step` apply to both bounds.
 
 In the website, `product.attributes.<key>.value` is `{from: …, to: …}`, an empty bound `null`, and
-the formatted value `from – to`, `from –` or `– to`. A display format places the bounds with
-`%from%` and `%to%`, empty when missing; `%value%` stands for the formatted value:
+the formatted value `from – to`, or `≥ from` / `≤ to` for a range open on one side. A display
+format places the bounds with `%from%` and `%to%`, empty when missing; `%value%` stands for the
+formatted value, so a format for ranges that may be open uses `%value%`, or the template renders
+`value.from` and `value.to` itself:
 
 ```
-%value% %unit%                        -> -20 – 60 °C
+%value% %unit%                        -> -20 – 60 °C, ≥ 18 °C
 from %from% %unit% up to %to% %unit%  -> from 100 V up to 240 V
 ```
 
