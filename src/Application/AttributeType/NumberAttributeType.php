@@ -18,7 +18,7 @@ use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Webmozart\Assert\Assert;
 
-final class NumberAttributeType extends AbstractAttributeType
+final class NumberAttributeType extends AbstractSingleRowAttributeType
 {
     public function getKey(): string
     {
@@ -35,23 +35,21 @@ final class NumberAttributeType extends AbstractAttributeType
         $this->addNumberOptions($field, $attribute);
     }
 
-    public function readValue(array $rows): mixed
+    protected function readRow(ProductAttributeValueInterface $row): mixed
     {
-        return ($rows[ProductAttributeValueInterface::DEFAULT_VALUE_KEY] ?? null)?->getNumber();
+        return $row->getNumber();
     }
 
-    public function writeValue(array $rows, mixed $raw): void
+    protected function writeRow(ProductAttributeValueInterface $row, mixed $raw): void
     {
-        $value = $rows[ProductAttributeValueInterface::DEFAULT_VALUE_KEY];
-
         if (null === $raw || '' === $raw) {
-            $value->setNumber(null);
+            $row->setNumber(null);
 
             return;
         }
 
         Assert::numeric($raw);
 
-        $value->setNumber((float) $raw);
+        $row->setNumber((float) $raw);
     }
 }

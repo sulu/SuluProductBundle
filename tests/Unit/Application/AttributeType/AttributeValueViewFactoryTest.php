@@ -74,6 +74,11 @@ class AttributeValueViewFactoryTest extends TestCase
                 return 'product_attribute_parts';
             }
 
+            public function getValueKeys(AttributeInterface $attribute, mixed $raw): array
+            {
+                return ['width', 'height'];
+            }
+
             public function readValue(array $rows): mixed
             {
                 return \array_map(static fn (ProductAttributeValueInterface $row): ?float => $row->getNumber(), $rows);

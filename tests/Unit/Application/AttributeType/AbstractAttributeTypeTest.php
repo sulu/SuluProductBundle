@@ -19,7 +19,7 @@ use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Product\Application\AttributeType\AbstractAttributeType;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
-use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
+use Sulu\Product\Domain\Model\AttributeInterface;
 
 #[CoversClass(AbstractAttributeType::class)]
 class AbstractAttributeTypeTest extends TestCase
@@ -35,6 +35,11 @@ class AbstractAttributeTypeTest extends TestCase
             public function getFormKey(): string
             {
                 return 'product_attribute_stub';
+            }
+
+            public function getValueKeys(AttributeInterface $attribute, mixed $raw): array
+            {
+                return [];
             }
 
             public function readValue(array $rows): mixed
@@ -57,13 +62,5 @@ class AbstractAttributeTypeTest extends TestCase
 
         self::assertSame('text_line', $field->getType());
         self::assertSame([], $field->getOptions());
-    }
-
-    public function testSingleRowValueKeyByDefault(): void
-    {
-        self::assertSame(
-            [ProductAttributeValueInterface::DEFAULT_VALUE_KEY],
-            $this->type()->getValueKeys(new Attribute(new AttributeGroup()), 42),
-        );
     }
 }

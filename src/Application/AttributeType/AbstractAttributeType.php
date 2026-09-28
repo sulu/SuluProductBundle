@@ -16,21 +16,12 @@ namespace Sulu\Product\Application\AttributeType;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\OptionMetadata;
 use Sulu\Product\Domain\Model\AttributeInterface;
-use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Webmozart\Assert\Assert;
 
 abstract class AbstractAttributeType implements AttributeTypeInterface
 {
     public function configureField(FieldMetadata $field, AttributeInterface $attribute, string $locale): void
     {
-    }
-
-    /**
-     * A single row, the default for a type whose value is one scalar.
-     */
-    public function getValueKeys(AttributeInterface $attribute, mixed $raw): array
-    {
-        return [ProductAttributeValueInterface::DEFAULT_VALUE_KEY];
     }
 
     /**
