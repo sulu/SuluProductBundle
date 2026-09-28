@@ -4,4 +4,8 @@
     <h1>{{ content.title }}</h1>
 
     {{ content.description|raw }}
+
+    {% if product.currentVariant is defined %}
+        <p class="current-variant">{{ product.currentVariant.title }} {{ product.currentVariant.code }}</p>
+    {% endif %}
 {% endblock %}

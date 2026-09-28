@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Sulu\Product\Tests\Unit\Infrastructure\Sulu\Content\Resolver;
 
 use PHPUnit\Framework\Attributes\CoversClass;
-use Sulu\Content\Application\ContentAggregator\ContentAggregatorInterface;
 use Sulu\Content\Application\ContentResolver\Value\ContentView;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Model\Attribute;
@@ -84,17 +83,7 @@ class ProductResolverAttributesTest extends ProductResolverTestCase
         $content->setStage(DimensionContentInterface::STAGE_DRAFT);
         $this->addTextValue($content, $this->createAttribute('colour'), 'black');
 
-        $productRepository = $this->createMock(ProductRepositoryInterface::class);
-        $productRepository->expects(self::once())->method('findOneBy')
-            ->with(['uuid' => 'parent-uuid', 'locale' => 'de', 'stage' => DimensionContentInterface::STAGE_DRAFT])
-            ->willReturn($parent);
-        $productRepository->method('findBy')->willReturn([]);
-
-        $resolved = $this->resolveContent($content, null, $this->createResolver(
-            productRepository: $productRepository,
-            contentAggregator: $this->aggregatorReturning($parentContent),
-            enhanced: $content,
-        ));
+        $resolved = $this->resolveContent($parentContent, null, $this->createResolver(currentVariant: $content));
 
         self::assertSame(['housing'], \array_keys($this->resolveAttributesOf($resolved)));
 
@@ -140,14 +129,6 @@ class ProductResolverAttributesTest extends ProductResolverTestCase
         self::assertIsArray($content);
 
         return $content;
-    }
-
-    private function aggregatorReturning(ProductDimensionContent $content): ContentAggregatorInterface
-    {
-        $contentAggregator = $this->createStub(ContentAggregatorInterface::class);
-        $contentAggregator->method('aggregate')->willReturn($content);
-
-        return $contentAggregator;
     }
 
     /**

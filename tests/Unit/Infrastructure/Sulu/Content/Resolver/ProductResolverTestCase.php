@@ -13,22 +13,21 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Tests\Unit\Infrastructure\Sulu\Content\Resolver;
 
-use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataLoaderInterface;
 use Sulu\Bundle\AdminBundle\Metadata\MetadataProviderInterface;
 use Sulu\Bundle\HttpCacheBundle\ReferenceStore\ReferenceStore;
 use Sulu\Bundle\HttpCacheBundle\ReferenceStore\ReferenceStoreInterface;
-use Sulu\Content\Application\ContentAggregator\ContentAggregatorInterface;
 use Sulu\Content\Application\ContentResolver\Value\ContentView;
 use Sulu\Content\Application\MetadataResolver\MetadataResolver;
-use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
-use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
-use Sulu\Product\Infrastructure\Sulu\Content\ProductParentContentLoader;
 use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductResolver;
+use Sulu\Product\Infrastructure\Sulu\Route\CurrentVariantProvider;
+use Sulu\Product\Infrastructure\Sulu\Route\ProductRouteDefaultsProvider;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * One resolver builds every section, so a test for one section still has to supply the
@@ -38,32 +37,26 @@ abstract class ProductResolverTestCase extends TestCase
 {
     /**
      * @param array<string, string> $variantProperties
-     * @param ProductDimensionContentInterface|null $enhanced content the variant enhancer has run for
+     * @param ProductDimensionContentInterface|null $currentVariant the variant whose URL the request renders
      */
     protected function createResolver(
         ?FormMetadataLoaderInterface $formMetadataLoader = null,
         ?MetadataProviderInterface $formMetadataProvider = null,
         ?MetadataResolver $metadataResolver = null,
         ?ProductRepositoryInterface $productRepository = null,
-        ?ContentAggregatorInterface $contentAggregator = null,
         ?ReferenceStoreInterface $referenceStore = null,
         array $variantProperties = ['title' => 'product.title', 'url' => 'product.url', 'code' => 'product.code', 'status' => 'product.status', 'position' => 'product.position'],
-        ?ProductDimensionContentInterface $enhanced = null,
+        ?ProductDimensionContentInterface $currentVariant = null,
     ): ProductResolver {
-        $productRepository ??= $this->noVariants();
-        $contentAggregator ??= $this->emptyContents();
-
-        $parentContentLoader = new ProductParentContentLoader($productRepository, $contentAggregator, $this->createStub(EntityManagerInterface::class));
-        if (null !== $enhanced) {
-            $parentContentLoader->load($enhanced);
-        }
+        $requestStack = new RequestStack();
+        $requestStack->push(new Request(attributes: [ProductRouteDefaultsProvider::VARIANT_ATTRIBUTE => $currentVariant]));
 
         return new ProductResolver(
             $formMetadataLoader ?? $this->noDetailFields(),
             $formMetadataProvider ?? $this->noAssociationFields(),
             $metadataResolver ?? $this->noResolvedItems(),
-            $productRepository,
-            $parentContentLoader,
+            $productRepository ?? $this->noVariants(),
+            new CurrentVariantProvider($requestStack),
             $referenceStore ?? new ReferenceStore(),
             $variantProperties,
         );
@@ -88,17 +81,6 @@ abstract class ProductResolverTestCase extends TestCase
         self::assertIsArray($content);
 
         return $content;
-    }
-
-    /** Every product aggregates to an empty dimension content of its own. */
-    protected function emptyContents(): ContentAggregatorInterface
-    {
-        $contentAggregator = $this->createStub(ContentAggregatorInterface::class);
-        $contentAggregator->method('aggregate')->willReturnCallback(
-            static fn (ProductInterface $product): ProductDimensionContent => new ProductDimensionContent($product),
-        );
-
-        return $contentAggregator;
     }
 
     protected function noDetailFields(): FormMetadataLoaderInterface

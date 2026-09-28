@@ -112,7 +112,6 @@ use Sulu\Product\Infrastructure\Sulu\Admin\ProductFamilyAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductRouteFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductsListMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductStatusFormMetadataVisitor;
-use Sulu\Product\Infrastructure\Sulu\Content\ContentEnhancer\ProductVariantDimensionContentEnhancer;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\AdditionalWebspacesDataMapper;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductAssociationsDataMapper;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductAttributesDataMapper;
@@ -126,7 +125,6 @@ use Sulu\Product\Infrastructure\Sulu\Content\Normalizer\ProductAttributesNormali
 use Sulu\Product\Infrastructure\Sulu\Content\Normalizer\ProductDetailsNormalizer;
 use Sulu\Product\Infrastructure\Sulu\Content\PageTreeProductSmartContentProvider;
 use Sulu\Product\Infrastructure\Sulu\Content\ProductLinkProvider;
-use Sulu\Product\Infrastructure\Sulu\Content\ProductParentContentLoader;
 use Sulu\Product\Infrastructure\Sulu\Content\ProductSmartContentProvider;
 use Sulu\Product\Infrastructure\Sulu\Content\ProductTeaserProvider;
 use Sulu\Product\Infrastructure\Sulu\Content\PropertyResolver\ProductFamilySelectionPropertyResolver;
@@ -143,6 +141,8 @@ use Sulu\Product\Infrastructure\Sulu\Reference\ProductAssociationReferenceCleanu
 use Sulu\Product\Infrastructure\Sulu\Reference\ProductFamilyReferenceDoctrineEventListener;
 use Sulu\Product\Infrastructure\Sulu\Reference\ProductFamilyReferenceRefresher;
 use Sulu\Product\Infrastructure\Sulu\Reference\ProductReferenceRefresher;
+use Sulu\Product\Infrastructure\Sulu\Route\CurrentVariantProvider;
+use Sulu\Product\Infrastructure\Sulu\Route\ProductLocalizationsResolver;
 use Sulu\Product\Infrastructure\Sulu\Route\ProductRouteDefaultsProvider;
 use Sulu\Product\Infrastructure\Sulu\Search\AdminProductIndexListener;
 use Sulu\Product\Infrastructure\Sulu\Search\AdminProductReindexProvider;
@@ -1033,7 +1033,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_admin.form_metadata_provider'),
                 new Reference('sulu_content.metadata_resolver'),
                 new Reference('sulu_product.product_repository'),
-                new Reference('sulu_product.product_parent_content_loader'),
+                new Reference('sulu_product.current_variant_provider'),
                 new Reference('sulu_http_cache.reference_store'),
                 '%sulu_product.variants.properties%',
             ])
@@ -1053,22 +1053,6 @@ final class SuluProductBundle extends AbstractBundle
             ])
             ->tag('sulu_content.resource_loader', ['type' => ProductFamilyResourceLoader::RESOURCE_LOADER_KEY]);
 
-        $services->set('sulu_product.product_parent_content_loader')
-            ->class(ProductParentContentLoader::class)
-            ->args([
-                new Reference('sulu_product.product_repository'),
-                new Reference('sulu_content.content_aggregator'),
-                new Reference('doctrine.orm.entity_manager'),
-            ])
-            ->tag('kernel.reset', ['method' => 'reset']);
-
-        $services->set('sulu_product.product_variant_dimension_content_enhancer')
-            ->class(ProductVariantDimensionContentEnhancer::class)
-            ->args([
-                new Reference('sulu_product.product_parent_content_loader'),
-            ])
-            ->tag('sulu_content.dimension_content_enhancer');
-
         $services->set('sulu_product.product_preview_provider')
             ->class(ContentObjectProvider::class)
             ->args([
@@ -1087,7 +1071,6 @@ final class SuluProductBundle extends AbstractBundle
             ->args([
                 new Reference('sulu_product.product_repository'),
                 new Reference('sulu_content.content_aggregator'),
-                new Reference('sulu_content.content_enhancer'),
                 new Reference('translator'),
                 new Reference('sulu_admin.teaser_tag_property_extractor'),
             ])
@@ -1237,9 +1220,22 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_content.content_aggregator'),
                 new Reference('sulu_admin.metadata_provider_registry'),
                 new Reference('sulu_http_cache.cache_lifetime.resolver'),
-                new Reference('sulu_product.product_parent_content_loader'),
             ])
             ->tag('sulu_route.route_defaults_provider', ['resource_key' => ProductInterface::RESOURCE_KEY]);
+
+        $services->set('sulu_product.current_variant_provider')
+            ->class(CurrentVariantProvider::class)
+            ->args([
+                new Reference('request_stack'),
+            ]);
+
+        $services->set('sulu_product.product_localizations_resolver')
+            ->class(ProductLocalizationsResolver::class)
+            ->args([
+                new Reference('sulu_content.route_localizations_resolver'),
+                new Reference('sulu_product.current_variant_provider'),
+            ])
+            ->tag('sulu_content.content_localizations_resolver', ['resource_key' => ProductInterface::RESOURCE_KEY]);
 
         $services->set('sulu_product.admin_product_index_listener')
             ->class(AdminProductIndexListener::class)

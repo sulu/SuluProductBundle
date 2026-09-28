@@ -23,14 +23,15 @@ use Sulu\Content\Application\ContentResolver\Value\ContentView;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
-use Sulu\Product\Infrastructure\Sulu\Content\ContentEnhancer\ProductVariantDimensionContentEnhancer;
-use Sulu\Product\Infrastructure\Sulu\Content\ProductParentContentLoader;
 use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductResolver;
+use Sulu\Product\Infrastructure\Sulu\Route\CurrentVariantProvider;
+use Sulu\Product\Infrastructure\Sulu\Route\ProductRouteDefaultsProvider;
 use Sulu\Route\Domain\Model\Route;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 #[CoversClass(ProductResolver::class)]
-#[CoversClass(ProductVariantDimensionContentEnhancer::class)]
-#[CoversClass(ProductParentContentLoader::class)]
+#[CoversClass(CurrentVariantProvider::class)]
 class ProductResolverVariantsTest extends SuluTestCase
 {
     private ContentResolverInterface $contentResolver;
@@ -101,15 +102,16 @@ class ProductResolverVariantsTest extends SuluTestCase
         self::assertNull($second['url'], 'a variant without a route has no url');
     }
 
-    /** A variant page renders its parent's content tab, with the parent as `product` and itself as `currentVariant`. */
-    public function testAVariantResolvesItsParentAndItselfAsCurrentVariant(): void
+    /** A variant URL renders its parent's content tab, with the parent as `product` and the variant as `currentVariant`. */
+    public function testAVariantUrlResolvesItsParentWithTheVariantAsCurrentVariant(): void
     {
         $parent = $this->createParent();
         $variant = $this->createVariant($parent, 'NL4FX-4', 0, '/products/nl4fx-4');
         $this->createVariant($parent, 'NL4FX-5', 1);
         $this->entityManager->flush();
 
-        $result = $this->contentResolver->resolve($this->aggregate($variant));
+        $this->requestVariantUrl($this->aggregate($variant));
+        $result = $this->contentResolver->resolve($this->aggregate($parent));
 
         $content = $result['content'];
         self::assertSame('NL4FX', $content['title'] ?? null, 'the content tab is the parent\'s');
@@ -128,6 +130,24 @@ class ProductResolverVariantsTest extends SuluTestCase
         self::assertSame('/products/nl4fx-4', $currentVariant['url']);
         self::assertArrayHasKey('attributes', $currentVariant);
         self::assertArrayNotHasKey('variants', $currentVariant, 'a variant is not itself a product with variants');
+    }
+
+    /** No enhancer lends a variant its parent's content any more, so a variant resolves as itself. */
+    public function testAVariantResolvesAsItself(): void
+    {
+        $parent = $this->createParent();
+        $variant = $this->createVariant($parent, 'NL4FX-4', 0, '/products/nl4fx-4');
+        $this->entityManager->flush();
+
+        $result = $this->contentResolver->resolve($this->aggregate($variant));
+
+        self::assertSame('NL4FX-4 Variant', $result['content']['title'] ?? null);
+        self::assertNull($result['content']['description'] ?? null, 'the parent\'s description stays with the parent');
+
+        $productData = $result['product'] ?? null;
+        self::assertIsArray($productData);
+        self::assertSame('NL4FX-4 Variant', $productData['title']);
+        self::assertArrayNotHasKey('currentVariant', $productData);
     }
 
     /** The reference index resolves without the enhancers, so a variant does not index its parent's associations and siblings. */
@@ -153,39 +173,6 @@ class ProductResolverVariantsTest extends SuluTestCase
         self::assertSame('NL4FX-4 Variant', $title->getContent());
     }
 
-    /** A parent whose draft was loaded earlier in the same request still resolves with its live content. */
-    public function testAVariantResolvesItsParentsLiveContentAfterTheParentDraftWasLoaded(): void
-    {
-        $parent = $this->createParent();
-        $draftContent = $parent->createDimensionContent();
-        $draftContent->setLocale('de');
-        $draftContent->setStage('draft');
-        $draftContent->setTemplateKey('product');
-        $draftContent->setTemplateData(['title' => 'NL4FX draft', 'description' => 'Draft description']);
-        $parent->addDimensionContent($draftContent);
-        $this->entityManager->persist($draftContent);
-        $variant = $this->createVariant($parent, 'NL4FX-4', 0);
-        $this->entityManager->flush();
-        $this->entityManager->clear();
-        // flushing already loaded the parent content, a new request starts without it
-        $this->getParentContentLoader()->reset();
-
-        $loadedParent = $this->productRepository->findOneBy(
-            ['uuid' => $parent->getUuid(), 'locale' => 'de', 'stage' => 'draft'],
-            [ProductRepositoryInterface::GROUP_SELECT_PRODUCT_WEBSITE => true],
-        );
-        self::assertNotNull($loadedParent);
-
-        $loadedVariant = $this->productRepository->getOneBy(
-            ['uuid' => $variant->getUuid(), 'locale' => 'de', 'stage' => 'live'],
-            [ProductRepositoryInterface::GROUP_SELECT_PRODUCT_WEBSITE => true],
-        );
-
-        $result = $this->contentResolver->resolve($this->aggregate($loadedVariant));
-
-        self::assertSame('NL4FX', $result['content']['title'] ?? null);
-    }
-
     /**
      * @return array<string, mixed>
      */
@@ -200,12 +187,12 @@ class ProductResolverVariantsTest extends SuluTestCase
         return $productData;
     }
 
-    private function getParentContentLoader(): ProductParentContentLoader
+    /** The route defaults of a variant URL, as `ProductRouteDefaultsProvider` sets them. */
+    private function requestVariantUrl(ProductDimensionContentInterface $variantContent): void
     {
-        /** @var ProductParentContentLoader $parentContentLoader */
-        $parentContentLoader = self::getContainer()->get('sulu_product.product_parent_content_loader');
-
-        return $parentContentLoader;
+        /** @var RequestStack $requestStack */
+        $requestStack = self::getContainer()->get('request_stack');
+        $requestStack->push(new Request(attributes: [ProductRouteDefaultsProvider::VARIANT_ATTRIBUTE => $variantContent]));
     }
 
     private function aggregate(ProductInterface $product): ProductDimensionContentInterface

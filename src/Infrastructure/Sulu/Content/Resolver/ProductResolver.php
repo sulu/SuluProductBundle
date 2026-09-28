@@ -27,8 +27,8 @@ use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\ProductFamilyContentViewFactory;
-use Sulu\Product\Infrastructure\Sulu\Content\ProductParentContentLoader;
 use Sulu\Product\Infrastructure\Sulu\Content\ResourceLoader\ProductResourceLoader;
+use Sulu\Product\Infrastructure\Sulu\Route\CurrentVariantProvider;
 
 /**
  * Assembles the root-level `product` namespace. A reference passes `$properties` and gets the
@@ -52,7 +52,7 @@ class ProductResolver implements ResolverInterface
         private readonly MetadataProviderInterface $formMetadataProvider,
         private readonly MetadataResolver $metadataResolver,
         private readonly ProductRepositoryInterface $productRepository,
-        private readonly ProductParentContentLoader $parentContentLoader,
+        private readonly CurrentVariantProvider $currentVariantProvider,
         private readonly ReferenceStoreInterface $referenceStore,
         private readonly array $variantProperties = [],
     ) {
@@ -76,18 +76,17 @@ class ProductResolver implements ResolverInterface
             ? null
             : [...$this->filterProperties($this->getDefaultProperties()), ...$this->filterProperties($properties)];
 
-        // A reference, such as a product selection, resolves a variant as itself.
-        $parentContent = null === $requested ? $this->parentContentLoader->getLoaded($dimensionContent) : null;
+        $content = $this->resolveProduct($dimensionContent, $locale, $requested);
 
-        if (null === $parentContent) {
-            return ContentView::create($this->resolveProduct($dimensionContent, $locale, $requested), []);
+        // A variant URL renders its product as the page, a reference never carries the variant.
+        $variantContent = null === $requested ? $this->currentVariantProvider->getCurrentVariant($dimensionContent) : null;
+
+        if (null !== $variantContent) {
+            // Tagged, so publishing the variant clears its cached page.
+            $this->referenceStore->add($variantContent->getResource()->getUuid(), ProductInterface::RESOURCE_KEY);
+
+            $content['currentVariant'] = ContentView::create($this->resolveProduct($variantContent, $locale, null), []);
         }
-
-        // Tagged, so publishing the parent clears the variant's cached page.
-        $this->referenceStore->add($parentContent->getResource()->getUuid(), ProductInterface::RESOURCE_KEY);
-
-        $content = $this->resolveProduct($parentContent, $locale, null);
-        $content['currentVariant'] = ContentView::create($this->resolveProduct($dimensionContent, $locale, null), []);
 
         return ContentView::create($content, []);
     }

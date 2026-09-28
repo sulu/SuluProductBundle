@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Tests\Unit\Infrastructure\Sulu\Route;
 
-use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
@@ -35,7 +34,6 @@ use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
-use Sulu\Product\Infrastructure\Sulu\Content\ProductParentContentLoader;
 use Sulu\Product\Infrastructure\Sulu\Route\ProductRouteDefaultsProvider;
 use Sulu\Route\Application\Routing\Matcher\RouteDefaultsProviderInterface;
 use Sulu\Route\Domain\Model\Route;
@@ -54,10 +52,6 @@ class ProductRouteDefaultsProviderTest extends TestCase
     private CacheLifetimeResolver $cacheLifetimeResolver;
     /** @var ObjectProphecy<FormMetadataProvider> */
     private ObjectProphecy $formMetadataProvider;
-    /** @var ObjectProphecy<ProductRepositoryInterface> */
-    private ObjectProphecy $parentProductRepository;
-    /** @var ObjectProphecy<ContentAggregatorInterface> */
-    private ObjectProphecy $parentContentAggregator;
 
     protected function setUp(): void
     {
@@ -68,8 +62,6 @@ class ProductRouteDefaultsProviderTest extends TestCase
         $container = new Container();
         $container->set('form', $this->formMetadataProvider->reveal());
         $this->metadataProviderRegistry = new MetadataProviderRegistry($container);
-        $this->parentProductRepository = $this->prophesize(ProductRepositoryInterface::class);
-        $this->parentContentAggregator = $this->prophesize(ContentAggregatorInterface::class);
     }
 
     protected function getProductRouteDefaultsProviderInstance(): RouteDefaultsProviderInterface
@@ -79,11 +71,6 @@ class ProductRouteDefaultsProviderTest extends TestCase
             $this->contentAggregator->reveal(),
             $this->metadataProviderRegistry,
             $this->cacheLifetimeResolver,
-            new ProductParentContentLoader(
-                $this->parentProductRepository->reveal(),
-                $this->parentContentAggregator->reveal(),
-                $this->createStub(EntityManagerInterface::class),
-            ),
         );
     }
 
@@ -134,6 +121,7 @@ class ProductRouteDefaultsProviderTest extends TestCase
         $result = $provider->getDefaults($route);
 
         $this->assertArrayNotHasKey('_seo', $result);
+        $this->assertArrayNotHasKey(ProductRouteDefaultsProvider::VARIANT_ATTRIBUTE, $result);
         $this->assertSame($resolvedDimensionContent, $result['object']);
         $this->assertSame('product.html.twig', $result['view']);
         $this->assertSame('ProductController::indexAction', $result['_controller']);
@@ -223,7 +211,8 @@ class ProductRouteDefaultsProviderTest extends TestCase
         $provider->getDefaults(new Route(ProductInterface::RESOURCE_KEY, '123-123-123', 'en', '/test-product'));
     }
 
-    public function testGetDefaultsReturnsVariantWhoseParentIsLive(): void
+    /** A variant has no content of its own, its URL renders its product and carries the variant along. */
+    public function testGetDefaultsRendersTheParentOfAVariant(): void
     {
         $provider = $this->getProductRouteDefaultsProviderInstance();
 
@@ -233,25 +222,27 @@ class ProductRouteDefaultsProviderTest extends TestCase
 
         $variantContent = new ProductDimensionContent($variant);
         $variantContent->setLocale('en');
-        $variantContent->setStage(DimensionContentInterface::STAGE_LIVE);
-        $variantContent->setTemplateKey('default');
 
-        $this->productRepository->findOneBy(Argument::cetera())->willReturn($variant);
-        $this->contentAggregator->aggregate($variant, Argument::type('array'))
+        $parentContent = new ProductDimensionContent($parent);
+        $parentContent->setLocale('en');
+        $parentContent->setTemplateKey('default');
+
+        $this->productRepository->findOneBy(['uuid' => '123-123-123'], Argument::type('array'))->willReturn($variant);
+        $this->contentAggregator->aggregate($variant, ['locale' => 'en', 'stage' => 'live', 'version' => 0])
             ->willReturn($variantContent);
 
-        $this->parentProductRepository->findOneBy(
-            ['uuid' => 'parent-uuid', 'locale' => 'en', 'stage' => DimensionContentInterface::STAGE_LIVE],
-            Argument::type('array'),
-        )->willReturn($parent);
-        $this->parentContentAggregator->aggregate($parent, ['locale' => 'en', 'stage' => DimensionContentInterface::STAGE_LIVE])
-            ->willReturn(new ProductDimensionContent($parent));
+        $this->productRepository->findOneBy(['uuid' => 'parent-uuid'], Argument::type('array'))->willReturn($parent);
+        $this->contentAggregator->aggregate($parent, ['locale' => 'en', 'stage' => 'live', 'version' => 0])
+            ->willReturn($parentContent);
 
         $this->prepareTemplateMetadata('ProductController::indexAction', 'product.html.twig', 'seconds', '3600');
 
         $result = $provider->getDefaults(new Route(ProductInterface::RESOURCE_KEY, '123-123-123', 'en', '/test-variant'));
 
-        $this->assertSame($variantContent, $result['object']);
+        $this->assertSame($parentContent, $result['object']);
+        $this->assertSame($variantContent, $result[ProductRouteDefaultsProvider::VARIANT_ATTRIBUTE]);
+        $this->assertSame('product.html.twig', $result['view']);
+        $this->assertSame('ProductController::indexAction', $result['_controller']);
     }
 
     public function testGetDefaultsThrowsForVariantWhoseParentIsNotLive(): void
@@ -264,16 +255,15 @@ class ProductRouteDefaultsProviderTest extends TestCase
 
         $variantContent = new ProductDimensionContent($variant);
         $variantContent->setLocale('en');
-        $variantContent->setStage(DimensionContentInterface::STAGE_LIVE);
-        $variantContent->setTemplateKey('default');
 
-        $this->productRepository->findOneBy(Argument::cetera())->willReturn($variant);
+        $this->productRepository->findOneBy(['uuid' => '123-123-123'], Argument::type('array'))->willReturn($variant);
         $this->contentAggregator->aggregate($variant, Argument::type('array'))
             ->willReturn($variantContent);
 
-        $this->parentProductRepository->findOneBy(Argument::cetera())->willReturn(null);
+        $this->productRepository->findOneBy(['uuid' => 'parent-uuid'], Argument::type('array'))->willReturn(null);
 
         $this->expectException(NotFoundHttpException::class);
+        $this->expectExceptionMessage('No published parent product found for variant id "123-123-123" and locale "en"');
 
         $provider->getDefaults(new Route(ProductInterface::RESOURCE_KEY, '123-123-123', 'en', '/test-variant'));
     }

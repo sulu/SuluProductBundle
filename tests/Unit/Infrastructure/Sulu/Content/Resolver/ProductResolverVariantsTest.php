@@ -16,7 +16,6 @@ namespace Sulu\Product\Tests\Unit\Infrastructure\Sulu\Content\Resolver;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\MockObject\Stub;
 use Sulu\Bundle\HttpCacheBundle\ReferenceStore\ReferenceStore;
-use Sulu\Content\Application\ContentAggregator\ContentAggregatorInterface;
 use Sulu\Content\Application\ContentResolver\Value\ContentView;
 use Sulu\Content\Application\ContentResolver\Value\Reference;
 use Sulu\Content\Application\ContentResolver\Value\ResolvableResource;
@@ -115,24 +114,19 @@ class ProductResolverVariantsTest extends ProductResolverTestCase
         self::assertSame(['properties' => ['code' => 'product.code', 'image' => 'product.image']], $resource->getMetadata());
     }
 
-    /** A variant page resolves its parent as `product` and itself as `currentVariant`. */
-    public function testAVariantResolvesItsParentAndItselfAsCurrentVariant(): void
+    /** A variant URL renders its parent as `product` and adds the variant as `currentVariant`. */
+    public function testAVariantUrlAddsTheVariantAsCurrentVariant(): void
     {
         $parentContent = $this->createVariantParentContent();
         $parentContent->setTitle('NC3FX');
 
-        $variantContent = $this->createVariantContent($parentContent->getResource());
-
-        $productRepository = $this->createVariantRepository();
-        $productRepository->method('findOneBy')->willReturn($parentContent->getResource());
-
-        $contentAggregator = $this->createStub(ContentAggregatorInterface::class);
-        $contentAggregator->method('aggregate')->willReturn($parentContent);
-
         $content = $this->resolveContent(
-            $variantContent,
+            $parentContent,
             null,
-            $this->createResolver(productRepository: $productRepository, contentAggregator: $contentAggregator, enhanced: $variantContent),
+            $this->createResolver(
+                productRepository: $this->createVariantRepository(),
+                currentVariant: $this->createVariantContent($parentContent->getResource()),
+            ),
         );
 
         self::assertSame('NC3FX', $this->contentOf($content['title']));
@@ -146,49 +140,34 @@ class ProductResolverVariantsTest extends ProductResolverTestCase
         self::assertArrayNotHasKey('currentVariant', $currentVariant);
     }
 
-    /** A variant page renders its parent's data, so publishing the parent must clear it. */
-    public function testAVariantPageIsTaggedWithItsParent(): void
-    {
-        $parent = new Product('01a0a3fe-4a32-77dc-bbce-312e6926f731');
-        $parent->setType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
-        $parentContent = new ProductDimensionContent($parent);
-        $parentContent->setLocale('de');
-
-        $productRepository = $this->createStub(ProductRepositoryInterface::class);
-        $productRepository->method('findOneBy')->willReturn($parent);
-        $productRepository->method('findIdentifiersBy')->willReturn([]);
-
-        $contentAggregator = $this->createStub(ContentAggregatorInterface::class);
-        $contentAggregator->method('aggregate')->willReturn($parentContent);
-
-        $variantContent = $this->createVariantContent($parent);
-
-        $referenceStore = new ReferenceStore();
-        $this->resolveContent(
-            $variantContent,
-            null,
-            $this->createResolver(productRepository: $productRepository, contentAggregator: $contentAggregator, referenceStore: $referenceStore, enhanced: $variantContent),
-        );
-
-        self::assertContains('01a0a3fe-4a32-77dc-bbce-312e6926f731', $referenceStore->getAll());
-    }
-
-    /** The reference index resolves without the enhancers, so a variant does not index its parent's references. */
-    public function testAVariantTheEnhancerHasNotRunForResolvesAsItself(): void
+    /** The core tags the page with its parent, publishing the variant must clear it too. */
+    public function testAVariantPageIsTaggedWithItsVariant(): void
     {
         $parentContent = $this->createVariantParentContent();
 
+        $referenceStore = new ReferenceStore();
+        $this->resolveContent(
+            $parentContent,
+            null,
+            $this->createResolver(
+                referenceStore: $referenceStore,
+                currentVariant: $this->createVariantContent($parentContent->getResource()),
+            ),
+        );
+
+        self::assertSame(['products-variant-uuid-2'], \array_values($referenceStore->getAll()));
+    }
+
+    /** Resolved directly, as the reference index does, a variant carries only its own fields. */
+    public function testAVariantResolvesAsItself(): void
+    {
         $productRepository = $this->createMock(ProductRepositoryInterface::class);
-        $productRepository->expects(self::never())->method('findOneBy');
         $productRepository->expects(self::never())->method('findIdentifiersBy');
 
-        $contentAggregator = $this->createStub(ContentAggregatorInterface::class);
-        $contentAggregator->method('aggregate')->willReturn($parentContent);
-
         $content = $this->resolveContent(
-            $this->createVariantContent($parentContent->getResource()),
+            $this->createVariantContent(new Product('parent-uuid')),
             null,
-            $this->createResolver(productRepository: $productRepository, contentAggregator: $contentAggregator),
+            $this->createResolver(productRepository: $productRepository),
         );
 
         self::assertSame('NC3FX-B', $this->contentOf($content['title']));
@@ -196,23 +175,32 @@ class ProductResolverVariantsTest extends ProductResolverTestCase
         self::assertArrayNotHasKey('variants', $content);
     }
 
-    public function testAReferenceTagsNoParent(): void
+    public function testAReferenceToTheParentGetsNoCurrentVariant(): void
     {
+        $parentContent = $this->createVariantParentContent();
+
         $referenceStore = new ReferenceStore();
-        $this->resolveContent(
-            $this->createVariantContent(new Product('01a0a3fe-4a32-77dc-bbce-312e6926f731')),
+        $content = $this->resolveContent(
+            $parentContent,
             ['title' => 'product.title'],
-            $this->createResolver(referenceStore: $referenceStore),
+            $this->createResolver(
+                referenceStore: $referenceStore,
+                currentVariant: $this->createVariantContent($parentContent->getResource()),
+            ),
         );
 
+        self::assertArrayNotHasKey('currentVariant', $content);
         self::assertSame([], $referenceStore->getAll());
     }
 
-    public function testAVariantWhoseParentIsNotLoadableResolvesAsItself(): void
+    public function testAVariantOfAnotherProductIsNoCurrentVariant(): void
     {
-        $content = $this->resolveContent($this->createVariantContent(new Product('parent-uuid')));
+        $content = $this->resolveContent(
+            $this->createVariantParentContent(),
+            null,
+            $this->createResolver(currentVariant: $this->createVariantContent(new Product('other-parent-uuid'))),
+        );
 
-        self::assertSame('NC3FX-B', $this->contentOf($content['title']));
         self::assertArrayNotHasKey('currentVariant', $content);
     }
 
