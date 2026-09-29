@@ -1,0 +1,92 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of Sulu.
+ *
+ * (c) Sulu GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
+namespace Sulu\Product\Application\Ai;
+
+use Sulu\Product\Domain\Measurement\MeasurementRegistry;
+use Sulu\Product\Domain\Model\AttributeInterface;
+use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
+
+/**
+ * List the known product specification attributes. Framework-agnostic:
+ * Infrastructure\Symfony\Ai\Tool\GetAttributesTool wraps this for symfony/ai-agent.
+ */
+final class GetAttributes
+{
+    public function __construct(
+        private readonly AttributeRepositoryInterface $attributeRepository,
+        private readonly MeasurementRegistry $measurementRegistry,
+    ) {
+    }
+
+    /**
+     * @return list<array{
+     *     key: string,
+     *     name: string,
+     *     type: string,
+     *     group: string,
+     *     unit: ?string,
+     *     options: list<array{key: string, label: string}>,
+     * }>
+     */
+    public function __invoke(string $locale, ?string $group = null): array
+    {
+        $group = null !== $group ? \trim($group) : null;
+
+        $attributes = $this->attributeRepository->findBy();
+
+        \usort(
+            $attributes,
+            static fn (AttributeInterface $a, AttributeInterface $b): int => [$a->getGroup()->getId(), $a->getPosition()]
+                <=> [$b->getGroup()->getId(), $b->getPosition()],
+        );
+
+        $results = [];
+
+        foreach ($attributes as $attribute) {
+            $groupTranslation = $attribute->getGroup()->getTranslation($locale);
+            $groupName = $groupTranslation?->getName() ?? $attribute->getGroup()->getUuid() ?? '';
+
+            if (null !== $group && '' !== $group && !\str_contains(\mb_strtolower($groupName), \mb_strtolower($group))) {
+                continue;
+            }
+
+            $translation = $attribute->getTranslation($locale);
+
+            $config = $attribute->getConfig();
+            $unitKey = $config['unit'] ?? null;
+            $unit = \is_string($unitKey) ? $this->measurementRegistry->findUnit($unitKey) : null;
+
+            $options = [];
+            if (AttributeInterface::TYPE_OPTIONS === $attribute->getType()) {
+                foreach ($attribute->getOptions() as $option) {
+                    $options[] = [
+                        'key' => $option->getKey(),
+                        'label' => $option->getTranslation($locale)?->getName() ?? $option->getKey(),
+                    ];
+                }
+            }
+
+            $results[] = [
+                'key' => $attribute->getKey(),
+                'name' => $translation?->getName() ?? $attribute->getKey(),
+                'type' => $attribute->getType(),
+                'group' => $groupName,
+                'unit' => $unit?->getSymbol(),
+                'options' => $options,
+            ];
+        }
+
+        return $results;
+    }
+}

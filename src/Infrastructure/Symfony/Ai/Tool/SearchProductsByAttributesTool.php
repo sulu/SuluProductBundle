@@ -13,10 +13,7 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Infrastructure\Symfony\Ai\Tool;
 
-use Sulu\Content\Domain\Model\DimensionContentInterface;
-use Sulu\Product\Domain\Model\ProductInterface;
-use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
-use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Application\Ai\SearchProductsByAttributes;
 use Symfony\AI\Agent\Toolbox\Attribute\AsTool;
 
 #[AsTool(
@@ -25,15 +22,8 @@ use Symfony\AI\Agent\Toolbox\Attribute\AsTool;
 )]
 final class SearchProductsByAttributesTool
 {
-    use ResolvesLiveProductContentTrait;
-
-    private const MAX_LIMIT = 25;
-
-    private const MAX_FILTERS = 5;
-
     public function __construct(
-        private readonly ProductRepositoryInterface $productRepository,
-        private readonly AttributeRepositoryInterface $attributeRepository,
+        private readonly SearchProductsByAttributes $searchProductsByAttributes,
     ) {
     }
 
@@ -64,62 +54,6 @@ final class SearchProductsByAttributesTool
         bool $includeVariants = false,
         int $limit = 10,
     ): array {
-        if ([] === $filters) {
-            return [
-                'results' => [],
-                'status' => 'no_match',
-                'instruction' => 'No filters were given. Call sulu_product_get_attributes first '
-                    . 'and pass at least one {key, value} pair.',
-            ];
-        }
-
-        $attributeValues = [];
-
-        foreach (\array_slice($filters, 0, self::MAX_FILTERS) as $filter) {
-            $key = \trim($filter['key']);
-            $attribute = '' !== $key ? $this->attributeRepository->findOneBy(['key' => $key]) : null;
-
-            if (null === $attribute) {
-                return [
-                    'results' => [],
-                    'status' => 'unknown_attribute',
-                    'instruction' => \sprintf(
-                        'No attribute with the exact key "%s" exists. Call sulu_product_get_attributes to get the exact key instead of guessing one.',
-                        $key,
-                    ),
-                ];
-            }
-
-            $attributeValues[] = ['attribute' => $attribute, 'value' => $filter['value']];
-        }
-
-        $productFilters = [
-            'locale' => $locale,
-            'stage' => DimensionContentInterface::STAGE_LIVE,
-            'attributeValues' => $attributeValues,
-            'limit' => \max(1, \min($limit, self::MAX_LIMIT)),
-        ];
-
-        if (!$includeVariants) {
-            $productFilters['excludeTypes'] = [ProductInterface::TYPE_VARIANT];
-        }
-
-        $results = [];
-
-        foreach ($this->productRepository->findBy($productFilters, ['title' => 'asc']) as $product) {
-            $row = $this->toProductSummary($product, $locale);
-
-            if (null !== $row) {
-                $results[] = $row;
-            }
-        }
-
-        return [
-            'results' => $results,
-            'status' => [] === $results ? 'no_match' : 'ok',
-            'instruction' => [] === $results ? 'No product matched every given attribute value. '
-                . 'Do not name, guess, or construct any product code as a fallback. Tell the '
-                . 'visitor plainly that no match was found.' : null,
-        ];
+        return ($this->searchProductsByAttributes)($locale, $filters, $includeVariants, $limit);
     }
 }

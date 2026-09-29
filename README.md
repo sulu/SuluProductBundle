@@ -247,6 +247,12 @@ a Symfony AI agent can look up products for a chatbot. Nothing is registered wit
 composer require symfony/ai-agent
 ```
 
+Each tool is a thin `#[AsTool]` wrapper (`Infrastructure\Symfony\Ai\Tool`) around a
+framework-agnostic service of the same behavior (`Application\Ai`), which is registered
+unconditionally. A project that wants this search/lookup logic through a different integration
+(e.g. MCP) can depend on the `Application\Ai` class directly, without requiring
+`symfony/ai-agent` at all.
+
 | Tool | Purpose |
 | --- | --- |
 | `sulu_product_get_products` | Search published products by keyword, article code, or product family. |

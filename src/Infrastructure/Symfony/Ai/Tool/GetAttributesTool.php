@@ -13,9 +13,7 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Infrastructure\Symfony\Ai\Tool;
 
-use Sulu\Product\Domain\Measurement\MeasurementRegistry;
-use Sulu\Product\Domain\Model\AttributeInterface;
-use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
+use Sulu\Product\Application\Ai\GetAttributes;
 use Symfony\AI\Agent\Toolbox\Attribute\AsTool;
 
 #[AsTool(
@@ -25,8 +23,7 @@ use Symfony\AI\Agent\Toolbox\Attribute\AsTool;
 final class GetAttributesTool
 {
     public function __construct(
-        private readonly AttributeRepositoryInterface $attributeRepository,
-        private readonly MeasurementRegistry $measurementRegistry,
+        private readonly GetAttributes $getAttributes,
     ) {
     }
 
@@ -46,52 +43,6 @@ final class GetAttributesTool
      */
     public function __invoke(string $locale, ?string $group = null): array
     {
-        $group = null !== $group ? \trim($group) : null;
-
-        $attributes = $this->attributeRepository->findBy();
-
-        \usort(
-            $attributes,
-            static fn (AttributeInterface $a, AttributeInterface $b): int => [$a->getGroup()->getId(), $a->getPosition()]
-                <=> [$b->getGroup()->getId(), $b->getPosition()],
-        );
-
-        $results = [];
-
-        foreach ($attributes as $attribute) {
-            $groupTranslation = $attribute->getGroup()->getTranslation($locale);
-            $groupName = $groupTranslation?->getName() ?? $attribute->getGroup()->getUuid() ?? '';
-
-            if (null !== $group && '' !== $group && !\str_contains(\mb_strtolower($groupName), \mb_strtolower($group))) {
-                continue;
-            }
-
-            $translation = $attribute->getTranslation($locale);
-
-            $config = $attribute->getConfig();
-            $unitKey = $config['unit'] ?? null;
-            $unit = \is_string($unitKey) ? $this->measurementRegistry->findUnit($unitKey) : null;
-
-            $options = [];
-            if (AttributeInterface::TYPE_OPTIONS === $attribute->getType()) {
-                foreach ($attribute->getOptions() as $option) {
-                    $options[] = [
-                        'key' => $option->getKey(),
-                        'label' => $option->getTranslation($locale)?->getName() ?? $option->getKey(),
-                    ];
-                }
-            }
-
-            $results[] = [
-                'key' => $attribute->getKey(),
-                'name' => $translation?->getName() ?? $attribute->getKey(),
-                'type' => $attribute->getType(),
-                'group' => $groupName,
-                'unit' => $unit?->getSymbol(),
-                'options' => $options,
-            ];
-        }
-
-        return $results;
+        return ($this->getAttributes)($locale, $group);
     }
 }

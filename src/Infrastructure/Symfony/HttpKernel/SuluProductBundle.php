@@ -17,6 +17,12 @@ use Sulu\Bundle\HttpCacheBundle\ReferenceStore\ReferenceStore;
 use Sulu\Bundle\PersistenceBundle\DependencyInjection\PersistenceExtensionTrait;
 use Sulu\Bundle\PersistenceBundle\PersistenceBundleTrait;
 use Sulu\Content\Infrastructure\Sulu\Preview\ContentObjectProvider;
+use Sulu\Product\Application\Ai\GetAttributes;
+use Sulu\Product\Application\Ai\GetAttributeValues;
+use Sulu\Product\Application\Ai\GetProductDetails;
+use Sulu\Product\Application\Ai\GetProducts;
+use Sulu\Product\Application\Ai\GetRelatedProducts;
+use Sulu\Product\Application\Ai\SearchProductsByAttributes;
 use Sulu\Product\Application\AttributeType\AttributeTypeInterface;
 use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
 use Sulu\Product\Application\AttributeType\DateAttributeType;
@@ -1360,64 +1366,85 @@ final class SuluProductBundle extends AbstractBundle
 
         $services->alias(ProductAttributeValueRepositoryInterface::class, 'sulu_product.product_attribute_value_repository');
 
-        // "symfony/ai-agent" is a require-dev/suggest dependency; register the tools only if it's installed.
+        // The search/lookup logic behind the AI tools below, framework-agnostic and always
+        // registered: a consumer (e.g. an MCP tool) can use it without symfony/ai-agent installed.
+        $services->set(GetProducts::class)
+            ->args([new Reference('sulu_product.product_repository')]);
+
+        $services->set(GetAttributes::class)
+            ->args([
+                new Reference('sulu_product.attribute_repository'),
+                new Reference('sulu_product.measurement_registry'),
+            ]);
+
+        $services->set(GetAttributeValues::class)
+            ->args([
+                new Reference('sulu_product.attribute_repository'),
+                new Reference('sulu_product.product_attribute_value_repository'),
+                new Reference('sulu_product.attribute_type_registry'),
+            ]);
+
+        $services->set(SearchProductsByAttributes::class)
+            ->args([
+                new Reference('sulu_product.product_repository'),
+                new Reference('sulu_product.attribute_repository'),
+            ]);
+
+        $services->set(GetProductDetails::class)
+            ->args([
+                new Reference('sulu_product.product_repository'),
+                new Reference('sulu_product.attribute_type_registry'),
+            ]);
+
+        $services->set(GetRelatedProducts::class)
+            ->args([
+                new Reference('sulu_product.product_repository'),
+                new Reference('sulu_product.association_type_registry'),
+            ]);
+
+        // "symfony/ai-agent" is a require-dev/suggest dependency; register the #[AsTool] wrappers
+        // only if it's installed. Each just delegates to its unconditionally-registered service above.
         if (ContainerBuilder::willBeAvailable('symfony/ai-agent', AsTool::class, ['sulu/product-bundle'])) {
             $this->registerAiTool(
                 $services,
                 GetProductsTool::class,
                 'sulu_product.ai_get_products_tool',
-                [new Reference('sulu_product.product_repository')],
+                [new Reference(GetProducts::class)],
             );
 
             $this->registerAiTool(
                 $services,
                 GetAttributesTool::class,
                 'sulu_product.ai_get_attributes_tool',
-                [
-                    new Reference('sulu_product.attribute_repository'),
-                    new Reference('sulu_product.measurement_registry'),
-                ],
+                [new Reference(GetAttributes::class)],
             );
 
             $this->registerAiTool(
                 $services,
                 GetAttributeValuesTool::class,
                 'sulu_product.ai_get_attribute_values_tool',
-                [
-                    new Reference('sulu_product.attribute_repository'),
-                    new Reference('sulu_product.product_attribute_value_repository'),
-                    new Reference('sulu_product.attribute_type_registry'),
-                ],
+                [new Reference(GetAttributeValues::class)],
             );
 
             $this->registerAiTool(
                 $services,
                 SearchProductsByAttributesTool::class,
                 'sulu_product.ai_search_products_by_attributes_tool',
-                [
-                    new Reference('sulu_product.product_repository'),
-                    new Reference('sulu_product.attribute_repository'),
-                ],
+                [new Reference(SearchProductsByAttributes::class)],
             );
 
             $this->registerAiTool(
                 $services,
                 GetProductDetailsTool::class,
                 'sulu_product.ai_get_product_details_tool',
-                [
-                    new Reference('sulu_product.product_repository'),
-                    new Reference('sulu_product.attribute_type_registry'),
-                ],
+                [new Reference(GetProductDetails::class)],
             );
 
             $this->registerAiTool(
                 $services,
                 GetRelatedProductsTool::class,
                 'sulu_product.ai_get_related_products_tool',
-                [
-                    new Reference('sulu_product.product_repository'),
-                    new Reference('sulu_product.association_type_registry'),
-                ],
+                [new Reference(GetRelatedProducts::class)],
             );
         }
     }

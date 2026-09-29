@@ -13,9 +13,7 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Infrastructure\Symfony\Ai\Tool;
 
-use Sulu\Content\Domain\Model\DimensionContentInterface;
-use Sulu\Product\Domain\Model\ProductInterface;
-use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Application\Ai\GetProducts;
 use Symfony\AI\Agent\Toolbox\Attribute\AsTool;
 
 #[AsTool(
@@ -24,16 +22,8 @@ use Symfony\AI\Agent\Toolbox\Attribute\AsTool;
 )]
 final class GetProductsTool
 {
-    use ResolvesLiveProductContentTrait;
-
-    private const MAX_LIMIT = 25;
-
-    private const NO_MATCH_INSTRUCTION = 'No product title or code matched this search '
-        . 'term. Do not name, guess, or construct any product code as a fallback. Tell the '
-        . 'visitor plainly that no match was found.';
-
     public function __construct(
-        private readonly ProductRepositoryInterface $productRepository,
+        private readonly GetProducts $getProducts,
     ) {
     }
 
@@ -65,45 +55,6 @@ final class GetProductsTool
         bool $includeVariants = false,
         int $limit = 10,
     ): array {
-        $query = null !== $query ? \trim($query) : null;
-        $productFamily = null !== $productFamily ? \trim($productFamily) : null;
-
-        if (('' === $query || null === $query) && ('' === $productFamily || null === $productFamily)) {
-            return ['results' => [], 'status' => 'no_match', 'instruction' => self::NO_MATCH_INSTRUCTION];
-        }
-
-        $filters = [
-            'locale' => $locale,
-            'stage' => DimensionContentInterface::STAGE_LIVE,
-            'limit' => \max(1, \min($limit, self::MAX_LIMIT)),
-        ];
-
-        if ('' !== $query && null !== $query) {
-            $filters['query'] = $query;
-        }
-
-        if ('' !== $productFamily && null !== $productFamily) {
-            $filters['productFamilyName'] = $productFamily;
-        }
-
-        if (!$includeVariants) {
-            $filters['excludeTypes'] = [ProductInterface::TYPE_VARIANT];
-        }
-
-        $results = [];
-
-        foreach ($this->productRepository->findBy($filters, ['title' => 'asc']) as $product) {
-            $row = $this->toProductSummary($product, $locale);
-
-            if (null !== $row) {
-                $results[] = $row;
-            }
-        }
-
-        return [
-            'results' => $results,
-            'status' => [] === $results ? 'no_match' : 'ok',
-            'instruction' => [] === $results ? self::NO_MATCH_INSTRUCTION : null,
-        ];
+        return ($this->getProducts)($locale, $query, $productFamily, $includeVariants, $limit);
     }
 }

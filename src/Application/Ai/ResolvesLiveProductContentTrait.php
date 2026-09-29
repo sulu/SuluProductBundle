@@ -11,7 +11,7 @@ declare(strict_types=1);
  * with this source code in the file LICENSE.
  */
 
-namespace Sulu\Product\Infrastructure\Symfony\Ai\Tool;
+namespace Sulu\Product\Application\Ai;
 
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Application\AttributeType\AttributeTypeInterface;
