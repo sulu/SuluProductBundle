@@ -25,7 +25,25 @@ interface AttributeTypeInterface
 
     public function configureField(FieldMetadata $field, AttributeInterface $attribute, string $locale): void;
 
-    public function readValue(ProductAttributeValueInterface $value): mixed;
+    /**
+     * Names the rows a value is stored in, e.g. `['value']`, `['from', 'to']` or one per selected
+     * option. The data mapper creates the missing rows and removes the ones not named.
+     *
+     * @return list<string>
+     */
+    public function getValueKeys(AttributeInterface $attribute, mixed $raw): array;
 
-    public function writeValue(ProductAttributeValueInterface $value, mixed $raw): void;
+    /**
+     * The value as the admin API and the website see it.
+     *
+     * @param array<string, ProductAttributeValueInterface> $rows the stored rows by value key, possibly none
+     */
+    public function readValue(array $rows): mixed;
+
+    /**
+     * Validates the whole value before changing any row.
+     *
+     * @param array<string, ProductAttributeValueInterface> $rows exactly the rows named by {@see getValueKeys()}
+     */
+    public function writeValue(array $rows, mixed $raw): void;
 }

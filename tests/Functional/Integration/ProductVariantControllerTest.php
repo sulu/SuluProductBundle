@@ -1501,6 +1501,64 @@ class ProductVariantControllerTest extends SuluTestCase
         );
     }
 
+    public function testVariantStoresRangeAttribute(): void
+    {
+        self::purgeDatabase();
+
+        $axisId = $this->createAttribute('voltage', 'Voltage', AttributeInterface::TYPE_RANGE);
+        $familyId = $this->createProductFamily([$axisId => ['variantSpecific' => true]]);
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+
+        $this->client->request(
+            'POST',
+            '/admin/api/products/' . $parentId . '/variants.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'code' => 'PSU-EU',
+                'title' => 'Power supply EU',
+                'attributes' => [$axisId => ['from' => 100, 'to' => 240]],
+            ]) ?: null,
+        );
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+        $created = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($created);
+        $this->assertIsArray($created['attributes']);
+        $this->assertEquals(['from' => 100, 'to' => 240], $created['attributes'][$axisId]);
+        $childId = $created['id'];
+        $this->assertIsString($childId);
+
+        $putRange = function(array $range) use ($parentId, $childId, $axisId): int {
+            $this->client->request(
+                'PUT',
+                '/admin/api/products/' . $parentId . '/variants/' . $childId . '.json?locale=en',
+                [],
+                [],
+                [],
+                \json_encode([
+                    'locale' => 'en',
+                    'code' => 'PSU-EU',
+                    'title' => 'Power supply EU',
+                    'attributes' => [$axisId => $range],
+                ]) ?: null,
+            );
+
+            return $this->client->getResponse()->getStatusCode();
+        };
+
+        $this->assertSame(200, $putRange(['from' => 110, 'to' => 230]));
+        $this->assertSame(400, $putRange(['from' => 230, 'to' => 110]));
+
+        $this->client->request('GET', '/admin/api/products/' . $parentId . '/variants/' . $childId . '.json?locale=en');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertIsArray($data['attributes']);
+        $this->assertEquals(['from' => 110, 'to' => 230], $data['attributes'][$axisId]);
+    }
+
     /**
      * `resolveFamily()` throws a plain `\RuntimeException` — surfaced as a 500 — when the parent
      * was never assigned a product family (`productFamily` omitted at creation).

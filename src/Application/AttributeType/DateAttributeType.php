@@ -17,7 +17,7 @@ use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Webmozart\Assert\Assert;
 
-final class DateAttributeType extends AbstractAttributeType
+final class DateAttributeType extends AbstractSingleRowAttributeType
 {
     public const FORMAT = 'Y-m-d';
 
@@ -31,9 +31,9 @@ final class DateAttributeType extends AbstractAttributeType
         return 'product_attribute_date';
     }
 
-    public function readValue(ProductAttributeValueInterface $value): mixed
+    protected function readRow(ProductAttributeValueInterface $row): mixed
     {
-        $timestamp = $value->getNumber();
+        $timestamp = $row->getNumber();
 
         if (null === $timestamp) {
             return null;
@@ -42,10 +42,10 @@ final class DateAttributeType extends AbstractAttributeType
         return (new \DateTimeImmutable('@' . (int) $timestamp))->format(self::FORMAT);
     }
 
-    public function writeValue(ProductAttributeValueInterface $value, mixed $raw): void
+    protected function writeRow(ProductAttributeValueInterface $row, mixed $raw): void
     {
         if (null === $raw || '' === $raw) {
-            $value->setNumber(null);
+            $row->setNumber(null);
 
             return;
         }
@@ -57,6 +57,6 @@ final class DateAttributeType extends AbstractAttributeType
         Assert::isInstanceOf($date, \DateTimeImmutable::class, \sprintf('Expected a date in format "%s", got "%s".', self::FORMAT, $raw));
         Assert::same($date->format(self::FORMAT), $raw, \sprintf('Expected a valid date in format "%s", got "%s".', self::FORMAT, $raw));
 
-        $value->setNumber((float) $date->getTimestamp());
+        $row->setNumber((float) $date->getTimestamp());
     }
 }

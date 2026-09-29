@@ -14,12 +14,11 @@ declare(strict_types=1);
 namespace Sulu\Product\Application\AttributeType;
 
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
-use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\OptionMetadata;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Webmozart\Assert\Assert;
 
-final class NumberAttributeType extends AbstractAttributeType
+final class NumberAttributeType extends AbstractSingleRowAttributeType
 {
     public function getKey(): string
     {
@@ -33,38 +32,24 @@ final class NumberAttributeType extends AbstractAttributeType
 
     public function configureField(FieldMetadata $field, AttributeInterface $attribute, string $locale): void
     {
-        $config = $attribute->getConfig();
-
-        foreach (['min', 'max', 'step'] as $name) {
-            $value = $config[$name] ?? null;
-            if (null === $value) {
-                continue;
-            }
-
-            Assert::numeric($value);
-
-            $option = new OptionMetadata();
-            $option->setName($name);
-            $option->setValue((string) $value);
-            $field->addOption($option);
-        }
+        $this->addNumberOptions($field, $attribute);
     }
 
-    public function readValue(ProductAttributeValueInterface $value): mixed
+    protected function readRow(ProductAttributeValueInterface $row): mixed
     {
-        return $value->getNumber();
+        return $row->getNumber();
     }
 
-    public function writeValue(ProductAttributeValueInterface $value, mixed $raw): void
+    protected function writeRow(ProductAttributeValueInterface $row, mixed $raw): void
     {
         if (null === $raw || '' === $raw) {
-            $value->setNumber(null);
+            $row->setNumber(null);
 
             return;
         }
 
         Assert::numeric($raw);
 
-        $value->setNumber((float) $raw);
+        $row->setNumber((float) $raw);
     }
 }

@@ -86,6 +86,15 @@ A product without variants resolves as itself, with `product.url` and without `v
 `currentVariant`. A variant resolved as a reference (a product selection) or as a teaser resolves
 as itself, without its product's content.
 
+`product.attributes` maps each attribute key to its `attribute` and its `value`. The value has the
+shape the admin API uses, however many rows the attribute's type stores it in: a number, a text, a
+`Y-m-d` date, an option key or a range's `{from, to}`:
+
+```twig
+{{ product.attributes.weight.value }}
+{{ product.attributes.weight.attribute.key }}
+```
+
 To show a variant's attributes together with its product's, merge them in the template; the
 variant's value wins on the same attribute:
 
@@ -151,7 +160,8 @@ Switching the option on or off adds or removes the whole `product` field, so the
 Only attributes with Filterable on get a filter field. An attribute key is reduced to letters, digits
 and `_`, and prefixed with `a_` unless it starts with a letter. A variant carries its own values plus
 those of its parent that the family does not mark variant-specific. The values of every attribute,
-filterable or not, are added to the searchable `content` as `<label>: <value>`.
+filterable or not, are added to the searchable `content` as `<label>: <value>`; a range reads
+`-20 – 60 °C`, or `≥ 18` / `≤ 24` open on one side, and has no filter field yet.
 
 The product family name, external identifier, short description and details image are indexed
 without this option: the first three as `content`, the image where neither the template nor the
@@ -197,6 +207,24 @@ Nested fields need an adapter that resolves a dotted path, such as Elasticsearch
 memory adapter does not.
 
 Sulu's own site search needs none of this: it finds products next to pages and articles.
+
+## Range attributes
+
+An attribute of type "range" holds two numbers, `from` and `to`, for example an operating
+temperature of -20 to 60 °C. The admin API reads and writes it as `{"from": -20, "to": 60}` under
+the attribute id. Either bound may be empty, for a range open on one side, and `from` may not
+exceed `to`. The attribute's unit, `min`, `max` and `step` apply to both bounds.
+
+In the website, `product.attributes.<key>.value` is `{from: …, to: …}`, an empty bound `null`, and
+the formatted value `from – to`, or `≥ from` / `≤ to` for a range open on one side. A display
+format places the bounds with `%from%` and `%to%`, empty when missing; `%value%` stands for the
+formatted value, so a format for ranges that may be open uses `%value%`, or the template renders
+`value.from` and `value.to` itself:
+
+```
+%value% %unit%                        -> -20 – 60 °C, ≥ 18 °C
+from %from% %unit% up to %to% %unit%  -> from 100 V up to 240 V
+```
 
 ## Association form overrides
 

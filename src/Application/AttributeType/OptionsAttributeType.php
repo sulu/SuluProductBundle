@@ -19,7 +19,7 @@ use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Webmozart\Assert\Assert;
 
-final class OptionsAttributeType extends AbstractAttributeType
+final class OptionsAttributeType extends AbstractSingleRowAttributeType
 {
     public function getKey(): string
     {
@@ -48,24 +48,24 @@ final class OptionsAttributeType extends AbstractAttributeType
         $field->addOption($values);
     }
 
-    public function readValue(ProductAttributeValueInterface $value): mixed
+    protected function readRow(ProductAttributeValueInterface $row): mixed
     {
-        return $value->getAttributeOptionKey();
+        return $row->getAttributeOptionKey();
     }
 
-    public function writeValue(ProductAttributeValueInterface $value, mixed $raw): void
+    protected function writeRow(ProductAttributeValueInterface $row, mixed $raw): void
     {
         if (null === $raw || '' === $raw) {
-            $value->setAttributeOption(null);
+            $row->setAttributeOption(null);
 
             return;
         }
 
         Assert::string($raw);
 
-        $option = $value->getAttribute()->getOption($raw);
-        Assert::notNull($option, \sprintf('Attribute "%s" has no option "%s".', $value->getAttributeKey(), $raw));
+        $option = $row->getAttribute()->getOption($raw);
+        Assert::notNull($option, \sprintf('Attribute "%s" has no option "%s".', $row->getAttributeKey(), $raw));
 
-        $value->setAttributeOption($option);
+        $row->setAttributeOption($option);
     }
 }

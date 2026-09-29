@@ -142,6 +142,35 @@ class WebsiteProductAttributesReindexProviderEnhancerTest extends SuluTestCase
         $this->assertNotContains('Note: First note', $second['content']);
     }
 
+    public function testARangeIsSearchableWithBothOrOneBound(): void
+    {
+        self::purgeDatabase();
+
+        $temperatureId = $this->createAttribute('temperature', 'Temperature', AttributeInterface::TYPE_RANGE, false, [], ['unit' => 'CELSIUS'], false);
+        $ageId = $this->createAttribute('age', 'Age', AttributeInterface::TYPE_RANGE, false, [], [], false);
+        $voltageId = $this->createAttribute('voltage', 'Voltage', AttributeInterface::TYPE_RANGE, false, [], ['unit' => 'VOLT'], false);
+        $familyId = $this->createProductFamily([$temperatureId => [], $ageId => [], $voltageId => []]);
+        $productId = $this->createProduct($familyId, 'Sensor', ProductInterface::TYPE_PRODUCT);
+        $this->putAttributes($productId, [
+            $temperatureId => ['from' => -20, 'to' => 60.5],
+            $ageId => ['from' => 18, 'to' => null],
+            $voltageId => ['from' => null, 'to' => 24],
+        ]);
+        $this->publish($productId);
+
+        /** @var EngineInterface $engine */
+        $engine = self::getContainer()->get('cmsig_seal.engine.default');
+
+        $document = $engine->getDocument('website', 'products__' . $productId . '__en');
+        $this->assertIsArray($document['content']);
+        $this->assertContains('Temperature: -20 – 60.5 °C', $document['content'], 'Both rows of a range are read as one value.');
+        $this->assertContains('Age: ≥ 18', $document['content']);
+        $this->assertContains('Voltage: ≤ 24 V', $document['content']);
+        $product = $document['product'];
+        $this->assertIsArray($product);
+        $this->assertSame([], $product['attributes_numeric_values'], 'A range is not filterable yet.');
+    }
+
     public function testANonFilterableAttributeIsOnlySearchable(): void
     {
         self::purgeDatabase();

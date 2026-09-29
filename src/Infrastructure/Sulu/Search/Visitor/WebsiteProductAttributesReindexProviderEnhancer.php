@@ -22,6 +22,7 @@ use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeOption;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
+use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Symfony\Contracts\Service\ResetInterface;
 
 /**
@@ -55,8 +56,11 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
 
     private const UNLOCALIZED = '';
 
+    /** @var ValueRow */
+    private const EMPTY_ROW = ['optionKey' => null, 'number' => null, 'text' => null, 'variantSpecific' => false];
+
     /**
-     * @var array<string, array<string, array<int, ValueRow>>> product id => locale => attribute id => row
+     * @var array<string, array<string, array<int, array<string, ValueRow>>>> product id => locale => attribute id => value key => row
      */
     private array $attributeValues = [];
 
@@ -119,7 +123,7 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
         $textValues = [];
         $numericValues = [];
 
-        foreach ($this->mergedAttributeValues($productId, $parentId, $locale) as $attributeId => $valueRow) {
+        foreach ($this->mergedAttributeValues($productId, $parentId, $locale) as $attributeId => $rows) {
             $attribute = $this->getAttributeDefinitions()[$attributeId] ?? null;
             if (null === $attribute) {
                 continue;
@@ -128,15 +132,18 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
             $key = $attribute['key'];
             $filterable = $attribute['filterable'];
             $display = null;
+            $valueRow = $rows[ProductAttributeValueInterface::DEFAULT_VALUE_KEY] ?? self::EMPTY_ROW;
             switch ($attribute['type']) {
                 case AttributeInterface::TYPE_NUMBER:
                     if (null !== $valueRow['number']) {
                         if ($filterable) {
                             $numericValues[self::numericField($key)] = [$valueRow['number']];
                         }
-                        $display = \rtrim(\rtrim(\number_format($valueRow['number'], 10, '.', ''), '0'), '.');
-                        $display .= null !== $attribute['unit'] ? ' ' . $attribute['unit'] : '';
+                        $display = $this->formatNumber($valueRow['number'], $attribute['unit']);
                     }
+                    break;
+                case AttributeInterface::TYPE_RANGE:
+                    $display = $this->formatRange($rows['from']['number'] ?? null, $rows['to']['number'] ?? null, $attribute['unit']);
                     break;
                 case AttributeInterface::TYPE_DATE:
                     if (null !== $valueRow['number']) {
@@ -178,15 +185,40 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
         return $document;
     }
 
+    private function formatNumber(float $number, ?string $unit): string
+    {
+        $display = \rtrim(\rtrim(\number_format($number, 10, '.', ''), '0'), '.');
+
+        return null !== $unit ? $display . ' ' . $unit : $display;
+    }
+
     /**
-     * @return array<int, ValueRow> attribute id => row
+     * "from – to", or "≥ from" / "≤ to" for a range open on one side, like the website renders it.
+     */
+    private function formatRange(?float $from, ?float $to, ?string $unit): ?string
+    {
+        $number = fn (float $bound): string => $this->formatNumber($bound, null);
+
+        $display = match (true) {
+            null !== $from && null !== $to => $number($from) . ' – ' . $number($to),
+            null !== $from => '≥ ' . $number($from),
+            null !== $to => '≤ ' . $number($to),
+            default => null,
+        };
+
+        return null !== $display && null !== $unit ? $display . ' ' . $unit : $display;
+    }
+
+    /**
+     * @return array<int, array<string, ValueRow>> attribute id => value key => row
      */
     private function mergedAttributeValues(string $productId, ?string $parentId, string $locale): array
     {
         $merged = $this->productAttributeValues($productId, $locale);
-        foreach (null !== $parentId ? $this->productAttributeValues($parentId, $locale) : [] as $attributeId => $valueRow) {
-            if (!$valueRow['variantSpecific'] && !isset($merged[$attributeId])) {
-                $merged[$attributeId] = $valueRow;
+        foreach (null !== $parentId ? $this->productAttributeValues($parentId, $locale) : [] as $attributeId => $rows) {
+            $variantSpecific = [] !== $rows && \reset($rows)['variantSpecific'];
+            if (!$variantSpecific && !isset($merged[$attributeId])) {
+                $merged[$attributeId] = $rows;
             }
         }
 
@@ -194,7 +226,7 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
     }
 
     /**
-     * @return array<int, ValueRow> attribute id => row
+     * @return array<int, array<string, ValueRow>> attribute id => value key => row
      */
     private function productAttributeValues(string $productId, string $locale): array
     {
@@ -233,11 +265,11 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
     /**
      * @param list<string> $productIds
      *
-     * @return array<string, array<string, array<int, ValueRow>>> product id => locale => attribute id => row
+     * @return array<string, array<string, array<int, array<string, ValueRow>>>> product id => locale => attribute id => value key => row
      */
     private function loadAttributeValues(array $productIds): array
     {
-        /** @var iterable<array{productId: string, locale: string|null, attributeId: int, optionKey: string|null, number: float|null, text: string|null, variantSpecific: bool|null}> $rows */
+        /** @var iterable<array{productId: string, locale: string|null, attributeId: int, valueKey: string, optionKey: string|null, number: float|null, text: string|null, variantSpecific: bool|null}> $rows */
         $rows = $this->entityManager->createQueryBuilder()
             ->from(ProductAttributeValue::class, 'value')
             ->innerJoin('value.productDimensionContent', 'dimensionContent')
@@ -246,6 +278,7 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
             ->select('IDENTITY(dimensionContent.product) AS productId')
             ->addSelect('dimensionContent.locale')
             ->addSelect('IDENTITY(value.attribute) AS attributeId')
+            ->addSelect('value.valueKey')
             ->addSelect('attributeOption.key AS optionKey')
             ->addSelect('value.number')
             ->addSelect('value.text')
@@ -262,7 +295,7 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
         $attributeValues = [];
         foreach ($rows as $row) {
             $text = \is_string($row['text']) ? \trim($row['text']) : '';
-            $attributeValues[$row['productId']][$row['locale'] ?? self::UNLOCALIZED][(int) $row['attributeId']] = [
+            $attributeValues[$row['productId']][$row['locale'] ?? self::UNLOCALIZED][(int) $row['attributeId']][$row['valueKey']] = [
                 'optionKey' => $row['optionKey'],
                 'number' => $row['number'],
                 'text' => '' !== $text ? $text : null,

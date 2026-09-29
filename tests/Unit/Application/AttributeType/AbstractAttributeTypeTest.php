@@ -19,7 +19,7 @@ use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Product\Application\AttributeType\AbstractAttributeType;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
-use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
+use Sulu\Product\Domain\Model\AttributeInterface;
 
 #[CoversClass(AbstractAttributeType::class)]
 class AbstractAttributeTypeTest extends TestCase
@@ -37,12 +37,17 @@ class AbstractAttributeTypeTest extends TestCase
                 return 'product_attribute_stub';
             }
 
-            public function readValue(ProductAttributeValueInterface $value): mixed
+            public function getValueKeys(AttributeInterface $attribute, mixed $raw): array
+            {
+                return [];
+            }
+
+            public function readValue(array $rows): mixed
             {
                 return null;
             }
 
-            public function writeValue(ProductAttributeValueInterface $value, mixed $raw): void
+            public function writeValue(array $rows, mixed $raw): void
             {
             }
         };

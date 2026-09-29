@@ -38,19 +38,19 @@ class TextAttributeTypeTest extends TestCase
         $type = new TextAttributeType();
         $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
 
-        $type->writeValue($value, 'hello');
+        $type->writeValue(['value' => $value], 'hello');
 
         self::assertSame('hello', $value->getText());
-        self::assertSame('hello', $type->readValue($value));
+        self::assertSame('hello', $type->readValue(['value' => $value]));
     }
 
     public function testWriteNullClearsText(): void
     {
         $type = new TextAttributeType();
         $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
-        $type->writeValue($value, 'world');
+        $type->writeValue(['value' => $value], 'world');
 
-        $type->writeValue($value, null);
+        $type->writeValue(['value' => $value], null);
 
         self::assertNull($value->getText());
     }

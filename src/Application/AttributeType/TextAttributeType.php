@@ -17,7 +17,7 @@ use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Webmozart\Assert\Assert;
 
-final class TextAttributeType extends AbstractAttributeType
+final class TextAttributeType extends AbstractSingleRowAttributeType
 {
     public function getKey(): string
     {
@@ -29,21 +29,21 @@ final class TextAttributeType extends AbstractAttributeType
         return 'product_attribute_text';
     }
 
-    public function readValue(ProductAttributeValueInterface $value): mixed
+    protected function readRow(ProductAttributeValueInterface $row): mixed
     {
-        return $value->getText();
+        return $row->getText();
     }
 
-    public function writeValue(ProductAttributeValueInterface $value, mixed $raw): void
+    protected function writeRow(ProductAttributeValueInterface $row, mixed $raw): void
     {
         if (null === $raw) {
-            $value->setText(null);
+            $row->setText(null);
 
             return;
         }
 
         Assert::string($raw);
 
-        $value->setText($raw);
+        $row->setText($raw);
     }
 }
