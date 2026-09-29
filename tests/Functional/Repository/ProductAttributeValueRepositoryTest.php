@@ -224,6 +224,11 @@ class ProductAttributeValueRepositoryTest extends SuluTestCase
         $this->assertSame([], $this->repository->findBy());
     }
 
+    public function testCountValuesOnEmptyDatabaseReturnsEmptyArray(): void
+    {
+        $this->assertSame([], $this->repository->countValues());
+    }
+
     public function testCountValuesGroupsIdenticalValuesMostCommonFirst(): void
     {
         $attribute = $this->createAttribute('material');

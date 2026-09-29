@@ -82,6 +82,11 @@ class ProductAttributeValueFormatterTest extends TestCase
         $this->assertSame('May 1, 2024', $this->formatter->format($value, 'en'));
     }
 
+    public function testDateWithoutATimestampFormatsToNull(): void
+    {
+        $this->assertNull($this->formatter->format($this->value(AttributeInterface::TYPE_DATE), 'en'));
+    }
+
     public function testEmptyValueFormatsToNull(): void
     {
         $value = $this->value(AttributeInterface::TYPE_TEXT);
