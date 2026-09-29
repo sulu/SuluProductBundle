@@ -14,18 +14,21 @@ declare(strict_types=1);
 namespace Sulu\Product\Tests\Functional\Infrastructure\Sulu\Search;
 
 use CmsIg\Seal\EngineInterface;
+use CmsIg\Seal\Reindex\ReindexConfig;
+use CmsIg\Seal\Reindex\ReindexProviderInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeOption;
 use Sulu\Product\Domain\Model\AttributeOptionTranslation;
 use Sulu\Product\Domain\Model\AttributeTranslation;
+use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 
-class WebsiteProductDetailsReindexProviderEnhancerTest extends SuluTestCase
+class WebsiteProductAttributesReindexProviderEnhancerTest extends SuluTestCase
 {
     private KernelBrowser $client;
 
@@ -59,6 +62,8 @@ class WebsiteProductDetailsReindexProviderEnhancerTest extends SuluTestCase
         $blueId = $this->createVariant($parentId);
         $this->putVariantAttributes($parentId, $blueId, [$colourId => 'blue']);
         $this->publish($parentId);
+        $this->publishVariant($parentId, $redId);
+        $this->publishVariant($parentId, $blueId);
 
         /** @var EngineInterface $engine */
         $engine = self::getContainer()->get('cmsig_seal.engine.default');
@@ -69,7 +74,7 @@ class WebsiteProductDetailsReindexProviderEnhancerTest extends SuluTestCase
         $this->assertIsArray($redProduct);
         $this->assertSame(['weight' => [2.5]], $redProduct['attributes_numeric_values']);
         $this->assertIsArray($redProduct['attributes_text_values']);
-        $this->assertEqualsCanonicalizing(['colour:red', 'note:Gold plated'], $redProduct['attributes_text_values']);
+        $this->assertSame(['colour:red'], $redProduct['attributes_text_values'], 'A text attribute is not filterable.');
         $this->assertIsArray($red['content']);
         $this->assertContains('Colour: Red', $red['content'], 'The option label, not its key, is searchable.');
         $this->assertNotContains('Colour: Blue', $red['content']);
@@ -118,7 +123,7 @@ class WebsiteProductDetailsReindexProviderEnhancerTest extends SuluTestCase
         $this->assertIsArray($firstProduct['attributes_numeric_values']);
         $this->assertSame([1.5], $firstProduct['attributes_numeric_values']['weight']);
         $this->assertSame([5.0], $firstProduct['attributes_numeric_values']['resistance']);
-        $this->assertSame(['note:First note'], $firstProduct['attributes_text_values']);
+        $this->assertSame([], $firstProduct['attributes_text_values']);
         $this->assertIsArray($first['content']);
         $this->assertContains('Note: First note', $first['content']);
         $this->assertContains('Weight: 1.5', $first['content']);
@@ -137,25 +142,15 @@ class WebsiteProductDetailsReindexProviderEnhancerTest extends SuluTestCase
         $this->assertNotContains('Note: First note', $second['content']);
     }
 
-    /**
-     * MySQL cuts GROUP_CONCAT at 1024 bytes by default; the values are loaded with it, so a product
-     * whose packed values exceed that must still be indexed completely.
-     */
-    public function testProductWithMoreThanAKilobyteOfValuesIsIndexedCompletely(): void
+    public function testANonFilterableAttributeIsOnlySearchable(): void
     {
         self::purgeDatabase();
 
-        $attributes = [];
-        $values = [];
-        for ($i = 1; $i <= 6; ++$i) {
-            $attributeId = $this->createAttribute('note' . $i, 'Note ' . $i, AttributeInterface::TYPE_TEXT, true);
-            $attributes[$attributeId] = [];
-            $values[$attributeId] = \str_repeat((string) $i, 250);
-        }
-
-        $familyId = $this->createProductFamily($attributes);
-        $productId = $this->createProduct($familyId, 'Long', ProductInterface::TYPE_PRODUCT);
-        $this->putAttributes($productId, $values);
+        $weightId = $this->createAttribute('weight', 'Weight', AttributeInterface::TYPE_NUMBER, false, [], [], false);
+        $colourId = $this->createAttribute('colour', 'Colour', AttributeInterface::TYPE_OPTIONS, false, ['red' => 'Red'], [], false);
+        $familyId = $this->createProductFamily([$weightId => [], $colourId => []]);
+        $productId = $this->createProduct($familyId, 'Cable', ProductInterface::TYPE_PRODUCT);
+        $this->putAttributes($productId, [$weightId => 2.5, $colourId => 'red']);
         $this->publish($productId);
 
         /** @var EngineInterface $engine */
@@ -164,16 +159,61 @@ class WebsiteProductDetailsReindexProviderEnhancerTest extends SuluTestCase
         $document = $engine->getDocument('website', 'products__' . $productId . '__en');
         $product = $document['product'];
         $this->assertIsArray($product);
-        $this->assertIsArray($product['attributes_text_values']);
-        $this->assertCount(6, $product['attributes_text_values']);
-        $this->assertContains('note6:' . \str_repeat('6', 250), $product['attributes_text_values']);
+        $this->assertSame([], $product['attributes_numeric_values']);
+        $this->assertSame([], $product['attributes_text_values']);
+        $this->assertIsArray($document['content']);
+        $this->assertContains('Weight: 2.5', $document['content']);
+        $this->assertContains('Colour: Red', $document['content']);
+    }
+
+    public function testASecondReindexInTheSameProcessReadsTheCurrentValues(): void
+    {
+        self::purgeDatabase();
+
+        $weightId = $this->createAttribute('weight', 'Weight', AttributeInterface::TYPE_NUMBER, false);
+        $familyId = $this->createProductFamily([$weightId => []]);
+        $productId = $this->createProduct($familyId, 'Cable', ProductInterface::TYPE_PRODUCT);
+        $this->putAttributes($productId, [$weightId => 2.5]);
+        $this->publish($productId);
+
+        /** @var ReindexProviderInterface $provider */
+        $provider = self::getContainer()->get('sulu_product.website_product_reindex_provider');
+        $reindexConfig = ReindexConfig::create()
+            ->withIndex('website')
+            ->withIdentifiers(['products__' . $productId . '__en']);
+
+        $this->assertSame(['weight' => [2.5]], $this->numericValues($provider, $reindexConfig));
+
+        self::getEntityManager()->createQueryBuilder()
+            ->update(ProductAttributeValue::class, 'value')
+            ->set('value.number', ':number')
+            ->setParameter('number', 4.0)
+            ->getQuery()
+            ->execute();
+
+        $this->assertSame(['weight' => [4.0]], $this->numericValues($provider, $reindexConfig));
+    }
+
+    /**
+     * @return array<mixed>
+     */
+    private function numericValues(ReindexProviderInterface $provider, ReindexConfig $reindexConfig): array
+    {
+        $documents = \iterator_to_array($provider->provide($reindexConfig), false);
+        $this->assertCount(1, $documents);
+        $product = $documents[0]['product'] ?? null;
+        $this->assertIsArray($product);
+        $numericValues = $product['attributes_numeric_values'];
+        $this->assertIsArray($numericValues);
+
+        return $numericValues;
     }
 
     /**
      * @param array<string, string> $options option key => english name
      * @param array<string, mixed> $config
      */
-    private function createAttribute(string $key, string $name, string $type, bool $localized, array $options = [], array $config = []): int
+    private function createAttribute(string $key, string $name, string $type, bool $localized, array $options = [], array $config = [], bool $filterable = true): int
     {
         $container = self::getContainer();
         /** @var AttributeGroupRepositoryInterface $groupRepository */
@@ -191,6 +231,7 @@ class WebsiteProductDetailsReindexProviderEnhancerTest extends SuluTestCase
         $attribute->setType($type);
         $attribute->setLocalized($localized);
         $attribute->setConfig($config);
+        $attribute->setFilterable($filterable && AttributeInterface::TYPE_TEXT !== $type);
         $attribute->addTranslation(new AttributeTranslation($attribute, 'en', $name));
         foreach ($options as $optionKey => $optionName) {
             $option = new AttributeOption($attribute, $optionKey);
@@ -208,10 +249,16 @@ class WebsiteProductDetailsReindexProviderEnhancerTest extends SuluTestCase
      */
     private function createProductFamily(array $attributes = []): string
     {
+        /** @var AttributeRepositoryInterface $attributeRepository */
+        $attributeRepository = self::getContainer()->get(AttributeRepositoryInterface::class);
+
         $normalized = [];
         foreach ($attributes as $attributeId => $entry) {
-            $normalized[$attributeId] = [
-                'enabled' => true,
+            $attribute = $attributeRepository->findOneBy(['id' => $attributeId]);
+            $this->assertNotNull($attribute);
+
+            $normalized[] = [
+                'id' => $attribute->getUuid(),
                 'required' => $entry['required'] ?? false,
                 'variantSpecific' => $entry['variantSpecific'] ?? false,
             ];
@@ -305,6 +352,12 @@ class WebsiteProductDetailsReindexProviderEnhancerTest extends SuluTestCase
     private function publish(string $id): void
     {
         $this->client->request('POST', '/admin/api/products/' . $id . '.json?locale=en&action=publish');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+    }
+
+    private function publishVariant(string $parentId, string $variantId): void
+    {
+        $this->client->request('POST', '/admin/api/products/' . $parentId . '/variants/' . $variantId . '.json?locale=en&action=publish');
         $this->assertHttpStatusCode(200, $this->client->getResponse());
     }
 }

@@ -21,10 +21,8 @@ use Sulu\Product\Domain\Model\ProductInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 
 /**
- * A variant document carries values, slug and webspaces of its parent, so the parent's variants
- * are reindexed with it. The changed product itself is always part of the identifiers: the
- * provider yields no document for a product that has variants, so the engine drops the document
- * a product had before it got its first variant.
+ * Reindexes a product with its parent and variants, since variants inherit the parent's values and
+ * webspaces. The product itself is always included, so a stale document gets dropped.
  *
  * @internal this class is internal no backwards compatibility promise is given for this class
  *           use Symfony Dependency Injection to override or create your own Listener instead

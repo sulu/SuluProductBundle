@@ -58,7 +58,6 @@ class WebsiteProductReindexContentEnhancer implements WebsiteProductReindexProvi
         $templateKey = $queryResult['templateKey'] ?? null;
         $locale = $queryResult['locale'] ?? null;
         $templateData = $queryResult['templateData'] ?? [];
-        $document['content'] = [];
 
         if (!\is_string($templateKey) || !\is_string($locale) || !\is_array($templateData) || 0 === \count($templateData)) {
             return $document;
@@ -73,7 +72,9 @@ class WebsiteProductReindexContentEnhancer implements WebsiteProductReindexProvi
         $searchableFields = [];
         $this->collectSearchableFields($metadata->getFlatFieldMetadata(), $searchableFields);
 
-        $document['content'] = $this->extractContent($templateData, $searchableFields);
+        /** @var list<string> $content */
+        $content = $document['content'] ?? [];
+        $document['content'] = \array_merge($content, $this->extractContent($templateData, $searchableFields));
 
         $title = $this->extractTitle($templateData, $searchableFields);
         if (null !== $title) {

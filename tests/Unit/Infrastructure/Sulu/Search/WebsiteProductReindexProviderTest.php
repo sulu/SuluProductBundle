@@ -91,9 +91,13 @@ class WebsiteProductReindexProviderTest extends TestCase
             $this->additionalQb->$method(Argument::cetera())->willReturn($this->additionalQb->reveal());
         }
         $this->dimensionContentQb->setParameter(Argument::cetera())->willReturn($this->dimensionContentQb->reveal());
-        $this->dimensionContentQb->setFirstResult(Argument::any())->willReturn($this->dimensionContentQb->reveal());
         $this->dimensionContentQb->setMaxResults(Argument::any())->willReturn($this->dimensionContentQb->reveal());
         $this->dimensionContentQb->getQuery()->willReturn($this->dimensionQuery->reveal());
+
+        // One batch of ids, then none, so the provider's paging loop terminates. This must use
+        // willReturn() with consecutive values rather than a closure with a static counter:
+        // Prophecy does not preserve closure static state across calls under PHPUnit.
+        $this->dimensionQuery->getSingleColumnResult()->willReturn(['1'], []);
 
         $this->additionalQb->setParameter(Argument::cetera())->willReturn($this->additionalQb->reveal());
         $this->additionalQb->getQuery()->willReturn($this->additionalQuery->reveal());
@@ -113,7 +117,8 @@ class WebsiteProductReindexProviderTest extends TestCase
 
     public function testProvideEmptyResultStopsIteration(): void
     {
-        $this->dimensionQuery->getResult()->willReturn([]);
+        $this->dimensionQuery->getSingleColumnResult()->willReturn([]);
+        $this->dimensionQuery->getResult()->shouldNotBeCalled();
 
         $provider = new WebsiteProductReindexProvider($this->entityManager->reveal());
 
@@ -124,16 +129,10 @@ class WebsiteProductReindexProviderTest extends TestCase
 
     public function testProvideYieldsDocumentsForBatch(): void
     {
-        // The first call returns a single batch, every subsequent call returns
-        // an empty batch so the provider's pagination loop terminates. This must
-        // use willReturn() with consecutive values rather than a closure with a
-        // static counter: Prophecy does not preserve closure static state across
-        // calls under PHPUnit, so the counter would stay at 1 and loop forever.
         $this->dimensionQuery->getResult()->willReturn(
             [
                 [
                     'productId' => '42',
-                    'type' => ProductInterface::TYPE_PRODUCT,
                     'parentId' => null,
                     'position' => 0,
                     'code' => 'NC3',
@@ -146,7 +145,6 @@ class WebsiteProductReindexProviderTest extends TestCase
                     'slug' => '/sample',
                 ],
             ],
-            [],
         );
 
         $this->additionalQuery->getResult()->willReturn([
@@ -164,7 +162,38 @@ class WebsiteProductReindexProviderTest extends TestCase
         $this->assertSame(['main', 'extra'], $results[0]['webspaces']);
         $this->assertSame(ProductInterface::RESOURCE_KEY, $results[0]['resourceKey']);
         $this->assertSame(['NC3'], $results[0]['content'], 'The code is only searchable, not a field of its own.');
-        $this->assertArrayNotHasKey('product', $results[0], 'The product field belongs to the details enhancer.');
+        $this->assertArrayNotHasKey('product', $results[0], 'The product field belongs to the attributes enhancer.');
+    }
+
+    public function testProvidePagesAfterTheLastDimensionContentIdOfTheBatch(): void
+    {
+        $row = static fn (string $productId, int $dimensionContentId): array => [
+            'productId' => $productId,
+            'parentId' => null,
+            'code' => null,
+            'authored' => null,
+            'changed' => new \DateTimeImmutable('2024-01-02'),
+            'title' => 'T' . $productId,
+            'locale' => 'en',
+            'mainWebspace' => null,
+            'dimensionContentId' => $dimensionContentId,
+            'slug' => '/s' . $productId,
+        ];
+
+        $this->dimensionQuery->getSingleColumnResult()->willReturn(['3', '8'], ['12'], []);
+        $this->dimensionQuery->getResult()->willReturn([$row('a', 3), $row('b', 8)], [$row('c', 12)]);
+        $this->additionalQuery->getResult()->willReturn([]);
+
+        $this->dimensionContentQb->setParameter('lastDimensionContentId', 0)->shouldBeCalledOnce()->willReturn($this->dimensionContentQb->reveal());
+        $this->dimensionContentQb->setParameter('lastDimensionContentId', 8)->shouldBeCalledOnce()->willReturn($this->dimensionContentQb->reveal());
+        $this->dimensionContentQb->setParameter('lastDimensionContentId', 12)->shouldBeCalledOnce()->willReturn($this->dimensionContentQb->reveal());
+
+        $provider = new WebsiteProductReindexProvider($this->entityManager->reveal());
+
+        $results = \iterator_to_array($provider->provide(new ReindexConfig()), false);
+
+        $this->assertSame(['Ta', 'Tb', 'Tc'], \array_column($results, 'title'));
+        $this->assertSame([], $results[0]['content'], 'Without a code the content starts empty.');
     }
 
     public function testProvideRunsEnhancers(): void
@@ -173,7 +202,6 @@ class WebsiteProductReindexProviderTest extends TestCase
             [
                 [
                     'productId' => '1',
-                    'type' => ProductInterface::TYPE_PRODUCT,
                     'parentId' => null,
                     'position' => 0,
                     'code' => 'CODE-1',
@@ -186,7 +214,6 @@ class WebsiteProductReindexProviderTest extends TestCase
                     'slug' => '/s',
                 ],
             ],
-            [],
         );
 
         $this->additionalQuery->getResult()->willReturn([]);
@@ -225,7 +252,6 @@ class WebsiteProductReindexProviderTest extends TestCase
             [
                 [
                     'productId' => '99',
-                    'type' => ProductInterface::TYPE_PRODUCT,
                     'parentId' => null,
                     'position' => 0,
                     'code' => 'CODE-99',
@@ -238,7 +264,6 @@ class WebsiteProductReindexProviderTest extends TestCase
                     'slug' => '/match',
                 ],
             ],
-            [],
         );
         $this->additionalQuery->getResult()->willReturn([]);
 
@@ -257,7 +282,6 @@ class WebsiteProductReindexProviderTest extends TestCase
             [
                 [
                     'productId' => '7',
-                    'type' => ProductInterface::TYPE_PRODUCT,
                     'parentId' => null,
                     'position' => 0,
                     'code' => 'CODE-7',
@@ -270,7 +294,6 @@ class WebsiteProductReindexProviderTest extends TestCase
                     'slug' => '/only-main',
                 ],
             ],
-            [],
         );
         $this->additionalQuery->getResult()->willReturn([]);
 

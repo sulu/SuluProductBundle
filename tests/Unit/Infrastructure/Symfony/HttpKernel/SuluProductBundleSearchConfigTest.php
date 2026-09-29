@@ -22,26 +22,16 @@ use Symfony\Component\DependencyInjection\Extension\ConfigurationExtensionInterf
 
 class SuluProductBundleSearchConfigTest extends TestCase
 {
-    public function testAdditionalProductFiltersAreEnabledByDefault(): void
+    public function testAdditionalProductFiltersAreDisabledByDefault(): void
     {
-        $this->assertSame(['website' => ['additional_product_filters' => true]], $this->processConfig([])['search']);
+        $this->assertSame(['website' => ['additional_product_filters' => false]], $this->processConfig([])['search']);
     }
 
-    public function testAdditionalProductFiltersCanBeDisabled(): void
+    public function testAdditionalProductFiltersCanBeEnabled(): void
     {
-        $processed = $this->processConfig(['search' => ['website' => ['additional_product_filters' => false]]]);
+        $processed = $this->processConfig(['search' => ['website' => ['additional_product_filters' => true]]]);
 
-        $this->assertSame(['website' => ['additional_product_filters' => false]], $processed['search']);
-    }
-
-    public function testPrependReadsTheRawConfigLastOneWinning(): void
-    {
-        $this->assertTrue($this->isAdditionalProductFiltersEnabled([]));
-        $this->assertTrue($this->isAdditionalProductFiltersEnabled([['variant_query_parameter' => 'v']]));
-        $this->assertFalse($this->isAdditionalProductFiltersEnabled([
-            ['search' => ['website' => ['additional_product_filters' => true]]],
-            ['search' => ['website' => ['additional_product_filters' => false]]],
-        ]));
+        $this->assertSame(['website' => ['additional_product_filters' => true]], $processed['search']);
     }
 
     /**
@@ -59,21 +49,5 @@ class SuluProductBundleSearchConfigTest extends TestCase
 
         /** @var array<string, mixed> */
         return (new Processor())->processConfiguration($configuration, ['sulu_product' => $config]);
-    }
-
-    /**
-     * @param array<int, array<string, mixed>> $configs in load order
-     */
-    private function isAdditionalProductFiltersEnabled(array $configs): bool
-    {
-        $builder = new ContainerBuilder();
-        foreach (\array_reverse($configs) as $config) {
-            $builder->prependExtensionConfig('sulu_product', $config);
-        }
-
-        $method = new \ReflectionMethod(SuluProductBundle::class, 'isAdditionalProductFiltersEnabled');
-
-        /** @var bool */
-        return $method->invoke(new SuluProductBundle(), $builder);
     }
 }

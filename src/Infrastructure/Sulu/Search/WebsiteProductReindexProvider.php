@@ -29,9 +29,7 @@ use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductReindexProvide
  *
  * @phpstan-type Product array{
  *     productId: string,
- *     type: string,
  *     parentId: string|null,
- *     position: int,
  *     dimensionContentId: int,
  *     locale: string,
  *     title: string|null,
@@ -65,7 +63,6 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
     public function __construct(
         EntityManagerInterface $entityManager,
         private readonly iterable $enhancers = [],
-        private readonly string $variantQueryParameter = 'variant',
     ) {
         $this->dimensionContentRepository = $entityManager->getRepository(ProductDimensionContentInterface::class);
         $this->additionalWebspacesRepository = $entityManager->getRepository(ProductDimensionContentAdditionalWebspace::class);
@@ -79,15 +76,13 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
     public function provide(ReindexConfig $reindexConfig): \Generator
     {
         $identifiers = $reindexConfig->getIdentifiers();
-        $offset = 0;
-        $batch = $this->loadBatch($identifiers, $offset);
+        $lastDimensionContentId = 0;
 
-        while ([] !== $batch) {
+        while ([] !== $batch = $this->loadBatch($identifiers, $lastDimensionContentId)) {
             $webspaces = $this->loadWebspaces($batch);
-            $parentSlugs = $this->loadParentSlugs($batch);
 
             foreach ($batch as $row) {
-                $data = $this->createDocument($row, $webspaces, $parentSlugs);
+                $data = $this->createDocument($row, $webspaces);
 
                 foreach ($this->enhancers as $enhancer) {
                     $data = $enhancer->enhanceDocument($row, $data);
@@ -97,30 +92,23 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
                     $data['title'] = (string) $row['title'];
                 }
 
-                // The content enhancer resets `content`, so the code is appended after the enhancers.
-                if (null !== $row['code'] && '' !== $row['code'] && \is_array($data['content'])) {
-                    $data['content'][] = $row['code'];
-                }
-
                 yield $data;
             }
 
-            $offset += self::BATCH_SIZE;
-            $batch = $this->loadBatch($identifiers, $offset);
+            $lastDimensionContentId = \max(\array_column($batch, 'dimensionContentId'));
         }
     }
 
     /**
      * @param Product $row
      * @param array<string, string[]> $webspaces keyed by "<productId>__<locale>"
-     * @param array<string, string> $parentSlugs keyed by "<parentId>__<locale>"
      *
      * @return array<string, mixed>
      */
-    private function createDocument(array $row, array $webspaces, array $parentSlugs): array
+    private function createDocument(array $row, array $webspaces): array
     {
-        $isVariant = ProductInterface::TYPE_VARIANT === $row['type'] && null !== $row['parentId'];
-        $webspaceKey = ($isVariant ? $row['parentId'] : $row['productId']) . '__' . $row['locale'];
+        // A variant owns its route, but its webspaces are the parent's.
+        $webspaceKey = ($row['parentId'] ?? $row['productId']) . '__' . $row['locale'];
 
         return [
             'id' => ProductInterface::RESOURCE_KEY . '__' . $row['productId'] . '__' . $row['locale'],
@@ -129,8 +117,8 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
             'locale' => $row['locale'],
             'webspaces' => $webspaces[$webspaceKey] ?? [],
             'title' => '',
-            'url' => $isVariant ? $this->variantUrl($row, $parentSlugs) : (string) $row['slug'],
-            'content' => [],
+            'url' => (string) $row['slug'],
+            'content' => null !== $row['code'] && '' !== $row['code'] ? [$row['code']] : [],
             'mediaId' => '',
             'authoredAt' => ($row['authored'] ?? $row['changed'])->format('c'),
             'metadata' => [],
@@ -138,28 +126,20 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
     }
 
     /**
-     * The same URL ProductResourceLoader gives a variant: the first one is what the bare parent URL shows.
+     * The next batch after the given dimension content id. Its ids are read first, so the sort and
+     * limit run before the joins of the document query and its enhancers.
      *
-     * @param Product $row
-     * @param array<string, string> $parentSlugs keyed by "<parentId>__<locale>"
-     */
-    private function variantUrl(array $row, array $parentSlugs): string
-    {
-        $slug = $parentSlugs[$row['parentId'] . '__' . $row['locale']] ?? '';
-        if ('' === $slug || 0 === $row['position'] || null === $row['code'] || '' === $row['code']) {
-            return $slug;
-        }
-
-        return $slug . '?' . \http_build_query([$this->variantQueryParameter => $row['code']]);
-    }
-
-    /**
      * @param string[] $identifiers
      *
      * @return array<int, Product>
      */
-    private function loadBatch(array $identifiers, int $offset): array
+    private function loadBatch(array $identifiers, int $lastDimensionContentId): array
     {
+        $dimensionContentIds = $this->loadBatchDimensionContentIds($identifiers, $lastDimensionContentId);
+        if ([] === $dimensionContentIds) {
+            return [];
+        }
+
         // The code is stored once per product, on the unlocalized dimension content.
         $queryBuilder = $this->dimensionContentRepository->createQueryBuilder('dimensionContent')
             ->innerJoin('dimensionContent.product', 'product')
@@ -174,9 +154,7 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
             )
             ->leftJoin('dimensionContent.route', 'route')
             ->select('product.uuid AS productId')
-            ->addSelect('product.type AS type')
             ->addSelect('IDENTITY(product.parent) AS parentId')
-            ->addSelect('product.position AS position')
             ->addSelect('dimensionContent.id AS dimensionContentId')
             ->addSelect('dimensionContent.locale')
             ->addSelect('dimensionContent.title')
@@ -185,16 +163,40 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
             ->addSelect('route.slug')
             ->addSelect('dimensionContent.authored')
             ->addSelect('dimensionContent.changed')
+            ->where('dimensionContent.id IN (:dimensionContentIds)')
+            ->setParameter('dimensionContentIds', $dimensionContentIds)
+            ->orderBy('dimensionContent.id', 'ASC');
+
+        foreach ($this->enhancers as $enhancer) {
+            $enhancer->enhanceQuery($queryBuilder);
+        }
+
+        /** @var array<int, Product> */
+        return $queryBuilder->getQuery()->getResult();
+    }
+
+    /**
+     * @param string[] $identifiers
+     *
+     * @return array<mixed>
+     */
+    private function loadBatchDimensionContentIds(array $identifiers, int $lastDimensionContentId): array
+    {
+        $queryBuilder = $this->dimensionContentRepository->createQueryBuilder('dimensionContent')
+            ->innerJoin('dimensionContent.product', 'product')
+            ->select('dimensionContent.id')
             ->where('dimensionContent.stage = :stage')
             ->andWhere('dimensionContent.locale IS NOT NULL')
             ->andWhere('dimensionContent.version = :version')
             // A product that has variants is represented by its variants.
-            ->andWhere('product.type != :parentType');
+            ->andWhere('product.type != :parentType')
+            ->andWhere('dimensionContent.id > :lastDimensionContentId');
 
         $parameters = [
             'stage' => DimensionContentInterface::STAGE_LIVE,
             'version' => DimensionContentInterface::CURRENT_VERSION,
             'parentType' => ProductInterface::TYPE_PRODUCT_WITH_VARIANTS,
+            'lastDimensionContentId' => $lastDimensionContentId,
         ];
 
         if (0 < \count($identifiers)) {
@@ -222,16 +224,10 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
             $queryBuilder->setParameter($parameterKey, $parameterValue);
         }
 
-        foreach ($this->enhancers as $enhancer) {
-            $enhancer->enhanceQuery($queryBuilder);
-        }
-
-        $queryBuilder->orderBy('dimensionContent.id', 'ASC')
-            ->setFirstResult($offset)
-            ->setMaxResults(self::BATCH_SIZE);
-
-        /** @var array<int, Product> */
-        return $queryBuilder->getQuery()->getResult();
+        return $queryBuilder->orderBy('dimensionContent.id', 'ASC')
+            ->setMaxResults(self::BATCH_SIZE)
+            ->getQuery()
+            ->getSingleColumnResult();
     }
 
     /**
@@ -305,49 +301,6 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
             ->addSelect('additionalWebspace.additionalWebspace AS webspace')
             ->where('additionalWebspace.productDimensionContent IN (:dimensionContentIds)')
             ->setParameter('dimensionContentIds', $dimensionContentIds)
-            ->getQuery()->getResult();
-    }
-
-    /**
-     * Live route slugs of the batch's parents, keyed by "<parentId>__<locale>".
-     *
-     * @param array<int, Product> $batch
-     *
-     * @return array<string, string>
-     */
-    private function loadParentSlugs(array $batch): array
-    {
-        $slugs = [];
-        foreach ($this->loadParentSlugRows($this->parentIds($batch)) as $row) {
-            $slugs[$row['productId'] . '__' . $row['locale']] = $row['slug'];
-        }
-
-        return $slugs;
-    }
-
-    /**
-     * @param string[] $parentIds
-     *
-     * @return array<int, array{productId: string, locale: string, slug: string}>
-     */
-    private function loadParentSlugRows(array $parentIds): array
-    {
-        if ([] === $parentIds) {
-            return [];
-        }
-
-        /** @var array<int, array{productId: string, locale: string, slug: string}> */
-        return $this->dimensionContentRepository->createQueryBuilder('dimensionContent')
-            ->innerJoin('dimensionContent.product', 'product')
-            ->innerJoin('dimensionContent.route', 'route')
-            ->select('product.uuid AS productId', 'dimensionContent.locale', 'route.slug')
-            ->where('product.uuid IN (:parentIds)')
-            ->andWhere('dimensionContent.stage = :stage')
-            ->andWhere('dimensionContent.version = :version')
-            ->andWhere('dimensionContent.locale IS NOT NULL')
-            ->setParameter('parentIds', $parentIds)
-            ->setParameter('stage', DimensionContentInterface::STAGE_LIVE)
-            ->setParameter('version', DimensionContentInterface::CURRENT_VERSION)
             ->getQuery()->getResult();
     }
 

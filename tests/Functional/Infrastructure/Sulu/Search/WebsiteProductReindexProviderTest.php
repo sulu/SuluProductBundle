@@ -48,6 +48,8 @@ class WebsiteProductReindexProviderTest extends SuluTestCase
         $secondVariantId = $this->createVariant($parentId, 1, 'SEARCH-SECOND-VARIANT');
         $plainId = $this->createProduct($familyId, 'Plain', ProductInterface::TYPE_PRODUCT);
         $this->publish($parentId);
+        $this->publishVariant($parentId, $firstVariantId);
+        $this->publishVariant($parentId, $secondVariantId);
         $this->publish($plainId);
 
         /** @var EngineInterface $engine */
@@ -67,13 +69,15 @@ class WebsiteProductReindexProviderTest extends SuluTestCase
         $firstVariant = $engine->getDocument('website', 'products__' . $firstVariantId . '__en');
         $this->assertSame($firstVariantId, $firstVariant['resourceId']);
         $this->assertSame(['sulu-io'], $firstVariant['webspaces']);
-        $parentUrl = $firstVariant['url'];
-        $this->assertIsString($parentUrl);
-        $this->assertStringStartsWith('/search-product-', $parentUrl);
-        $this->assertStringNotContainsString('?', $parentUrl, 'The first variant is what the bare parent URL shows.');
+        $firstVariantUrl = $firstVariant['url'];
+        $this->assertIsString($firstVariantUrl);
+        $this->assertStringStartsWith('/search-variant-', $firstVariantUrl, 'A variant is indexed with its own route.');
 
         $secondVariant = $engine->getDocument('website', 'products__' . $secondVariantId . '__en');
-        $this->assertSame($parentUrl . '?variant=SEARCH-SECOND-VARIANT', $secondVariant['url']);
+        $secondVariantUrl = $secondVariant['url'];
+        $this->assertIsString($secondVariantUrl);
+        $this->assertStringStartsWith('/search-variant-', $secondVariantUrl);
+        $this->assertNotSame($firstVariantUrl, $secondVariantUrl);
         $content = $secondVariant['content'];
         $this->assertIsArray($content);
         $this->assertContains('SEARCH-SECOND-VARIANT', $content, 'The code is searchable through the content.');
@@ -119,6 +123,7 @@ class WebsiteProductReindexProviderTest extends SuluTestCase
         $variantId = $this->createVariant($parentId);
         $draftId = $this->createProduct($familyId, 'Draft', ProductInterface::TYPE_PRODUCT);
         $this->publish($parentId);
+        $this->publishVariant($parentId, $variantId);
 
         /** @var MessageBusInterface $messageBus */
         $messageBus = self::getContainer()->get('sulu_message_bus');
@@ -157,6 +162,7 @@ class WebsiteProductReindexProviderTest extends SuluTestCase
         $variantId = $this->createVariant($parentId);
         $this->publish($plainId);
         $this->publish($parentId);
+        $this->publishVariant($parentId, $variantId);
 
         /** @var EngineInterface $engine */
         $engine = self::getContainer()->get('cmsig_seal.engine.default');
@@ -185,6 +191,12 @@ class WebsiteProductReindexProviderTest extends SuluTestCase
     private function publish(string $id): void
     {
         $this->client->request('POST', '/admin/api/products/' . $id . '.json?locale=en&action=publish');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+    }
+
+    private function publishVariant(string $parentId, string $variantId): void
+    {
+        $this->client->request('POST', '/admin/api/products/' . $parentId . '/variants/' . $variantId . '.json?locale=en&action=publish');
         $this->assertHttpStatusCode(200, $this->client->getResponse());
     }
 

@@ -19,3 +19,6 @@ sulu_product:
     association_types:
         alternative: ~
         suitable: ~
+    search:
+        website:
+            additional_product_filters: true
