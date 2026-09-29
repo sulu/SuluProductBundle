@@ -22,6 +22,7 @@ use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Mcp\Application\AdminLink\AdminLinkGeneratorInterface;
 use Sulu\Mcp\Application\Content\BlockDataNormalizerTrait;
 use Sulu\Mcp\Application\Content\ContentNormalizerTrait;
+use Sulu\Mcp\Domain\Security\DangerousTool;
 use Sulu\Mcp\Domain\Security\PermissionRequirement;
 use Sulu\Mcp\Domain\Security\RequiresPermission;
 use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushStamp;
@@ -65,6 +66,7 @@ class ProductVariantUpdateTool
         description: 'Update a variant of a product. Both the parent UUID and the variant UUID are required, and the variant must actually belong to that parent. The family stays inherited from the parent and cannot be changed here. In "attributes" pass only variant axes (the attributes the family marks variantSpecific), keyed by their INTEGER attribute id; they are merged into the existing values and shared attributes are dropped. The variant stays a draft: publish it individually with sulu_content_publish (type: product, the variant\'s uuid), which only works while its parent is published in that locale.',
         annotations: new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false),
     )]
+    #[DangerousTool('product_write')]
     #[RequiresPermission(requirements: [
         new PermissionRequirement(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT),
     ])]

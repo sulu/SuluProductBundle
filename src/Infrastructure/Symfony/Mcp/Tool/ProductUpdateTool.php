@@ -26,6 +26,7 @@ use Sulu\Mcp\Application\Content\BlockDataValidator;
 use Sulu\Mcp\Application\Content\ContentMetadataMapper;
 use Sulu\Mcp\Application\Content\ContentNormalizerTrait;
 use Sulu\Mcp\Application\Content\ShadowTrait;
+use Sulu\Mcp\Domain\Security\DangerousTool;
 use Sulu\Mcp\Domain\Security\PermissionRequirement;
 use Sulu\Mcp\Domain\Security\RequiresPermission;
 use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushStamp;
@@ -74,6 +75,7 @@ class ProductUpdateTool
         description: 'Update an existing product. Reads the current state, merges your changes and writes back, so pass only what should change. "attributes" is a map keyed by the INTEGER attribute id (sulu_attribute_list) and is merged into the existing values — pass null for an id to clear it. Changing "productFamily" changes which attributes the product may carry. This tool does not change a product\'s type or parent: use sulu_product_variant_update for variants. The product stays a draft — call sulu_content_publish (type: product) to make changes live.',
         annotations: new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false),
     )]
+    #[DangerousTool('product_write')]
     #[RequiresPermission(requirements: [
         new PermissionRequirement(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT),
     ])]

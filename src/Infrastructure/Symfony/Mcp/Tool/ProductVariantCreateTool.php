@@ -21,6 +21,7 @@ use Sulu\Content\Application\ContentManager\ContentManagerInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Mcp\Application\AdminLink\AdminLinkGeneratorInterface;
 use Sulu\Mcp\Application\Content\BlockDataNormalizerTrait;
+use Sulu\Mcp\Domain\Security\DangerousTool;
 use Sulu\Mcp\Domain\Security\PermissionRequirement;
 use Sulu\Mcp\Domain\Security\RequiresPermission;
 use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushStamp;
@@ -61,6 +62,7 @@ class ProductVariantCreateTool
         description: 'Create a variant of an existing product (draft). The parent must be a product of type "product_with_variants" — a plain product or another variant is rejected, because variants cannot be nested. The variant inherits its parent\'s product family, so there is no productFamily parameter. In "attributes" pass only the variant axes: the attributes the family marks variantSpecific (see sulu_product_family_list), keyed by their INTEGER attribute id. Shared attributes belong on the parent and are dropped here; a variant-specific attribute the family marks required must be present. Variants are published individually with sulu_content_publish (type: product, the variant\'s uuid), and only after the parent is published in that locale; publishing the parent leaves its variants unpublished, and unpublishing the parent unpublishes its variants.',
         annotations: new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false),
     )]
+    #[DangerousTool('product_write')]
     #[RequiresPermission(requirements: [
         new PermissionRequirement(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT),
         new PermissionRequirement(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::ADD),
