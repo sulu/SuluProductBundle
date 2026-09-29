@@ -34,6 +34,7 @@ use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductUpdateTool;
 use Sulu\Product\Tests\Unit\Fixture\ArrayMetadataProvider;
 use Sulu\Product\Tests\Unit\Fixture\FixedBlockIdGenerator;
+use Sulu\Product\Tests\Unit\Fixture\ProductContentMetadata;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
@@ -222,5 +223,101 @@ final class ProductUpdateToolTest extends TestCase
         $provider->setDefault(new FormMetadata());
 
         return $provider;
+    }
+
+    public function testUpdateProductSendsCodeStatusFamilyTemplateBlocksAndMergedDetails(): void
+    {
+        $captured = $this->givenProduct(['title' => 'Shirt', 'details' => ['shortDescription' => 'Old', 'keep' => 'yes']]);
+
+        $result = $this->toolWithContentMetadata()->updateProduct(
+            'uuid-1',
+            'en',
+            code: 'SHIRT-2',
+            status: 'available',
+            productFamily: 'family-uuid',
+            template: 'default',
+            content: ['blocks' => [['type' => 'text', 'title' => 'Hello']]],
+            details: ['shortDescription' => 'New'],
+        );
+
+        $this->assertTrue($result['success']);
+        $message = $captured();
+        $this->assertInstanceOf(ModifyProductMessage::class, $message);
+        /** @var array<string, mixed> $data */
+        $data = $message->getData();
+        $this->assertSame('SHIRT-2', $data['code'] ?? null);
+        $this->assertSame('available', $data['status'] ?? null);
+        $this->assertSame('family-uuid', $data['productFamily'] ?? null);
+        $this->assertSame('default', $data['template'] ?? null);
+        $this->assertSame(['shortDescription' => 'New', 'keep' => 'yes'], $data['details'] ?? null);
+        $this->assertSame([['type' => 'text', 'title' => 'Hello', '_id' => 'b1']], $data['blocks'] ?? null);
+    }
+
+    public function testUpdateProductRejectsABlockWithUnknownKeys(): void
+    {
+        $this->givenProduct([]);
+        $this->messageBus->dispatch(Argument::cetera())->shouldNotBeCalled();
+
+        $result = $this->toolWithContentMetadata()->updateProduct('uuid-1', 'en', content: ['blocks' => [['type' => 'text', 'bogus' => 1]]]);
+
+        $this->assertArrayNotHasKey('success', $result);
+        $this->assertIsString($result['error']);
+        $this->assertStringContainsString('bogus', $result['error']);
+    }
+
+    public function testUpdateProductRejectsAnUnknownExcerptField(): void
+    {
+        $this->givenProduct([]);
+
+        $result = $this->toolWithContentMetadata()->updateProduct('uuid-1', 'en', excerpt: ['bogus' => 'x']);
+
+        $this->assertIsString($result['error']);
+        $this->assertStringContainsString('excerpt', $result['error']);
+    }
+
+    public function testUpdateProductRejectsAnUnknownSeoField(): void
+    {
+        $this->givenProduct([]);
+
+        $result = $this->toolWithContentMetadata()->updateProduct('uuid-1', 'en', seo: ['bogus' => 'x']);
+
+        $this->assertIsString($result['error']);
+        $this->assertStringContainsString('seo', $result['error']);
+    }
+
+    public function testUpdateProductReturnsTheAdminUrl(): void
+    {
+        $adminLinkGenerator = $this->prophesize(AdminLinkGeneratorInterface::class);
+        $adminLinkGenerator->generate('product', ['locale' => 'en', 'uuid' => 'uuid-1'])->willReturn('https://admin.example/product');
+        $this->givenProduct([]);
+
+        $result = $this->toolWithContentMetadata($adminLinkGenerator->reveal())->updateProduct('uuid-1', 'en', title: 'x');
+
+        $this->assertSame('https://admin.example/product', $result['admin_url'] ?? null);
+    }
+
+    public function testUpdateProductReturnsErrorOnFailure(): void
+    {
+        $this->productRepository->getOneBy(Argument::cetera())->willThrow(new \RuntimeException('database gone'));
+
+        $result = $this->tool->updateProduct('uuid-1', 'en', title: 'x');
+
+        $this->assertArrayNotHasKey('success', $result);
+        $this->assertIsString($result['error']);
+        $this->assertStringContainsString('database gone', $result['error']);
+        $this->assertNotEmpty($result['hint']);
+    }
+
+    private function toolWithContentMetadata(?AdminLinkGeneratorInterface $adminLinkGenerator = null): ProductUpdateTool
+    {
+        return new ProductUpdateTool(
+            $this->messageBus->reveal(),
+            $this->contentManager->reveal(),
+            $this->productRepository->reveal(),
+            new ContentMetadataMapper(ProductContentMetadata::provider()),
+            new BlockDataValidator(ProductContentMetadata::provider(), new MetadataLocaleResolver(new TokenStorage(), 'en')),
+            FixedBlockIdGenerator::returning('b1', 'b2', 'b3'),
+            $adminLinkGenerator ?? $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
+        );
     }
 }

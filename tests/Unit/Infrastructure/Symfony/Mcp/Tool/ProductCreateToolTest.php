@@ -32,6 +32,7 @@ use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductCreateTool;
 use Sulu\Product\Tests\Unit\Fixture\ArrayMetadataProvider;
 use Sulu\Product\Tests\Unit\Fixture\FixedBlockIdGenerator;
+use Sulu\Product\Tests\Unit\Fixture\ProductContentMetadata;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
@@ -214,5 +215,110 @@ final class ProductCreateToolTest extends TestCase
         $provider->setDefault(new FormMetadata());
 
         return $provider;
+    }
+
+    public function testCreateProductSendsStatusTemplateDetailsAndBlocks(): void
+    {
+        $tool = $this->toolWithContentMetadata();
+        $product = new Product('new-uuid');
+        $captured = $this->captureMessage($product);
+
+        $result = $tool->createProduct(
+            'en',
+            'family-uuid',
+            'Shirt',
+            status: 'available',
+            template: 'default',
+            content: ['blocks' => [['type' => 'text', 'title' => 'Hello']]],
+            details: ['shortDescription' => 'Soft'],
+        );
+
+        $this->assertTrue($result['success']);
+        $message = $captured();
+        $this->assertInstanceOf(CreateProductMessage::class, $message);
+        /** @var array<string, mixed> $data */
+        $data = $message->getData();
+        $this->assertSame('available', $data['status'] ?? null);
+        $this->assertSame('default', $data['template'] ?? null);
+        $this->assertSame(['shortDescription' => 'Soft'], $data['details'] ?? null);
+        $this->assertSame([['type' => 'text', 'title' => 'Hello', '_id' => 'b1']], $data['blocks'] ?? null);
+    }
+
+    public function testCreateProductRejectsABlockWithUnknownKeys(): void
+    {
+        $this->messageBus->dispatch(Argument::cetera())->shouldNotBeCalled();
+
+        $result = $this->toolWithContentMetadata()->createProduct('en', 'family-uuid', 'Shirt', template: 'default', content: ['blocks' => [['type' => 'text', 'bogus' => 1]]]);
+
+        $this->assertArrayNotHasKey('success', $result);
+        $this->assertIsString($result['error']);
+        $this->assertStringContainsString('bogus', $result['error']);
+    }
+
+    public function testCreateProductRejectsAnUnknownExcerptField(): void
+    {
+        $this->messageBus->dispatch(Argument::cetera())->shouldNotBeCalled();
+
+        $result = $this->toolWithContentMetadata()->createProduct('en', 'family-uuid', 'Shirt', excerpt: ['bogus' => 'x']);
+
+        $this->assertIsString($result['error']);
+        $this->assertStringContainsString('excerpt', $result['error']);
+    }
+
+    public function testCreateProductRejectsAnUnknownSeoField(): void
+    {
+        $this->messageBus->dispatch(Argument::cetera())->shouldNotBeCalled();
+
+        $result = $this->toolWithContentMetadata()->createProduct('en', 'family-uuid', 'Shirt', seo: ['bogus' => 'x']);
+
+        $this->assertIsString($result['error']);
+        $this->assertStringContainsString('seo', $result['error']);
+    }
+
+    public function testCreateProductReturnsTheAdminUrl(): void
+    {
+        $adminLinkGenerator = $this->prophesize(AdminLinkGeneratorInterface::class);
+        $adminLinkGenerator->generate('product', ['locale' => 'en', 'uuid' => 'new-uuid'])->willReturn('https://admin.example/product');
+        $this->captureMessage(new Product('new-uuid'));
+
+        $result = $this->toolWithContentMetadata($adminLinkGenerator->reveal())->createProduct('en', 'family-uuid', 'Shirt');
+
+        $this->assertSame('https://admin.example/product', $result['admin_url'] ?? null);
+    }
+
+    private function toolWithContentMetadata(?AdminLinkGeneratorInterface $adminLinkGenerator = null): ProductCreateTool
+    {
+        return new ProductCreateTool(
+            $this->messageBus->reveal(),
+            $this->contentManager->reveal(),
+            new ContentMetadataMapper(ProductContentMetadata::provider()),
+            new BlockDataValidator(ProductContentMetadata::provider(), new MetadataLocaleResolver(new TokenStorage(), 'en')),
+            FixedBlockIdGenerator::returning('b1', 'b2', 'b3'),
+            $adminLinkGenerator ?? $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
+        );
+    }
+
+    /**
+     * @return \Closure(): ?object
+     */
+    private function captureMessage(ProductInterface $product): \Closure
+    {
+        $captured = null;
+
+        $this->messageBus->dispatch(Argument::type(Envelope::class), Argument::cetera())
+            ->will(function(array $args) use ($product, &$captured): Envelope {
+                /** @var Envelope $envelope */
+                $envelope = $args[0];
+                $captured = $envelope->getMessage();
+
+                return $envelope->with(new HandledStamp($product, 'handler'));
+            });
+
+        $this->contentManager->resolve(Argument::cetera())->willReturn(new ProductDimensionContent(new Product()));
+        $this->contentManager->normalize(Argument::cetera())->willReturn([]);
+
+        return static function() use (&$captured): ?object {
+            return $captured;
+        };
     }
 }

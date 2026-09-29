@@ -231,4 +231,39 @@ final class ProductVariantCreateToolTest extends TestCase
 
         return $family;
     }
+
+    public function testCreateVariantSendsCodeStatusAndDetails(): void
+    {
+        $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => [10 => false]]));
+        $captured = $this->captureDispatchedMessage(new Product('variant-uuid'));
+
+        $this->tool->createProductVariant('en', 'parent-uuid', 'Red', code: 'RED-1', status: 'available', details: ['shortDescription' => 'Red']);
+
+        $message = $captured();
+        $this->assertInstanceOf(CreateProductMessage::class, $message);
+        $data = $message->getData();
+        $this->assertSame('RED-1', $data['code'] ?? null);
+        $this->assertSame('available', $data['status'] ?? null);
+        $this->assertSame(['shortDescription' => 'Red'], $data['details'] ?? null);
+    }
+
+    public function testCreateVariantReturnsTheAdminUrl(): void
+    {
+        $adminLinkGenerator = $this->prophesize(AdminLinkGeneratorInterface::class);
+        $adminLinkGenerator->generate('product_variant', ['locale' => 'en', 'uuid' => 'parent-uuid'])->willReturn('https://admin.example/variant');
+
+        $tool = new ProductVariantCreateTool(
+            $this->messageBus->reveal(),
+            $this->contentManager->reveal(),
+            new VariantParentResolver($this->productRepository->reveal(), $this->productFamilyRepository->reveal()),
+            $adminLinkGenerator->reveal(),
+        );
+
+        $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => [10 => false]]));
+        $this->captureDispatchedMessage(new Product('variant-uuid'));
+
+        $result = $tool->createProductVariant('en', 'parent-uuid', 'Red');
+
+        $this->assertSame('https://admin.example/variant', $result['admin_url'] ?? null);
+    }
 }

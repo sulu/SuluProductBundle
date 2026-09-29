@@ -43,6 +43,13 @@ final class ContentTypeExtensionTest extends TestCase
         $this->extension = new ContentTypeExtension($this->productRepository->reveal());
     }
 
+    public function testAProductCanAlwaysBeRemoved(): void
+    {
+        $this->expectNotToPerformAssertions();
+
+        $this->extension->assertCanRemove('any-uuid');
+    }
+
     public function testGetTemplateTypeReturnsProduct(): void
     {
         $this->assertSame('product', $this->extension->getTemplateType());

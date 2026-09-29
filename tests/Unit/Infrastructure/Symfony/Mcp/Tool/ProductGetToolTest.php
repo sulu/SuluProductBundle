@@ -131,4 +131,16 @@ final class ProductGetToolTest extends TestCase
         $instance = $attributes[0]->newInstance();
         $this->assertSame('sulu_product_get', $instance->name);
     }
+
+    public function testGetProductReturnsAnErrorWhenLoadingFails(): void
+    {
+        $this->productRepository->getOneBy(Argument::cetera())->willThrow(new \RuntimeException('database gone'));
+
+        $result = $this->tool->getProduct('en', 'product-uuid');
+
+        $this->assertArrayNotHasKey('uuid', $result);
+        $this->assertIsString($result['error']);
+        $this->assertStringContainsString('database gone', $result['error']);
+        $this->assertNotEmpty($result['hint']);
+    }
 }

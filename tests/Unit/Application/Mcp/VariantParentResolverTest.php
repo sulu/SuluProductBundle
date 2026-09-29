@@ -191,4 +191,18 @@ final class VariantParentResolverTest extends TestCase
         $reflection = new \ReflectionProperty($entity, 'id');
         $reflection->setValue($entity, $id);
     }
+
+    public function testAssertVariantOwnedByParentRejectsAnUnknownVariant(): void
+    {
+        $this->productRepository->getOneBy(['uuid' => 'nope'])->willThrow(new ProductNotFoundException(['uuid' => 'nope']));
+
+        try {
+            $this->resolver->assertVariantOwnedByParent('parent-uuid', 'nope');
+            $this->fail('An unknown variant must be rejected.');
+        } catch (InvalidVariantParentException $e) {
+            $this->assertSame('Variant not found: nope', $e->getMessage());
+            $this->assertStringContainsString('sulu_product_variant_list', $e->getHint());
+            $this->assertInstanceOf(ProductNotFoundException::class, $e->getPrevious());
+        }
+    }
 }

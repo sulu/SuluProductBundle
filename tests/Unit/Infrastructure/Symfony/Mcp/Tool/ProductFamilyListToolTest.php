@@ -174,4 +174,30 @@ final class ProductFamilyListToolTest extends TestCase
 
         return $family;
     }
+
+    public function testListFamiliesRejectsAnUnsupportedSortOrder(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        $this->tool->listProductFamilies('en', sortOrder: 'sideways');
+    }
+
+    public function testListFamiliesSkipsMalformedRowsAndReportsNoAttributesForAVanishedFamily(): void
+    {
+        $this->listBuilder->execute()->willReturn([
+            'not-a-row',
+            ['name' => 'Row without an id'],
+            ['id' => 'gone', 'name' => 'Gone'],
+        ]);
+        $this->listBuilder->count()->willReturn(3);
+
+        $this->productFamilyRepository->findOneBy(['uuid' => 'gone'])->willReturn(null);
+
+        $result = $this->tool->listProductFamilies('en');
+
+        $this->assertSame(
+            [['uuid' => 'gone', 'name' => 'Gone', 'attributes' => []]],
+            $result['families'],
+        );
+    }
 }

@@ -214,4 +214,51 @@ final class ProductVariantUpdateToolTest extends TestCase
 
         return $family;
     }
+
+    public function testUpdateVariantSendsCodeStatusAndMergedDetails(): void
+    {
+        $captured = $this->givenVariantOfParent(['details' => ['shortDescription' => 'Old', 'keep' => 'yes']]);
+
+        $this->tool->updateProductVariant('en', 'parent-uuid', 'variant-uuid', code: 'RED-2', status: 'available', details: ['shortDescription' => 'New']);
+
+        $message = $captured();
+        $this->assertInstanceOf(ModifyProductMessage::class, $message);
+        $data = $message->getData();
+        $this->assertSame('RED-2', $data['code'] ?? null);
+        $this->assertSame('available', $data['status'] ?? null);
+        $this->assertSame(['shortDescription' => 'New', 'keep' => 'yes'], $data['details'] ?? null);
+    }
+
+    public function testUpdateVariantReturnsTheAdminUrl(): void
+    {
+        $adminLinkGenerator = $this->prophesize(AdminLinkGeneratorInterface::class);
+        $adminLinkGenerator->generate('product_variant', ['locale' => 'en', 'uuid' => 'parent-uuid'])->willReturn('https://admin.example/variant');
+
+        $tool = new ProductVariantUpdateTool(
+            $this->messageBus->reveal(),
+            $this->contentManager->reveal(),
+            $this->productRepository->reveal(),
+            new VariantParentResolver($this->productRepository->reveal(), $this->productFamilyRepository->reveal()),
+            $adminLinkGenerator->reveal(),
+        );
+        $this->givenVariantOfParent([]);
+
+        $result = $tool->updateProductVariant('en', 'parent-uuid', 'variant-uuid', title: 'x');
+
+        $this->assertSame('https://admin.example/variant', $result['admin_url'] ?? null);
+    }
+
+    public function testUpdateVariantReturnsErrorOnFailure(): void
+    {
+        $this->givenVariantOfParent([]);
+        $this->productRepository->getOneBy(Argument::type('array'), Argument::type('array'))->willThrow(new \RuntimeException('Product code "RED-2" is already in use'));
+
+        $result = $this->tool->updateProductVariant('en', 'parent-uuid', 'variant-uuid', code: 'RED-2');
+
+        $this->assertArrayNotHasKey('success', $result);
+        $this->assertIsString($result['error']);
+        $this->assertStringContainsString('already in use', $result['error']);
+        $this->assertIsString($result['hint']);
+        $this->assertNotEmpty($result['hint']);
+    }
 }

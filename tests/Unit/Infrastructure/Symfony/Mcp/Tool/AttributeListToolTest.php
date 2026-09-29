@@ -173,4 +173,11 @@ final class AttributeListToolTest extends TestCase
 
         return $attribute;
     }
+
+    public function testListAttributesRejectsAnUnsupportedSortOrder(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        $this->tool->listAttributes('en', sortOrder: 'sideways');
+    }
 }

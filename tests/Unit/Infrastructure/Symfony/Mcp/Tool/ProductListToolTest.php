@@ -167,4 +167,11 @@ final class ProductListToolTest extends TestCase
         $instance = $attributes[0]->newInstance();
         $this->assertSame('sulu_product_list', $instance->name);
     }
+
+    public function testListProductsRejectsAnUnsupportedSortOrder(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        $this->tool->listProducts('en', sortOrder: 'sideways');
+    }
 }
