@@ -24,20 +24,24 @@ use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductReindexProviderEnhancerInterface;
 
 /**
+ * One document per published leaf: a product without variants, or a variant. A product that has
+ * variants is represented by them, so it gets no document of its own.
+ *
  * @phpstan-type Product array{
- *     productId: int,
- *     changed: \DateTimeImmutable,
- *     title: string,
- *     locale: string,
- *     mainWebspace: string|null,
- *     additionalWebspaces: string[]|null,
- *     slug: string,
+ *     productId: string,
+ *     parentId: string|null,
  *     dimensionContentId: int,
+ *     locale: string,
+ *     title: string|null,
+ *     code: string|null,
+ *     mainWebspace: string|null,
+ *     slug: string|null,
  *     authored: \DateTimeImmutable|null,
+ *     changed: \DateTimeImmutable,
  * }
  *
  * @internal this class is internal no backwards compatibility promise is given for this class
- *            use Symfony Dependency Injection to override or create your own ReindexProvider instead
+ *           use Symfony Dependency Injection to override or create your own ReindexProvider instead
  */
 final class WebsiteProductReindexProvider implements ReindexProviderInterface
 {
@@ -58,13 +62,10 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
      */
     public function __construct(
         EntityManagerInterface $entityManager,
-        private iterable $enhancers = [],
+        private readonly iterable $enhancers = [],
     ) {
-        $dimensionContentRepository = $entityManager->getRepository(ProductDimensionContentInterface::class);
-        $additionalWebspacesRepository = $entityManager->getRepository(ProductDimensionContentAdditionalWebspace::class);
-
-        $this->dimensionContentRepository = $dimensionContentRepository;
-        $this->additionalWebspacesRepository = $additionalWebspacesRepository;
+        $this->dimensionContentRepository = $entityManager->getRepository(ProductDimensionContentInterface::class);
+        $this->additionalWebspacesRepository = $entityManager->getRepository(ProductDimensionContentAdditionalWebspace::class);
     }
 
     public function total(): ?int
@@ -75,96 +76,141 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
     public function provide(ReindexConfig $reindexConfig): \Generator
     {
         $identifiers = $reindexConfig->getIdentifiers();
-        $offset = 0;
-        $batch = $this->loadBatch($identifiers, $offset);
+        $lastDimensionContentId = 0;
 
-        while ([] !== $batch) {
-            $dimensionContentIds = \array_column($batch, 'dimensionContentId');
-            $additionalWebspacesResult = $this->loadAdditionalWebspaces($dimensionContentIds);
+        while ([] !== $batch = $this->loadBatch($identifiers, $lastDimensionContentId)) {
+            $webspaces = $this->loadWebspaces($batch);
 
-            /** @var Product $product */
-            foreach ($batch as $product) {
-                $authoredAt = $product['authored'] ?? $product['changed'];
-                $webspaces = $product['mainWebspace'] ? [$product['mainWebspace']] : [];
-
-                foreach ($additionalWebspacesResult as $additionalWebspaceRow) {
-                    if ($additionalWebspaceRow['productDimensionContentId'] === $product['dimensionContentId'] && !\in_array($additionalWebspaceRow['webspace'], $webspaces, true)) {
-                        $webspaces[] = $additionalWebspaceRow['webspace'];
-                    }
-                }
-
-                $data = [
-                    'id' => ProductInterface::RESOURCE_KEY . '__' . ((string) $product['productId']) . '__' . $product['locale'],
-                    'resourceKey' => ProductInterface::RESOURCE_KEY,
-                    'resourceId' => (string) $product['productId'],
-                    'locale' => $product['locale'],
-                    'webspaces' => $webspaces,
-                    'title' => '',
-                    'url' => $product['slug'],
-                    'content' => [],
-                    'mediaId' => '',
-                    'authoredAt' => $authoredAt->format('c'),
-                    'metadata' => [],
-                ];
+            foreach ($batch as $row) {
+                $data = $this->createDocument($row, $webspaces);
 
                 foreach ($this->enhancers as $enhancer) {
-                    $data = $enhancer->enhanceDocument($product, $data);
+                    $data = $enhancer->enhanceDocument($row, $data);
                 }
 
                 if ('' === $data['title']) {
-                    $data['title'] = $product['title'];
+                    $data['title'] = (string) $row['title'];
                 }
 
                 yield $data;
             }
 
-            $offset += self::BATCH_SIZE;
-            $batch = $this->loadBatch($identifiers, $offset);
+            $lastDimensionContentId = \max(\array_column($batch, 'dimensionContentId'));
         }
+    }
+
+    /**
+     * @param Product $row
+     * @param array<string, string[]> $webspaces keyed by "<productId>__<locale>"
+     *
+     * @return array<string, mixed>
+     */
+    private function createDocument(array $row, array $webspaces): array
+    {
+        // A variant owns its route, but its webspaces are the parent's.
+        $webspaceKey = ($row['parentId'] ?? $row['productId']) . '__' . $row['locale'];
+
+        return [
+            'id' => ProductInterface::RESOURCE_KEY . '__' . $row['productId'] . '__' . $row['locale'],
+            'resourceKey' => ProductInterface::RESOURCE_KEY,
+            'resourceId' => $row['productId'],
+            'locale' => $row['locale'],
+            'webspaces' => $webspaces[$webspaceKey] ?? [],
+            'title' => '',
+            'url' => (string) $row['slug'],
+            'content' => null !== $row['code'] && '' !== $row['code'] ? [$row['code']] : [],
+            'mediaId' => '',
+            'authoredAt' => ($row['authored'] ?? $row['changed'])->format('c'),
+            'metadata' => [],
+        ];
+    }
+
+    /**
+     * The next batch after the given dimension content id. Its ids are read first, so the sort and
+     * limit run before the joins of the document query and its enhancers.
+     *
+     * @param string[] $identifiers
+     *
+     * @return array<int, Product>
+     */
+    private function loadBatch(array $identifiers, int $lastDimensionContentId): array
+    {
+        $dimensionContentIds = $this->loadBatchDimensionContentIds($identifiers, $lastDimensionContentId);
+        if ([] === $dimensionContentIds) {
+            return [];
+        }
+
+        // The code is stored once per product, on the unlocalized dimension content.
+        $queryBuilder = $this->dimensionContentRepository->createQueryBuilder('dimensionContent')
+            ->innerJoin('dimensionContent.product', 'product')
+            ->innerJoin(
+                $this->dimensionContentRepository->getClassName(),
+                'unlocalizedDimensionContent',
+                'WITH',
+                'unlocalizedDimensionContent.product = product'
+                . ' AND unlocalizedDimensionContent.locale IS NULL'
+                . ' AND unlocalizedDimensionContent.stage = dimensionContent.stage'
+                . ' AND unlocalizedDimensionContent.version = dimensionContent.version',
+            )
+            ->leftJoin('dimensionContent.route', 'route')
+            ->select('product.uuid AS productId')
+            ->addSelect('IDENTITY(product.parent) AS parentId')
+            ->addSelect('dimensionContent.id AS dimensionContentId')
+            ->addSelect('dimensionContent.locale')
+            ->addSelect('dimensionContent.title')
+            ->addSelect('unlocalizedDimensionContent.code')
+            ->addSelect('dimensionContent.mainWebspace')
+            ->addSelect('route.slug')
+            ->addSelect('dimensionContent.authored')
+            ->addSelect('dimensionContent.changed')
+            ->where('dimensionContent.id IN (:dimensionContentIds)')
+            ->setParameter('dimensionContentIds', $dimensionContentIds)
+            ->orderBy('dimensionContent.id', 'ASC');
+
+        foreach ($this->enhancers as $enhancer) {
+            $enhancer->enhanceQuery($queryBuilder);
+        }
+
+        /** @var array<int, Product> */
+        return $queryBuilder->getQuery()->getResult();
     }
 
     /**
      * @param string[] $identifiers
      *
-     * @return array<int, Product>
+     * @return array<mixed>
      */
-    private function loadBatch(array $identifiers, int $offset): array
+    private function loadBatchDimensionContentIds(array $identifiers, int $lastDimensionContentId): array
     {
         $queryBuilder = $this->dimensionContentRepository->createQueryBuilder('dimensionContent')
-            ->leftJoin('dimensionContent.route', 'route')
-            ->select('IDENTITY(dimensionContent.product) AS productId')
-            ->addSelect('dimensionContent.authored')
-            ->addSelect('dimensionContent.changed')
-            ->addSelect('dimensionContent.title')
-            ->addSelect('dimensionContent.locale')
-            ->addSelect('dimensionContent.mainWebspace')
-            ->addSelect('dimensionContent.id AS dimensionContentId')
-            ->addSelect('route.slug')
+            ->innerJoin('dimensionContent.product', 'product')
+            ->select('dimensionContent.id')
             ->where('dimensionContent.stage = :stage')
             ->andWhere('dimensionContent.locale IS NOT NULL')
-            ->andWhere('dimensionContent.version = :version');
+            ->andWhere('dimensionContent.version = :version')
+            // A product that has variants is represented by its variants.
+            ->andWhere('product.type != :parentType')
+            ->andWhere('dimensionContent.id > :lastDimensionContentId');
 
         $parameters = [
             'stage' => DimensionContentInterface::STAGE_LIVE,
             'version' => DimensionContentInterface::CURRENT_VERSION,
+            'parentType' => ProductInterface::TYPE_PRODUCT_WITH_VARIANTS,
+            'lastDimensionContentId' => $lastDimensionContentId,
         ];
 
         if (0 < \count($identifiers)) {
             $conditions = [];
 
             foreach ($identifiers as $index => $identifier) {
-                $resourceKey = \explode('__', $identifier)[0];
-
-                if (ProductInterface::RESOURCE_KEY !== $resourceKey) {
+                $parts = \explode('__', $identifier);
+                if (ProductInterface::RESOURCE_KEY !== $parts[0]) {
                     continue;
                 }
 
-                $id = \explode('__', $identifier)[1] ?? '';
-                $locale = \explode('__', $identifier)[2] ?? '';
-
-                $conditions[] = "(dimensionContent.product = :id{$index} AND dimensionContent.locale = :locale{$index})";
-                $parameters["id{$index}"] = $id;
-                $parameters["locale{$index}"] = $locale;
+                $conditions[] = "(product.uuid = :id{$index} AND dimensionContent.locale = :locale{$index})";
+                $parameters["id{$index}"] = $parts[1] ?? '';
+                $parameters["locale{$index}"] = $parts[2] ?? '';
             }
 
             if (!$conditions) {
@@ -178,36 +224,94 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
             $queryBuilder->setParameter($parameterKey, $parameterValue);
         }
 
-        foreach ($this->enhancers as $enhancer) {
-            $enhancer->enhanceQuery($queryBuilder);
+        return $queryBuilder->orderBy('dimensionContent.id', 'ASC')
+            ->setMaxResults(self::BATCH_SIZE)
+            ->getQuery()
+            ->getSingleColumnResult();
+    }
+
+    /**
+     * Main plus additional webspaces per document key "<productId>__<locale>".
+     *
+     * @param array<int, Product> $batch
+     *
+     * @return array<string, string[]>
+     */
+    private function loadWebspaces(array $batch): array
+    {
+        $webspaces = [];
+        $byDimensionContentId = [];
+        foreach ($batch as $row) {
+            $key = $row['productId'] . '__' . $row['locale'];
+            $webspaces[$key] = $row['mainWebspace'] ? [$row['mainWebspace']] : [];
+            $byDimensionContentId[$row['dimensionContentId']] = $key;
         }
 
-        $queryBuilder->orderBy('dimensionContent.id', 'ASC')
-            ->setFirstResult($offset)
-            ->setMaxResults(self::BATCH_SIZE);
+        // Variants inherit the parent's webspaces; parents outside the batch are loaded with them.
+        foreach ($this->loadParentWebspaceRows($this->parentIds($batch)) as $parentRow) {
+            $key = $parentRow['productId'] . '__' . $parentRow['locale'];
+            $webspaces[$key] ??= $parentRow['mainWebspace'] ? [$parentRow['mainWebspace']] : [];
+            $byDimensionContentId[$parentRow['dimensionContentId']] = $key;
+        }
 
-        /** @var array<int, Product> */
-        return $queryBuilder->getQuery()->getResult();
+        foreach ($this->loadAdditionalWebspaceRows(\array_keys($byDimensionContentId)) as $additionalRow) {
+            $key = $byDimensionContentId[$additionalRow['dimensionContentId']] ?? null;
+            if (null !== $key && !\in_array($additionalRow['webspace'], $webspaces[$key], true)) {
+                $webspaces[$key][] = $additionalRow['webspace'];
+            }
+        }
+
+        return $webspaces;
+    }
+
+    /**
+     * @param string[] $parentIds
+     *
+     * @return array<int, array{productId: string, locale: string, mainWebspace: string|null, dimensionContentId: int}>
+     */
+    private function loadParentWebspaceRows(array $parentIds): array
+    {
+        if ([] === $parentIds) {
+            return [];
+        }
+
+        /** @var array<int, array{productId: string, locale: string, mainWebspace: string|null, dimensionContentId: int}> */
+        return $this->dimensionContentRepository->createQueryBuilder('dimensionContent')
+            ->innerJoin('dimensionContent.product', 'product')
+            ->select('product.uuid AS productId', 'dimensionContent.locale', 'dimensionContent.mainWebspace', 'dimensionContent.id AS dimensionContentId')
+            ->where('product.uuid IN (:parentIds)')
+            ->andWhere('dimensionContent.stage = :stage')
+            ->andWhere('dimensionContent.version = :version')
+            ->andWhere('dimensionContent.locale IS NOT NULL')
+            ->setParameter('parentIds', $parentIds)
+            ->setParameter('stage', DimensionContentInterface::STAGE_LIVE)
+            ->setParameter('version', DimensionContentInterface::CURRENT_VERSION)
+            ->getQuery()->getResult();
     }
 
     /**
      * @param int[] $dimensionContentIds
      *
-     * @return array<int, array{productDimensionContentId: int, webspace: string}>
+     * @return array<int, array{dimensionContentId: int, webspace: string}>
      */
-    private function loadAdditionalWebspaces(array $dimensionContentIds = []): array
+    private function loadAdditionalWebspaceRows(array $dimensionContentIds): array
     {
-        if (0 === \count($dimensionContentIds)) {
-            return [];
-        }
-
-        $queryBuilder = $this->additionalWebspacesRepository->createQueryBuilder('additionalWebspace')
-            ->select('IDENTITY(additionalWebspace.productDimensionContent) AS productDimensionContentId')
+        return $this->additionalWebspacesRepository->createQueryBuilder('additionalWebspace')
+            ->select('IDENTITY(additionalWebspace.productDimensionContent) AS dimensionContentId')
             ->addSelect('additionalWebspace.additionalWebspace AS webspace')
             ->where('additionalWebspace.productDimensionContent IN (:dimensionContentIds)')
-            ->setParameter('dimensionContentIds', $dimensionContentIds);
+            ->setParameter('dimensionContentIds', $dimensionContentIds)
+            ->getQuery()->getResult();
+    }
 
-        return $queryBuilder->getQuery()->getResult();
+    /**
+     * @param array<int, Product> $batch
+     *
+     * @return string[]
+     */
+    private function parentIds(array $batch): array
+    {
+        return \array_values(\array_unique(\array_filter(\array_column($batch, 'parentId'))));
     }
 
     public static function getIndex(): string

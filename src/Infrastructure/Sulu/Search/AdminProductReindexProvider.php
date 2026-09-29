@@ -92,6 +92,7 @@ final class AdminProductReindexProvider implements ReindexProviderInterface
     private function loadProducts(array $identifiers = []): iterable
     {
         $qb = $this->dimensionContentRepository->createQueryBuilder('dimensionContent')
+            ->innerJoin('dimensionContent.product', 'product')
             ->select('IDENTITY(dimensionContent.product) AS productId')
             ->addSelect('dimensionContent.created')
             ->addSelect('dimensionContent.changed')
@@ -100,11 +101,13 @@ final class AdminProductReindexProvider implements ReindexProviderInterface
             ->addSelect('dimensionContent.templateKey')
             ->where('dimensionContent.stage = :stage')
             ->andWhere('dimensionContent.locale IS NOT NULL')
-            ->andWhere('dimensionContent.version = :version');
+            ->andWhere('dimensionContent.version = :version')
+            ->andWhere('product.type != :variantType');
 
         $parameters = [
             'stage' => DimensionContentInterface::STAGE_DRAFT,
             'version' => DimensionContentInterface::CURRENT_VERSION,
+            'variantType' => ProductInterface::TYPE_VARIANT,
         ];
 
         if (0 < \count($identifiers)) {

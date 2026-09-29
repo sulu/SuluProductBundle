@@ -116,6 +116,88 @@ the website each family resolves to the shape of a product's `productFamily`:
 </property>
 ```
 
+## Product documents in the `website` index
+
+A product is indexed into Sulu's shared `website` index, next to pages and articles. Only leaves
+become documents: a product without variants, and the variants of a product that has them. A product
+with variants is represented by its variants and gets no document of its own. A variant document
+carries its own title and its parent's webspaces, and the `url` the "Variant URLs" section above
+describes. The product code is searchable through the document's `content`.
+
+The admin index keeps the opposite rule: it holds the parent, because the edit view belongs to it,
+and skips variants.
+
+### Product filters
+
+A project with a catalogue page turns on the product family and the attribute values as filter
+fields of an object field `product`, which `ProductSchemaLoader` adds to the index Sulu ships:
+
+```yaml
+sulu_product:
+    search:
+        website:
+            additional_product_filters: true # default: false
+```
+
+Switching the option on or off adds or removes the whole `product` field, so the index needs
+`bin/console cmsig:seal:reindex --index website --drop` afterwards.
+
+| field | use |
+|---|---|
+| `productFamilyId` | filterable and facet |
+| `attributes_text_values` | one `<attributeKey>:<optionKey>` entry per value of a filterable options attribute, filterable and facet |
+| `attributes_numeric_values.<attributeKey>` | the values of a filterable number or date attribute, filterable and facet |
+
+Only attributes with Filterable on get a filter field. An attribute key is reduced to letters, digits
+and `_`, and prefixed with `a_` unless it starts with a letter. A variant carries its own values plus
+those of its parent that the family does not mark variant-specific. The values of every attribute,
+filterable or not, are added to the searchable `content` as `<label>: <value>`.
+
+The product family name, external identifier, short description and details image are indexed
+without this option: the first three as `content`, the image where neither the template nor the
+excerpt has one.
+
+Options attributes need no field of their own, so adding one changes no schema. A number or date
+attribute does, when it is created filterable or its Filterable flag or key changes: the loader
+reads the attribute table, and the live index only learns the change when it is recreated, which is
+never automatic:
+
+    bin/console cmsig:seal:reindex --index website --drop
+
+Run it before a product with a value for the new attribute is published. An engine with a strict
+mapping, such as Elasticsearch, rejects a document that carries a field its index does not know, so
+until the recreation such a product does not index at all. The schema is read once per container, so
+a long-running process such as a Messenger worker sees a new attribute only after a restart.
+
+### Searching products
+
+The bundle ships no route, controller or template for a catalogue page. A project builds its own
+overview controller on SEAL's `EngineInterface`, which is autowirable, and restricts the search to
+the product documents of the current locale and webspace:
+
+```php
+use CmsIg\Seal\Search\Condition\Condition;
+use CmsIg\Seal\Search\Facet\Facet;
+use Sulu\Product\Domain\Model\ProductInterface;
+
+$result = $engine->createSearchBuilder('website')
+    ->addFilter(Condition::equal('resourceKey', ProductInterface::RESOURCE_KEY))
+    ->addFilter(Condition::equal('locale', $locale))
+    ->addFilter(Condition::equal('webspaces', $webspaceKey))
+    ->addFilter(Condition::search($term))
+    ->addFilter(Condition::equal('product.attributes_text_values', 'colour:black'))
+    ->addFilter(Condition::greaterThanEqual('product.attributes_numeric_values.weight', 20.0))
+    ->addFacet(Facet::count('product.attributes_numeric_values.weight'))
+    ->limit(24)
+    ->offset(0)
+    ->getResult();
+```
+
+Nested fields need an adapter that resolves a dotted path, such as Elasticsearch or Loupe; the
+memory adapter does not.
+
+Sulu's own site search needs none of this: it finds products next to pages and articles.
+
 ## Association form overrides
 
 The bundle generates a `product_associations` form with one field per configured

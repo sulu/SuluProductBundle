@@ -61,6 +61,7 @@ class AdminProductReindexProviderTest extends TestCase
             ->willReturn($this->repository->reveal());
 
         $this->repository->createQueryBuilder('dimensionContent')->willReturn($this->queryBuilder->reveal());
+        $this->queryBuilder->innerJoin(Argument::cetera())->willReturn($this->queryBuilder->reveal());
         $this->queryBuilder->select(Argument::any())->willReturn($this->queryBuilder->reveal());
         $this->queryBuilder->addSelect(Argument::any())->willReturn($this->queryBuilder->reveal());
         $this->queryBuilder->where(Argument::any())->willReturn($this->queryBuilder->reveal());

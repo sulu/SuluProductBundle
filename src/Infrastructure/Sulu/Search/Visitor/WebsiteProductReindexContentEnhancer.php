@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Infrastructure\Sulu\Search\Visitor;
 
+use CmsIg\Seal\Converter\HtmlToTextConverter;
 use Doctrine\ORM\QueryBuilder;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
@@ -57,7 +58,6 @@ class WebsiteProductReindexContentEnhancer implements WebsiteProductReindexProvi
         $templateKey = $queryResult['templateKey'] ?? null;
         $locale = $queryResult['locale'] ?? null;
         $templateData = $queryResult['templateData'] ?? [];
-        $document['content'] = [];
 
         if (!\is_string($templateKey) || !\is_string($locale) || !\is_array($templateData) || 0 === \count($templateData)) {
             return $document;
@@ -72,7 +72,9 @@ class WebsiteProductReindexContentEnhancer implements WebsiteProductReindexProvi
         $searchableFields = [];
         $this->collectSearchableFields($metadata->getFlatFieldMetadata(), $searchableFields);
 
-        $document['content'] = $this->extractContent($templateData, $searchableFields);
+        /** @var list<string> $content */
+        $content = $document['content'] ?? [];
+        $document['content'] = \array_merge($content, $this->extractContent($templateData, $searchableFields));
 
         $title = $this->extractTitle($templateData, $searchableFields);
         if (null !== $title) {
@@ -160,7 +162,7 @@ class WebsiteProductReindexContentEnhancer implements WebsiteProductReindexProvi
 
             $value = $this->getValueByPath($templateData, $fieldPath);
             if (null !== $value) {
-                $extracted = $this->extractTextFromValue($value);
+                $extracted = $this->extractTextFromValue($value, $fieldInfo['type']);
                 $content = \array_merge($content, $extracted);
             }
         }
@@ -185,7 +187,7 @@ class WebsiteProductReindexContentEnhancer implements WebsiteProductReindexProvi
 
             $value = $this->getValueByPath($templateData, $fieldPath);
             if (\is_string($value) && '' !== \trim($value)) {
-                return $this->stripHtml($value);
+                return $this->normalizeText($value, $fieldInfo['type']);
             }
         }
 
@@ -282,10 +284,10 @@ class WebsiteProductReindexContentEnhancer implements WebsiteProductReindexProvi
     /**
      * @return array<int, string>
      */
-    private function extractTextFromValue(mixed $value): array
+    private function extractTextFromValue(mixed $value, string $type): array
     {
         if (\is_string($value)) {
-            $text = $this->stripHtml($value);
+            $text = $this->normalizeText($value, $type);
 
             return !empty(\trim($text)) ? [$text] : [];
         }
@@ -294,9 +296,9 @@ class WebsiteProductReindexContentEnhancer implements WebsiteProductReindexProvi
             $content = [];
             foreach ($value as $item) {
                 if (\is_array($item)) {
-                    $content = \array_merge($content, $this->extractTextFromValue($item));
+                    $content = \array_merge($content, $this->extractTextFromValue($item, $type));
                 } elseif (\is_string($item)) {
-                    $text = $this->stripHtml($item);
+                    $text = $this->normalizeText($item, $type);
                     if (!empty(\trim($text))) {
                         $content[] = $text;
                     }
@@ -309,8 +311,16 @@ class WebsiteProductReindexContentEnhancer implements WebsiteProductReindexProvi
         return [];
     }
 
-    private function stripHtml(string $html): string
+    /**
+     * Only a text_editor value holds HTML; the converter also decodes entities and keeps words apart
+     * across block elements.
+     */
+    private function normalizeText(string $value, string $type): string
     {
-        return \trim(\strip_tags($html));
+        if ('text_editor' === $type) {
+            return HtmlToTextConverter::convert($value);
+        }
+
+        return \trim($value);
     }
 }
