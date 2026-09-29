@@ -19,9 +19,10 @@ use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Application\Ai\GetProductDetails;
-use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
-use Sulu\Product\Application\AttributeType\TextAttributeType;
+use Sulu\Product\Application\Ai\ProductUrlGenerator;
+use Sulu\Product\Application\Attribute\ProductAttributeValueFormatter;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
+use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeGroupTranslation;
@@ -32,6 +33,7 @@ use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Tests\Unit\Application\Ai\Fixtures\FakeRouteGenerator;
 use Sulu\Route\Domain\Model\Route;
 
 #[CoversClass(GetProductDetails::class)]
@@ -49,7 +51,8 @@ class GetProductDetailsTest extends TestCase
         $this->productRepository = $this->prophesize(ProductRepositoryInterface::class);
         $this->getProductDetails = new GetProductDetails(
             $this->productRepository->reveal(),
-            new AttributeTypeRegistry([new TextAttributeType()]),
+            new ProductAttributeValueFormatter(new MeasurementRegistry()),
+            new ProductUrlGenerator(new FakeRouteGenerator()),
         );
     }
 
@@ -185,25 +188,79 @@ class GetProductDetailsTest extends TestCase
         $this->assertSame('material', $result['specGroups'][0]['attributes'][0]['label']);
     }
 
+    public function testInvokeReturnsTheAbsolutePageUrlWithTheLocalePrefix(): void
+    {
+        [$product] = $this->buildProduct('en');
+
+        $this->productRepository->getOneBy([
+            'code' => 'ABC-1',
+            'locale' => 'en',
+            'stage' => DimensionContentInterface::STAGE_LIVE,
+        ])->willReturn($product);
+
+        $result = ($this->getProductDetails)('ABC-1', 'en');
+
+        $this->assertSame('https://example.org/en/widget', $result['url']);
+    }
+
+    public function testInvokeMergesTheParentsValuesIntoAVariantsSpecSheet(): void
+    {
+        [$parent, , $parentUnlocalized] = $this->buildProduct('en', 'ABC-1', 'Widget', 'widget');
+        [$variant, , $variantUnlocalized] = $this->buildProduct('en', 'ABC-1-RED', 'Widget red', 'widget-red');
+        $variant->setParent($parent);
+
+        $group = new AttributeGroup();
+        $group->addTranslation(new AttributeGroupTranslation($group, 'en', 'General'));
+
+        $housing = new Attribute($group);
+        $housing->setKey('housing');
+        $housing->setType(AttributeInterface::TYPE_TEXT);
+        $housing->addTranslation(new AttributeTranslation($housing, 'en', 'Housing'));
+
+        $colour = new Attribute($group);
+        $colour->setKey('colour');
+        $colour->setType(AttributeInterface::TYPE_TEXT);
+        $colour->addTranslation(new AttributeTranslation($colour, 'en', 'Colour'));
+
+        $parentUnlocalized->addAttribute($this->value($parentUnlocalized, $housing, 'Zinc'));
+        $parentUnlocalized->addAttribute($this->value($parentUnlocalized, $colour, 'grey'));
+        $variantUnlocalized->addAttribute($this->value($variantUnlocalized, $colour, 'red'));
+
+        $this->productRepository->getOneBy([
+            'code' => 'ABC-1-RED',
+            'locale' => 'en',
+            'stage' => DimensionContentInterface::STAGE_LIVE,
+        ])->willReturn($variant);
+
+        $result = ($this->getProductDetails)('ABC-1-RED', 'en');
+
+        $this->assertSame([
+            ['label' => 'General', 'attributes' => [
+                ['label' => 'Housing', 'value' => 'Zinc'],
+                ['label' => 'Colour', 'value' => 'red'],
+            ]],
+        ], $result['specGroups']);
+    }
+
     /**
      * @return array{0: Product, 1: ProductDimensionContentInterface, 2: ProductDimensionContentInterface}
      */
-    private function buildProduct(string $locale): array
+    private function buildProduct(string $locale, string $code = 'ABC-1', string $title = 'Widget', string $slug = 'widget'): array
     {
         $product = new Product();
 
         $unlocalized = $product->createDimensionContent();
         $unlocalized->setStage(DimensionContentInterface::STAGE_LIVE);
         $unlocalized->setVersion(DimensionContentInterface::CURRENT_VERSION);
-        $unlocalized->setCode('ABC-1');
+        $unlocalized->setCode($code);
         $product->addDimensionContent($unlocalized);
 
         $localized = $product->createDimensionContent();
         $localized->setLocale($locale);
         $localized->setStage(DimensionContentInterface::STAGE_LIVE);
         $localized->setVersion(DimensionContentInterface::CURRENT_VERSION);
-        $localized->setTitle('Widget');
-        $localized->setRoute(new Route(ProductInterface::RESOURCE_KEY, $product->getUuid(), $locale, 'widget'));
+        $localized->setTitle($title);
+        $localized->setRoute(new Route(ProductInterface::RESOURCE_KEY, $product->getUuid(), $locale, $slug));
         $product->addDimensionContent($localized);
 
         return [$product, $localized, $unlocalized];

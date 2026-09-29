@@ -29,17 +29,9 @@ final class GetProductsTool
 
     /**
      * @param string $locale IETF locale of the request, e.g. "en", "de".
-     * @param string|null $query Free-text search term: an article code or part of a product
-     *                           title, e.g. "ABC-123". Leave empty and pass productFamily
-     *                           instead to list a whole product family.
-     * @param string|null $productFamily Product family name to narrow the search, or to list on
-     *                                   its own. Family names are not known upfront — search by
-     *                                   query first, or read the "productFamily" field of a
-     *                                   result, to learn one.
-     * @param bool $includeVariants Whether to include product variants (individual configurations
-     *                              of a product with variants) in the results. Leave false for a
-     *                              product family listing; set true when searching for an exact
-     *                              article code, which may belong to a variant.
+     * @param string|null $query free-text search term, an article code or part of a product title, e.g. "ABC-123", leave empty and pass productFamily to list a whole family
+     * @param string|null $productFamily product family name to narrow or list by, not known upfront, so search by query first and read the "productFamily" field of a result to learn one
+     * @param bool $includeVariants whether to include product variants in the results, false for a family listing, true when searching an exact article code that may belong to a variant
      * @param int $limit maximum number of results to return, capped at 25
      *
      * @return array{

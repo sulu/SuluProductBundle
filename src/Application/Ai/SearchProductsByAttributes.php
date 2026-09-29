@@ -33,11 +33,12 @@ final class SearchProductsByAttributes
     public function __construct(
         private readonly ProductRepositoryInterface $productRepository,
         private readonly AttributeRepositoryInterface $attributeRepository,
+        private readonly ProductUrlGenerator $urlGenerator,
     ) {
     }
 
     /**
-     * @param list<array{key: string, value: string}> $filters
+     * @param list<AttributeFilter> $filters
      *
      * @return array{
      *     results: list<array{code: string, title: string, productFamily: ?string, url: ?string}>,
@@ -63,7 +64,7 @@ final class SearchProductsByAttributes
         $attributeValues = [];
 
         foreach (\array_slice($filters, 0, self::MAX_FILTERS) as $filter) {
-            $key = \trim($filter['key']);
+            $key = \trim($filter->key);
             $attribute = '' !== $key ? $this->attributeRepository->findOneBy(['key' => $key]) : null;
 
             if (null === $attribute) {
@@ -77,7 +78,7 @@ final class SearchProductsByAttributes
                 ];
             }
 
-            $attributeValues[] = ['attribute' => $attribute, 'value' => $filter['value']];
+            $attributeValues[] = ['attribute' => $attribute, 'value' => $filter->value];
         }
 
         $productFilters = [
@@ -94,7 +95,7 @@ final class SearchProductsByAttributes
         $results = [];
 
         foreach ($this->productRepository->findBy($productFilters, ['title' => 'asc']) as $product) {
-            $row = $this->toProductSummary($product, $locale);
+            $row = $this->toProductSummary($product, $locale, $this->urlGenerator);
 
             if (null !== $row) {
                 $results[] = $row;

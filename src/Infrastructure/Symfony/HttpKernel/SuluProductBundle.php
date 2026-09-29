@@ -22,7 +22,9 @@ use Sulu\Product\Application\Ai\GetAttributeValues;
 use Sulu\Product\Application\Ai\GetProductDetails;
 use Sulu\Product\Application\Ai\GetProducts;
 use Sulu\Product\Application\Ai\GetRelatedProducts;
+use Sulu\Product\Application\Ai\ProductUrlGenerator;
 use Sulu\Product\Application\Ai\SearchProductsByAttributes;
+use Sulu\Product\Application\Attribute\ProductAttributeValueFormatter;
 use Sulu\Product\Application\AttributeType\AttributeTypeInterface;
 use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
 use Sulu\Product\Application\AttributeType\DateAttributeType;
@@ -1017,6 +1019,14 @@ final class SuluProductBundle extends AbstractBundle
         $services->alias(ProductRepositoryInterface::class, 'sulu_product.product_repository');
         $services->alias(ProductRepository::class, 'sulu_product.product_repository');
 
+        $services->set('sulu_product.product_attribute_value_repository')
+            ->class(ProductAttributeValueRepository::class)
+            ->args([
+                new Reference('doctrine.orm.entity_manager'),
+            ]);
+
+        $services->alias(ProductAttributeValueRepositoryInterface::class, 'sulu_product.product_attribute_value_repository');
+
         $services->set('sulu_product.admin_product_controller')
             ->class(ProductController::class)
             ->public()
@@ -1159,10 +1169,16 @@ final class SuluProductBundle extends AbstractBundle
             ])
             ->tag('twig.extension');
 
+        $services->set('sulu_product.product_attribute_value_formatter')
+            ->class(ProductAttributeValueFormatter::class)
+            ->args([
+                new Reference('sulu_product.measurement_registry'),
+            ]);
+
         $services->set('sulu_product.product_attribute_twig_extension')
             ->class(ProductAttributeTwigExtension::class)
             ->args([
-                new Reference('sulu_product.measurement_registry'),
+                new Reference('sulu_product.product_attribute_value_formatter'),
                 new Reference('sulu_core.webspace.request_analyzer'),
             ])
             ->tag('twig.extension');
@@ -1357,19 +1373,16 @@ final class SuluProductBundle extends AbstractBundle
                 ]);
         }
 
-        $services->set('sulu_product.product_attribute_value_repository')
-            ->class(ProductAttributeValueRepository::class)
-            ->public()
-            ->args([
-                new Reference('doctrine.orm.entity_manager'),
-            ]);
-
-        $services->alias(ProductAttributeValueRepositoryInterface::class, 'sulu_product.product_attribute_value_repository');
-
         // The search/lookup logic behind the AI tools below, framework-agnostic and always
         // registered: a consumer (e.g. an MCP tool) can use it without symfony/ai-agent installed.
+        $services->set(ProductUrlGenerator::class)
+            ->args([new Reference('sulu_route.route_generator')]);
+
         $services->set(GetProducts::class)
-            ->args([new Reference('sulu_product.product_repository')]);
+            ->args([
+                new Reference('sulu_product.product_repository'),
+                new Reference(ProductUrlGenerator::class),
+            ]);
 
         $services->set(GetAttributes::class)
             ->args([
@@ -1380,30 +1393,31 @@ final class SuluProductBundle extends AbstractBundle
         $services->set(GetAttributeValues::class)
             ->args([
                 new Reference('sulu_product.attribute_repository'),
-                new Reference('sulu_product.product_attribute_value_repository'),
-                new Reference('sulu_product.attribute_type_registry'),
+                new Reference(ProductAttributeValueRepositoryInterface::class),
+                new Reference('sulu_product.product_attribute_value_formatter'),
             ]);
 
         $services->set(SearchProductsByAttributes::class)
             ->args([
                 new Reference('sulu_product.product_repository'),
                 new Reference('sulu_product.attribute_repository'),
+                new Reference(ProductUrlGenerator::class),
             ]);
 
         $services->set(GetProductDetails::class)
             ->args([
                 new Reference('sulu_product.product_repository'),
-                new Reference('sulu_product.attribute_type_registry'),
+                new Reference('sulu_product.product_attribute_value_formatter'),
+                new Reference(ProductUrlGenerator::class),
             ]);
 
         $services->set(GetRelatedProducts::class)
             ->args([
                 new Reference('sulu_product.product_repository'),
                 new Reference('sulu_product.association_type_registry'),
+                new Reference(ProductUrlGenerator::class),
             ]);
 
-        // "symfony/ai-agent" is a require-dev/suggest dependency; register the #[AsTool] wrappers
-        // only if it's installed. Each just delegates to its unconditionally-registered service above.
         if (ContainerBuilder::willBeAvailable('symfony/ai-agent', AsTool::class, ['sulu/product-bundle'])) {
             $this->registerAiTool(
                 $services,

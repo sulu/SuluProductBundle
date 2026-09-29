@@ -394,11 +394,15 @@ final class ProductRepository implements ProductRepositoryInterface
                     ->setParameter('productFamilyName', '%' . $productFamilyName . '%');
             }
 
-            if (null !== $code && '' !== $code) {
+            if (null !== $code) {
                 Assert::string($code); // @phpstan-ignore staticMethod.alreadyNarrowedType
                 $queryBuilder
-                    ->andWhere('unlocalizedContent.code = :code')
-                    ->setParameter('code', $code);
+                    // an empty code matches nothing, dropping the condition would match every product
+                    ->andWhere('' === $code ? '1 = 0' : 'unlocalizedContent.code = :code');
+
+                if ('' !== $code) {
+                    $queryBuilder->setParameter('code', $code);
+                }
             }
         }
 

@@ -1437,6 +1437,108 @@ class ProductRepositoryTest extends SuluTestCase
         $this->assertSame($queriesBefore, $this->countQueries(), 'walking the family graph must not query');
     }
 
+    public function testGetOneByEmptyCodeMatchesNoProduct(): void
+    {
+        $this->createLiveProductWithTitleCodeAndFamily('Widget Pro', 'CODE-A', 'Fasteners');
+        $this->createLiveProductWithTitleCodeAndFamily('Widget Max', 'CODE-B', 'Fasteners');
+        $this->entityManager->clear();
+
+        $this->expectException(ProductNotFoundException::class);
+
+        $this->repository->getOneBy(['code' => '', 'locale' => 'en', 'stage' => 'live']);
+    }
+
+    public function testFindByEmptyCodeMatchesNothing(): void
+    {
+        $this->createLiveProductWithTitleCodeAndFamily('Widget Pro', 'CODE-A', 'Fasteners');
+        $this->entityManager->clear();
+
+        $this->assertSame([], \iterator_to_array(
+            $this->repository->findBy(['locale' => 'en', 'stage' => 'live', 'code' => '']),
+            false,
+        ));
+    }
+
+    /**
+     * Live carries the given code and text, the draft of the same product a different one.
+     *
+     * @return array{ProductInterface, AttributeInterface}
+     */
+    private function createProductWhoseDraftDiffersFromLive(string $liveCode, string $draftCode, string $liveText, string $draftText, string $attributeKey): array
+    {
+        $attribute = $this->createTextAttribute($attributeKey);
+        $product = $this->repository->createNew();
+
+        $contents = [];
+        foreach (['live' => [$liveCode, $liveText], 'draft' => [$draftCode, $draftText]] as $stage => [$code, $text]) {
+            $unlocalized = $product->createDimensionContent();
+            $unlocalized->setStage($stage);
+            $unlocalized->setVersion(0);
+            $unlocalized->setCode($code);
+            $product->addDimensionContent($unlocalized);
+
+            $localized = $product->createDimensionContent();
+            $localized->setLocale('en');
+            $localized->setStage($stage);
+            $localized->setVersion(0);
+            $localized->setTitle($code . ' Title');
+            $product->addDimensionContent($localized);
+
+            $contents[$stage] = [$unlocalized, $localized, $text];
+        }
+
+        $this->repository->add($product);
+        foreach ($contents as [$unlocalized, $localized, $text]) {
+            $this->entityManager->persist($unlocalized);
+            $this->entityManager->persist($localized);
+
+            $value = new ProductAttributeValue($unlocalized, $attribute, $attributeKey);
+            $value->setText($text);
+            $this->entityManager->persist($value);
+        }
+
+        $this->entityManager->flush();
+
+        return [$product, $attribute];
+    }
+
+    public function testFindByCodeOnlyMatchesTheRequestedStage(): void
+    {
+        [$product] = $this->createProductWhoseDraftDiffersFromLive('LIVE-CODE', 'DRAFT-CODE', 'Brass', 'Steel', 'material');
+        $this->entityManager->clear();
+
+        $byDraftCode = \iterator_to_array($this->repository->findBy(['locale' => 'en', 'stage' => 'live', 'code' => 'DRAFT-CODE']), false);
+        $byLiveCode = \iterator_to_array($this->repository->findBy(['locale' => 'en', 'stage' => 'live', 'code' => 'LIVE-CODE']), false);
+
+        $this->assertSame([], $byDraftCode, 'a draft code must not match a live search');
+        $this->assertCount(1, $byLiveCode, 'the live code must match once, not once per stage');
+        $this->assertSame($product->getUuid(), $byLiveCode[0]->getUuid());
+    }
+
+    public function testFindByAttributeValuesOnlyMatchesTheRequestedStage(): void
+    {
+        [$product, $attribute] = $this->createProductWhoseDraftDiffersFromLive('LIVE-AV', 'DRAFT-AV', 'Brass', 'Steel', 'material');
+        $this->entityManager->clear();
+
+        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getId());
+        $this->assertNotNull($attribute);
+
+        $byDraftValue = \iterator_to_array($this->repository->findBy([
+            'locale' => 'en',
+            'stage' => 'live',
+            'attributeValues' => [['attribute' => $attribute, 'value' => 'Steel']],
+        ]), false);
+        $byLiveValue = \iterator_to_array($this->repository->findBy([
+            'locale' => 'en',
+            'stage' => 'live',
+            'attributeValues' => [['attribute' => $attribute, 'value' => 'Brass']],
+        ]), false);
+
+        $this->assertSame([], $byDraftValue, 'a draft value must not match a live search');
+        $this->assertCount(1, $byLiveValue);
+        $this->assertSame($product->getUuid(), $byLiveValue[0]->getUuid());
+    }
+
     private function countQueries(): int
     {
         /** @var array<array{Value: string}> $rows */

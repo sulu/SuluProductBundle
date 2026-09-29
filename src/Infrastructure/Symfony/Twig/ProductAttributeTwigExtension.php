@@ -14,8 +14,7 @@ declare(strict_types=1);
 namespace Sulu\Product\Infrastructure\Symfony\Twig;
 
 use Sulu\Component\Webspace\Analyzer\RequestAnalyzerInterface;
-use Sulu\Product\Domain\Measurement\MeasurementRegistry;
-use Sulu\Product\Domain\Model\AttributeInterface;
+use Sulu\Product\Application\Attribute\ProductAttributeValueFormatter;
 use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
@@ -30,7 +29,7 @@ use Twig\TwigFunction;
 class ProductAttributeTwigExtension extends AbstractExtension
 {
     public function __construct(
-        private readonly MeasurementRegistry $measurementRegistry,
+        private readonly ProductAttributeValueFormatter $formatter,
         private readonly RequestAnalyzerInterface $requestAnalyzer,
     ) {
     }
@@ -136,9 +135,8 @@ class ProductAttributeTwigExtension extends AbstractExtension
     }
 
     /**
-     * The value as displayed: option name, text or number with its display format, date in its display
-     * format or the locale's default.
-     * Without a locale the request's; null for an empty value or without any locale.
+     * The value as displayed, see ProductAttributeValueFormatter. Without a locale the request's;
+     * null for an empty value or without any locale.
      */
     public function formatValue(ProductAttributeValueInterface $productAttributeValue, ?string $locale = null): ?string
     {
@@ -148,60 +146,6 @@ class ProductAttributeTwigExtension extends AbstractExtension
             return null;
         }
 
-        $attribute = $productAttributeValue->getAttribute();
-
-        return match ($attribute->getType()) {
-            AttributeInterface::TYPE_OPTIONS => $productAttributeValue->getAttributeOption()?->getTranslation($locale)?->getName()
-                ?? $productAttributeValue->getAttributeOptionKey(),
-            AttributeInterface::TYPE_TEXT => $this->applyDisplayFormat($attribute, $productAttributeValue->getText()),
-            AttributeInterface::TYPE_NUMBER => $this->applyDisplayFormat($attribute, $productAttributeValue->getNumber()),
-            AttributeInterface::TYPE_DATE => $this->formatDate($attribute, $productAttributeValue->getNumber(), $locale),
-            default => null,
-        };
-    }
-
-    /** An editor can set a unit and a display format per attribute; without them the value renders bare. */
-    private function applyDisplayFormat(AttributeInterface $attribute, string|float|null $value): ?string
-    {
-        if (null === $value || '' === $value) {
-            return null;
-        }
-
-        $config = $attribute->getConfig();
-        $format = $config['displayFormat'] ?? null;
-
-        if (!\is_string($format) || '' === $format) {
-            return (string) $value;
-        }
-
-        $unitKey = $config['unit'] ?? null;
-        $unit = \is_string($unitKey) ? $this->measurementRegistry->findUnit($unitKey) : null;
-
-        return \trim(\str_replace(['%value%', '%unit%'], [(string) $value, $unit?->getSymbol() ?? ''], $format));
-    }
-
-    /**
-     * The display format is an ICU pattern, still rendered in the locale so month names translate;
-     * without one the locale's medium date, because a bare `05.03.2024` names a different month elsewhere.
-     * Rendered in UTC, because a date is stored as midnight UTC.
-     */
-    private function formatDate(AttributeInterface $attribute, ?float $timestamp, string $locale): ?string
-    {
-        if (null === $timestamp) {
-            return null;
-        }
-
-        $format = $attribute->getConfig()['displayFormat'] ?? null;
-
-        $formatter = new \IntlDateFormatter(
-            $locale,
-            \IntlDateFormatter::MEDIUM,
-            \IntlDateFormatter::NONE,
-            'UTC',
-            null,
-            \is_string($format) && '' !== $format ? $format : null,
-        );
-
-        return $formatter->format(new \DateTimeImmutable('@' . (int) $timestamp)) ?: null;
+        return $this->formatter->format($productAttributeValue, $locale);
     }
 }

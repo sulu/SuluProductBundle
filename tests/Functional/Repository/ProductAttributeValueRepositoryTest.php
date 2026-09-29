@@ -18,6 +18,8 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeInterface;
+use Sulu\Product\Domain\Model\AttributeOption;
+use Sulu\Product\Domain\Model\AttributeOptionTranslation;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
@@ -43,10 +45,6 @@ class ProductAttributeValueRepositoryTest extends SuluTestCase
         self::bootKernel();
         $container = self::getContainer();
 
-        /** @var ProductAttributeValueRepositoryInterface $repository */
-        $repository = $container->get(ProductAttributeValueRepositoryInterface::class);
-        $this->repository = $repository;
-
         /** @var ProductRepositoryInterface $productRepository */
         $productRepository = $container->get(ProductRepositoryInterface::class);
         $this->productRepository = $productRepository;
@@ -58,6 +56,9 @@ class ProductAttributeValueRepositoryTest extends SuluTestCase
         /** @var EntityManagerInterface $entityManager */
         $entityManager = $container->get('doctrine.orm.entity_manager');
         $this->entityManager = $entityManager;
+
+        // private and not consumed by any service of the test application, so not fetchable from the container
+        $this->repository = new ProductAttributeValueRepository($entityManager);
 
         self::purgeDatabase();
     }
@@ -221,5 +222,112 @@ class ProductAttributeValueRepositoryTest extends SuluTestCase
     public function testFindByOnEmptyDatabaseReturnsEmptyArray(): void
     {
         $this->assertSame([], $this->repository->findBy());
+    }
+
+    public function testCountValuesGroupsIdenticalValuesMostCommonFirst(): void
+    {
+        $attribute = $this->createAttribute('material');
+
+        foreach (['Brass', 'Steel', 'Brass', 'Brass', 'Steel', 'Zinc'] as $text) {
+            [, $dimensionContent] = $this->createProductWithDimensionContent(null, 'live', 0);
+            $this->createValue($attribute, $dimensionContent, $text);
+        }
+
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getId());
+        $this->assertNotNull($attribute);
+
+        $groups = $this->repository->countValues(['attribute' => $attribute, 'stage' => 'live']);
+
+        $this->assertSame(
+            [['Brass', 3], ['Steel', 2], ['Zinc', 1]],
+            \array_map(static fn (array $group): array => [$group['value']->getText(), $group['count']], $groups),
+        );
+    }
+
+    public function testCountValuesAppliesTheLimitAndTheStageFilter(): void
+    {
+        $attribute = $this->createAttribute('material');
+
+        foreach ([['Brass', 'live'], ['Brass', 'live'], ['Steel', 'live'], ['Draft only', 'draft'], ['Draft only', 'draft'], ['Draft only', 'draft']] as [$text, $stage]) {
+            [, $dimensionContent] = $this->createProductWithDimensionContent(null, $stage, 0);
+            $this->createValue($attribute, $dimensionContent, $text);
+        }
+
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getId());
+        $this->assertNotNull($attribute);
+
+        $groups = $this->repository->countValues(['attribute' => $attribute, 'stage' => 'live'], 1);
+
+        $this->assertCount(1, $groups);
+        $this->assertSame('Brass', $groups[0]['value']->getText());
+        $this->assertSame(2, $groups[0]['count']);
+    }
+
+    public function testCountValuesGroupsOptionValuesByOptionAndSkipsEmptyValues(): void
+    {
+        $attribute = $this->createAttribute('color');
+        $attribute->setType(AttributeInterface::TYPE_OPTIONS);
+        $red = new AttributeOption($attribute, 'red');
+        $red->addTranslation(new AttributeOptionTranslation($red, 'en', 'Red'));
+        $blue = new AttributeOption($attribute, 'blue');
+        $this->entityManager->persist($red);
+        $this->entityManager->persist($blue);
+
+        foreach ([$red, $red, $blue, null] as $option) {
+            [, $dimensionContent] = $this->createProductWithDimensionContent(null, 'live', 0);
+            $value = new ProductAttributeValue($dimensionContent, $attribute, 'color');
+            $value->setAttributeOption($option);
+            $this->entityManager->persist($value);
+        }
+
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getId());
+        $this->assertNotNull($attribute);
+
+        $groups = $this->repository->countValues(['attribute' => $attribute, 'stage' => 'live']);
+
+        $this->assertSame(
+            [['red', 2], ['blue', 1]],
+            \array_map(static fn (array $group): array => [$group['value']->getAttributeOption()?->getKey(), $group['count']], $groups),
+        );
+    }
+
+    public function testCountValuesRunsAFixedNumberOfSelectsRegardlessOfTheNumberOfValues(): void
+    {
+        $attribute = $this->createAttribute('material');
+
+        foreach (\range(1, 30) as $i) {
+            [, $dimensionContent] = $this->createProductWithDimensionContent(null, 'live', 0);
+            $this->createValue($attribute, $dimensionContent, 'Value ' . ($i % 3));
+        }
+
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getId());
+        $this->assertNotNull($attribute);
+
+        $before = $this->selectCount();
+        $this->repository->countValues(['attribute' => $attribute, 'stage' => 'live']);
+
+        $this->assertLessThanOrEqual(2, $this->selectCount() - $before, 'grouping and one representative load, not one query per value');
+    }
+
+    private function selectCount(): int
+    {
+        /** @var array<array{Value: string}> $rows */
+        $rows = $this->entityManager->getConnection()
+            ->executeQuery("SHOW SESSION STATUS LIKE 'Com_select'")
+            ->fetchAllAssociative();
+
+        return (int) $rows[0]['Value'];
     }
 }

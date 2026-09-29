@@ -18,7 +18,8 @@ use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Sulu\Product\Application\Ai\GetAttributeValues;
-use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
+use Sulu\Product\Application\Attribute\ProductAttributeValueFormatter;
+use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductAttributeValueRepositoryInterface;
 use Sulu\Product\Infrastructure\Symfony\Ai\Tool\GetAttributeValuesTool;
@@ -42,7 +43,7 @@ class GetAttributeValuesToolTest extends TestCase
         $tool = new GetAttributeValuesTool(new GetAttributeValues(
             $attributeRepository->reveal(),
             $productAttributeValueRepository->reveal(),
-            new AttributeTypeRegistry([]),
+            new ProductAttributeValueFormatter(new MeasurementRegistry()),
         ));
 
         $result = $tool('  ', 'en');

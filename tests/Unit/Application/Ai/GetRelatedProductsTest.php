@@ -20,6 +20,7 @@ use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Application\Ai\GetRelatedProducts;
+use Sulu\Product\Application\Ai\ProductUrlGenerator;
 use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
 use Sulu\Product\Domain\Model\Product;
@@ -27,6 +28,7 @@ use Sulu\Product\Domain\Model\ProductAssociation;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Tests\Unit\Application\Ai\Fixtures\FakeRouteGenerator;
 use Sulu\Route\Domain\Model\Route;
 
 #[CoversClass(GetRelatedProducts::class)]
@@ -51,6 +53,7 @@ class GetRelatedProductsTest extends TestCase
         $this->getRelatedProducts = new GetRelatedProducts(
             $this->productRepository->reveal(),
             $this->associationTypeRegistry,
+            new ProductUrlGenerator(new FakeRouteGenerator()),
         );
     }
 
@@ -102,7 +105,7 @@ class GetRelatedProductsTest extends TestCase
         $result = ($this->getRelatedProducts)('ABC-1', 'en');
 
         $this->assertSame([
-            ['code' => 'ABC-1-RED', 'title' => 'ABC-1-RED Title', 'url' => 'abc-1-red'],
+            ['code' => 'ABC-1-RED', 'title' => 'ABC-1-RED Title', 'url' => 'https://example.org/en/abc-1-red'],
         ], $result['variants']);
     }
 
@@ -124,7 +127,7 @@ class GetRelatedProductsTest extends TestCase
 
         $this->assertSame([
             'accessory' => [
-                ['code' => 'ACC-1', 'title' => 'ACC-1 Title', 'url' => 'acc-1'],
+                ['code' => 'ACC-1', 'title' => 'ACC-1 Title', 'url' => 'https://example.org/en/acc-1'],
             ],
         ], $result['associations']);
     }

@@ -14,9 +14,10 @@ declare(strict_types=1);
 namespace Sulu\Product\Application\Ai;
 
 use Sulu\Content\Domain\Model\DimensionContentInterface;
-use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
+use Sulu\Product\Application\Attribute\ProductAttributeValueFormatter;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
-use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
+use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
+use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 
 /**
@@ -30,7 +31,8 @@ final class GetProductDetails
 
     public function __construct(
         private readonly ProductRepositoryInterface $productRepository,
-        private readonly AttributeTypeRegistry $attributeTypeRegistry,
+        private readonly ProductAttributeValueFormatter $valueFormatter,
+        private readonly ProductUrlGenerator $urlGenerator,
     ) {
     }
 
@@ -57,7 +59,7 @@ final class GetProductDetails
             throw new \InvalidArgumentException(\sprintf('No published product found with article code "%s".', $code));
         }
 
-        $summary = $this->toProductSummary($product, $locale);
+        $summary = $this->toProductSummary($product, $locale, $this->urlGenerator);
         [$localized, $unlocalized] = $this->findLiveDimensionContents($product, $locale);
 
         if (null === $summary || null === $localized || null === $unlocalized) {
@@ -69,28 +71,50 @@ final class GetProductDetails
             'title' => $summary['title'],
             'url' => $summary['url'],
             'productFamily' => $summary['productFamily'],
-            'specGroups' => $this->resolveSpecGroups($localized, $unlocalized, $locale),
+            'specGroups' => $this->resolveSpecGroups($this->collectAttributeValues($product, $locale), $locale),
         ];
     }
 
     /**
+     * A variant holds only its own attribute values, so the parent's are merged in underneath:
+     * keyed by attribute key, the variant's value wins.
+     *
+     * @return list<ProductAttributeValueInterface>
+     */
+    private function collectAttributeValues(ProductInterface $product, string $locale): array
+    {
+        $parent = $product->getParent();
+        $merged = [];
+
+        foreach (null === $parent ? [$product] : [$parent, $product] as $source) {
+            [$localized, $unlocalized] = $this->findLiveDimensionContents($source, $locale);
+
+            foreach ([$unlocalized, $localized] as $dimensionContent) {
+                foreach ($dimensionContent?->getAttributes() ?? [] as $value) {
+                    $merged[$value->getAttribute()->getKey()] = $value;
+                }
+            }
+        }
+
+        return \array_values($merged);
+    }
+
+    /**
+     * @param list<ProductAttributeValueInterface> $values
+     *
      * @return list<array{label: string, attributes: list<array{label: string, value: string}>}>
      */
-    private function resolveSpecGroups(
-        ProductDimensionContentInterface $localized,
-        ProductDimensionContentInterface $unlocalized,
-        string $locale,
-    ): array {
+    private function resolveSpecGroups(array $values, string $locale): array
+    {
         /** @var array<string, list<array{label: string, value: string}>> $byGroup */
         $byGroup = [];
         $groupOrder = [];
 
-        foreach ([...$unlocalized->getAttributes(), ...$localized->getAttributes()] as $value) {
+        foreach ($values as $value) {
             $attribute = $value->getAttribute();
-            $type = $this->attributeTypeRegistry->get($attribute->getType());
-            $display = $this->displayAttributeValue($value, $type, $locale);
+            $display = $this->valueFormatter->format($value, $locale);
 
-            if (null === $display) {
+            if (null === $display || '' === \trim($display)) {
                 continue;
             }
 
@@ -103,7 +127,7 @@ final class GetProductDetails
                 $groupOrder[] = $groupName;
             }
 
-            $byGroup[$groupName][] = ['label' => $label, 'value' => $display];
+            $byGroup[$groupName][] = ['label' => $label, 'value' => \trim($display)];
         }
 
         $specGroups = [];

@@ -19,6 +19,8 @@ use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Product\Application\Ai\AttributeFilter;
+use Sulu\Product\Application\Ai\ProductUrlGenerator;
 use Sulu\Product\Application\Ai\SearchProductsByAttributes;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
@@ -28,6 +30,7 @@ use Sulu\Product\Domain\Model\ProductFamilyTranslation;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Tests\Unit\Application\Ai\Fixtures\FakeRouteGenerator;
 use Sulu\Route\Domain\Model\Route;
 
 #[CoversClass(SearchProductsByAttributes::class)]
@@ -50,6 +53,7 @@ class SearchProductsByAttributesTest extends TestCase
         $this->searchProductsByAttributes = new SearchProductsByAttributes(
             $this->productRepository->reveal(),
             $this->attributeRepository->reveal(),
+            new ProductUrlGenerator(new FakeRouteGenerator()),
         );
     }
 
@@ -69,7 +73,7 @@ class SearchProductsByAttributesTest extends TestCase
     {
         $this->attributeRepository->findOneBy(['key' => ''])->shouldNotBeCalled();
 
-        $result = ($this->searchProductsByAttributes)('en', [['key' => '  ', 'value' => 'red']]);
+        $result = ($this->searchProductsByAttributes)('en', [new AttributeFilter('  ', 'red')]);
 
         $this->assertSame('unknown_attribute', $result['status']);
         $this->assertSame([], $result['results']);
@@ -80,7 +84,7 @@ class SearchProductsByAttributesTest extends TestCase
         $this->attributeRepository->findOneBy(['key' => 'missing'])->willReturn(null);
         $this->productRepository->findBy(Argument::cetera())->shouldNotBeCalled();
 
-        $result = ($this->searchProductsByAttributes)('en', [['key' => 'missing', 'value' => 'red']]);
+        $result = ($this->searchProductsByAttributes)('en', [new AttributeFilter('missing', 'red')]);
 
         $this->assertSame('unknown_attribute', $result['status']);
         $this->assertNotNull($result['instruction']);
@@ -93,7 +97,7 @@ class SearchProductsByAttributesTest extends TestCase
         $this->productRepository->findBy(Argument::cetera())->willReturn([]);
 
         $filters = \array_map(
-            static fn (int $i): array => ['key' => 'a' . $i, 'value' => 'v' . $i],
+            static fn (int $i): AttributeFilter => new AttributeFilter('a' . $i, 'v' . $i),
             \range(1, 6),
         );
 
@@ -116,7 +120,7 @@ class SearchProductsByAttributesTest extends TestCase
             ['title' => 'asc'],
         )->willReturn([])->shouldBeCalled();
 
-        $result = ($this->searchProductsByAttributes)('en', [['key' => 'current', 'value' => '16']]);
+        $result = ($this->searchProductsByAttributes)('en', [new AttributeFilter('current', '16')]);
 
         $this->assertSame('no_match', $result['status']);
     }
@@ -131,7 +135,7 @@ class SearchProductsByAttributesTest extends TestCase
             Argument::any(),
         )->willReturn([])->shouldBeCalled();
 
-        ($this->searchProductsByAttributes)('en', [['key' => 'current', 'value' => '16']], true);
+        ($this->searchProductsByAttributes)('en', [new AttributeFilter('current', '16')], true);
     }
 
     public function testInvokeCapsLimitAtTwentyFive(): void
@@ -144,7 +148,7 @@ class SearchProductsByAttributesTest extends TestCase
             Argument::any(),
         )->willReturn([])->shouldBeCalled();
 
-        ($this->searchProductsByAttributes)('en', [['key' => 'current', 'value' => '16']], false, 999);
+        ($this->searchProductsByAttributes)('en', [new AttributeFilter('current', '16')], false, 999);
     }
 
     public function testInvokeReturnsMatchedProducts(): void
@@ -155,7 +159,7 @@ class SearchProductsByAttributesTest extends TestCase
         $product = $this->buildMatchedProduct('en');
         $this->productRepository->findBy(Argument::cetera())->willReturn([$product]);
 
-        $result = ($this->searchProductsByAttributes)('en', [['key' => 'current', 'value' => '16']]);
+        $result = ($this->searchProductsByAttributes)('en', [new AttributeFilter('current', '16')]);
 
         $this->assertSame('ok', $result['status']);
         $this->assertNull($result['instruction']);
@@ -163,7 +167,7 @@ class SearchProductsByAttributesTest extends TestCase
             'code' => 'ABC-1',
             'title' => 'Widget',
             'productFamily' => 'Fasteners',
-            'url' => 'widget',
+            'url' => 'https://example.org/en/widget',
         ], $result['results'][0]);
     }
 

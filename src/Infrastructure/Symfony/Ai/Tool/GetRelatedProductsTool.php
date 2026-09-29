@@ -28,8 +28,7 @@ final class GetRelatedProductsTool
     }
 
     /**
-     * @param string $code Exact article code, e.g. "ABC-123". Use sulu_product_get_products
-     *                     first if the exact code is not known.
+     * @param string $code exact article code, e.g. "ABC-123", use sulu_product_get_products first if it is not known
      * @param string $locale IETF locale of the request, e.g. "en", "de".
      *
      * @return array{

@@ -20,11 +20,13 @@ use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Application\Ai\GetProducts;
+use Sulu\Product\Application\Ai\ProductUrlGenerator;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductFamilyTranslation;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Tests\Unit\Application\Ai\Fixtures\FakeRouteGenerator;
 use Sulu\Route\Domain\Model\Route;
 
 #[CoversClass(GetProducts::class)]
@@ -40,7 +42,7 @@ class GetProductsTest extends TestCase
     protected function setUp(): void
     {
         $this->productRepository = $this->prophesize(ProductRepositoryInterface::class);
-        $this->getProducts = new GetProducts($this->productRepository->reveal());
+        $this->getProducts = new GetProducts($this->productRepository->reveal(), new ProductUrlGenerator(new FakeRouteGenerator()));
     }
 
     public function testInvokeWithoutQueryOrFamilyReturnsNoMatchWithoutQuerying(): void
@@ -128,7 +130,7 @@ class GetProductsTest extends TestCase
             'code' => 'ABC-1',
             'title' => 'Widget',
             'productFamily' => 'Fasteners',
-            'url' => 'widget',
+            'url' => 'https://example.org/en/widget',
         ], $result['results'][0]);
     }
 

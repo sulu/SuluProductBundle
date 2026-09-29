@@ -28,8 +28,7 @@ final class GetAttributeValuesTool
     }
 
     /**
-     * @param string $key exact attribute key, from sulu_product_get_attributes — not its
-     *                    translated name
+     * @param string $key exact attribute key from sulu_product_get_attributes, not its translated name
      * @param string $locale IETF locale of the request, e.g. "en", "de".
      * @param int $limit maximum number of distinct values to return, capped at 30
      *

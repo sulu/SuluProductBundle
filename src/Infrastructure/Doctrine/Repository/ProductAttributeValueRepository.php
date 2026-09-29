@@ -17,12 +17,14 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\QueryBuilder;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
-use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Sulu\Product\Domain\Repository\ProductAttributeValueRepositoryInterface;
 use Webmozart\Assert\Assert;
 
+/**
+ * @phpstan-import-type ProductAttributeValueRepositoryFilters from ProductAttributeValueRepositoryInterface
+ */
 final class ProductAttributeValueRepository implements ProductAttributeValueRepositoryInterface
 {
     /** @var EntityRepository<ProductAttributeValueInterface> */
@@ -45,8 +47,48 @@ final class ProductAttributeValueRepository implements ProductAttributeValueRepo
         return $result;
     }
 
+    public function countValues(array $filters = [], int $limit = 100): array
+    {
+        $queryBuilder = $this->createQueryBuilder($filters)
+            ->select('MIN(attributeValue.id) AS representativeId', 'COUNT(attributeValue.id) AS valueCount')
+            ->leftJoin('attributeValue.attributeOption', 'attributeOption')
+            ->andWhere("(attributeValue.text IS NOT NULL AND attributeValue.text <> '') OR attributeValue.number IS NOT NULL OR attributeOption.id IS NOT NULL")
+            ->groupBy('attributeValue.text')
+            ->addGroupBy('attributeValue.number')
+            ->addGroupBy('attributeOption.id')
+            ->orderBy('valueCount', 'DESC')
+            ->addOrderBy('representativeId', 'ASC')
+            ->setMaxResults($limit);
+
+        /** @var list<array{representativeId: string, valueCount: string}> $rows */
+        $rows = $queryBuilder->getQuery()->getScalarResult();
+
+        if ([] === $rows) {
+            return [];
+        }
+
+        /** @var list<ProductAttributeValueInterface> $representatives */
+        $representatives = $this->entityRepository->findBy(['id' => \array_column($rows, 'representativeId')]);
+
+        $byId = [];
+        foreach ($representatives as $representative) {
+            $byId[$representative->getId()] = $representative;
+        }
+
+        $groups = [];
+        foreach ($rows as $row) {
+            $value = $byId[(int) $row['representativeId']] ?? null;
+
+            if (null !== $value) {
+                $groups[] = ['value' => $value, 'count' => (int) $row['valueCount']];
+            }
+        }
+
+        return $groups;
+    }
+
     /**
-     * @param array{attribute?: AttributeInterface, locale?: string, stage?: string} $filters
+     * @param ProductAttributeValueRepositoryFilters $filters
      */
     public function createQueryBuilder(array $filters): QueryBuilder
     {

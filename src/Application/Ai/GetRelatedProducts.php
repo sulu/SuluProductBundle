@@ -31,6 +31,7 @@ final class GetRelatedProducts
     public function __construct(
         private readonly ProductRepositoryInterface $productRepository,
         private readonly ProductAssociationTypeRegistry $associationTypeRegistry,
+        private readonly ProductUrlGenerator $urlGenerator,
     ) {
     }
 
@@ -75,7 +76,7 @@ final class GetRelatedProducts
             ['parent' => $product->getUuid(), 'locale' => $locale, 'stage' => DimensionContentInterface::STAGE_LIVE],
             ['position' => 'asc'],
         ) as $variant) {
-            $summary = $this->toProductSummary($variant, $locale);
+            $summary = $this->toProductSummary($variant, $locale, $this->urlGenerator);
 
             if (null !== $summary) {
                 $variants[] = ['code' => $summary['code'], 'title' => $summary['title'], 'url' => $summary['url']];
@@ -102,7 +103,7 @@ final class GetRelatedProducts
             $targets = [];
 
             foreach ($unlocalized->getAssociationsByType($type->getKey()) as $association) {
-                $summary = $this->toProductSummary($association->getTarget(), $locale);
+                $summary = $this->toProductSummary($association->getTarget(), $locale, $this->urlGenerator);
 
                 if (null !== $summary) {
                     $targets[] = ['code' => $summary['code'], 'title' => $summary['title'], 'url' => $summary['url']];

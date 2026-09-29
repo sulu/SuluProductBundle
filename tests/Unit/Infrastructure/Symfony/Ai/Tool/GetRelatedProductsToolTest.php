@@ -18,10 +18,12 @@ use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Application\Ai\GetRelatedProducts;
+use Sulu\Product\Application\Ai\ProductUrlGenerator;
 use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Symfony\Ai\Tool\GetRelatedProductsTool;
+use Sulu\Product\Tests\Unit\Application\Ai\Fixtures\FakeRouteGenerator;
 
 /**
  * GetRelatedProducts (final, so Prophecy can't double it directly) is real here, built over a
@@ -45,6 +47,7 @@ class GetRelatedProductsToolTest extends TestCase
         $tool = new GetRelatedProductsTool(new GetRelatedProducts(
             $productRepository->reveal(),
             new ProductAssociationTypeRegistry([]),
+            new ProductUrlGenerator(new FakeRouteGenerator()),
         ));
 
         $this->expectException(\InvalidArgumentException::class);

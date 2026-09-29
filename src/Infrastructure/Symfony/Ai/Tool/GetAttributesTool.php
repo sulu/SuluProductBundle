@@ -29,8 +29,7 @@ final class GetAttributesTool
 
     /**
      * @param string $locale IETF locale of the request, e.g. "en", "de".
-     * @param string|null $group attribute group name, or a substring of it, to list only the
-     *                           attributes of that group
+     * @param string|null $group attribute group name, or a substring of it, to list only that group's attributes
      *
      * @return list<array{
      *     key: string,

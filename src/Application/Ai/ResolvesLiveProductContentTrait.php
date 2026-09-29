@@ -14,13 +14,9 @@ declare(strict_types=1);
 namespace Sulu\Product\Application\Ai;
 
 use Sulu\Content\Domain\Model\DimensionContentInterface;
-use Sulu\Product\Application\AttributeType\AttributeTypeInterface;
-use Sulu\Product\Domain\Model\AttributeInterface;
-use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 
-/** Shared read helpers for the AI tools: live dimension content lookup and attribute value formatting. */
 trait ResolvesLiveProductContentTrait
 {
     /**
@@ -51,7 +47,7 @@ trait ResolvesLiveProductContentTrait
     /**
      * @return array{code: string, title: string, productFamily: ?string, url: ?string}|null
      */
-    private function toProductSummary(ProductInterface $product, string $locale): ?array
+    private function toProductSummary(ProductInterface $product, string $locale, ProductUrlGenerator $urlGenerator): ?array
     {
         [$localized, $unlocalized] = $this->findLiveDimensionContents($product, $locale);
 
@@ -70,40 +66,7 @@ trait ResolvesLiveProductContentTrait
             'code' => $code,
             'title' => $title,
             'productFamily' => $unlocalized->getProductFamily()?->getTranslation($locale)?->getName(),
-            'url' => $localized->getRoute()?->getSlug(),
+            'url' => $urlGenerator->generate($localized, $locale),
         ];
-    }
-
-    private function displayAttributeValue(ProductAttributeValueInterface $value, AttributeTypeInterface $type, string $locale): ?string
-    {
-        if (AttributeInterface::TYPE_OPTIONS === $type->getKey()) {
-            $option = $value->getAttributeOption();
-
-            if (null === $option) {
-                return null;
-            }
-
-            return $option->getTranslation($locale)?->getName() ?? $option->getKey();
-        }
-
-        $raw = $type->readValue($value);
-
-        if (null === $raw) {
-            return null;
-        }
-
-        if (\is_float($raw)) {
-            $formatted = \rtrim(\rtrim(\number_format($raw, 6, '.', ''), '0'), '.');
-
-            return '' === $formatted ? '0' : $formatted;
-        }
-
-        if (!\is_string($raw)) {
-            return null;
-        }
-
-        $formatted = \trim($raw);
-
-        return '' === $formatted ? null : $formatted;
     }
 }

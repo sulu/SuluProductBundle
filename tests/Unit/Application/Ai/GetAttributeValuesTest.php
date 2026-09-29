@@ -15,14 +15,12 @@ namespace Sulu\Product\Tests\Unit\Application\Ai;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Product\Application\Ai\GetAttributeValues;
-use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
-use Sulu\Product\Application\AttributeType\DateAttributeType;
-use Sulu\Product\Application\AttributeType\NumberAttributeType;
-use Sulu\Product\Application\AttributeType\OptionsAttributeType;
-use Sulu\Product\Application\AttributeType\TextAttributeType;
+use Sulu\Product\Application\Attribute\ProductAttributeValueFormatter;
+use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
@@ -33,7 +31,6 @@ use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductAttributeValueRepositoryInterface;
-use Sulu\Product\Tests\Unit\Application\Ai\Fixtures\BooleanAttributeTypeFake;
 
 #[CoversClass(GetAttributeValues::class)]
 class GetAttributeValuesTest extends TestCase
@@ -53,17 +50,10 @@ class GetAttributeValuesTest extends TestCase
         $this->attributeRepository = $this->prophesize(AttributeRepositoryInterface::class);
         $this->productAttributeValueRepository = $this->prophesize(ProductAttributeValueRepositoryInterface::class);
 
-        $registry = new AttributeTypeRegistry([
-            new TextAttributeType(),
-            new NumberAttributeType(),
-            new OptionsAttributeType(),
-            new DateAttributeType(),
-        ]);
-
         $this->getAttributeValues = new GetAttributeValues(
             $this->attributeRepository->reveal(),
             $this->productAttributeValueRepository->reveal(),
-            $registry,
+            new ProductAttributeValueFormatter(new MeasurementRegistry()),
         );
     }
 
@@ -88,7 +78,7 @@ class GetAttributeValuesTest extends TestCase
     public function testInvokeWithUnknownKeyReturnsUnknownAttribute(): void
     {
         $this->attributeRepository->findOneBy(['key' => 'missing'])->willReturn(null);
-        $this->productAttributeValueRepository->findBy()->shouldNotBeCalled();
+        $this->productAttributeValueRepository->countValues(Argument::cetera())->shouldNotBeCalled();
 
         $result = ($this->getAttributeValues)('missing', 'en');
 
@@ -103,16 +93,14 @@ class GetAttributeValuesTest extends TestCase
         $attribute->setType(AttributeInterface::TYPE_TEXT);
         $this->attributeRepository->findOneBy(['key' => 'material'])->willReturn($attribute);
 
-        $values = [
-            $this->textValue($attribute, 'Brass'),
-            $this->textValue($attribute, 'Steel'),
-            $this->textValue($attribute, 'Brass'),
-        ];
-        $this->productAttributeValueRepository->findBy([
+        $this->productAttributeValueRepository->countValues([
             'attribute' => $attribute,
             'locale' => 'en',
             'stage' => 'live',
-        ])->willReturn($values);
+        ], 15)->willReturn([
+            ['value' => $this->textValue($attribute, 'Brass'), 'count' => 2],
+            ['value' => $this->textValue($attribute, 'Steel'), 'count' => 1],
+        ]);
 
         $result = ($this->getAttributeValues)('material', 'en');
 
@@ -134,11 +122,11 @@ class GetAttributeValuesTest extends TestCase
         $value = new ProductAttributeValue($this->dimensionContent(), $attribute, 'material');
         $value->setText(null);
 
-        $this->productAttributeValueRepository->findBy([
+        $this->productAttributeValueRepository->countValues([
             'attribute' => $attribute,
             'locale' => 'en',
             'stage' => 'live',
-        ])->willReturn([$value]);
+        ], 15)->willReturn([['value' => $value, 'count' => 1]]);
 
         $result = ($this->getAttributeValues)('material', 'en');
 
@@ -156,11 +144,11 @@ class GetAttributeValuesTest extends TestCase
         $value = new ProductAttributeValue($this->dimensionContent(), $attribute, 'current');
         $value->setNumber(16.0);
 
-        $this->productAttributeValueRepository->findBy([
+        $this->productAttributeValueRepository->countValues([
             'attribute' => $attribute,
             'locale' => 'en',
             'stage' => 'live',
-        ])->willReturn([$value]);
+        ], 15)->willReturn([['value' => $value, 'count' => 1]]);
 
         $result = ($this->getAttributeValues)('current', 'en');
 
@@ -178,11 +166,11 @@ class GetAttributeValuesTest extends TestCase
         $value = new ProductAttributeValue($this->dimensionContent(), $attribute, 'current');
         $value->setNumber(16.5);
 
-        $this->productAttributeValueRepository->findBy([
+        $this->productAttributeValueRepository->countValues([
             'attribute' => $attribute,
             'locale' => 'en',
             'stage' => 'live',
-        ])->willReturn([$value]);
+        ], 15)->willReturn([['value' => $value, 'count' => 1]]);
 
         $result = ($this->getAttributeValues)('current', 'en');
 
@@ -200,15 +188,15 @@ class GetAttributeValuesTest extends TestCase
         $value = new ProductAttributeValue($this->dimensionContent(), $attribute, 'released');
         $value->setNumber((float) (new \DateTimeImmutable('2024-05-01', new \DateTimeZone('UTC')))->getTimestamp());
 
-        $this->productAttributeValueRepository->findBy([
+        $this->productAttributeValueRepository->countValues([
             'attribute' => $attribute,
             'locale' => 'en',
             'stage' => 'live',
-        ])->willReturn([$value]);
+        ], 15)->willReturn([['value' => $value, 'count' => 1]]);
 
         $result = ($this->getAttributeValues)('released', 'en');
 
-        $this->assertSame([['value' => '2024-05-01', 'count' => 1]], $result['values']);
+        $this->assertSame([['value' => 'May 1, 2024', 'count' => 1]], $result['values']);
     }
 
     public function testInvokeUsesTranslatedOptionLabel(): void
@@ -225,11 +213,11 @@ class GetAttributeValuesTest extends TestCase
         $value = new ProductAttributeValue($this->dimensionContent(), $attribute, 'color');
         $value->setAttributeOption($option);
 
-        $this->productAttributeValueRepository->findBy([
+        $this->productAttributeValueRepository->countValues([
             'attribute' => $attribute,
             'locale' => 'en',
             'stage' => 'live',
-        ])->willReturn([$value]);
+        ], 15)->willReturn([['value' => $value, 'count' => 1]]);
 
         $result = ($this->getAttributeValues)('color', 'en');
 
@@ -249,11 +237,11 @@ class GetAttributeValuesTest extends TestCase
         $value = new ProductAttributeValue($this->dimensionContent(), $attribute, 'color');
         $value->setAttributeOption($option);
 
-        $this->productAttributeValueRepository->findBy([
+        $this->productAttributeValueRepository->countValues([
             'attribute' => $attribute,
             'locale' => 'en',
             'stage' => 'live',
-        ])->willReturn([$value]);
+        ], 15)->willReturn([['value' => $value, 'count' => 1]]);
 
         $result = ($this->getAttributeValues)('color', 'en');
 
@@ -270,11 +258,11 @@ class GetAttributeValuesTest extends TestCase
 
         $value = new ProductAttributeValue($this->dimensionContent(), $attribute, 'color');
 
-        $this->productAttributeValueRepository->findBy([
+        $this->productAttributeValueRepository->countValues([
             'attribute' => $attribute,
             'locale' => 'en',
             'stage' => 'live',
-        ])->willReturn([$value]);
+        ], 15)->willReturn([['value' => $value, 'count' => 1]]);
 
         $result = ($this->getAttributeValues)('color', 'en');
 
@@ -291,20 +279,13 @@ class GetAttributeValuesTest extends TestCase
 
         $value = new ProductAttributeValue($this->dimensionContent(), $attribute, 'flag');
 
-        $registry = new AttributeTypeRegistry([new BooleanAttributeTypeFake()]);
-        $getAttributeValues = new GetAttributeValues(
-            $this->attributeRepository->reveal(),
-            $this->productAttributeValueRepository->reveal(),
-            $registry,
-        );
-
-        $this->productAttributeValueRepository->findBy([
+        $this->productAttributeValueRepository->countValues([
             'attribute' => $attribute,
             'locale' => 'en',
             'stage' => 'live',
-        ])->willReturn([$value]);
+        ], 15)->willReturn([['value' => $value, 'count' => 1]]);
 
-        $result = ($getAttributeValues)('flag', 'en');
+        $result = ($this->getAttributeValues)('flag', 'en');
 
         $this->assertSame([], $result['values']);
     }
@@ -317,21 +298,63 @@ class GetAttributeValuesTest extends TestCase
         $attribute->setType(AttributeInterface::TYPE_TEXT);
         $this->attributeRepository->findOneBy(['key' => 'material'])->willReturn($attribute);
 
-        $values = [
-            $this->textValue($attribute, 'Brass'),
-            $this->textValue($attribute, 'Brass'),
-            $this->textValue($attribute, 'Steel'),
-        ];
-        $this->productAttributeValueRepository->findBy([
+        $this->productAttributeValueRepository->countValues([
             'attribute' => $attribute,
             'locale' => 'en',
             'stage' => 'live',
-        ])->willReturn($values);
+        ], 1)->willReturn([
+            ['value' => $this->textValue($attribute, 'Brass'), 'count' => 2],
+        ]);
 
         $result = ($this->getAttributeValues)('material', 'en', 1);
 
         $this->assertCount(1, $result['values']);
         $this->assertSame('Brass', $result['values'][0]['value']);
+    }
+
+    public function testInvokeAppliesTheAttributesDisplayFormatAndUnit(): void
+    {
+        $group = new AttributeGroup();
+        $attribute = new Attribute($group);
+        $attribute->setKey('current');
+        $attribute->setType(AttributeInterface::TYPE_NUMBER);
+        $attribute->setConfig(['displayFormat' => '%value% %unit%', 'unit' => 'MILLIMETER']);
+        $this->attributeRepository->findOneBy(['key' => 'current'])->willReturn($attribute);
+
+        $value = new ProductAttributeValue($this->dimensionContent(), $attribute, 'current');
+        $value->setNumber(16.0);
+
+        $this->productAttributeValueRepository->countValues([
+            'attribute' => $attribute,
+            'locale' => 'en',
+            'stage' => 'live',
+        ], 15)->willReturn([['value' => $value, 'count' => 3]]);
+
+        $result = ($this->getAttributeValues)('current', 'en');
+
+        $this->assertSame([['value' => '16 mm', 'count' => 3]], $result['values']);
+    }
+
+    public function testInvokeMergesGroupsThatDisplayTheSame(): void
+    {
+        $group = new AttributeGroup();
+        $attribute = new Attribute($group);
+        $attribute->setKey('material');
+        $attribute->setType(AttributeInterface::TYPE_TEXT);
+        $this->attributeRepository->findOneBy(['key' => 'material'])->willReturn($attribute);
+
+        $this->productAttributeValueRepository->countValues([
+            'attribute' => $attribute,
+            'locale' => 'en',
+            'stage' => 'live',
+        ], 15)->willReturn([
+            ['value' => $this->textValue($attribute, 'Brass'), 'count' => 2],
+            ['value' => $this->textValue($attribute, 'Brass '), 'count' => 1],
+        ]);
+
+        $result = ($this->getAttributeValues)('material', 'en');
+
+        $this->assertSame([['value' => 'Brass', 'count' => 3]], $result['values']);
     }
 
     private function textValue(Attribute $attribute, string $text): ProductAttributeValue

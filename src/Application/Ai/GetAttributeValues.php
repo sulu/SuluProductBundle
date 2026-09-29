@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Sulu\Product\Application\Ai;
 
 use Sulu\Content\Domain\Model\DimensionContentInterface;
-use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
+use Sulu\Product\Application\Attribute\ProductAttributeValueFormatter;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductAttributeValueRepositoryInterface;
 
@@ -24,14 +24,12 @@ use Sulu\Product\Domain\Repository\ProductAttributeValueRepositoryInterface;
  */
 final class GetAttributeValues
 {
-    use ResolvesLiveProductContentTrait;
-
     private const MAX_LIMIT = 30;
 
     public function __construct(
         private readonly AttributeRepositoryInterface $attributeRepository,
         private readonly ProductAttributeValueRepositoryInterface $productAttributeValueRepository,
-        private readonly AttributeTypeRegistry $attributeTypeRegistry,
+        private readonly ProductAttributeValueFormatter $valueFormatter,
     ) {
     }
 
@@ -58,24 +56,23 @@ final class GetAttributeValues
 
         $limit = \max(1, \min($limit, self::MAX_LIMIT));
 
-        $rows = $this->productAttributeValueRepository->findBy([
+        $groups = $this->productAttributeValueRepository->countValues([
             'attribute' => $attribute,
             'locale' => $locale,
             'stage' => DimensionContentInterface::STAGE_LIVE,
-        ]);
-
-        $type = $this->attributeTypeRegistry->get($attribute->getType());
+        ], $limit);
 
         /** @var array<string, int> $counts */
         $counts = [];
-        foreach ($rows as $row) {
-            $value = $this->displayAttributeValue($row, $type, $locale);
+        foreach ($groups as $group) {
+            $value = $this->valueFormatter->format($group['value'], $locale);
 
-            if (null === $value) {
+            if (null === $value || '' === \trim($value)) {
                 continue;
             }
 
-            $counts[$value] = ($counts[$value] ?? 0) + 1;
+            $value = \trim($value);
+            $counts[$value] = ($counts[$value] ?? 0) + $group['count'];
         }
 
         \arsort($counts);

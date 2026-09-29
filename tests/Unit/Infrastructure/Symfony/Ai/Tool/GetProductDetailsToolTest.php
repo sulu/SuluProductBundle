@@ -18,10 +18,13 @@ use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Application\Ai\GetProductDetails;
-use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
+use Sulu\Product\Application\Ai\ProductUrlGenerator;
+use Sulu\Product\Application\Attribute\ProductAttributeValueFormatter;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
+use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Symfony\Ai\Tool\GetProductDetailsTool;
+use Sulu\Product\Tests\Unit\Application\Ai\Fixtures\FakeRouteGenerator;
 
 /**
  * GetProductDetails (final, so Prophecy can't double it directly) is real here, built over a
@@ -42,7 +45,7 @@ class GetProductDetailsToolTest extends TestCase
             'stage' => DimensionContentInterface::STAGE_LIVE,
         ])->willThrow(new ProductNotFoundException(['code' => 'MISSING']));
 
-        $tool = new GetProductDetailsTool(new GetProductDetails($productRepository->reveal(), new AttributeTypeRegistry([])));
+        $tool = new GetProductDetailsTool(new GetProductDetails($productRepository->reveal(), new ProductAttributeValueFormatter(new MeasurementRegistry()), new ProductUrlGenerator(new FakeRouteGenerator())));
 
         $this->expectException(\InvalidArgumentException::class);
 

@@ -33,6 +33,7 @@ final class GetProducts
 
     public function __construct(
         private readonly ProductRepositoryInterface $productRepository,
+        private readonly ProductUrlGenerator $urlGenerator,
     ) {
     }
 
@@ -78,7 +79,7 @@ final class GetProducts
         $results = [];
 
         foreach ($this->productRepository->findBy($filters, ['title' => 'asc']) as $product) {
-            $row = $this->toProductSummary($product, $locale);
+            $row = $this->toProductSummary($product, $locale, $this->urlGenerator);
 
             if (null !== $row) {
                 $results[] = $row;

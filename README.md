@@ -262,10 +262,10 @@ unconditionally. A project that wants this search/lookup logic through a differe
 | `sulu_product_get_product_details` | Get the full specification sheet of one product by its exact code. |
 | `sulu_product_get_related_products` | Get a product's variants and configured associations. |
 
-Every tool only reads live, current-version content; drafts are never exposed to the agent. Each
-tool's PHP docblock is the parameter schema an agent sees, so it is written for the agent as much
-as for a human reader — that is why a description can read like an instruction rather than a plain
-sentence.
+Every tool only reads live, current-version content; drafts are never exposed to the agent. The
+`@param` lines of a tool's docblock are the parameter descriptions an agent sees, but only the
+first line of each one reaches it, so every description fits on one line. Guidance that does not
+fit belongs in the tool's `description`.
 
 Collect the tagged services into a `Toolbox` and pass it to an `Agent` as usual:
 

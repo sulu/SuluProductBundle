@@ -33,4 +33,12 @@ $config->ignoreErrorsOnPackageAndPaths(
     [ErrorType::DEV_DEPENDENCY_IN_PROD],
 );
 
+// The tool test runs symfony/ai-agent's own argument resolver, which needs its ToolCall value object
+// from the platform package ai-agent already pulls in.
+$config->ignoreErrorsOnPackageAndPaths(
+    'symfony/ai-platform',
+    [__DIR__ . '/tests/Unit/Infrastructure/Symfony/Ai/Tool/SearchProductsByAttributesToolTest.php'],
+    [ErrorType::SHADOW_DEPENDENCY],
+);
+
 return $config;

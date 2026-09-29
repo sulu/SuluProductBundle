@@ -18,8 +18,10 @@ use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Sulu\Product\Application\Ai\GetProducts;
+use Sulu\Product\Application\Ai\ProductUrlGenerator;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Symfony\Ai\Tool\GetProductsTool;
+use Sulu\Product\Tests\Unit\Application\Ai\Fixtures\FakeRouteGenerator;
 
 /**
  * GetProducts (final, so Prophecy can't double it directly) is real here, built over a mocked
@@ -36,7 +38,7 @@ class GetProductsToolTest extends TestCase
         $productRepository = $this->prophesize(ProductRepositoryInterface::class);
         $productRepository->findBy(Argument::cetera())->shouldNotBeCalled();
 
-        $tool = new GetProductsTool(new GetProducts($productRepository->reveal()));
+        $tool = new GetProductsTool(new GetProducts($productRepository->reveal(), new ProductUrlGenerator(new FakeRouteGenerator())));
 
         $result = $tool('en');
 
