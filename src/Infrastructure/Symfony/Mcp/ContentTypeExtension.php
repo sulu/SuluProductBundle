@@ -24,7 +24,7 @@ use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 
 /**
- * Plugs "product" into SuluMcpBundle's unified content/block tools, sulu_content_search, and
+ * Plugs the "products" resourceKey into SuluMcpBundle's unified content/block tools, sulu_content_search, and
  * permission discovery, via ContentTypeExtensionInterface. Tagged sulu_mcp.content_type_extension
  * only when sulu/mcp-bundle is installed at a version that carries the interface; see
  * SuluProductBundle::registerMcpIntegration().
@@ -36,19 +36,43 @@ final readonly class ContentTypeExtension implements ContentTypeExtensionInterfa
     ) {
     }
 
-    public function getType(): string
-    {
-        return 'product';
-    }
-
     public function getResourceKey(): string
     {
         return ProductInterface::RESOURCE_KEY;
     }
 
-    public function getSecurityContext(): string
+    public function getTemplateType(): string
+    {
+        return 'product';
+    }
+
+    public function getViewSecurityContexts(): array
+    {
+        return [ProductAdmin::SECURITY_CONTEXT];
+    }
+
+    public function getEntitySecurityContext(object $aggregate, ?string $templateKey): string
     {
         return ProductAdmin::SECURITY_CONTEXT;
+    }
+
+    public function requiresResolvedContent(): bool
+    {
+        return false;
+    }
+
+    public function getAclObjectType(): ?string
+    {
+        return null;
+    }
+
+    public function getWebspaceKey(object $aggregate): ?string
+    {
+        return null;
+    }
+
+    public function assertCanRemove(string $uuid): void
+    {
     }
 
     public function loadDraft(string $uuid, string $locale, bool $loadGhost = false): ProductInterface

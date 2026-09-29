@@ -43,9 +43,9 @@ final class ContentTypeExtensionTest extends TestCase
         $this->extension = new ContentTypeExtension($this->productRepository->reveal());
     }
 
-    public function testGetTypeReturnsProduct(): void
+    public function testGetTemplateTypeReturnsProduct(): void
     {
-        $this->assertSame('product', $this->extension->getType());
+        $this->assertSame('product', $this->extension->getTemplateType());
     }
 
     public function testGetResourceKeyMatchesTheIndexedResourceKey(): void
@@ -53,9 +53,13 @@ final class ContentTypeExtensionTest extends TestCase
         $this->assertSame(ProductInterface::RESOURCE_KEY, $this->extension->getResourceKey());
     }
 
-    public function testGetSecurityContextMatchesProductAdmin(): void
+    public function testSecurityContextsMatchProductAdmin(): void
     {
-        $this->assertSame(ProductAdmin::SECURITY_CONTEXT, $this->extension->getSecurityContext());
+        $this->assertSame([ProductAdmin::SECURITY_CONTEXT], $this->extension->getViewSecurityContexts());
+        $this->assertSame(ProductAdmin::SECURITY_CONTEXT, $this->extension->getEntitySecurityContext(new \stdClass(), null));
+        $this->assertFalse($this->extension->requiresResolvedContent());
+        $this->assertNull($this->extension->getAclObjectType());
+        $this->assertNull($this->extension->getWebspaceKey(new \stdClass()));
     }
 
     public function testLoadDraftQueriesTheDraftStageWithAdminSelects(): void

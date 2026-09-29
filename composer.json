@@ -6,7 +6,7 @@
     "repositories": [
         {
             "type": "vcs",
-            "url": "https://github.com/wachterjohannes/SuluMcpBundle.git"
+            "url": "https://github.com/sulu/SuluMcpBundle.git"
         }
     ],
     "require": {
@@ -54,7 +54,7 @@
         "rector/rector": "^2.0",
         "shipmonk/composer-dependency-analyser": "^1.8",
         "spaze/phpstan-disallowed-calls": "^4.7",
-        "sulu/mcp-bundle": "dev-mcp-tools-integration",
+        "sulu/mcp-bundle": "dev-content-type-extension-point",
         "symfony/ai-agent": "^0.14",
         "symfony/browser-kit": "^6.4 || ^7.1 || ^8.0",
         "symfony/console": "^6.4 || ^7.1 || ^8.0",
