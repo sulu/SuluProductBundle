@@ -19,6 +19,7 @@ use Mcp\Schema\ToolAnnotations;
 use Sulu\Component\Security\Authorization\PermissionTypes;
 use Sulu\Mcp\Domain\Security\PermissionRequirement;
 use Sulu\Mcp\Domain\Security\RequiresPermission;
+use Sulu\Product\Application\Ai\AttributeFilter;
 use Sulu\Product\Application\Ai\SearchProductsByAttributes;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 
@@ -73,6 +74,11 @@ class SearchProductsByAttributesTool
         #[Schema(description: 'Maximum number of results to return, capped at 25.')]
         int $limit = 10,
     ): array {
-        return ($this->searchProductsByAttributes)($locale, $filters, $includeVariants, $limit);
+        $attributeFilters = \array_map(
+            static fn (array $filter): AttributeFilter => new AttributeFilter($filter['key'], $filter['value']),
+            $filters,
+        );
+
+        return ($this->searchProductsByAttributes)($locale, $attributeFilters, $includeVariants, $limit);
     }
 }
