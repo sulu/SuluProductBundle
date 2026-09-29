@@ -37,6 +37,13 @@ interface AttributeRepositoryInterface
     /**
      * @param AttributeRepositoryFilters $filters
      *
+     * @return list<AttributeInterface>
+     */
+    public function findBy(array $filters = []): array;
+
+    /**
+     * @param AttributeRepositoryFilters $filters
+     *
      * @throws AttributeNotFoundException
      */
     public function getOneBy(array $filters): AttributeInterface;

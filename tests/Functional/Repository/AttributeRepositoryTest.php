@@ -401,6 +401,58 @@ class AttributeRepositoryTest extends SuluTestCase
         $this->assertNotContains($attrs[0]->getUuid(), $uuids);
     }
 
+    public function testFindByWithoutFiltersReturnsAllAttributes(): void
+    {
+        $group = $this->createGroup();
+
+        $a = $this->repository->create($group);
+        $a->setKey('findby-a');
+        $a->setType(AttributeInterface::TYPE_TEXT);
+        $this->repository->save($a);
+
+        $b = $this->repository->create($group);
+        $b->setKey('findby-b');
+        $b->setType(AttributeInterface::TYPE_TEXT);
+        $this->repository->save($b);
+
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        $results = $this->repository->findBy();
+
+        $keys = \array_map(static fn (AttributeInterface $attribute): string => $attribute->getKey(), $results);
+        $this->assertContains('findby-a', $keys);
+        $this->assertContains('findby-b', $keys);
+    }
+
+    public function testFindByKeyFilterReturnsOnlyMatchingAttribute(): void
+    {
+        $group = $this->createGroup();
+
+        $a = $this->repository->create($group);
+        $a->setKey('findby-key-match');
+        $a->setType(AttributeInterface::TYPE_TEXT);
+        $this->repository->save($a);
+
+        $b = $this->repository->create($group);
+        $b->setKey('findby-key-other');
+        $b->setType(AttributeInterface::TYPE_TEXT);
+        $this->repository->save($b);
+
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        $results = $this->repository->findBy(['key' => 'findby-key-match']);
+
+        $this->assertCount(1, $results);
+        $this->assertSame('findby-key-match', $results[0]->getKey());
+    }
+
+    public function testFindByOnEmptyDatabaseReturnsEmptyArray(): void
+    {
+        $this->assertSame([], $this->repository->findBy());
+    }
+
     public function testCountByReturnsZeroForEmptyGroup(): void
     {
         $group = $this->createGroup();

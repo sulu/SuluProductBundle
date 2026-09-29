@@ -237,3 +237,40 @@ Rules for the declared fields:
 ```
 
 Types the project does not declare keep their generated field, label and layout.
+
+## AI agent tools
+
+With `symfony/ai-agent` installed, the bundle registers six read-only tools, tagged `ai.tool`, so
+a Symfony AI agent can look up products for a chatbot. Nothing is registered without that package:
+
+```bash
+composer require symfony/ai-agent
+```
+
+| Tool | Purpose |
+| --- | --- |
+| `sulu_product_get_products` | Search published products by keyword, article code, or product family. |
+| `sulu_product_get_attributes` | List the known specification attributes: key, name, type, group, unit, options. |
+| `sulu_product_get_attribute_values` | List the actual values seen for one attribute, most common first. |
+| `sulu_product_search_products_by_attributes` | Search products by one or more attribute values (spec, color, ...). |
+| `sulu_product_get_product_details` | Get the full specification sheet of one product by its exact code. |
+| `sulu_product_get_related_products` | Get a product's variants and configured associations. |
+
+Every tool only reads live, current-version content; drafts are never exposed to the agent. Each
+tool's PHP docblock is the parameter schema an agent sees, so it is written for the agent as much
+as for a human reader — that is why a description can read like an instruction rather than a plain
+sentence.
+
+Collect the tagged services into a `Toolbox` and pass it to an `Agent` as usual:
+
+```php
+use Symfony\AI\Agent\Agent;
+use Symfony\AI\Agent\Toolbox\Toolbox;
+use Symfony\AI\Platform\Message\Message;
+use Symfony\AI\Platform\Message\MessageBag;
+
+$toolbox = new Toolbox($tools); // every service tagged `ai.tool`
+$agent = new Agent($platform, $model, toolbox: $toolbox);
+
+$agent->call(new MessageBag(Message::ofUser('Which products come in a heavy-duty finish?')));
+```

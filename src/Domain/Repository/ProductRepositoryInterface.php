@@ -13,6 +13,7 @@ namespace Sulu\Product\Domain\Repository;
 
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
+use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 
 /**
@@ -45,6 +46,7 @@ interface ProductRepositoryInterface
      *     uuids?: string[],
      *     locale?: string,
      *     stage?: string,
+     *     code?: string,
      *     load_ghost_content?: bool,
      *     associationTargetUuid?: string,
      *     associationType?: string,
@@ -56,6 +58,9 @@ interface ProductRepositoryInterface
      *     with-product-family?: bool,
      * }|array<string, mixed> $selects
      *
+     * Note: "code" matches the unlocalized dimension content's code exactly and requires
+     * "locale" and "stage" to also be set
+     *
      * @throws ProductNotFoundException
      */
     public function getOneBy(array $filters, array $selects = []): ProductInterface;
@@ -66,6 +71,7 @@ interface ProductRepositoryInterface
      *     uuids?: string[],
      *     locale?: string,
      *     stage?: string,
+     *     code?: string,
      *     associationTargetUuid?: string,
      *     associationType?: string,
      * } $filters
@@ -95,6 +101,10 @@ interface ProductRepositoryInterface
      *     uuids?: string[],
      *     locale?: string,
      *     stage?: string,
+     *     query?: string,
+     *     productFamilyName?: string,
+     *     code?: string,
+     *     attributeValues?: list<array{attribute: AttributeInterface, value: string}>,
      *     categoryIds?: int[],
      *     categoryKeys?: string[],
      *     categoryOperator?: 'AND'|'OR',
@@ -122,6 +132,13 @@ interface ProductRepositoryInterface
      *     with-product-content?: bool|array<string, mixed>,
      *     with-product-family?: bool,
      * }|array<string, mixed> $selects
+     *
+     * Note: "query" matches the title (localized) or code (unlocalized) as a substring,
+     * "productFamilyName" matches the product family's translated name as a substring, and
+     * "code" matches the unlocalized code exactly. "attributeValues" keeps only products where
+     * every pair's attribute has a value matching the given substring (or, for a number
+     * attribute, an exact value when the substring is itself numeric) — pairs are ANDed. All of
+     * these require "locale" and "stage" to also be set.
      *
      * @return iterable<ProductInterface>
      */

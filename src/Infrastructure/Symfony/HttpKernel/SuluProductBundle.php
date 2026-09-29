@@ -89,11 +89,13 @@ use Sulu\Product\Domain\Model\ProductFamilyTranslationInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
+use Sulu\Product\Domain\Repository\ProductAttributeValueRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Doctrine\EventListener\ProductWithVariantsRouteGuard;
 use Sulu\Product\Infrastructure\Doctrine\Repository\AttributeGroupRepository;
 use Sulu\Product\Infrastructure\Doctrine\Repository\AttributeRepository;
+use Sulu\Product\Infrastructure\Doctrine\Repository\ProductAttributeValueRepository;
 use Sulu\Product\Infrastructure\Doctrine\Repository\ProductFamilyRepository;
 use Sulu\Product\Infrastructure\Doctrine\Repository\ProductRepository;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeAdmin;
@@ -158,6 +160,12 @@ use Sulu\Product\Infrastructure\Sulu\Search\WebsiteProductIndexListener;
 use Sulu\Product\Infrastructure\Sulu\Search\WebsiteProductReindexProvider;
 use Sulu\Product\Infrastructure\Sulu\Sitemap\ProductsSitemapProvider;
 use Sulu\Product\Infrastructure\Sulu\Trash\ProductTrashItemHandler;
+use Sulu\Product\Infrastructure\Symfony\Ai\Tool\GetAttributesTool;
+use Sulu\Product\Infrastructure\Symfony\Ai\Tool\GetAttributeValuesTool;
+use Sulu\Product\Infrastructure\Symfony\Ai\Tool\GetProductDetailsTool;
+use Sulu\Product\Infrastructure\Symfony\Ai\Tool\GetProductsTool;
+use Sulu\Product\Infrastructure\Symfony\Ai\Tool\GetRelatedProductsTool;
+use Sulu\Product\Infrastructure\Symfony\Ai\Tool\SearchProductsByAttributesTool;
 use Sulu\Product\Infrastructure\Symfony\Serializer\Normalizer\ProductFamilyNormalizer;
 use Sulu\Product\Infrastructure\Symfony\Serializer\Normalizer\ProductNormalizer;
 use Sulu\Product\Infrastructure\Symfony\Twig\ProductAttributeTwigExtension;
@@ -169,11 +177,13 @@ use Sulu\Product\UserInterface\Controller\Admin\MeasurementUnitController;
 use Sulu\Product\UserInterface\Controller\Admin\ProductController;
 use Sulu\Product\UserInterface\Controller\Admin\ProductFamilyController;
 use Sulu\Product\UserInterface\Controller\Admin\ProductVariantController;
+use Symfony\AI\Agent\Toolbox\Attribute\AsTool;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symfony\Component\DependencyInjection\Loader\Configurator\ServicesConfigurator;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
 
@@ -1340,6 +1350,97 @@ final class SuluProductBundle extends AbstractBundle
                     new Reference('doctrine.orm.entity_manager'),
                 ]);
         }
+
+        $services->set('sulu_product.product_attribute_value_repository')
+            ->class(ProductAttributeValueRepository::class)
+            ->public()
+            ->args([
+                new Reference('doctrine.orm.entity_manager'),
+            ]);
+
+        $services->alias(ProductAttributeValueRepositoryInterface::class, 'sulu_product.product_attribute_value_repository');
+
+        // "symfony/ai-agent" is a require-dev/suggest dependency; register the tools only if it's installed.
+        if (ContainerBuilder::willBeAvailable('symfony/ai-agent', AsTool::class, ['sulu/product-bundle'])) {
+            $this->registerAiTool(
+                $services,
+                GetProductsTool::class,
+                'sulu_product.ai_get_products_tool',
+                [new Reference('sulu_product.product_repository')],
+            );
+
+            $this->registerAiTool(
+                $services,
+                GetAttributesTool::class,
+                'sulu_product.ai_get_attributes_tool',
+                [
+                    new Reference('sulu_product.attribute_repository'),
+                    new Reference('sulu_product.measurement_registry'),
+                ],
+            );
+
+            $this->registerAiTool(
+                $services,
+                GetAttributeValuesTool::class,
+                'sulu_product.ai_get_attribute_values_tool',
+                [
+                    new Reference('sulu_product.attribute_repository'),
+                    new Reference('sulu_product.product_attribute_value_repository'),
+                    new Reference('sulu_product.attribute_type_registry'),
+                ],
+            );
+
+            $this->registerAiTool(
+                $services,
+                SearchProductsByAttributesTool::class,
+                'sulu_product.ai_search_products_by_attributes_tool',
+                [
+                    new Reference('sulu_product.product_repository'),
+                    new Reference('sulu_product.attribute_repository'),
+                ],
+            );
+
+            $this->registerAiTool(
+                $services,
+                GetProductDetailsTool::class,
+                'sulu_product.ai_get_product_details_tool',
+                [
+                    new Reference('sulu_product.product_repository'),
+                    new Reference('sulu_product.attribute_type_registry'),
+                ],
+            );
+
+            $this->registerAiTool(
+                $services,
+                GetRelatedProductsTool::class,
+                'sulu_product.ai_get_related_products_tool',
+                [
+                    new Reference('sulu_product.product_repository'),
+                    new Reference('sulu_product.association_type_registry'),
+                ],
+            );
+        }
+    }
+
+    /**
+     * @param class-string $toolClass
+     * @param list<Reference> $arguments
+     */
+    private function registerAiTool(ServicesConfigurator $services, string $toolClass, string $serviceId, array $arguments): void
+    {
+        $reflectionClass = new \ReflectionClass($toolClass);
+        $attribute = $reflectionClass->getAttributes(AsTool::class)[0]->newInstance();
+
+        $services->set($serviceId)
+            ->class($toolClass)
+            ->args($arguments)
+            ->tag('ai.tool', [
+                'name' => $attribute->name,
+                'description' => $attribute->description,
+                'method' => $attribute->method,
+            ]);
+
+        $services->alias($toolClass, $serviceId);
     }
 
     /**

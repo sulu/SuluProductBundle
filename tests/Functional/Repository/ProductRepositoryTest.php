@@ -19,9 +19,14 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
+use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeInterface;
+use Sulu\Product\Domain\Model\AttributeOption;
+use Sulu\Product\Domain\Model\ProductAttributeValue;
+use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductFamilyAttribute;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
+use Sulu\Product\Domain\Model\ProductFamilyTranslation;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
@@ -509,6 +514,384 @@ class ProductRepositoryTest extends SuluTestCase
         $products = \iterator_to_array($this->repository->findBy(), false);
 
         $this->assertSame([], $products);
+    }
+
+    /**
+     * @return array{ProductInterface, ProductFamilyInterface}
+     */
+    private function createLiveProductWithTitleCodeAndFamily(string $title, string $code, string $familyName): array
+    {
+        $family = $this->createFamily();
+        $family->addTranslation(new ProductFamilyTranslation($family, 'en', $familyName));
+        $this->entityManager->flush();
+
+        $product = $this->repository->createNew();
+
+        $unlocalized = $product->createDimensionContent();
+        $unlocalized->setStage('live');
+        $unlocalized->setVersion(0);
+        $unlocalized->setCode($code);
+        $unlocalized->setProductFamily($family);
+        $product->addDimensionContent($unlocalized);
+
+        $localized = $product->createDimensionContent();
+        $localized->setLocale('en');
+        $localized->setStage('live');
+        $localized->setVersion(0);
+        $localized->setTitle($title);
+        $product->addDimensionContent($localized);
+
+        $this->repository->add($product);
+        $this->entityManager->persist($unlocalized);
+        $this->entityManager->persist($localized);
+        $this->entityManager->flush();
+
+        return [$product, $family];
+    }
+
+    public function testFindByQueryFilterMatchesTitle(): void
+    {
+        [$matching] = $this->createLiveProductWithTitleCodeAndFamily('Widget Pro', 'WID-1', 'Fasteners');
+        $this->createLiveProductWithTitleCodeAndFamily('Other Thing', 'OTH-1', 'Cables');
+        $this->entityManager->clear();
+
+        $products = \iterator_to_array(
+            $this->repository->findBy(['locale' => 'en', 'stage' => 'live', 'query' => 'Widget']),
+            false,
+        );
+
+        $this->assertCount(1, $products);
+        $this->assertSame($matching->getUuid(), $products[0]->getUuid());
+    }
+
+    public function testFindByQueryFilterMatchesCode(): void
+    {
+        [$matching] = $this->createLiveProductWithTitleCodeAndFamily('Widget Pro', 'WID-CODE-1', 'Fasteners');
+        $this->createLiveProductWithTitleCodeAndFamily('Other Thing', 'OTH-CODE-1', 'Cables');
+        $this->entityManager->clear();
+
+        $products = \iterator_to_array(
+            $this->repository->findBy(['locale' => 'en', 'stage' => 'live', 'query' => 'WID-CODE']),
+            false,
+        );
+
+        $this->assertCount(1, $products);
+        $this->assertSame($matching->getUuid(), $products[0]->getUuid());
+    }
+
+    public function testFindByProductFamilyNameFilterMatchesFamily(): void
+    {
+        [$matching] = $this->createLiveProductWithTitleCodeAndFamily('Widget Pro', 'WID-2', 'Heavy Duty Fasteners');
+        $this->createLiveProductWithTitleCodeAndFamily('Other Thing', 'OTH-2', 'Cables');
+        $this->entityManager->clear();
+
+        $products = \iterator_to_array(
+            $this->repository->findBy(['locale' => 'en', 'stage' => 'live', 'productFamilyName' => 'Fasteners']),
+            false,
+        );
+
+        $this->assertCount(1, $products);
+        $this->assertSame($matching->getUuid(), $products[0]->getUuid());
+    }
+
+    public function testFindByQueryAndProductFamilyNameNarrowTogether(): void
+    {
+        [$matching] = $this->createLiveProductWithTitleCodeAndFamily('Widget Pro', 'WID-3', 'Heavy Duty Fasteners');
+        $this->createLiveProductWithTitleCodeAndFamily('Widget Basic', 'WID-4', 'Cables');
+        $this->entityManager->clear();
+
+        $products = \iterator_to_array(
+            $this->repository->findBy([
+                'locale' => 'en',
+                'stage' => 'live',
+                'query' => 'Widget',
+                'productFamilyName' => 'Heavy Duty',
+            ]),
+            false,
+        );
+
+        $this->assertCount(1, $products);
+        $this->assertSame($matching->getUuid(), $products[0]->getUuid());
+    }
+
+    public function testFindByQueryWithoutLocaleOrStageThrows(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        \iterator_to_array($this->repository->findBy(['query' => 'Widget']), false);
+    }
+
+    public function testFindByCodeFilterMatchesExactCodeOnly(): void
+    {
+        [$matching] = $this->createLiveProductWithTitleCodeAndFamily('Widget Pro', 'CODE-EXACT', 'Fasteners');
+        $this->createLiveProductWithTitleCodeAndFamily('Other', 'CODE-EXACT-EXTRA', 'Cables');
+        $this->entityManager->clear();
+
+        $products = \iterator_to_array(
+            $this->repository->findBy(['locale' => 'en', 'stage' => 'live', 'code' => 'CODE-EXACT']),
+            false,
+        );
+
+        $this->assertCount(1, $products);
+        $this->assertSame($matching->getUuid(), $products[0]->getUuid());
+    }
+
+    public function testGetOneByCodeFilterMatchesExactCode(): void
+    {
+        [$matching] = $this->createLiveProductWithTitleCodeAndFamily('Widget Pro', 'CODE-GET-ONE', 'Fasteners');
+        $this->entityManager->clear();
+
+        $loaded = $this->repository->getOneBy(['code' => 'CODE-GET-ONE', 'locale' => 'en', 'stage' => 'live']);
+
+        $this->assertSame($matching->getUuid(), $loaded->getUuid());
+    }
+
+    public function testFindOneByCodeFilterMatchesExactCode(): void
+    {
+        [$matching] = $this->createLiveProductWithTitleCodeAndFamily('Widget Pro', 'CODE-FIND-ONE', 'Fasteners');
+        $this->entityManager->clear();
+
+        $loaded = $this->repository->findOneBy(['code' => 'CODE-FIND-ONE', 'locale' => 'en', 'stage' => 'live']);
+
+        $this->assertInstanceOf(ProductInterface::class, $loaded);
+        $this->assertSame($matching->getUuid(), $loaded->getUuid());
+    }
+
+    public function testFindByCodeWithoutLocaleOrStageThrows(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        \iterator_to_array($this->repository->findBy(['code' => 'ANY']), false);
+    }
+
+    /**
+     * @return array{ProductInterface, AttributeInterface}
+     */
+    private function createLiveProductWithTextAttributeValue(string $code, string $attributeKey, string $value): array
+    {
+        $attribute = $this->createTextAttribute($attributeKey);
+
+        $product = $this->repository->createNew();
+
+        $unlocalized = $product->createDimensionContent();
+        $unlocalized->setStage('live');
+        $unlocalized->setVersion(0);
+        $unlocalized->setCode($code);
+        $product->addDimensionContent($unlocalized);
+
+        $localized = $product->createDimensionContent();
+        $localized->setLocale('en');
+        $localized->setStage('live');
+        $localized->setVersion(0);
+        $localized->setTitle($code . ' Title');
+        $product->addDimensionContent($localized);
+
+        $this->repository->add($product);
+        $this->entityManager->persist($unlocalized);
+        $this->entityManager->persist($localized);
+
+        $attributeValue = new ProductAttributeValue($unlocalized, $attribute, $attributeKey);
+        $attributeValue->setText($value);
+        $this->entityManager->persist($attributeValue);
+
+        $this->entityManager->flush();
+
+        return [$product, $attribute];
+    }
+
+    private function unlocalizedDimensionContent(ProductInterface $product): ProductDimensionContentInterface
+    {
+        foreach ($product->getDimensionContents() as $dimensionContent) {
+            if (null === $dimensionContent->getLocale()) {
+                return $dimensionContent;
+            }
+        }
+
+        throw new \RuntimeException('Unlocalized dimension content not found.');
+    }
+
+    private function createTextAttribute(string $key): AttributeInterface
+    {
+        $container = self::getContainer();
+        /** @var AttributeGroupRepositoryInterface $attributeGroupRepository */
+        $attributeGroupRepository = $container->get(AttributeGroupRepositoryInterface::class);
+
+        $group = $attributeGroupRepository->create();
+        $attributeGroupRepository->save($group);
+
+        $attribute = new Attribute($group);
+        $attribute->setKey($key);
+        $attribute->setType(AttributeInterface::TYPE_TEXT);
+        $this->entityManager->persist($attribute);
+        $this->entityManager->flush();
+
+        return $attribute;
+    }
+
+    public function testFindByAttributeValuesFilterMatchesTextValueSubstring(): void
+    {
+        [$matching, $attribute] = $this->createLiveProductWithTextAttributeValue('AV-1', 'material', 'Brass');
+        $this->createLiveProductWithTextAttributeValue('AV-2', 'material-other', 'Steel');
+        $this->entityManager->clear();
+
+        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getId());
+        $this->assertNotNull($attribute);
+
+        $products = \iterator_to_array(
+            $this->repository->findBy([
+                'locale' => 'en',
+                'stage' => 'live',
+                'attributeValues' => [['attribute' => $attribute, 'value' => 'ras']],
+            ]),
+            false,
+        );
+
+        $this->assertCount(1, $products);
+        $this->assertSame($matching->getUuid(), $products[0]->getUuid());
+    }
+
+    public function testFindByAttributeValuesFilterMatchesNumericValueExactly(): void
+    {
+        $attribute = $this->createTextAttribute('current');
+        $attribute->setType(AttributeInterface::TYPE_NUMBER);
+        $this->entityManager->flush();
+
+        [$matching] = $this->createLiveProductWithTitleCodeAndFamily('Widget 16A', 'AV-NUM-1', 'Fasteners');
+        [$other] = $this->createLiveProductWithTitleCodeAndFamily('Widget 160A', 'AV-NUM-2', 'Fasteners');
+
+        foreach ([[$matching, 16.0], [$other, 160.0]] as [$product, $number]) {
+            $attributeValue = new ProductAttributeValue($this->unlocalizedDimensionContent($product), $attribute, 'current');
+            $attributeValue->setNumber($number);
+            $this->entityManager->persist($attributeValue);
+        }
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getId());
+        $this->assertNotNull($attribute);
+
+        $products = \iterator_to_array(
+            $this->repository->findBy([
+                'locale' => 'en',
+                'stage' => 'live',
+                'attributeValues' => [['attribute' => $attribute, 'value' => '16']],
+            ]),
+            false,
+        );
+
+        $uuids = \array_map(static fn (ProductInterface $p): string => $p->getUuid(), $products);
+
+        $this->assertSame([$matching->getUuid()], $uuids);
+    }
+
+    public function testFindByAttributeValuesFilterMatchesOptionValue(): void
+    {
+        $attribute = $this->createTextAttribute('color');
+        $attribute->setType(AttributeInterface::TYPE_OPTIONS);
+
+        $option = new AttributeOption($attribute, 'red');
+        $attribute->addOption($option);
+        $this->entityManager->persist($option);
+        $this->entityManager->flush();
+
+        [$matching] = $this->createLiveProductWithTitleCodeAndFamily('Widget Red', 'AV-OPT-1', 'Fasteners');
+
+        $attributeValue = new ProductAttributeValue($this->unlocalizedDimensionContent($matching), $attribute, 'color');
+        $attributeValue->setAttributeOption($option);
+        $this->entityManager->persist($attributeValue);
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getId());
+        $this->assertNotNull($attribute);
+
+        $products = \iterator_to_array(
+            $this->repository->findBy([
+                'locale' => 'en',
+                'stage' => 'live',
+                'attributeValues' => [['attribute' => $attribute, 'value' => 'red']],
+            ]),
+            false,
+        );
+
+        $this->assertCount(1, $products);
+        $this->assertSame($matching->getUuid(), $products[0]->getUuid());
+    }
+
+    public function testFindByAttributeValuesFilterAndsMultiplePairs(): void
+    {
+        $material = $this->createTextAttribute('material-and');
+        $finish = $this->createTextAttribute('finish-and');
+
+        [$matching] = $this->createLiveProductWithTitleCodeAndFamily('Widget Both', 'AV-AND-1', 'Fasteners');
+        [$partial] = $this->createLiveProductWithTitleCodeAndFamily('Widget Partial', 'AV-AND-2', 'Fasteners');
+
+        $matchingContent = $this->unlocalizedDimensionContent($matching);
+        $materialValue = new ProductAttributeValue($matchingContent, $material, 'material-and');
+        $materialValue->setText('Brass');
+        $this->entityManager->persist($materialValue);
+        $finishValue = new ProductAttributeValue($matchingContent, $finish, 'finish-and');
+        $finishValue->setText('Matte');
+        $this->entityManager->persist($finishValue);
+
+        $partialMaterialValue = new ProductAttributeValue($this->unlocalizedDimensionContent($partial), $material, 'material-and');
+        $partialMaterialValue->setText('Brass');
+        $this->entityManager->persist($partialMaterialValue);
+
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        $material = $this->entityManager->getRepository(Attribute::class)->find($material->getId());
+        $finish = $this->entityManager->getRepository(Attribute::class)->find($finish->getId());
+        $this->assertNotNull($material);
+        $this->assertNotNull($finish);
+
+        $products = \iterator_to_array(
+            $this->repository->findBy([
+                'locale' => 'en',
+                'stage' => 'live',
+                'attributeValues' => [
+                    ['attribute' => $material, 'value' => 'Brass'],
+                    ['attribute' => $finish, 'value' => 'Matte'],
+                ],
+            ]),
+            false,
+        );
+
+        $this->assertCount(1, $products);
+        $this->assertSame($matching->getUuid(), $products[0]->getUuid());
+    }
+
+    public function testFindByAttributeValuesFilterReturnsNoMatchWhenValueDiffers(): void
+    {
+        [, $attribute] = $this->createLiveProductWithTextAttributeValue('AV-NOMATCH', 'material-nomatch', 'Brass');
+        $this->entityManager->clear();
+
+        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getId());
+        $this->assertNotNull($attribute);
+
+        $products = \iterator_to_array(
+            $this->repository->findBy([
+                'locale' => 'en',
+                'stage' => 'live',
+                'attributeValues' => [['attribute' => $attribute, 'value' => 'Steel']],
+            ]),
+            false,
+        );
+
+        $this->assertSame([], $products);
+    }
+
+    public function testFindByAttributeValuesWithoutLocaleOrStageThrows(): void
+    {
+        $attribute = $this->createTextAttribute('material-throws');
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        \iterator_to_array(
+            $this->repository->findBy(['attributeValues' => [['attribute' => $attribute, 'value' => 'Brass']]]),
+            false,
+        );
     }
 
     public function testFindIdentifiersByReturnsUuids(): void
