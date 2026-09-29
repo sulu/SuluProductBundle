@@ -33,6 +33,40 @@ class WebsiteProductAttributesReindexProviderEnhancerTest extends TestCase
 
     public function testValueOfAnUnknownAttributeIsSkipped(): void
     {
+        $document = $this->enhance(
+            [
+                ['productId' => 'product-1', 'locale' => null, 'attributeId' => 1, 'valueKey' => 'value', 'optionKey' => null, 'number' => 2.5, 'text' => null, 'variantSpecific' => false],
+                ['productId' => 'product-1', 'locale' => null, 'attributeId' => 2, 'valueKey' => 'value', 'optionKey' => null, 'number' => 7.0, 'text' => null, 'variantSpecific' => false],
+            ],
+            // only attribute 1 is known
+            [['id' => 1, 'key' => 'weight', 'type' => AttributeInterface::TYPE_NUMBER, 'filterable' => true, 'config' => [], 'defaultLocale' => null]],
+        );
+
+        $this->assertIsArray($document['product']);
+        $this->assertSame(['weight' => [2.5]], $document['product']['attributes_numeric_values']);
+    }
+
+    public function testRangeWithoutAnyBoundIsLeftOutOfTheContent(): void
+    {
+        $document = $this->enhance(
+            [
+                ['productId' => 'product-1', 'locale' => null, 'attributeId' => 1, 'valueKey' => 'from', 'optionKey' => null, 'number' => null, 'text' => null, 'variantSpecific' => false],
+                ['productId' => 'product-1', 'locale' => null, 'attributeId' => 1, 'valueKey' => 'to', 'optionKey' => null, 'number' => null, 'text' => null, 'variantSpecific' => false],
+            ],
+            [['id' => 1, 'key' => 'temperature', 'type' => AttributeInterface::TYPE_RANGE, 'filterable' => false, 'config' => [], 'defaultLocale' => null]],
+        );
+
+        $this->assertSame([], $document['content']);
+    }
+
+    /**
+     * @param list<array<string, mixed>> $valueRows
+     * @param list<array<string, mixed>> $attributeRows
+     *
+     * @return array<string, mixed>
+     */
+    private function enhance(array $valueRows, array $attributeRows): array
+    {
         $queryBuilder = $this->prophesize(QueryBuilder::class);
         foreach (['from', 'select', 'addSelect', 'innerJoin', 'leftJoin', 'where', 'andWhere', 'setParameter'] as $method) {
             $queryBuilder->$method(Argument::cetera())->willReturn($queryBuilder->reveal());
@@ -40,16 +74,9 @@ class WebsiteProductAttributesReindexProviderEnhancerTest extends TestCase
 
         /** @var ObjectProphecy<Query<mixed, mixed>> $query */
         $query = $this->prophesize(Query::class);
-        $query->toIterable()->willReturn([
-            ['productId' => 'product-1', 'locale' => null, 'attributeId' => 1, 'optionKey' => null, 'number' => 2.5, 'text' => null, 'variantSpecific' => false],
-            ['productId' => 'product-1', 'locale' => null, 'attributeId' => 2, 'optionKey' => null, 'number' => 7.0, 'text' => null, 'variantSpecific' => false],
-        ]);
-        // Labels, options, attributes: only attribute 1 is known.
-        $query->getArrayResult()->willReturn(
-            [],
-            [],
-            [['id' => 1, 'key' => 'weight', 'type' => AttributeInterface::TYPE_NUMBER, 'filterable' => true, 'config' => [], 'defaultLocale' => null]],
-        );
+        $query->toIterable()->willReturn($valueRows);
+        // Labels, options, attributes.
+        $query->getArrayResult()->willReturn([], [], $attributeRows);
         $queryBuilder->getQuery()->willReturn($query->reveal());
 
         $entityManager = $this->prophesize(EntityManagerInterface::class);
@@ -67,13 +94,10 @@ class WebsiteProductAttributesReindexProviderEnhancerTest extends TestCase
         $enhancer = new WebsiteProductAttributesReindexProviderEnhancer($entityManager->reveal(), new MeasurementRegistry());
         $enhancer->enhanceQuery((new QueryBuilder($entityManager->reveal()))->from(ProductDimensionContent::class, 'dimensionContent'));
 
-        $document = $enhancer->enhanceDocument(
+        return $enhancer->enhanceDocument(
             ['productId' => 'product-1', 'locale' => 'en', 'parentId' => null],
             ['content' => [], 'mediaId' => ''],
         );
-
-        $this->assertIsArray($document['product']);
-        $this->assertSame(['weight' => [2.5]], $document['product']['attributes_numeric_values']);
     }
 
     public function testTextValueJoinsKeyAndValue(): void

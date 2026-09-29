@@ -160,7 +160,8 @@ Switching the option on or off adds or removes the whole `product` field, so the
 Only attributes with Filterable on get a filter field. An attribute key is reduced to letters, digits
 and `_`, and prefixed with `a_` unless it starts with a letter. A variant carries its own values plus
 those of its parent that the family does not mark variant-specific. The values of every attribute,
-filterable or not, are added to the searchable `content` as `<label>: <value>`.
+filterable or not, are added to the searchable `content` as `<label>: <value>`; a range reads
+`-20 – 60 °C`, or `≥ 18` / `≤ 24` open on one side, and has no filter field yet.
 
 The product family name, external identifier, short description and details image are indexed
 without this option: the first three as `content`, the image where neither the template nor the
