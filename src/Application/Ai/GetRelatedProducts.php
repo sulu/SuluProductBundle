@@ -40,11 +40,11 @@ final class GetRelatedProducts
      * @param string $locale IETF locale of the request, e.g. "en", "de".
      *
      * @return array{
+     *     status: 'ok'|'not_found',
+     *     instruction: ?string,
      *     variants: list<array{code: string, title: string, url: ?string}>,
      *     associations: array<string, list<array{code: string, title: string, url: ?string}>>,
      * }
-     *
-     * @throws \InvalidArgumentException when no published product has this code in this locale
      */
     public function __invoke(string $code, string $locale): array
     {
@@ -55,10 +55,21 @@ final class GetRelatedProducts
                 'stage' => DimensionContentInterface::STAGE_LIVE,
             ]);
         } catch (ProductNotFoundException) {
-            throw new \InvalidArgumentException(\sprintf('No published product found with article code "%s".', $code));
+            return [
+                'status' => 'not_found',
+                'instruction' => \sprintf(
+                    'No published product found with article code "%s". Do not guess or construct a code. '
+                    . 'Use sulu_product_get_products to find the exact code, or tell the visitor plainly that the product was not found.',
+                    $code,
+                ),
+                'variants' => [],
+                'associations' => [],
+            ];
         }
 
         return [
+            'status' => 'ok',
+            'instruction' => null,
             'variants' => $this->resolveVariants($product, $locale),
             'associations' => $this->resolveAssociations($product, $locale),
         ];

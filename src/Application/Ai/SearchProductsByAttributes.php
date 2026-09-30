@@ -41,7 +41,7 @@ final class SearchProductsByAttributes
     /**
      * @param string $locale IETF locale of the request, e.g. "en", "de".
      * @param list<AttributeFilter> $filters one to five filters ANDed together, "key" is the exact attribute key from sulu_product_get_attributes and "value" a literal value, a substring for text or options, an exact number for a number attribute, never a comparison, range or wildcard like "16A or more"
-     * @param bool $includeVariants whether to include product variants in the results
+     * @param bool $includeVariants whether to include product variants in the results, a match on a value the parent holds returns the parent and each of its variants
      * @param int $limit maximum number of results to return, capped at 25
      *
      * @return array{
@@ -110,6 +110,7 @@ final class SearchProductsByAttributes
             'results' => $results,
             'status' => [] === $results ? 'no_match' : 'ok',
             'instruction' => [] === $results ? 'No product matched every given attribute value. '
+                . ($includeVariants ? '' : 'Variants were left out, so a value only a variant holds finds nothing: retry with includeVariants true before giving up. ')
                 . 'Do not name, guess, or construct any product code as a fallback. Tell the '
                 . 'visitor plainly that no match was found.' : null,
         ];

@@ -126,6 +126,7 @@ class SearchProductsByAttributesTest extends TestCase
         $result = ($this->searchProductsByAttributes)('en', [new AttributeFilter('current', '16')]);
 
         $this->assertSame('no_match', $result['status']);
+        $this->assertStringContainsString('Variants were left out', (string) $result['instruction']);
     }
 
     public function testInvokeIncludeVariantsTrueOmitsExcludeTypes(): void
@@ -138,7 +139,9 @@ class SearchProductsByAttributesTest extends TestCase
             Argument::any(),
         )->willReturn([])->shouldBeCalled();
 
-        ($this->searchProductsByAttributes)('en', [new AttributeFilter('current', '16')], true);
+        $result = ($this->searchProductsByAttributes)('en', [new AttributeFilter('current', '16')], true);
+
+        $this->assertStringNotContainsString('Variants were left out', (string) $result['instruction']);
     }
 
     public function testInvokeCapsLimitAtTwentyFive(): void

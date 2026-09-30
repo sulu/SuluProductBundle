@@ -41,14 +41,14 @@ final class GetProductDetails
      * @param string $locale IETF locale of the request, e.g. "en", "de".
      *
      * @return array{
+     *     status: 'ok'|'not_found',
+     *     instruction: ?string,
      *     code: string,
      *     title: string,
      *     url: ?string,
      *     productFamily: ?string,
      *     specGroups: list<array{label: string, attributes: list<array{label: string, value: string}>}>,
      * }
-     *
-     * @throws \InvalidArgumentException when no published product has this code in this locale
      */
     public function __invoke(string $code, string $locale): array
     {
@@ -59,22 +59,44 @@ final class GetProductDetails
                 'stage' => DimensionContentInterface::STAGE_LIVE,
             ]);
         } catch (ProductNotFoundException) {
-            throw new \InvalidArgumentException(\sprintf('No published product found with article code "%s".', $code));
+            return $this->notFound($code);
         }
 
         $summary = $this->toProductSummary($product, $locale, $this->urlGenerator);
         [$localized, $unlocalized] = $this->findLiveDimensionContents($product, $locale);
 
         if (null === $summary || null === $localized || null === $unlocalized) {
-            throw new \InvalidArgumentException(\sprintf('No published product found with article code "%s".', $code));
+            return $this->notFound($code);
         }
 
         return [
+            'status' => 'ok',
+            'instruction' => null,
             'code' => $summary['code'],
             'title' => $summary['title'],
             'url' => $summary['url'],
             'productFamily' => $summary['productFamily'],
             'specGroups' => $this->resolveSpecGroups($this->collectAttributeValues($product, $locale), $locale),
+        ];
+    }
+
+    /**
+     * @return array{status: 'not_found', instruction: string, code: string, title: string, url: null, productFamily: null, specGroups: list<never>}
+     */
+    private function notFound(string $code): array
+    {
+        return [
+            'status' => 'not_found',
+            'instruction' => \sprintf(
+                'No published product found with article code "%s". Do not guess or construct a code. '
+                . 'Use sulu_product_get_products to find the exact code, or tell the visitor plainly that the product was not found.',
+                $code,
+            ),
+            'code' => $code,
+            'title' => '',
+            'url' => null,
+            'productFamily' => null,
+            'specGroups' => [],
         ];
     }
 

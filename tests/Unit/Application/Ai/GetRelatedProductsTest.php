@@ -57,7 +57,7 @@ class GetRelatedProductsTest extends TestCase
         );
     }
 
-    public function testInvokeThrowsWhenProductNotFound(): void
+    public function testInvokeReturnsNotFoundStatusWhenProductNotFound(): void
     {
         $this->productRepository->getOneBy([
             'code' => 'MISSING',
@@ -65,9 +65,12 @@ class GetRelatedProductsTest extends TestCase
             'stage' => DimensionContentInterface::STAGE_LIVE,
         ])->willThrow(new ProductNotFoundException(['code' => 'MISSING']));
 
-        $this->expectException(\InvalidArgumentException::class);
+        $result = ($this->getRelatedProducts)('MISSING', 'en');
 
-        ($this->getRelatedProducts)('MISSING', 'en');
+        $this->assertSame('not_found', $result['status']);
+        $this->assertStringContainsString('"MISSING"', (string) $result['instruction']);
+        $this->assertSame([], $result['variants']);
+        $this->assertSame([], $result['associations']);
     }
 
     public function testInvokeReturnsNoVariantsForProductWithoutVariantType(): void

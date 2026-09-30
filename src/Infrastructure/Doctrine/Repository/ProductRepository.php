@@ -377,8 +377,8 @@ final class ProductRepository implements ProductRepositoryInterface
                     Join::WITH,
                     'unlocalizedContent.locale IS NULL AND unlocalizedContent.stage = :stage AND unlocalizedContent.version = :version',
                 )
-                ->leftJoin('unlocalizedContent.productFamily', 'productFamily')
-                ->leftJoin('productFamily.translations', 'productFamilyTranslation', Join::WITH, 'productFamilyTranslation.locale = :locale');
+                ->leftJoin('unlocalizedContent.productFamily', 'filterProductFamily')
+                ->leftJoin('filterProductFamily.translations', 'productFamilyTranslation', Join::WITH, 'productFamilyTranslation.locale = :locale');
 
             if (null !== $query && '' !== $query) {
                 Assert::string($query); // @phpstan-ignore staticMethod.alreadyNarrowedType
@@ -418,37 +418,45 @@ final class ProductRepository implements ProductRepositoryInterface
 
                 $attributeParam = 'attributeValueAttribute' . $index;
                 $valueParam = 'attributeValueValue' . $index;
-                $valueAlias = 'attributeValue' . $index;
-                $valueDimensionContentAlias = 'valueDimensionContent' . $index;
-                $valueAttributeOptionAlias = 'valueAttributeOption' . $index;
-
-                $valueSubQueryBuilder = $this->entityManager->createQueryBuilder()
-                    ->select($valueAlias . '.id')
-                    ->from(ProductAttributeValue::class, $valueAlias)
-                    ->innerJoin($valueAlias . '.productDimensionContent', $valueDimensionContentAlias)
-                    ->leftJoin($valueAlias . '.attributeOption', $valueAttributeOptionAlias)
-                    ->where($valueDimensionContentAlias . '.product = product OR ' . $valueDimensionContentAlias . '.product = product.parent')
-                    ->andWhere($valueDimensionContentAlias . '.stage = :stage')
-                    ->andWhere($valueDimensionContentAlias . '.version = :version')
-                    ->andWhere($valueDimensionContentAlias . '.locale = :locale OR ' . $valueDimensionContentAlias . '.locale IS NULL')
-                    ->andWhere($valueAlias . '.attribute = :' . $attributeParam);
-
-                $valueConditions = [
-                    $valueAlias . '.text LIKE :' . $valueParam,
-                    $valueAttributeOptionAlias . '.key LIKE :' . $valueParam,
-                ];
-
                 $queryBuilder->setParameter($attributeParam, $attribute);
                 $queryBuilder->setParameter($valueParam, '%' . $value . '%');
 
                 if (\is_numeric($value)) {
-                    $valueConditions[] = $valueAlias . '.number = :' . $valueParam . 'Numeric';
                     $queryBuilder->setParameter($valueParam . 'Numeric', (float) $value);
                 }
 
-                $valueSubQueryBuilder->andWhere('(' . \implode(' OR ', $valueConditions) . ')');
+                // Two uncorrelated IN subqueries: an OR against a correlated column stops MySQL from
+                // materializing the subquery. The second one needs its own aliases inside the one DQL.
+                $subQueries = [];
+                foreach (['Own', 'Parent'] as $side) {
+                    $valueAlias = 'attributeValue' . $side . $index;
+                    $valueDimensionContentAlias = 'valueDimensionContent' . $side . $index;
+                    $valueAttributeOptionAlias = 'valueAttributeOption' . $side . $index;
 
-                $queryBuilder->andWhere($queryBuilder->expr()->exists($valueSubQueryBuilder->getDQL()));
+                    $valueSubQueryBuilder = $this->entityManager->createQueryBuilder()
+                        ->select('IDENTITY(' . $valueDimensionContentAlias . '.product)')
+                        ->from(ProductAttributeValue::class, $valueAlias)
+                        ->innerJoin($valueAlias . '.productDimensionContent', $valueDimensionContentAlias)
+                        ->leftJoin($valueAlias . '.attributeOption', $valueAttributeOptionAlias)
+                        ->where($valueDimensionContentAlias . '.stage = :stage')
+                        ->andWhere($valueDimensionContentAlias . '.version = :version')
+                        ->andWhere($valueDimensionContentAlias . '.locale = :locale OR ' . $valueDimensionContentAlias . '.locale IS NULL')
+                        ->andWhere($valueAlias . '.attribute = :' . $attributeParam);
+
+                    $valueConditions = [
+                        $valueAlias . '.text LIKE :' . $valueParam,
+                        $valueAttributeOptionAlias . '.key LIKE :' . $valueParam,
+                    ];
+
+                    if (\is_numeric($value)) {
+                        $valueConditions[] = $valueAlias . '.number = :' . $valueParam . 'Numeric';
+                    }
+
+                    $valueSubQueryBuilder->andWhere('(' . \implode(' OR ', $valueConditions) . ')');
+                    $subQueries[] = $valueSubQueryBuilder->getDQL();
+                }
+
+                $queryBuilder->andWhere('product.uuid IN (' . $subQueries[0] . ') OR IDENTITY(product.parent) IN (' . $subQueries[1] . ')');
             }
         }
 

@@ -646,6 +646,19 @@ class ProductRepositoryTest extends SuluTestCase
         $this->assertSame($matching->getUuid(), $loaded->getUuid());
     }
 
+    public function testGetOneByCodeFilterWorksWithTheProductAdminSelect(): void
+    {
+        [$matching] = $this->createLiveProductWithTitleCodeAndFamily('Widget Pro', 'CODE-ADMIN', 'Fasteners');
+        $this->entityManager->clear();
+
+        $loaded = $this->repository->getOneBy(
+            ['code' => 'CODE-ADMIN', 'locale' => 'en', 'stage' => 'live'],
+            [ProductRepositoryInterface::GROUP_SELECT_PRODUCT_ADMIN => true],
+        );
+
+        $this->assertSame($matching->getUuid(), $loaded->getUuid());
+    }
+
     public function testFindOneByCodeFilterMatchesExactCode(): void
     {
         [$matching] = $this->createLiveProductWithTitleCodeAndFamily('Widget Pro', 'CODE-FIND-ONE', 'Fasteners');

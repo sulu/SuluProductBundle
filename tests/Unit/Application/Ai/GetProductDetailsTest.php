@@ -56,7 +56,7 @@ class GetProductDetailsTest extends TestCase
         );
     }
 
-    public function testInvokeThrowsWhenProductNotFound(): void
+    public function testInvokeReturnsNotFoundStatusWhenProductNotFound(): void
     {
         $this->productRepository->getOneBy([
             'code' => 'MISSING',
@@ -64,12 +64,14 @@ class GetProductDetailsTest extends TestCase
             'stage' => DimensionContentInterface::STAGE_LIVE,
         ])->willThrow(new ProductNotFoundException(['code' => 'MISSING']));
 
-        $this->expectException(\InvalidArgumentException::class);
+        $result = ($this->getProductDetails)('MISSING', 'en');
 
-        ($this->getProductDetails)('MISSING', 'en');
+        $this->assertSame('not_found', $result['status']);
+        $this->assertStringContainsString('"MISSING"', (string) $result['instruction']);
+        $this->assertSame([], $result['specGroups']);
     }
 
-    public function testInvokeThrowsWhenLiveContentIncomplete(): void
+    public function testInvokeReturnsNotFoundStatusWhenLiveContentIncomplete(): void
     {
         $product = new Product();
         $unlocalized = $product->createDimensionContent();
@@ -85,9 +87,7 @@ class GetProductDetailsTest extends TestCase
             'stage' => DimensionContentInterface::STAGE_LIVE,
         ])->willReturn($product);
 
-        $this->expectException(\InvalidArgumentException::class);
-
-        ($this->getProductDetails)('ABC-1', 'en');
+        $this->assertSame('not_found', ($this->getProductDetails)('ABC-1', 'en')['status']);
     }
 
     public function testInvokeReturnsSpecGroupsOrderedByFirstAppearance(): void
