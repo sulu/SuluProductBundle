@@ -68,6 +68,7 @@ class GetProductDetailsTest extends TestCase
 
         $this->assertSame('not_found', $result['status']);
         $this->assertStringContainsString('"MISSING"', (string) $result['instruction']);
+        $this->assertStringNotContainsString('sulu_', (string) $result['instruction']);
         $this->assertSame([], $result['specGroups']);
     }
 

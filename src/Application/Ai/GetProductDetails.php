@@ -89,7 +89,7 @@ final class GetProductDetails
             'status' => 'not_found',
             'instruction' => \sprintf(
                 'No published product found with article code "%s". Do not guess or construct a code. '
-                . 'Use sulu_product_get_products to find the exact code, or tell the visitor plainly that the product was not found.',
+                . 'Look up the exact code first, or tell the visitor plainly that the product was not found.',
                 $code,
             ),
             'code' => $code,

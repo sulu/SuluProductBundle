@@ -55,8 +55,7 @@ final class GetAttributeValues
             return [
                 'values' => [],
                 'status' => 'unknown_attribute',
-                'instruction' => 'No attribute with this exact key exists. Call '
-                    . 'sulu_product_get_attributes to get the exact key instead of guessing one.',
+                'instruction' => 'No attribute with this exact key exists. Look up the exact key instead of guessing one.',
             ];
         }
 

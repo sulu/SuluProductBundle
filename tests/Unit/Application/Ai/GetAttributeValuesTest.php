@@ -73,6 +73,7 @@ class GetAttributeValuesTest extends TestCase
         $this->assertSame('unknown_attribute', $result['status']);
         $this->assertSame([], $result['values']);
         $this->assertNotNull($result['instruction']);
+        $this->assertStringNotContainsString('sulu_', (string) $result['instruction']);
     }
 
     public function testInvokeWithUnknownKeyReturnsUnknownAttribute(): void

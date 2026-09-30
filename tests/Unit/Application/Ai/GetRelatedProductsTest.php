@@ -69,6 +69,7 @@ class GetRelatedProductsTest extends TestCase
 
         $this->assertSame('not_found', $result['status']);
         $this->assertStringContainsString('"MISSING"', (string) $result['instruction']);
+        $this->assertStringNotContainsString('sulu_', (string) $result['instruction']);
         $this->assertSame([], $result['variants']);
         $this->assertSame([], $result['associations']);
     }
