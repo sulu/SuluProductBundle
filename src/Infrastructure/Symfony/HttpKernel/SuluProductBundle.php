@@ -201,6 +201,7 @@ use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symfony\Component\DependencyInjection\Loader\Configurator\ServicesConfigurator;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
 
@@ -1445,7 +1446,7 @@ final class SuluProductBundle extends AbstractBundle
     }
 
     /**
-    /**
+     * /**
      * Registers this bundle's MCP surface: the sulu_product_* tools, the AdminLink providers for
      * their "admin_url" response field, and the ContentTypeExtension that plugs "product" into
      * sulu_content_search and the unified content/block tools.
@@ -1480,8 +1481,6 @@ final class SuluProductBundle extends AbstractBundle
             ProductVariantUpdateTool::class,
             ProductFamilyListTool::class,
             AttributeListTool::class,
-            McpGetProductsTool::class,
-            McpSearchProductsByAttributesTool::class,
         ] as $mcpTool) {
             // autoconfigure() is what makes symfony/mcp-bundle's own attribute-autoconfiguration
             // pick up #[McpTool] on these classes' methods; this bundle otherwise wires every
@@ -1490,6 +1489,14 @@ final class SuluProductBundle extends AbstractBundle
                 ->autowire()
                 ->autoconfigure();
         }
+
+        $services->set(McpGetProductsTool::class)
+            ->autoconfigure()
+            ->arg('$getProducts', new Reference('sulu_product.ai_get_products'));
+
+        $services->set(McpSearchProductsByAttributesTool::class)
+            ->autoconfigure()
+            ->arg('$searchProductsByAttributes', new Reference('sulu_product.ai_search_products_by_attributes'));
     }
 
     /**
