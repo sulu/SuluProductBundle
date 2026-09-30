@@ -1446,7 +1446,6 @@ final class SuluProductBundle extends AbstractBundle
     }
 
     /**
-     * /**
      * Registers this bundle's MCP surface: the sulu_product_* tools, the AdminLink providers for
      * their "admin_url" response field, and the ContentTypeExtension that plugs "product" into
      * sulu_content_search and the unified content/block tools.
