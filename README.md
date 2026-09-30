@@ -279,3 +279,43 @@ $agent = new Agent($platform, $model, toolbox: $toolbox);
 
 $agent->call(new MessageBag(Message::ofUser('Which products come in a heavy-duty finish?')));
 ```
+
+## MCP tools
+
+With [`sulu/mcp-bundle`](https://github.com/sulu/SuluMcpBundle) installed, the bundle adds product
+tools to its MCP server, so an MCP client such as Claude.ai or Claude Code can work with products:
+
+```bash
+composer require sulu/mcp-bundle
+```
+
+The bundle has no other link to the MCP bundle. It registers its own tools and a content type
+extension for the resource key `products`. The MCP bundle's generic tools (`sulu_content_search`,
+`sulu_content_publish`, `sulu_block_*` and so on) then accept `products` as `resourceKey`.
+
+| Tool | Purpose |
+| --- | --- |
+| `sulu_product_list` | List products with optional filters. Variants only on request. |
+| `sulu_product_get` | Get one product with its attribute values. Also resolves a variant. |
+| `sulu_product_variant_list` | List the variants of a product. |
+| `sulu_product_family_list` | List the product families. |
+| `sulu_attribute_list` | List the attributes with their keys, types and options. |
+| `sulu_product_get_products` | Search published products by keyword, article code or family. |
+| `sulu_product_search_products_by_attributes` | Search products by attribute values. |
+| `sulu_product_create` | Create a product draft. Needs `product_write`. |
+| `sulu_product_update` | Update a product draft. Needs `product_write`. |
+| `sulu_product_variant_create` | Create a variant draft. Needs `product_write`. |
+| `sulu_product_variant_update` | Update a variant draft. Needs `product_write`. |
+
+Every tool checks the caller's permissions on `sulu.product.products`. The four write tools change
+data, so they are off by default. Enable them in the MCP bundle's configuration:
+
+```yaml
+# config/packages/sulu_mcp.yaml
+sulu_mcp:
+    dangerous_tools:
+        product_write: true
+```
+
+Publishing, unpublishing and deleting a product go through the generic tools with
+`resourceKey: products` and are gated by the MCP bundle's `publish` and `delete` flags.
