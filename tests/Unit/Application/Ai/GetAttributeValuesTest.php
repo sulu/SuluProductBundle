@@ -106,8 +106,8 @@ class GetAttributeValuesTest extends TestCase
 
         $this->assertSame('ok', $result['status']);
         $this->assertSame([
-            ['value' => 'Brass', 'count' => 2],
-            ['value' => 'Steel', 'count' => 1],
+            ['value' => 'Brass', 'searchValue' => 'Brass', 'count' => 2],
+            ['value' => 'Steel', 'searchValue' => 'Steel', 'count' => 1],
         ], $result['values']);
     }
 
@@ -152,7 +152,7 @@ class GetAttributeValuesTest extends TestCase
 
         $result = ($this->getAttributeValues)('current', 'en');
 
-        $this->assertSame([['value' => '16', 'count' => 1]], $result['values']);
+        $this->assertSame([['value' => '16', 'searchValue' => '16', 'count' => 1]], $result['values']);
     }
 
     public function testInvokeFormatsFractionalNumber(): void
@@ -174,7 +174,7 @@ class GetAttributeValuesTest extends TestCase
 
         $result = ($this->getAttributeValues)('current', 'en');
 
-        $this->assertSame([['value' => '16.5', 'count' => 1]], $result['values']);
+        $this->assertSame([['value' => '16.5', 'searchValue' => '16.5', 'count' => 1]], $result['values']);
     }
 
     public function testInvokeFormatsDateValue(): void
@@ -196,7 +196,7 @@ class GetAttributeValuesTest extends TestCase
 
         $result = ($this->getAttributeValues)('released', 'en');
 
-        $this->assertSame([['value' => 'May 1, 2024', 'count' => 1]], $result['values']);
+        $this->assertSame([['value' => 'May 1, 2024', 'searchValue' => '1714521600', 'count' => 1]], $result['values']);
     }
 
     public function testInvokeUsesTranslatedOptionLabel(): void
@@ -221,7 +221,7 @@ class GetAttributeValuesTest extends TestCase
 
         $result = ($this->getAttributeValues)('color', 'en');
 
-        $this->assertSame([['value' => 'Red', 'count' => 1]], $result['values']);
+        $this->assertSame([['value' => 'Red', 'searchValue' => 'red', 'count' => 1]], $result['values']);
     }
 
     public function testInvokeFallsBackToOptionKeyWhenOptionTranslationMissing(): void
@@ -245,7 +245,7 @@ class GetAttributeValuesTest extends TestCase
 
         $result = ($this->getAttributeValues)('color', 'en');
 
-        $this->assertSame([['value' => 'blue', 'count' => 1]], $result['values']);
+        $this->assertSame([['value' => 'blue', 'searchValue' => 'blue', 'count' => 1]], $result['values']);
     }
 
     public function testInvokeSkipsOptionValueWithoutAnOption(): void
@@ -312,6 +312,27 @@ class GetAttributeValuesTest extends TestCase
         $this->assertSame('Brass', $result['values'][0]['value']);
     }
 
+    public function testInvokeReturnsTheOptionKeyAsSearchValueNextToTheTranslatedLabel(): void
+    {
+        $group = new AttributeGroup();
+        $attribute = new Attribute($group);
+        $attribute->setKey('finish');
+        $attribute->setType(AttributeInterface::TYPE_OPTIONS);
+        $this->attributeRepository->findOneBy(['key' => 'finish'])->willReturn($attribute);
+
+        $option = new AttributeOption($attribute, 'heavy_duty');
+        $option->addTranslation(new AttributeOptionTranslation($option, 'en', 'Heavy duty'));
+
+        $value = new ProductAttributeValue($this->dimensionContent(), $attribute, 'finish');
+        $value->setAttributeOption($option);
+
+        $this->productAttributeValueRepository->countValues(Argument::cetera())->willReturn([['value' => $value, 'count' => 1]]);
+
+        $result = ($this->getAttributeValues)('finish', 'en');
+
+        $this->assertSame([['value' => 'Heavy duty', 'searchValue' => 'heavy_duty', 'count' => 1]], $result['values']);
+    }
+
     public function testInvokeAppliesTheAttributesDisplayFormatAndUnit(): void
     {
         $group = new AttributeGroup();
@@ -332,7 +353,7 @@ class GetAttributeValuesTest extends TestCase
 
         $result = ($this->getAttributeValues)('current', 'en');
 
-        $this->assertSame([['value' => '16 mm', 'count' => 3]], $result['values']);
+        $this->assertSame([['value' => '16 mm', 'searchValue' => '16', 'count' => 3]], $result['values']);
     }
 
     public function testInvokeMergesGroupsThatDisplayTheSame(): void
@@ -354,7 +375,7 @@ class GetAttributeValuesTest extends TestCase
 
         $result = ($this->getAttributeValues)('material', 'en');
 
-        $this->assertSame([['value' => 'Brass', 'count' => 3]], $result['values']);
+        $this->assertSame([['value' => 'Brass', 'searchValue' => 'Brass', 'count' => 3]], $result['values']);
     }
 
     private function textValue(Attribute $attribute, string $text): ProductAttributeValue

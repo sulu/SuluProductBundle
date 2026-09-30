@@ -16,11 +16,12 @@ namespace Sulu\Product\Application\Ai;
 use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
+use Symfony\AI\Agent\Toolbox\Attribute\AsTool;
 
-/**
- * List the known product specification attributes. Framework-agnostic:
- * Infrastructure\Symfony\Ai\Tool\GetAttributesTool wraps this for symfony/ai-agent.
- */
+#[AsTool(
+    name: 'sulu_product_get_attributes',
+    description: 'List the known product specification attributes — their exact key, translated name, type, group and (for an "options" attribute) its possible option values — to build a precise sulu_product_get_attribute_values call instead of guessing an attribute key.',
+)]
 final class GetAttributes
 {
     public function __construct(
@@ -30,6 +31,9 @@ final class GetAttributes
     }
 
     /**
+     * @param string $locale IETF locale of the request, e.g. "en", "de".
+     * @param string|null $group attribute group name, or a substring of it, to list only that group's attributes
+     *
      * @return list<array{
      *     key: string,
      *     name: string,

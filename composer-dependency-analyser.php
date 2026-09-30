@@ -21,13 +21,13 @@ $config->addPathRegexesToExclude([
     '#/vendor/sulu/sulu/#', // sulu/sulu test files are mapped via autoload-dev but are not our code
 ]);
 
-// "symfony/ai-agent" is an optional require-dev dependency: the AI tool classes reference it,
-// but registering the services they need is itself guarded behind
-// ContainerBuilder::willBeAvailable(), so the package never has to be installed at runtime.
+// "symfony/ai-agent" is an optional require-dev dependency: the AI tool classes only carry its
+// #[AsTool] attribute, which PHP never resolves unless something reflects on it, and the bundle
+// does that behind ContainerBuilder::willBeAvailable(), so the package never has to be installed.
 $config->ignoreErrorsOnPackageAndPaths(
     'symfony/ai-agent',
     [
-        __DIR__ . '/src/Infrastructure/Symfony/Ai',
+        __DIR__ . '/src/Application/Ai',
         __DIR__ . '/src/Infrastructure/Symfony/HttpKernel/SuluProductBundle.php',
     ],
     [ErrorType::DEV_DEPENDENCY_IN_PROD],
@@ -37,7 +37,7 @@ $config->ignoreErrorsOnPackageAndPaths(
 // from the platform package ai-agent already pulls in.
 $config->ignoreErrorsOnPackageAndPaths(
     'symfony/ai-platform',
-    [__DIR__ . '/tests/Unit/Infrastructure/Symfony/Ai/Tool/SearchProductsByAttributesToolTest.php'],
+    [__DIR__ . '/tests/Unit/Application/Ai/SearchProductsByAttributesTest.php'],
     [ErrorType::SHADOW_DEPENDENCY],
 );
 

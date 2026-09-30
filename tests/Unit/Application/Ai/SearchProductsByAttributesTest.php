@@ -32,6 +32,9 @@ use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Tests\Unit\Application\Ai\Fixtures\FakeRouteGenerator;
 use Sulu\Route\Domain\Model\Route;
+use Symfony\AI\Agent\Toolbox\ToolCallArgumentResolver;
+use Symfony\AI\Agent\Toolbox\ToolFactory\ReflectionToolFactory;
+use Symfony\AI\Platform\Result\ToolCall;
 
 #[CoversClass(SearchProductsByAttributes::class)]
 class SearchProductsByAttributesTest extends TestCase
@@ -169,6 +172,43 @@ class SearchProductsByAttributesTest extends TestCase
             'productFamily' => 'Fasteners',
             'url' => 'https://example.org/en/widget',
         ], $result['results'][0]);
+    }
+
+    public function testAgentCallDenormalizesFiltersIntoAttributeFilterObjects(): void
+    {
+        $tool = \iterator_to_array((new ReflectionToolFactory())->getTool(SearchProductsByAttributes::class))[0];
+
+        $arguments = (new ToolCallArgumentResolver())->resolveArguments(
+            $tool,
+            new ToolCall('call-1', $tool->getName(), [
+                'locale' => 'en',
+                'filters' => [['key' => 'current', 'value' => '16']],
+            ]),
+        );
+
+        $this->assertEquals([new AttributeFilter('current', '16')], $arguments['filters']);
+    }
+
+    public function testFiltersSchemaDescribesAnArrayOfKeyValueObjectsWithTheFullDescription(): void
+    {
+        $tool = \iterator_to_array((new ReflectionToolFactory())->getTool(SearchProductsByAttributes::class))[0];
+
+        $parameters = $tool->getParameters();
+        $this->assertNotNull($parameters);
+
+        $this->assertJsonStringEqualsJsonString(
+            (string) \json_encode([
+                'type' => 'array',
+                'items' => [
+                    'type' => 'object',
+                    'properties' => ['key' => ['type' => 'string'], 'value' => ['type' => 'string']],
+                    'required' => ['key', 'value'],
+                    'additionalProperties' => false,
+                ],
+                'description' => 'one to five filters ANDed together, "key" is the exact attribute key from sulu_product_get_attributes and "value" a literal value, a substring for text or options, an exact number for a number attribute, never a comparison, range or wildcard like "16A or more"',
+            ]),
+            (string) \json_encode($parameters['properties']['filters']),
+        );
     }
 
     private function attribute(string $key): Attribute

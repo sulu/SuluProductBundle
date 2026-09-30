@@ -862,6 +862,53 @@ class ProductRepositoryTest extends SuluTestCase
         $this->assertSame($matching->getUuid(), $products[0]->getUuid());
     }
 
+    public function testFindByAttributeValuesFilterMatchesAVariantAgainstItsParentsValuesToo(): void
+    {
+        $material = $this->createTextAttribute('material-parent');
+        $finish = $this->createTextAttribute('finish-variant');
+
+        [$parent] = $this->createLiveProductWithTitleCodeAndFamily('Widget Parent', 'AV-PAR-1', 'Fasteners');
+        [$matching] = $this->createLiveProductWithTitleCodeAndFamily('Widget Matte', 'AV-PAR-2', 'Fasteners');
+        [$other] = $this->createLiveProductWithTitleCodeAndFamily('Widget Glossy', 'AV-PAR-3', 'Fasteners');
+        $matching->setType(ProductInterface::TYPE_VARIANT);
+        $matching->setParent($parent);
+        $other->setType(ProductInterface::TYPE_VARIANT);
+        $other->setParent($parent);
+
+        $materialValue = new ProductAttributeValue($this->unlocalizedDimensionContent($parent), $material, 'material-parent');
+        $materialValue->setText('Brass');
+        $this->entityManager->persist($materialValue);
+
+        foreach ([[$matching, 'Matte'], [$other, 'Glossy']] as [$variant, $text]) {
+            $finishValue = new ProductAttributeValue($this->unlocalizedDimensionContent($variant), $finish, 'finish-variant');
+            $finishValue->setText($text);
+            $this->entityManager->persist($finishValue);
+        }
+
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        $material = $this->entityManager->getRepository(Attribute::class)->find($material->getId());
+        $finish = $this->entityManager->getRepository(Attribute::class)->find($finish->getId());
+        $this->assertNotNull($material);
+        $this->assertNotNull($finish);
+
+        $products = \iterator_to_array(
+            $this->repository->findBy([
+                'locale' => 'en',
+                'stage' => 'live',
+                'attributeValues' => [
+                    ['attribute' => $material, 'value' => 'Brass'],
+                    ['attribute' => $finish, 'value' => 'Matte'],
+                ],
+            ]),
+            false,
+        );
+
+        $this->assertCount(1, $products);
+        $this->assertSame($matching->getUuid(), $products[0]->getUuid());
+    }
+
     public function testFindByAttributeValuesFilterReturnsNoMatchWhenValueDiffers(): void
     {
         [, $attribute] = $this->createLiveProductWithTextAttributeValue('AV-NOMATCH', 'material-nomatch', 'Brass');

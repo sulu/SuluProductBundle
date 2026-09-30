@@ -427,7 +427,7 @@ final class ProductRepository implements ProductRepositoryInterface
                     ->from(ProductAttributeValue::class, $valueAlias)
                     ->innerJoin($valueAlias . '.productDimensionContent', $valueDimensionContentAlias)
                     ->leftJoin($valueAlias . '.attributeOption', $valueAttributeOptionAlias)
-                    ->where($valueDimensionContentAlias . '.product = product')
+                    ->where($valueDimensionContentAlias . '.product = product OR ' . $valueDimensionContentAlias . '.product = product.parent')
                     ->andWhere($valueDimensionContentAlias . '.stage = :stage')
                     ->andWhere($valueDimensionContentAlias . '.version = :version')
                     ->andWhere($valueDimensionContentAlias . '.locale = :locale OR ' . $valueDimensionContentAlias . '.locale IS NULL')

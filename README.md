@@ -241,17 +241,16 @@ Types the project does not declare keep their generated field, label and layout.
 ## AI agent tools
 
 With `symfony/ai-agent` installed, the bundle registers six read-only tools, tagged `ai.tool`, so
-a Symfony AI agent can look up products for a chatbot. Nothing is registered without that package:
+a Symfony AI agent can look up products for a chatbot. Without that package the tools stay untagged:
 
 ```bash
 composer require symfony/ai-agent
 ```
 
-Each tool is a thin `#[AsTool]` wrapper (`Infrastructure\Symfony\Ai\Tool`) around a
-framework-agnostic service of the same behavior (`Application\Ai`), which is registered
-unconditionally. A project that wants this search/lookup logic through a different integration
-(e.g. MCP) can depend on the `Application\Ai` class directly, without requiring
-`symfony/ai-agent` at all.
+Each tool is a plain `#[AsTool]` class in `Application\Ai`. It loads and runs without
+`symfony/ai-agent`, so the classes are always registered (`sulu_product.ai_<name>`) and only the
+`ai.tool` tag depends on the package. A project that wants the same lookups through a different
+integration (e.g. MCP) can depend on these services directly.
 
 | Tool | Purpose |
 | --- | --- |

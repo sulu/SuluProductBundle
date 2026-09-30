@@ -19,12 +19,12 @@ use Sulu\Product\Domain\Exception\ProductNotFoundException;
 use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Symfony\AI\Agent\Toolbox\Attribute\AsTool;
 
-/**
- * Get the full technical specification sheet for one published product by its exact article
- * code. Framework-agnostic: Infrastructure\Symfony\Ai\Tool\GetProductDetailsTool wraps this for
- * symfony/ai-agent.
- */
+#[AsTool(
+    name: 'sulu_product_get_product_details',
+    description: 'Get the full technical specification sheet for one published product by its exact article code. Use this for every specific spec value on a known product — never invent one. Use sulu_product_get_products first if the exact code is not known.',
+)]
 final class GetProductDetails
 {
     use ResolvesLiveProductContentTrait;
@@ -37,6 +37,9 @@ final class GetProductDetails
     }
 
     /**
+     * @param string $code exact article code, e.g. "ABC-123", use sulu_product_get_products first if it is not known
+     * @param string $locale IETF locale of the request, e.g. "en", "de".
+     *
      * @return array{
      *     code: string,
      *     title: string,

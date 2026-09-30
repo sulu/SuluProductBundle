@@ -168,12 +168,6 @@ use Sulu\Product\Infrastructure\Sulu\Search\WebsiteProductIndexListener;
 use Sulu\Product\Infrastructure\Sulu\Search\WebsiteProductReindexProvider;
 use Sulu\Product\Infrastructure\Sulu\Sitemap\ProductsSitemapProvider;
 use Sulu\Product\Infrastructure\Sulu\Trash\ProductTrashItemHandler;
-use Sulu\Product\Infrastructure\Symfony\Ai\Tool\GetAttributesTool;
-use Sulu\Product\Infrastructure\Symfony\Ai\Tool\GetAttributeValuesTool;
-use Sulu\Product\Infrastructure\Symfony\Ai\Tool\GetProductDetailsTool;
-use Sulu\Product\Infrastructure\Symfony\Ai\Tool\GetProductsTool;
-use Sulu\Product\Infrastructure\Symfony\Ai\Tool\GetRelatedProductsTool;
-use Sulu\Product\Infrastructure\Symfony\Ai\Tool\SearchProductsByAttributesTool;
 use Sulu\Product\Infrastructure\Symfony\Serializer\Normalizer\ProductFamilyNormalizer;
 use Sulu\Product\Infrastructure\Symfony\Serializer\Normalizer\ProductNormalizer;
 use Sulu\Product\Infrastructure\Symfony\Twig\ProductAttributeTwigExtension;
@@ -191,7 +185,6 @@ use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ServicesConfigurator;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
 
@@ -1373,115 +1366,57 @@ final class SuluProductBundle extends AbstractBundle
                 ]);
         }
 
-        // The search/lookup logic behind the AI tools below, framework-agnostic and always
-        // registered: a consumer (e.g. an MCP tool) can use it without symfony/ai-agent installed.
-        $services->set(ProductUrlGenerator::class)
+        // The AI tools are plain #[AsTool] classes that need no symfony/ai-agent to load or run, so they
+        // are always registered and a consumer such as an MCP tool can reuse them. Only the tag is optional.
+        $services->set('sulu_product.product_url_generator')
+            ->class(ProductUrlGenerator::class)
             ->args([new Reference('sulu_route.route_generator')]);
 
-        $services->set(GetProducts::class)
-            ->args([
+        $aiTools = [
+            'sulu_product.ai_get_products' => [GetProducts::class, [
                 new Reference('sulu_product.product_repository'),
-                new Reference(ProductUrlGenerator::class),
-            ]);
-
-        $services->set(GetAttributes::class)
-            ->args([
+                new Reference('sulu_product.product_url_generator'),
+            ]],
+            'sulu_product.ai_get_attributes' => [GetAttributes::class, [
                 new Reference('sulu_product.attribute_repository'),
                 new Reference('sulu_product.measurement_registry'),
-            ]);
-
-        $services->set(GetAttributeValues::class)
-            ->args([
+            ]],
+            'sulu_product.ai_get_attribute_values' => [GetAttributeValues::class, [
                 new Reference('sulu_product.attribute_repository'),
                 new Reference(ProductAttributeValueRepositoryInterface::class),
                 new Reference('sulu_product.product_attribute_value_formatter'),
-            ]);
-
-        $services->set(SearchProductsByAttributes::class)
-            ->args([
+            ]],
+            'sulu_product.ai_search_products_by_attributes' => [SearchProductsByAttributes::class, [
                 new Reference('sulu_product.product_repository'),
                 new Reference('sulu_product.attribute_repository'),
-                new Reference(ProductUrlGenerator::class),
-            ]);
-
-        $services->set(GetProductDetails::class)
-            ->args([
+                new Reference('sulu_product.product_url_generator'),
+            ]],
+            'sulu_product.ai_get_product_details' => [GetProductDetails::class, [
                 new Reference('sulu_product.product_repository'),
                 new Reference('sulu_product.product_attribute_value_formatter'),
-                new Reference(ProductUrlGenerator::class),
-            ]);
-
-        $services->set(GetRelatedProducts::class)
-            ->args([
+                new Reference('sulu_product.product_url_generator'),
+            ]],
+            'sulu_product.ai_get_related_products' => [GetRelatedProducts::class, [
                 new Reference('sulu_product.product_repository'),
                 new Reference('sulu_product.association_type_registry'),
-                new Reference(ProductUrlGenerator::class),
-            ]);
+                new Reference('sulu_product.product_url_generator'),
+            ]],
+        ];
 
-        if (ContainerBuilder::willBeAvailable('symfony/ai-agent', AsTool::class, ['sulu/product-bundle'])) {
-            $this->registerAiTool(
-                $services,
-                GetProductsTool::class,
-                'sulu_product.ai_get_products_tool',
-                [new Reference(GetProducts::class)],
-            );
+        $aiAgentAvailable = ContainerBuilder::willBeAvailable('symfony/ai-agent', AsTool::class, ['sulu/product-bundle']);
 
-            $this->registerAiTool(
-                $services,
-                GetAttributesTool::class,
-                'sulu_product.ai_get_attributes_tool',
-                [new Reference(GetAttributes::class)],
-            );
+        foreach ($aiTools as $serviceId => [$toolClass, $arguments]) {
+            $service = $services->set($serviceId)->class($toolClass)->args($arguments);
 
-            $this->registerAiTool(
-                $services,
-                GetAttributeValuesTool::class,
-                'sulu_product.ai_get_attribute_values_tool',
-                [new Reference(GetAttributeValues::class)],
-            );
-
-            $this->registerAiTool(
-                $services,
-                SearchProductsByAttributesTool::class,
-                'sulu_product.ai_search_products_by_attributes_tool',
-                [new Reference(SearchProductsByAttributes::class)],
-            );
-
-            $this->registerAiTool(
-                $services,
-                GetProductDetailsTool::class,
-                'sulu_product.ai_get_product_details_tool',
-                [new Reference(GetProductDetails::class)],
-            );
-
-            $this->registerAiTool(
-                $services,
-                GetRelatedProductsTool::class,
-                'sulu_product.ai_get_related_products_tool',
-                [new Reference(GetRelatedProducts::class)],
-            );
+            if ($aiAgentAvailable) {
+                $attribute = (new \ReflectionClass($toolClass))->getAttributes(AsTool::class)[0]->newInstance();
+                $service->tag('ai.tool', [
+                    'name' => $attribute->name,
+                    'description' => $attribute->description,
+                    'method' => $attribute->method,
+                ]);
+            }
         }
-    }
-
-    /**
-     * @param class-string $toolClass
-     * @param list<Reference> $arguments
-     */
-    private function registerAiTool(ServicesConfigurator $services, string $toolClass, string $serviceId, array $arguments): void
-    {
-        $reflectionClass = new \ReflectionClass($toolClass);
-        $attribute = $reflectionClass->getAttributes(AsTool::class)[0]->newInstance();
-
-        $services->set($serviceId)
-            ->class($toolClass)
-            ->args($arguments)
-            ->tag('ai.tool', [
-                'name' => $attribute->name,
-                'description' => $attribute->description,
-                'method' => $attribute->method,
-            ]);
-
-        $services->alias($toolClass, $serviceId);
     }
 
     /**
