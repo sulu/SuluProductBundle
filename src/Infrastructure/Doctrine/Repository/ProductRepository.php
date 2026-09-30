@@ -14,11 +14,14 @@ namespace Sulu\Product\Infrastructure\Doctrine\Repository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\NoResultException;
+use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\Query\Expr\OrderBy;
 use Doctrine\ORM\QueryBuilder;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
+use Sulu\Product\Domain\Model\AttributeInterface;
+use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
@@ -247,6 +250,10 @@ final class ProductRepository implements ProductRepositoryInterface
      *     uuids?: string[],
      *     locale?: string|null,
      *     stage?: string|null,
+     *     query?: string,
+     *     productFamilyName?: string,
+     *     code?: string,
+     *     attributeValues?: list<array{attribute: AttributeInterface, value: string}>,
      *     categoryIds?: int[],
      *     categoryKeys?: string[],
      *     categoryOperator?: 'AND'|'OR',
@@ -352,6 +359,105 @@ final class ProductRepository implements ProductRepositoryInterface
                 // whatever order the caller asked for. Applied below in one pass instead.
                 [],
             );
+        }
+
+        $query = $filters['query'] ?? null;
+        $productFamilyName = $filters['productFamilyName'] ?? null;
+        $code = $filters['code'] ?? null;
+        if (null !== $query || null !== $productFamilyName || null !== $code) {
+            // "code" and the product family live on the unlocalized dimension content, not the "filterDimensionContent" already joined above.
+            if (!\array_key_exists('locale', $filters) || !\array_key_exists('stage', $filters)) {
+                throw new \InvalidArgumentException('Filtering by "query", "productFamilyName" or "code" requires both "locale" and "stage" filters.');
+            }
+
+            $queryBuilder
+                ->leftJoin(
+                    'product.dimensionContents',
+                    'unlocalizedContent',
+                    Join::WITH,
+                    'unlocalizedContent.locale IS NULL AND unlocalizedContent.stage = :stage AND unlocalizedContent.version = :version',
+                )
+                ->leftJoin('unlocalizedContent.productFamily', 'filterProductFamily')
+                ->leftJoin('filterProductFamily.translations', 'productFamilyTranslation', Join::WITH, 'productFamilyTranslation.locale = :locale');
+
+            if (null !== $query && '' !== $query) {
+                Assert::string($query); // @phpstan-ignore staticMethod.alreadyNarrowedType
+                $queryBuilder
+                    ->andWhere('filterDimensionContent.title LIKE :query OR unlocalizedContent.code LIKE :query')
+                    ->setParameter('query', '%' . $query . '%');
+            }
+
+            if (null !== $productFamilyName && '' !== $productFamilyName) {
+                Assert::string($productFamilyName); // @phpstan-ignore staticMethod.alreadyNarrowedType
+                $queryBuilder
+                    ->andWhere('productFamilyTranslation.name LIKE :productFamilyName')
+                    ->setParameter('productFamilyName', '%' . $productFamilyName . '%');
+            }
+
+            if (null !== $code) {
+                Assert::string($code); // @phpstan-ignore staticMethod.alreadyNarrowedType
+                $queryBuilder
+                    // an empty code matches nothing, dropping the condition would match every product
+                    ->andWhere('' === $code ? '1 = 0' : 'unlocalizedContent.code = :code');
+
+                if ('' !== $code) {
+                    $queryBuilder->setParameter('code', $code);
+                }
+            }
+        }
+
+        $attributeValues = $filters['attributeValues'] ?? null;
+        if (null !== $attributeValues) {
+            if (!\array_key_exists('locale', $filters) || !\array_key_exists('stage', $filters)) {
+                throw new \InvalidArgumentException('Filtering by "attributeValues" requires both "locale" and "stage" filters.');
+            }
+
+            foreach ($attributeValues as $index => $pair) {
+                $attribute = $pair['attribute'];
+                $value = $pair['value'];
+
+                $attributeParam = 'attributeValueAttribute' . $index;
+                $valueParam = 'attributeValueValue' . $index;
+                $queryBuilder->setParameter($attributeParam, $attribute);
+                $queryBuilder->setParameter($valueParam, '%' . $value . '%');
+
+                if (\is_numeric($value)) {
+                    $queryBuilder->setParameter($valueParam . 'Numeric', (float) $value);
+                }
+
+                // Two uncorrelated IN subqueries: an OR against a correlated column stops MySQL from
+                // materializing the subquery. The second one needs its own aliases inside the one DQL.
+                $subQueries = [];
+                foreach (['Own', 'Parent'] as $side) {
+                    $valueAlias = 'attributeValue' . $side . $index;
+                    $valueDimensionContentAlias = 'valueDimensionContent' . $side . $index;
+                    $valueAttributeOptionAlias = 'valueAttributeOption' . $side . $index;
+
+                    $valueSubQueryBuilder = $this->entityManager->createQueryBuilder()
+                        ->select('IDENTITY(' . $valueDimensionContentAlias . '.product)')
+                        ->from(ProductAttributeValue::class, $valueAlias)
+                        ->innerJoin($valueAlias . '.productDimensionContent', $valueDimensionContentAlias)
+                        ->leftJoin($valueAlias . '.attributeOption', $valueAttributeOptionAlias)
+                        ->where($valueDimensionContentAlias . '.stage = :stage')
+                        ->andWhere($valueDimensionContentAlias . '.version = :version')
+                        ->andWhere($valueDimensionContentAlias . '.locale = :locale OR ' . $valueDimensionContentAlias . '.locale IS NULL')
+                        ->andWhere($valueAlias . '.attribute = :' . $attributeParam);
+
+                    $valueConditions = [
+                        $valueAlias . '.text LIKE :' . $valueParam,
+                        $valueAttributeOptionAlias . '.key LIKE :' . $valueParam,
+                    ];
+
+                    if (\is_numeric($value)) {
+                        $valueConditions[] = $valueAlias . '.number = :' . $valueParam . 'Numeric';
+                    }
+
+                    $valueSubQueryBuilder->andWhere('(' . \implode(' OR ', $valueConditions) . ')');
+                    $subQueries[] = $valueSubQueryBuilder->getDQL();
+                }
+
+                $queryBuilder->andWhere('product.uuid IN (' . $subQueries[0] . ') OR IDENTITY(product.parent) IN (' . $subQueries[1] . ')');
+            }
         }
 
         $associationTargetUuid = $filters['associationTargetUuid'] ?? null;

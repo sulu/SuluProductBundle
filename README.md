@@ -237,3 +237,45 @@ Rules for the declared fields:
 ```
 
 Types the project does not declare keep their generated field, label and layout.
+
+## AI agent tools
+
+With `symfony/ai-agent` installed, the bundle registers six read-only tools, tagged `ai.tool`, so
+a Symfony AI agent can look up products for a chatbot. Without that package the tools stay untagged:
+
+```bash
+composer require symfony/ai-agent
+```
+
+Each tool is a plain `#[AsTool]` class in `Application\Ai`. It loads and runs without
+`symfony/ai-agent`, so the classes are always registered (`sulu_product.ai_<name>`) and only the
+`ai.tool` tag depends on the package. A project that wants the same lookups through a different
+integration (e.g. MCP) can depend on these services directly.
+
+| Tool | Purpose |
+| --- | --- |
+| `sulu_product_get_products` | Search published products by keyword, article code, or product family. |
+| `sulu_product_get_attributes` | List the known specification attributes: key, name, type, group, unit, options. |
+| `sulu_product_get_attribute_values` | List the actual values seen for one attribute, most common first. |
+| `sulu_product_search_products_by_attributes` | Search products by one or more attribute values (spec, color, ...). |
+| `sulu_product_get_product_details` | Get the full specification sheet of one product by its exact code. |
+| `sulu_product_get_related_products` | Get a product's variants and configured associations. |
+
+Every tool only reads live, current-version content; drafts are never exposed to the agent. The
+`@param` lines of a tool's docblock are the parameter descriptions an agent sees, but only the
+first line of each one reaches it, so every description fits on one line. Guidance that does not
+fit belongs in the tool's `description`.
+
+Collect the tagged services into a `Toolbox` and pass it to an `Agent` as usual:
+
+```php
+use Symfony\AI\Agent\Agent;
+use Symfony\AI\Agent\Toolbox\Toolbox;
+use Symfony\AI\Platform\Message\Message;
+use Symfony\AI\Platform\Message\MessageBag;
+
+$toolbox = new Toolbox($tools); // every service tagged `ai.tool`
+$agent = new Agent($platform, $model, toolbox: $toolbox);
+
+$agent->call(new MessageBag(Message::ofUser('Which products come in a heavy-duty finish?')));
+```

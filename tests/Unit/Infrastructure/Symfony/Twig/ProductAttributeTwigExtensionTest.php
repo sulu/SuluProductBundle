@@ -17,6 +17,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Component\Localization\Localization;
 use Sulu\Component\Webspace\Analyzer\RequestAnalyzerInterface;
+use Sulu\Product\Application\Attribute\ProductAttributeValueFormatter;
 use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
@@ -41,7 +42,7 @@ class ProductAttributeTwigExtensionTest extends TestCase
             null === $currentLocale ? null : new Localization($currentLocale),
         );
 
-        return new ProductAttributeTwigExtension(new MeasurementRegistry(), $requestAnalyzer);
+        return new ProductAttributeTwigExtension(new ProductAttributeValueFormatter(new MeasurementRegistry()), $requestAnalyzer);
     }
 
     /**

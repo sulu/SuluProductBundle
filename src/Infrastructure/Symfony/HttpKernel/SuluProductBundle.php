@@ -17,6 +17,14 @@ use Sulu\Bundle\HttpCacheBundle\ReferenceStore\ReferenceStore;
 use Sulu\Bundle\PersistenceBundle\DependencyInjection\PersistenceExtensionTrait;
 use Sulu\Bundle\PersistenceBundle\PersistenceBundleTrait;
 use Sulu\Content\Infrastructure\Sulu\Preview\ContentObjectProvider;
+use Sulu\Product\Application\Ai\GetAttributes;
+use Sulu\Product\Application\Ai\GetAttributeValues;
+use Sulu\Product\Application\Ai\GetProductDetails;
+use Sulu\Product\Application\Ai\GetProducts;
+use Sulu\Product\Application\Ai\GetRelatedProducts;
+use Sulu\Product\Application\Ai\ProductUrlGenerator;
+use Sulu\Product\Application\Ai\SearchProductsByAttributes;
+use Sulu\Product\Application\Attribute\ProductAttributeValueFormatter;
 use Sulu\Product\Application\AttributeType\AttributeTypeInterface;
 use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
 use Sulu\Product\Application\AttributeType\DateAttributeType;
@@ -89,11 +97,13 @@ use Sulu\Product\Domain\Model\ProductFamilyTranslationInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
+use Sulu\Product\Domain\Repository\ProductAttributeValueRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Doctrine\EventListener\ProductWithVariantsRouteGuard;
 use Sulu\Product\Infrastructure\Doctrine\Repository\AttributeGroupRepository;
 use Sulu\Product\Infrastructure\Doctrine\Repository\AttributeRepository;
+use Sulu\Product\Infrastructure\Doctrine\Repository\ProductAttributeValueRepository;
 use Sulu\Product\Infrastructure\Doctrine\Repository\ProductFamilyRepository;
 use Sulu\Product\Infrastructure\Doctrine\Repository\ProductRepository;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeAdmin;
@@ -169,6 +179,7 @@ use Sulu\Product\UserInterface\Controller\Admin\MeasurementUnitController;
 use Sulu\Product\UserInterface\Controller\Admin\ProductController;
 use Sulu\Product\UserInterface\Controller\Admin\ProductFamilyController;
 use Sulu\Product\UserInterface\Controller\Admin\ProductVariantController;
+use Symfony\AI\Agent\Toolbox\Attribute\AsTool;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -1001,6 +1012,14 @@ final class SuluProductBundle extends AbstractBundle
         $services->alias(ProductRepositoryInterface::class, 'sulu_product.product_repository');
         $services->alias(ProductRepository::class, 'sulu_product.product_repository');
 
+        $services->set('sulu_product.product_attribute_value_repository')
+            ->class(ProductAttributeValueRepository::class)
+            ->args([
+                new Reference('doctrine.orm.entity_manager'),
+            ]);
+
+        $services->alias(ProductAttributeValueRepositoryInterface::class, 'sulu_product.product_attribute_value_repository');
+
         $services->set('sulu_product.admin_product_controller')
             ->class(ProductController::class)
             ->public()
@@ -1143,10 +1162,16 @@ final class SuluProductBundle extends AbstractBundle
             ])
             ->tag('twig.extension');
 
+        $services->set('sulu_product.product_attribute_value_formatter')
+            ->class(ProductAttributeValueFormatter::class)
+            ->args([
+                new Reference('sulu_product.measurement_registry'),
+            ]);
+
         $services->set('sulu_product.product_attribute_twig_extension')
             ->class(ProductAttributeTwigExtension::class)
             ->args([
-                new Reference('sulu_product.measurement_registry'),
+                new Reference('sulu_product.product_attribute_value_formatter'),
                 new Reference('sulu_core.webspace.request_analyzer'),
             ])
             ->tag('twig.extension');
@@ -1339,6 +1364,58 @@ final class SuluProductBundle extends AbstractBundle
                     new Reference('.inner'),
                     new Reference('doctrine.orm.entity_manager'),
                 ]);
+        }
+
+        // The AI tools are plain #[AsTool] classes that need no symfony/ai-agent to load or run, so they
+        // are always registered and a consumer such as an MCP tool can reuse them. Only the tag is optional.
+        $services->set('sulu_product.product_url_generator')
+            ->class(ProductUrlGenerator::class)
+            ->args([new Reference('sulu_route.route_generator')]);
+
+        $aiTools = [
+            'sulu_product.ai_get_products' => [GetProducts::class, [
+                new Reference('sulu_product.product_repository'),
+                new Reference('sulu_product.product_url_generator'),
+            ]],
+            'sulu_product.ai_get_attributes' => [GetAttributes::class, [
+                new Reference('sulu_product.attribute_repository'),
+                new Reference('sulu_product.measurement_registry'),
+            ]],
+            'sulu_product.ai_get_attribute_values' => [GetAttributeValues::class, [
+                new Reference('sulu_product.attribute_repository'),
+                new Reference(ProductAttributeValueRepositoryInterface::class),
+                new Reference('sulu_product.product_attribute_value_formatter'),
+            ]],
+            'sulu_product.ai_search_products_by_attributes' => [SearchProductsByAttributes::class, [
+                new Reference('sulu_product.product_repository'),
+                new Reference('sulu_product.attribute_repository'),
+                new Reference('sulu_product.product_url_generator'),
+            ]],
+            'sulu_product.ai_get_product_details' => [GetProductDetails::class, [
+                new Reference('sulu_product.product_repository'),
+                new Reference('sulu_product.product_attribute_value_formatter'),
+                new Reference('sulu_product.product_url_generator'),
+            ]],
+            'sulu_product.ai_get_related_products' => [GetRelatedProducts::class, [
+                new Reference('sulu_product.product_repository'),
+                new Reference('sulu_product.association_type_registry'),
+                new Reference('sulu_product.product_url_generator'),
+            ]],
+        ];
+
+        $aiAgentAvailable = ContainerBuilder::willBeAvailable('symfony/ai-agent', AsTool::class, ['sulu/product-bundle']);
+
+        foreach ($aiTools as $serviceId => [$toolClass, $arguments]) {
+            $service = $services->set($serviceId)->class($toolClass)->args($arguments);
+
+            if ($aiAgentAvailable) {
+                $attribute = (new \ReflectionClass($toolClass))->getAttributes(AsTool::class)[0]->newInstance();
+                $service->tag('ai.tool', [
+                    'name' => $attribute->name,
+                    'description' => $attribute->description,
+                    'method' => $attribute->method,
+                ]);
+            }
         }
     }
 

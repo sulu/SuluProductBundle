@@ -76,6 +76,16 @@ final class AttributeRepository implements AttributeRepositoryInterface
         return $attribute;
     }
 
+    public function findBy(array $filters = []): array
+    {
+        $queryBuilder = $this->createQueryBuilder($filters);
+
+        /** @var list<AttributeInterface> $result */
+        $result = $queryBuilder->getQuery()->getResult();
+
+        return $result;
+    }
+
     /**
      * @param AttributeRepositoryFilters $filters
      */

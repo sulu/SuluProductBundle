@@ -10,6 +10,7 @@
  */
 
 use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
+use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
 
 require __DIR__ . '/vendor/symfony/dependency-injection/Loader/Configurator/ContainerConfigurator.php'; // see https://github.com/shipmonk-rnd/composer-dependency-analyser/issues/147#issuecomment-2202156380
 
@@ -19,5 +20,25 @@ $config->addPathRegexesToExclude([
     '#/var/(cache|log)/#',
     '#/vendor/sulu/sulu/#', // sulu/sulu test files are mapped via autoload-dev but are not our code
 ]);
+
+// "symfony/ai-agent" is an optional require-dev dependency: the AI tool classes only carry its
+// #[AsTool] attribute, which PHP never resolves unless something reflects on it, and the bundle
+// does that behind ContainerBuilder::willBeAvailable(), so the package never has to be installed.
+$config->ignoreErrorsOnPackageAndPaths(
+    'symfony/ai-agent',
+    [
+        __DIR__ . '/src/Application/Ai',
+        __DIR__ . '/src/Infrastructure/Symfony/HttpKernel/SuluProductBundle.php',
+    ],
+    [ErrorType::DEV_DEPENDENCY_IN_PROD],
+);
+
+// The tool test runs symfony/ai-agent's own argument resolver, which needs its ToolCall value object
+// from the platform package ai-agent already pulls in.
+$config->ignoreErrorsOnPackageAndPaths(
+    'symfony/ai-platform',
+    [__DIR__ . '/tests/Unit/Application/Ai/SearchProductsByAttributesTest.php'],
+    [ErrorType::SHADOW_DEPENDENCY],
+);
 
 return $config;

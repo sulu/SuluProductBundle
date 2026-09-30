@@ -1,0 +1,118 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of Sulu.
+ *
+ * (c) Sulu GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
+namespace Sulu\Product\Application\Ai;
+
+use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Product\Domain\Model\ProductInterface;
+use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
+use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Symfony\AI\Agent\Toolbox\Attribute\AsTool;
+
+#[AsTool(
+    name: 'sulu_product_search_products_by_attributes',
+    description: 'Search published products by one or more specification attribute values, e.g. a rated current or a color — something sulu_product_get_products cannot do since it only matches product titles and codes, not specs. Call sulu_product_get_attributes first to get the exact attribute keys. Filters match literal values only, never a comparison or range: to look for the best match among several values, call this once per plausible literal value.',
+)]
+final class SearchProductsByAttributes
+{
+    use ResolvesLiveProductContentTrait;
+
+    private const MAX_LIMIT = 25;
+
+    private const MAX_FILTERS = 5;
+
+    public function __construct(
+        private readonly ProductRepositoryInterface $productRepository,
+        private readonly AttributeRepositoryInterface $attributeRepository,
+        private readonly ProductUrlGenerator $urlGenerator,
+    ) {
+    }
+
+    /**
+     * @param string $locale IETF locale of the request, e.g. "en", "de".
+     * @param list<AttributeFilter> $filters one to five filters ANDed together, "key" is the exact attribute key from sulu_product_get_attributes and "value" a literal value, a substring for text or options, an exact number for a number attribute, never a comparison, range or wildcard like "16A or more"
+     * @param bool $includeVariants whether to include product variants in the results, a match on a value the parent holds returns the parent and each of its variants
+     * @param int $limit maximum number of results to return, capped at 25
+     *
+     * @return array{
+     *     results: list<array{code: string, title: string, productFamily: ?string, url: ?string}>,
+     *     status: 'ok'|'no_match'|'unknown_attribute',
+     *     instruction: ?string,
+     * }
+     */
+    public function __invoke(
+        string $locale,
+        array $filters,
+        bool $includeVariants = false,
+        int $limit = 10,
+    ): array {
+        if ([] === $filters) {
+            return [
+                'results' => [],
+                'status' => 'no_match',
+                'instruction' => 'No filters were given. Look up the exact attribute keys first '
+                    . 'and pass at least one {key, value} pair.',
+            ];
+        }
+
+        $attributeValues = [];
+
+        foreach (\array_slice($filters, 0, self::MAX_FILTERS) as $filter) {
+            $key = \trim($filter->key);
+            $attribute = '' !== $key ? $this->attributeRepository->findOneBy(['key' => $key]) : null;
+
+            if (null === $attribute) {
+                return [
+                    'results' => [],
+                    'status' => 'unknown_attribute',
+                    'instruction' => \sprintf(
+                        'No attribute with the exact key "%s" exists. Look up the exact key instead of guessing one.',
+                        $key,
+                    ),
+                ];
+            }
+
+            $attributeValues[] = ['attribute' => $attribute, 'value' => $filter->value];
+        }
+
+        $productFilters = [
+            'locale' => $locale,
+            'stage' => DimensionContentInterface::STAGE_LIVE,
+            'attributeValues' => $attributeValues,
+            'limit' => \max(1, \min($limit, self::MAX_LIMIT)),
+        ];
+
+        if (!$includeVariants) {
+            $productFilters['excludeTypes'] = [ProductInterface::TYPE_VARIANT];
+        }
+
+        $results = [];
+
+        foreach ($this->productRepository->findBy($productFilters, ['title' => 'asc']) as $product) {
+            $row = $this->toProductSummary($product, $locale, $this->urlGenerator);
+
+            if (null !== $row) {
+                $results[] = $row;
+            }
+        }
+
+        return [
+            'results' => $results,
+            'status' => [] === $results ? 'no_match' : 'ok',
+            'instruction' => [] === $results ? 'No product matched every given attribute value. '
+                . ($includeVariants ? '' : 'Variants were left out, so a value only a variant holds finds nothing: retry with includeVariants true before giving up. ')
+                . 'Do not name, guess, or construct any product code as a fallback. Tell the '
+                . 'visitor plainly that no match was found.' : null,
+        ];
+    }
+}

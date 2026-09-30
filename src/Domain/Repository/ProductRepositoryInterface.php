@@ -13,6 +13,7 @@ namespace Sulu\Product\Domain\Repository;
 
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
+use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 
 /**
@@ -45,6 +46,7 @@ interface ProductRepositoryInterface
      *     uuids?: string[],
      *     locale?: string,
      *     stage?: string,
+     *     code?: string,
      *     load_ghost_content?: bool,
      *     associationTargetUuid?: string,
      *     associationType?: string,
@@ -66,6 +68,7 @@ interface ProductRepositoryInterface
      *     uuids?: string[],
      *     locale?: string,
      *     stage?: string,
+     *     code?: string,
      *     associationTargetUuid?: string,
      *     associationType?: string,
      * } $filters
@@ -95,6 +98,10 @@ interface ProductRepositoryInterface
      *     uuids?: string[],
      *     locale?: string,
      *     stage?: string,
+     *     query?: string,
+     *     productFamilyName?: string,
+     *     code?: string,
+     *     attributeValues?: list<array{attribute: AttributeInterface, value: string}>,
      *     categoryIds?: int[],
      *     categoryKeys?: string[],
      *     categoryOperator?: 'AND'|'OR',
