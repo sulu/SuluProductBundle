@@ -15,6 +15,7 @@ namespace Sulu\Product\Infrastructure\Symfony\Mcp;
 
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
+use Sulu\Mcp\Domain\Content\ContentSecurity;
 use Sulu\Mcp\Domain\Content\ContentTypeExtensionInterface;
 use Sulu\Product\Application\Message\ApplyWorkflowTransitionProductMessage;
 use Sulu\Product\Application\Message\ModifyProductMessage;
@@ -51,28 +52,9 @@ final readonly class ContentTypeExtension implements ContentTypeExtensionInterfa
         return [ProductAdmin::SECURITY_CONTEXT];
     }
 
-    public function getEntitySecurityContext(object $aggregate, ?string $templateKey): string
+    public function getSecurity(object $aggregate): ContentSecurity
     {
-        return ProductAdmin::SECURITY_CONTEXT;
-    }
-
-    public function requiresResolvedContent(): bool
-    {
-        return false;
-    }
-
-    public function getAclObjectType(): ?string
-    {
-        return null;
-    }
-
-    public function getWebspaceKey(object $aggregate): ?string
-    {
-        return null;
-    }
-
-    public function assertCanRemove(string $uuid): void
-    {
+        return new ContentSecurity(ProductAdmin::SECURITY_CONTEXT);
     }
 
     public function loadDraft(string $uuid, string $locale, bool $loadGhost = false): ProductInterface
