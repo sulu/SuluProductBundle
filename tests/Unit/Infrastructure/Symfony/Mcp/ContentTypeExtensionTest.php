@@ -57,7 +57,7 @@ final class ContentTypeExtensionTest extends TestCase
     public function testSecurityContextsMatchProductAdmin(): void
     {
         $this->assertSame([ProductAdmin::SECURITY_CONTEXT], $this->extension->getViewSecurityContexts());
-        $this->assertEquals(new ContentSecurity(ProductAdmin::SECURITY_CONTEXT), $this->extension->getSecurity(new \stdClass()));
+        $this->assertEquals(new ContentSecurity(ProductAdmin::SECURITY_CONTEXT), $this->extension->getSecurity(new \stdClass(), 'en'));
     }
 
     public function testLoadDraftQueriesTheDraftStageWithAdminSelects(): void
