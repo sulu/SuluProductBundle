@@ -60,7 +60,7 @@ final class SearchProductsByAttributes
             return [
                 'results' => [],
                 'status' => 'no_match',
-                'instruction' => 'No filters were given. Call sulu_product_get_attributes first '
+                'instruction' => 'No filters were given. Look up the exact attribute keys first '
                     . 'and pass at least one {key, value} pair.',
             ];
         }
@@ -76,7 +76,7 @@ final class SearchProductsByAttributes
                     'results' => [],
                     'status' => 'unknown_attribute',
                     'instruction' => \sprintf(
-                        'No attribute with the exact key "%s" exists. Call sulu_product_get_attributes to get the exact key instead of guessing one.',
+                        'No attribute with the exact key "%s" exists. Look up the exact key instead of guessing one.',
                         $key,
                     ),
                 ];

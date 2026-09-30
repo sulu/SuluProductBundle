@@ -70,6 +70,7 @@ class SearchProductsByAttributesTest extends TestCase
         $this->assertSame('no_match', $result['status']);
         $this->assertSame([], $result['results']);
         $this->assertNotNull($result['instruction']);
+        $this->assertStringNotContainsString('sulu_', (string) $result['instruction']);
     }
 
     public function testInvokeWithBlankKeyReturnsUnknownAttributeWithoutLookup(): void
@@ -91,6 +92,7 @@ class SearchProductsByAttributesTest extends TestCase
 
         $this->assertSame('unknown_attribute', $result['status']);
         $this->assertNotNull($result['instruction']);
+        $this->assertStringNotContainsString('sulu_', (string) $result['instruction']);
     }
 
     public function testInvokeLooksUpAtMostFiveFilters(): void
