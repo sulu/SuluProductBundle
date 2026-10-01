@@ -21,7 +21,7 @@ use Symfony\AI\Agent\Toolbox\Attribute\AsTool;
 
 #[AsTool(
     name: 'sulu_product_search_products_by_attributes',
-    description: 'Search published products by one or more specification attribute values, e.g. a rated current or a color — something sulu_product_get_products cannot do since it only matches product titles and codes, not specs. Call sulu_product_get_attributes first to get the exact attribute keys. Filters match literal values only, never a comparison or range: to look for the best match among several values, call this once per plausible literal value.',
+    description: 'Search published products by one or more specification attribute values, e.g. a rated current or a color. sulu_product_get_products cannot do this, since it only matches product titles and codes, not specs. Call sulu_product_get_attributes first to get the exact attribute keys. Filters match literal values only, never a comparison or range: to look for the best match among several values, call this once per plausible literal value.',
 )]
 final class SearchProductsByAttributes
 {

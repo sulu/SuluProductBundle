@@ -23,7 +23,7 @@ use Symfony\AI\Agent\Toolbox\Attribute\AsTool;
 
 #[AsTool(
     name: 'sulu_product_get_product_details',
-    description: 'Get the full technical specification sheet for one published product by its exact article code. Use this for every specific spec value on a known product — never invent one. Use sulu_product_get_products first if the exact code is not known.',
+    description: 'Get the full technical specification sheet for one published product by its exact article code. Use this for every specific spec value on a known product. Never invent one. Use sulu_product_get_products first if the exact code is not known.',
 )]
 final class GetProductDetails
 {

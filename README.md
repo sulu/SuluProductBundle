@@ -203,13 +203,13 @@ Sulu's own site search needs none of this: it finds products next to pages and a
 The bundle generates a `product_associations` form with one field per configured
 `sulu_product.association_types` key. A project overrides that form by shipping its own form
 XML using the same `product_associations` key in a directory registered under
-`sulu_admin.forms.directories` — the Sulu skeleton registers `config/forms` by default.
+`sulu_admin.forms.directories`. The Sulu skeleton registers `config/forms` by default.
 
 Rules for the declared fields:
 
 - The field name must be `associations/<type>`, where `<type>` is a configured
   `sulu_product.association_types` key.
-- Only the type `product_selection` is allowed — no other field type maps to product
+- Only the type `product_selection` is allowed. No other field type maps to product
   associations.
 - A `properties` collection param declares which target properties resolve, in addition to the
   always-resolved `title`, `url`, `code`, `externalIdentifier`, `status`, `productFamily`,
