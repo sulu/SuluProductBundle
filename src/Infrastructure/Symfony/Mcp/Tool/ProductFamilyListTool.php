@@ -48,7 +48,7 @@ final class ProductFamilyListTool
     #[McpTool(
         name: 'sulu_product_family_list',
         title: 'List Product Families',
-        description: 'List product families. A family decides which attributes a product can carry, and its UUID is the mandatory "productFamily" argument of sulu_product_create. Each family lists its attributes with three flags that determine where a value belongs: "required" means a value must be supplied, and "variantSpecific" means the attribute is a variant axis — required variant-specific attributes are set on the variant (sulu_product_variant_create), all other required attributes on the product itself. Use "attributeId" as the key in any "attributes" map.',
+        description: 'List product families. A family decides which attributes a product can carry, and its UUID is the mandatory "productFamily" argument of sulu_product_create. Each family lists its attributes with three flags that determine where a value belongs: "required" means a value must be supplied, and "variantSpecific" means the attribute is a variant axis. Required variant-specific attributes are set on the variant (sulu_product_variant_create), all other required attributes on the product itself. Use "attributeId" as the key in any "attributes" map.',
         annotations: new ToolAnnotations(readOnlyHint: true, openWorldHint: false),
     )]
     #[RequiresPermission(requirements: [

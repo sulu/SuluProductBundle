@@ -45,7 +45,7 @@ final class SearchProductsByAttributesTool
     #[McpTool(
         name: 'sulu_product_search_products_by_attributes',
         title: 'Search Products by Attribute',
-        description: 'Search published products by one or more specification attribute values, e.g. a rated current or a color — something sulu_product_get_products cannot do since it only matches product titles and codes, not specs. Call sulu_attribute_list first to get the exact attribute keys.',
+        description: 'Search published products by one or more specification attribute values, e.g. a rated current or a color. sulu_product_get_products cannot do this, since it only matches product titles and codes, not specs. Call sulu_attribute_list first to get the exact attribute keys.',
         annotations: new ToolAnnotations(readOnlyHint: true, openWorldHint: false),
     )]
     #[RequiresPermission(requirements: [
@@ -63,7 +63,7 @@ final class SearchProductsByAttributesTool
                 ],
                 'required' => ['key', 'value'],
             ],
-            description: 'One to five {key, value} pairs, ANDed together — a matching product must have every filter\'s attribute contain its value. "key" is the exact attribute key from sulu_attribute_list (its "key" field, not its "id"), never its translated name. "value" matches as a substring for a text or options attribute, or an exact number for a number attribute when the value itself is numeric — never a comparison, range, or wildcard like "16A or more" or "IP54 or higher", none of which match anything and silently return no results. To find the best match among several values, call this once per plausible literal value instead of describing a threshold.',
+            description: 'One to five {key, value} pairs, ANDed together. A matching product must have every filter\'s attribute contain its value. "key" is the exact attribute key from sulu_attribute_list (its "key" field, not its "id"), never its translated name. "value" matches as a substring for a text or options attribute, or an exact number for a number attribute when the value itself is numeric. It is never a comparison, range, or wildcard like "16A or more" or "IP54 or higher", none of which match anything and silently return no results. To find the best match among several values, call this once per plausible literal value instead of describing a threshold.',
         )]
         array $filters,
         #[Schema(description: 'Whether to include product variants (individual configurations of a product with variants) in the results.')]

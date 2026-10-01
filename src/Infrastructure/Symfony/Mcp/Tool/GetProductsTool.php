@@ -42,7 +42,7 @@ final class GetProductsTool
     #[McpTool(
         name: 'sulu_product_get_products',
         title: 'Search Products by Keyword',
-        description: 'Search published products by keyword, article code, or product family — matches product titles and codes as text, nothing else. Never use this for a specification value (an attribute value such as a size, a material, a rating, ...) — those never appear verbatim in a title or code and will always return no_match. Use sulu_product_search_products_by_attributes instead, and sulu_attribute_list to find the exact attribute key.',
+        description: 'Search published products by keyword, article code, or product family. It matches product titles and codes as text, nothing else. Never use this for a specification value (an attribute value such as a size, a material, a rating, ...). Those never appear verbatim in a title or code and will always return no_match. Use sulu_product_search_products_by_attributes instead, and sulu_attribute_list to find the exact attribute key.',
         annotations: new ToolAnnotations(readOnlyHint: true, openWorldHint: false),
     )]
     #[RequiresPermission(requirements: [

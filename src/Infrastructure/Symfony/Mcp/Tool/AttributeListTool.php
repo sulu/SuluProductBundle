@@ -42,7 +42,7 @@ final class AttributeListTool
     #[McpTool(
         name: 'sulu_attribute_list',
         title: 'List Product Attributes',
-        description: 'List product attributes, paginated. Each entry names its attribute group. The "id" of each attribute is the key to use in the "attributes" map of sulu_product_create, sulu_product_update and the variant tools — e.g. an attribute with id 12 is written as {"12": "red"}. "type" tells you what a value looks like: "text" a string, "number" a number, "date" an ISO-8601 date, "options" one of the listed option keys. Which attributes actually apply to a given product, and which are required or variant axes, depends on its family — see sulu_product_family_list.',
+        description: 'List product attributes, paginated. Each entry names its attribute group. The "id" of each attribute is the key to use in the "attributes" map of sulu_product_create, sulu_product_update and the variant tools, e.g. an attribute with id 12 is written as {"12": "red"}. "type" tells you what a value looks like: "text" a string, "number" a number, "date" an ISO-8601 date, "options" one of the listed option keys. Which attributes actually apply to a given product, and which are required or variant axes, depends on its family. See sulu_product_family_list.',
         annotations: new ToolAnnotations(readOnlyHint: true, openWorldHint: false),
     )]
     #[RequiresPermission(requirements: [
