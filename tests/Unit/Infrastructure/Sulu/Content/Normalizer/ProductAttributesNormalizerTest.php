@@ -89,7 +89,7 @@ class ProductAttributesNormalizerTest extends TestCase
     {
         /** @var ObjectProphecy<AttributeInterface> $attribute */
         $attribute = $this->prophesize(AttributeInterface::class);
-        $attribute->getId()->willReturn(42);
+        $attribute->getUuid()->willReturn('0198c3e2-0000-7000-8000-000000000042');
 
         /** @var ObjectProphecy<ProductFamilyAttributeInterface> $familyAttribute */
         $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
@@ -108,15 +108,15 @@ class ProductAttributesNormalizerTest extends TestCase
 
         $attributes = $result['attributes'];
         $this->assertIsArray($attributes);
-        $this->assertArrayHasKey(42, $attributes);
-        $this->assertNull($attributes[42]);
+        $this->assertArrayHasKey('0198c3e2-0000-7000-8000-000000000042', $attributes);
+        $this->assertNull($attributes['0198c3e2-0000-7000-8000-000000000042']);
     }
 
     public function testEnhanceEmitsNoUnitKeyForMeasurementAttribute(): void
     {
         /** @var ObjectProphecy<AttributeInterface> $attribute */
         $attribute = $this->prophesize(AttributeInterface::class);
-        $attribute->getId()->willReturn(42);
+        $attribute->getUuid()->willReturn('0198c3e2-0000-7000-8000-000000000042');
 
         /** @var ObjectProphecy<ProductFamilyAttributeInterface> $familyAttribute */
         $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
@@ -133,7 +133,7 @@ class ProductAttributesNormalizerTest extends TestCase
 
         $result = $this->normalizer->enhance($dc->reveal(), []);
 
-        $this->assertSame([42 => null], $result['attributes']);
+        $this->assertSame(['0198c3e2-0000-7000-8000-000000000042' => null], $result['attributes']);
     }
 
     public function testEnhanceWithAttributeValueSetsValue(): void
@@ -142,7 +142,7 @@ class ProductAttributesNormalizerTest extends TestCase
 
         /** @var ObjectProphecy<AttributeInterface> $attribute */
         $attribute = $this->prophesize(AttributeInterface::class);
-        $attribute->getId()->willReturn(7);
+        $attribute->getUuid()->willReturn('0198c3e2-0000-7000-8000-000000000007');
         $attribute->getType()->willReturn(AttributeInterface::TYPE_NUMBER);
 
         $attrValue = new ProductAttributeValue($pdc, $attribute->reveal(), 'attr-7');
@@ -161,6 +161,6 @@ class ProductAttributesNormalizerTest extends TestCase
 
         $attributes = $result['attributes'];
         $this->assertIsArray($attributes);
-        $this->assertSame(3.14, $attributes[7]);
+        $this->assertSame(3.14, $attributes['0198c3e2-0000-7000-8000-000000000007']);
     }
 }

@@ -65,6 +65,11 @@
             </field>
         </case-property>
 
+        <property name="key" translation="sulu_admin.key" visibility="yes" searchability="yes">
+            <field-name>key</field-name>
+            <entity-name>Sulu\Product\Domain\Model\ProductFamilyInterface</entity-name>
+        </property>
+
         <property name="created" translation="sulu_admin.created" visibility="no">
             <field-name>created</field-name>
             <entity-name>Sulu\Product\Domain\Model\ProductFamilyInterface</entity-name>

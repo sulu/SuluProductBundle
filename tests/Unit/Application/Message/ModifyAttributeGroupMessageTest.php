@@ -32,21 +32,14 @@ class ModifyAttributeGroupMessageTest extends TestCase
         $this->assertSame('en', $message->getLocale());
         $this->assertSame('Test Group', $message->getName());
         $this->assertNull($message->getDescription());
-        $this->assertSame([], $message->getAttributes());
     }
 
     public function testGettersWithAllFields(): void
     {
-        $attributes = [
-            ['attribute' => 'uuid-1'],
-            ['attribute' => 'uuid-2'],
-        ];
-
         $data = [
             'locale' => 'de',
             'name' => 'Advanced Group',
             'description' => 'A test description',
-            'attributes' => $attributes,
         ];
 
         $message = new ModifyAttributeGroupMessage(['uuid' => 'test-uuid-456'], $data);
@@ -55,7 +48,6 @@ class ModifyAttributeGroupMessageTest extends TestCase
         $this->assertSame('de', $message->getLocale());
         $this->assertSame('Advanced Group', $message->getName());
         $this->assertSame('A test description', $message->getDescription());
-        $this->assertSame($attributes, $message->getAttributes());
     }
 
     public function testGetDataReturnsFullDataArray(): void
@@ -75,15 +67,5 @@ class ModifyAttributeGroupMessageTest extends TestCase
         );
 
         $this->assertNull($message->getDescription());
-    }
-
-    public function testGetAttributesReturnsEmptyArrayWhenMissing(): void
-    {
-        $message = new ModifyAttributeGroupMessage(
-            ['uuid' => 'test-uuid'],
-            ['locale' => 'en', 'name' => 'Test Group'],
-        );
-
-        $this->assertSame([], $message->getAttributes());
     }
 }

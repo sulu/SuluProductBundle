@@ -41,14 +41,14 @@ class WebsiteProductAttributesReindexProviderEnhancerTest extends TestCase
         /** @var ObjectProphecy<Query<mixed, mixed>> $query */
         $query = $this->prophesize(Query::class);
         $query->toIterable()->willReturn([
-            ['productId' => 'product-1', 'locale' => null, 'attributeId' => 1, 'optionKey' => null, 'number' => 2.5, 'text' => null, 'variantSpecific' => false],
-            ['productId' => 'product-1', 'locale' => null, 'attributeId' => 2, 'optionKey' => null, 'number' => 7.0, 'text' => null, 'variantSpecific' => false],
+            ['productId' => 'product-1', 'locale' => null, 'attributeUuid' => 'attribute-1', 'optionKey' => null, 'number' => 2.5, 'text' => null, 'variantSpecific' => false],
+            ['productId' => 'product-1', 'locale' => null, 'attributeUuid' => 'attribute-2', 'optionKey' => null, 'number' => 7.0, 'text' => null, 'variantSpecific' => false],
         ]);
         // Labels, options, attributes: only attribute 1 is known.
         $query->getArrayResult()->willReturn(
             [],
             [],
-            [['id' => 1, 'key' => 'weight', 'type' => AttributeInterface::TYPE_NUMBER, 'filterable' => true, 'config' => [], 'defaultLocale' => null]],
+            [['uuid' => 'attribute-1', 'key' => 'weight', 'type' => AttributeInterface::TYPE_NUMBER, 'filterable' => true, 'config' => [], 'defaultLocale' => null]],
         );
         $queryBuilder->getQuery()->willReturn($query->reveal());
 

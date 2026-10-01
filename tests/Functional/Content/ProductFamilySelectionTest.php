@@ -59,7 +59,8 @@ class ProductFamilySelectionTest extends SuluTestCase
     {
         /** @var ProductFamilyRepositoryInterface $repository */
         $repository = self::getContainer()->get(ProductFamilyRepositoryInterface::class);
-        $family = $repository->create();
+        $family = $repository->createNew();
+        $family->setKey(\uniqid('family-'));
         $family->setExternalIdentifier('SPK');
         $family->addTranslation(new ProductFamilyTranslation($family, 'en', 'speakON'));
         $repository->save($family);
@@ -98,7 +99,8 @@ class ProductFamilySelectionTest extends SuluTestCase
 
         /** @var ProductFamilyRepositoryInterface $familyRepository */
         $familyRepository = $container->get(ProductFamilyRepositoryInterface::class);
-        $family = $familyRepository->create();
+        $family = $familyRepository->createNew();
+        $family->setKey(\uniqid('family-'));
         $family->setExternalIdentifier('SPK');
         $family->setImage($media);
         $family->addTranslation(new ProductFamilyTranslation($family, 'en', 'speakON'));

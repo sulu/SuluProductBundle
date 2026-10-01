@@ -36,7 +36,7 @@ class ProductReindexProviderQueryCountTest extends SuluTestCase
     private KernelBrowser $client;
 
     /**
-     * @var array{weight: int, colour: int, note: int}
+     * @var array{weight: string, colour: string, note: string}
      */
     private array $attributeIds;
 
@@ -120,16 +120,10 @@ class ProductReindexProviderQueryCountTest extends SuluTestCase
             'note' => $this->createAttribute('note', 'Note', AttributeInterface::TYPE_TEXT, true),
         ];
 
-        /** @var AttributeRepositoryInterface $attributeRepository */
-        $attributeRepository = self::getContainer()->get(AttributeRepositoryInterface::class);
-
         $attributes = [];
         foreach ($this->attributeIds as $key => $attributeId) {
-            $attribute = $attributeRepository->findOneBy(['id' => $attributeId]);
-            $this->assertNotNull($attribute);
-
             $attributes[] = [
-                'id' => $attribute->getUuid(),
+                'id' => $attributeId,
                 'required' => false,
                 'variantSpecific' => 'colour' === $key,
             ];
@@ -138,6 +132,7 @@ class ProductReindexProviderQueryCountTest extends SuluTestCase
         $this->client->request('POST', '/admin/api/product-families.json?locale=en', [], [], [], \json_encode([
             'locale' => 'en',
             'name' => 'Query Count Family',
+            'key' => \uniqid('family-'),
             'attributes' => $attributes,
         ]) ?: null);
         $this->assertHttpStatusCode(201, $this->client->getResponse());
@@ -197,7 +192,7 @@ class ProductReindexProviderQueryCountTest extends SuluTestCase
     /**
      * @param array<string, string> $options option key => english name
      */
-    private function createAttribute(string $key, string $name, string $type, bool $localized, array $options = []): int
+    private function createAttribute(string $key, string $name, string $type, bool $localized, array $options = []): string
     {
         $container = self::getContainer();
         /** @var AttributeGroupRepositoryInterface $groupRepository */
@@ -207,10 +202,10 @@ class ProductReindexProviderQueryCountTest extends SuluTestCase
         /** @var EntityManagerInterface $entityManager */
         $entityManager = $container->get('doctrine.orm.entity_manager');
 
-        $group = $groupRepository->create();
+        $group = $groupRepository->createNew();
         $groupRepository->save($group);
 
-        $attribute = $attributeRepository->create($group);
+        $attribute = $attributeRepository->createNew($group);
         $attribute->setKey($key);
         $attribute->setType($type);
         $attribute->setLocalized($localized);
@@ -223,7 +218,7 @@ class ProductReindexProviderQueryCountTest extends SuluTestCase
         $attributeRepository->save($attribute);
         $entityManager->flush();
 
-        return $attribute->getId();
+        return $attribute->getUuid();
     }
 
     private function responseId(): string

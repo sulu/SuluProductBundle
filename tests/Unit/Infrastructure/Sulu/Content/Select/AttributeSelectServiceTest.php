@@ -47,8 +47,7 @@ class AttributeSelectServiceTest extends TestCase
 
     public function testGetValuesReturnsUuidAndTranslatedName(): void
     {
-        $attribute = new Attribute(new AttributeGroup());
-        $attribute->setUuid('some-uuid');
+        $attribute = new Attribute(new AttributeGroup(), 'some-uuid');
         $attribute->setKey('color');
         $translation = new AttributeTranslation($attribute, 'en', 'Color');
         $attribute->addTranslation($translation);
@@ -65,8 +64,7 @@ class AttributeSelectServiceTest extends TestCase
 
     public function testGetValuesFallsBackToUuidWhenNoTranslation(): void
     {
-        $attribute = new Attribute(new AttributeGroup());
-        $attribute->setUuid('fallback-uuid');
+        $attribute = new Attribute(new AttributeGroup(), 'fallback-uuid');
         $attribute->setKey('size');
 
         $this->entityRepository->findAll()->willReturn([$attribute]);

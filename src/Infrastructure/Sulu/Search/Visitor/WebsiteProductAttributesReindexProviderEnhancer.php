@@ -49,19 +49,19 @@ use Symfony\Contracts\Service\ResetInterface;
 final class WebsiteProductAttributesReindexProviderEnhancer implements WebsiteProductReindexProviderEnhancerInterface, ResetInterface
 {
     public const FIELD = 'product';
-    public const PRODUCT_FAMILY_ID_FIELD = 'productFamilyId';
+    public const PRODUCT_FAMILY_KEY_FIELD = 'productFamilyKey';
     public const TEXT_VALUES_FIELD = 'attributes_text_values';
     public const NUMERIC_VALUES_FIELD = 'attributes_numeric_values';
 
     private const UNLOCALIZED = '';
 
     /**
-     * @var array<string, array<string, array<int, ValueRow>>> product id => locale => attribute id => row
+     * @var array<string, array<string, array<string, ValueRow>>> product id => locale => attribute uuid => row
      */
     private array $attributeValues = [];
 
     /**
-     * @var array<int, AttributeDefinition>|null attribute id => definition
+     * @var array<string, AttributeDefinition>|null attribute uuid => definition
      */
     private ?array $attributeDefinitions = null;
 
@@ -119,8 +119,8 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
         $textValues = [];
         $numericValues = [];
 
-        foreach ($this->mergedAttributeValues($productId, $parentId, $locale) as $attributeId => $valueRow) {
-            $attribute = $this->getAttributeDefinitions()[$attributeId] ?? null;
+        foreach ($this->mergedAttributeValues($productId, $parentId, $locale) as $attributeUuid => $valueRow) {
+            $attribute = $this->getAttributeDefinitions()[$attributeUuid] ?? null;
             if (null === $attribute) {
                 continue;
             }
@@ -166,11 +166,11 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
         }
 
         // Selected by the details enhancer, which always runs.
-        $productFamilyId = $queryResult['productFamilyId'] ?? null;
+        $productFamilyKey = $queryResult['productFamilyKey'] ?? null;
 
         $document['content'] = \array_values(\array_unique($content));
         $document[self::FIELD] = [
-            self::PRODUCT_FAMILY_ID_FIELD => \is_string($productFamilyId) ? $productFamilyId : '',
+            self::PRODUCT_FAMILY_KEY_FIELD => \is_string($productFamilyKey) ? $productFamilyKey : '',
             self::TEXT_VALUES_FIELD => \array_values(\array_unique($textValues)),
             self::NUMERIC_VALUES_FIELD => $numericValues,
         ];
@@ -179,14 +179,14 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
     }
 
     /**
-     * @return array<int, ValueRow> attribute id => row
+     * @return array<string, ValueRow> attribute uuid => row
      */
     private function mergedAttributeValues(string $productId, ?string $parentId, string $locale): array
     {
         $merged = $this->productAttributeValues($productId, $locale);
-        foreach (null !== $parentId ? $this->productAttributeValues($parentId, $locale) : [] as $attributeId => $valueRow) {
-            if (!$valueRow['variantSpecific'] && !isset($merged[$attributeId])) {
-                $merged[$attributeId] = $valueRow;
+        foreach (null !== $parentId ? $this->productAttributeValues($parentId, $locale) : [] as $attributeUuid => $valueRow) {
+            if (!$valueRow['variantSpecific'] && !isset($merged[$attributeUuid])) {
+                $merged[$attributeUuid] = $valueRow;
             }
         }
 
@@ -194,7 +194,7 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
     }
 
     /**
-     * @return array<int, ValueRow> attribute id => row
+     * @return array<string, ValueRow> attribute uuid => row
      */
     private function productAttributeValues(string $productId, string $locale): array
     {
@@ -233,11 +233,11 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
     /**
      * @param list<string> $productIds
      *
-     * @return array<string, array<string, array<int, ValueRow>>> product id => locale => attribute id => row
+     * @return array<string, array<string, array<string, ValueRow>>> product id => locale => attribute uuid => row
      */
     private function loadAttributeValues(array $productIds): array
     {
-        /** @var iterable<array{productId: string, locale: string|null, attributeId: int, optionKey: string|null, number: float|null, text: string|null, variantSpecific: bool|null}> $rows */
+        /** @var iterable<array{productId: string, locale: string|null, attributeUuid: string, optionKey: string|null, number: float|null, text: string|null, variantSpecific: bool|null}> $rows */
         $rows = $this->entityManager->createQueryBuilder()
             ->from(ProductAttributeValue::class, 'value')
             ->innerJoin('value.productDimensionContent', 'dimensionContent')
@@ -245,7 +245,7 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
             ->leftJoin('value.attributeOption', 'attributeOption')
             ->select('IDENTITY(dimensionContent.product) AS productId')
             ->addSelect('dimensionContent.locale')
-            ->addSelect('IDENTITY(value.attribute) AS attributeId')
+            ->addSelect('IDENTITY(value.attribute) AS attributeUuid')
             ->addSelect('attributeOption.key AS optionKey')
             ->addSelect('value.number')
             ->addSelect('value.text')
@@ -262,7 +262,7 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
         $attributeValues = [];
         foreach ($rows as $row) {
             $text = \is_string($row['text']) ? \trim($row['text']) : '';
-            $attributeValues[$row['productId']][$row['locale'] ?? self::UNLOCALIZED][(int) $row['attributeId']] = [
+            $attributeValues[$row['productId']][$row['locale'] ?? self::UNLOCALIZED][$row['attributeUuid']] = [
                 'optionKey' => $row['optionKey'],
                 'number' => $row['number'],
                 'text' => '' !== $text ? $text : null,
@@ -274,7 +274,7 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
     }
 
     /**
-     * @return array<int, AttributeDefinition> attribute id => definition
+     * @return array<string, AttributeDefinition> attribute uuid => definition
      */
     private function getAttributeDefinitions(): array
     {
@@ -282,48 +282,48 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
             return $this->attributeDefinitions;
         }
 
-        /** @var list<array{attributeId: int, locale: string, name: string}> $labelRows */
+        /** @var list<array{attributeUuid: string, locale: string, name: string}> $labelRows */
         $labelRows = $this->entityManager->createQueryBuilder()
             ->from(Attribute::class, 'attribute')
             ->innerJoin('attribute.translations', 'translation')
-            ->select('attribute.id AS attributeId', 'translation.locale', 'translation.name')
+            ->select('attribute.uuid AS attributeUuid', 'translation.locale', 'translation.name')
             ->getQuery()
             ->getArrayResult();
         $labels = [];
         foreach ($labelRows as $row) {
-            $labels[$row['attributeId']][$row['locale']] = $row['name'];
+            $labels[$row['attributeUuid']][$row['locale']] = $row['name'];
         }
 
-        /** @var list<array{attributeId: int, optionKey: string, locale: string, name: string}> $optionRows */
+        /** @var list<array{attributeUuid: string, optionKey: string, locale: string, name: string}> $optionRows */
         $optionRows = $this->entityManager->createQueryBuilder()
             ->from(AttributeOption::class, 'option')
             ->innerJoin('option.translations', 'translation')
-            ->select('IDENTITY(option.attribute) AS attributeId', 'option.key AS optionKey', 'translation.locale', 'translation.name')
+            ->select('IDENTITY(option.attribute) AS attributeUuid', 'option.key AS optionKey', 'translation.locale', 'translation.name')
             ->getQuery()
             ->getArrayResult();
         $options = [];
         foreach ($optionRows as $row) {
-            $options[(int) $row['attributeId']][$row['optionKey']][$row['locale']] = $row['name'];
+            $options[$row['attributeUuid']][$row['optionKey']][$row['locale']] = $row['name'];
         }
 
-        /** @var list<array{id: int, key: string, type: string, filterable: bool, config: array<string, mixed>, defaultLocale: string|null}> $attributeRows */
+        /** @var list<array{uuid: string, key: string, type: string, filterable: bool, config: array<string, mixed>, defaultLocale: string|null}> $attributeRows */
         $attributeRows = $this->entityManager->createQueryBuilder()
             ->from(Attribute::class, 'attribute')
-            ->select('attribute.id', 'attribute.key', 'attribute.type', 'attribute.filterable', 'attribute.config', 'attribute.defaultLocale')
+            ->select('attribute.uuid', 'attribute.key', 'attribute.type', 'attribute.filterable', 'attribute.config', 'attribute.defaultLocale')
             ->getQuery()
             ->getArrayResult();
 
         $this->attributeDefinitions = [];
         foreach ($attributeRows as $row) {
             $unitKey = $row['config']['unit'] ?? null;
-            $this->attributeDefinitions[$row['id']] = [
+            $this->attributeDefinitions[$row['uuid']] = [
                 'key' => $row['key'],
                 'type' => $row['type'],
                 'filterable' => $row['filterable'],
-                'labels' => $labels[$row['id']] ?? [],
+                'labels' => $labels[$row['uuid']] ?? [],
                 'defaultLocale' => $row['defaultLocale'],
                 'unit' => \is_string($unitKey) ? $this->measurementRegistry->findUnit($unitKey)?->getSymbol() : null,
-                'options' => $options[$row['id']] ?? [],
+                'options' => $options[$row['uuid']] ?? [],
             ];
         }
 

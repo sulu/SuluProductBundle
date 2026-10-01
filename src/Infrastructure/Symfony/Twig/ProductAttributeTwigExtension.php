@@ -96,7 +96,7 @@ class ProductAttributeTwigExtension extends AbstractExtension
             }
 
             $group = $attribute->getGroup();
-            $groupKey = (string) $group->getId();
+            $groupKey = $group->getUuid();
 
             $groups[$groupKey] ??= [
                 'key' => $groupKey,
@@ -118,8 +118,8 @@ class ProductAttributeTwigExtension extends AbstractExtension
             ];
         }
 
-        // group keys are database ids rendered as strings, so "10" must follow "9"
-        \uksort($groups, static fn (int|string $a, int|string $b): int => (int) $a <=> (int) $b);
+        // uuid v7 strings sort by creation time
+        \uksort($groups, static fn (string $a, string $b): int => \strcmp($a, $b));
 
         $result = [];
         foreach ($groups as $group) {

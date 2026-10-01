@@ -99,7 +99,12 @@ final class ProductFamilyController implements SecuredControllerInterface
 
     public function postAction(Request $request): Response
     {
-        $message = new CreateProductFamilyMessage($this->getData($request));
+        $key = \trim($request->request->getString('key'));
+        if ('' === $key) {
+            return new JsonResponse(['detail' => 'ProductFamily key is required.'], 400);
+        }
+
+        $message = new CreateProductFamilyMessage([...$this->getData($request), 'key' => $key]);
 
         try {
             /** @var ProductFamilyInterface $family */
@@ -163,6 +168,7 @@ final class ProductFamilyController implements SecuredControllerInterface
      *   locale: string,
      *   name: string,
      *   description: string|null,
+     *   image: array{id: int}|null,
      *   attributes: list<array{id: string, required: bool, variantSpecific: bool}>,
      * }
      */
@@ -174,13 +180,15 @@ final class ProductFamilyController implements SecuredControllerInterface
         $image = $request->request->all()['image'] ?? null;
         $imageId = \is_array($image) && \is_numeric($image['id'] ?? null) ? (int) $image['id'] : null;
 
-        return [
+        $data = [
             'name' => (string) $request->request->get('name', ''),
             'description' => $description,
             'image' => null === $imageId ? null : ['id' => $imageId],
             'attributes' => $this->extractAttributes($request),
             'locale' => $this->getLocale($request),
         ];
+
+        return $data;
     }
 
     /**

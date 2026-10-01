@@ -34,8 +34,7 @@ class ProductFamilyNormalizerTest extends TestCase
 
     private function attributeWithUuid(string $uuid, string $key): Attribute
     {
-        $attribute = new Attribute(new AttributeGroup());
-        $attribute->setUuid($uuid);
+        $attribute = new Attribute(new AttributeGroup(), $uuid);
         $attribute->setKey($key);
 
         return $attribute;
@@ -56,6 +55,7 @@ class ProductFamilyNormalizerTest extends TestCase
         $image->method('getId')->willReturn(5);
 
         $family = new ProductFamily();
+        $family->setKey('shoes');
         $family->setImage($image);
 
         $result = $this->normalizer()->normalize($family, null, ['locale' => 'en']);
@@ -73,8 +73,8 @@ class ProductFamilyNormalizerTest extends TestCase
 
     public function testNormalizeWithNoTranslationAndNoAttributes(): void
     {
-        $family = new ProductFamily();
-        $family->setUuid('test-uuid');
+        $family = new ProductFamily('test-uuid');
+        $family->setKey('shoes');
 
         $result = $this->normalizer()->normalize($family, null, ['locale' => 'en']);
 
@@ -84,12 +84,13 @@ class ProductFamilyNormalizerTest extends TestCase
         $this->assertNull($result['externalIdentifier']);
         $this->assertNull($result['image']);
         $this->assertSame([], $result['attributes']);
+        $this->assertSame('shoes', $result['key']);
     }
 
     public function testNormalizeWithTranslation(): void
     {
-        $family = new ProductFamily();
-        $family->setUuid('test-uuid');
+        $family = new ProductFamily('test-uuid');
+        $family->setKey('shoes');
         $translation = new ProductFamilyTranslation($family, 'en', 'Apparel');
         $translation->setDescription('Clothing family');
         $family->addTranslation($translation);
@@ -102,8 +103,8 @@ class ProductFamilyNormalizerTest extends TestCase
 
     public function testNormalizeReturnsOnlyTheFamilysOwnAttributesAsAList(): void
     {
-        $family = new ProductFamily();
-        $family->setUuid('test-uuid');
+        $family = new ProductFamily('test-uuid');
+        $family->setKey('shoes');
 
         $attributeColor = $this->attributeWithUuid('uuid-1', 'color');
         $attributeSize = $this->attributeWithUuid('uuid-2', 'size');
@@ -126,8 +127,8 @@ class ProductFamilyNormalizerTest extends TestCase
 
     public function testNormalizeWithMissingLocaleUsesEmptyString(): void
     {
-        $family = new ProductFamily();
-        $family->setUuid('test-uuid');
+        $family = new ProductFamily('test-uuid');
+        $family->setKey('shoes');
         $translation = new ProductFamilyTranslation($family, 'en', 'English Name');
         $family->addTranslation($translation);
 
@@ -138,8 +139,8 @@ class ProductFamilyNormalizerTest extends TestCase
 
     public function testNormalizeUseFallbackTranslationWhenLocaleNotFound(): void
     {
-        $family = new ProductFamily();
-        $family->setUuid('test-uuid');
+        $family = new ProductFamily('test-uuid');
+        $family->setKey('shoes');
         $family->setDefaultLocale('de');
         $de = new ProductFamilyTranslation($family, 'de', 'Fallback Name');
         $family->addTranslation($de);

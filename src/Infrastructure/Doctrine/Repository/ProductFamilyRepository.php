@@ -27,7 +27,6 @@ use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductFamilyAttribute;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
-use Symfony\Component\Uid\Uuid;
 use Webmozart\Assert\Assert;
 
 /**
@@ -55,12 +54,9 @@ final class ProductFamilyRepository implements ProductFamilyRepositoryInterface
         $this->entityRepository = $repo;
     }
 
-    public function create(): ProductFamilyInterface
+    public function createNew(?string $uuid = null): ProductFamilyInterface
     {
-        $family = new ProductFamily();
-        $family->setUuid(Uuid::v7()->toRfc4122());
-
-        return $family;
+        return new ProductFamily($uuid);
     }
 
     public function findOneBy(array $filters, array $selects = []): ?ProductFamilyInterface
@@ -129,6 +125,13 @@ final class ProductFamilyRepository implements ProductFamilyRepositoryInterface
             Assert::isArray($uuids); // @phpstan-ignore staticMethod.alreadyNarrowedType
             $queryBuilder->andWhere('productFamily.uuid IN(:uuids)')
                 ->setParameter('uuids', $uuids);
+        }
+
+        $key = $filters['key'] ?? null;
+        if (null !== $key) {
+            Assert::string($key); // @phpstan-ignore staticMethod.alreadyNarrowedType
+            $queryBuilder->andWhere('productFamily.key = :key')
+                ->setParameter('key', $key);
         }
 
         $externalIdentifier = $filters['externalIdentifier'] ?? null;

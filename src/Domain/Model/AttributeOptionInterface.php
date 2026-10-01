@@ -15,7 +15,7 @@ namespace Sulu\Product\Domain\Model;
 
 interface AttributeOptionInterface
 {
-    public function getId(): int;
+    public function getUuid(): string;
 
     public function getKey(): string;
 

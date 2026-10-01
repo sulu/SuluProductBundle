@@ -106,14 +106,6 @@ class ProductFamilyResourceLoaderTest extends TestCase
         $this->assertNull($content['image']->getContent());
     }
 
-    public function testLoadSkipsAFamilyWithoutUuid(): void
-    {
-        $this->productFamilyRepository->findBy(['uuids' => ['uuid-1']])
-            ->willReturn([new ProductFamily()]);
-
-        $this->assertSame([], $this->loader->load(['uuid-1'], 'en'));
-    }
-
     public function testLoadWithoutLocaleQueriesNothing(): void
     {
         $this->productFamilyRepository->findBy(Argument::cetera())->shouldNotBeCalled();
@@ -145,8 +137,7 @@ class ProductFamilyResourceLoaderTest extends TestCase
      */
     private function createFamily(string $uuid, ?string $externalIdentifier, array $names): ProductFamily
     {
-        $family = new ProductFamily();
-        $family->setUuid($uuid);
+        $family = new ProductFamily($uuid);
         $family->setExternalIdentifier($externalIdentifier);
         foreach ($names as $locale => $name) {
             $family->addTranslation(new ProductFamilyTranslation($family, $locale, $name));

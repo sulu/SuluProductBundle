@@ -71,7 +71,8 @@ class ProductRepositoryTest extends SuluTestCase
 
     private function createFamily(): ProductFamilyInterface
     {
-        $family = $this->productFamilyRepository->create();
+        $family = $this->productFamilyRepository->createNew();
+        $family->setKey(\uniqid('family-'));
         $this->productFamilyRepository->save($family);
         $this->entityManager->flush();
 
@@ -246,7 +247,6 @@ class ProductRepositoryTest extends SuluTestCase
         $this->entityManager->flush();
 
         $familyUuid = $family->getUuid();
-        self::assertNotNull($familyUuid);
         $this->entityManager->clear();
 
         $this->assertTrue($this->repository->existBy(['productFamilyUuid' => $familyUuid]));
@@ -1446,15 +1446,16 @@ class ProductRepositoryTest extends SuluTestCase
         /** @var AttributeRepositoryInterface $attributeRepository */
         $attributeRepository = $container->get(AttributeRepositoryInterface::class);
 
-        $group = $groupRepository->create();
+        $group = $groupRepository->createNew();
         $groupRepository->save($group);
 
-        $attribute = $attributeRepository->create($group);
+        $attribute = $attributeRepository->createNew($group);
         $attribute->setKey('color');
         $attribute->setType(AttributeInterface::TYPE_TEXT);
         $attributeRepository->save($attribute);
 
-        $family = $this->productFamilyRepository->create();
+        $family = $this->productFamilyRepository->createNew();
+        $family->setKey(\uniqid('family-'));
         $family->addFamilyAttribute(new ProductFamilyAttribute($family, $attribute));
         $this->productFamilyRepository->save($family);
 
@@ -1467,7 +1468,7 @@ class ProductRepositoryTest extends SuluTestCase
         $this->entityManager->flush();
 
         $uuid = $product->getUuid();
-        $attributeId = $attribute->getId();
+        $attributeUuid = $attribute->getUuid();
         $this->entityManager->clear();
 
         $selects = [
@@ -1489,11 +1490,11 @@ class ProductRepositoryTest extends SuluTestCase
             }
 
             foreach ($productFamily->getFamilyAttributes() as $familyAttribute) {
-                $familyAttributes[] = $familyAttribute->getAttribute()->getId();
+                $familyAttributes[] = $familyAttribute->getAttribute()->getUuid();
             }
         }
 
-        $this->assertSame([$attributeId], $familyAttributes);
+        $this->assertSame([$attributeUuid], $familyAttributes);
         $this->assertSame($queriesBefore, $this->countQueries(), 'walking the family graph must not query');
     }
 

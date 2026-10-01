@@ -35,14 +35,13 @@ final class CreateAttributeMessageHandler
         /** @var AttributeGroupInterface $group */
         $group = $this->attributeGroupRepository->findOneBy(['uuid' => $message->getGroup()]);
 
-        $attribute = $this->attributeRepository->create($group);
+        $attribute = $this->attributeRepository->createNew($group);
 
         foreach ($this->attributeMappers as $attributeMapper) {
             $attributeMapper->mapAttributeData($attribute, $message);
         }
 
         $this->attributeRepository->save($attribute);
-        $this->attributeGroupRepository->save($group);
 
         return $attribute;
     }

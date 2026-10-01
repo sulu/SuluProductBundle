@@ -69,11 +69,10 @@ use Sulu\Product\Domain\Event\ProductTranslationRemovedEvent;
 use Sulu\Product\Domain\Event\ProductTranslationRestoredEvent;
 use Sulu\Product\Domain\Event\ProductWorkflowTransitionAppliedEvent;
 use Sulu\Product\Domain\Exception\ProductVariantParentNotFoundException;
+use Sulu\Product\Domain\Exception\ProductFamilyKeyNotUniqueException;
 use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
-use Sulu\Product\Domain\Model\AttributeGroupAttribute;
-use Sulu\Product\Domain\Model\AttributeGroupAttributeInterface;
 use Sulu\Product\Domain\Model\AttributeGroupInterface;
 use Sulu\Product\Domain\Model\AttributeGroupTranslation;
 use Sulu\Product\Domain\Model\AttributeGroupTranslationInterface;
@@ -835,6 +834,7 @@ final class SuluProductBundle extends AbstractBundle
             ->args([
                 new Reference('sulu_product.attribute_repository'),
                 new Reference('sulu.repository.media'),
+                new Reference('sulu_product.product_family_repository'),
             ])
             ->tag('sulu_product.product_family_mapper');
 
@@ -866,7 +866,6 @@ final class SuluProductBundle extends AbstractBundle
             ->class(CreateAttributeGroupMessageHandler::class)
             ->args([
                 new Reference('sulu_product.attribute_group_repository'),
-                new Reference('sulu_product.attribute_repository'),
             ])
             ->tag('messenger.message_handler');
 
@@ -874,7 +873,6 @@ final class SuluProductBundle extends AbstractBundle
             ->class(ModifyAttributeGroupMessageHandler::class)
             ->args([
                 new Reference('sulu_product.attribute_group_repository'),
-                new Reference('sulu_product.attribute_repository'),
             ])
             ->tag('messenger.message_handler');
 
@@ -1506,6 +1504,18 @@ final class SuluProductBundle extends AbstractBundle
                 ],
             ],
         );
+        if ($builder->hasExtension('fos_rest')) {
+            $builder->prependExtensionConfig(
+                'fos_rest',
+                [
+                    'exception' => [
+                        'codes' => [
+                            ProductFamilyKeyNotUniqueException::class => 409,
+                        ],
+                    ],
+                ],
+            );
+        }
 
         if ($builder->hasExtension('sulu_admin')) {
             $builder->prependExtensionConfig(
@@ -1800,7 +1810,6 @@ final class SuluProductBundle extends AbstractBundle
             AttributeOptionTranslationInterface::class => AttributeOptionTranslation::class,
             AttributeGroupInterface::class => AttributeGroup::class,
             AttributeGroupTranslationInterface::class => AttributeGroupTranslation::class,
-            AttributeGroupAttributeInterface::class => AttributeGroupAttribute::class,
             ProductFamilyInterface::class => ProductFamily::class,
             ProductFamilyTranslationInterface::class => ProductFamilyTranslation::class,
             ProductFamilyAttributeInterface::class => ProductFamilyAttribute::class,

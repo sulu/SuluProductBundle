@@ -92,19 +92,19 @@ class ProductAttributesSchemaFormMetadataVisitorTest extends TestCase
      * @param array<string, mixed> $config
      */
     private function familyAttribute(
-        int $id,
+        string $uuid,
         bool $variantSpecific = false,
         bool $required = false,
         array $config = [],
         string $type = AttributeInterface::TYPE_NUMBER,
     ): ProductFamilyAttributeInterface {
         $translation = $this->prophesize(AttributeTranslationInterface::class);
-        $translation->getName()->willReturn('Attribute ' . $id);
+        $translation->getName()->willReturn('Attribute ' . $uuid);
         $translation->getDescription()->willReturn(null);
 
         $attribute = $this->prophesize(AttributeInterface::class);
-        $attribute->getId()->willReturn($id);
-        $attribute->getKey()->willReturn('attribute_' . $id);
+        $attribute->getUuid()->willReturn($uuid);
+        $attribute->getKey()->willReturn('attribute_' . $uuid);
         $attribute->getType()->willReturn($type);
         $attribute->getConfig()->willReturn($config);
         $attribute->getDefaultLocale()->willReturn(null);
@@ -124,7 +124,7 @@ class ProductAttributesSchemaFormMetadataVisitorTest extends TestCase
     /**
      * @param list<ProductFamilyAttributeInterface> $familyAttributes
      */
-    private function family(?string $uuid, array $familyAttributes): ProductFamilyInterface
+    private function family(string $uuid, array $familyAttributes): ProductFamilyInterface
     {
         $family = $this->prophesize(ProductFamilyInterface::class);
         $family->getUuid()->willReturn($uuid);
@@ -147,12 +147,11 @@ class ProductAttributesSchemaFormMetadataVisitorTest extends TestCase
     {
         $this->productFamilyRepository->findBy([], self::FAMILY_SELECT)->willReturn([
             $this->family('family-1', [
-                $this->familyAttribute(7, false, true, ['min' => 0, 'max' => 10]),
-                $this->familyAttribute(8, true),
-                $this->familyAttribute(9),
+                $this->familyAttribute('0198c3e2-0000-7000-8000-000000000007', false, true, ['min' => 0, 'max' => 10]),
+                $this->familyAttribute('0198c3e2-0000-7000-8000-000000000008', true),
+                $this->familyAttribute('0198c3e2-0000-7000-8000-000000000009'),
             ]),
-            $this->family('family-2', [$this->familyAttribute(10)]),
-            $this->family(null, [$this->familyAttribute(11)]),
+            $this->family('family-2', [$this->familyAttribute('0198c3e2-0000-7000-8000-000000000010')]),
         ]);
         $form = $this->form('product_details');
 
@@ -169,16 +168,16 @@ class ProductAttributesSchemaFormMetadataVisitorTest extends TestCase
                     'allOf' => [
                         self::branch('family-1', 'product', [
                             'type' => 'object',
-                            'properties' => ['7' => $seven, '8' => $nullableNumber, '9' => $nullableNumber],
-                            'required' => ['7'],
+                            'properties' => ['0198c3e2-0000-7000-8000-000000000007' => $seven, '0198c3e2-0000-7000-8000-000000000008' => $nullableNumber, '0198c3e2-0000-7000-8000-000000000009' => $nullableNumber],
+                            'required' => ['0198c3e2-0000-7000-8000-000000000007'],
                         ], true),
                         self::branch('family-1', 'product_with_variants', [
                             'type' => 'object',
-                            'properties' => ['7' => $seven, '9' => $nullableNumber],
-                            'required' => ['7'],
+                            'properties' => ['0198c3e2-0000-7000-8000-000000000007' => $seven, '0198c3e2-0000-7000-8000-000000000009' => $nullableNumber],
+                            'required' => ['0198c3e2-0000-7000-8000-000000000007'],
                         ], true),
-                        self::branch('family-2', 'product', ['type' => 'object', 'properties' => ['10' => $nullableNumber]]),
-                        self::branch('family-2', 'product_with_variants', ['type' => 'object', 'properties' => ['10' => $nullableNumber]]),
+                        self::branch('family-2', 'product', ['type' => 'object', 'properties' => ['0198c3e2-0000-7000-8000-000000000010' => $nullableNumber]]),
+                        self::branch('family-2', 'product_with_variants', ['type' => 'object', 'properties' => ['0198c3e2-0000-7000-8000-000000000010' => $nullableNumber]]),
                     ],
                 ],
             ],
@@ -188,7 +187,7 @@ class ProductAttributesSchemaFormMetadataVisitorTest extends TestCase
     public function testDetailsFormRequiresAVariantAttributeOnlyOnAProductWithoutVariants(): void
     {
         $this->productFamilyRepository->findBy([], self::FAMILY_SELECT)->willReturn([
-            $this->family('family-1', [$this->familyAttribute(8, true, true)]),
+            $this->family('family-1', [$this->familyAttribute('0198c3e2-0000-7000-8000-000000000008', true, true)]),
         ]);
         $form = $this->form('product_details');
 
@@ -201,8 +200,8 @@ class ProductAttributesSchemaFormMetadataVisitorTest extends TestCase
                     'allOf' => [
                         self::branch('family-1', 'product', [
                             'type' => 'object',
-                            'properties' => ['8' => ['type' => 'number']],
-                            'required' => ['8'],
+                            'properties' => ['0198c3e2-0000-7000-8000-000000000008' => ['type' => 'number']],
+                            'required' => ['0198c3e2-0000-7000-8000-000000000008'],
                         ], true),
                     ],
                 ],
@@ -213,14 +212,14 @@ class ProductAttributesSchemaFormMetadataVisitorTest extends TestCase
     public function testDetailsFormScopesTheSchemaToTheProductsOwnFamily(): void
     {
         $this->productFamilyRepository->findOneBy(['productUuid' => 'product-1'], self::FAMILY_SELECT)->willReturn(
-            $this->family('family-1', [$this->familyAttribute(10)]),
+            $this->family('family-1', [$this->familyAttribute('0198c3e2-0000-7000-8000-000000000010')]),
         );
         $this->productFamilyRepository->findBy(Argument::cetera())->shouldNotBeCalled();
         $form = $this->form('product_details');
 
         $this->visitor()->visitFormMetadata($form, 'en', ['id' => 'product-1']);
 
-        $attributes = ['type' => 'object', 'properties' => ['10' => ['anyOf' => [['type' => 'null'], ['type' => 'number']]]]];
+        $attributes = ['type' => 'object', 'properties' => ['0198c3e2-0000-7000-8000-000000000010' => ['anyOf' => [['type' => 'null'], ['type' => 'number']]]]];
 
         self::assertSame([
             'allOf' => [
@@ -261,8 +260,8 @@ class ProductAttributesSchemaFormMetadataVisitorTest extends TestCase
     {
         $this->productFamilyRepository->findOneBy(['productUuid' => 'product-1'], self::FAMILY_SELECT)->willReturn(
             $this->family('family-1', [
-                $this->familyAttribute(7, false, true),
-                $this->familyAttribute(8, true, true),
+                $this->familyAttribute('0198c3e2-0000-7000-8000-000000000007', false, true),
+                $this->familyAttribute('0198c3e2-0000-7000-8000-000000000008', true, true),
             ]),
         );
         $form = $this->form('product_variant');
@@ -278,8 +277,8 @@ class ProductAttributesSchemaFormMetadataVisitorTest extends TestCase
                     'properties' => [
                         'attributes' => [
                             'type' => 'object',
-                            'properties' => ['8' => ['type' => 'number']],
-                            'required' => ['8'],
+                            'properties' => ['0198c3e2-0000-7000-8000-000000000008' => ['type' => 'number']],
+                            'required' => ['0198c3e2-0000-7000-8000-000000000008'],
                         ],
                     ],
                     'required' => ['attributes'],
@@ -291,7 +290,7 @@ class ProductAttributesSchemaFormMetadataVisitorTest extends TestCase
     public function testVariantFormKeepsTheAttributesSectionForAxisAttributes(): void
     {
         $this->productFamilyRepository->findOneBy(['productUuid' => 'product-1'], self::FAMILY_SELECT)->willReturn(
-            $this->family('family-1', [$this->familyAttribute(8, true)]),
+            $this->family('family-1', [$this->familyAttribute('0198c3e2-0000-7000-8000-000000000008', true)]),
         );
         $form = $this->variantFormWithAttributesSection();
 
@@ -303,7 +302,7 @@ class ProductAttributesSchemaFormMetadataVisitorTest extends TestCase
     public function testVariantFormDropsTheAttributesSectionWithoutAxisAttributes(): void
     {
         $this->productFamilyRepository->findOneBy(['productUuid' => 'product-1'], self::FAMILY_SELECT)->willReturn(
-            $this->family('family-1', [$this->familyAttribute(7)]),
+            $this->family('family-1', [$this->familyAttribute('0198c3e2-0000-7000-8000-000000000007')]),
         );
         $form = $this->variantFormWithAttributesSection();
 
@@ -350,8 +349,8 @@ class ProductAttributesSchemaFormMetadataVisitorTest extends TestCase
     public function testDetailsFormSkipsTheProductWithVariantsBranchOfAFamilyWithoutSharedAttributes(): void
     {
         $this->productFamilyRepository->findBy([], self::FAMILY_SELECT)->willReturn([
-            $this->family('family-axis-only', [$this->familyAttribute(7, true)]),
-            $this->family('family-2', [$this->familyAttribute(10)]),
+            $this->family('family-axis-only', [$this->familyAttribute('0198c3e2-0000-7000-8000-000000000007', true)]),
+            $this->family('family-2', [$this->familyAttribute('0198c3e2-0000-7000-8000-000000000010')]),
         ]);
         $form = $this->form('product_details');
 
@@ -364,9 +363,9 @@ class ProductAttributesSchemaFormMetadataVisitorTest extends TestCase
                 self::ANY,
                 [
                     'allOf' => [
-                        self::branch('family-axis-only', 'product', ['type' => 'object', 'properties' => ['7' => $nullableNumber]]),
-                        self::branch('family-2', 'product', ['type' => 'object', 'properties' => ['10' => $nullableNumber]]),
-                        self::branch('family-2', 'product_with_variants', ['type' => 'object', 'properties' => ['10' => $nullableNumber]]),
+                        self::branch('family-axis-only', 'product', ['type' => 'object', 'properties' => ['0198c3e2-0000-7000-8000-000000000007' => $nullableNumber]]),
+                        self::branch('family-2', 'product', ['type' => 'object', 'properties' => ['0198c3e2-0000-7000-8000-000000000010' => $nullableNumber]]),
+                        self::branch('family-2', 'product_with_variants', ['type' => 'object', 'properties' => ['0198c3e2-0000-7000-8000-000000000010' => $nullableNumber]]),
                     ],
                 ],
             ],
@@ -377,15 +376,15 @@ class ProductAttributesSchemaFormMetadataVisitorTest extends TestCase
     {
         $this->productFamilyRepository->findBy([], self::FAMILY_SELECT)->willReturn([
             $this->family('family-1', [
-                $this->familyAttribute(7, false, false, [], AttributeInterface::TYPE_TEXT),
-                $this->familyAttribute(10),
+                $this->familyAttribute('0198c3e2-0000-7000-8000-000000000007', false, false, [], AttributeInterface::TYPE_TEXT),
+                $this->familyAttribute('0198c3e2-0000-7000-8000-000000000010'),
             ]),
         ]);
         $form = $this->form('product_details');
 
         $this->visitor()->visitFormMetadata($form, 'en');
 
-        $attributes = ['type' => 'object', 'properties' => ['10' => ['anyOf' => [['type' => 'null'], ['type' => 'number']]]]];
+        $attributes = ['type' => 'object', 'properties' => ['0198c3e2-0000-7000-8000-000000000010' => ['anyOf' => [['type' => 'null'], ['type' => 'number']]]]];
 
         self::assertSame([
             'allOf' => [

@@ -144,7 +144,7 @@ Switching the option on or off adds or removes the whole `product` field, so the
 
 | field | use |
 |---|---|
-| `productFamilyId` | filterable and facet |
+| `productFamilyKey` | the key of the product family, empty for a family without one; filterable and facet |
 | `attributes_text_values` | one `<attributeKey>:<optionKey>` entry per value of a filterable options attribute, filterable and facet |
 | `attributes_numeric_values.<attributeKey>` | the values of a filterable number or date attribute, filterable and facet |
 

@@ -14,14 +14,10 @@ declare(strict_types=1);
 namespace Sulu\Product\Application\Message;
 
 /**
- * @phpstan-type AttributeGroupAttributeMessageData array{
- *     attribute: string,
- * }
  * @phpstan-type CreateAttributeGroupMessageData array{
  *     locale: string,
  *     name: string,
  *     description?: string|null,
- *     attributes?: list<AttributeGroupAttributeMessageData>|null,
  * }
  */
 class CreateAttributeGroupMessage
@@ -46,14 +42,6 @@ class CreateAttributeGroupMessage
     public function getDescription(): ?string
     {
         return $this->data['description'] ?? null;
-    }
-
-    /**
-     * @return list<AttributeGroupAttributeMessageData>
-     */
-    public function getAttributes(): array
-    {
-        return $this->data['attributes'] ?? [];
     }
 
     /**

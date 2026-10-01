@@ -49,7 +49,7 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
     {
         return new ModifyProductFamilyMessageHandler(
             $this->familyRepository->reveal(),
-            [new ProductFamilyMapper($this->attributeRepository->reveal(), $this->prophesize(MediaRepositoryInterface::class)->reveal())],
+            [new ProductFamilyMapper($this->attributeRepository->reveal(), $this->prophesize(MediaRepositoryInterface::class)->reveal(), $this->familyRepository->reveal())],
         );
     }
 
@@ -71,8 +71,7 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
 
     private function attributeWithUuid(string $uuid): Attribute
     {
-        $attribute = new Attribute(new AttributeGroup());
-        $attribute->setUuid($uuid);
+        $attribute = new Attribute(new AttributeGroup(), $uuid);
         $attribute->setKey('attr-' . $uuid);
 
         return $attribute;

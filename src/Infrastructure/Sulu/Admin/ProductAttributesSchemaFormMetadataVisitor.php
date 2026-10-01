@@ -98,10 +98,6 @@ class ProductAttributesSchemaFormMetadataVisitor implements FormMetadataVisitorI
 
         foreach ($this->resolveFamilies($metadataOptions, $select) as $family) {
             $uuid = $family->getUuid();
-            if (null === $uuid) {
-                continue;
-            }
-
             foreach ([ProductInterface::TYPE_PRODUCT, ProductInterface::TYPE_PRODUCT_WITH_VARIANTS] as $productType) {
                 $attributes = $this->buildAttributesProperty($family, $productType, $locale);
                 if (null === $attributes) {

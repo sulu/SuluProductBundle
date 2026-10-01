@@ -94,8 +94,8 @@ class AttributeMapperTest extends TestCase
         $translation->setDescription('Old description');
         $attribute->addTranslation($translation);
 
-        $this->createOption($attribute, 1, 'red', 'Red');
-        $blue = $this->createOption($attribute, 2, 'blue', 'Blue');
+        $this->createOption($attribute, 'option-1', 'red', 'Red');
+        $blue = $this->createOption($attribute, 'option-2', 'blue', 'Blue');
 
         // position = 0 (default), findNextPositionInGroup returns 1 → newPosition = 0 = oldPosition → no change
         $this->attributeRepository->findNextPositionInGroup($group)->willReturn(1);
@@ -107,7 +107,7 @@ class AttributeMapperTest extends TestCase
             'name' => 'Color',
             'description' => 'Updated description',
             'options' => [
-                ['id' => 2, 'type' => 'option', 'key' => 'blue', 'name' => 'Azure'],
+                ['id' => 'option-2', 'type' => 'option', 'key' => 'blue', 'name' => 'Azure'],
                 ['type' => 'option', 'key' => 'green', 'name' => 'Green'],
             ],
         ]));
@@ -134,7 +134,7 @@ class AttributeMapperTest extends TestCase
         $attribute = new Attribute($group);
         $attribute->setType('options');
 
-        $blue = $this->createOption($attribute, 7, 'blue', 'Blue');
+        $blue = $this->createOption($attribute, 'option-7', 'blue', 'Blue');
         $this->attributeRepository->findNextPositionInGroup($group)->willReturn(1);
 
         $this->mapper->mapAttributeData($attribute, new ModifyAttributeMessage(['uuid' => 'attribute-uuid'], [
@@ -143,7 +143,7 @@ class AttributeMapperTest extends TestCase
             'type' => 'options',
             'name' => 'Color',
             'options' => [
-                ['id' => 7, 'type' => 'option', 'key' => 'navy', 'name' => 'Navy'],
+                ['id' => 'option-7', 'type' => 'option', 'key' => 'navy', 'name' => 'Navy'],
             ],
         ]));
 
@@ -160,7 +160,7 @@ class AttributeMapperTest extends TestCase
         $attribute = new Attribute($group);
         $attribute->setType('options');
 
-        $blue = $this->createOption($attribute, 7, 'blue', 'Blue');
+        $blue = $this->createOption($attribute, 'option-7', 'blue', 'Blue');
         $this->attributeRepository->findNextPositionInGroup($group)->willReturn(1);
 
         $this->mapper->mapAttributeData($attribute, new ModifyAttributeMessage(['uuid' => 'attribute-uuid'], [
@@ -169,8 +169,8 @@ class AttributeMapperTest extends TestCase
             'type' => 'options',
             'name' => 'Color',
             'options' => [
-                ['id' => 7, 'type' => 'option', 'key' => 'blue', 'name' => 'Blue'],
-                ['id' => 7, 'type' => 'option', 'key' => 'navy', 'name' => 'Navy'],
+                ['id' => 'option-7', 'type' => 'option', 'key' => 'blue', 'name' => 'Blue'],
+                ['id' => 'option-7', 'type' => 'option', 'key' => 'navy', 'name' => 'Navy'],
             ],
         ]));
 
@@ -188,8 +188,8 @@ class AttributeMapperTest extends TestCase
         $attribute = new Attribute($group);
         $attribute->setType('options');
 
-        $red = $this->createOption($attribute, 1, 'red', 'Red');
-        $blue = $this->createOption($attribute, 2, 'blue', 'Blue');
+        $red = $this->createOption($attribute, 'option-1', 'red', 'Red');
+        $blue = $this->createOption($attribute, 'option-2', 'blue', 'Blue');
         $this->attributeRepository->findNextPositionInGroup($group)->willReturn(1);
 
         $this->mapper->mapAttributeData($attribute, new ModifyAttributeMessage(['uuid' => 'attribute-uuid'], [
@@ -198,8 +198,8 @@ class AttributeMapperTest extends TestCase
             'type' => 'options',
             'name' => 'Color',
             'options' => [
-                ['id' => 1, 'type' => 'option', 'key' => 'blue', 'name' => 'Red'],
-                ['id' => 2, 'type' => 'option', 'key' => 'red', 'name' => 'Blue'],
+                ['id' => 'option-1', 'type' => 'option', 'key' => 'blue', 'name' => 'Red'],
+                ['id' => 'option-2', 'type' => 'option', 'key' => 'red', 'name' => 'Blue'],
             ],
         ]));
 
@@ -214,7 +214,7 @@ class AttributeMapperTest extends TestCase
         $attribute = new Attribute($group);
         $attribute->setType('options');
 
-        $this->createOption($attribute, 1, 'red', 'Red');
+        $this->createOption($attribute, 'option-1', 'red', 'Red');
         $this->attributeRepository->findNextPositionInGroup($group)->willReturn(1);
 
         $this->expectException(AttributeOptionKeyNotUniqueException::class);
@@ -225,16 +225,15 @@ class AttributeMapperTest extends TestCase
             'type' => 'options',
             'name' => 'Color',
             'options' => [
-                ['id' => 1, 'type' => 'option', 'key' => 'red', 'name' => 'Red'],
+                ['id' => 'option-1', 'type' => 'option', 'key' => 'red', 'name' => 'Red'],
                 ['type' => 'option', 'key' => 'red', 'name' => 'Another red'],
             ],
         ]));
     }
 
-    private function createOption(Attribute $attribute, int $id, string $key, string $name): AttributeOption
+    private function createOption(Attribute $attribute, string $uuid, string $key, string $name): AttributeOption
     {
-        $option = new AttributeOption($attribute, $key);
-        (new \ReflectionProperty(AttributeOption::class, 'id'))->setValue($option, $id);
+        $option = new AttributeOption($attribute, $key, $uuid);
         $option->addTranslation(new AttributeOptionTranslation($option, 'en', $name));
         $attribute->addOption($option);
 

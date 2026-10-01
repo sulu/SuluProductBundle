@@ -177,6 +177,7 @@ class ProductVariantWebsiteRoutingTest extends SuluTestCase
     {
         $admin->request('POST', '/admin/api/product-families.json?locale=de', [], [], [], \json_encode([
             'name' => 'Connectors',
+            'key' => \uniqid('connectors-'),
         ]) ?: null);
         $this->assertHttpStatusCode(201, $admin->getResponse());
         $familyId = $this->getId($admin);

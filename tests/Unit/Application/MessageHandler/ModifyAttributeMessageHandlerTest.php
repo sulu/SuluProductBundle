@@ -166,8 +166,7 @@ class ModifyAttributeMessageHandlerTest extends TestCase
     {
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setPosition(0);
-        $option = new AttributeOption($attribute, 'small');
-        (new \ReflectionProperty(AttributeOption::class, 'id'))->setValue($option, 1);
+        $option = new AttributeOption($attribute, 'small', 'option-1');
         $optionTranslation = new AttributeOptionTranslation($option, 'en', 'Small');
         $option->addTranslation($optionTranslation);
         $attribute->addOption($option);
@@ -184,7 +183,7 @@ class ModifyAttributeMessageHandlerTest extends TestCase
             'name' => 'Size',
             'position' => 0,
             'options' => [
-                ['id' => 1, 'type' => 'option', 'key' => 'small', 'name' => 'Petit'],
+                ['id' => 'option-1', 'type' => 'option', 'key' => 'small', 'name' => 'Petit'],
             ],
         ]));
 
@@ -195,10 +194,8 @@ class ModifyAttributeMessageHandlerTest extends TestCase
     {
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setPosition(0);
-        $optionToKeep = new AttributeOption($attribute, 'large');
-        $optionToRemove = new AttributeOption($attribute, 'small');
-        (new \ReflectionProperty(AttributeOption::class, 'id'))->setValue($optionToKeep, 1);
-        (new \ReflectionProperty(AttributeOption::class, 'id'))->setValue($optionToRemove, 2);
+        $optionToKeep = new AttributeOption($attribute, 'large', 'option-1');
+        $optionToRemove = new AttributeOption($attribute, 'small', 'option-2');
         $attribute->addOption($optionToKeep);
         $attribute->addOption($optionToRemove);
 
@@ -214,7 +211,7 @@ class ModifyAttributeMessageHandlerTest extends TestCase
             'name' => 'Size',
             'position' => 0,
             'options' => [
-                ['id' => 1, 'type' => 'option', 'key' => 'large', 'name' => 'Large'],
+                ['id' => 'option-1', 'type' => 'option', 'key' => 'large', 'name' => 'Large'],
             ],
         ]));
 
@@ -299,8 +296,7 @@ class ModifyAttributeMessageHandlerTest extends TestCase
 
     public function testModifyAttributePositionChangeShiftsOthersInGroup(): void
     {
-        $group = new AttributeGroup();
-        $group->setUuid('group-uuid-1');
+        $group = new AttributeGroup('group-uuid-1');
         $attribute = new Attribute($group);
         $attribute->setPosition(5);
 
@@ -385,8 +381,7 @@ class ModifyAttributeMessageHandlerTest extends TestCase
 
     public function testModifyAttributeSamePositionDoesNotShift(): void
     {
-        $group = new AttributeGroup();
-        $group->setUuid('group-uuid-1');
+        $group = new AttributeGroup('group-uuid-1');
         $attribute = new Attribute($group);
         $attribute->setPosition(3);
 

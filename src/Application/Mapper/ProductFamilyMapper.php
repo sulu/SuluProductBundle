@@ -17,16 +17,19 @@ use Sulu\Bundle\MediaBundle\Entity\MediaInterface;
 use Sulu\Bundle\MediaBundle\Entity\MediaRepositoryInterface;
 use Sulu\Product\Application\Message\CreateProductFamilyMessage;
 use Sulu\Product\Application\Message\ModifyProductFamilyMessage;
+use Sulu\Product\Domain\Exception\ProductFamilyKeyNotUniqueException;
 use Sulu\Product\Domain\Model\ProductFamilyAttribute;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Model\ProductFamilyTranslation;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
+use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 
 final class ProductFamilyMapper implements ProductFamilyMapperInterface
 {
     public function __construct(
         private AttributeRepositoryInterface $attributeRepository,
         private MediaRepositoryInterface $mediaRepository,
+        private ProductFamilyRepositoryInterface $productFamilyRepository,
     ) {
     }
 
@@ -34,6 +37,9 @@ final class ProductFamilyMapper implements ProductFamilyMapperInterface
         ProductFamilyInterface $family,
         CreateProductFamilyMessage|ModifyProductFamilyMessage $message,
     ): void {
+        if ($message instanceof CreateProductFamilyMessage) {
+            $this->mapKey($family, $message);
+        }
         $this->mapTranslation($family, $message);
         $this->mapImage($family, $message);
         $this->mapAttributes($family, $message);
@@ -49,6 +55,22 @@ final class ProductFamilyMapper implements ProductFamilyMapperInterface
         /** @var MediaInterface|null $image */
         $image = null === $imageId ? null : $this->mediaRepository->findMediaById($imageId);
         $family->setImage($image);
+    }
+
+    /**
+     * The key is set on creation only, because the search index stores products under it.
+     *
+     * @throws ProductFamilyKeyNotUniqueException
+     */
+    private function mapKey(ProductFamilyInterface $family, CreateProductFamilyMessage $message): void
+    {
+        $key = $message->getKey();
+        $owner = $this->productFamilyRepository->findOneBy(['key' => $key]);
+        if (null !== $owner && $owner->getUuid() !== $family->getUuid()) {
+            throw new ProductFamilyKeyNotUniqueException($key);
+        }
+
+        $family->setKey($key);
     }
 
     private function mapTranslation(
@@ -83,12 +105,6 @@ final class ProductFamilyMapper implements ProductFamilyMapperInterface
         $existingMap = [];
         foreach ($family->getFamilyAttributes() as $familyAttribute) {
             $uuid = $familyAttribute->getAttribute()->getUuid();
-            // A persisted attribute always has a uuid; skipping keeps an unexpected null from
-            // reading as "not submitted" and silently removing the assignment.
-            if (null === $uuid) {
-                continue;
-            }
-
             if (!isset($submitted[$uuid])) {
                 $family->removeFamilyAttribute($familyAttribute);
 

@@ -21,13 +21,12 @@ use Sulu\Product\Domain\Model\AttributeInterface;
  * @phpstan-type AttributeRepositoryFilters array{
  *     uuid?: string,
  *     key?: string,
- *     id?: int,
  *     externalIdentifier?: string,
  * }
  */
 interface AttributeRepositoryInterface
 {
-    public function create(AttributeGroupInterface $group): AttributeInterface;
+    public function createNew(AttributeGroupInterface $group, ?string $uuid = null): AttributeInterface;
 
     /**
      * @param AttributeRepositoryFilters $filters

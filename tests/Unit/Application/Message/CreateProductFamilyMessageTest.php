@@ -25,6 +25,7 @@ class CreateProductFamilyMessageTest extends TestCase
         $data = [
             'locale' => 'en',
             'name' => 'My Family',
+            'key' => 'my-family',
             'description' => 'desc',
             'attributes' => [['id' => 'uuid-5', 'required' => true, 'variantSpecific' => false]],
         ];
@@ -32,6 +33,7 @@ class CreateProductFamilyMessageTest extends TestCase
 
         $this->assertSame('en', $message->getLocale());
         $this->assertSame('My Family', $message->getName());
+        $this->assertSame('my-family', $message->getKey());
         $this->assertSame('desc', $message->getDescription());
         $this->assertSame([['id' => 'uuid-5', 'required' => true, 'variantSpecific' => false]], $message->getAttributes());
         $this->assertSame($data, $message->getData());
@@ -39,7 +41,7 @@ class CreateProductFamilyMessageTest extends TestCase
 
     public function testDefaultsForOptionalKeys(): void
     {
-        $message = new CreateProductFamilyMessage(['locale' => 'en', 'name' => 'X']);
+        $message = new CreateProductFamilyMessage(['locale' => 'en', 'name' => 'X', 'key' => 'x']);
         $this->assertNull($message->getDescription());
         $this->assertSame([], $message->getAttributes());
     }
