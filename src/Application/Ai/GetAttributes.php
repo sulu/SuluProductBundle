@@ -20,7 +20,7 @@ use Symfony\AI\Agent\Toolbox\Attribute\AsTool;
 
 #[AsTool(
     name: 'sulu_product_get_attributes',
-    description: 'List the known product specification attributes — their exact key, translated name, type, group and (for an "options" attribute) its possible option values — to build a precise sulu_product_get_attribute_values call instead of guessing an attribute key.',
+    description: 'List the known product specification attributes: their exact key, translated name, type, group and (for an "options" attribute) its possible option values. Use them to build a precise sulu_product_get_attribute_values call instead of guessing an attribute key.',
 )]
 final class GetAttributes
 {

@@ -20,7 +20,7 @@ use Symfony\AI\Agent\Toolbox\Attribute\AsTool;
 
 #[AsTool(
     name: 'sulu_product_get_products',
-    description: 'Search published products by keyword, article code, or product family — matches product titles and codes as text, nothing else. Never use this for a specification value (an attribute value such as a size, a material, a rating, ...) — those never appear verbatim in a title or code and will always return no_match. Use sulu_product_get_attributes and sulu_product_get_attribute_values instead to find the right attribute and its exact value spelling.',
+    description: 'Search published products by keyword, article code, or product family. It matches product titles and codes as text, nothing else. Never use this for a specification value (an attribute value such as a size, a material, a rating, ...). These never appear verbatim in a title or code and will always return no_match. Use sulu_product_get_attributes and sulu_product_get_attribute_values instead to find the right attribute and its exact value spelling.',
 )]
 final class GetProducts
 {

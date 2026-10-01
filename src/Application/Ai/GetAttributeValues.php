@@ -22,7 +22,7 @@ use Symfony\AI\Agent\Toolbox\Attribute\AsTool;
 
 #[AsTool(
     name: 'sulu_product_get_attribute_values',
-    description: 'List the actual values seen for one product attribute, most common first — call this before searching by a specification value whenever its exact spelling is unclear, instead of guessing and getting zero results because the data is spelled differently. Call sulu_product_get_attributes first to get the exact attribute key. Each value has a display text and a searchValue: pass the searchValue, not the display text, as a filter value to sulu_product_search_products_by_attributes.',
+    description: 'List the actual values seen for one product attribute, most common first. Call this before searching by a specification value whenever its exact spelling is unclear, instead of guessing and getting zero results because the data is spelled differently. Call sulu_product_get_attributes first to get the exact attribute key. Each value has a display text and a searchValue: pass the searchValue, not the display text, as a filter value to sulu_product_search_products_by_attributes.',
 )]
 final class GetAttributeValues
 {
