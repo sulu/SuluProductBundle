@@ -16,14 +16,16 @@ namespace Sulu\Product\Tests\Functional\Infrastructure\Symfony\Mcp;
 use Mcp\Capability\RegistryInterface;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Component\Security\Authorization\PermissionTypes;
+use Sulu\Mcp\Application\Content\ContentTypeExtensionRegistry;
 use Sulu\Mcp\Infrastructure\Mcp\FilteredRegistry;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductFamilyAdmin;
 
 /**
- * Boots the product bundle together with the MCP bundle, because the unit tests cannot see
- * a changed #[RequiresPermission] or a dropped #[DangerousTool].
+ * Boots the product bundle together with the MCP bundle. Only a booted kernel shows the
+ * resolved #[RequiresPermission] requirements, that the write tools are missing from the
+ * registry while product_write is off, and that the content type extension is tagged.
  */
 class McpToolRegistrationTest extends SuluTestCase
 {
@@ -82,6 +84,17 @@ class McpToolRegistrationTest extends SuluTestCase
         }
 
         $this->assertEquals($expected, $actual);
+    }
+
+    public function testContentTypeExtensionRegistryResolvesProducts(): void
+    {
+        self::bootKernel(['environment' => 'test_mcp_write']);
+
+        /** @var ContentTypeExtensionRegistry $registry */
+        $registry = self::getContainer()->get(ContentTypeExtensionRegistry::class);
+
+        $this->assertTrue($registry->has('products'));
+        $this->assertSame('products', $registry->get('products')->getResourceKey());
     }
 
     public function testWriteToolsAreRegisteredWhenProductWriteIsEnabled(): void
