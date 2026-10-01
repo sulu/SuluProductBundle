@@ -310,7 +310,7 @@ extension for the resource key `products`. The MCP bundle's generic tools (`sulu
 
 The tools check the caller's permissions on these security contexts:
 
-- `sulu.product.products`: view for the product and variant read tools and the two search tools. Edit for the update tools, edit and add for the create tools.
+- `sulu.product.products`: view for the product and variant read tools, the two search tools and `sulu_attribute_value_list`, because it returns values and counts of products. Edit for the update tools, edit and add for the create tools.
 - `sulu.product.product_families`: view for `sulu_product_family_list`.
 - `sulu.product.attributes`: view for `sulu_attribute_list` and `sulu_attribute_value_list`.
 

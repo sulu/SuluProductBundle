@@ -64,7 +64,7 @@ class McpToolRegistrationTest extends SuluTestCase
             'sulu_product_variant_list' => [[$products, PermissionTypes::VIEW]],
             'sulu_product_family_list' => [[ProductFamilyAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW]],
             'sulu_attribute_list' => [[AttributeAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW]],
-            'sulu_attribute_value_list' => [[AttributeAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW]],
+            'sulu_attribute_value_list' => [[AttributeAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW], [$products, PermissionTypes::VIEW]],
             'sulu_product_get_products' => [[$products, PermissionTypes::VIEW]],
             'sulu_product_search_products_by_attributes' => [[$products, PermissionTypes::VIEW]],
             'sulu_product_create' => [[$products, PermissionTypes::EDIT], [$products, PermissionTypes::ADD]],

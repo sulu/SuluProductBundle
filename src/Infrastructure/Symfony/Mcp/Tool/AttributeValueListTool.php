@@ -21,6 +21,7 @@ use Sulu\Mcp\Domain\Security\PermissionRequirement;
 use Sulu\Mcp\Domain\Security\RequiresPermission;
 use Sulu\Product\Application\Ai\GetAttributeValues;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeAdmin;
+use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 
 /**
  * @internal
@@ -47,6 +48,7 @@ final class AttributeValueListTool
     )]
     #[RequiresPermission(requirements: [
         new PermissionRequirement(AttributeAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW),
+        new PermissionRequirement(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW),
     ])]
     public function listValues(
         #[Schema(description: 'Exact attribute key from sulu_attribute_list (its "key" field, not its "id" or translated name).')]

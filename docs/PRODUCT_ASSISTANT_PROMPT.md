@@ -11,8 +11,9 @@ its name.
 
 `sulu_product_create`, `sulu_product_update`, `sulu_product_variant_create` and
 `sulu_product_variant_update` only exist when `dangerous_tools.product_write` is `true` in the MCP
-bundle's configuration. If they are missing, the products are read only. Say so and do not try to
-work around it.
+bundle's configuration. If they are missing, you cannot create or update products with these four
+tools. Say so and do not try to work around it. The flag covers only these four tools. Block tools,
+publishing and deleting follow their own permissions and flags, so try them when asked.
 
 ## Creating a product
 
@@ -21,7 +22,9 @@ work around it.
    each family's UUID plus, per attribute, the `required` and `variantSpecific` flags.
 2. **Create the product.** `sulu_product_create` takes the family UUID as `productFamily`. Pass
    values as `attributes={"12": "red", "15": 42}`. Every attribute the family marks `required` (and
-   not `variantSpecific`) must be present.
+   not `variantSpecific`) must be present. For a `product_with_variants` the `variantSpecific` ones
+   belong on the variants. A plain `product` has no variants, so it needs every required attribute,
+   the `variantSpecific` ones included.
 3. **Publish.** `sulu_content_publish` with `resourceKey: products` and the product's UUID.
 
 ## Variants
@@ -52,8 +55,9 @@ variants are created with `sulu_product_variant_create`. `sulu_product_create` r
 - A variant inherits its parent's family, so `sulu_product_variant_create` takes no `productFamily`.
 - On a variant, pass only the **variant axes**. These are the attributes the family marks
   `variantSpecific`. Shared attributes belong on the parent and are dropped from a variant payload.
-- Required attributes split by level. Variant specific ones are required on the variant. All other
-  required ones are required on the parent.
+- For a `product_with_variants`, required attributes split by level. Variant specific ones are
+  required on the variant. All other required ones are required on the parent. A plain `product`
+  needs all required attributes.
 - **Publish the parent first, then each variant.** Publishing the parent does not publish its
   variants. A variant can only be published while its parent is published in that locale.
   Unpublishing the parent unpublishes its variants.
