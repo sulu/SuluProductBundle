@@ -92,7 +92,7 @@ final readonly class ProductContentTypeExtension implements ContentTypeExtension
 
     public function createRemoveMessage(string $uuid, string $locale, bool $forceRemoveChildren = false): object
     {
-        // A product has no subtree, so forceRemoveChildren means nothing here.
+        // forceRemoveChildren has no effect: the handler always removes the variants with their product.
         return new RemoveProductMessage(['uuid' => $uuid], $locale);
     }
 
