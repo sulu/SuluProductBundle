@@ -27,21 +27,21 @@ use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
-use Sulu\Product\Infrastructure\Symfony\Mcp\ContentTypeExtension;
+use Sulu\Product\Infrastructure\Symfony\Mcp\ProductContentTypeExtension;
 
-#[CoversClass(ContentTypeExtension::class)]
-final class ContentTypeExtensionTest extends TestCase
+#[CoversClass(ProductContentTypeExtension::class)]
+final class ProductContentTypeExtensionTest extends TestCase
 {
     use ProphecyTrait;
 
     /** @var ObjectProphecy<ProductRepositoryInterface> */
     private ObjectProphecy $productRepository;
-    private ContentTypeExtension $extension;
+    private ProductContentTypeExtension $extension;
 
     protected function setUp(): void
     {
         $this->productRepository = $this->prophesize(ProductRepositoryInterface::class);
-        $this->extension = new ContentTypeExtension($this->productRepository->reveal());
+        $this->extension = new ProductContentTypeExtension($this->productRepository->reveal());
     }
 
     public function testGetTemplateTypeReturnsProduct(): void

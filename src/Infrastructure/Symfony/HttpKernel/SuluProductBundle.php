@@ -172,7 +172,7 @@ use Sulu\Product\Infrastructure\Sulu\Sitemap\ProductsSitemapProvider;
 use Sulu\Product\Infrastructure\Sulu\Trash\ProductTrashItemHandler;
 use Sulu\Product\Infrastructure\Symfony\Mcp\AdminLink\ProductAdminLinkProvider as McpProductAdminLinkProvider;
 use Sulu\Product\Infrastructure\Symfony\Mcp\AdminLink\ProductVariantAdminLinkProvider as McpProductVariantAdminLinkProvider;
-use Sulu\Product\Infrastructure\Symfony\Mcp\ContentTypeExtension;
+use Sulu\Product\Infrastructure\Symfony\Mcp\ProductContentTypeExtension;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\AttributeListTool;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\GetProductsTool as McpGetProductsTool;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductCreateTool;
@@ -1444,7 +1444,7 @@ final class SuluProductBundle extends AbstractBundle
 
     private function registerMcpIntegration(ServicesConfigurator $services): void
     {
-        $services->set(ContentTypeExtension::class)
+        $services->set(ProductContentTypeExtension::class)
             ->autowire()
             ->tag('sulu_mcp.content_type_extension');
 
