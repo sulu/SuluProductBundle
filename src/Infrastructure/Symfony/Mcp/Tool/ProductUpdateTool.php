@@ -70,7 +70,7 @@ class ProductUpdateTool
     #[McpTool(
         name: 'sulu_product_update',
         title: 'Update Product',
-        description: 'Update an existing product. Reads the current state, merges your changes and writes back, so pass only what should change. "attributes" is a map keyed by the INTEGER attribute id (sulu_attribute_list) and is merged into the existing values — pass null for an id to clear it. Changing "productFamily" changes which attributes the product may carry. This tool does not change a product\'s type or parent: use sulu_product_variant_update for variants. The product stays a draft — call sulu_content_publish (type: product) to make changes live.',
+        description: 'Update an existing product. Reads the current state, merges your changes and writes back, so pass only what should change. "attributes" is a map keyed by the INTEGER attribute id (sulu_attribute_list) and is merged into the existing values — pass null for an id to clear it. Changing "productFamily" changes which attributes the product may carry. This tool does not change a product\'s type or parent: use sulu_product_variant_update for variants. The product stays a draft — call sulu_content_publish (resourceKey: products) to make changes live.',
         annotations: new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false),
     )]
     #[DangerousTool('product_write')]
