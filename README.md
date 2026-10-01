@@ -324,3 +324,5 @@ sulu_mcp:
 
 Publishing, unpublishing and deleting a product go through the generic tools with
 `resourceKey: products` and are gated by the MCP bundle's `publish` and `delete` flags.
+
+A ready-made prompt for the MCP client is in [docs/PRODUCT_ASSISTANT_PROMPT.md](docs/PRODUCT_ASSISTANT_PROMPT.md).
