@@ -64,6 +64,7 @@ class RemoveProductTranslationMessageHandlerTest extends TestCase
         $dc = new ProductDimensionContent($product);
         $dc->setLocale('en');
         $dc->setStage(DimensionContentInterface::STAGE_DRAFT);
+        $dc->setTitle('English Title');
         $product->addDimensionContent($dc);
 
         $this->productRepository->getOneBy(['uuid' => 'prod-uuid'])
@@ -73,8 +74,10 @@ class RemoveProductTranslationMessageHandlerTest extends TestCase
         $this->productRepository->removeDimensionContent($dc)
             ->shouldBeCalledOnce();
 
-        $this->domainEventCollector->collect(Argument::type(ProductTranslationRemovedEvent::class))
-            ->shouldBeCalledOnce();
+        // The title is read before the dimension content is removed.
+        $this->domainEventCollector->collect(Argument::that(
+            static fn ($event) => $event instanceof ProductTranslationRemovedEvent && 'English Title' === $event->getResourceTitle(),
+        ))->shouldBeCalledOnce();
 
         $message = new RemoveProductTranslationMessage(['uuid' => 'prod-uuid'], 'en');
 

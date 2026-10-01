@@ -93,7 +93,7 @@ class AdminProductIndexListenerTest extends TestCase
     public function testOnProductChangedWithProductTranslationRemovedEvent(): void
     {
         $product = new Product('444');
-        $event = new ProductTranslationRemovedEvent($product, 'de');
+        $event = new ProductTranslationRemovedEvent($product, 'de', null);
         $expectedConfig = ReindexConfig::create()->withIndex('admin')->withIdentifiers([ProductInterface::RESOURCE_KEY . '__444__de']);
         $this->messageBus->dispatch($expectedConfig)->willReturn(new Envelope($expectedConfig))->shouldBeCalledOnce();
         $this->listener->onProductChanged($event);

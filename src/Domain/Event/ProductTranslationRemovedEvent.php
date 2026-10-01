@@ -14,8 +14,6 @@ declare(strict_types=1);
 namespace Sulu\Product\Domain\Event;
 
 use Sulu\Bundle\ActivityBundle\Domain\Event\DomainEvent;
-use Sulu\Content\Domain\Model\DimensionContentCollection;
-use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 
@@ -23,7 +21,8 @@ class ProductTranslationRemovedEvent extends DomainEvent
 {
     public function __construct(
         private ProductInterface $product,
-        private string $locale
+        private string $locale,
+        private ?string $productTitle,
     ) {
         parent::__construct();
     }
@@ -55,9 +54,7 @@ class ProductTranslationRemovedEvent extends DomainEvent
 
     public function getResourceTitle(): ?string
     {
-        $dimensionContentCollection = new DimensionContentCollection($this->product->getDimensionContents(), [], ProductDimensionContent::class);
-
-        return $dimensionContentCollection->getDimensionContent(['locale' => $this->locale])?->getTitle();
+        return $this->productTitle;
     }
 
     public function getResourceTitleLocale(): ?string

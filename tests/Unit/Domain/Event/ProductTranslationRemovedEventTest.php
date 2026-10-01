@@ -32,7 +32,7 @@ class ProductTranslationRemovedEventTest extends TestCase
     protected function setUp(): void
     {
         $this->product = new Product('uuid-translation-removed');
-        $this->event = new ProductTranslationRemovedEvent($this->product, $this->locale);
+        $this->event = new ProductTranslationRemovedEvent($this->product, $this->locale, 'Removed Title');
     }
 
     public function testGetProduct(): void
@@ -62,7 +62,7 @@ class ProductTranslationRemovedEventTest extends TestCase
 
     public function testGetResourceTitle(): void
     {
-        $this->assertNull($this->event->getResourceTitle());
+        $this->assertSame('Removed Title', $this->event->getResourceTitle());
     }
 
     public function testGetResourceTitleLocale(): void

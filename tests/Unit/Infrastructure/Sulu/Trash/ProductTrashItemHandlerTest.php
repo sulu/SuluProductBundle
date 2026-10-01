@@ -19,7 +19,6 @@ use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
-use Sulu\Bundle\TrashBundle\Application\RestoreConfigurationProvider\RestoreConfiguration;
 use Sulu\Bundle\TrashBundle\Domain\Model\TrashItemInterface;
 use Sulu\Bundle\TrashBundle\Domain\Repository\TrashItemRepositoryInterface;
 use Sulu\Content\Application\ContentMerger\ContentMergerInterface;
@@ -29,12 +28,14 @@ use Sulu\Content\Domain\Model\DimensionContentCollection;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Event\ProductRestoredEvent;
 use Sulu\Product\Domain\Event\ProductTranslationRestoredEvent;
+use Sulu\Product\Domain\Exception\ProductVariantParentNotFoundException;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
+use Sulu\Product\Infrastructure\Sulu\Trash\ProductRestoreResult;
 use Sulu\Product\Infrastructure\Sulu\Trash\ProductTrashItemHandler;
 
 #[CoversClass(ProductTrashItemHandler::class)]
@@ -90,8 +91,8 @@ class ProductTrashItemHandlerTest extends TestCase
     {
         $configuration = $this->handler->getConfiguration();
 
-        // @phpstan-ignore method.alreadyNarrowedType
-        $this->assertInstanceOf(RestoreConfiguration::class, $configuration);
+        $this->assertSame(ProductAdmin::EDIT_TABS_VIEW, $configuration->getView());
+        $this->assertSame(['id' => 'id', 'locale' => 'locale'], $configuration->getResultToView());
     }
 
     public function testRestoreCreatesProductWhenNotFound(): void
@@ -119,7 +120,7 @@ class ProductTrashItemHandlerTest extends TestCase
 
         $restored = $this->handler->restore($trashItem->reveal());
 
-        $this->assertSame($product, $restored);
+        $this->assertEquals(new ProductRestoreResult('uuid-restore', 'en'), $restored);
     }
 
     public function testRestoreUsesExistingProductWhenFound(): void
@@ -127,18 +128,19 @@ class ProductTrashItemHandlerTest extends TestCase
         $product = new Product('uuid-restore');
 
         $trashItem = $this->prophesize(TrashItemInterface::class);
-        $trashItem->getRestoreData()->willReturn(['dimensionContents' => []]);
+        $trashItem->getRestoreData()->willReturn(['dimensionContents' => [['locale' => 'de']]]);
         $trashItem->getResourceId()->willReturn('uuid-restore');
         $trashItem->getRestoreType()->willReturn(null);
 
         $this->productRepository->findOneBy(['uuid' => 'uuid-restore'])->willReturn($product);
         $this->productRepository->createNew(Argument::cetera())->shouldNotBeCalled();
         $this->productRepository->add(Argument::any())->shouldNotBeCalled();
+        $this->contentPersister->persist($product, ['locale' => 'de'], Argument::type('array'))->shouldBeCalledOnce();
         $this->domainEventCollector->collect(Argument::type(ProductRestoredEvent::class))->shouldBeCalled();
 
         $restored = $this->handler->restore($trashItem->reveal());
 
-        $this->assertSame($product, $restored);
+        $this->assertEquals(new ProductRestoreResult('uuid-restore', 'de'), $restored);
     }
 
     public function testRestoreReattachesVariantParentAndType(): void
@@ -150,20 +152,93 @@ class ProductTrashItemHandlerTest extends TestCase
         $trashItem->getRestoreData()->willReturn([
             'parent' => 'parent-uuid',
             'type' => ProductInterface::TYPE_VARIANT,
-            'dimensionContents' => [],
+            'position' => 3,
+            'dimensionContents' => [['locale' => 'en']],
         ]);
         $trashItem->getResourceId()->willReturn('variant-uuid');
         $trashItem->getRestoreType()->willReturn(null);
 
         $this->productRepository->findOneBy(['uuid' => 'variant-uuid'])->willReturn($product);
         $this->productRepository->findOneBy(['uuid' => 'parent-uuid'])->willReturn($parent);
+        $this->contentPersister->persist($product, Argument::type('array'), Argument::type('array'))->shouldBeCalledOnce();
         $this->domainEventCollector->collect(Argument::type(ProductRestoredEvent::class))->shouldBeCalled();
 
         $restored = $this->handler->restore($trashItem->reveal());
 
-        $this->assertSame($product, $restored);
+        // A variant is edited in its parent's variants tab.
+        $this->assertEquals(new ProductRestoreResult('parent-uuid', 'en'), $restored);
         $this->assertSame($parent, $product->getParent());
         $this->assertSame(ProductInterface::TYPE_VARIANT, $product->getType());
+        $this->assertSame(3, $product->getPosition());
+    }
+
+    public function testRestoreRefusesVariantWhoseParentIsMissing(): void
+    {
+        $trashItem = $this->prophesize(TrashItemInterface::class);
+        $trashItem->getRestoreData()->willReturn([
+            'parent' => 'parent-uuid',
+            'type' => ProductInterface::TYPE_VARIANT,
+            'dimensionContents' => [['locale' => 'en']],
+        ]);
+        $trashItem->getResourceId()->willReturn('variant-uuid');
+        $trashItem->getRestoreType()->willReturn(null);
+
+        $this->productRepository->findOneBy(['uuid' => 'parent-uuid'])->willReturn(null);
+        $this->productRepository->add(Argument::any())->shouldNotBeCalled();
+        $this->contentPersister->persist(Argument::cetera())->shouldNotBeCalled();
+
+        $this->expectException(ProductVariantParentNotFoundException::class);
+
+        $this->handler->restore($trashItem->reveal());
+    }
+
+    public function testRestoreBringsBackEmbeddedVariants(): void
+    {
+        $parent = new Product('parent-uuid');
+        $variant = new Product('variant-uuid');
+
+        $variantData = [
+            'uuid' => 'variant-uuid',
+            'position' => 2,
+            'dimensionContents' => [['locale' => 'en', 'title' => 'Variant L']],
+        ];
+        $trashItem = $this->prophesize(TrashItemInterface::class);
+        $trashItem->getRestoreData()->willReturn([
+            'type' => ProductInterface::TYPE_PRODUCT_WITH_VARIANTS,
+            'parent' => null,
+            'dimensionContents' => [['locale' => 'en', 'title' => 'Parent']],
+            'variants' => [$variantData],
+        ]);
+        $trashItem->getResourceId()->willReturn('parent-uuid');
+        $trashItem->getRestoreType()->willReturn(null);
+
+        $this->productRepository->findOneBy(['uuid' => 'parent-uuid'])->willReturn(null);
+        $this->productRepository->createNew('parent-uuid')->willReturn($parent);
+        $this->productRepository->add($parent)->shouldBeCalled();
+        $this->productRepository->findOneBy(['uuid' => 'variant-uuid'])->willReturn(null);
+        $this->productRepository->createNew('variant-uuid')->willReturn($variant);
+        $this->productRepository->add($variant)->shouldBeCalled();
+        $this->contentPersister->persist($parent, Argument::type('array'), Argument::type('array'))->shouldBeCalledOnce();
+        $this->contentPersister->persist($variant, ['locale' => 'en', 'title' => 'Variant L'], Argument::type('array'))->shouldBeCalledOnce();
+
+        $this->domainEventCollector->collect(Argument::that(
+            static fn ($event) => $event instanceof ProductRestoredEvent
+                && 'parent-uuid' === $event->getResourceId()
+                && !\array_key_exists('variants', $event->getEventPayload() ?? []),
+        ))->shouldBeCalledOnce();
+        $this->domainEventCollector->collect(Argument::that(
+            static fn ($event) => $event instanceof ProductRestoredEvent
+                && 'variant-uuid' === $event->getResourceId()
+                && 'Variant L' === $event->getResourceTitle(),
+        ))->shouldBeCalledOnce();
+
+        $restored = $this->handler->restore($trashItem->reveal());
+
+        $this->assertEquals(new ProductRestoreResult('parent-uuid', 'en'), $restored);
+        $this->assertSame(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS, $parent->getType());
+        $this->assertSame($parent, $variant->getParent());
+        $this->assertSame(ProductInterface::TYPE_VARIANT, $variant->getType());
+        $this->assertSame(2, $variant->getPosition());
     }
 
     public function testRestoreEmitsTranslationEventWhenRestoreTypeIsTranslation(): void
@@ -189,7 +264,33 @@ class ProductTrashItemHandlerTest extends TestCase
 
         $restored = $this->handler->restore($trashItem->reveal());
 
-        $this->assertSame($product, $restored);
+        $this->assertEquals(new ProductRestoreResult('uuid-restore', 'en'), $restored);
+    }
+
+    public function testRestoreTranslationKeepsTheCurrentPosition(): void
+    {
+        $parent = new Product('parent-uuid');
+        $variant = new Product('variant-uuid');
+        $variant->setPosition(5);
+
+        $trashItem = $this->prophesize(TrashItemInterface::class);
+        $trashItem->getRestoreData()->willReturn([
+            'parent' => 'parent-uuid',
+            'type' => ProductInterface::TYPE_VARIANT,
+            'position' => 1,
+            'dimensionContents' => [['locale' => 'de']],
+        ]);
+        $trashItem->getResourceId()->willReturn('variant-uuid');
+        $trashItem->getRestoreType()->willReturn('translation');
+
+        $this->productRepository->findOneBy(['uuid' => 'variant-uuid'])->willReturn($variant);
+        $this->productRepository->findOneBy(['uuid' => 'parent-uuid'])->willReturn($parent);
+        $this->contentPersister->persist($variant, Argument::type('array'), Argument::type('array'))->shouldBeCalledOnce();
+        $this->domainEventCollector->collect(Argument::type(ProductTranslationRestoredEvent::class))->shouldBeCalledOnce();
+
+        $this->handler->restore($trashItem->reveal());
+
+        $this->assertSame(5, $variant->getPosition());
     }
 
     public function testStoreCreatesTrashItemForProduct(): void
@@ -364,5 +465,57 @@ class ProductTrashItemHandlerTest extends TestCase
         $result = $this->handler->store($product, []);
 
         $this->assertSame($trashItem->reveal(), $result);
+    }
+
+    public function testStoreEmbedsVariantsInTheParentsTrashItem(): void
+    {
+        $product = new Product('parent-uuid');
+        $product->setType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $this->addDraftContent($product, 'en');
+
+        $variant = new Product('variant-uuid');
+        $variant->setType(ProductInterface::TYPE_VARIANT);
+        $variant->setParent($product);
+        $variant->setPosition(4);
+        $this->addDraftContent($variant, 'en');
+        $this->productRepository->findBy(['parent' => 'parent-uuid'])->willReturn([$variant]);
+
+        $mergedContent = $this->prophesize(ProductDimensionContentInterface::class);
+        $this->contentMerger->merge(Argument::type(DimensionContentCollection::class))
+            ->willReturn($mergedContent->reveal());
+        $this->contentNormalizer->normalize($mergedContent->reveal())
+            ->willReturn(['locale' => 'en']);
+
+        $trashItem = $this->prophesize(TrashItemInterface::class);
+        $this->trashItemRepository->create(
+            ProductInterface::RESOURCE_KEY,
+            'parent-uuid',
+            Argument::type('array'),
+            Argument::that(static fn (array $data) => [[
+                'uuid' => 'variant-uuid',
+                'position' => 4,
+                'dimensionContents' => [['locale' => 'en']],
+            ]] === $data['variants']),
+            null,
+            [],
+            ProductAdmin::SECURITY_CONTEXT,
+            null,
+            'parent-uuid',
+        )->willReturn($trashItem->reveal());
+
+        $this->assertSame($trashItem->reveal(), $this->handler->store($product, []));
+    }
+
+    private function addDraftContent(Product $product, string $locale): void
+    {
+        $unlocalizedContent = new ProductDimensionContent($product);
+        $unlocalizedContent->setStage(DimensionContentInterface::STAGE_DRAFT);
+        $unlocalizedContent->addAvailableLocale($locale);
+        $product->addDimensionContent($unlocalizedContent);
+
+        $localizedContent = new ProductDimensionContent($product);
+        $localizedContent->setLocale($locale);
+        $localizedContent->setStage(DimensionContentInterface::STAGE_DRAFT);
+        $product->addDimensionContent($localizedContent);
     }
 }

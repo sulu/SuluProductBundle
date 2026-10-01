@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Tests\Functional\Integration;
 
+use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
@@ -784,62 +785,120 @@ class ProductVariantControllerTest extends SuluTestCase
         $this->assertSame(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS, $data['type']);
     }
 
-    public function testDeletingParentTrashesEachVariant(): void
+    public function testRestoringADeletedParentBringsBackItsVariants(): void
+    {
+        self::purgeDatabase();
+        $familyId = $this->createProductFamily();
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $firstVariantId = $this->createVariant($parentId, 'Variant L', 0);
+        $secondVariantId = $this->createVariant($parentId, 'Variant XL', 1);
+
+        $this->client->request('GET', '/admin/api/products/' . $parentId . '/variants/' . $firstVariantId . '.json?locale=en');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+        $variantData = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($variantData);
+        $this->assertIsString($variantData['url'] ?? null);
+        $variantUrl = $variantData['url'];
+
+        $this->client->request('DELETE', '/admin/api/products/' . $parentId . '.json?locale=en');
+        $this->assertHttpStatusCode(204, $this->client->getResponse());
+
+        // Same identity-map reason as testRestoringADeletedVariantParentKeepsItsType.
+        self::ensureKernelShutdown();
+        $this->client = $this->createAuthenticatedClient(
+            [],
+            ['CONTENT_TYPE' => 'application/json', 'HTTP_ACCEPT' => 'application/json'],
+        );
+
+        $this->client->request('GET', '/admin/api/products/' . $parentId . '/variants/' . $firstVariantId . '.json?locale=en');
+        $this->assertHttpStatusCode(404, $this->client->getResponse());
+
+        // The variants ride on the parent's trash item instead of getting their own.
+        /** @var TrashItemRepositoryInterface $trashItemRepository */
+        $trashItemRepository = self::getContainer()->get(TrashItemRepositoryInterface::class);
+        $this->assertNull($trashItemRepository->findOneBy([
+            'resourceKey' => ProductInterface::RESOURCE_KEY,
+            'resourceId' => $firstVariantId,
+        ]));
+        $parentTrashItem = $trashItemRepository->getOneBy([
+            'resourceKey' => ProductInterface::RESOURCE_KEY,
+            'resourceId' => $parentId,
+        ]);
+
+        $this->client->request('POST', '/admin/api/trash-items/' . $parentTrashItem->getId() . '?action=restore');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+        $this->assertSame(
+            ['id' => $parentId, 'locale' => 'en'],
+            \json_decode((string) $this->client->getResponse()->getContent(), true),
+        );
+
+        foreach ([$firstVariantId => ['Variant L', 0], $secondVariantId => ['Variant XL', 1]] as $variantId => [$title, $position]) {
+            $this->client->request('GET', '/admin/api/products/' . $parentId . '/variants/' . $variantId . '.json?locale=en');
+            $this->assertHttpStatusCode(200, $this->client->getResponse());
+            $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+            $this->assertIsArray($data);
+            $this->assertSame($title, $data['title'] ?? null);
+            $this->assertSame($position, $data['position'] ?? null);
+        }
+
+        /** @var Connection $connection */
+        $connection = self::getContainer()->get('doctrine.dbal.default_connection');
+        $this->assertSame($firstVariantId, $connection->fetchOne(
+            'SELECT resource_id FROM ro_routes WHERE resource_key = ? AND slug = ?',
+            [ProductInterface::RESOURCE_KEY, $variantUrl],
+        ));
+    }
+
+    public function testDeletingParentRemovesTheVariantsRoutes(): void
     {
         self::purgeDatabase();
         $familyId = $this->createProductFamily();
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
         $variantId = $this->createVariant($parentId, 'Variant L');
 
+        /** @var Connection $connection */
+        $connection = self::getContainer()->get('doctrine.dbal.default_connection');
+        $countRoutes = static function() use ($connection, $variantId): int {
+            $count = $connection->fetchOne(
+                'SELECT COUNT(*) FROM ro_routes WHERE resource_key = ? AND resource_id = ?',
+                [ProductInterface::RESOURCE_KEY, $variantId],
+            );
+            self::assertIsNumeric($count);
+
+            return (int) $count;
+        };
+        $this->assertGreaterThan(0, $countRoutes());
+
         $this->client->request('DELETE', '/admin/api/products/' . $parentId . '.json?locale=en');
         $this->assertHttpStatusCode(204, $this->client->getResponse());
 
-        // Same identity-map reason as testRestoringADeletedVariantKeepsItsParent.
-        self::ensureKernelShutdown();
-        self::bootKernel();
+        $this->assertSame(0, $countRoutes());
+    }
 
-        $container = self::getContainer();
-        /** @var ProductRepositoryInterface $productRepository */
-        $productRepository = $container->get(ProductRepositoryInterface::class);
+    public function testRestoringAVariantWhoseParentIsGoneIsRefused(): void
+    {
+        self::purgeDatabase();
+        $familyId = $this->createProductFamily();
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $variantId = $this->createVariant($parentId, 'Variant L');
 
-        // The variant is gone from the DB (cascade-deleted alongside the parent) …
-        $this->assertNull($productRepository->findOneBy(['uuid' => $variantId]));
+        $this->client->request('DELETE', '/admin/api/products/' . $parentId . '/variants/' . $variantId . '.json?locale=en');
+        $this->assertHttpStatusCode(204, $this->client->getResponse());
+        $this->client->request('DELETE', '/admin/api/products/' . $parentId . '.json?locale=en');
+        $this->assertHttpStatusCode(204, $this->client->getResponse());
 
-        // … but a restorable trash item exists for it.
         /** @var TrashItemRepositoryInterface $trashItemRepository */
-        $trashItemRepository = $container->get(TrashItemRepositoryInterface::class);
-        $trashItem = $trashItemRepository->findOneBy([
+        $trashItemRepository = self::getContainer()->get(TrashItemRepositoryInterface::class);
+        $trashItem = $trashItemRepository->getOneBy([
             'resourceKey' => ProductInterface::RESOURCE_KEY,
             'resourceId' => $variantId,
         ]);
-        $this->assertNotNull($trashItem);
 
-        // The parent was cascade-deleted too, so restore it first — otherwise the variant's
-        // `parent` re-attach lookup finds no row and is silently left null
-        // (ProductTrashItemHandler::restore()'s documented no-op case).
-        /** @var TrashItemRepositoryInterface $trashItemRepository */
-        $parentTrashItem = $trashItemRepository->findOneBy([
-            'resourceKey' => ProductInterface::RESOURCE_KEY,
-            'resourceId' => $parentId,
-        ]);
-        $this->assertNotNull($parentTrashItem);
-
-        /** @var TrashManagerInterface $trashManager */
-        $trashManager = $container->get(TrashManagerInterface::class);
-        /** @var EntityManagerInterface $entityManager */
-        $entityManager = $container->get('doctrine.orm.entity_manager');
-
-        // Flush after restoring the parent so the variant's re-attach lookup (a DB query) finds it.
-        $trashManager->restore($parentTrashItem);
-        $entityManager->flush();
-
-        $trashManager->restore($trashItem);
-        $entityManager->flush();
-
-        $restored = $productRepository->getOneBy(['uuid' => $variantId]);
-        $this->assertInstanceOf(Product::class, $restored);
-        $this->assertNotNull($restored->getParent());
-        $this->assertSame($parentId, $restored->getParent()->getUuid());
+        $this->client->request('POST', '/admin/api/trash-items/' . $trashItem->getId() . '?action=restore');
+        $this->assertHttpStatusCode(409, $this->client->getResponse());
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertSame('This variant cannot be restored because its parent product no longer exists. Restore the parent product first.', $data['detail'] ?? null);
     }
 
     public function testPostTriggerPublishesAndUnpublishesTheVariantOnly(): void

@@ -199,6 +199,9 @@ class ProductAdmin extends Admin
         if ($this->securityChecker->hasPermission(static::SECURITY_CONTEXT, PermissionTypes::ADD)) {
             $variantsToolbarActions[] = new ToolbarAction('sulu_admin.add');
         }
+        if ($this->securityChecker->hasPermission(static::SECURITY_CONTEXT, PermissionTypes::DELETE)) {
+            $variantsToolbarActions[] = new ToolbarAction('sulu_admin.delete');
+        }
         if ($this->securityChecker->hasPermission(static::SECURITY_CONTEXT, PermissionTypes::LIVE)) {
             $variantsToolbarActions[] = new ToolbarAction('sulu_admin.publishing');
         }

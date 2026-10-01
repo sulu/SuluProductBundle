@@ -94,27 +94,20 @@ class WebsiteProductIndexListenerTest extends TestCase
     }
 
     /**
-     * The removal cascades to the variants, so their documents are reindexed as well. The reindex
-     * provider yields nothing for a deleted row, so the engine deletes those identifiers.
+     * Each removed variant collects its own event, so a removal reindexes only the removed product.
+     * The reindex provider yields nothing for a deleted row, so the engine deletes the identifier.
      */
-    public function testRemovedProductReindexesItsVariantsAndParent(): void
+    public function testRemovedProductReindexesOnlyItself(): void
     {
         $messageBus = $this->prophesize(MessageBusInterface::class);
         $messageBus->dispatch(Argument::that(function(ReindexConfig $config): bool {
-            $this->assertEqualsCanonicalizing([
-                'products__parent-uuid__en',
-                'products__variant-one-uuid__en',
-                'products__variant-two-uuid__en',
-            ], $config->getIdentifiers());
+            $this->assertSame(['products__parent-uuid__en'], $config->getIdentifiers());
 
             return true;
         }))->willReturn(new Envelope(new \stdClass()))->shouldBeCalledOnce();
 
         $listener = new WebsiteProductIndexListener($messageBus->reveal());
-        $listener->onProductChanged(new ProductRemovedEvent('parent-uuid', 'Gone', [
-            'locales' => ['en'],
-            'variantUuids' => ['variant-one-uuid', 'variant-two-uuid'],
-        ]));
+        $listener->onProductChanged(new ProductRemovedEvent('parent-uuid', 'Gone', ['locales' => ['en']]));
     }
 
     /**
@@ -141,7 +134,7 @@ class WebsiteProductIndexListenerTest extends TestCase
         }))->willReturn(new Envelope(new \stdClass()))->shouldBeCalledOnce();
 
         $listener = new WebsiteProductIndexListener($messageBus->reveal());
-        $listener->onProductChanged(new ProductTranslationRemovedEvent($parent, 'de'));
+        $listener->onProductChanged(new ProductTranslationRemovedEvent($parent, 'de', null));
     }
 
     public function testTranslationRemovedOnAVariantReindexesItAndItsParent(): void
@@ -162,7 +155,7 @@ class WebsiteProductIndexListenerTest extends TestCase
         }))->willReturn(new Envelope(new \stdClass()))->shouldBeCalledOnce();
 
         $listener = new WebsiteProductIndexListener($messageBus->reveal());
-        $listener->onProductChanged(new ProductTranslationRemovedEvent($variant, 'de'));
+        $listener->onProductChanged(new ProductTranslationRemovedEvent($variant, 'de', null));
     }
 
     public function testEventWithoutLocaleDispatchesNothing(): void
