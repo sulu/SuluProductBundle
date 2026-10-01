@@ -52,9 +52,7 @@ final class AttributeListToolTest extends TestCase
 
         $this->addAttribute($group, 12, 'colour', AttributeInterface::TYPE_TEXT, 'Colour');
 
-        // Pinned rather than matched loosely: the listing reads a translation per group,
-        // then its attributes, then a translation per attribute. Losing a select here
-        // costs a query per row and nothing else would notice.
+        // Pinned: a lost select here costs a query per row and nothing else would notice.
         $this->attributeGroupRepository->findBy([], [], [
             AttributeGroupRepositoryInterface::SELECT_GROUP_TRANSLATIONS => true,
             AttributeGroupRepositoryInterface::SELECT_GROUP_ATTRIBUTES => true,

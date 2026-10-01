@@ -18,9 +18,6 @@ use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\TypedFormMetadata;
 
 /**
- * Metadata that makes the content, excerpt and SEO validation of the product tools reject unknown input:
- * a "default" product template with a "blocks" list of "text" blocks that only know a "title".
- *
  * @internal
  */
 final class ProductContentMetadata

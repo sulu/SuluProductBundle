@@ -23,12 +23,6 @@ use Sulu\Product\Application\Ai\AttributeFilter;
 use Sulu\Product\Application\Ai\SearchProductsByAttributes;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 
-/**
- * MCP adapter for this bundle's own product search/lookup logic
- * (Application\Ai\SearchProductsByAttributes): same behavior and result shape as the
- * `sulu_product_search_products_by_attributes` symfony/ai-agent tool, but wired here without
- * requiring symfony/ai-agent to be installed.
- */
 class SearchProductsByAttributesTool
 {
     public function __construct(

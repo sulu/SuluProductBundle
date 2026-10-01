@@ -23,11 +23,6 @@ use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\GetProductsTool;
 use Sulu\Product\Tests\Unit\Application\Ai\Fixtures\FakeRouteGenerator;
 
-/**
- * GetProducts (final, so Prophecy can't double it directly) is real here, built over a mocked
- * repository; GetProductsTest covers its actual search behavior in depth, this just proves the
- * adapter threads its arguments through.
- */
 #[CoversClass(GetProductsTool::class)]
 class GetProductsToolTest extends TestCase
 {

@@ -16,9 +16,6 @@ namespace Sulu\Product\Tests\Unit\Fixture;
 use Sulu\Bundle\AdminBundle\Application\BlockIdGenerator\BlockIdGeneratorInterface;
 
 /**
- * Hands out predictable ids. Sulu's real generator produces random UUIDs, which
- * assertions on written block data cannot pin down.
- *
  * @internal
  */
 final class FixedBlockIdGenerator implements BlockIdGeneratorInterface
@@ -33,9 +30,6 @@ final class FixedBlockIdGenerator implements BlockIdGeneratorInterface
     ) {
     }
 
-    /**
-     * Hands out the given ids in order, for tests that assert on each block's id.
-     */
     public static function returning(string ...$ids): self
     {
         $generator = new self();

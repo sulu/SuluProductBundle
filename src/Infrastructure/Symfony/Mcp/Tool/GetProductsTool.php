@@ -22,11 +22,6 @@ use Sulu\Mcp\Domain\Security\RequiresPermission;
 use Sulu\Product\Application\Ai\GetProducts;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 
-/**
- * MCP adapter for this bundle's own product search/lookup logic (Application\Ai\GetProducts):
- * same behavior and result shape as the `sulu_product_get_products` symfony/ai-agent tool, but
- * wired here without requiring symfony/ai-agent to be installed.
- */
 class GetProductsTool
 {
     public function __construct(

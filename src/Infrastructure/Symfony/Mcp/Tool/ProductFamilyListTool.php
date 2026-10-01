@@ -27,11 +27,6 @@ use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductFamilyAdmin;
 
-/**
- * Uses Sulu's list builder rather than the repository, because
- * ProductFamilyRepositoryInterface exposes no findBy/countBy -- only single-family
- * lookups. ProductFamilyController lists the same way.
- */
 class ProductFamilyListTool
 {
     private const ALLOWED_SORT_FIELDS = ['name', 'created', 'changed'];
@@ -81,8 +76,7 @@ class ProductFamilyListTool
             $listBuilder = $this->listBuilderFactory->create(ProductFamilyInterface::class);
             $listBuilder->setIdField($fieldDescriptors['id']);
             $listBuilder->setParameter('locale', $locale);
-            // Not RestHelperInterface: it reads paging off the current HTTP request, which
-            // here is the MCP transport request.
+            // Not RestHelperInterface: it reads paging off the MCP transport request.
             $listBuilder->limit($limit);
             $listBuilder->setCurrentPage($page);
 
@@ -133,8 +127,6 @@ class ProductFamilyListTool
     }
 
     /**
-     * The list builder returns flat columns, so the family is re-read for its attributes.
-     *
      * @return list<array<string, mixed>>
      */
     private function describeAttributes(string $uuid, string $locale): array

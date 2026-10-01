@@ -65,8 +65,6 @@ class AttributeListTool
         try {
             $attributes = [];
 
-            // The listing reads every group's translation, its attributes and their
-            // translations, so ask for all three eagerly instead of one query per row.
             $groups = $this->attributeGroupRepository->findBy(selects: [
                 AttributeGroupRepositoryInterface::SELECT_GROUP_TRANSLATIONS => true,
                 AttributeGroupRepositoryInterface::SELECT_GROUP_ATTRIBUTES => true,
@@ -93,8 +91,7 @@ class AttributeListTool
             $total = \count($attributes);
 
             return [
-                // AttributeRepositoryInterface exposes no paginated query, so the page is cut
-                // in PHP: this bounds the response, not the rows read from the database.
+                // The repository has no paginated query: this bounds the response, not the rows read.
                 'attributes' => \array_slice($attributes, ($page - 1) * $limit, $limit),
                 'total' => $total,
                 'page' => $page,

@@ -94,8 +94,7 @@ class ProductListTool
             $sortBys = [$sortBy => $sortOrder];
             $total = $this->productRepository->countBy($filters);
 
-            // Two-step paging; see PageListTool. A limit on the admin select truncates
-            // fetch-joined SQL rows rather than products.
+            // Two-step paging, see PageListTool: a limit on the admin select truncates joined rows.
             $uuids = [...$this->productRepository->findIdentifiersBy($filters, $sortBys)];
             if ([] === $uuids) {
                 return ['products' => [], 'total' => $total, 'page' => $page, 'limit' => $limit];

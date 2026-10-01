@@ -22,10 +22,7 @@ use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductVariantCreateTool;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductVariantUpdateTool;
 
 /**
- * Every write tool must declare #[DangerousTool('product_write')] on its #[McpTool] method, so an
- * operator can disable product writes over MCP the same way SuluMcpBundle's own delete/publish/
- * block_remove/media_upload categories work — DangerousToolsPass reads it regardless of which
- * bundle declares it.
+ * Every write tool must carry #[DangerousTool('product_write')], so operators can disable writes.
  */
 final class DangerousToolGatingTest extends TestCase
 {

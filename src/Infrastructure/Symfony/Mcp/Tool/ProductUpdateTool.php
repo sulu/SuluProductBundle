@@ -60,9 +60,7 @@ class ProductUpdateTool
 
     /**
      * @param array<string, mixed>|null $content
-     * @param array<int, mixed>|null $attributes attribute ids are integers; PHP folds numeric
-     *                                           string keys to int, so an int-keyed array is what a JSON object with numeric keys
-     *                                           actually deserializes to
+     * @param array<int, mixed>|null $attributes
      * @param array<string, mixed>|null $details
      * @param array<string, mixed>|null $excerpt
      * @param array<string, mixed>|null $seo
@@ -172,7 +170,7 @@ class ProductUpdateTool
                 return $data;
             }
 
-            // Identity-level: only the variant tools may set these.
+            // Only the variant tools may set these.
             unset($data['type'], $data['parent']);
 
             if ($validationError = $this->validateShadow($shadowOn, $shadowLocale, $locale, $currentData)) {

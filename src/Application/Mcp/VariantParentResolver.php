@@ -21,10 +21,8 @@ use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 
 /**
- * Re-asserts the variant invariants SuluProductBundle enforces in ProductVariantController
- * rather than in its message handlers: ProductParentMapper resolves `parent` by UUID without
- * ever checking its type, so dispatching CreateProductMessage directly would nest a variant
- * under a plain product, or under another variant.
+ * ProductParentMapper never checks the parent's type, so the variant rules of
+ * ProductVariantController are enforced here.
  *
  * @internal
  */

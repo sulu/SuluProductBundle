@@ -68,8 +68,7 @@ class ProductVariantListTool
             $sortBys = ['title' => 'asc'];
             $total = $this->productRepository->countBy($filters);
 
-            // Two-step paging; see PageListTool. A limit on the admin select truncates
-            // fetch-joined SQL rows rather than variants.
+            // Two-step paging, see PageListTool: a limit on the admin select truncates joined rows.
             $uuids = [...$this->productRepository->findIdentifiersBy($filters, $sortBys)];
             if ([] === $uuids) {
                 return ['variants' => [], 'parent' => $parentUuid, 'total' => $total, 'page' => $page, 'limit' => $limit];

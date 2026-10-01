@@ -18,10 +18,6 @@ use Sulu\Bundle\AdminBundle\Admin\View\ViewRegistry;
 use Sulu\Bundle\AdminBundle\Exception\ViewNotFoundException;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 
-/**
- * Test stub returning the product edit-view path template Sulu registers, so the
- * AdminLink providers can be exercised without booting the admin kernel.
- */
 final class TestViewRegistry extends ViewRegistry
 {
     public function __construct()

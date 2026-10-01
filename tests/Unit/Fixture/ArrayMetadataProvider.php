@@ -17,9 +17,6 @@ use Sulu\Bundle\AdminBundle\Metadata\MetadataInterface;
 use Sulu\Bundle\AdminBundle\Metadata\MetadataProviderInterface;
 
 /**
- * Serves metadata from a map keyed the way the provider is queried. Records the
- * locale of every call so tests can assert what a subject asked for.
- *
  * @internal
  */
 final class ArrayMetadataProvider implements MetadataProviderInterface
@@ -44,10 +41,6 @@ final class ArrayMetadataProvider implements MetadataProviderInterface
         return $this;
     }
 
-    /**
-     * Answers every key the map does not cover, for subjects that only care that
-     * metadata came back at all.
-     */
     public function setDefault(MetadataInterface $metadata): self
     {
         $this->default = $metadata;

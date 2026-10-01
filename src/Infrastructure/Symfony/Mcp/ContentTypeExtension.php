@@ -24,12 +24,6 @@ use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 
-/**
- * Plugs the "products" resourceKey into SuluMcpBundle's unified content/block tools, sulu_content_search, and
- * permission discovery, via ContentTypeExtensionInterface. Tagged sulu_mcp.content_type_extension
- * only when sulu/mcp-bundle is installed at a version that carries the interface; see
- * SuluProductBundle::registerMcpIntegration().
- */
 final readonly class ContentTypeExtension implements ContentTypeExtensionInterface
 {
     public function __construct(
@@ -95,7 +89,7 @@ final readonly class ContentTypeExtension implements ContentTypeExtensionInterfa
 
     public function createRemoveMessage(string $uuid, string $locale, bool $forceRemoveChildren = false): object
     {
-        // forceRemoveChildren has no product meaning: a product has no subtree, unlike a page.
+        // A product has no subtree, so forceRemoveChildren means nothing here.
         return new RemoveProductMessage(['uuid' => $uuid], $locale);
     }
 

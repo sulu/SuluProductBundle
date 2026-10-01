@@ -183,9 +183,6 @@ final class VariantParentResolverTest extends TestCase
         return $family;
     }
 
-    /**
-     * Attribute ids are database-generated, but stripInheritedAttributes() keys on them.
-     */
     private function forceId(object $entity, int $id): void
     {
         $reflection = new \ReflectionProperty($entity, 'id');

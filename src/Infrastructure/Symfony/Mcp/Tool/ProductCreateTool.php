@@ -43,8 +43,7 @@ class ProductCreateTool
     use ShadowTrait;
 
     /**
-     * Excludes "variant": SuluProductBundle validates the parent's type only in
-     * ProductVariantController, so a raw parent UUID here could nest variants.
+     * "variant" is excluded: only ProductVariantController validates the parent's type.
      *
      * @var list<string>
      */
@@ -66,9 +65,7 @@ class ProductCreateTool
 
     /**
      * @param array<string, mixed>|null $content
-     * @param array<int, mixed>|null $attributes attribute ids are integers; PHP folds numeric
-     *                                           string keys to int, so an int-keyed array is what a JSON object with numeric keys
-     *                                           actually deserializes to
+     * @param array<int, mixed>|null $attributes
      * @param array<string, mixed>|null $details
      * @param array<string, mixed>|null $excerpt
      * @param array<string, mixed>|null $seo

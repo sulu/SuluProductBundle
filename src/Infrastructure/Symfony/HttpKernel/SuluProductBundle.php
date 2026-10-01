@@ -1435,21 +1435,13 @@ final class SuluProductBundle extends AbstractBundle
             }
         }
 
-        // "sulu/mcp-bundle" is a require-dev/suggest dependency. Gated on
-        // ContentTypeExtensionInterface specifically, not just the bundle being loaded: earlier
-        // released versions (1.0.0-RC2/RC3) ship their OWN sulu_product_* tools directly and have
-        // no such interface, so this stays a no-op against them instead of fataling on a missing
-        // class or double-registering the same tool names.
+        // Gated on the interface, not the bundle: RC2/RC3 ship their own sulu_product_* tools
+        // and would register the same names twice.
         if (ContainerBuilder::willBeAvailable('sulu/mcp-bundle', ContentTypeExtensionInterface::class, ['sulu/product-bundle'])) {
             $this->registerMcpIntegration($services);
         }
     }
 
-    /**
-     * Registers this bundle's MCP surface: the sulu_product_* tools, the AdminLink providers for
-     * their "admin_url" response field, and the ContentTypeExtension that plugs "product" into
-     * sulu_content_search and the unified content/block tools.
-     */
     private function registerMcpIntegration(ServicesConfigurator $services): void
     {
         $services->set(ContentTypeExtension::class)
@@ -1459,9 +1451,8 @@ final class SuluProductBundle extends AbstractBundle
         $services->set(VariantParentResolver::class)
             ->autowire();
 
-        // The admin_link_provider tag is set explicitly: SuluMcpBundle's own instanceof rule for
-        // it is file-scoped to its own services.php and does not reach this file. sulu_admin.view_registry
-        // only exists in the admin container, hence the extra sulu.context tag.
+        // The tag is explicit because SuluMcpBundle's instanceof rule does not reach this file.
+        // sulu_admin.view_registry only exists in the admin container.
         foreach ([McpProductAdminLinkProvider::class, McpProductVariantAdminLinkProvider::class] as $adminLinkProvider) {
             $services->set($adminLinkProvider)
                 ->autowire()
@@ -1481,9 +1472,7 @@ final class SuluProductBundle extends AbstractBundle
             ProductFamilyListTool::class,
             AttributeListTool::class,
         ] as $mcpTool) {
-            // autoconfigure() is what makes symfony/mcp-bundle's own attribute-autoconfiguration
-            // pick up #[McpTool] on these classes' methods; this bundle otherwise wires every
-            // service explicitly rather than defaulting autoconfigure on.
+            // autoconfigure() is what picks up #[McpTool]; this bundle does not enable it by default.
             $services->set($mcpTool)
                 ->autowire()
                 ->autoconfigure();

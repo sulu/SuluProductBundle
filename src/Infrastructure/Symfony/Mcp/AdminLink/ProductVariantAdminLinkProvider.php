@@ -19,9 +19,7 @@ use Sulu\Mcp\Infrastructure\Sulu\AdminLink\AdminLinkContextTrait;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 
 /**
- * Variants have no standalone edit view -- SuluProductBundle renders them as a form overlay
- * on the parent's "variants" tab, which only carries the "/variants" segment. The path is
- * composed from the parent tabs view, and `uuid` is the PARENT's uuid.
+ * Variants open as an overlay on the parent's "variants" tab, so `uuid` is the PARENT's uuid.
  */
 final readonly class ProductVariantAdminLinkProvider implements AdminLinkProviderInterface
 {

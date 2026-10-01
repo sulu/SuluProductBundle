@@ -28,8 +28,7 @@ use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Tests\Unit\Application\Ai\Fixtures\FakeRouteGenerator;
 
 /**
- * A description or an instruction that names a tool the MCP server does not register sends the
- * client to a call that fails, so every sulu_* tool name mentioned must be a registered one.
+ * Every sulu_* tool name mentioned in a description must be a registered tool.
  */
 #[CoversNothing]
 class McpToolReferencesTest extends TestCase

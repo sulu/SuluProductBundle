@@ -112,8 +112,7 @@ final class ProductListToolTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
 
-        // The product repository sorts on uuid/created plus the dimension-content fields;
-        // "id" is advertised by its phpdoc but silently ignored.
+        // "id" is advertised by the repository phpdoc but silently ignored.
         $this->tool->listProducts('en', sortBy: 'id');
     }
 
