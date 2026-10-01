@@ -1435,8 +1435,10 @@ final class SuluProductBundle extends AbstractBundle
             }
         }
 
-        // Gated on the interface, not the bundle: RC2/RC3 ship their own sulu_product_* tools
-        // and would register the same names twice.
+        // Gated on the interface, not the bundle: up to 1.0.0-RC3 sulu/mcp-bundle has no
+        // interface and ships its own sulu_product_* tools. The 1.0 branch has the interface
+        // and still ships them, so composer.json conflicts with it. The conflict is dropped
+        // once a release without the tools is out.
         if (ContainerBuilder::willBeAvailable('sulu/mcp-bundle', ContentTypeExtensionInterface::class, ['sulu/product-bundle'])) {
             $this->registerMcpIntegration($services);
         }

@@ -36,7 +36,8 @@
         "webmozart/assert": "^1.0 || ^2.0"
     },
     "conflict": {
-        "doctrine/orm": "3.7.x-dev"
+        "doctrine/orm": "3.7.x-dev",
+        "sulu/mcp-bundle": "<=1.0.0-RC3 || 1.0.x-dev"
     },
     "require-dev": {
         "ext-filter": "*",
