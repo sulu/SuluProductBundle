@@ -1435,10 +1435,8 @@ final class SuluProductBundle extends AbstractBundle
             }
         }
 
-        // Gated on the interface, not the bundle: up to 1.0.0-RC3 sulu/mcp-bundle has no
-        // interface and ships its own sulu_product_* tools. The 1.0 branch has the interface
-        // and still ships them, so composer.json conflicts with it. The conflict is dropped
-        // once a release without the tools is out.
+        // Only checks that sulu/mcp-bundle is installed. Up to 1.0.0-RC3 it ships its own
+        // sulu_product_* tools, which would clash by name, so composer.json conflicts with those.
         if (ContainerBuilder::willBeAvailable('sulu/mcp-bundle', ContentTypeExtensionInterface::class, ['sulu/product-bundle'])) {
             $this->registerMcpIntegration($services);
         }

@@ -37,7 +37,7 @@
     },
     "conflict": {
         "doctrine/orm": "3.7.x-dev",
-        "sulu/mcp-bundle": "<=1.0.0-RC3 || 1.0.x-dev"
+        "sulu/mcp-bundle": "<=1.0.0-RC3"
     },
     "require-dev": {
         "ext-filter": "*",
