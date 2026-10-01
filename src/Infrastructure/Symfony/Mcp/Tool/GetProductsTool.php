@@ -22,7 +22,10 @@ use Sulu\Mcp\Domain\Security\RequiresPermission;
 use Sulu\Product\Application\Ai\GetProducts;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 
-class GetProductsTool
+/**
+ * @internal
+ */
+final class GetProductsTool
 {
     public function __construct(
         private readonly GetProducts $getProducts,

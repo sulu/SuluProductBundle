@@ -25,7 +25,10 @@ use Sulu\Product\Domain\Exception\ProductNotFoundException;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 
-class ProductGetTool
+/**
+ * @internal
+ */
+final class ProductGetTool
 {
     use ContentNormalizerTrait;
 

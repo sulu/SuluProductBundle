@@ -39,7 +39,10 @@ use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\HandleTrait;
 use Symfony\Component\Messenger\MessageBusInterface;
 
-class ProductUpdateTool
+/**
+ * @internal
+ */
+final class ProductUpdateTool
 {
     use HandleTrait;
     use BlockDataNormalizerTrait;

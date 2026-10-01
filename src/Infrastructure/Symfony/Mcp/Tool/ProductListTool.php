@@ -25,7 +25,10 @@ use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 
-class ProductListTool
+/**
+ * @internal
+ */
+final class ProductListTool
 {
     private const SUMMARY_FIELDS = [
         'title', 'code', 'status', 'productFamily', 'template',

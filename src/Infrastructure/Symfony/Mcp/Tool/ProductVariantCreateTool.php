@@ -34,7 +34,10 @@ use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\HandleTrait;
 use Symfony\Component\Messenger\MessageBusInterface;
 
-class ProductVariantCreateTool
+/**
+ * @internal
+ */
+final class ProductVariantCreateTool
 {
     use HandleTrait;
     use BlockDataNormalizerTrait;

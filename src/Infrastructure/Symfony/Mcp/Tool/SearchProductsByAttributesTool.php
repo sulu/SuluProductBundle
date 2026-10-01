@@ -23,7 +23,10 @@ use Sulu\Product\Application\Ai\AttributeFilter;
 use Sulu\Product\Application\Ai\SearchProductsByAttributes;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 
-class SearchProductsByAttributesTool
+/**
+ * @internal
+ */
+final class SearchProductsByAttributesTool
 {
     public function __construct(
         private readonly SearchProductsByAttributes $searchProductsByAttributes,

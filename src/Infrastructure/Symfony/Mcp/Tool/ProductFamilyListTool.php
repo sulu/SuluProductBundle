@@ -27,7 +27,10 @@ use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductFamilyAdmin;
 
-class ProductFamilyListTool
+/**
+ * @internal
+ */
+final class ProductFamilyListTool
 {
     private const ALLOWED_SORT_FIELDS = ['name', 'created', 'changed'];
     private const ALLOWED_SORT_ORDERS = ['asc', 'desc'];

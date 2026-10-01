@@ -18,6 +18,9 @@ use Sulu\Mcp\Application\AdminLink\AdminLinkProviderInterface;
 use Sulu\Mcp\Infrastructure\Sulu\AdminLink\AdminLinkContextTrait;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 
+/**
+ * @internal
+ */
 final readonly class ProductAdminLinkProvider implements AdminLinkProviderInterface
 {
     use AdminLinkContextTrait;

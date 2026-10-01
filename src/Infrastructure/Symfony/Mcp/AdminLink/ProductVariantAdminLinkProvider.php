@@ -20,6 +20,8 @@ use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 
 /**
  * Variants open as an overlay on the parent's "variants" tab, so `uuid` is the PARENT's uuid.
+ *
+ * @internal
  */
 final readonly class ProductVariantAdminLinkProvider implements AdminLinkProviderInterface
 {

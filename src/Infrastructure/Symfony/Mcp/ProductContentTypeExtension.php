@@ -24,6 +24,9 @@ use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 
+/**
+ * @internal
+ */
 final readonly class ProductContentTypeExtension implements ContentTypeExtensionInterface
 {
     public function __construct(

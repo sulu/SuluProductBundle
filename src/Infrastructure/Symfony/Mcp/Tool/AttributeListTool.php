@@ -23,7 +23,10 @@ use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeAdmin;
 
-class AttributeListTool
+/**
+ * @internal
+ */
+final class AttributeListTool
 {
     private const ALLOWED_SORT_FIELDS = ['key', 'id'];
     private const ALLOWED_SORT_ORDERS = ['asc', 'desc'];
