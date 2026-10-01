@@ -30,12 +30,14 @@
         "webmozart/assert": "^1.0 || ^2.0"
     },
     "conflict": {
-        "doctrine/orm": "3.7.x-dev"
+        "doctrine/orm": "3.7.x-dev",
+        "sulu/mcp-bundle": "<=1.0.0-RC3"
     },
     "require-dev": {
         "ext-filter": "*",
         "handcraftedinthealps/code-coverage-checker": "^0.2.1",
         "jangregor/phpstan-prophecy": "^2.0",
+        "league/oauth2-server-bundle": "^1.2",
         "php-cs-fixer/shim": "^3.14",
         "phpspec/prophecy": "^1.0",
         "phpspec/prophecy-phpunit": "^2.0",
@@ -48,15 +50,18 @@
         "rector/rector": "^2.0",
         "shipmonk/composer-dependency-analyser": "^1.8",
         "spaze/phpstan-disallowed-calls": "^4.7",
+        "sulu/mcp-bundle": "^1.0 || 1.0.x-dev",
         "symfony/ai-agent": "^0.14",
         "symfony/browser-kit": "^6.4 || ^7.1 || ^8.0",
         "symfony/console": "^6.4 || ^7.1 || ^8.0",
         "symfony/dom-crawler": "^6.4 || ^7.1 || ^8.0",
         "symfony/dotenv": "^6.4 || ^7.1 || ^8.0",
         "symfony/framework-bundle": "^6.4 || ^7.1 || ^8.0",
+        "symfony/mcp-bundle": "^0.13",
         "cmsig/seal-memory-adapter": "^0.12.10"
     },
     "suggest": {
+        "sulu/mcp-bundle": "Enables the sulu_product_* MCP tools and the sulu_content_search / unified content tools product hook.",
         "symfony/ai-agent": "To expose read-only product/attribute tools to a Symfony AI agent."
     },
     "autoload": {

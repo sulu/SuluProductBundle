@@ -41,4 +41,24 @@ $config->ignoreErrorsOnPackageAndPaths(
     [ErrorType::SHADOW_DEPENDENCY],
 );
 
+// Optional sulu/mcp-bundle brings mcp/sdk, used only by the MCP classes.
+$config->ignoreErrorsOnPackageAndPaths(
+    'mcp/sdk',
+    [
+        __DIR__ . '/src/Infrastructure/Symfony/Mcp',
+        __DIR__ . '/tests/Unit/Infrastructure/Symfony/Mcp',
+    ],
+    [ErrorType::SHADOW_DEPENDENCY],
+);
+
+// MCP integration is registered only when the optional dev package is present.
+$config->ignoreErrorsOnPackageAndPaths(
+    'sulu/mcp-bundle',
+    [
+        __DIR__ . '/src/Infrastructure/Symfony/Mcp',
+        __DIR__ . '/src/Infrastructure/Symfony/HttpKernel/SuluProductBundle.php',
+    ],
+    [ErrorType::DEV_DEPENDENCY_IN_PROD],
+);
+
 return $config;

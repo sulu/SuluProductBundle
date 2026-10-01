@@ -1,0 +1,26 @@
+mcp:
+    servers:
+        sulu:
+            pagination_limit: 100
+
+league_oauth2_server:
+    authorization_server:
+        private_key: '%kernel.project_dir%/config/jwt/private.pem'
+        private_key_passphrase: ~
+        encryption_key: 'FunctionalTestSuiteEncryptionKeyNotASecret'
+    resource_server:
+        public_key: '%kernel.project_dir%/config/jwt/public.pem'
+    scopes:
+        default: ['mcp:tools', 'mcp:resources']
+    persistence:
+        in_memory: ~
+
+sulu_security:
+    checker:
+        enabled: true
+
+sulu_mcp:
+    server_url: 'https://sulu-mcp-server.test'
+
+sulu_article:
+    default_main_webspace: sulu-io

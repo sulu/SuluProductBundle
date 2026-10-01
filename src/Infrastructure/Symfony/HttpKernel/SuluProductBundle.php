@@ -17,6 +17,7 @@ use Sulu\Bundle\HttpCacheBundle\ReferenceStore\ReferenceStore;
 use Sulu\Bundle\PersistenceBundle\DependencyInjection\PersistenceExtensionTrait;
 use Sulu\Bundle\PersistenceBundle\PersistenceBundleTrait;
 use Sulu\Content\Infrastructure\Sulu\Preview\ContentObjectProvider;
+use Sulu\Mcp\Domain\Content\ContentTypeExtensionInterface;
 use Sulu\Product\Application\Ai\GetAttributes;
 use Sulu\Product\Application\Ai\GetAttributeValues;
 use Sulu\Product\Application\Ai\GetProductDetails;
@@ -38,6 +39,7 @@ use Sulu\Product\Application\Mapper\ProductFamilyMapper;
 use Sulu\Product\Application\Mapper\ProductFamilyMapperInterface;
 use Sulu\Product\Application\Mapper\ProductMapperInterface;
 use Sulu\Product\Application\Mapper\ProductParentMapper;
+use Sulu\Product\Application\Mcp\VariantParentResolver;
 use Sulu\Product\Application\MessageHandler\ApplyWorkflowTransitionProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\CopyLocaleProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\CreateAttributeGroupMessageHandler;
@@ -169,6 +171,21 @@ use Sulu\Product\Infrastructure\Sulu\Search\WebsiteProductIndexListener;
 use Sulu\Product\Infrastructure\Sulu\Search\WebsiteProductReindexProvider;
 use Sulu\Product\Infrastructure\Sulu\Sitemap\ProductsSitemapProvider;
 use Sulu\Product\Infrastructure\Sulu\Trash\ProductTrashItemHandler;
+use Sulu\Product\Infrastructure\Symfony\Mcp\AdminLink\ProductAdminLinkProvider as McpProductAdminLinkProvider;
+use Sulu\Product\Infrastructure\Symfony\Mcp\AdminLink\ProductVariantAdminLinkProvider as McpProductVariantAdminLinkProvider;
+use Sulu\Product\Infrastructure\Symfony\Mcp\ProductContentTypeExtension;
+use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\AttributeListTool;
+use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\AttributeValueListTool;
+use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\GetProductsTool as McpGetProductsTool;
+use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductCreateTool;
+use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductFamilyListTool;
+use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductGetTool;
+use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductListTool;
+use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductUpdateTool;
+use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductVariantCreateTool;
+use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductVariantListTool;
+use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductVariantUpdateTool;
+use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\SearchProductsByAttributesTool as McpSearchProductsByAttributesTool;
 use Sulu\Product\Infrastructure\Symfony\Serializer\Normalizer\ProductFamilyNormalizer;
 use Sulu\Product\Infrastructure\Symfony\Serializer\Normalizer\ProductNormalizer;
 use Sulu\Product\Infrastructure\Symfony\Twig\ProductAttributeTwigExtension;
@@ -186,6 +203,7 @@ use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symfony\Component\DependencyInjection\Loader\Configurator\ServicesConfigurator;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
 
@@ -1418,6 +1436,61 @@ final class SuluProductBundle extends AbstractBundle
                 ]);
             }
         }
+
+        // Only checks that sulu/mcp-bundle is installed. Up to 1.0.0-RC3 it ships its own
+        // sulu_product_* tools, which would clash by name, so composer.json conflicts with those.
+        if (ContainerBuilder::willBeAvailable('sulu/mcp-bundle', ContentTypeExtensionInterface::class, ['sulu/product-bundle'])) {
+            $this->registerMcpIntegration($services);
+        }
+    }
+
+    private function registerMcpIntegration(ServicesConfigurator $services): void
+    {
+        $services->set(ProductContentTypeExtension::class)
+            ->autowire()
+            ->tag('sulu_mcp.content_type_extension');
+
+        $services->set(VariantParentResolver::class)
+            ->autowire();
+
+        // The tag is explicit because SuluMcpBundle's instanceof rule does not reach this file.
+        // sulu_admin.view_registry only exists in the admin container.
+        foreach ([McpProductAdminLinkProvider::class, McpProductVariantAdminLinkProvider::class] as $adminLinkProvider) {
+            $services->set($adminLinkProvider)
+                ->autowire()
+                ->arg('$viewRegistry', new Reference('sulu_admin.view_registry'))
+                ->tag('sulu_mcp.admin_link_provider')
+                ->tag('sulu.context', ['context' => 'admin']);
+        }
+
+        foreach ([
+            ProductGetTool::class,
+            ProductListTool::class,
+            ProductCreateTool::class,
+            ProductUpdateTool::class,
+            ProductVariantListTool::class,
+            ProductVariantCreateTool::class,
+            ProductVariantUpdateTool::class,
+            ProductFamilyListTool::class,
+            AttributeListTool::class,
+        ] as $mcpTool) {
+            // autoconfigure() is what picks up #[McpTool]; this bundle does not enable it by default.
+            $services->set($mcpTool)
+                ->autowire()
+                ->autoconfigure();
+        }
+
+        $services->set(McpGetProductsTool::class)
+            ->autoconfigure()
+            ->arg('$getProducts', new Reference('sulu_product.ai_get_products'));
+
+        $services->set(AttributeValueListTool::class)
+            ->autoconfigure()
+            ->arg('$getAttributeValues', new Reference('sulu_product.ai_get_attribute_values'));
+
+        $services->set(McpSearchProductsByAttributesTool::class)
+            ->autoconfigure()
+            ->arg('$searchProductsByAttributes', new Reference('sulu_product.ai_search_products_by_attributes'));
     }
 
     /**

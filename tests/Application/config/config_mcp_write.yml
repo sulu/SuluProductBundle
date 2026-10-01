@@ -1,0 +1,6 @@
+imports:
+    - config_mcp.yml
+
+sulu_mcp:
+    dangerous_tools:
+        product_write: true
