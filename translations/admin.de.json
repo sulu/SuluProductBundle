@@ -11,6 +11,7 @@
     "sulu_product.select_product_families": "Produktfamilien auswählen",
     "sulu_product.product_family_selection_label": "{count} {count, plural, =1 {Produktfamilie} other {Produktfamilien}} ausgewählt",
     "sulu_product.product_family_has_products": "Diese Produktfamilie kann nicht entfernt werden, da ihr noch Produkte zugeordnet sind.",
+    "sulu_product.variant_parent_not_found": "Diese Variante kann nicht wiederhergestellt werden, da ihr Elternprodukt nicht mehr existiert. Das Elternprodukt muss zuerst wiederhergestellt werden.",
     "sulu_product.required": "Pflichtfeld",
     "sulu_product.no_attribute_selected": "Kein Attribut ausgewählt",
     "sulu_product.select_attribute": "Attribut auswählen",

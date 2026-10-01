@@ -38,36 +38,28 @@ final class RemoveProductMessageHandler
     {
         $product = $this->productRepository->getOneBy($message->getIdentifier());
 
-        // The cascade-removed variants are only reachable before the flush, so their uuids travel
-        // with the event.
-        $variantUuids = [];
-        if ($product->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS)) {
-            foreach ($this->productRepository->findBy(['parent' => $product->getUuid()]) as $variant) {
-                /** @var string $variantResourceKey */
-                $variantResourceKey = $variant::RESOURCE_KEY;
-
-                // Store (not remove) — the parent's ON DELETE CASCADE removes the variant row once
-                // $this->productRepository->remove($product) below is flushed.
-                $this->trashManager?->store($variantResourceKey, $variant);
-
-                $variantUuids[] = $variant->getUuid();
-            }
-        }
-
-        $this->productRepository->remove($product);
-
         /** @var string $resourceKey */
         $resourceKey = $product::RESOURCE_KEY;
         $this->trashManager?->store($resourceKey, $product);
 
+        if ($product->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS)) {
+            foreach ($this->productRepository->findBy(['parent' => $product->getUuid()]) as $variant) {
+                $this->productRepository->remove($variant);
+                $this->collectRemovedEvent($variant, $message->getLocale());
+            }
+        }
+
+        $this->productRepository->remove($product);
+        $this->collectRemovedEvent($product, $message->getLocale());
+    }
+
+    private function collectRemovedEvent(ProductInterface $product, string $locale): void
+    {
         $dimensionContentCollection = new DimensionContentCollection($product->getDimensionContents(), [], ProductDimensionContent::class);
         /** @var ProductDimensionContentInterface|null $localizedDimensionContent */
-        $localizedDimensionContent = $dimensionContentCollection->getDimensionContent(['locale' => $message->getLocale()]);
+        $localizedDimensionContent = $dimensionContentCollection->getDimensionContent(['locale' => $locale]);
         $unlocalizedDimensionContent = $dimensionContentCollection->getDimensionContent(['locale' => null, 'stage' => 'draft']);
         $context = $unlocalizedDimensionContent?->getAvailableLocales() ? ['locales' => $unlocalizedDimensionContent->getAvailableLocales()] : [];
-        if ([] !== $variantUuids) {
-            $context['variantUuids'] = $variantUuids;
-        }
 
         // Try to get title from the removed locale first, fallback to any available locale if null
         $title = $localizedDimensionContent?->getTitle();

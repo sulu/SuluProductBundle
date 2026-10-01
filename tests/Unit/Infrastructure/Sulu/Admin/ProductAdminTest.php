@@ -321,6 +321,24 @@ class ProductAdminTest extends TestCase
         $this->assertSame(['sulu_admin.add'], $this->getVariantsToolbarActionTypes($viewCollection));
     }
 
+    public function testConfigureViewsWithDeletePermissionShowsVariantDelete(): void
+    {
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(true);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::ADD)->willReturn(true);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::DELETE)->willReturn(true);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::LIVE)->willReturn(true);
+        $this->securityChecker->hasPermission(ActivityAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(false);
+
+        $viewCollection = new ViewCollection();
+        $this->admin->configureViews($viewCollection);
+
+        $this->assertSame(
+            ['sulu_admin.add', 'sulu_admin.delete', 'sulu_admin.publishing'],
+            $this->getVariantsToolbarActionTypes($viewCollection),
+        );
+    }
+
     /**
      * @return string[]
      */

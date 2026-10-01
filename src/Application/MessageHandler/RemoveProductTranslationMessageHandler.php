@@ -13,9 +13,11 @@ namespace Sulu\Product\Application\MessageHandler;
 
 use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
 use Sulu\Bundle\TrashBundle\Application\TrashManager\TrashManagerInterface;
+use Sulu\Content\Domain\Model\DimensionContentCollection;
 use Sulu\Product\Application\Message\RemoveProductTranslationMessage;
 use Sulu\Product\Application\Workflow\ProductVariantUnpublisher;
 use Sulu\Product\Domain\Event\ProductTranslationRemovedEvent;
+use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
@@ -44,6 +46,8 @@ final class RemoveProductTranslationMessageHandler
         $this->trashManager?->store($resourceKey, $product, ['locale' => $locale]);
 
         $dimensionContents = $product->getDimensionContents();
+        $title = (new DimensionContentCollection($dimensionContents, [], ProductDimensionContent::class))
+            ->getDimensionContent(['locale' => $locale])?->getTitle();
 
         foreach ($dimensionContents as $dimensionContent) {
             if ($dimensionContent->getLocale() === $locale) {
@@ -64,7 +68,8 @@ final class RemoveProductTranslationMessageHandler
 
         $this->domainEventCollector->collect(new ProductTranslationRemovedEvent(
             $product,
-            $locale
+            $locale,
+            $title,
         ));
 
         // the variants lost the content they render in this locale

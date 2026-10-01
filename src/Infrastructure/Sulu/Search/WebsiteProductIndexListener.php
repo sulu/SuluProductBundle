@@ -37,7 +37,7 @@ final class WebsiteProductIndexListener
     public function onProductChanged(ProductWorkflowTransitionAppliedEvent|ProductRemovedEvent|ProductTranslationRemovedEvent $event): void
     {
         $productIds = $event instanceof ProductRemovedEvent
-            ? \array_values(\array_unique([$event->getResourceId(), ...$event->getVariantUuids()]))
+            ? [$event->getResourceId()]
             : $this->relatedProductIds($event->getProduct());
 
         $identifiers = [];
