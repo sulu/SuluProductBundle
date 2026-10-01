@@ -45,7 +45,7 @@ final class SearchProductsByAttributesTool
     #[McpTool(
         name: 'sulu_product_search_products_by_attributes',
         title: 'Search Products by Attribute',
-        description: 'Search published products by one or more specification attribute values, e.g. a rated current or a color. sulu_product_get_products cannot do this, since it only matches product titles and codes, not specs. Call sulu_attribute_list first to get the exact attribute keys.',
+        description: 'Search published products by one or more specification attribute values, e.g. a rated current or a color. sulu_product_get_products cannot do this, since it only matches product titles and codes, not specs. Call sulu_attribute_list first to get the exact attribute keys. Call sulu_attribute_value_list when the exact spelling of a value is unclear.',
         annotations: new ToolAnnotations(readOnlyHint: true, openWorldHint: false),
     )]
     #[RequiresPermission(requirements: [

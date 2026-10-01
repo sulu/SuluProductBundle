@@ -300,6 +300,7 @@ extension for the resource key `products`. The MCP bundle's generic tools (`sulu
 | `sulu_product_variant_list` | List the variants of a product. |
 | `sulu_product_family_list` | List the product families. |
 | `sulu_attribute_list` | List the attributes with their keys, types and options. |
+| `sulu_attribute_value_list` | List the values products carry for one attribute, with the value to search by. |
 | `sulu_product_get_products` | Search published products by keyword, article code or family. |
 | `sulu_product_search_products_by_attributes` | Search products by attribute values. |
 | `sulu_product_create` | Create a product draft. Needs `product_write`. |
@@ -311,7 +312,7 @@ The tools check the caller's permissions on these security contexts:
 
 - `sulu.product.products`: view for the product and variant read tools and the two search tools. Edit for the update tools, edit and add for the create tools.
 - `sulu.product.product_families`: view for `sulu_product_family_list`.
-- `sulu.product.attributes`: view for `sulu_attribute_list`.
+- `sulu.product.attributes`: view for `sulu_attribute_list` and `sulu_attribute_value_list`.
 
 The four write tools change data, so they are off by default. Enable them in the MCP bundle's configuration:
 
@@ -324,5 +325,7 @@ sulu_mcp:
 
 Publishing, unpublishing and deleting a product go through the generic tools with
 `resourceKey: products` and are gated by the MCP bundle's `publish` and `delete` flags.
+
+`product_write` covers only the four product tools. `sulu_block_add`, `sulu_block_update` and `sulu_block_reorder` accept `resourceKey: products` and write product drafts without it. They need edit on `sulu.product.products`, the same as for pages and articles.
 
 A ready-made prompt for the MCP client is in [docs/PRODUCT_ASSISTANT_PROMPT.md](docs/PRODUCT_ASSISTANT_PROMPT.md).

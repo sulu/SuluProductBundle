@@ -174,6 +174,7 @@ use Sulu\Product\Infrastructure\Symfony\Mcp\AdminLink\ProductAdminLinkProvider a
 use Sulu\Product\Infrastructure\Symfony\Mcp\AdminLink\ProductVariantAdminLinkProvider as McpProductVariantAdminLinkProvider;
 use Sulu\Product\Infrastructure\Symfony\Mcp\ProductContentTypeExtension;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\AttributeListTool;
+use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\AttributeValueListTool;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\GetProductsTool as McpGetProductsTool;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductCreateTool;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductFamilyListTool;
@@ -1481,6 +1482,10 @@ final class SuluProductBundle extends AbstractBundle
         $services->set(McpGetProductsTool::class)
             ->autoconfigure()
             ->arg('$getProducts', new Reference('sulu_product.ai_get_products'));
+
+        $services->set(AttributeValueListTool::class)
+            ->autoconfigure()
+            ->arg('$getAttributeValues', new Reference('sulu_product.ai_get_attribute_values'));
 
         $services->set(McpSearchProductsByAttributesTool::class)
             ->autoconfigure()

@@ -36,6 +36,7 @@ variants are created with `sulu_product_variant_create`. `sulu_product_create` r
 | `sulu_product_variant_list` | List the variants of one parent. |
 | `sulu_product_family_list` | Families, their UUIDs and attribute flags. |
 | `sulu_attribute_list` | Attributes with the integer ids used as keys. |
+| `sulu_attribute_value_list` | Values products carry for one attribute, with the `searchValue` to filter by. |
 | `sulu_product_get_products` | Search published products by keyword, article code or family. |
 | `sulu_product_search_products_by_attributes` | Search products by attribute values. |
 | `sulu_product_create` | Create a `product` or `product_with_variants`. Needs `product_write`. |
@@ -45,6 +46,8 @@ variants are created with `sulu_product_variant_create`. `sulu_product_create` r
 
 **Important details:**
 
+- Before `sulu_product_search_products_by_attributes`, call `sulu_attribute_value_list` when the exact
+  spelling of a value is unclear. Filter by its `searchValue`, not the display text.
 - Variants cannot be nested. Only a `product_with_variants` can hold them.
 - A variant inherits its parent's family, so `sulu_product_variant_create` takes no `productFamily`.
 - On a variant, pass only the **variant axes**. These are the attributes the family marks
