@@ -24,6 +24,7 @@ use Sulu\Bundle\AdminBundle\Admin\View\ViewCollection;
 use Sulu\Component\Localization\Manager\LocalizationManagerInterface;
 use Sulu\Component\Security\Authorization\PermissionTypes;
 use Sulu\Component\Security\Authorization\SecurityCheckerInterface;
+use Sulu\Content\Infrastructure\Sulu\Admin\ContentViewBuilderFactoryInterface;
 use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
 use Sulu\Product\Domain\Model\ProductInterface;
 
@@ -45,6 +46,7 @@ class ProductAdmin extends Admin
         private LocalizationManagerInterface $localizationManager,
         private ActivityViewBuilderFactoryInterface $activityViewBuilderFactory,
         private ProductAssociationTypeRegistry $associationTypeRegistry,
+        private ContentViewBuilderFactoryInterface $contentViewBuilderFactory,
     ) {
     }
 
@@ -139,8 +141,15 @@ class ProductAdmin extends Admin
                 ->setTitleProperty('title'),
         );
 
+        $workflowToolbarActions = $this->contentViewBuilderFactory->getWorkflowTransitionRequestToolbarActions(
+            ProductInterface::class,
+            publishVisibleCondition: $this->securityChecker->hasPermission(static::SECURITY_CONTEXT, PermissionTypes::LIVE)
+                ? '(!_permissions || _permissions.live)'
+                : 'false',
+        );
+
         // Details form — add mode
-        $addToolbarActions = [new ToolbarAction('sulu_admin.save')];
+        $addToolbarActions = [$workflowToolbarActions['save']];
         $viewCollection->add(
             $this->viewBuilderFactory->createFormViewBuilder(static::ADD_TABS_VIEW . '.details', '/details')
                 ->setResourceKey(ProductInterface::RESOURCE_KEY)
@@ -153,15 +162,7 @@ class ProductAdmin extends Admin
         );
 
         // Details form — edit mode
-        $editToolbarActions = [
-            new ToolbarAction(
-                'sulu_admin.save_with_publishing',
-                [
-                    'publish_visible_condition' => '(!_permissions || _permissions.live)',
-                    'save_visible_condition' => '(!_permissions || _permissions.edit)',
-                ]
-            ),
-        ];
+        $editToolbarActions = [$workflowToolbarActions['save'], $workflowToolbarActions['approval']];
         if ($this->securityChecker->hasPermission(static::SECURITY_CONTEXT, PermissionTypes::DELETE)) {
             $editToolbarActions[] = new ToolbarAction('sulu_admin.delete');
         }
@@ -263,6 +264,7 @@ class ProductAdmin extends Admin
                         PermissionTypes::EDIT,
                         PermissionTypes::DELETE,
                         PermissionTypes::LIVE,
+                        PermissionTypes::REVIEW,
                     ],
                 ],
             ],

@@ -684,6 +684,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu.core.localization_manager'),
                 new Reference('sulu_activity.activity_list_view_builder_factory'),
                 new Reference('sulu_product.association_type_registry'),
+                new Reference('sulu_content.content_view_builder_factory'),
             ])
             ->tag('sulu.context', ['context' => 'admin'])
             ->tag('sulu.admin');
@@ -1535,6 +1536,7 @@ final class SuluProductBundle extends AbstractBundle
                                 'list' => 'sulu_product.get_products',
                                 'detail' => 'sulu_product.get_product',
                             ],
+                            'security_context' => ProductAdmin::SECURITY_CONTEXT,
                         ],
                         ProductInterface::LIST_KEY_VERSIONS => [
                             'routes' => [
