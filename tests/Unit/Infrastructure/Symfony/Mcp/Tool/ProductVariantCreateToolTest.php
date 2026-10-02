@@ -21,6 +21,7 @@ use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Content\Application\ContentManager\ContentManagerInterface;
 use Sulu\Mcp\Application\AdminLink\AdminLinkGeneratorInterface;
+use Sulu\Product\Application\Mcp\DefaultProductUrlResolver;
 use Sulu\Product\Application\Mcp\VariantParentResolver;
 use Sulu\Product\Application\Message\CreateProductMessage;
 use Sulu\Product\Domain\Model\Attribute;
@@ -34,6 +35,8 @@ use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductVariantCreateTool;
+use Sulu\Route\Application\ResourceLocator\ResourceLocatorGeneratorInterface;
+use Sulu\Route\Application\ResourceLocator\ResourceLocatorRequest;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
@@ -68,7 +71,49 @@ final class ProductVariantCreateToolTest extends TestCase
                 $this->productFamilyRepository->reveal(),
             ),
             $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
+            $this->defaultProductUrlResolver(),
         );
+    }
+
+    public function testCreateVariantDefaultsTheUrlFromTheTitle(): void
+    {
+        $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => [10 => false, 11 => true]]));
+        $captured = $this->captureDispatchedMessage(new Product('variant-uuid'));
+
+        $this->tool->createProductVariant('en', 'parent-uuid', 'Red / XL');
+
+        $this->assertSame('/products/red-xl', $this->capturedData($captured)['url'] ?? null);
+    }
+
+    public function testCreateVariantKeepsAnExplicitUrl(): void
+    {
+        $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => [10 => false, 11 => true]]));
+        $captured = $this->captureDispatchedMessage(new Product('variant-uuid'));
+
+        $this->tool->createProductVariant('en', 'parent-uuid', 'Red / XL', url: '/shop/red-xl');
+
+        $this->assertSame('/shop/red-xl', $this->capturedData($captured)['url'] ?? null);
+    }
+
+    /**
+     * @param \Closure(): ?object $captured
+     *
+     * @return array<string, mixed>
+     */
+    private function capturedData(\Closure $captured): array
+    {
+        $message = $captured();
+        $this->assertInstanceOf(CreateProductMessage::class, $message);
+
+        return $message->getData();
+    }
+
+    private function defaultProductUrlResolver(): DefaultProductUrlResolver
+    {
+        $generator = $this->prophesize(ResourceLocatorGeneratorInterface::class);
+        $generator->generate(Argument::type(ResourceLocatorRequest::class))->willReturn('/products/red-xl');
+
+        return new DefaultProductUrlResolver($generator->reveal(), 'route', ['route_schema' => '/products/{implode(\'-\', object)}']);
     }
 
     public function testCreateVariantForcesTypeParentAndInheritedFamily(): void
@@ -257,6 +302,7 @@ final class ProductVariantCreateToolTest extends TestCase
             $this->contentManager->reveal(),
             new VariantParentResolver($this->productRepository->reveal(), $this->productFamilyRepository->reveal()),
             $adminLinkGenerator->reveal(),
+            $this->defaultProductUrlResolver(),
         );
 
         $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => [10 => false]]));

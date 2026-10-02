@@ -4,3 +4,11 @@ imports:
 sulu_mcp:
     dangerous_tools:
         product_write: true
+
+services:
+    test.sulu_product.product_create_tool:
+        alias: Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductCreateTool
+        public: true
+    test.sulu_product.product_variant_create_tool:
+        alias: Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductVariantCreateTool
+        public: true
