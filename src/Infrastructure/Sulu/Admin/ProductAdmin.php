@@ -143,8 +143,17 @@ class ProductAdmin extends Admin
                 ->setTitleProperty('title'),
         );
 
+        // Products send no `_permissions`, so the factory's default publish condition is always true.
+        // Without `live` the publish entries must be hidden here, or Publish answers 403.
+        $workflowToolbarActions = $this->contentViewBuilderFactory->getWorkflowTransitionRequestToolbarActions(
+            ProductInterface::class,
+            publishVisibleCondition: $this->securityChecker->hasPermission(static::SECURITY_CONTEXT, PermissionTypes::LIVE)
+                ? '(!_permissions || _permissions.live)'
+                : 'false',
+        );
+
         // Details form — add mode
-        $addToolbarActions = [new ToolbarAction('sulu_admin.save')];
+        $addToolbarActions = [$workflowToolbarActions['save']];
         $viewCollection->add(
             $this->viewBuilderFactory->createFormViewBuilder(static::ADD_TABS_VIEW . '.details', '/details')
                 ->setResourceKey(ProductInterface::RESOURCE_KEY)
@@ -157,18 +166,7 @@ class ProductAdmin extends Admin
         );
 
         // Details form — edit mode
-        // Products send no `_permissions`, so the factory's default publish condition is always true.
-        // Without `live` the publish entries must be hidden here, or Publish answers 403.
-        $workflowToolbarActions = $this->contentViewBuilderFactory->getWorkflowTransitionRequestToolbarActions(
-            ProductInterface::class,
-            publishVisibleCondition: $this->securityChecker->hasPermission(static::SECURITY_CONTEXT, PermissionTypes::LIVE)
-                ? '(!_permissions || _permissions.live)'
-                : 'false',
-        );
-        $editToolbarActions = [
-            $workflowToolbarActions['save'],
-            $workflowToolbarActions['approval'],
-        ];
+        $editToolbarActions = [$workflowToolbarActions['save'], $workflowToolbarActions['approval']];
         if ($this->securityChecker->hasPermission(static::SECURITY_CONTEXT, PermissionTypes::DELETE)) {
             $editToolbarActions[] = new ToolbarAction('sulu_admin.delete');
         }
