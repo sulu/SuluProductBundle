@@ -1385,12 +1385,6 @@ final class SuluProductBundle extends AbstractBundle
                                 'detail' => 'sulu_product.get_product',
                             ],
                         ],
-                        ProductInterface::LIST_KEY_LINKABLE => [
-                            'routes' => [
-                                'list' => 'sulu_product.get_linkable_products',
-                                'detail' => 'sulu_product.get_product',
-                            ],
-                        ],
                         ProductInterface::LIST_KEY_VERSIONS => [
                             'routes' => [
                                 'list' => 'sulu_product.get_product_versions',
@@ -1438,11 +1432,11 @@ final class SuluProductBundle extends AbstractBundle
                         'selection' => [
                             'product_selection' => [
                                 'default_type' => 'list_overlay',
-                                'resource_key' => ProductInterface::LIST_KEY_LINKABLE,
+                                'resource_key' => ProductInterface::RESOURCE_KEY,
                                 'types' => [
                                     'list_overlay' => [
                                         'adapter' => 'table',
-                                        'list_key' => ProductInterface::LIST_KEY_LINKABLE,
+                                        'list_key' => ProductInterface::LIST_KEY,
                                         'display_properties' => ['name'],
                                         'icon' => 'su-industry',
                                         'label' => 'sulu_product.selection_label',
@@ -1468,11 +1462,11 @@ final class SuluProductBundle extends AbstractBundle
                         'single_selection' => [
                             'single_product_selection' => [
                                 'default_type' => 'list_overlay',
-                                'resource_key' => ProductInterface::LIST_KEY_LINKABLE,
+                                'resource_key' => ProductInterface::RESOURCE_KEY,
                                 'types' => [
                                     'list_overlay' => [
                                         'adapter' => 'table',
-                                        'list_key' => ProductInterface::LIST_KEY_LINKABLE,
+                                        'list_key' => ProductInterface::LIST_KEY,
                                         // the selected item is loaded from the detail endpoint, which has no `name`
                                         'display_properties' => ['title'],
                                         'empty_text' => 'sulu_product.no_product_selected',

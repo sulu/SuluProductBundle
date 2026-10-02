@@ -108,7 +108,7 @@ class SingleProductSelectionPropertyResolverTest extends TestCase
         $contentView = $this->resolver->resolve('1', 'en', ['properties' => ['property1' => 'value1', 'property2' => 'value2']]);
         $content = $contentView->getContent();
         $this->assertInstanceOf(ResolvableResource::class, $content);
-        $this->assertSame(['properties' => ['property1' => 'value1', 'property2' => 'value2', 'title' => 'title', 'url' => 'url']], $content->getMetadata());
+        $this->assertSame(['properties' => ['property1' => 'value1', 'property2' => 'value2', 'title' => 'product.title', 'url' => 'url']], $content->getMetadata());
         $references = $contentView->getReferences();
         $this->assertCount(1, $references);
         $this->assertSame('1', $references[0]->getResourceId());
@@ -120,7 +120,7 @@ class SingleProductSelectionPropertyResolverTest extends TestCase
         $contentView = $this->resolver->resolve('1', 'en');
         $content = $contentView->getContent();
         $this->assertInstanceOf(ResolvableResource::class, $content);
-        $this->assertSame(['properties' => ['title' => 'title', 'url' => 'url']], $content->getMetadata());
+        $this->assertSame(['properties' => ['title' => 'product.title', 'url' => 'url']], $content->getMetadata());
         $references = $contentView->getReferences();
         $this->assertCount(1, $references);
     }
@@ -131,6 +131,6 @@ class SingleProductSelectionPropertyResolverTest extends TestCase
         $contentView = $this->resolver->resolve('1', 'en', ['metadata' => $metadata]);
         $content = $contentView->getContent();
         $this->assertInstanceOf(ResolvableResource::class, $content);
-        $this->assertSame(['properties' => ['title' => 'title', 'url' => 'url']], $content->getMetadata());
+        $this->assertSame(['properties' => ['title' => 'product.title', 'url' => 'url']], $content->getMetadata());
     }
 }

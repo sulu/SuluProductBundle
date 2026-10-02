@@ -114,6 +114,8 @@ class ProductAdmin extends Admin
             $this->viewBuilderFactory->createListViewBuilder(static::LIST_VIEW, '/:locale/products')
                 ->setResourceKey(ProductInterface::RESOURCE_KEY)
                 ->setListKey(ProductInterface::LIST_KEY)
+                ->addRequestParameters(['excludeVariants' => true])
+                ->addMetadataRequestParameters(['excludeVariants' => true])
                 ->addListAdapters(['table'])
                 ->addLocales($locales)
                 ->setDefaultLocale($locales[0] ?? '')

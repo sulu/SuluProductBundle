@@ -39,11 +39,26 @@ class ProductsListFiltersTest extends SuluTestCase
         );
     }
 
-    public function testTypeIsFilterableByTheTwoProductTypes(): void
+    public function testTypeOffersTheTypesOfASelection(): void
     {
         $field = $this->listMetadata()->getField('type');
 
         $this->assertSame('select', $field->getFilterType());
+        $this->assertSame(
+            [
+                'options' => [
+                    'product' => 'sulu_product.product_type_product',
+                    'variant' => 'sulu_product.product_type_variant',
+                ],
+            ],
+            $field->getFilterTypeParameters(),
+        );
+    }
+
+    public function testTypeOffersTheTypesOfTheAdminList(): void
+    {
+        $field = $this->listMetadata(metadataOptions: ['excludeVariants' => 'true'])->getField('type');
+
         $this->assertSame(
             [
                 'options' => [
@@ -99,14 +114,17 @@ class ProductsListFiltersTest extends SuluTestCase
         $this->assertSame('key', $field->getName());
     }
 
-    private function listMetadata(string $key = 'products'): ListMetadata
+    /**
+     * @param array<string, string> $metadataOptions
+     */
+    private function listMetadata(string $key = 'products', array $metadataOptions = []): ListMetadata
     {
         self::bootKernel();
 
         /** @var ListMetadataProvider $provider */
         $provider = self::getContainer()->get('sulu_admin.list_metadata_provider');
 
-        $metadata = $provider->getMetadata($key, 'en');
+        $metadata = $provider->getMetadata($key, 'en', $metadataOptions);
         $this->assertInstanceOf(ListMetadata::class, $metadata);
 
         return $metadata;

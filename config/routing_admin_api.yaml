@@ -4,12 +4,6 @@ sulu_product.get_products:
     controller: sulu_product.admin_product_controller::cgetAction
     format: json
 
-sulu_product.get_linkable_products:
-    path: /linkable-products.{_format}
-    methods: GET
-    controller: sulu_product.admin_product_controller::cgetLinkableAction
-    format: json
-
 sulu_product.get_product:
     path: /products/{id}.{_format}
     methods: GET

@@ -125,7 +125,7 @@ readonly class ProductSmartContentProvider implements SmartContentProviderInterf
                 ],
             )
             ->enableProperties([
-                'title' => 'title',
+                'title' => 'product.title',
                 'url' => 'url',
             ]);
 
@@ -192,12 +192,16 @@ readonly class ProductSmartContentProvider implements SmartContentProviderInterf
             $sortBys,
         );
         $this->addInternalFilters($queryBuilder, $filters, $alias);
-        $queryBuilder->addOrderBy(self::LINKED_ALIAS . '.position');
 
         // TODO refactor this part to not use distinct
         // we need the distinct here, because joins due to tags/categories can lead to duplicate results
         $queryBuilder->select('DISTINCT ' . self::LINKED_ALIAS . '.uuid as id');
         $this->smartContentQueryEnhancer->addOrderBySelects($queryBuilder);
+        // Keeps variants by position under their content owner, hidden so the admin preview shows no column for them.
+        $queryBuilder->addSelect($alias . '.uuid AS HIDDEN ownerUuid');
+        $queryBuilder->addSelect(self::LINKED_ALIAS . '.position AS HIDDEN linkedPosition');
+        $queryBuilder->addOrderBy('ownerUuid');
+        $queryBuilder->addOrderBy('linkedPosition');
         // after the order selects, which would otherwise override it with the title of the content owner
         $queryBuilder->addSelect(self::LINKED_CONTENT_ALIAS . '.title as title');
         $this->smartContentQueryEnhancer->addPagination($queryBuilder, $filters['offset'] ?? 0, $filters['limit']);
