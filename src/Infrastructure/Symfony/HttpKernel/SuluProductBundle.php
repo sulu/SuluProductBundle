@@ -39,6 +39,7 @@ use Sulu\Product\Application\Mapper\ProductFamilyMapper;
 use Sulu\Product\Application\Mapper\ProductFamilyMapperInterface;
 use Sulu\Product\Application\Mapper\ProductMapperInterface;
 use Sulu\Product\Application\Mapper\ProductParentMapper;
+use Sulu\Product\Application\Mcp\ProductAssociationResolver;
 use Sulu\Product\Application\Mcp\VariantParentResolver;
 use Sulu\Product\Application\MessageHandler\ApplyWorkflowTransitionProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\CopyLocaleProductMessageHandler;
@@ -176,6 +177,7 @@ use Sulu\Product\Infrastructure\Symfony\Mcp\ProductContentTypeExtension;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\AttributeListTool;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\AttributeValueListTool;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\GetProductsTool as McpGetProductsTool;
+use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductAssociationTypeListTool;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductCreateTool;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductFamilyListTool;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductGetTool;
@@ -1451,6 +1453,9 @@ final class SuluProductBundle extends AbstractBundle
         $services->set(VariantParentResolver::class)
             ->autowire();
 
+        $services->set(ProductAssociationResolver::class)
+            ->autowire();
+
         // The tag is explicit because SuluMcpBundle's instanceof rule does not reach this file.
         // sulu_admin.view_registry only exists in the admin container.
         foreach ([McpProductAdminLinkProvider::class, McpProductVariantAdminLinkProvider::class] as $adminLinkProvider) {
@@ -1463,6 +1468,7 @@ final class SuluProductBundle extends AbstractBundle
 
         foreach ([
             ProductGetTool::class,
+            ProductAssociationTypeListTool::class,
             ProductListTool::class,
             ProductCreateTool::class,
             ProductUpdateTool::class,

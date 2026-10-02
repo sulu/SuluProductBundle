@@ -21,14 +21,18 @@ use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Content\Application\ContentManager\ContentManagerInterface;
+use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Mcp\Application\AdminLink\AdminLinkGeneratorInterface;
 use Sulu\Mcp\Application\Content\BlockDataValidator;
 use Sulu\Mcp\Application\Content\ContentMetadataMapper;
 use Sulu\Mcp\Application\Metadata\MetadataLocaleResolver;
+use Sulu\Product\Application\Mcp\ProductAssociationResolver;
 use Sulu\Product\Application\Message\CreateProductMessage;
+use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductInterface;
+use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductCreateTool;
 use Sulu\Product\Tests\Unit\Fixture\ArrayMetadataProvider;
 use Sulu\Product\Tests\Unit\Fixture\FixedBlockIdGenerator;
@@ -61,6 +65,7 @@ final class ProductCreateToolTest extends TestCase
             new BlockDataValidator($this->formMetadataProvider(), new MetadataLocaleResolver(new TokenStorage(), 'en')),
             FixedBlockIdGenerator::returning('b1', 'b2', 'b3'),
             $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
+            $this->associationResolver(),
         );
     }
 
@@ -244,6 +249,63 @@ final class ProductCreateToolTest extends TestCase
         $this->assertSame([['type' => 'text', 'title' => 'Hello', '_id' => 'b1']], $data['blocks'] ?? null);
     }
 
+    public function testCreateProductWarnsWhenTheProductHasNoUrl(): void
+    {
+        $this->captureMessage(new Product('new-uuid'));
+
+        $result = $this->tool->createProduct('en', 'family-uuid', 'Shirt');
+
+        $this->assertTrue($result['success']);
+        $this->assertStringContainsString('sulu_product_update', \is_string($result['warning'] ?? null) ? $result['warning'] : '');
+    }
+
+    public function testCreateProductDoesNotWarnWhenTheProductHasAUrl(): void
+    {
+        $this->captureMessage(new Product('new-uuid'));
+        $this->contentManager->normalize(Argument::cetera())->willReturn([
+            'url' => ['page' => ['uuid' => 'page-uuid', 'path' => '/products'], 'suffix' => '/shirt'],
+        ]);
+
+        $result = $this->tool->createProduct('en', 'family-uuid', 'Shirt');
+
+        $this->assertArrayNotHasKey('warning', $result);
+    }
+
+    public function testCreateProductGeneratesTheUrlSuffixFromTheTitle(): void
+    {
+        $captured = $this->captureMessage(new Product('new-uuid'));
+
+        $this->tool->createProduct(
+            'en',
+            'family-uuid',
+            'Große Monstera Deliciosa!',
+            content: ['url' => ['page' => ['uuid' => 'page-uuid', 'path' => '/products']]],
+        );
+
+        $message = $captured();
+        $this->assertInstanceOf(CreateProductMessage::class, $message);
+        /** @var array<string, mixed> $data */
+        $data = $message->getData();
+        $this->assertSame(
+            ['page' => ['uuid' => 'page-uuid', 'path' => '/products'], 'suffix' => '/grosse-monstera-deliciosa'],
+            $data['url'] ?? null,
+        );
+    }
+
+    public function testCreateProductKeepsAGivenUrlSuffix(): void
+    {
+        $captured = $this->captureMessage(new Product('new-uuid'));
+        $url = ['page' => ['uuid' => 'page-uuid', 'path' => '/products'], 'suffix' => '/custom'];
+
+        $this->tool->createProduct('en', 'family-uuid', 'Shirt', content: ['url' => $url]);
+
+        $message = $captured();
+        $this->assertInstanceOf(CreateProductMessage::class, $message);
+        /** @var array<string, mixed> $data */
+        $data = $message->getData();
+        $this->assertSame($url, $data['url'] ?? null);
+    }
+
     public function testCreateProductRejectsABlockWithUnknownKeys(): void
     {
         $this->messageBus->dispatch(Argument::cetera())->shouldNotBeCalled();
@@ -286,6 +348,83 @@ final class ProductCreateToolTest extends TestCase
         $this->assertSame('https://admin.example/product', $result['admin_url'] ?? null);
     }
 
+    public function testCreateProductResolvesAssociationsToUuids(): void
+    {
+        $captured = $this->captureMessage(new Product('new-uuid'));
+
+        $result = $this->toolWithContentMetadata()->createProduct('en', 'family-uuid', 'Shirt', associations: ['accessory' => ['pot-uuid', 'BELT-1'], 'alternative' => []]);
+
+        $this->assertTrue($result['success']);
+        $message = $captured();
+        $this->assertInstanceOf(CreateProductMessage::class, $message);
+        /** @var array<string, mixed> $data */
+        $data = $message->getData();
+        $this->assertSame(['accessory' => ['pot-uuid', 'belt-uuid'], 'alternative' => []], $data['associations'] ?? null);
+    }
+
+    public function testCreateProductRejectsAnUnknownAssociationType(): void
+    {
+        $this->messageBus->dispatch(Argument::cetera())->shouldNotBeCalled();
+
+        $result = $this->toolWithContentMetadata()->createProduct('en', 'family-uuid', 'Shirt', associations: ['bogus' => ['pot-uuid']]);
+
+        $this->assertArrayNotHasKey('success', $result);
+        $this->assertIsString($result['error']);
+        $this->assertStringContainsString('bogus', $result['error']);
+        $this->assertIsString($result['hint']);
+        $this->assertStringContainsString('sulu_product_association_type_list', $result['hint']);
+    }
+
+    public function testCreateProductRejectsAnAssociationTargetThatDoesNotExist(): void
+    {
+        $this->messageBus->dispatch(Argument::cetera())->shouldNotBeCalled();
+
+        $result = $this->toolWithContentMetadata()->createProduct('en', 'family-uuid', 'Shirt', associations: ['accessory' => ['missing']]);
+
+        $this->assertIsString($result['error']);
+        $this->assertStringContainsString('missing', $result['error']);
+    }
+
+    public function testCreateProductSendsExcerptCategoriesAndTags(): void
+    {
+        $captured = $this->captureMessage(new Product('new-uuid'));
+
+        $this->toolWithContentMetadata()->createProduct('en', 'family-uuid', 'Shirt', excerpt: ['excerptCategories' => [3], 'excerptTags' => [4, 5]]);
+
+        $message = $captured();
+        $this->assertInstanceOf(CreateProductMessage::class, $message);
+        /** @var array<string, mixed> $data */
+        $data = $message->getData();
+        $this->assertSame([3], $data['excerptCategories'] ?? null);
+        $this->assertSame([4, 5], $data['excerptTags'] ?? null);
+    }
+
+    public function testCreateProductSendsMediaDetails(): void
+    {
+        $captured = $this->captureMessage(new Product('new-uuid'));
+        $details = ['image' => ['id' => 12], 'documents' => ['ids' => [34, 35]]];
+
+        $this->toolWithContentMetadata()->createProduct('en', 'family-uuid', 'Shirt', details: $details);
+
+        $message = $captured();
+        $this->assertInstanceOf(CreateProductMessage::class, $message);
+        /** @var array<string, mixed> $data */
+        $data = $message->getData();
+        $this->assertSame($details, $data['details'] ?? null);
+    }
+
+    private function associationResolver(): ProductAssociationResolver
+    {
+        $repository = $this->prophesize(ProductRepositoryInterface::class);
+        $repository->findOneBy(['uuid' => 'pot-uuid'])->willReturn(new Product('pot-uuid'));
+        $repository->findOneBy(['uuid' => 'BELT-1'])->willReturn(null);
+        $repository->findOneBy(['uuid' => 'missing'])->willReturn(null);
+        $repository->findOneBy(['code' => 'BELT-1', 'locale' => 'en', 'stage' => DimensionContentInterface::STAGE_DRAFT])->willReturn(new Product('belt-uuid'));
+        $repository->findOneBy(['code' => 'missing', 'locale' => 'en', 'stage' => DimensionContentInterface::STAGE_DRAFT])->willReturn(null);
+
+        return new ProductAssociationResolver($repository->reveal(), new ProductAssociationTypeRegistry(['accessory' => ['label' => 'Accessory'], 'alternative' => ['label' => 'Alternative']]));
+    }
+
     private function toolWithContentMetadata(?AdminLinkGeneratorInterface $adminLinkGenerator = null): ProductCreateTool
     {
         return new ProductCreateTool(
@@ -295,6 +434,7 @@ final class ProductCreateToolTest extends TestCase
             new BlockDataValidator(ProductContentMetadata::provider(), new MetadataLocaleResolver(new TokenStorage(), 'en')),
             FixedBlockIdGenerator::returning('b1', 'b2', 'b3'),
             $adminLinkGenerator ?? $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
+            $this->associationResolver(),
         );
     }
 
