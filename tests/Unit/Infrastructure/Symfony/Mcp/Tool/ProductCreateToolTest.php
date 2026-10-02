@@ -35,6 +35,7 @@ use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductCreateTool;
 use Sulu\Product\Tests\Unit\Fixture\ArrayMetadataProvider;
+use Sulu\Product\Tests\Unit\Fixture\CompletenessCheckerFactory;
 use Sulu\Product\Tests\Unit\Fixture\FixedBlockIdGenerator;
 use Sulu\Product\Tests\Unit\Fixture\ProductContentMetadata;
 use Symfony\Component\Messenger\Envelope;
@@ -66,6 +67,7 @@ final class ProductCreateToolTest extends TestCase
             FixedBlockIdGenerator::returning('b1', 'b2', 'b3'),
             $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
             $this->associationResolver(),
+            CompletenessCheckerFactory::create(),
         );
     }
 
@@ -81,6 +83,36 @@ final class ProductCreateToolTest extends TestCase
 
         $this->assertTrue($result['success']);
         $this->assertSame('new-uuid', $result['uuid']);
+    }
+
+    public function testCreateProductListsRecommendationsForAnIncompleteProduct(): void
+    {
+        $this->expectDispatch(new Product('new-uuid'));
+        $this->contentManager->resolve(Argument::cetera())->willReturn(new ProductDimensionContent(new Product()));
+        $this->contentManager->normalize(Argument::cetera())->willReturn(['title' => 'Shirt']);
+
+        $result = $this->tool->createProduct('en', 'family-uuid', 'Shirt');
+
+        $this->assertIsArray($result['recommendations'] ?? null);
+        $this->assertStringContainsString('No code.', \implode("\n", \array_filter($result['recommendations'], 'is_string')));
+    }
+
+    public function testCreateProductOmitsRecommendationsForACompleteProduct(): void
+    {
+        $this->expectDispatch(new Product('new-uuid'));
+        $this->contentManager->resolve(Argument::cetera())->willReturn(new ProductDimensionContent(new Product()));
+        $this->contentManager->normalize(Argument::cetera())->willReturn([
+            'title' => 'Shirt',
+            'code' => 'S-1',
+            'url' => ['page' => ['uuid' => 'p', 'path' => '/products'], 'suffix' => '/shirt'],
+            'excerptCategories' => [1],
+            'excerptTags' => [2],
+            'seo' => ['title' => 'Shirt', 'description' => 'A shirt'],
+        ]);
+
+        $result = $this->tool->createProduct('en', 'family-uuid', 'Shirt');
+
+        $this->assertArrayNotHasKey('recommendations', $result);
     }
 
     public function testCreateProductSendsFamilyCodeAndAttributes(): void
@@ -435,6 +467,7 @@ final class ProductCreateToolTest extends TestCase
             FixedBlockIdGenerator::returning('b1', 'b2', 'b3'),
             $adminLinkGenerator ?? $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
             $this->associationResolver(),
+            CompletenessCheckerFactory::create(),
         );
     }
 
