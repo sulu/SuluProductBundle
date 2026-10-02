@@ -70,7 +70,7 @@ final class ProductFamilyRepository implements ProductFamilyRepositoryInterface
             return null;
         }
 
-        $this->addRowMultiplyingSelects([$family], $selects);
+        $this->preloadCollections([$family], $selects);
 
         return $family;
     }
@@ -86,7 +86,7 @@ final class ProductFamilyRepository implements ProductFamilyRepositoryInterface
             throw new ProductFamilyNotFoundException($filters, $e);
         }
 
-        $this->addRowMultiplyingSelects([$family], $selects);
+        $this->preloadCollections([$family], $selects);
 
         return $family;
     }
@@ -98,7 +98,7 @@ final class ProductFamilyRepository implements ProductFamilyRepositoryInterface
             ->getQuery()
             ->getResult();
 
-        $this->addRowMultiplyingSelects($families, $selects);
+        $this->preloadCollections($families, $selects);
 
         return $families;
     }
@@ -188,7 +188,7 @@ final class ProductFamilyRepository implements ProductFamilyRepositoryInterface
      * @param list<ProductFamilyInterface> $families
      * @param ProductFamilyRepositorySelects $selects
      */
-    private function addRowMultiplyingSelects(array $families, array $selects): void
+    private function preloadCollections(array $families, array $selects): void
     {
         if ([] === $families) {
             return;

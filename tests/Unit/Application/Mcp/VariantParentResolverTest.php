@@ -150,30 +150,29 @@ final class VariantParentResolverTest extends TestCase
     public function testStripInheritedAttributesKeepsOnlyVariantAxes(): void
     {
         $family = $this->familyWithAttributes([
-            10 => false, // shared -> stripped
-            11 => true,  // variant axis -> kept
+            'shared-uuid' => false, // shared -> stripped
+            'axis-uuid' => true, // variant axis -> kept
         ]);
 
         $stripped = $this->resolver->stripInheritedAttributes($family, [
-            10 => 'shared value',
-            11 => 'red',
-            99 => 'unknown attribute is left untouched',
+            'shared-uuid' => 'shared value',
+            'axis-uuid' => 'red',
+            'unknown-uuid' => 'unknown attribute is left untouched',
         ]);
 
-        $this->assertSame([11 => 'red', 99 => 'unknown attribute is left untouched'], $stripped);
+        $this->assertSame(['axis-uuid' => 'red', 'unknown-uuid' => 'unknown attribute is left untouched'], $stripped);
     }
 
     /**
-     * @param array<int, bool> $variantSpecificByAttributeId
+     * @param array<string, bool> $variantSpecificByAttributeUuid
      */
-    private function familyWithAttributes(array $variantSpecificByAttributeId): ProductFamilyInterface
+    private function familyWithAttributes(array $variantSpecificByAttributeUuid): ProductFamilyInterface
     {
         $family = new ProductFamily();
         $group = new AttributeGroup();
 
-        foreach ($variantSpecificByAttributeId as $attributeId => $variantSpecific) {
-            $attribute = new Attribute($group);
-            $this->forceId($attribute, $attributeId);
+        foreach ($variantSpecificByAttributeUuid as $attributeUuid => $variantSpecific) {
+            $attribute = new Attribute($group, $attributeUuid);
 
             $familyAttribute = new ProductFamilyAttribute($family, $attribute);
             $familyAttribute->setVariantSpecific($variantSpecific);
@@ -181,12 +180,6 @@ final class VariantParentResolverTest extends TestCase
         }
 
         return $family;
-    }
-
-    private function forceId(object $entity, int $id): void
-    {
-        $reflection = new \ReflectionProperty($entity, 'id');
-        $reflection->setValue($entity, $id);
     }
 
     public function testAssertVariantOwnedByParentRejectsAnUnknownVariant(): void

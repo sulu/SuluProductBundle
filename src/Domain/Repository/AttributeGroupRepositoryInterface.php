@@ -25,7 +25,6 @@ use Sulu\Product\Domain\Model\AttributeGroupInterface;
  *     uuid?: 'asc'|'desc',
  *     externalIdentifier?: 'asc'|'desc',
  * }
- * @phpstan-type AttributeGroupRepositorySelects array<string, mixed>
  */
 interface AttributeGroupRepositoryInterface
 {
@@ -50,9 +49,8 @@ interface AttributeGroupRepositoryInterface
     /**
      * @param AttributeGroupRepositoryFilters $filters
      * @param AttributeGroupRepositorySortBy $sortBy
-     * @param AttributeGroupRepositorySelects $selects
      *
      * @return iterable<AttributeGroupInterface>
      */
-    public function findBy(array $filters = [], array $sortBy = [], array $selects = []): iterable;
+    public function findBy(array $filters = [], array $sortBy = []): iterable;
 }

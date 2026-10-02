@@ -86,6 +86,8 @@ class ProductAttributeTwigExtension extends AbstractExtension
 
         /** @var array<string, array{key: string, label: string, attributes: array<string, ResolvedAttribute>}> $groups */
         $groups = [];
+        /** @var array<string, array{\DateTimeImmutable, string}> $groupOrder */
+        $groupOrder = [];
 
         foreach ($productAttributeValues as $productAttributeValue) {
             $attribute = $productAttributeValue->getAttribute();
@@ -97,6 +99,7 @@ class ProductAttributeTwigExtension extends AbstractExtension
 
             $group = $attribute->getGroup();
             $groupKey = $group->getUuid();
+            $groupOrder[$groupKey] ??= [$group->getCreated(), $groupKey];
 
             $groups[$groupKey] ??= [
                 'key' => $groupKey,
@@ -118,8 +121,7 @@ class ProductAttributeTwigExtension extends AbstractExtension
             ];
         }
 
-        // uuid v7 strings sort by creation time
-        \uksort($groups, static fn (string $a, string $b): int => \strcmp($a, $b));
+        \uksort($groups, static fn (string $a, string $b): int => $groupOrder[$a] <=> $groupOrder[$b]);
 
         $result = [];
         foreach ($groups as $group) {

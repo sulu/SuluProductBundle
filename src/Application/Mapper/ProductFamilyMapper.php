@@ -66,7 +66,7 @@ final class ProductFamilyMapper implements ProductFamilyMapperInterface
     {
         $key = $message->getKey();
         $owner = $this->productFamilyRepository->findOneBy(['key' => $key]);
-        if (null !== $owner && $owner->getUuid() !== $family->getUuid()) {
+        if (null !== $owner) {
             throw new ProductFamilyKeyNotUniqueException($key);
         }
 

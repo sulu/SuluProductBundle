@@ -104,6 +104,10 @@ final class ProductFamilyController implements SecuredControllerInterface
             return new JsonResponse(['detail' => 'ProductFamily key is required.'], 400);
         }
 
+        if (\mb_strlen($key) > 255) {
+            return new JsonResponse(['detail' => 'ProductFamily key must not exceed 255 characters.'], 400);
+        }
+
         $message = new CreateProductFamilyMessage([...$this->getData($request), 'key' => $key]);
 
         try {

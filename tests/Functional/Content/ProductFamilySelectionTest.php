@@ -60,7 +60,7 @@ class ProductFamilySelectionTest extends SuluTestCase
         /** @var ProductFamilyRepositoryInterface $repository */
         $repository = self::getContainer()->get(ProductFamilyRepositoryInterface::class);
         $family = $repository->createNew();
-        $family->setKey(\uniqid('family-'));
+        $family->setKey('speakon');
         $family->setExternalIdentifier('SPK');
         $family->addTranslation(new ProductFamilyTranslation($family, 'en', 'speakON'));
         $repository->save($family);
@@ -87,8 +87,8 @@ class ProductFamilySelectionTest extends SuluTestCase
         $this->assertInstanceOf(ContentView::class, $loaded[$uuid]);
         $content = $loaded[$uuid]->getContent();
         $this->assertIsArray($content);
-        $this->assertSame(['uuid', 'externalIdentifier', 'name', 'image'], \array_keys($content));
-        $this->assertSame([$uuid, 'SPK', 'speakON'], [$content['uuid'], $content['externalIdentifier'], $content['name']]);
+        $this->assertSame(['uuid', 'key', 'externalIdentifier', 'name', 'image'], \array_keys($content));
+        $this->assertSame([$uuid, 'speakon', 'SPK', 'speakON'], [$content['uuid'], $content['key'], $content['externalIdentifier'], $content['name']]);
     }
 
     /** A selected family resolves to the flat shape of a product's `productFamily`, with its image loaded as media. */
@@ -100,7 +100,7 @@ class ProductFamilySelectionTest extends SuluTestCase
         /** @var ProductFamilyRepositoryInterface $familyRepository */
         $familyRepository = $container->get(ProductFamilyRepositoryInterface::class);
         $family = $familyRepository->createNew();
-        $family->setKey(\uniqid('family-'));
+        $family->setKey('speakon');
         $family->setExternalIdentifier('SPK');
         $family->setImage($media);
         $family->addTranslation(new ProductFamilyTranslation($family, 'en', 'speakON'));
@@ -131,8 +131,8 @@ class ProductFamilySelectionTest extends SuluTestCase
         $this->assertCount(1, $content['productFamilies']);
         $selected = $content['productFamilies'][0];
         $this->assertIsArray($selected);
-        $this->assertSame(['uuid', 'externalIdentifier', 'name', 'image'], \array_keys($selected));
-        $this->assertSame([$family->getUuid(), 'SPK', 'speakON'], [$selected['uuid'], $selected['externalIdentifier'], $selected['name']]);
+        $this->assertSame(['uuid', 'key', 'externalIdentifier', 'name', 'image'], \array_keys($selected));
+        $this->assertSame([$family->getUuid(), 'speakon', 'SPK', 'speakON'], [$selected['uuid'], $selected['key'], $selected['externalIdentifier'], $selected['name']]);
         $this->assertInstanceOf(Media::class, $selected['image']);
         $this->assertSame($media->getId(), $selected['image']->getId());
     }

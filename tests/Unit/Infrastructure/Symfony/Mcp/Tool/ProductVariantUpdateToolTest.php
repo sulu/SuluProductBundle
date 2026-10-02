@@ -73,9 +73,9 @@ final class ProductVariantUpdateToolTest extends TestCase
 
     public function testUpdateVariantMergesAxesAndStripsSharedAttributes(): void
     {
-        $captured = $this->givenVariantOfParent(['attributes' => ['10' => 'shared', '11' => 'M']]);
+        $captured = $this->givenVariantOfParent(['attributes' => ['shared-uuid' => 'shared', 'axis-uuid' => 'M']]);
 
-        $result = $this->tool->updateProductVariant('en', 'parent-uuid', 'variant-uuid', attributes: [11 => 'L']);
+        $result = $this->tool->updateProductVariant('en', 'parent-uuid', 'variant-uuid', attributes: ['axis-uuid' => 'L']);
 
         $this->assertTrue($result['success']);
         $this->assertSame('parent-uuid', $result['parent']);
@@ -83,9 +83,9 @@ final class ProductVariantUpdateToolTest extends TestCase
         $message = $captured();
         $this->assertInstanceOf(ModifyProductMessage::class, $message);
         $this->assertSame(
-            ['11' => 'L'],
+            ['axis-uuid' => 'L'],
             $message->getData()['attributes'] ?? null,
-            'Attribute 10 is shared and belongs on the parent; only the variant axis 11 may be written here.',
+            'The shared attribute belongs on the parent; only the variant axis may be written here.',
         );
     }
 
@@ -199,13 +199,11 @@ final class ProductVariantUpdateToolTest extends TestCase
 
     private function family(): ProductFamily
     {
-        $family = new ProductFamily();
-        $family->setUuid('family-uuid');
+        $family = new ProductFamily('family-uuid');
 
         $group = new AttributeGroup();
-        foreach ([10 => false, 11 => true] as $attributeId => $variantSpecific) {
-            $attribute = new Attribute($group);
-            (new \ReflectionProperty($attribute, 'id'))->setValue($attribute, $attributeId);
+        foreach (['shared-uuid' => false, 'axis-uuid' => true] as $attributeUuid => $variantSpecific) {
+            $attribute = new Attribute($group, $attributeUuid);
 
             $familyAttribute = new ProductFamilyAttribute($family, $attribute);
             $familyAttribute->setVariantSpecific($variantSpecific);

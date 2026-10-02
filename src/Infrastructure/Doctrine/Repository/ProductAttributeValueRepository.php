@@ -52,10 +52,10 @@ final class ProductAttributeValueRepository implements ProductAttributeValueRepo
         $queryBuilder = $this->createQueryBuilder($filters)
             ->select('MIN(attributeValue.id) AS representativeId', 'COUNT(attributeValue.id) AS valueCount')
             ->leftJoin('attributeValue.attributeOption', 'attributeOption')
-            ->andWhere("(attributeValue.text IS NOT NULL AND attributeValue.text <> '') OR attributeValue.number IS NOT NULL OR attributeOption.id IS NOT NULL")
+            ->andWhere("(attributeValue.text IS NOT NULL AND attributeValue.text <> '') OR attributeValue.number IS NOT NULL OR attributeOption.uuid IS NOT NULL")
             ->groupBy('attributeValue.text')
             ->addGroupBy('attributeValue.number')
-            ->addGroupBy('attributeOption.id')
+            ->addGroupBy('attributeOption.uuid')
             ->orderBy('valueCount', 'DESC')
             ->addOrderBy('representativeId', 'ASC')
             ->setMaxResults($limit);

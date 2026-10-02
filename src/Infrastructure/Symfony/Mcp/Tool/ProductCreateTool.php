@@ -68,7 +68,7 @@ final class ProductCreateTool
 
     /**
      * @param array<string, mixed>|null $content
-     * @param array<int, mixed>|null $attributes
+     * @param array<string, mixed>|null $attributes
      * @param array<string, mixed>|null $details
      * @param array<string, mixed>|null $excerpt
      * @param array<string, mixed>|null $seo
@@ -78,7 +78,7 @@ final class ProductCreateTool
     #[McpTool(
         name: 'sulu_product_create',
         title: 'Create Product',
-        description: 'Create a new product (draft). Workflow: 1) Call sulu_product_family_list to pick a family. "productFamily" is its UUID and is mandatory, because the family decides which attributes the product has. 2) Pass attribute values in "attributes" as a map keyed by the INTEGER attribute id, e.g. attributes={"12": "red", "15": 42}. Get those ids from sulu_attribute_list. Attributes the family marks required must be present or the save is rejected. Template fields go in "content" as a flat object. Call sulu_get_context for the product templates. Set type="product_with_variants" when the product should hold variants; its variant-specific attributes then belong on the variants, not here. To create the variants themselves use sulu_product_variant_create. This tool cannot create them. The product is created as a draft: call sulu_content_publish (resourceKey: products) to make it live.',
+        description: 'Create a new product (draft). Workflow: 1) Call sulu_product_family_list to pick a family. "productFamily" is its UUID and is mandatory, because the family decides which attributes the product has. 2) Pass attribute values in "attributes" as a map keyed by the attribute UUID, e.g. attributes={"<attribute uuid>": "red"}. Get those UUIDs from sulu_attribute_list. Attributes the family marks required must be present or the save is rejected. Template fields go in "content" as a flat object. Call sulu_get_context for the product templates. Set type="product_with_variants" when the product should hold variants; its variant-specific attributes then belong on the variants, not here. To create the variants themselves use sulu_product_variant_create. This tool cannot create them. The product is created as a draft: call sulu_content_publish (resourceKey: products) to make it live.',
         annotations: new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false),
     )]
     #[DangerousTool('product_write')]
@@ -101,7 +101,7 @@ final class ProductCreateTool
         ?string $template = null,
         #[Schema(type: 'object', description: 'Template field values as a flat object, e.g. {"description": "<p>…</p>"}. Call sulu_get_context to see the product templates and their fields. May include a "blocks" tree; block _ids are assigned automatically.', additionalProperties: true)]
         ?array $content = null,
-        #[Schema(type: 'object', description: 'Attribute values keyed by the INTEGER attribute id from sulu_attribute_list, e.g. {"12": "red", "15": 42}. Keys that are not numeric are ignored by Sulu.', additionalProperties: true)]
+        #[Schema(type: 'object', description: 'Attribute values keyed by the attribute UUID from sulu_attribute_list, e.g. {"<attribute uuid>": "red"}. Keys that are not attributes of the product\'s family are ignored.', additionalProperties: true)]
         ?array $attributes = null,
         #[Schema(type: 'object', description: 'Detail fields, e.g. {"shortDescription": "<p>…</p>", "image": {"id": 12}}. Media fields take {"id": <mediaId>}.', additionalProperties: true)]
         ?array $details = null,
@@ -203,7 +203,7 @@ final class ProductCreateTool
         } catch (\Throwable $e) {
             return [
                 'error' => \sprintf('Failed to create product "%s": %s', $title, $e->getMessage()),
-                'hint' => 'Verify the productFamily UUID exists (sulu_product_family_list), that "code" is unique, and that every attribute the family marks required is present in "attributes" keyed by its integer id (sulu_attribute_list).',
+                'hint' => 'Verify the productFamily UUID exists (sulu_product_family_list), that "code" is unique, and that every attribute the family marks required is present in "attributes" keyed by its UUID (sulu_attribute_list).',
             ];
         }
     }

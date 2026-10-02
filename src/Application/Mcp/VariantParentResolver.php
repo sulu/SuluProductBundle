@@ -114,7 +114,7 @@ final readonly class VariantParentResolver
     {
         foreach ($family->getFamilyAttributes() as $familyAttribute) {
             if (!$familyAttribute->isVariantSpecific()) {
-                unset($attributes[$familyAttribute->getAttribute()->getId()]);
+                unset($attributes[$familyAttribute->getAttribute()->getUuid()]);
             }
         }
 

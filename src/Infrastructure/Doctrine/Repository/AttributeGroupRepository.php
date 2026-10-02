@@ -26,7 +26,6 @@ use Webmozart\Assert\Assert;
 /**
  * @phpstan-import-type AttributeGroupRepositoryFilters from AttributeGroupRepositoryInterface
  * @phpstan-import-type AttributeGroupRepositorySortBy from AttributeGroupRepositoryInterface
- * @phpstan-import-type AttributeGroupRepositorySelects from AttributeGroupRepositoryInterface
  */
 final class AttributeGroupRepository implements AttributeGroupRepositoryInterface
 {
@@ -76,9 +75,8 @@ final class AttributeGroupRepository implements AttributeGroupRepositoryInterfac
     /**
      * @param AttributeGroupRepositoryFilters $filters
      * @param AttributeGroupRepositorySortBy $sortBy
-     * @param AttributeGroupRepositorySelects $selects
      */
-    public function createQueryBuilder(array $filters, array $sortBy = [], array $selects = []): QueryBuilder
+    public function createQueryBuilder(array $filters, array $sortBy = []): QueryBuilder
     {
         $queryBuilder = $this->entityRepository->createQueryBuilder('attributeGroup');
 
@@ -109,10 +107,10 @@ final class AttributeGroupRepository implements AttributeGroupRepositoryInterfac
         return $queryBuilder;
     }
 
-    public function findBy(array $filters = [], array $sortBy = [], array $selects = []): iterable
+    public function findBy(array $filters = [], array $sortBy = []): iterable
     {
         /** @var iterable<AttributeGroupInterface> $groups */
-        $groups = $this->createQueryBuilder($filters, $sortBy, $selects)
+        $groups = $this->createQueryBuilder($filters, $sortBy)
             ->getQuery()
             ->getResult();
 
