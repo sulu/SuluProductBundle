@@ -37,6 +37,7 @@ use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductUpdateTool;
 use Sulu\Product\Tests\Unit\Fixture\ArrayMetadataProvider;
+use Sulu\Product\Tests\Unit\Fixture\CompletenessCheckerFactory;
 use Sulu\Product\Tests\Unit\Fixture\FixedBlockIdGenerator;
 use Sulu\Product\Tests\Unit\Fixture\ProductContentMetadata;
 use Symfony\Component\Messenger\Envelope;
@@ -72,6 +73,7 @@ final class ProductUpdateToolTest extends TestCase
             FixedBlockIdGenerator::returning('b1', 'b2', 'b3'),
             $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
             $this->associationResolver(),
+            CompletenessCheckerFactory::create(),
         );
     }
 
@@ -334,6 +336,33 @@ final class ProductUpdateToolTest extends TestCase
         $this->assertStringContainsString('sulu_product_update', \is_string($result['warning'] ?? null) ? $result['warning'] : '');
     }
 
+    public function testUpdateProductListsRecommendationsForAnIncompleteProduct(): void
+    {
+        $this->givenProduct(['title' => 'Shirt']);
+
+        $result = $this->tool->updateProduct('uuid-1', 'en', title: 'Shirt');
+
+        $this->assertTrue($result['success']);
+        $this->assertIsArray($result['recommendations'] ?? null);
+        $this->assertStringContainsString('excerpt.excerptCategories', \implode("\n", \array_filter($result['recommendations'], 'is_string')));
+    }
+
+    public function testUpdateProductOmitsRecommendationsForACompleteProduct(): void
+    {
+        $this->givenProduct([
+            'title' => 'Shirt',
+            'code' => 'S-1',
+            'url' => ['page' => ['uuid' => 'p', 'path' => '/products'], 'suffix' => '/shirt'],
+            'excerptCategories' => [1],
+            'excerptTags' => [2],
+            'seo' => ['title' => 'Shirt', 'description' => 'A shirt'],
+        ]);
+
+        $result = $this->tool->updateProduct('uuid-1', 'en', title: 'Shirt');
+
+        $this->assertArrayNotHasKey('recommendations', $result);
+    }
+
     public function testUpdateProductDoesNotWarnWhenTheProductHasAUrl(): void
     {
         $this->givenProduct(['title' => 'Shirt', 'url' => ['page' => ['uuid' => 'p', 'path' => '/products'], 'suffix' => '/shirt']]);
@@ -393,6 +422,7 @@ final class ProductUpdateToolTest extends TestCase
             FixedBlockIdGenerator::returning('b1', 'b2', 'b3'),
             $adminLinkGenerator ?? $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
             $this->associationResolver(),
+            CompletenessCheckerFactory::create(),
         );
     }
 

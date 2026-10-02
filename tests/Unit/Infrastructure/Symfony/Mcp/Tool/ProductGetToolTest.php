@@ -28,6 +28,7 @@ use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductGetTool;
+use Sulu\Product\Tests\Unit\Fixture\CompletenessCheckerFactory;
 
 #[CoversClass(ProductGetTool::class)]
 final class ProductGetToolTest extends TestCase
@@ -48,6 +49,7 @@ final class ProductGetToolTest extends TestCase
         $this->tool = new ProductGetTool(
             $this->productRepository->reveal(),
             $this->contentManager->reveal(),
+            CompletenessCheckerFactory::create(),
         );
     }
 
@@ -68,6 +70,36 @@ final class ProductGetToolTest extends TestCase
         $this->assertNull($result['parent']);
         $this->assertIsArray($result['data']);
         $this->assertSame('Red Shirt', $result['data']['title']);
+    }
+
+    public function testGetProductListsRecommendationsForTheAskedLocale(): void
+    {
+        $this->productRepository->getOneBy(Argument::cetera())->willReturn(new Product('product-uuid'));
+        $this->contentManager->resolve(Argument::cetera())->willReturn(new ProductDimensionContent(new Product()));
+        $this->contentManager->normalize(Argument::cetera())->willReturn(['title' => 'Red Shirt']);
+
+        $result = $this->tool->getProduct('en', 'product-uuid');
+
+        $this->assertIsArray($result['recommendations'] ?? null);
+        $this->assertStringContainsString('sulu_tag_list', \implode("\n", \array_filter($result['recommendations'], 'is_string')));
+    }
+
+    public function testGetProductOmitsRecommendationsForACompleteProduct(): void
+    {
+        $this->productRepository->getOneBy(Argument::cetera())->willReturn(new Product('product-uuid'));
+        $this->contentManager->resolve(Argument::cetera())->willReturn(new ProductDimensionContent(new Product()));
+        $this->contentManager->normalize(Argument::cetera())->willReturn([
+            'title' => 'Red Shirt',
+            'code' => 'S-1',
+            'url' => '/shirt',
+            'excerptCategories' => [1],
+            'excerptTags' => [2],
+            'seo' => ['title' => 'Shirt', 'description' => 'A shirt'],
+        ]);
+
+        $result = $this->tool->getProduct('en', 'product-uuid');
+
+        $this->assertArrayNotHasKey('recommendations', $result);
     }
 
     public function testGetProductReportsItsParentForAVariant(): void

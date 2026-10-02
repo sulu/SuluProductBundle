@@ -40,6 +40,7 @@ use Sulu\Product\Application\Mapper\ProductFamilyMapperInterface;
 use Sulu\Product\Application\Mapper\ProductMapperInterface;
 use Sulu\Product\Application\Mapper\ProductParentMapper;
 use Sulu\Product\Application\Mcp\ProductAssociationResolver;
+use Sulu\Product\Application\Mcp\ProductCompletenessChecker;
 use Sulu\Product\Application\Mcp\VariantParentResolver;
 use Sulu\Product\Application\MessageHandler\ApplyWorkflowTransitionProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\CopyLocaleProductMessageHandler;
@@ -1457,6 +1458,10 @@ final class SuluProductBundle extends AbstractBundle
 
         $services->set(ProductAssociationResolver::class)
             ->autowire();
+
+        $services->set(ProductCompletenessChecker::class)
+            ->arg('$formMetadataProvider', new Reference('sulu_admin.form_metadata_provider'))
+            ->arg('$webspaceManager', new Reference('sulu_core.webspace.webspace_manager'));
 
         // The tag is explicit because SuluMcpBundle's instanceof rule does not reach this file.
         // sulu_admin.view_registry only exists in the admin container.

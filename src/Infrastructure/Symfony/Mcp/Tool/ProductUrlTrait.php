@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Infrastructure\Symfony\Mcp\Tool;
 
+use Sulu\Product\Application\Mcp\ProductCompletenessChecker;
+
 /**
  * The product route is only created when the saved data carries a "url". Without it the product
  * has no page on the website, and nothing fails to tell the agent.
@@ -60,18 +62,6 @@ trait ProductUrlTrait
      */
     private function hasProductUrl(array $normalized): bool
     {
-        $url = $normalized['url'] ?? null;
-
-        if (\is_string($url)) {
-            return '' !== $url;
-        }
-
-        if (!\is_array($url)) {
-            return false;
-        }
-
-        $page = $url['page'] ?? null;
-
-        return \is_array($page) && \is_string($page['uuid'] ?? null) && '' !== $page['uuid'];
+        return ProductCompletenessChecker::hasUrl($normalized);
     }
 }
