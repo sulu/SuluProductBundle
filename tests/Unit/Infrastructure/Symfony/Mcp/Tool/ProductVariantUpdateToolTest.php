@@ -20,6 +20,7 @@ use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Content\Application\ContentManager\ContentManagerInterface;
+use Sulu\Content\Domain\Exception\ContentNotFoundException;
 use Sulu\Mcp\Application\AdminLink\AdminLinkGeneratorInterface;
 use Sulu\Product\Application\Mcp\VariantParentResolver;
 use Sulu\Product\Application\Message\ModifyProductMessage;
@@ -246,6 +247,25 @@ final class ProductVariantUpdateToolTest extends TestCase
         $result = $tool->updateProductVariant('en', 'parent-uuid', 'variant-uuid', title: 'x');
 
         $this->assertSame('https://admin.example/variant', $result['admin_url'] ?? null);
+    }
+
+    public function testUpdateVariantCreatesANewLocale(): void
+    {
+        $captured = $this->givenVariantOfParent([]);
+        $calls = 0;
+        $this->contentManager->resolve(Argument::cetera())->will(function() use (&$calls): ProductDimensionContent {
+            if (1 === ++$calls) {
+                throw new ContentNotFoundException(new Product('variant-uuid'), []);
+            }
+
+            return new ProductDimensionContent(new Product());
+        });
+
+        $this->tool->updateProductVariant('de', 'parent-uuid', 'variant-uuid', title: 'Rot');
+
+        $message = $captured();
+        $this->assertInstanceOf(ModifyProductMessage::class, $message);
+        $this->assertSame('Rot', $message->getData()['title'] ?? null);
     }
 
     public function testUpdateVariantReturnsErrorOnFailure(): void

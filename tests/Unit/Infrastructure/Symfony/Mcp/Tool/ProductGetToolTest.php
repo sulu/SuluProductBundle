@@ -20,6 +20,7 @@ use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Content\Application\ContentManager\ContentManagerInterface;
+use Sulu\Content\Domain\Exception\ContentNotFoundException;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
 use Sulu\Product\Domain\Model\Product;
@@ -91,20 +92,32 @@ final class ProductGetToolTest extends TestCase
     public function testGetProductPassesDraftFiltersToRepository(): void
     {
         $this->productRepository->getOneBy(
-            [
-                'uuid' => 'my-uuid',
+            ['uuid' => 'my-uuid'],
+            Argument::withEntry(ProductRepositoryInterface::SELECT_PRODUCT_CONTENT, Argument::withEntry('dimensionAttributes', [
                 'locale' => 'de',
                 'stage' => DimensionContentInterface::STAGE_DRAFT,
-            ],
-            [
-                ProductRepositoryInterface::GROUP_SELECT_PRODUCT_ADMIN => true,
-            ],
+            ])),
         )->shouldBeCalledOnce()->willReturn(new Product('my-uuid'));
 
         $this->contentManager->resolve(Argument::cetera())->willReturn(new ProductDimensionContent(new Product()));
         $this->contentManager->normalize(Argument::cetera())->willReturn([]);
 
         $this->tool->getProduct('de', 'my-uuid');
+    }
+
+    public function testGetProductReturnsEmptyDataForALocaleWithoutContent(): void
+    {
+        $this->productRepository->getOneBy(Argument::cetera())->willReturn(new Product('product-uuid'));
+        $this->contentManager->resolve(Argument::cetera())->willThrow(new ContentNotFoundException(new Product('product-uuid'), []));
+
+        $result = $this->tool->getProduct('de', 'product-uuid');
+
+        $this->assertArrayNotHasKey('error', $result);
+        $this->assertSame('product-uuid', $result['uuid']);
+        $this->assertSame('de', $result['locale']);
+        $this->assertSame([], $result['data']);
+        $this->assertIsString($result['hint']);
+        $this->assertStringContainsString('sulu_product_update', $result['hint']);
     }
 
     public function testGetProductReturnsErrorForMissingProduct(): void

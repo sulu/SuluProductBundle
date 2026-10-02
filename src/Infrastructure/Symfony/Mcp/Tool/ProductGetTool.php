@@ -17,7 +17,6 @@ use Mcp\Capability\Attribute\McpTool;
 use Mcp\Schema\ToolAnnotations;
 use Sulu\Component\Security\Authorization\PermissionTypes;
 use Sulu\Content\Application\ContentManager\ContentManagerInterface;
-use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Mcp\Application\Content\ContentNormalizerTrait;
 use Sulu\Mcp\Domain\Security\PermissionRequirement;
 use Sulu\Mcp\Domain\Security\RequiresPermission;
@@ -31,6 +30,7 @@ use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 final class ProductGetTool
 {
     use ContentNormalizerTrait;
+    use LoadsProductLocaleTrait;
 
     public function __construct(
         private readonly ProductRepositoryInterface $productRepository,
@@ -44,7 +44,7 @@ final class ProductGetTool
     #[McpTool(
         name: 'sulu_product_get',
         title: 'Get Product',
-        description: 'Get a product by UUID, including its attribute values. Returns "productFamily" as the family UUID and "attributes" as a map keyed by the integer attribute id (e.g. {"12": "red"}). Resolve those ids to readable keys with sulu_attribute_list. Number attributes that carry a measurement unit also return a "<id>_unit" entry. Works for plain products, variant parents, and variants alike; use sulu_product_variant_list to see a parent\'s variants.',
+        description: 'Get a product by UUID, including its attribute values. Returns "productFamily" as the family UUID and "attributes" as a map keyed by the integer attribute id (e.g. {"12": "red"}). Resolve those ids to readable keys with sulu_attribute_list. Number attributes that carry a measurement unit also return a "<id>_unit" entry. "associations" maps each association type to the UUIDs of the linked products. "details" holds shortDescription, image and documents. "excerptCategories" and "excerptTags" are lists of integer ids. All of it can be passed back to sulu_product_update. A locale without content returns empty "data" and a hint. Works for plain products, variant parents, and variants alike; use sulu_product_variant_list to see a parent\'s variants.',
         annotations: new ToolAnnotations(readOnlyHint: true, openWorldHint: false),
     )]
     #[RequiresPermission(requirements: [
@@ -53,23 +53,18 @@ final class ProductGetTool
     public function getProduct(string $locale, string $uuid): array
     {
         try {
-            $product = $this->productRepository->getOneBy(
-                [
-                    'uuid' => $uuid,
+            [$product, $normalized] = $this->loadProductLocale($uuid, $locale);
+
+            if (null === $normalized) {
+                return [
+                    'uuid' => $product->getUuid(),
                     'locale' => $locale,
-                    'stage' => DimensionContentInterface::STAGE_DRAFT,
-                ],
-                [
-                    ProductRepositoryInterface::GROUP_SELECT_PRODUCT_ADMIN => true,
-                ],
-            );
-
-            $dimensionContent = $this->contentManager->resolve($product, [
-                'locale' => $locale,
-                'stage' => DimensionContentInterface::STAGE_DRAFT,
-            ]);
-
-            $normalized = $this->contentManager->normalize($dimensionContent);
+                    'type' => $product->getType(),
+                    'parent' => $product->getParent()?->getUuid(),
+                    'data' => [],
+                    'hint' => \sprintf('The product has no content in "%s" yet. Call sulu_product_update (or sulu_product_variant_update for a variant) with this locale to create it.', $locale),
+                ];
+            }
 
             return [
                 'uuid' => $product->getUuid(),
@@ -81,7 +76,7 @@ final class ProductGetTool
         } catch (ProductNotFoundException) {
             return [
                 'error' => 'Product not found: ' . $uuid,
-                'hint' => 'Verify the UUID and locale. Use sulu_product_list to find products.',
+                'hint' => 'Verify the UUID. Use sulu_product_list to find products.',
             ];
         } catch (\Throwable $e) {
             return [
