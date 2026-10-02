@@ -72,15 +72,15 @@ final class ProductUpdateToolTest extends TestCase
 
     public function testUpdateProductMergesAttributesIntoTheCurrentState(): void
     {
-        $captured = $this->givenProduct(['title' => 'Shirt', 'attributes' => ['10' => 'blue', '11' => 'M']]);
+        $captured = $this->givenProduct(['title' => 'Shirt', 'attributes' => ['colour-uuid' => 'blue', 'size-uuid' => 'M']]);
 
-        $result = $this->tool->updateProduct('uuid-1', 'en', attributes: ['11' => 'L']);
+        $result = $this->tool->updateProduct('uuid-1', 'en', attributes: ['size-uuid' => 'L']);
 
         $this->assertTrue($result['success']);
 
         $message = $captured();
         $this->assertInstanceOf(ModifyProductMessage::class, $message);
-        $this->assertSame(['10' => 'blue', '11' => 'L'], $message->getData()['attributes'] ?? null);
+        $this->assertSame(['colour-uuid' => 'blue', 'size-uuid' => 'L'], $message->getData()['attributes'] ?? null);
     }
 
     public function testUpdateProductSetsTheShadow(): void

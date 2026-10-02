@@ -18,16 +18,17 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Sulu\Bundle\MediaBundle\Entity\MediaInterface;
 use Sulu\Component\Persistence\Model\AuditableTrait;
+use Symfony\Component\Uid\Uuid;
 
 class ProductFamily implements ProductFamilyInterface
 {
     use AuditableTrait;
 
-    protected int $id;
-
-    protected ?string $uuid = null;
+    protected string $uuid;
 
     protected ?string $externalIdentifier = null;
+
+    protected string $key;
 
     protected ?string $defaultLocale = null;
 
@@ -39,27 +40,16 @@ class ProductFamily implements ProductFamilyInterface
     /** @var Collection<int, ProductFamilyAttributeInterface> */
     protected Collection $familyAttributes;
 
-    public function __construct()
+    public function __construct(?string $uuid = null)
     {
+        $this->uuid = $uuid ?: Uuid::v7()->toRfc4122();
         $this->translations = new ArrayCollection();
         $this->familyAttributes = new ArrayCollection();
     }
 
-    public function getId(): int
-    {
-        return $this->id;
-    }
-
-    public function getUuid(): ?string
+    public function getUuid(): string
     {
         return $this->uuid;
-    }
-
-    public function setUuid(string $uuid): self
-    {
-        $this->uuid = $uuid;
-
-        return $this;
     }
 
     public function getExternalIdentifier(): ?string
@@ -82,6 +72,18 @@ class ProductFamily implements ProductFamilyInterface
     public function setImage(?MediaInterface $image): self
     {
         $this->image = $image;
+
+        return $this;
+    }
+
+    public function getKey(): string
+    {
+        return $this->key;
+    }
+
+    public function setKey(string $key): self
+    {
+        $this->key = $key;
 
         return $this;
     }

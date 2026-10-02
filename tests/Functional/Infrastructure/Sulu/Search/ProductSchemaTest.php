@@ -41,11 +41,11 @@ class ProductSchemaTest extends SuluTestCase
 
         $product = $index->fields['product'];
         $this->assertInstanceOf(Field\ObjectField::class, $product);
-        foreach (['productFamilyId', 'attributes_text_values', 'attributes_numeric_values'] as $name) {
+        foreach (['productFamilyKey', 'attributes_text_values', 'attributes_numeric_values'] as $name) {
             $this->assertArrayHasKey($name, $product->fields, $name);
         }
 
-        $this->assertContains('product.productFamilyId', $index->facetFields);
+        $this->assertContains('product.productFamilyKey', $index->facetFields);
         $this->assertContains('product.attributes_text_values', $index->filterableFields);
         $this->assertContains('product.attributes_text_values', $index->facetFields);
         $this->assertTrue($product->fields['attributes_text_values']->multiple);
@@ -63,7 +63,7 @@ class ProductSchemaTest extends SuluTestCase
         /** @var EntityManagerInterface $entityManager */
         $entityManager = $container->get('doctrine.orm.entity_manager');
 
-        $group = $groupRepository->create();
+        $group = $groupRepository->createNew();
         $groupRepository->save($group);
         foreach ([
             ['weight', AttributeInterface::TYPE_NUMBER, true],
@@ -72,7 +72,7 @@ class ProductSchemaTest extends SuluTestCase
             ['colour', AttributeInterface::TYPE_OPTIONS, true],
             ['note', AttributeInterface::TYPE_TEXT, false],
         ] as [$key, $type, $filterable]) {
-            $attribute = $attributeRepository->create($group);
+            $attribute = $attributeRepository->createNew($group);
             $attribute->setKey($key);
             $attribute->setType($type);
             $attribute->setFilterable($filterable);
@@ -112,9 +112,9 @@ class ProductSchemaTest extends SuluTestCase
         $fields = $this->numericFields($loader->load()->indexes['website']->fields);
         $this->assertArrayNotHasKey('weight', $fields);
 
-        $group = $groupRepository->create();
+        $group = $groupRepository->createNew();
         $groupRepository->save($group);
-        $attribute = $attributeRepository->create($group);
+        $attribute = $attributeRepository->createNew($group);
         $attribute->setKey('weight');
         $attribute->setType(AttributeInterface::TYPE_NUMBER);
         $attribute->setFilterable(true);
@@ -167,7 +167,7 @@ class ProductSchemaTest extends SuluTestCase
 
         $this->assertArrayHasKey('id', $index->fields);
         $this->assertSame([], $this->numericFields($index->fields));
-        $this->assertContains('product.productFamilyId', $index->filterableFields);
+        $this->assertContains('product.productFamilyKey', $index->filterableFields);
     }
 
     public function testSchemaWithoutWebsiteIndexIsReturnedUnchanged(): void
@@ -206,9 +206,9 @@ class ProductSchemaTest extends SuluTestCase
         /** @var EntityManagerInterface $entityManager */
         $entityManager = $container->get('doctrine.orm.entity_manager');
 
-        $group = $groupRepository->create();
+        $group = $groupRepository->createNew();
         $groupRepository->save($group);
-        $attribute = $attributeRepository->create($group);
+        $attribute = $attributeRepository->createNew($group);
         $attribute->setKey($key);
         $attribute->setType(AttributeInterface::TYPE_NUMBER);
         $attribute->setFilterable(true);

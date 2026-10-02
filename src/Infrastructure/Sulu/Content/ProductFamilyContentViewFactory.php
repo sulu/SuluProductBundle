@@ -32,6 +32,7 @@ final class ProductFamilyContentViewFactory
 
         return ContentView::create([
             'uuid' => $family->getUuid(),
+            'key' => $family->getKey(),
             'externalIdentifier' => $family->getExternalIdentifier(),
             'name' => $family->getTranslation($locale)?->getName(),
             'image' => null === $image

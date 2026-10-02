@@ -21,13 +21,12 @@ use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
-use Sulu\Product\Domain\Model\AttributeGroupAttribute;
 use Sulu\Product\Domain\Model\AttributeGroupTranslation;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeOption;
 use Sulu\Product\Domain\Model\AttributeOptionTranslation;
 use Sulu\Product\Domain\Model\AttributeTranslation;
-use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
+use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\AttributeListTool;
 
 #[CoversClass(AttributeListTool::class)]
@@ -35,29 +34,29 @@ final class AttributeListToolTest extends TestCase
 {
     use ProphecyTrait;
 
-    /** @var ObjectProphecy<AttributeGroupRepositoryInterface> */
-    private ObjectProphecy $attributeGroupRepository;
+    /** @var ObjectProphecy<AttributeRepositoryInterface> */
+    private ObjectProphecy $attributeRepository;
     private AttributeListTool $tool;
 
     protected function setUp(): void
     {
-        $this->attributeGroupRepository = $this->prophesize(AttributeGroupRepositoryInterface::class);
-        $this->tool = new AttributeListTool($this->attributeGroupRepository->reveal());
+        $this->attributeRepository = $this->prophesize(AttributeRepositoryInterface::class);
+        $this->tool = new AttributeListTool($this->attributeRepository->reveal());
     }
 
-    public function testListAttributesExposesTheIntegerIdUsedAsAttributeKey(): void
+    public function testListAttributesExposesTheUuidUsedAsAttributeKey(): void
     {
-        $group = new AttributeGroup();
+        $group = new AttributeGroup('group-uuid');
         $group->addTranslation(new AttributeGroupTranslation($group, 'en', 'Appearance'));
 
-        $this->addAttribute($group, 12, 'colour', AttributeInterface::TYPE_TEXT, 'Colour');
+        $colour = $this->attribute($group, 'colour-uuid', 'colour', AttributeInterface::TYPE_TEXT, 'Colour');
 
-        // Pinned: a lost select here costs a query per row and nothing else would notice.
-        $this->attributeGroupRepository->findBy([], [], [
-            AttributeGroupRepositoryInterface::SELECT_GROUP_TRANSLATIONS => true,
-            AttributeGroupRepositoryInterface::SELECT_GROUP_ATTRIBUTES => true,
-            AttributeGroupRepositoryInterface::SELECT_GROUP_ATTRIBUTE_TRANSLATIONS => true,
-        ])->willReturn([$group])->shouldBeCalledOnce();
+        // Pinned: a lost select here costs queries per row and nothing else would notice.
+        $this->attributeRepository->findBy([], [
+            AttributeRepositoryInterface::SELECT_ATTRIBUTE_TRANSLATIONS => true,
+            AttributeRepositoryInterface::SELECT_ATTRIBUTE_GROUP => true,
+            AttributeRepositoryInterface::SELECT_ATTRIBUTE_OPTIONS => true,
+        ])->willReturn([$colour])->shouldBeCalledOnce();
 
         $result = $this->tool->listAttributes('en');
 
@@ -67,7 +66,8 @@ final class AttributeListToolTest extends TestCase
         $attribute = $result['attributes'][0];
         $this->assertIsArray($attribute);
         $this->assertSame('Appearance', $attribute['group']);
-        $this->assertSame(12, $attribute['id']);
+        $this->assertSame('colour-uuid', $attribute['id']);
+        $this->assertSame('group-uuid', $attribute['groupUuid']);
         $this->assertSame('colour', $attribute['key']);
         $this->assertSame(AttributeInterface::TYPE_TEXT, $attribute['type']);
         $this->assertSame('Colour', $attribute['name']);
@@ -77,13 +77,13 @@ final class AttributeListToolTest extends TestCase
     public function testListAttributesIncludesOptionsForOptionAttributes(): void
     {
         $group = new AttributeGroup();
-        $attribute = $this->addAttribute($group, 13, 'size', AttributeInterface::TYPE_OPTIONS, 'Size');
+        $attribute = $this->attribute($group, 'size-uuid', 'size', AttributeInterface::TYPE_OPTIONS, 'Size');
 
         $option = new AttributeOption($attribute, 'xl');
         $option->addTranslation(new AttributeOptionTranslation($option, 'en', 'Extra Large'));
         $attribute->addOption($option);
 
-        $this->attributeGroupRepository->findBy(Argument::cetera())->willReturn([$group]);
+        $this->attributeRepository->findBy(Argument::cetera())->willReturn([$attribute]);
 
         $result = $this->tool->listAttributes('en');
 
@@ -96,9 +96,9 @@ final class AttributeListToolTest extends TestCase
     public function testListAttributesFallsBackToTheKeyWhenALocaleIsMissing(): void
     {
         $group = new AttributeGroup();
-        $this->addAttribute($group, 14, 'material', AttributeInterface::TYPE_TEXT, 'Material');
+        $material = $this->attribute($group, 'material-uuid', 'material', AttributeInterface::TYPE_TEXT, 'Material');
 
-        $this->attributeGroupRepository->findBy(Argument::cetera())->willReturn([$group]);
+        $this->attributeRepository->findBy(Argument::cetera())->willReturn([$material]);
 
         $result = $this->tool->listAttributes('de');
 
@@ -111,11 +111,11 @@ final class AttributeListToolTest extends TestCase
     public function testListAttributesSortsAndPagesTheFlattenedList(): void
     {
         $group = new AttributeGroup();
-        $this->addAttribute($group, 30, 'alpha', AttributeInterface::TYPE_TEXT, 'Alpha');
-        $this->addAttribute($group, 31, 'bravo', AttributeInterface::TYPE_TEXT, 'Bravo');
-        $this->addAttribute($group, 32, 'charlie', AttributeInterface::TYPE_TEXT, 'Charlie');
-
-        $this->attributeGroupRepository->findBy(Argument::cetera())->willReturn([$group]);
+        $this->attributeRepository->findBy(Argument::cetera())->willReturn([
+            $this->attribute($group, 'alpha-uuid', 'alpha', AttributeInterface::TYPE_TEXT, 'Alpha'),
+            $this->attribute($group, 'bravo-uuid', 'bravo', AttributeInterface::TYPE_TEXT, 'Bravo'),
+            $this->attribute($group, 'charlie-uuid', 'charlie', AttributeInterface::TYPE_TEXT, 'Charlie'),
+        ]);
 
         $descending = $this->tool->listAttributes('en', sortBy: 'key', sortOrder: 'desc');
         $this->assertIsArray($descending['attributes']);
@@ -140,7 +140,7 @@ final class AttributeListToolTest extends TestCase
 
     public function testListAttributesReturnsErrorOnFailure(): void
     {
-        $this->attributeGroupRepository->findBy(Argument::cetera())->willThrow(new \RuntimeException('DB gone'));
+        $this->attributeRepository->findBy(Argument::cetera())->willThrow(new \RuntimeException('DB gone'));
 
         $result = $this->tool->listAttributes('en');
 
@@ -159,15 +159,12 @@ final class AttributeListToolTest extends TestCase
         $this->assertSame('sulu_attribute_list', $instance->name);
     }
 
-    private function addAttribute(AttributeGroup $group, int $id, string $key, string $type, string $name): Attribute
+    private function attribute(AttributeGroup $group, string $uuid, string $key, string $type, string $name): Attribute
     {
-        $attribute = new Attribute($group);
-        (new \ReflectionProperty($attribute, 'id'))->setValue($attribute, $id);
+        $attribute = new Attribute($group, $uuid);
         $attribute->setKey($key);
         $attribute->setType($type);
         $attribute->addTranslation(new AttributeTranslation($attribute, 'en', $name));
-
-        $group->addGroupAttribute(new AttributeGroupAttribute($group, $attribute));
 
         return $attribute;
     }

@@ -30,6 +30,7 @@ use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Doctrine\Repository\ProductFamilyRepository;
+use Symfony\Component\Uid\Uuid;
 
 #[CoversClass(ProductFamilyRepository::class)]
 class ProductFamilyRepositoryTest extends SuluTestCase
@@ -78,16 +79,18 @@ class ProductFamilyRepositoryTest extends SuluTestCase
         \restore_exception_handler();
     }
 
-    public function testCreateReturnsFamilyWithUuid(): void
+    public function testCreateNewGeneratesUuidAndAcceptsPinnedUuid(): void
     {
-        $family = $this->repository->create();
-        $this->assertNotNull($family->getUuid());
-        $this->assertNotSame('', $family->getUuid());
+        $this->assertTrue(Uuid::isValid($this->repository->createNew()->getUuid()));
+
+        $uuid = Uuid::v7()->toRfc4122();
+        $this->assertSame($uuid, $this->repository->createNew($uuid)->getUuid());
     }
 
     public function testSavePersistsWithTranslationAndFindsByUuid(): void
     {
-        $family = $this->repository->create();
+        $family = $this->repository->createNew();
+        $family->setKey(\uniqid('family-'));
         $translation = new ProductFamilyTranslation($family, 'en', 'My Family');
         $translation->setDescription('A description');
         $family->addTranslation($translation);
@@ -95,7 +98,6 @@ class ProductFamilyRepositoryTest extends SuluTestCase
         $this->entityManager->flush();
 
         $uuid = $family->getUuid();
-        $this->assertNotNull($uuid);
         $this->entityManager->clear();
 
         $loaded = $this->repository->findOneBy(['uuid' => $uuid]);
@@ -105,7 +107,8 @@ class ProductFamilyRepositoryTest extends SuluTestCase
 
     public function testFindOneByExternalIdentifierReturnsFamily(): void
     {
-        $family = $this->repository->create();
+        $family = $this->repository->createNew();
+        $family->setKey(\uniqid('family-'));
         $family->setExternalIdentifier('ext-family-1');
         $this->repository->save($family);
         $this->entityManager->flush();
@@ -118,7 +121,8 @@ class ProductFamilyRepositoryTest extends SuluTestCase
 
     public function testFindOneByProductUuidReturnsOwningFamily(): void
     {
-        $family = $this->repository->create();
+        $family = $this->repository->createNew();
+        $family->setKey(\uniqid('family-'));
         $this->repository->save($family);
 
         $product = $this->productRepository->createNew();
@@ -131,7 +135,6 @@ class ProductFamilyRepositoryTest extends SuluTestCase
 
         $familyUuid = $family->getUuid();
         $productUuid = $product->getUuid();
-        $this->assertNotNull($familyUuid);
         $this->entityManager->clear();
 
         $loaded = $this->repository->findOneBy(['productUuid' => $productUuid]);
@@ -141,18 +144,19 @@ class ProductFamilyRepositoryTest extends SuluTestCase
 
     public function testFindByUuidsReturnsMatchingFamilies(): void
     {
-        $family1 = $this->repository->create();
+        $family1 = $this->repository->createNew();
+        $family1->setKey(\uniqid('family-'));
         $this->repository->save($family1);
-        $family2 = $this->repository->create();
+        $family2 = $this->repository->createNew();
+        $family2->setKey(\uniqid('family-'));
         $this->repository->save($family2);
-        $family3 = $this->repository->create();
+        $family3 = $this->repository->createNew();
+        $family3->setKey(\uniqid('family-'));
         $this->repository->save($family3);
         $this->entityManager->flush();
 
         $uuid1 = $family1->getUuid();
         $uuid2 = $family2->getUuid();
-        $this->assertNotNull($uuid1);
-        $this->assertNotNull($uuid2);
         $this->entityManager->clear();
 
         $result = [];
@@ -168,7 +172,9 @@ class ProductFamilyRepositoryTest extends SuluTestCase
 
     public function testFindByWithoutFiltersReturnsAllFamilies(): void
     {
-        $this->repository->save($this->repository->create());
+        $family = $this->repository->createNew();
+        $family->setKey('shoes');
+        $this->repository->save($family);
         $this->entityManager->flush();
         $this->entityManager->clear();
 
@@ -193,11 +199,11 @@ class ProductFamilyRepositoryTest extends SuluTestCase
 
     public function testGetOneByReturnsFamilyWhenFound(): void
     {
-        $family = $this->repository->create();
+        $family = $this->repository->createNew();
+        $family->setKey(\uniqid('family-'));
         $this->repository->save($family);
         $this->entityManager->flush();
         $uuid = $family->getUuid();
-        $this->assertNotNull($uuid);
         $this->entityManager->clear();
 
         $this->assertSame($uuid, $this->repository->getOneBy(['uuid' => $uuid])->getUuid());
@@ -205,11 +211,11 @@ class ProductFamilyRepositoryTest extends SuluTestCase
 
     public function testRemoveDeletesFromDatabase(): void
     {
-        $family = $this->repository->create();
+        $family = $this->repository->createNew();
+        $family->setKey(\uniqid('family-'));
         $this->repository->save($family);
         $this->entityManager->flush();
         $uuid = $family->getUuid();
-        $this->assertNotNull($uuid);
 
         $loaded = $this->repository->findOneBy(['uuid' => $uuid]);
         $this->assertNotNull($loaded);
@@ -343,14 +349,27 @@ class ProductFamilyRepositoryTest extends SuluTestCase
         $this->assertCount(6, $names);
     }
 
+    public function testFindOneByKey(): void
+    {
+        $keyed = $this->repository->createNew();
+        $keyed->setKey('shoes');
+        $keyed->addTranslation(new ProductFamilyTranslation($keyed, 'en', 'Shoes'));
+        $this->repository->save($keyed);
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        $this->assertSame($keyed->getUuid(), $this->repository->findOneBy(['key' => 'shoes'])?->getUuid());
+        $this->assertNull($this->repository->findOneBy(['key' => 'boots']));
+    }
+
     private function createFamilyWithOptionAttribute(string $key): string
     {
-        $group = $this->attributeGroupRepository->create();
+        $group = $this->attributeGroupRepository->createNew();
         $group->setDefaultLocale('de');
         $group->addTranslation(new AttributeGroupTranslation($group, 'de', 'Farbe & Form'));
         $this->attributeGroupRepository->save($group);
 
-        $attribute = $this->attributeRepository->create($group);
+        $attribute = $this->attributeRepository->createNew($group);
         $attribute->setKey($key);
         $attribute->setType(AttributeInterface::TYPE_OPTIONS);
         $attribute->setDefaultLocale('de');
@@ -361,13 +380,13 @@ class ProductFamilyRepositoryTest extends SuluTestCase
         $attribute->addOption($option);
         $this->attributeRepository->save($attribute);
 
-        $family = $this->repository->create();
+        $family = $this->repository->createNew();
+        $family->setKey(\uniqid('family-'));
         $family->addFamilyAttribute(new ProductFamilyAttribute($family, $attribute));
         $this->repository->save($family);
         $this->entityManager->flush();
 
         $uuid = $family->getUuid();
-        $this->assertNotNull($uuid);
 
         return $uuid;
     }

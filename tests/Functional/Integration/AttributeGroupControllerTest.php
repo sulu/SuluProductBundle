@@ -61,7 +61,7 @@ class AttributeGroupControllerTest extends SuluTestCase
             [],
             [],
             [],
-            \json_encode(['locale' => 'en', 'name' => 'Dimensions', 'description' => null, 'attributes' => []]) ?: null,
+            \json_encode(['locale' => 'en', 'name' => 'Dimensions', 'description' => null]) ?: null,
         );
         $this->assertHttpStatusCode(201, $this->client->getResponse());
 
@@ -90,7 +90,6 @@ class AttributeGroupControllerTest extends SuluTestCase
                 'locale' => 'en',
                 'name' => 'Colors',
                 'description' => 'Color attributes',
-                'attributes' => [],
             ]) ?: null,
         );
 
@@ -120,7 +119,6 @@ class AttributeGroupControllerTest extends SuluTestCase
         $this->assertSame('Colors', $data['name']);
         $this->assertSame('Color attributes', $data['description']);
         $this->assertNull($data['externalIdentifier']);
-        $this->assertSame([], $data['attributes']);
 
         return $id;
     }
@@ -138,7 +136,6 @@ class AttributeGroupControllerTest extends SuluTestCase
                 'locale' => 'en',
                 'name' => 'Sizes',
                 'description' => 'Size attributes',
-                'attributes' => [],
             ]) ?: null,
         );
 
@@ -182,7 +179,6 @@ class AttributeGroupControllerTest extends SuluTestCase
                 'locale' => 'en',
                 'name' => 'Colors',
                 'description' => null,
-                'attributes' => [],
             ]) ?: null,
         );
 
@@ -209,7 +205,7 @@ class AttributeGroupControllerTest extends SuluTestCase
             [],
             [],
             [],
-            \json_encode(['locale' => 'en', 'name' => 'Non-Empty Group', 'description' => null, 'attributes' => []]) ?: null,
+            \json_encode(['locale' => 'en', 'name' => 'Non-Empty Group', 'description' => null]) ?: null,
         );
         $this->assertHttpStatusCode(201, $this->client->getResponse());
         $groupData = \json_decode((string) $this->client->getResponse()->getContent(), true);
@@ -231,5 +227,35 @@ class AttributeGroupControllerTest extends SuluTestCase
         $response = $this->client->getResponse();
 
         $this->assertHttpStatusCode(409, $response);
+    }
+
+    public function testSavingAGroupKeepsItsAttributesAndTheirOrder(): void
+    {
+        self::purgeDatabase();
+
+        $this->client->request('POST', '/admin/api/attribute-groups.json?locale=en', [], [], [], \json_encode(['locale' => 'en', 'name' => 'Dimensions']) ?: null);
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+        /** @var array{id: string} $group */
+        $group = \json_decode((string) $this->client->getResponse()->getContent(), true);
+
+        foreach (['width', 'height'] as $key) {
+            $this->client->request('POST', '/admin/api/attributes.json?locale=en', [], [], [], \json_encode([
+                'locale' => 'en',
+                'name' => \ucfirst($key),
+                'key' => $key,
+                'type' => 'number',
+                'group' => $group['id'],
+            ]) ?: null);
+            $this->assertHttpStatusCode(201, $this->client->getResponse());
+        }
+
+        $this->client->request('PUT', '/admin/api/attribute-groups/' . $group['id'] . '.json?locale=en', [], [], [], \json_encode(['locale' => 'en', 'name' => 'Dimensions']) ?: null);
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        $this->client->request('GET', '/admin/api/attributes.json?locale=en&group=' . $group['id'] . '&fields=key,position');
+        /** @var array{_embedded: array{attributes: list<array{key: string, position: int}>}} $list */
+        $list = \json_decode((string) $this->client->getResponse()->getContent(), true);
+
+        $this->assertSame(['width', 'height'], \array_column($list['_embedded']['attributes'], 'key'));
     }
 }

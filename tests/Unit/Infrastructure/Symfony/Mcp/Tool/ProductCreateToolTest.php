@@ -101,7 +101,7 @@ final class ProductCreateToolTest extends TestCase
             'Shirt',
             code: 'SHIRT-1',
             type: ProductInterface::TYPE_PRODUCT_WITH_VARIANTS,
-            attributes: ['12' => 'red'],
+            attributes: ['colour-uuid' => 'red'],
         );
 
         $this->assertInstanceOf(CreateProductMessage::class, $captured);
@@ -109,7 +109,7 @@ final class ProductCreateToolTest extends TestCase
         $this->assertSame('family-uuid', $data['productFamily']);
         $this->assertSame('SHIRT-1', $data['code'] ?? null);
         $this->assertSame(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS, $data['type'] ?? null);
-        $this->assertSame(['12' => 'red'], $data['attributes'] ?? null);
+        $this->assertSame(['colour-uuid' => 'red'], $data['attributes'] ?? null);
     }
 
     public function testCreateProductSetsTheShadow(): void

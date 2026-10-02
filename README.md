@@ -105,7 +105,7 @@ switcher, format it with `sulu_product_format_attribute_value`:
 
 `product_family_selection` (a list) and `single_product_family_selection` store family uuids. In
 the website each family resolves to the shape of a product's `productFamily`:
-`{uuid, externalIdentifier, name, image}`, with `name` in the requested locale or `null` and
+`{uuid, key, externalIdentifier, name, image}`, with `name` in the requested locale or `null` and
 `image` resolved as media or `null`. A family that no longer exists is left out of the list.
 
 ```xml
@@ -144,7 +144,7 @@ Switching the option on or off adds or removes the whole `product` field, so the
 
 | field | use |
 |---|---|
-| `productFamilyId` | filterable and facet |
+| `productFamilyKey` | the key of the product family, empty only for a product without a family; filterable and facet |
 | `attributes_text_values` | one `<attributeKey>:<optionKey>` entry per value of a filterable options attribute, filterable and facet |
 | `attributes_numeric_values.<attributeKey>` | the values of a filterable number or date attribute, filterable and facet |
 

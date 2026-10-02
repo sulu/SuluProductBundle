@@ -54,10 +54,11 @@ class ProductAttributesMetadataTest extends SuluTestCase
         $this->client->request('POST', '/admin/api/product-families.json?locale=en', [], [], [], \json_encode([
             'locale' => 'en',
             'name' => 'Shoes',
+            'key' => 'shoes',
             'description' => null,
             'attributes' => [
-                ['id' => $weight, 'required' => true, 'variantSpecific' => false],
-                ['id' => $colour, 'required' => false, 'variantSpecific' => true],
+                ['id' => $weight->getUuid(), 'required' => true, 'variantSpecific' => false],
+                ['id' => $colour->getUuid(), 'required' => false, 'variantSpecific' => true],
             ],
         ]) ?: null);
         $this->assertHttpStatusCode(201, $this->client->getResponse());
@@ -72,6 +73,7 @@ class ProductAttributesMetadataTest extends SuluTestCase
         /** @var array{form: array<string, array{label: string, items: array<string, array{type: string, label: string, required: bool}>}>, schema: array<string, mixed>} $shared */
         $shared = \json_decode((string) $response->getContent(), true);
         $this->assertCount(1, $shared['form']);
+        $this->assertSame(['attribute_group_' . $weight->getGroup()->getUuid()], \array_keys($shared['form']));
         $section = \reset($shared['form']);
         $this->assertSame('Dimensions', $section['label']);
         $this->assertCount(1, $section['items']);
@@ -79,8 +81,7 @@ class ProductAttributesMetadataTest extends SuluTestCase
         $this->assertSame('text_line', $field['type']);
         $this->assertSame('Weight (kg)', $field['label']);
         $this->assertTrue($field['required']);
-        $fieldName = (string) \array_key_first($section['items']);
-        $this->assertStringStartsWith('attribute_', $fieldName);
+        $this->assertSame(['attribute_' . $weight->getUuid()], \array_keys($section['items']));
         $this->assertSame(['type' => ['number', 'string', 'boolean', 'object', 'array', 'null']], $shared['schema']);
 
         $this->client->request('GET', '/admin/metadata/form/product_attributes?productFamily=' . $family['id'] . '&productType=variant');
@@ -88,9 +89,11 @@ class ProductAttributesMetadataTest extends SuluTestCase
         /** @var array{form: array<string, array{label: string, items: array<string, array{label: string}>}>} $axis */
         $axis = \json_decode((string) $this->client->getResponse()->getContent(), true);
         $this->assertCount(1, $axis['form']);
+        $this->assertSame(['attribute_group_' . $colour->getGroup()->getUuid()], \array_keys($axis['form']));
         $axisSection = \reset($axis['form']);
         $this->assertSame('Appearance', $axisSection['label']);
         $this->assertCount(1, $axisSection['items']);
+        $this->assertSame(['attribute_' . $colour->getUuid()], \array_keys($axisSection['items']));
         $axisField = \reset($axisSection['items']);
         $this->assertSame('Colour', $axisField['label']);
     }
@@ -102,19 +105,15 @@ class ProductAttributesMetadataTest extends SuluTestCase
         $this->client->request('POST', '/admin/api/product-families.json?locale=en', [], [], [], \json_encode([
             'locale' => 'en',
             'name' => 'Shoes',
+            'key' => 'shoes',
             'description' => null,
-            'attributes' => [['id' => $weight, 'required' => true, 'variantSpecific' => false]],
+            'attributes' => [['id' => $weight->getUuid(), 'required' => true, 'variantSpecific' => false]],
         ]) ?: null);
         $this->assertHttpStatusCode(201, $this->client->getResponse());
         /** @var array{id: string} $family */
         $family = \json_decode((string) $this->client->getResponse()->getContent(), true);
 
-        $this->client->request('GET', '/admin/metadata/form/product_attributes?productFamily=' . $family['id']);
-        /** @var array{form: array<string, array{items: array<string, mixed>}>} $attributesForm */
-        $attributesForm = \json_decode((string) $this->client->getResponse()->getContent(), true);
-        $section = \reset($attributesForm['form']);
-        $this->assertIsArray($section);
-        $weightId = \substr((string) \array_key_first($section['items']), \strlen('attribute_'));
+        $weightUuid = $weight->getUuid();
 
         $this->client->request('GET', '/admin/metadata/form/product_details');
         $response = $this->client->getResponse();
@@ -128,7 +127,7 @@ class ProductAttributesMetadataTest extends SuluTestCase
         foreach (['product', 'product_with_variants'] as $productType) {
             $this->assertStringContainsString(
                 '"if":{"type":"object","properties":{"productFamily":{"const":"' . $family['id'] . '"},"type":{"const":"' . $productType . '"}},"required":["productFamily","type"]},'
-                . '"then":{"type":"object","properties":{"attributes":{"type":"object","properties":{"' . $weightId . '":{"type":"string","minLength":1}},"required":["' . $weightId . '"]}},"required":["attributes"]}',
+                . '"then":{"type":"object","properties":{"attributes":{"type":"object","properties":{"' . $weightUuid . '":{"type":"string","minLength":1}},"required":["' . $weightUuid . '"]}},"required":["attributes"]}',
                 $encoded,
                 'a shared attribute is validated for both product types',
             );
@@ -147,7 +146,7 @@ class ProductAttributesMetadataTest extends SuluTestCase
     /**
      * @param array<string, mixed> $config
      */
-    private function createAttribute(string $key, string $name, string $groupName, array $config = []): string
+    private function createAttribute(string $key, string $name, string $groupName, array $config = []): AttributeInterface
     {
         $container = self::getContainer();
 
@@ -158,12 +157,12 @@ class ProductAttributesMetadataTest extends SuluTestCase
         /** @var EntityManagerInterface $entityManager */
         $entityManager = $container->get('doctrine.orm.entity_manager');
 
-        $group = $groupRepository->create();
+        $group = $groupRepository->createNew();
         $group->setDefaultLocale('en');
         $group->addTranslation(new AttributeGroupTranslation($group, 'en', $groupName));
         $groupRepository->save($group);
 
-        $attribute = $attributeRepository->create($group);
+        $attribute = $attributeRepository->createNew($group);
         $attribute->setKey($key);
         $attribute->setType(AttributeInterface::TYPE_TEXT);
         $attribute->setConfig($config);
@@ -173,9 +172,6 @@ class ProductAttributesMetadataTest extends SuluTestCase
 
         $entityManager->flush();
 
-        $uuid = $attribute->getUuid();
-        \assert(null !== $uuid);
-
-        return $uuid;
+        return $attribute;
     }
 }

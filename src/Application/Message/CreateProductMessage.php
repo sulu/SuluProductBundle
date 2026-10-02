@@ -23,7 +23,7 @@ namespace Sulu\Product\Application\Message;
  *     template?: string,
  *     author?: int|null,
  *     authored?: string,
- *     attributes?: array<int, mixed>,
+ *     attributes?: array<string, mixed>,
  *     status?: string,
  *     details?: array<string, mixed>,
  *     type?: string,
@@ -56,7 +56,7 @@ class CreateProductMessage
     }
 
     /**
-     * @return array<int, mixed>
+     * @return array<string, mixed>
      */
     public function getAttributes(): array
     {

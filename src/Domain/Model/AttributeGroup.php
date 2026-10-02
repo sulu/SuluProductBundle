@@ -17,14 +17,13 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Sulu\Component\Persistence\Model\AuditableTrait;
+use Symfony\Component\Uid\Uuid;
 
 class AttributeGroup implements AttributeGroupInterface
 {
     use AuditableTrait;
 
-    protected int $id;
-
-    protected ?string $uuid = null;
+    protected string $uuid;
 
     protected ?string $externalIdentifier = null;
 
@@ -33,30 +32,15 @@ class AttributeGroup implements AttributeGroupInterface
     /** @var Collection<int, AttributeGroupTranslationInterface> */
     protected Collection $translations;
 
-    /** @var Collection<int, AttributeGroupAttributeInterface> */
-    protected Collection $groupAttributes;
-
-    public function __construct()
+    public function __construct(?string $uuid = null)
     {
+        $this->uuid = $uuid ?: Uuid::v7()->toRfc4122();
         $this->translations = new ArrayCollection();
-        $this->groupAttributes = new ArrayCollection();
     }
 
-    public function getId(): int
-    {
-        return $this->id;
-    }
-
-    public function getUuid(): ?string
+    public function getUuid(): string
     {
         return $this->uuid;
-    }
-
-    public function setUuid(string $uuid): self
-    {
-        $this->uuid = $uuid;
-
-        return $this;
     }
 
     public function getExternalIdentifier(): ?string
@@ -106,33 +90,6 @@ class AttributeGroup implements AttributeGroupInterface
     public function removeTranslation(AttributeGroupTranslationInterface $translation): self
     {
         $this->translations->removeElement($translation);
-
-        return $this;
-    }
-
-    public function getGroupAttributes(): array
-    {
-        $groupAttributes = $this->groupAttributes->toArray();
-        \usort(
-            $groupAttributes,
-            static fn (AttributeGroupAttributeInterface $a, AttributeGroupAttributeInterface $b) => $a->getAttribute()->getPosition() <=> $b->getAttribute()->getPosition(),
-        );
-
-        return $groupAttributes;
-    }
-
-    public function addGroupAttribute(AttributeGroupAttributeInterface $groupAttribute): self
-    {
-        if (!$this->groupAttributes->contains($groupAttribute)) {
-            $this->groupAttributes->add($groupAttribute);
-        }
-
-        return $this;
-    }
-
-    public function removeGroupAttribute(AttributeGroupAttributeInterface $groupAttribute): self
-    {
-        $this->groupAttributes->removeElement($groupAttribute);
 
         return $this;
     }

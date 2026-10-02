@@ -22,11 +22,7 @@ interface ProductFamilyInterface extends AuditableInterface
     public const FORM_KEY = 'product_family_details';
     public const LIST_KEY = 'product_families';
 
-    public function getId(): int;
-
-    public function getUuid(): ?string;
-
-    public function setUuid(string $uuid): self;
+    public function getUuid(): string;
 
     public function getExternalIdentifier(): ?string;
 
@@ -35,6 +31,10 @@ interface ProductFamilyInterface extends AuditableInterface
     public function getImage(): ?MediaInterface;
 
     public function setImage(?MediaInterface $image): self;
+
+    public function getKey(): string;
+
+    public function setKey(string $key): self;
 
     public function getDefaultLocale(): ?string;
 

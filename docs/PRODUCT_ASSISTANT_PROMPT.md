@@ -4,7 +4,7 @@ A system prompt addition for an MCP client that works with products through `sul
 Add it to the client's prompt next to the generic content prompt of `sulu/mcp-bundle`.
 
 Products are structured records, not free-form content. A **product family** decides which
-attributes a product has. Every attribute value is keyed by its **integer attribute id**, never by
+attributes a product has. Every attribute value is keyed by its **attribute UUID**, never by
 its name.
 
 ## Write access
@@ -21,7 +21,7 @@ publishing and deleting follow their own permissions and flags, so try them when
    `type` and, for `options` attributes, its allowed option keys. `sulu_product_family_list` gives
    each family's UUID plus, per attribute, the `required` and `variantSpecific` flags.
 2. **Create the product.** `sulu_product_create` takes the family UUID as `productFamily`. Pass
-   values as `attributes={"12": "red", "15": 42}`. Every attribute the family marks `required` (and
+   values as `attributes={"<colour uuid>": "red", "<width uuid>": 42}`. Every attribute the family marks `required` (and
    not `variantSpecific`) must be present. For a `product_with_variants` the `variantSpecific` ones
    belong on the variants. A plain `product` has no variants, so it needs every required attribute,
    the `variantSpecific` ones included.
@@ -38,7 +38,7 @@ variants are created with `sulu_product_variant_create`. `sulu_product_create` r
 | `sulu_product_get` | Fetch one product or variant with its attribute values. |
 | `sulu_product_variant_list` | List the variants of one parent. |
 | `sulu_product_family_list` | Families, their UUIDs and attribute flags. |
-| `sulu_attribute_list` | Attributes with the integer ids used as keys. |
+| `sulu_attribute_list` | Attributes with the UUIDs used as keys. |
 | `sulu_attribute_value_list` | Values products carry for one attribute, with the `searchValue` to filter by. |
 | `sulu_product_get_products` | Search published products by keyword, article code or family. |
 | `sulu_product_search_products_by_attributes` | Search products by attribute values. |

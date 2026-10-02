@@ -47,7 +47,7 @@ final class ProductVariantListTool
     #[McpTool(
         name: 'sulu_product_variant_list',
         title: 'List Product Variants',
-        description: 'List the variants of one product. Pass the UUID of a product of type "product_with_variants". Each entry includes its "attributes" map keyed by the integer attribute id, which is where the variant axes (the attributes the family marks variantSpecific) carry their distinguishing values. Returns an empty list for a product that has no variants.',
+        description: 'List the variants of one product. Pass the UUID of a product of type "product_with_variants". Each entry includes its "attributes" map keyed by the attribute UUID, which is where the variant axes (the attributes the family marks variantSpecific) carry their distinguishing values. Returns an empty list for a product that has no variants.',
         annotations: new ToolAnnotations(readOnlyHint: true, openWorldHint: false),
     )]
     #[RequiresPermission(requirements: [

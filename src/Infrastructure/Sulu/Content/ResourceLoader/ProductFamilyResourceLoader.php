@@ -47,12 +47,7 @@ class ProductFamilyResourceLoader implements ResourceLoaderInterface
 
         $mappedResult = [];
         foreach ($this->productFamilyRepository->findBy(['uuids' => $ids]) as $family) {
-            $uuid = $family->getUuid();
-            if (null === $uuid) {
-                continue;
-            }
-
-            $mappedResult[$uuid] = ProductFamilyContentViewFactory::create($family, $locale);
+            $mappedResult[$family->getUuid()] = ProductFamilyContentViewFactory::create($family, $locale);
         }
 
         return $mappedResult;

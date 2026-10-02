@@ -54,29 +54,27 @@ class ProductAttributesDataMapper implements DataMapperInterface
         /** @var array<int|string, mixed> $submitted */
         $submitted = $data['attributes'] ?? [];
 
-        /** @var array<int, ProductFamilyAttributeInterface> $familyAttributes */
+        /** @var array<string, ProductFamilyAttributeInterface> $familyAttributes */
         $familyAttributes = [];
         foreach ($productFamily->getFamilyAttributes() as $familyAttribute) {
-            $familyAttributes[$familyAttribute->getAttribute()->getId()] = $familyAttribute;
+            $familyAttributes[$familyAttribute->getAttribute()->getUuid()] = $familyAttribute;
         }
 
-        /** @var array<int, ProductAttributeValueInterface> $allExisting */
+        /** @var array<string, ProductAttributeValueInterface> $allExisting */
         $allExisting = [];
         foreach ($unlocalizedDimensionContent->getAttributes() as $value) {
-            $allExisting[$value->getAttribute()->getId()] = $value;
+            $allExisting[$value->getAttribute()->getUuid()] = $value;
         }
         foreach ($localizedDimensionContent->getAttributes() as $value) {
-            $allExisting[$value->getAttribute()->getId()] = $value;
+            $allExisting[$value->getAttribute()->getUuid()] = $value;
         }
 
-        foreach ($submitted as $attributeId => $raw) {
-            if (!\is_int($attributeId) && !\ctype_digit((string) $attributeId)) {
+        foreach ($submitted as $attributeUuid => $raw) {
+            if (!\is_string($attributeUuid)) {
                 continue;
             }
 
-            $attributeId = (int) $attributeId;
-            $familyAttribute = $familyAttributes[$attributeId] ?? null;
-
+            $familyAttribute = $familyAttributes[$attributeUuid] ?? null;
             if (null === $familyAttribute) {
                 continue;
             }
@@ -86,12 +84,12 @@ class ProductAttributesDataMapper implements DataMapperInterface
                 ? $localizedDimensionContent
                 : $unlocalizedDimensionContent;
             $type = $this->attributeTypeRegistry->get($attribute->getType());
-            $existing = $allExisting[$attributeId] ?? null;
+            $existing = $allExisting[$attributeUuid] ?? null;
 
             if ($this->isEmpty($raw)) {
                 if (null !== $existing) {
                     $targetDimensionContent->removeAttribute($existing);
-                    unset($allExisting[$attributeId]);
+                    unset($allExisting[$attributeUuid]);
                 }
 
                 continue;
@@ -107,7 +105,7 @@ class ProductAttributesDataMapper implements DataMapperInterface
 
             if ($isNew) {
                 $targetDimensionContent->addAttribute($existing);
-                $allExisting[$attributeId] = $existing;
+                $allExisting[$attributeUuid] = $existing;
             }
         }
 
@@ -117,14 +115,14 @@ class ProductAttributesDataMapper implements DataMapperInterface
     }
 
     /**
-     * @param array<int, ProductFamilyAttributeInterface> $familyAttributes
-     * @param array<int, ProductAttributeValueInterface> $values
+     * @param array<string, ProductFamilyAttributeInterface> $familyAttributes
+     * @param array<string, ProductAttributeValueInterface> $values
      *
      * @throws RequiredProductAttributeMissingException
      */
     private function assertRequiredSatisfied(array $familyAttributes, array $values, string $productType): void
     {
-        foreach ($familyAttributes as $attributeId => $familyAttribute) {
+        foreach ($familyAttributes as $attributeUuid => $familyAttribute) {
             if (!$familyAttribute->isRequired()) {
                 continue;
             }
@@ -133,7 +131,7 @@ class ProductAttributesDataMapper implements DataMapperInterface
                 continue;
             }
 
-            $value = $values[$attributeId] ?? null;
+            $value = $values[$attributeUuid] ?? null;
             if (null === $value || $this->isEmpty($value->getValue())) {
                 throw new RequiredProductAttributeMissingException($familyAttribute->getAttribute()->getKey());
             }

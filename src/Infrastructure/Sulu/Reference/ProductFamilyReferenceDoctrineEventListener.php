@@ -67,13 +67,13 @@ class ProductFamilyReferenceDoctrineEventListener implements ResetInterface
                 default => null,
             };
 
-            if (null !== $family?->getUuid()) {
+            if (null !== $family) {
                 $this->writtenUuids[$family->getUuid()] = true;
             }
         }
 
         foreach ($unitOfWork->getScheduledEntityDeletions() as $entity) {
-            if ($entity instanceof ProductFamilyInterface && null !== $entity->getUuid()) {
+            if ($entity instanceof ProductFamilyInterface) {
                 $this->removedUuids[$entity->getUuid()] = true;
             }
         }

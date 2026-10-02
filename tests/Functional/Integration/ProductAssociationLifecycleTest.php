@@ -62,6 +62,7 @@ class ProductAssociationLifecycleTest extends SuluTestCase
             \json_encode([
                 'locale' => 'en',
                 'name' => 'Lifecycle Family',
+                'key' => \uniqid('family-'),
                 'description' => null,
             ]) ?: null,
         );

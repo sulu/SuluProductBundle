@@ -236,7 +236,7 @@ final class AttributeController implements SecuredControllerInterface
                     }
 
                     return [
-                        'id' => $option->getId(),
+                        'id' => $option->getUuid(),
                         'type' => 'option',
                         'key' => $option->getKey(),
                         'name' => $optionTranslation?->getName() ?? '',

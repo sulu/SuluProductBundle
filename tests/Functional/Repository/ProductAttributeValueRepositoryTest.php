@@ -71,7 +71,7 @@ class ProductAttributeValueRepositoryTest extends SuluTestCase
 
     private function createAttribute(string $key = 'material'): AttributeInterface
     {
-        $group = $this->attributeGroupRepository->create();
+        $group = $this->attributeGroupRepository->createNew();
         $this->attributeGroupRepository->save($group);
 
         $attribute = new Attribute($group);
@@ -124,7 +124,7 @@ class ProductAttributeValueRepositoryTest extends SuluTestCase
         $this->entityManager->flush();
         $this->entityManager->clear();
 
-        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getId());
+        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getUuid());
         $this->assertNotNull($attribute);
 
         $results = $this->repository->findBy(['attribute' => $attribute]);
@@ -146,7 +146,7 @@ class ProductAttributeValueRepositoryTest extends SuluTestCase
         $this->entityManager->flush();
         $this->entityManager->clear();
 
-        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getId());
+        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getUuid());
         $this->assertNotNull($attribute);
 
         $results = $this->repository->findBy(['attribute' => $attribute, 'stage' => 'live']);
@@ -171,7 +171,7 @@ class ProductAttributeValueRepositoryTest extends SuluTestCase
         $this->entityManager->flush();
         $this->entityManager->clear();
 
-        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getId());
+        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getUuid());
         $this->assertNotNull($attribute);
 
         $results = $this->repository->findBy(['attribute' => $attribute, 'locale' => 'en']);
@@ -195,7 +195,7 @@ class ProductAttributeValueRepositoryTest extends SuluTestCase
         $this->entityManager->flush();
         $this->entityManager->clear();
 
-        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getId());
+        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getUuid());
         $this->assertNotNull($attribute);
 
         $results = $this->repository->findBy(['attribute' => $attribute]);
@@ -241,7 +241,7 @@ class ProductAttributeValueRepositoryTest extends SuluTestCase
         $this->entityManager->flush();
         $this->entityManager->clear();
 
-        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getId());
+        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getUuid());
         $this->assertNotNull($attribute);
 
         $groups = $this->repository->countValues(['attribute' => $attribute, 'stage' => 'live']);
@@ -264,7 +264,7 @@ class ProductAttributeValueRepositoryTest extends SuluTestCase
         $this->entityManager->flush();
         $this->entityManager->clear();
 
-        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getId());
+        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getUuid());
         $this->assertNotNull($attribute);
 
         $groups = $this->repository->countValues(['attribute' => $attribute, 'stage' => 'live'], 1);
@@ -294,7 +294,7 @@ class ProductAttributeValueRepositoryTest extends SuluTestCase
         $this->entityManager->flush();
         $this->entityManager->clear();
 
-        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getId());
+        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getUuid());
         $this->assertNotNull($attribute);
 
         $groups = $this->repository->countValues(['attribute' => $attribute, 'stage' => 'live']);
@@ -317,7 +317,7 @@ class ProductAttributeValueRepositoryTest extends SuluTestCase
         $this->entityManager->flush();
         $this->entityManager->clear();
 
-        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getId());
+        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getUuid());
         $this->assertNotNull($attribute);
 
         $before = $this->selectCount();

@@ -56,6 +56,7 @@ final class ProductAssociationReferenceCleanupTest extends SuluTestCase
             \json_encode([
                 'locale' => 'en',
                 'name' => 'Reference Cleanup Family',
+                'key' => \uniqid('family-'),
                 'description' => null,
             ]) ?: null,
         );

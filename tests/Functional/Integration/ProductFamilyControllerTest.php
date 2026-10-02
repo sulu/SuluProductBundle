@@ -15,6 +15,7 @@ namespace Sulu\Product\Tests\Functional\Integration;
 
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Depends;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Content\Tests\Functional\Traits\CreateMediaTrait;
@@ -69,7 +70,7 @@ class ProductFamilyControllerTest extends SuluTestCase
             [],
             [],
             [],
-            \json_encode(['locale' => 'en', 'name' => 'Shoes', 'description' => null]) ?: null,
+            \json_encode(['locale' => 'en', 'name' => 'Shoes', 'key' => 'shoes', 'description' => null]) ?: null,
         );
         $this->assertHttpStatusCode(201, $this->client->getResponse());
 
@@ -86,6 +87,35 @@ class ProductFamilyControllerTest extends SuluTestCase
         $this->assertNotNull($item['changed']);
     }
 
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function provideInvalidKeys(): iterable
+    {
+        yield 'empty' => ['  ', 'ProductFamily key is required.'];
+        yield 'too long' => [\str_repeat('ä', 256), 'ProductFamily key must not exceed 255 characters.'];
+    }
+
+    #[DataProvider('provideInvalidKeys')]
+    public function testPostRejectsAnInvalidKey(string $key, string $detail): void
+    {
+        $this->client->request(
+            'POST',
+            '/admin/api/product-families.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode(['locale' => 'en', 'name' => 'Shoes', 'key' => $key]) ?: null,
+        );
+
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(400, $response);
+
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertSame($detail, $data['detail']);
+    }
+
     public function testPost(): string
     {
         $this->client->request(
@@ -97,6 +127,7 @@ class ProductFamilyControllerTest extends SuluTestCase
             \json_encode([
                 'locale' => 'en',
                 'name' => 'Shoes',
+                'key' => 'shoe-family',
                 'description' => 'Shoe family',
             ]) ?: null,
         );
@@ -209,6 +240,7 @@ class ProductFamilyControllerTest extends SuluTestCase
             \json_encode([
                 'locale' => 'en',
                 'name' => 'Apparel',
+                'key' => 'apparel',
                 'description' => null,
                 'attributes' => [
                     ['id' => $attributeUuid, 'required' => true, 'variantSpecific' => false],
@@ -246,6 +278,7 @@ class ProductFamilyControllerTest extends SuluTestCase
         $this->client->request('POST', '/admin/api/product-families.json?locale=en', [], [], [], \json_encode([
             'locale' => 'en',
             'name' => 'Apparel',
+            'key' => 'apparel',
             'image' => ['id' => $mediaId],
         ]) ?: null);
 
@@ -272,6 +305,40 @@ class ProductFamilyControllerTest extends SuluTestCase
         $this->assertNull($data['image']);
     }
 
+    public function testKeyIsRequiredUniqueAndFixedAfterCreation(): void
+    {
+        self::purgeDatabase();
+
+        $post = function(array $body): array {
+            $this->client->request('POST', '/admin/api/product-families.json?locale=en', [], [], [], \json_encode($body) ?: null);
+
+            /** @var array<string, mixed> */
+            return \json_decode((string) $this->client->getResponse()->getContent(), true);
+        };
+
+        $shoes = $post(['name' => 'Shoes', 'key' => ' shoes ']);
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+        $this->assertSame('shoes', $shoes['key']);
+        $shoesUuid = $shoes['id'];
+        $this->assertIsString($shoesUuid);
+
+        $post(['name' => 'Blank key', 'key' => '']);
+        $this->assertHttpStatusCode(400, $this->client->getResponse());
+        $post(['name' => 'No key']);
+        $this->assertHttpStatusCode(400, $this->client->getResponse());
+
+        $duplicate = $post(['name' => 'Other', 'key' => 'shoes']);
+        $this->assertHttpStatusCode(409, $this->client->getResponse());
+        $this->assertSame('The key "shoes" is already assigned to another product family.', $duplicate['detail']);
+
+        $this->client->request('PUT', '/admin/api/product-families/' . $shoesUuid . '.json?locale=en', [], [], [], \json_encode(['name' => 'Shoes', 'key' => 'footwear']) ?: null);
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        /** @var array{key: string} $data */
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertSame('shoes', $data['key']);
+    }
+
     private function createAttribute(string $key, string $name): string
     {
         $container = self::getContainer();
@@ -283,10 +350,10 @@ class ProductFamilyControllerTest extends SuluTestCase
         /** @var EntityManagerInterface $entityManager */
         $entityManager = $container->get('doctrine.orm.entity_manager');
 
-        $group = $groupRepository->create();
+        $group = $groupRepository->createNew();
         $groupRepository->save($group);
 
-        $attribute = $attributeRepository->create($group);
+        $attribute = $attributeRepository->createNew($group);
         $attribute->setKey($key);
         $attribute->setType(AttributeInterface::TYPE_TEXT);
         $attribute->addTranslation(new AttributeTranslation($attribute, 'en', $name));
@@ -294,9 +361,6 @@ class ProductFamilyControllerTest extends SuluTestCase
 
         $entityManager->flush();
 
-        $uuid = $attribute->getUuid();
-        \assert(null !== $uuid);
-
-        return $uuid;
+        return $attribute->getUuid();
     }
 }

@@ -128,8 +128,8 @@ class ProductResolverDetailsTest extends ProductResolverTestCase
 
     public function testResolvesEntityOwnedFields(): void
     {
-        $family = new ProductFamily();
-        $family->setUuid('fam-uuid');
+        $family = new ProductFamily('fam-uuid');
+        $family->setKey('fam-key');
 
         $dc = $this->makeDimensionContent();
         $dc->setCode('SKU-1');
@@ -147,8 +147,9 @@ class ProductResolverDetailsTest extends ProductResolverTestCase
 
         $familyData = $this->contentViewAt($dc, 'productFamily')->getContent();
         self::assertIsArray($familyData);
-        self::assertSame(['uuid', 'externalIdentifier', 'name', 'image'], \array_keys($familyData));
+        self::assertSame(['uuid', 'key', 'externalIdentifier', 'name', 'image'], \array_keys($familyData));
         self::assertSame('fam-uuid', $familyData['uuid']);
+        self::assertSame('fam-key', $familyData['key']);
         self::assertNull($familyData['name']);
         self::assertInstanceOf(ContentView::class, $familyData['image']);
         self::assertNull($familyData['image']->getContent());
@@ -164,6 +165,7 @@ class ProductResolverDetailsTest extends ProductResolverTestCase
         $image->method('getId')->willReturn(5);
 
         $family = new ProductFamily();
+        $family->setKey('fam-key');
         $family->setImage($image);
 
         $dc = $this->makeDimensionContent();

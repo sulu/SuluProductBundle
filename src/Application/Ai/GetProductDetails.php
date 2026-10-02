@@ -144,7 +144,7 @@ final class GetProductDetails
             }
 
             $group = $attribute->getGroup();
-            $groupName = $group->getTranslation($locale)?->getName() ?? $group->getUuid() ?? '';
+            $groupName = $group->getTranslation($locale)?->getName() ?? $group->getUuid();
             $label = $attribute->getTranslation($locale)?->getName() ?? $attribute->getKey();
 
             if (!isset($byGroup[$groupName])) {

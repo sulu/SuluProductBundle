@@ -14,8 +14,6 @@ declare(strict_types=1);
 namespace Sulu\Product\Application\Message;
 
 /**
- * @phpstan-import-type AttributeGroupAttributeMessageData from CreateAttributeGroupMessage
- *
  * @phpstan-type ModifyAttributeGroupMessageIdentifier array{
  *     uuid: string,
  * }
@@ -23,7 +21,6 @@ namespace Sulu\Product\Application\Message;
  *     locale: string,
  *     name: string,
  *     description?: string|null,
- *     attributes?: list<AttributeGroupAttributeMessageData>|null,
  * }
  */
 class ModifyAttributeGroupMessage
@@ -64,14 +61,6 @@ class ModifyAttributeGroupMessage
     public function getDescription(): ?string
     {
         return $this->data['description'] ?? null;
-    }
-
-    /**
-     * @return list<AttributeGroupAttributeMessageData>
-     */
-    public function getAttributes(): array
-    {
-        return $this->data['attributes'] ?? [];
     }
 
     /**

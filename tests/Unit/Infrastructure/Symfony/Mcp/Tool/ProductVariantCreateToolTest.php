@@ -73,7 +73,7 @@ final class ProductVariantCreateToolTest extends TestCase
 
     public function testCreateVariantForcesTypeParentAndInheritedFamily(): void
     {
-        $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => [10 => false, 11 => true]]));
+        $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => ['shared-uuid' => false, 'axis-uuid' => true]]));
         $captured = $this->captureDispatchedMessage(new Product('variant-uuid'));
 
         $result = $this->tool->createProductVariant('en', 'parent-uuid', 'Red / XL');
@@ -92,17 +92,17 @@ final class ProductVariantCreateToolTest extends TestCase
 
     public function testCreateVariantKeepsOnlyVariantSpecificAttributes(): void
     {
-        $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => [10 => false, 11 => true]]));
+        $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => ['shared-uuid' => false, 'axis-uuid' => true]]));
         $captured = $this->captureDispatchedMessage(new Product('variant-uuid'));
 
         $this->tool->createProductVariant('en', 'parent-uuid', 'Red / XL', attributes: [
-            10 => 'shared, belongs on the parent',
-            11 => 'red',
+            'shared-uuid' => 'shared, belongs on the parent',
+            'axis-uuid' => 'red',
         ]);
 
         $message = $captured();
         $this->assertInstanceOf(CreateProductMessage::class, $message);
-        $this->assertSame(['11' => 'red'], $message->getData()['attributes'] ?? null);
+        $this->assertSame(['axis-uuid' => 'red'], $message->getData()['attributes'] ?? null);
     }
 
     public function testCreateVariantRejectsAPlainProductAsParent(): void
@@ -211,18 +211,16 @@ final class ProductVariantCreateToolTest extends TestCase
     }
 
     /**
-     * @param array<string, array<int, bool>> $attributesByFamilyUuid
+     * @param array<string, array<string, bool>> $attributesByFamilyUuid
      */
     private function familyWithAttributes(array $attributesByFamilyUuid): ProductFamilyInterface
     {
         $uuid = (string) \array_key_first($attributesByFamilyUuid);
-        $family = new ProductFamily();
-        $family->setUuid($uuid);
+        $family = new ProductFamily($uuid);
 
         $group = new AttributeGroup();
-        foreach ($attributesByFamilyUuid[$uuid] as $attributeId => $variantSpecific) {
-            $attribute = new Attribute($group);
-            (new \ReflectionProperty($attribute, 'id'))->setValue($attribute, $attributeId);
+        foreach ($attributesByFamilyUuid[$uuid] as $attributeUuid => $variantSpecific) {
+            $attribute = new Attribute($group, $attributeUuid);
 
             $familyAttribute = new ProductFamilyAttribute($family, $attribute);
             $familyAttribute->setVariantSpecific($variantSpecific);
@@ -234,7 +232,7 @@ final class ProductVariantCreateToolTest extends TestCase
 
     public function testCreateVariantSendsCodeStatusAndDetails(): void
     {
-        $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => [10 => false]]));
+        $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => ['shared-uuid' => false]]));
         $captured = $this->captureDispatchedMessage(new Product('variant-uuid'));
 
         $this->tool->createProductVariant('en', 'parent-uuid', 'Red', code: 'RED-1', status: 'available', details: ['shortDescription' => 'Red']);
@@ -259,7 +257,7 @@ final class ProductVariantCreateToolTest extends TestCase
             $adminLinkGenerator->reveal(),
         );
 
-        $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => [10 => false]]));
+        $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => ['shared-uuid' => false]]));
         $this->captureDispatchedMessage(new Product('variant-uuid'));
 
         $result = $tool->createProductVariant('en', 'parent-uuid', 'Red');
