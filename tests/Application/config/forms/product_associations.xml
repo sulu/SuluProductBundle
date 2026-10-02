@@ -14,6 +14,9 @@
             <params>
                 <param name="properties" type="collection">
                     <param name="description" value="description"/>
+                    <param name="parent" value="product.code"/>
+                    <param name="parentTitle" value="product.parent.title"/>
+                    <param name="parentImage" value="product.parent.image"/>
                 </param>
             </params>
         </property>

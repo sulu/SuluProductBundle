@@ -13,6 +13,7 @@ namespace Sulu\Product\Infrastructure\Sulu\Content;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use Sulu\Bundle\AdminBundle\SmartContent\Configuration\Builder;
 use Sulu\Bundle\AdminBundle\SmartContent\Configuration\BuilderInterface;
@@ -72,6 +73,10 @@ use Sulu\Product\Infrastructure\Sulu\Content\ResourceLoader\ProductResourceLoade
  */
 readonly class ProductSmartContentProvider implements SmartContentProviderInterface
 {
+    protected const LINKED_ALIAS = 'linkedProduct';
+
+    protected const LINKED_CONTENT_ALIAS = 'linkedProductContent';
+
     /**
      * @var EntityRepository<ProductInterface>
      */
@@ -120,7 +125,7 @@ readonly class ProductSmartContentProvider implements SmartContentProviderInterf
                 ],
             )
             ->enableProperties([
-                'title' => 'title',
+                'title' => 'product.title',
                 'url' => 'url',
             ]);
 
@@ -141,9 +146,8 @@ readonly class ProductSmartContentProvider implements SmartContentProviderInterf
         $filters = $this->enhanceWithDimensionAttributes($filters);
 
         $alias = 'product';
-        $queryBuilder = $this->entityRepository->createQueryBuilder($alias);
-
         $filters = $this->mapFilters($filters, $params);
+        $queryBuilder = $this->createLinkedProductQueryBuilder($filters, $alias);
         $this->dimensionContentQueryEnhancer->addFilters(
             $queryBuilder,
             $alias,
@@ -153,7 +157,7 @@ readonly class ProductSmartContentProvider implements SmartContentProviderInterf
         );
         $this->addInternalFilters($queryBuilder, $filters, $alias);
 
-        $queryBuilder->select('COUNT(DISTINCT product.uuid)');
+        $queryBuilder->select('COUNT(DISTINCT ' . self::LINKED_ALIAS . '.uuid)');
 
         return (int) $queryBuilder->getQuery()->getSingleScalarResult();
     }
@@ -178,9 +182,8 @@ readonly class ProductSmartContentProvider implements SmartContentProviderInterf
         $sortBys = $this->mapSortBys($sortBys);
 
         $alias = 'product';
-        $queryBuilder = $this->entityRepository->createQueryBuilder($alias);
-
         $filters = $this->mapFilters($filters, $params);
+        $queryBuilder = $this->createLinkedProductQueryBuilder($filters, $alias);
         $this->dimensionContentQueryEnhancer->addFilters(
             $queryBuilder,
             $alias,
@@ -192,9 +195,15 @@ readonly class ProductSmartContentProvider implements SmartContentProviderInterf
 
         // TODO refactor this part to not use distinct
         // we need the distinct here, because joins due to tags/categories can lead to duplicate results
-        $queryBuilder->select('DISTINCT ' . $alias . '.uuid as id');
-        $queryBuilder->addSelect('filterDimensionContent.title');
+        $queryBuilder->select('DISTINCT ' . self::LINKED_ALIAS . '.uuid as id');
         $this->smartContentQueryEnhancer->addOrderBySelects($queryBuilder);
+        // Keeps variants by position under their content owner, hidden so the admin preview shows no column for them.
+        $queryBuilder->addSelect($alias . '.uuid AS HIDDEN ownerUuid');
+        $queryBuilder->addSelect(self::LINKED_ALIAS . '.position AS HIDDEN linkedPosition');
+        $queryBuilder->addOrderBy('ownerUuid');
+        $queryBuilder->addOrderBy('linkedPosition');
+        // after the order selects, which would otherwise override it with the title of the content owner
+        $queryBuilder->addSelect(self::LINKED_CONTENT_ALIAS . '.title as title');
         $this->smartContentQueryEnhancer->addPagination($queryBuilder, $filters['offset'] ?? 0, $filters['limit']);
 
         /** @var array{id: string, title: string}[] $result */
@@ -305,9 +314,6 @@ readonly class ProductSmartContentProvider implements SmartContentProviderInterf
      */
     protected function addInternalFilters(QueryBuilder $queryBuilder, array $filters, string $alias): void
     {
-        $queryBuilder->andWhere($alias . '.type != :excludedProductType')
-            ->setParameter('excludedProductType', ProductInterface::TYPE_VARIANT);
-
         $websiteCategoryIds = $filters['websiteCategories'];
         if ([] !== $websiteCategoryIds) {
             $this->smartContentQueryEnhancer->addJoinFilter(
@@ -340,6 +346,39 @@ readonly class ProductSmartContentProvider implements SmartContentProviderInterf
             $queryBuilder->andWhere('filterDimensionContent.mainWebspace = :webspaceKey OR additionalWebspace.additionalWebspace = :webspaceKey');
             $queryBuilder->setParameter('webspaceKey', $webspaceKey);
         }
+    }
+
+    /**
+     * Selects every product whose own content in the filtered locale and stage has a route. The filters match
+     * `$alias`, its content owner: the product itself, or for a variant its parent, whose template,
+     * excerpt and webspaces the variant takes.
+     *
+     * @param array{locale?: string|null, stage?: string} $filters
+     */
+    protected function createLinkedProductQueryBuilder(array $filters, string $alias): QueryBuilder
+    {
+        $queryBuilder = $this->entityRepository->createQueryBuilder(self::LINKED_ALIAS);
+        $queryBuilder->innerJoin(
+            $this->entityRepository->getClassName(),
+            $alias,
+            Join::WITH,
+            $alias . '.uuid = COALESCE(IDENTITY(' . self::LINKED_ALIAS . '.parent), ' . self::LINKED_ALIAS . '.uuid)',
+        );
+        $queryBuilder->innerJoin(
+            $this->productDimensionContentClassName,
+            self::LINKED_CONTENT_ALIAS,
+            Join::WITH,
+            self::LINKED_CONTENT_ALIAS . '.product = ' . self::LINKED_ALIAS
+            . ' AND ' . self::LINKED_CONTENT_ALIAS . '.locale = :linkedLocale'
+            . ' AND ' . self::LINKED_CONTENT_ALIAS . '.stage = :linkedStage'
+            . ' AND ' . self::LINKED_CONTENT_ALIAS . '.version = :linkedVersion'
+            . ' AND ' . self::LINKED_CONTENT_ALIAS . '.route IS NOT NULL',
+        );
+        $queryBuilder->setParameter('linkedLocale', $filters['locale'] ?? null);
+        $queryBuilder->setParameter('linkedStage', $filters['stage'] ?? DimensionContentInterface::STAGE_LIVE);
+        $queryBuilder->setParameter('linkedVersion', DimensionContentInterface::CURRENT_VERSION);
+
+        return $queryBuilder;
     }
 
     public function getType(): string

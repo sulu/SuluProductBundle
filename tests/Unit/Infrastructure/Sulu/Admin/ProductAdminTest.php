@@ -229,6 +229,10 @@ class ProductAdminTest extends TestCase
         $this->assertTrue($viewCollection->has(ProductAdmin::ADD_TABS_VIEW . '.details'));
         $this->assertTrue($viewCollection->has(ProductAdmin::EDIT_TABS_VIEW . '.details'));
         $this->assertTrue($viewCollection->has(ProductAdmin::EDIT_TABS_VIEW . '.variants'));
+
+        $listView = $viewCollection->get(ProductAdmin::LIST_VIEW)->getView();
+        $this->assertSame(['excludeVariants' => true], $listView->getOption('requestParameters'));
+        $this->assertSame(['excludeVariants' => true], $listView->getOption('metadataRequestParameters'));
     }
 
     public function testDetailsEditViewRendersPreview(): void

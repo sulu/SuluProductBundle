@@ -6,6 +6,7 @@
     "require": {
         "php": "^8.2",
         "ext-ctype": "*",
+        "ext-filter": "*",
         "ext-intl": "*",
         "ext-mbstring": "*",
         "cmsig/seal": "^0.12",
@@ -34,7 +35,6 @@
         "sulu/mcp-bundle": "<=1.0.0-RC3"
     },
     "require-dev": {
-        "ext-filter": "*",
         "handcraftedinthealps/code-coverage-checker": "^0.2.1",
         "jangregor/phpstan-prophecy": "^2.0",
         "league/oauth2-server-bundle": "^1.2",

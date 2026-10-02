@@ -19,7 +19,9 @@ use Sulu\Product\Domain\Model\ProductInterface;
 
 /**
  * Fills the status filter options from the configured statuses, which cannot be hardcoded in the
- * list XML because projects can configure their own.
+ * list XML because projects can configure their own. The type filter offers only the types the
+ * list shows: the admin list, which sends `excludeVariants`, shows no variant, a selection no
+ * product with variants.
  *
  * @internal
  */
@@ -49,5 +51,14 @@ class ProductsListMetadataVisitor implements ListMetadataVisitorInterface
         }
 
         $statusField->setFilterTypeParameters(['options' => $options]);
+
+        $typeField = $listMetadata->getField('type');
+        $typeParameters = $typeField->getFilterTypeParameters() ?? [];
+        $typeOptions = $typeParameters['options'] ?? null;
+        if (\is_array($typeOptions)) {
+            $excludeVariants = \filter_var($metadataOptions['excludeVariants'] ?? false, \FILTER_VALIDATE_BOOLEAN);
+            unset($typeOptions[$excludeVariants ? ProductInterface::TYPE_VARIANT : ProductInterface::TYPE_PRODUCT_WITH_VARIANTS]);
+            $typeField->setFilterTypeParameters([...$typeParameters, 'options' => $typeOptions]);
+        }
     }
 }

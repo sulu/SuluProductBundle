@@ -25,6 +25,7 @@ use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Bundle\AdminBundle\SmartContent\SmartContentQueryEnhancer;
 use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
+use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
@@ -49,6 +50,7 @@ class ProductSmartContentProviderTest extends TestCase
         /** @var ObjectProphecy<EntityRepository<ProductInterface>> $productRepository */
         $productRepository = $this->prophesize(EntityRepository::class);
         $this->productRepository = $productRepository;
+        $productRepository->getClassName()->willReturn(Product::class);
 
         /** @var ObjectProphecy<EntityRepository<ProductDimensionContentInterface>> $dimensionContentRepository */
         $dimensionContentRepository = $this->prophesize(EntityRepository::class);
@@ -165,7 +167,7 @@ class ProductSmartContentProviderTest extends TestCase
         $query->getSingleScalarResult()->willReturn(0);
         $queryBuilder->getQuery()->willReturn($query->reveal());
 
-        $this->productRepository->createQueryBuilder('product')->willReturn($queryBuilder->reveal());
+        $this->productRepository->createQueryBuilder('linkedProduct')->willReturn($queryBuilder->reveal());
 
         $result = $this->createProvider()->countBy($this->minimalFilters());
 
@@ -181,7 +183,7 @@ class ProductSmartContentProviderTest extends TestCase
         $query->getArrayResult()->willReturn([]);
         $queryBuilder->getQuery()->willReturn($query->reveal());
 
-        $this->productRepository->createQueryBuilder('product')->willReturn($queryBuilder->reveal());
+        $this->productRepository->createQueryBuilder('linkedProduct')->willReturn($queryBuilder->reveal());
 
         $result = $this->createProvider()->findFlatBy($this->minimalFilters(), []);
 
@@ -197,7 +199,7 @@ class ProductSmartContentProviderTest extends TestCase
         $query->getSingleScalarResult()->willReturn(3);
         $queryBuilder->getQuery()->willReturn($query->reveal());
 
-        $this->productRepository->createQueryBuilder('product')->willReturn($queryBuilder->reveal());
+        $this->productRepository->createQueryBuilder('linkedProduct')->willReturn($queryBuilder->reveal());
 
         $filters = $this->minimalFilters();
         $filters['categories'] = [1, 2, 3];
@@ -216,7 +218,7 @@ class ProductSmartContentProviderTest extends TestCase
         $query->getSingleScalarResult()->willReturn(2);
         $queryBuilder->getQuery()->willReturn($query->reveal());
 
-        $this->productRepository->createQueryBuilder('product')->willReturn($queryBuilder->reveal());
+        $this->productRepository->createQueryBuilder('linkedProduct')->willReturn($queryBuilder->reveal());
 
         $filters = $this->minimalFilters();
         $filters['tags'] = [10, 20];
@@ -235,7 +237,7 @@ class ProductSmartContentProviderTest extends TestCase
         $query->getArrayResult()->willReturn([]);
         $queryBuilder->getQuery()->willReturn($query->reveal());
 
-        $this->productRepository->createQueryBuilder('product')->willReturn($queryBuilder->reveal());
+        $this->productRepository->createQueryBuilder('linkedProduct')->willReturn($queryBuilder->reveal());
 
         $filters = $this->minimalFilters();
         // templateKeys in params — no templateKeys in filters means the param list is used directly
@@ -253,7 +255,7 @@ class ProductSmartContentProviderTest extends TestCase
         $query->getArrayResult()->willReturn([]);
         $queryBuilder->getQuery()->willReturn($query->reveal());
 
-        $this->productRepository->createQueryBuilder('product')->willReturn($queryBuilder->reveal());
+        $this->productRepository->createQueryBuilder('linkedProduct')->willReturn($queryBuilder->reveal());
 
         $filters = $this->minimalFilters();
         $filters['templateKeys'] = ['default', 'overview'];
@@ -272,7 +274,7 @@ class ProductSmartContentProviderTest extends TestCase
         $query->getArrayResult()->willReturn([]);
         $queryBuilder->getQuery()->willReturn($query->reveal());
 
-        $this->productRepository->createQueryBuilder('product')->willReturn($queryBuilder->reveal());
+        $this->productRepository->createQueryBuilder('linkedProduct')->willReturn($queryBuilder->reveal());
 
         // 'published' in sortBys must be mapped to 'workflowPublished' before being passed to DimensionContentQueryEnhancer
         // which would call addOrderBy('filterDimensionContent.workflowPublished', 'asc')
@@ -294,7 +296,7 @@ class ProductSmartContentProviderTest extends TestCase
         $query->getSingleScalarResult()->willReturn(1);
         $queryBuilder->getQuery()->willReturn($query->reveal());
 
-        $this->productRepository->createQueryBuilder('product')->willReturn($queryBuilder->reveal());
+        $this->productRepository->createQueryBuilder('linkedProduct')->willReturn($queryBuilder->reveal());
 
         $filters = $this->minimalFilters();
         $filters['websiteCategories'] = ['cat-1', 'cat-2'];
@@ -319,7 +321,7 @@ class ProductSmartContentProviderTest extends TestCase
         $query->getSingleScalarResult()->willReturn(0);
         $queryBuilder->getQuery()->willReturn($query->reveal());
 
-        $this->productRepository->createQueryBuilder('product')->willReturn($queryBuilder->reveal());
+        $this->productRepository->createQueryBuilder('linkedProduct')->willReturn($queryBuilder->reveal());
 
         $filters = $this->minimalFilters();
         $filters['websiteTags'] = ['tag-a', 'tag-b'];
@@ -344,7 +346,7 @@ class ProductSmartContentProviderTest extends TestCase
         $query->getSingleScalarResult()->willReturn(5);
         $queryBuilder->getQuery()->willReturn($query->reveal());
 
-        $this->productRepository->createQueryBuilder('product')->willReturn($queryBuilder->reveal());
+        $this->productRepository->createQueryBuilder('linkedProduct')->willReturn($queryBuilder->reveal());
 
         $filters = $this->minimalFilters();
         $filters['webspaceKey'] = 'sulu_io';
@@ -356,7 +358,7 @@ class ProductSmartContentProviderTest extends TestCase
         $queryBuilder->setParameter('webspaceKey', 'sulu_io')->shouldHaveBeenCalled();
     }
 
-    public function testAddInternalFiltersExcludesVariants(): void
+    public function testCountByCountsProductsWithARouteFilteredByTheirContentOwner(): void
     {
         $queryBuilder = $this->createQueryBuilderProphecy();
 
@@ -365,12 +367,23 @@ class ProductSmartContentProviderTest extends TestCase
         $query->getSingleScalarResult()->willReturn(3);
         $queryBuilder->getQuery()->willReturn($query->reveal());
 
-        $this->productRepository->createQueryBuilder('product')->willReturn($queryBuilder->reveal());
+        $this->productRepository->createQueryBuilder('linkedProduct')->willReturn($queryBuilder->reveal());
 
         $result = $this->createProvider()->countBy($this->minimalFilters());
 
         $this->assertSame(3, $result);
-        $queryBuilder->andWhere('product.type != :excludedProductType')->shouldHaveBeenCalled();
-        $queryBuilder->setParameter('excludedProductType', ProductInterface::TYPE_VARIANT)->shouldHaveBeenCalled();
+        $queryBuilder->innerJoin(
+            Product::class,
+            'product',
+            'WITH',
+            'product.uuid = COALESCE(IDENTITY(linkedProduct.parent), linkedProduct.uuid)',
+        )->shouldHaveBeenCalled();
+        $queryBuilder->innerJoin(
+            ProductDimensionContent::class,
+            'linkedProductContent',
+            'WITH',
+            Argument::containingString('linkedProductContent.route IS NOT NULL'),
+        )->shouldHaveBeenCalled();
+        $queryBuilder->select('COUNT(DISTINCT linkedProduct.uuid)')->shouldHaveBeenCalled();
     }
 }

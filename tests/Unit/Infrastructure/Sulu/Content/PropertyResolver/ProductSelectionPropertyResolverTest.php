@@ -123,7 +123,7 @@ class ProductSelectionPropertyResolverTest extends TestCase
         $content = $contentView->getContent();
         $this->assertIsArray($content);
         $this->assertInstanceOf(ResolvableResource::class, $content[0]);
-        $this->assertSame(['properties' => ['property1' => 'value1', 'property2' => 'value2', 'title' => 'title', 'url' => 'url']], $content[0]->getMetadata());
+        $this->assertSame(['properties' => ['property1' => 'value1', 'property2' => 'value2', 'title' => 'product.title', 'url' => 'url']], $content[0]->getMetadata());
         $references = $contentView->getReferences();
         $this->assertCount(1, $references);
         $this->assertSame('1', $references[0]->getResourceId());
@@ -136,7 +136,7 @@ class ProductSelectionPropertyResolverTest extends TestCase
         $content = $contentView->getContent();
         $this->assertIsArray($content);
         $this->assertInstanceOf(ResolvableResource::class, $content[0]);
-        $this->assertSame(['properties' => ['title' => 'title', 'url' => 'url']], $content[0]->getMetadata());
+        $this->assertSame(['properties' => ['title' => 'product.title', 'url' => 'url']], $content[0]->getMetadata());
         $references = $contentView->getReferences();
         $this->assertCount(1, $references);
     }
@@ -157,6 +157,6 @@ class ProductSelectionPropertyResolverTest extends TestCase
         $content = $contentView->getContent();
         $this->assertIsArray($content);
         $this->assertInstanceOf(ResolvableResource::class, $content[0]);
-        $this->assertSame(['properties' => ['title' => 'title', 'url' => 'url']], $content[0]->getMetadata());
+        $this->assertSame(['properties' => ['title' => 'product.title', 'url' => 'url']], $content[0]->getMetadata());
     }
 }

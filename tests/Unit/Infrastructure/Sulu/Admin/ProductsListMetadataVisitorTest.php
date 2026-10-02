@@ -29,6 +29,7 @@ class ProductsListMetadataVisitorTest extends TestCase
 
         $listMetadata = new ListMetadata();
         $listMetadata->addField($statusField);
+        $listMetadata->addField($this->createTypeField());
 
         $visitor = new ProductsListMetadataVisitor(['announced', 'available']);
         $visitor->visitListMetadata($listMetadata, ProductInterface::LIST_KEY, 'en');
@@ -39,6 +40,38 @@ class ProductsListMetadataVisitorTest extends TestCase
                 'available' => 'sulu_product.product_status.available',
             ]],
             $statusField->getFilterTypeParameters(),
+        );
+    }
+
+    public function testASelectionOffersNoProductWithVariants(): void
+    {
+        $typeField = $this->createTypeField();
+        $listMetadata = new ListMetadata();
+        $listMetadata->addField(new FieldMetadata('status'));
+        $listMetadata->addField($typeField);
+
+        $visitor = new ProductsListMetadataVisitor([]);
+        $visitor->visitListMetadata($listMetadata, ProductInterface::LIST_KEY, 'en');
+
+        $this->assertSame(
+            ['options' => [ProductInterface::TYPE_PRODUCT => 'product', ProductInterface::TYPE_VARIANT => 'variant']],
+            $typeField->getFilterTypeParameters(),
+        );
+    }
+
+    public function testTheAdminListOffersNoVariant(): void
+    {
+        $typeField = $this->createTypeField();
+        $listMetadata = new ListMetadata();
+        $listMetadata->addField(new FieldMetadata('status'));
+        $listMetadata->addField($typeField);
+
+        $visitor = new ProductsListMetadataVisitor([]);
+        $visitor->visitListMetadata($listMetadata, ProductInterface::LIST_KEY, 'en', ['excludeVariants' => 'true']);
+
+        $this->assertSame(
+            ['options' => [ProductInterface::TYPE_PRODUCT => 'product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS => 'product_with_variants']],
+            $typeField->getFilterTypeParameters(),
         );
     }
 
@@ -53,5 +86,17 @@ class ProductsListMetadataVisitorTest extends TestCase
         $visitor->visitListMetadata($listMetadata, ProductInterface::LIST_KEY_VARIANTS, 'en');
 
         $this->assertNull($statusField->getFilterTypeParameters());
+    }
+
+    private function createTypeField(): FieldMetadata
+    {
+        $typeField = new FieldMetadata('type');
+        $typeField->setFilterTypeParameters(['options' => [
+            ProductInterface::TYPE_PRODUCT => 'product',
+            ProductInterface::TYPE_PRODUCT_WITH_VARIANTS => 'product_with_variants',
+            ProductInterface::TYPE_VARIANT => 'variant',
+        ]]);
+
+        return $typeField;
     }
 }

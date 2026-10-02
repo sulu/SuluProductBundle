@@ -84,7 +84,20 @@ sulu_product:
 
 A product without variants resolves as itself, with `product.url` and without `variants` or
 `currentVariant`. A variant resolved as a reference (a product selection) or as a teaser resolves
-as itself, without its product's content.
+as itself, without its product's content. A reference reaches the variant's product through
+`product.parent.`, which offers what `product.` offers and is `null` for a product without parent.
+Map it to a key of its own, since keys are shared across prefixes:
+
+```xml
+<property name="product" type="single_product_selection">
+    <params>
+        <param name="properties" type="collection">
+            <param name="parentTitle" value="product.parent.title"/>
+            <param name="parentShortDescription" value="product.parent.shortDescription"/>
+        </param>
+    </params>
+</property>
+```
 
 To show a variant's attributes together with its product's, merge them in the template; the
 variant's value wins on the same attribute:

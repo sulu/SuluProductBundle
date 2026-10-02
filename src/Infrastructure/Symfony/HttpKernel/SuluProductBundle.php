@@ -1583,11 +1583,11 @@ final class SuluProductBundle extends AbstractBundle
                         'selection' => [
                             'product_selection' => [
                                 'default_type' => 'list_overlay',
-                                'resource_key' => 'products',
+                                'resource_key' => ProductInterface::RESOURCE_KEY,
                                 'types' => [
                                     'list_overlay' => [
                                         'adapter' => 'table',
-                                        'list_key' => 'products',
+                                        'list_key' => ProductInterface::LIST_KEY,
                                         'display_properties' => ['name'],
                                         'icon' => 'su-industry',
                                         'label' => 'sulu_product.selection_label',
@@ -1613,11 +1613,11 @@ final class SuluProductBundle extends AbstractBundle
                         'single_selection' => [
                             'single_product_selection' => [
                                 'default_type' => 'list_overlay',
-                                'resource_key' => 'products',
+                                'resource_key' => ProductInterface::RESOURCE_KEY,
                                 'types' => [
                                     'list_overlay' => [
                                         'adapter' => 'table',
-                                        'list_key' => 'products',
+                                        'list_key' => ProductInterface::LIST_KEY,
                                         // the selected item is loaded from the detail endpoint, which has no `name`
                                         'display_properties' => ['title'],
                                         'empty_text' => 'sulu_product.no_product_selected',
