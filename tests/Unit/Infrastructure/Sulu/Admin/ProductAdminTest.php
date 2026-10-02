@@ -15,11 +15,13 @@ namespace Sulu\Product\Tests\Unit\Infrastructure\Sulu\Admin;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Bundle\ActivityBundle\Infrastructure\Sulu\Admin\ActivityAdmin;
 use Sulu\Bundle\ActivityBundle\Infrastructure\Sulu\Admin\View\ActivityViewBuilderFactory;
 use Sulu\Bundle\AdminBundle\Admin\Navigation\NavigationItemCollection;
+use Sulu\Bundle\AdminBundle\Admin\View\DropdownToolbarAction;
 use Sulu\Bundle\AdminBundle\Admin\View\FormViewBuilder;
 use Sulu\Bundle\AdminBundle\Admin\View\PreviewFormViewBuilder;
 use Sulu\Bundle\AdminBundle\Admin\View\ToolbarAction;
@@ -28,7 +30,9 @@ use Sulu\Bundle\AdminBundle\Admin\View\ViewCollection;
 use Sulu\Component\Localization\Manager\LocalizationManagerInterface;
 use Sulu\Component\Security\Authorization\PermissionTypes;
 use Sulu\Component\Security\Authorization\SecurityCheckerInterface;
+use Sulu\Content\Infrastructure\Sulu\Admin\ContentViewBuilderFactoryInterface;
 use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
+use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeGroupAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
@@ -49,6 +53,9 @@ class ProductAdminTest extends TestCase
 
     private ActivityViewBuilderFactory $activityViewBuilderFactory;
 
+    /** @var ObjectProphecy<ContentViewBuilderFactoryInterface> */
+    private ObjectProphecy $contentViewBuilderFactory;
+
     private ProductAdmin $admin;
 
     protected function setUp(): void
@@ -62,12 +69,24 @@ class ProductAdminTest extends TestCase
             $this->securityChecker->reveal(),
         );
 
+        $this->contentViewBuilderFactory = $this->prophesize(ContentViewBuilderFactoryInterface::class);
+        $this->contentViewBuilderFactory
+            ->getWorkflowTransitionRequestToolbarActions(ProductInterface::class, Argument::cetera())
+            ->will(static fn (array $arguments): array => [
+                'save' => new DropdownToolbarAction('sulu_admin.save', 'su-save', [
+                    new ToolbarAction('sulu_content.request_for_publish'),
+                    new ToolbarAction('sulu_admin.publish', ['visible_condition' => $arguments[2] ?? 'default']),
+                ]),
+                'approval' => new ToolbarAction('sulu_content.review_workflow_transition_request'),
+            ]);
+
         $this->admin = new ProductAdmin(
             $this->viewBuilderFactory,
             $this->securityChecker->reveal(),
             $this->localizationManager->reveal(),
             $this->activityViewBuilderFactory,
             new ProductAssociationTypeRegistry([]),
+            $this->contentViewBuilderFactory->reveal(),
         );
     }
 
@@ -197,6 +216,7 @@ class ProductAdminTest extends TestCase
             PermissionTypes::EDIT,
             PermissionTypes::DELETE,
             PermissionTypes::LIVE,
+            PermissionTypes::REVIEW,
         ], $contexts['Sulu']['Product'][ProductAdmin::SECURITY_CONTEXT]);
     }
 
@@ -258,6 +278,52 @@ class ProductAdminTest extends TestCase
         // nothing to preview before the product exists
         $addView = $viewCollection->get(ProductAdmin::ADD_TABS_VIEW . '.details')->getView();
         $this->assertSame(FormViewBuilder::TYPE, $addView->getType());
+        /** @var ToolbarAction[] $addToolbarActions */
+        $addToolbarActions = $addView->getOption('toolbarActions');
+        $this->assertSame(
+            ['sulu_admin.dropdown'],
+            \array_map(static fn (ToolbarAction $toolbarAction): string => $toolbarAction->getType(), $addToolbarActions),
+        );
+    }
+
+    public function testDetailsEditViewOffersTheRequestWorkflow(): void
+    {
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(true);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::ADD)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::DELETE)->willReturn(true);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::LIVE)->willReturn(true);
+        $this->securityChecker->hasPermission(ActivityAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(false);
+
+        $viewCollection = new ViewCollection();
+        $this->admin->configureViews($viewCollection);
+
+        /** @var ToolbarAction[] $toolbarActions */
+        $toolbarActions = $viewCollection->get(ProductAdmin::EDIT_TABS_VIEW . '.details')->getView()->getOption('toolbarActions');
+
+        $this->assertSame(
+            ['sulu_admin.dropdown', 'sulu_content.review_workflow_transition_request', 'sulu_admin.delete', 'sulu_admin.dropdown'],
+            \array_map(static fn (ToolbarAction $toolbarAction): string => $toolbarAction->getType(), $toolbarActions),
+        );
+        $this->assertSame('(!_permissions || _permissions.live)', $this->getDetailsPublishCondition($viewCollection));
+    }
+
+    public function testDetailsEditViewHidesPublishingWithoutLivePermission(): void
+    {
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(true);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::ADD)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::DELETE)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::LIVE)->willReturn(false);
+        $this->securityChecker->hasPermission(ActivityAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(false);
+
+        $viewCollection = new ViewCollection();
+        $this->admin->configureViews($viewCollection);
+
+        /** @var ToolbarAction[] $toolbarActions */
+        $toolbarActions = $viewCollection->get(ProductAdmin::EDIT_TABS_VIEW . '.details')->getView()->getOption('toolbarActions');
+
+        $this->assertSame('false', $this->getDetailsPublishCondition($viewCollection));
     }
 
     public function testConfigureViewsAddsVariantsTabView(): void
@@ -339,6 +405,17 @@ class ProductAdminTest extends TestCase
         );
     }
 
+    private function getDetailsPublishCondition(ViewCollection $viewCollection): mixed
+    {
+        /** @var DropdownToolbarAction[] $toolbarActions */
+        $toolbarActions = $viewCollection->get(ProductAdmin::EDIT_TABS_VIEW . '.details')->getView()->getOption('toolbarActions');
+
+        /** @var ToolbarAction[] $entries */
+        $entries = $toolbarActions[0]->getOptions()['toolbarActions'];
+
+        return $entries[1]->getOptions()['visible_condition'];
+    }
+
     /**
      * @return string[]
      */
@@ -380,6 +457,7 @@ class ProductAdminTest extends TestCase
             $this->localizationManager->reveal(),
             $this->activityViewBuilderFactory,
             new ProductAssociationTypeRegistry(['alternative' => ['label' => 'sulu_product.association_type_alternative']]),
+            $this->contentViewBuilderFactory->reveal(),
         );
 
         $viewCollection = new ViewCollection();
