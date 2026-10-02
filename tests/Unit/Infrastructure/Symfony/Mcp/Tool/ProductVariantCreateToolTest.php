@@ -34,6 +34,7 @@ use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductVariantCreateTool;
+use Sulu\Product\Tests\Unit\Fixture\ProductUrlHelperFactory;
 use Sulu\Product\Tests\Unit\Fixture\ProjectLocalesFactory;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -70,7 +71,41 @@ final class ProductVariantCreateToolTest extends TestCase
             ),
             $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
             ProjectLocalesFactory::create(),
+            ProductUrlHelperFactory::create('route'),
         );
+    }
+
+    public function testCreateVariantDefaultsTheUrlFromTheTitle(): void
+    {
+        $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => ['shared-uuid' => false, 'axis-uuid' => true]]));
+        $captured = $this->captureDispatchedMessage(new Product('variant-uuid'));
+
+        $this->tool->createProductVariant('en', 'parent-uuid', 'Red XL');
+
+        $this->assertSame('/products/red-xl', $this->capturedData($captured)['url'] ?? null);
+    }
+
+    public function testCreateVariantKeepsAnExplicitUrl(): void
+    {
+        $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => ['shared-uuid' => false, 'axis-uuid' => true]]));
+        $captured = $this->captureDispatchedMessage(new Product('variant-uuid'));
+
+        $this->tool->createProductVariant('en', 'parent-uuid', 'Red XL', url: '/shop/red-xl');
+
+        $this->assertSame('/shop/red-xl', $this->capturedData($captured)['url'] ?? null);
+    }
+
+    /**
+     * @param \Closure(): ?object $captured
+     *
+     * @return array<string, mixed>
+     */
+    private function capturedData(\Closure $captured): array
+    {
+        $message = $captured();
+        $this->assertInstanceOf(CreateProductMessage::class, $message);
+
+        return $message->getData();
     }
 
     public function testCreateVariantForcesTypeParentAndInheritedFamily(): void
@@ -259,6 +294,7 @@ final class ProductVariantCreateToolTest extends TestCase
             new VariantParentResolver($this->productRepository->reveal(), $this->productFamilyRepository->reveal()),
             $adminLinkGenerator->reveal(),
             ProjectLocalesFactory::create(),
+            ProductUrlHelperFactory::create('route'),
         );
 
         $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => ['shared-uuid' => false]]));

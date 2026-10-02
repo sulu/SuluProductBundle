@@ -229,6 +229,71 @@ final class ProductCreateToolTest extends TestCase
         $this->assertNotEmpty($result['hint']);
     }
 
+    public function testCreateProductDefaultsTheUrlFromTheTitle(): void
+    {
+        $captured = $this->captureMessage(new Product('new-uuid'));
+
+        $this->toolWithRouteType()->createProduct('en', 'family-uuid', 'Shirt');
+
+        $this->assertSame('/products/shirt', $this->capturedData($captured)['url']);
+    }
+
+    public function testCreateProductKeepsAnExplicitUrl(): void
+    {
+        $captured = $this->captureMessage(new Product('new-uuid'));
+
+        $this->toolWithRouteType()->createProduct('en', 'family-uuid', 'Shirt', content: ['url' => '/shop/shirt']);
+
+        $this->assertSame('/shop/shirt', $this->capturedData($captured)['url']);
+    }
+
+    public function testCreateProductWithVariantsGetsNoUrl(): void
+    {
+        $captured = $this->captureMessage(new Product('new-uuid'));
+
+        $this->toolWithRouteType()->createProduct('en', 'family-uuid', 'Shirt', type: ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+
+        $this->assertArrayNotHasKey('url', $this->capturedData($captured));
+    }
+
+    public function testCreateProductWithAPageTreeRouteGetsNoUrlFromTheTitle(): void
+    {
+        $captured = $this->captureMessage(new Product('new-uuid'));
+
+        $this->tool->createProduct('en', 'family-uuid', 'Shirt');
+
+        $this->assertArrayNotHasKey('url', $this->capturedData($captured));
+    }
+
+    /**
+     * @param \Closure(): ?object $captured
+     *
+     * @return array<string, mixed>
+     */
+    private function capturedData(\Closure $captured): array
+    {
+        $message = $captured();
+        $this->assertInstanceOf(CreateProductMessage::class, $message);
+
+        return $message->getData();
+    }
+
+    private function toolWithRouteType(): ProductCreateTool
+    {
+        return new ProductCreateTool(
+            $this->messageBus->reveal(),
+            $this->contentManager->reveal(),
+            new ContentMetadataMapper(new ArrayMetadataProvider()),
+            new BlockDataValidator($this->formMetadataProvider(), new MetadataLocaleResolver(new TokenStorage(), 'en')),
+            FixedBlockIdGenerator::returning('b1', 'b2', 'b3'),
+            $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
+            $this->associationResolver(),
+            CompletenessCheckerFactory::create(),
+            ProductUrlHelperFactory::create('route'),
+            ProjectLocalesFactory::create(),
+        );
+    }
+
     public function testCreateProductMethodHasMcpToolAttribute(): void
     {
         $reflection = new \ReflectionMethod(ProductCreateTool::class, 'createProduct');

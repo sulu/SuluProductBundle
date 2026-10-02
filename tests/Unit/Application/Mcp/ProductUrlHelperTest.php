@@ -127,6 +127,41 @@ final class ProductUrlHelperTest extends TestCase
         $this->assertStringContainsString('e.g. the pattern of a sibling product', ProductUrlHelperFactory::create('route')->instruction(['title' => '  ', 'code' => 5]));
     }
 
+    public function testAMissingPathUrlIsGeneratedFromTheTitle(): void
+    {
+        $data = ProductUrlHelperFactory::create('route')->completeUrl(['title' => 'Dup Check', 'code' => 'x-1'], 'en');
+
+        $this->assertSame('/products/dup-check', $data['url']);
+    }
+
+    public function testAGeneratedPathUrlIsUniqueAmongTheExistingRoutes(): void
+    {
+        $helper = ProductUrlHelperFactory::create('route', ['/products/dup-check']);
+
+        $this->assertSame('/products/dup-check-1', $helper->completeUrl(['title' => 'Dup Check'], 'en')['url']);
+    }
+
+    public function testAGivenUrlIsNeverReplaced(): void
+    {
+        $data = ['title' => 'Dup Check', 'url' => '/shop/dup'];
+
+        $this->assertSame($data, ProductUrlHelperFactory::create('route')->completeUrl($data, 'en'));
+    }
+
+    public function testAPageBasedUrlIsNotGeneratedWithoutAPage(): void
+    {
+        $data = ['title' => 'Dup Check'];
+
+        $this->assertSame($data, ProductUrlHelperFactory::create('page_tree_route')->completeUrl($data, 'en'));
+    }
+
+    public function testWithoutATitleNoUrlIsGenerated(): void
+    {
+        $data = ['title' => '  '];
+
+        $this->assertSame($data, ProductUrlHelperFactory::create('route')->completeUrl($data, 'en'));
+    }
+
     public function testATitleWithoutASlugLeavesTheUrlWithoutASuffix(): void
     {
         $data = ['title' => '!!!', 'url' => ['page' => ['uuid' => 'p', 'path' => '/products']]];

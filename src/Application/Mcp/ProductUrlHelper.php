@@ -138,6 +138,31 @@ final readonly class ProductUrlHelper
     }
 
     /**
+     * Fills a missing path url from the title, as the admin does while the editor types. A page based
+     * url needs a page that only the agent can name, so it is left alone and the warning asks for it.
+     *
+     * @param array<string, mixed> $data
+     *
+     * @return array<string, mixed>
+     */
+    public function completeUrl(array $data, string $locale): array
+    {
+        $title = $data['title'] ?? null;
+        if ($this->isPageBased() || isset($data['url']) || !\is_string($title) || '' === \trim($title)) {
+            return $data;
+        }
+
+        $parts = $this->routeParts($data, $locale);
+        if ([] === $parts) {
+            $parts = ['title' => $title];
+        }
+
+        $data['url'] = $this->generateUrl($parts, $locale, null);
+
+        return $data;
+    }
+
+    /**
      * Fills a missing suffix of a page based url from the title, so that the agent only has to name the page.
      * The suffix comes from the route generator with the page as parent and its default schema,
      * so it is not taken below the page yet, as long as the page has a url in this locale.

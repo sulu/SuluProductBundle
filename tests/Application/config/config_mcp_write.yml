@@ -12,3 +12,9 @@ services:
     test.sulu_product.mcp_product_get_tool:
         alias: Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductGetTool
         public: true
+    test.sulu_product.product_create_tool:
+        alias: Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductCreateTool
+        public: true
+    test.sulu_product.product_variant_create_tool:
+        alias: Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductVariantCreateTool
+        public: true
