@@ -25,6 +25,7 @@ use Sulu\Mcp\Domain\Security\DangerousTool;
 use Sulu\Mcp\Domain\Security\PermissionRequirement;
 use Sulu\Mcp\Domain\Security\RequiresPermission;
 use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushStamp;
+use Sulu\Product\Application\Mcp\DefaultProductUrlResolver;
 use Sulu\Product\Application\Mcp\VariantParentResolver;
 use Sulu\Product\Application\Message\CreateProductMessage;
 use Sulu\Product\Domain\Exception\InvalidVariantParentException;
@@ -47,6 +48,7 @@ final class ProductVariantCreateTool
         private readonly ContentManagerInterface $contentManager,
         private readonly VariantParentResolver $variantParentResolver,
         private readonly AdminLinkGeneratorInterface $adminLinkGenerator,
+        private readonly DefaultProductUrlResolver $defaultProductUrlResolver,
     ) {
         $this->messageBus = $messageBus;
     }
@@ -60,7 +62,7 @@ final class ProductVariantCreateTool
     #[McpTool(
         name: 'sulu_product_variant_create',
         title: 'Create Product Variant',
-        description: 'Create a variant of an existing product (draft). The parent must be a product of type "product_with_variants". A plain product or another variant is rejected, because variants cannot be nested. The variant inherits its parent\'s product family, so there is no productFamily parameter. In "attributes" pass only the variant axes: the attributes the family marks variantSpecific (see sulu_product_family_list), keyed by their INTEGER attribute id. Shared attributes belong on the parent and are dropped here; a variant-specific attribute the family marks required must be present. Variants are published individually with sulu_content_publish (resourceKey: products, the variant\'s uuid), and only after the parent is published in that locale; publishing the parent leaves its variants unpublished, and unpublishing the parent unpublishes its variants.',
+        description: 'Create a variant of an existing product (draft). The parent must be a product of type "product_with_variants". A plain product or another variant is rejected, because variants cannot be nested. The variant inherits its parent\'s product family, so there is no productFamily parameter. The variant URL is generated from the title with the product route schema unless "url" is given. In "attributes" pass only the variant axes: the attributes the family marks variantSpecific (see sulu_product_family_list), keyed by their INTEGER attribute id. Shared attributes belong on the parent and are dropped here; a variant-specific attribute the family marks required must be present. Variants are published individually with sulu_content_publish (resourceKey: products, the variant\'s uuid), and only after the parent is published in that locale; publishing the parent leaves its variants unpublished, and unpublishing the parent unpublishes its variants.',
         annotations: new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false),
     )]
     #[DangerousTool('product_write')]
@@ -80,6 +82,8 @@ final class ProductVariantCreateTool
         ?array $attributes = null,
         #[Schema(type: 'object', description: 'Detail fields, e.g. {"shortDescription": "<p>…</p>"}. Media fields take {"id": <mediaId>}.', additionalProperties: true)]
         ?array $details = null,
+        #[Schema(description: 'URL of the variant, e.g. "/products/red-xl". Generated from the title with the product route schema when omitted.')]
+        ?string $url = null,
     ): array {
         try {
             $parent = $this->variantParentResolver->resolveParent($parentUuid);
@@ -108,6 +112,10 @@ final class ProductVariantCreateTool
             }
             if (null !== $details) {
                 $data['details'] = $details;
+            }
+            $url ??= $this->defaultProductUrlResolver->resolve($title, $locale);
+            if (null !== $url) {
+                $data['url'] = $url;
             }
             if (null !== $attributes) {
                 $data['attributes'] = $this->variantParentResolver->stripInheritedAttributes($family, $attributes);

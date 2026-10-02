@@ -303,9 +303,9 @@ extension for the resource key `products`. The MCP bundle's generic tools (`sulu
 | `sulu_attribute_value_list` | List the values products carry for one attribute, with the value to search by. |
 | `sulu_product_get_products` | Search published products by keyword, article code or family. |
 | `sulu_product_search_products_by_attributes` | Search products by attribute values. |
-| `sulu_product_create` | Create a product draft. Needs `product_write`. |
+| `sulu_product_create` | Create a product draft. Without `content.url` the URL is generated from the title. Needs `product_write`. |
 | `sulu_product_update` | Update a product draft. Needs `product_write`. |
-| `sulu_product_variant_create` | Create a variant draft. Needs `product_write`. |
+| `sulu_product_variant_create` | Create a variant draft. Without `url` the URL is generated from the title. Needs `product_write`. |
 | `sulu_product_variant_update` | Update a variant draft. Needs `product_write`. |
 
 The tools check the caller's permissions on these security contexts:

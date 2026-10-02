@@ -29,6 +29,7 @@ use Sulu\Mcp\Domain\Security\DangerousTool;
 use Sulu\Mcp\Domain\Security\PermissionRequirement;
 use Sulu\Mcp\Domain\Security\RequiresPermission;
 use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushStamp;
+use Sulu\Product\Application\Mcp\DefaultProductUrlResolver;
 use Sulu\Product\Application\Message\CreateProductMessage;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
@@ -62,6 +63,7 @@ final class ProductCreateTool
         private readonly BlockDataValidator $blockDataValidator,
         private readonly BlockIdGeneratorInterface $blockIdGenerator,
         private readonly AdminLinkGeneratorInterface $adminLinkGenerator,
+        private readonly DefaultProductUrlResolver $defaultProductUrlResolver,
     ) {
         $this->messageBus = $messageBus;
     }
@@ -78,7 +80,7 @@ final class ProductCreateTool
     #[McpTool(
         name: 'sulu_product_create',
         title: 'Create Product',
-        description: 'Create a new product (draft). Workflow: 1) Call sulu_product_family_list to pick a family. "productFamily" is its UUID and is mandatory, because the family decides which attributes the product has. 2) Pass attribute values in "attributes" as a map keyed by the INTEGER attribute id, e.g. attributes={"12": "red", "15": 42}. Get those ids from sulu_attribute_list. Attributes the family marks required must be present or the save is rejected. Template fields go in "content" as a flat object. Call sulu_get_context for the product templates. Set type="product_with_variants" when the product should hold variants; its variant-specific attributes then belong on the variants, not here. To create the variants themselves use sulu_product_variant_create. This tool cannot create them. The product is created as a draft: call sulu_content_publish (resourceKey: products) to make it live.',
+        description: 'Create a new product (draft). Workflow: 1) Call sulu_product_family_list to pick a family. "productFamily" is its UUID and is mandatory, because the family decides which attributes the product has. 2) Pass attribute values in "attributes" as a map keyed by the INTEGER attribute id, e.g. attributes={"12": "red", "15": 42}. Get those ids from sulu_attribute_list. Attributes the family marks required must be present or the save is rejected. Template fields go in "content" as a flat object. Without "url" in "content" the URL is generated from the title with the product route schema; a product_with_variants never has one. Call sulu_get_context for the product templates. Set type="product_with_variants" when the product should hold variants; its variant-specific attributes then belong on the variants, not here. To create the variants themselves use sulu_product_variant_create. This tool cannot create them. The product is created as a draft: call sulu_content_publish (resourceKey: products) to make it live.',
         annotations: new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false),
     )]
     #[DangerousTool('product_write')]
@@ -151,6 +153,9 @@ final class ProductCreateTool
             if (null !== $template) {
                 $data['template'] = $template;
             }
+            if (!isset($data['url']) && ProductInterface::TYPE_PRODUCT_WITH_VARIANTS !== $type) {
+                $data = $this->withDefaultUrl($data, $title, $locale);
+            }
             if (null !== $attributes) {
                 $data['attributes'] = $attributes;
             }
@@ -206,5 +211,20 @@ final class ProductCreateTool
                 'hint' => 'Verify the productFamily UUID exists (sulu_product_family_list), that "code" is unique, and that every attribute the family marks required is present in "attributes" keyed by its integer id (sulu_attribute_list).',
             ];
         }
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     *
+     * @return array<string, mixed>
+     */
+    private function withDefaultUrl(array $data, string $title, string $locale): array
+    {
+        $url = $this->defaultProductUrlResolver->resolve($title, $locale);
+        if (null !== $url) {
+            $data['url'] = $url;
+        }
+
+        return $data;
     }
 }

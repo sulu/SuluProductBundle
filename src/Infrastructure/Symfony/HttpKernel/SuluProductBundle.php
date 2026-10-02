@@ -39,6 +39,7 @@ use Sulu\Product\Application\Mapper\ProductFamilyMapper;
 use Sulu\Product\Application\Mapper\ProductFamilyMapperInterface;
 use Sulu\Product\Application\Mapper\ProductMapperInterface;
 use Sulu\Product\Application\Mapper\ProductParentMapper;
+use Sulu\Product\Application\Mcp\DefaultProductUrlResolver;
 use Sulu\Product\Application\Mcp\VariantParentResolver;
 use Sulu\Product\Application\MessageHandler\ApplyWorkflowTransitionProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\CopyLocaleProductMessageHandler;
@@ -1452,6 +1453,11 @@ final class SuluProductBundle extends AbstractBundle
 
         $services->set(VariantParentResolver::class)
             ->autowire();
+
+        $services->set(DefaultProductUrlResolver::class)
+            ->arg('$resourceLocatorGenerator', new Reference('sulu_route.resource_locator_generator'))
+            ->arg('$routeType', '%sulu_product.route.type%')
+            ->arg('$routeParams', '%sulu_product.route.params%');
 
         // The tag is explicit because SuluMcpBundle's instanceof rule does not reach this file.
         // sulu_admin.view_registry only exists in the admin container.
