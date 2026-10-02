@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Sulu\Product\Tests\Functional\Infrastructure\Symfony\Mcp;
 
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\RunClassInSeparateProcess;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductCreateTool;
@@ -22,6 +23,7 @@ use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 
 #[CoversClass(ProductCreateTool::class)]
 #[CoversClass(ProductVariantCreateTool::class)]
+#[RunClassInSeparateProcess]
 class ProductCreateToolUrlTest extends SuluTestCase
 {
     protected KernelBrowser $client;
