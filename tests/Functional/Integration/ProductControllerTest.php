@@ -746,6 +746,38 @@ class ProductControllerTest extends SuluTestCase
         $this->assertHttpStatusCode(200, $this->client->getResponse());
     }
 
+    public function testPublishTwiceWithinOneSecondCreatesNoDuplicateVersion(): void
+    {
+        self::purgeDatabase();
+        $familyId = $this->createProductFamily();
+
+        $this->client->request(
+            'POST',
+            '/admin/api/products.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'title' => 'Coded Product',
+                'url' => '/coded-product',
+                'code' => '5555',
+                'productFamily' => $familyId,
+            ]) ?: null,
+        );
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($data);
+        $id = $data['id'];
+        $this->assertIsString($id);
+
+        $this->client->request('POST', '/admin/api/products/' . $id . '.json?locale=en&action=publish');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        $this->client->request('POST', '/admin/api/products/' . $id . '.json?locale=en&action=publish');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+    }
+
     public function testPostTriggerCopyLocale(): void
     {
         self::purgeDatabase();
