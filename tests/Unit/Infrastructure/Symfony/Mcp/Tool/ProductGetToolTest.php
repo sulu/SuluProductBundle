@@ -152,6 +152,19 @@ final class ProductGetToolTest extends TestCase
         $this->assertStringContainsString('sulu_product_update', $result['hint']);
     }
 
+    public function testGetProductReturnsTheHintWhenResolveHandsBackAGhostOfAnotherLocale(): void
+    {
+        $this->productRepository->getOneBy(Argument::cetera())->willReturn(new Product('product-uuid'));
+        $this->contentManager->resolve(Argument::cetera())->willReturn(new ProductDimensionContent(new Product()));
+        $this->contentManager->normalize(Argument::cetera())->willReturn(['title' => null, 'availableLocales' => ['en']]);
+
+        $result = $this->tool->getProduct('de', 'product-uuid');
+
+        $this->assertSame([], $result['data']);
+        $this->assertIsString($result['hint']);
+        $this->assertStringContainsString('sulu_product_update', $result['hint']);
+    }
+
     public function testGetProductReturnsErrorForMissingProduct(): void
     {
         $this->productRepository->getOneBy(Argument::cetera())

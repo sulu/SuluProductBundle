@@ -465,8 +465,8 @@ final class ProductCreateToolTest extends TestCase
         $repository->findOneBy(['uuid' => 'pot-uuid'])->willReturn(new Product('pot-uuid'));
         $repository->findOneBy(['uuid' => 'BELT-1'])->willReturn(null);
         $repository->findOneBy(['uuid' => 'missing'])->willReturn(null);
-        $repository->findOneBy(['code' => 'BELT-1', 'locale' => 'en', 'stage' => DimensionContentInterface::STAGE_DRAFT])->willReturn(new Product('belt-uuid'));
-        $repository->findOneBy(['code' => 'missing', 'locale' => 'en', 'stage' => DimensionContentInterface::STAGE_DRAFT])->willReturn(null);
+        $repository->findOneBy(['code' => 'BELT-1', 'locale' => 'en', 'stage' => DimensionContentInterface::STAGE_DRAFT, 'loadGhost' => true])->willReturn(new Product('belt-uuid'));
+        $repository->findOneBy(['code' => 'missing', 'locale' => 'en', 'stage' => DimensionContentInterface::STAGE_DRAFT, 'loadGhost' => true])->willReturn(null);
 
         return new ProductAssociationResolver($repository->reveal(), new ProductAssociationTypeRegistry(['accessory' => ['label' => 'Accessory'], 'alternative' => ['label' => 'Alternative']]));
     }

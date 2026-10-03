@@ -46,7 +46,7 @@ final class ProductGetTool
     #[McpTool(
         name: 'sulu_product_get',
         title: 'Get Product',
-        description: 'Get a product by UUID, including its attribute values. Returns "productFamily" as the family UUID and "attributes" as a map keyed by the integer attribute id (e.g. {"12": "red"}). Resolve those ids to readable keys with sulu_attribute_list. Number attributes that carry a measurement unit also return a "<id>_unit" entry. "associations" maps each association type to the UUIDs of the linked products. "details" holds shortDescription, image and documents. "excerptCategories" and "excerptTags" are lists of integer ids. All of it can be passed back to sulu_product_update. A locale without content returns empty "data" and a hint. The result lists "recommendations" for things that are still empty. Work through them before publishing. Works for plain products, variant parents, and variants alike; use sulu_product_variant_list to see a parent\'s variants.',
+        description: 'Get a product by UUID, including its attribute values. Returns "productFamily" as the family UUID and "attributes" as a map keyed by the integer attribute id (e.g. {"12": "red"}). Resolve those ids to readable keys with sulu_attribute_list. Number attributes that carry a measurement unit also return a "<id>_unit" entry. "associations" maps each association type to the UUIDs of the linked products. "details" holds shortDescription, image and documents. "excerptCategories" and "excerptTags" are lists of integer ids. All of it can be passed back to sulu_product_update. A locale without content returns empty "data" and a hint. The result lists "recommendations" for things that are still empty. Fill what the datasheet or the user gives you and ask the user for the rest. Never invent values to empty the list. Works for plain products, variant parents, and variants alike; use sulu_product_variant_list to see a parent\'s variants.',
         annotations: new ToolAnnotations(readOnlyHint: true, openWorldHint: false),
     )]
     #[RequiresPermission(requirements: [
@@ -57,7 +57,9 @@ final class ProductGetTool
         try {
             [$product, $normalized] = $this->loadProductLocale($uuid, $locale);
 
-            if (null === $normalized) {
+            // resolve() hands back a ghost for a locale without content, so availableLocales decides.
+            $availableLocales = $normalized['availableLocales'] ?? null;
+            if (null === $normalized || (\is_array($availableLocales) && !\in_array($locale, $availableLocales, true))) {
                 return [
                     'uuid' => $product->getUuid(),
                     'locale' => $locale,

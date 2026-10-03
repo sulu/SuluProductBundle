@@ -98,6 +98,8 @@ final readonly class ProductAssociationResolver
                 'code' => $reference,
                 'locale' => $locale,
                 'stage' => DimensionContentInterface::STAGE_DRAFT,
+                // The code is shared by all locales. Without this the lookup misses a product that has no content in $locale yet.
+                'loadGhost' => true,
             ]);
 
         if (null === $product) {
