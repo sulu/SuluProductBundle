@@ -70,6 +70,25 @@ final class ProductAssociationResolverTest extends TestCase
         $this->resolver->resolve(['accessory' => ['nope']], 'en');
     }
 
+    public function testItRejectsAnUnknownTypeAndPointsToTheTypeList(): void
+    {
+        try {
+            $this->resolver->resolve(['bogus' => ['a-uuid']], 'en');
+            $this->fail('Expected an InvalidProductAssociationException.');
+        } catch (InvalidProductAssociationException $e) {
+            $this->assertStringContainsString('"bogus"', $e->getMessage());
+            $this->assertStringContainsString('sulu_product_association_type_list', $e->getHint());
+        }
+    }
+
+    public function testItRejectsAProductAssociatedWithItself(): void
+    {
+        $this->expectException(InvalidProductAssociationException::class);
+        $this->expectExceptionMessage('itself');
+
+        $this->resolver->resolve(['accessory' => ['a-uuid']], 'en', 'a-uuid');
+    }
+
     public function testItRejectsAValueThatIsNotAList(): void
     {
         $this->expectException(InvalidProductAssociationException::class);

@@ -324,6 +324,20 @@ final class ProductCreateToolTest extends TestCase
         );
     }
 
+    public function testCreateProductLeavesTheSuffixOutWhenTheTitleHasNoLetters(): void
+    {
+        $captured = $this->captureMessage(new Product('new-uuid'));
+        $url = ['page' => ['uuid' => 'page-uuid', 'path' => '/products']];
+
+        $this->tool->createProduct('en', 'family-uuid', '!!!', content: ['url' => $url]);
+
+        $message = $captured();
+        $this->assertInstanceOf(CreateProductMessage::class, $message);
+        /** @var array<string, mixed> $data */
+        $data = $message->getData();
+        $this->assertSame($url, $data['url'] ?? null);
+    }
+
     public function testCreateProductKeepsAGivenUrlSuffix(): void
     {
         $captured = $this->captureMessage(new Product('new-uuid'));
