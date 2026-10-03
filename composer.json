@@ -77,9 +77,9 @@
     },
     "scripts": {
         "bootstrap-test-environment": [
-            "@php tests/Application/bin/console.php doctrine:database:drop --if-exists --force --env test",
-            "@php tests/Application/bin/console.php doctrine:database:create --env test",
-            "@php tests/Application/bin/console.php doctrine:schema:update --force --complete --env test"
+            "@php tests/Application/bin/console.php doctrine:database:drop --if-exists --force --env test_mcp_write",
+            "@php tests/Application/bin/console.php doctrine:database:create --env test_mcp_write",
+            "@php tests/Application/bin/console.php doctrine:schema:update --force --complete --env test_mcp_write"
         ],
         "test": "@php vendor/bin/phpunit",
         "test-with-coverage": "@php vendor/bin/phpunit --coverage-php tests/reports/coverage.php --coverage-html tests/reports/html --log-junit tests/reports/junit.xml",

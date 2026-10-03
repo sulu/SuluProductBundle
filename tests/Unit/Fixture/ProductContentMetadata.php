@@ -41,17 +41,19 @@ final class ProductContentMetadata
         $provider = new ArrayMetadataProvider();
         $provider->set('product', $typed);
         $provider->set('content_excerpt_metadata', self::form('excerpt/title'));
-        $provider->set('content_excerpt_taxonomies', self::form('excerptTags'));
+        $provider->set('content_excerpt_taxonomies', self::form('excerptCategories', 'excerptTags'));
         $provider->set('content_seo_metadata', self::form('seo/title'));
         $provider->setDefault(new FormMetadata());
 
         return $provider;
     }
 
-    private static function form(string $fieldName): FormMetadata
+    private static function form(string ...$fieldNames): FormMetadata
     {
         $form = new FormMetadata();
-        $form->addItem(self::field($fieldName));
+        foreach ($fieldNames as $fieldName) {
+            $form->addItem(self::field($fieldName));
+        }
 
         return $form;
     }
