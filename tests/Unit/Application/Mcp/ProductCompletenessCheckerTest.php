@@ -17,6 +17,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\MetadataInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Application\Mcp\ProductCompletenessChecker;
 use Sulu\Product\Domain\Model\Product;
@@ -98,6 +99,51 @@ final class ProductCompletenessCheckerTest extends TestCase
 
         $this->assertStringContainsString('"fr"', $text);
         $this->assertStringNotContainsString('"de"', $text);
+    }
+
+    public function testAUrlGivenAsAStringCountsAsPresent(): void
+    {
+        $checker = CompletenessCheckerFactory::create(null, ['en']);
+        $data = $this->completeData();
+        $data['url'] = '/products/shirt';
+
+        $text = \implode("\n", $checker->check($this->productWithLocales(['en']), $data, 'en'));
+
+        $this->assertStringNotContainsString('No url.', $text);
+    }
+
+    public function testAnEmptyUrlStringCountsAsMissing(): void
+    {
+        $checker = CompletenessCheckerFactory::create(null, ['en']);
+        $data = $this->completeData();
+        $data['url'] = '';
+
+        $text = \implode("\n", $checker->check($this->productWithLocales(['en']), $data, 'en'));
+
+        $this->assertStringContainsString('No url.', $text);
+    }
+
+    public function testMediaFieldsAreSkippedWhenTheMetadataIsNotAForm(): void
+    {
+        $checker = CompletenessCheckerFactory::create((new ArrayMetadataProvider())->setDefault($this->createStub(MetadataInterface::class)), ['en']);
+
+        $text = \implode("\n", $checker->check($this->productWithLocales(['en']), $this->completeData(), 'en'));
+
+        $this->assertSame('', $text);
+    }
+
+    public function testContentOfAnotherStageDoesNotCountAsALocale(): void
+    {
+        $checker = CompletenessCheckerFactory::create(null, ['en', 'de']);
+        $product = $this->productWithLocales(['en']);
+        $live = new ProductDimensionContent($product);
+        $live->setLocale('de');
+        $live->setStage(DimensionContentInterface::STAGE_LIVE);
+        $product->addDimensionContent($live);
+
+        $text = \implode("\n", $checker->check($product, $this->completeData(), 'en'));
+
+        $this->assertStringContainsString('"de"', $text);
     }
 
     /**
