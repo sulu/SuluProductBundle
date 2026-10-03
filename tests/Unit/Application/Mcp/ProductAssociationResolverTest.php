@@ -39,8 +39,8 @@ final class ProductAssociationResolverTest extends TestCase
         $this->repository->findOneBy(['uuid' => 'a-uuid'])->willReturn(new Product('a-uuid'));
         $this->repository->findOneBy(['uuid' => 'B-CODE'])->willReturn(null);
         $this->repository->findOneBy(['uuid' => 'nope'])->willReturn(null);
-        $this->repository->findOneBy(['code' => 'B-CODE', 'locale' => 'en', 'stage' => DimensionContentInterface::STAGE_DRAFT])->willReturn(new Product('b-uuid'));
-        $this->repository->findOneBy(['code' => 'nope', 'locale' => 'en', 'stage' => DimensionContentInterface::STAGE_DRAFT])->willReturn(null);
+        $this->repository->findOneBy(['code' => 'B-CODE', 'locale' => 'en', 'stage' => DimensionContentInterface::STAGE_DRAFT, 'loadGhost' => true])->willReturn(new Product('b-uuid'));
+        $this->repository->findOneBy(['code' => 'nope', 'locale' => 'en', 'stage' => DimensionContentInterface::STAGE_DRAFT, 'loadGhost' => true])->willReturn(null);
 
         $this->resolver = new ProductAssociationResolver(
             $this->repository->reveal(),

@@ -380,6 +380,9 @@ final class ProductRepository implements ProductRepositoryInterface
                 ->leftJoin('unlocalizedContent.productFamily', 'filterProductFamily')
                 ->leftJoin('filterProductFamily.translations', 'productFamilyTranslation', Join::WITH, 'productFamilyTranslation.locale = :locale');
 
+            // The enhancer binds :locale itself, except with loadGhost, which skips the locale filter.
+            $queryBuilder->setParameter('locale', $filters['locale']);
+
             if (null !== $query && '' !== $query) {
                 Assert::string($query); // @phpstan-ignore staticMethod.alreadyNarrowedType
                 $queryBuilder

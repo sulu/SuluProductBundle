@@ -510,7 +510,7 @@ final class ProductUpdateToolTest extends TestCase
         $this->productRepository->findOneBy(['uuid' => 'pot-uuid'])->willReturn(new Product('pot-uuid'));
         $this->productRepository->findOneBy(['uuid' => 'uuid-1'])->willReturn(new Product('uuid-1'));
         $this->productRepository->findOneBy(['uuid' => 'BELT-1'])->willReturn(null);
-        $this->productRepository->findOneBy(['code' => 'BELT-1', 'locale' => 'en', 'stage' => DimensionContentInterface::STAGE_DRAFT])->willReturn(new Product('belt-uuid'));
+        $this->productRepository->findOneBy(['code' => 'BELT-1', 'locale' => 'en', 'stage' => DimensionContentInterface::STAGE_DRAFT, 'loadGhost' => true])->willReturn(new Product('belt-uuid'));
 
         return new ProductAssociationResolver($this->productRepository->reveal(), new ProductAssociationTypeRegistry(['accessory' => ['label' => 'Accessory'], 'alternative' => ['label' => 'Alternative']]));
     }
