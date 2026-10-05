@@ -63,7 +63,7 @@ final readonly class ProductCompletenessChecker
 
         // A parent that holds variants has no code or url of its own.
         if (!$withVariants && self::isEmpty($normalized['code'] ?? null)) {
-            $recommendations[] = 'No code. Pass code with the SKU from the datasheet or the user.';
+            $recommendations[] = 'No code. Pass code with the SKU from the datasheet. If there is none, derive one that follows the pattern of the codes of existing products (sulu_product_list) and is not taken yet.';
         }
 
         if (!$withVariants && !self::hasUrl($normalized)) {
