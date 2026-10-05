@@ -52,7 +52,7 @@ final class ProductVariantCreateTool
     }
 
     /**
-     * @param array<int, mixed>|null $attributes
+     * @param array<string, mixed>|null $attributes
      * @param array<string, mixed>|null $details
      *
      * @return array<string, mixed>
@@ -60,7 +60,7 @@ final class ProductVariantCreateTool
     #[McpTool(
         name: 'sulu_product_variant_create',
         title: 'Create Product Variant',
-        description: 'Create a variant of an existing product (draft). The parent must be a product of type "product_with_variants". A plain product or another variant is rejected, because variants cannot be nested. The variant inherits its parent\'s product family, so there is no productFamily parameter. In "attributes" pass only the variant axes: the attributes the family marks variantSpecific (see sulu_product_family_list), keyed by their INTEGER attribute id. Shared attributes belong on the parent and are dropped here; a variant-specific attribute the family marks required must be present. Variants are published individually with sulu_content_publish (resourceKey: products, the variant\'s uuid), and only after the parent is published in that locale; publishing the parent leaves its variants unpublished, and unpublishing the parent unpublishes its variants.',
+        description: 'Create a variant of an existing product (draft). The parent must be a product of type "product_with_variants". A plain product or another variant is rejected, because variants cannot be nested. The variant inherits its parent\'s product family, so there is no productFamily parameter. In "attributes" pass only the variant axes: the attributes the family marks variantSpecific (see sulu_product_family_list), keyed by their attribute UUID. Shared attributes belong on the parent and are dropped here; a variant-specific attribute the family marks required must be present. Variants are published individually with sulu_content_publish (resourceKey: products, the variant\'s uuid), and only after the parent is published in that locale; publishing the parent leaves its variants unpublished, and unpublishing the parent unpublishes its variants.',
         annotations: new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false),
     )]
     #[DangerousTool('product_write')]
@@ -76,7 +76,7 @@ final class ProductVariantCreateTool
         #[Schema(description: 'Variant code (SKU). Must be unique across all products.')]
         ?string $code = null,
         ?string $status = null,
-        #[Schema(type: 'object', description: 'Variant axis values keyed by the INTEGER attribute id, e.g. {"12": "red", "13": "XL"}. Only attributes the family marks variantSpecific are kept; the rest are inherited from the parent and silently dropped.', additionalProperties: true)]
+        #[Schema(type: 'object', description: 'Variant axis values keyed by the attribute UUID, e.g. {"<attribute uuid>": "red"}. Only attributes the family marks variantSpecific are kept; the rest are inherited from the parent and silently dropped.', additionalProperties: true)]
         ?array $attributes = null,
         #[Schema(type: 'object', description: 'Detail fields, e.g. {"shortDescription": "<p>…</p>"}. Media fields take {"id": <mediaId>}.', additionalProperties: true)]
         ?array $details = null,
@@ -143,7 +143,7 @@ final class ProductVariantCreateTool
         } catch (\Throwable $e) {
             return [
                 'error' => \sprintf('Failed to create variant "%s" of product %s: %s', $title, $parentUuid, $e->getMessage()),
-                'hint' => 'Verify "code" is unique and that every variant-specific attribute the family marks required is present in "attributes", keyed by its integer id (sulu_product_family_list shows which attributes are variantSpecific and required).',
+                'hint' => 'Verify "code" is unique and that every variant-specific attribute the family marks required is present in "attributes", keyed by its UUID (sulu_product_family_list shows which attributes are variantSpecific and required).',
             ];
         }
     }

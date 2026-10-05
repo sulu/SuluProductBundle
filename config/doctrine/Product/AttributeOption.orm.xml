@@ -3,8 +3,8 @@
                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
     <entity name="Sulu\Product\Domain\Model\AttributeOption" table="pr_attribute_options">
-        <id name="id" type="integer" column="id">
-            <generator strategy="AUTO"/>
+        <id name="uuid" type="string" column="uuid" length="36">
+            <generator strategy="NONE"/>
         </id>
 
         <field name="key" type="string" length="255" nullable="false" column="attribute_option_key"/>
@@ -17,7 +17,7 @@
         <many-to-one field="attribute"
                      target-entity="Sulu\Product\Domain\Model\AttributeInterface"
                      inversed-by="options">
-            <join-column name="idAttributes" referenced-column-name="id"
+            <join-column name="attributeUuid" referenced-column-name="uuid"
                          nullable="false" on-delete="CASCADE"/>
         </many-to-one>
 

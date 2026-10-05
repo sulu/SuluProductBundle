@@ -71,7 +71,8 @@ class ProductRepositoryTest extends SuluTestCase
 
     private function createFamily(): ProductFamilyInterface
     {
-        $family = $this->productFamilyRepository->create();
+        $family = $this->productFamilyRepository->createNew();
+        $family->setKey(\uniqid('family-'));
         $this->productFamilyRepository->save($family);
         $this->entityManager->flush();
 
@@ -246,7 +247,6 @@ class ProductRepositoryTest extends SuluTestCase
         $this->entityManager->flush();
 
         $familyUuid = $family->getUuid();
-        self::assertNotNull($familyUuid);
         $this->entityManager->clear();
 
         $this->assertTrue($this->repository->existBy(['productFamilyUuid' => $familyUuid]));
@@ -729,7 +729,7 @@ class ProductRepositoryTest extends SuluTestCase
         /** @var AttributeGroupRepositoryInterface $attributeGroupRepository */
         $attributeGroupRepository = $container->get(AttributeGroupRepositoryInterface::class);
 
-        $group = $attributeGroupRepository->create();
+        $group = $attributeGroupRepository->createNew();
         $attributeGroupRepository->save($group);
 
         $attribute = new Attribute($group);
@@ -747,7 +747,7 @@ class ProductRepositoryTest extends SuluTestCase
         $this->createLiveProductWithTextAttributeValue('AV-2', 'material-other', 'Steel');
         $this->entityManager->clear();
 
-        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getId());
+        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getUuid());
         $this->assertNotNull($attribute);
 
         $products = \iterator_to_array(
@@ -780,7 +780,7 @@ class ProductRepositoryTest extends SuluTestCase
         $this->entityManager->flush();
         $this->entityManager->clear();
 
-        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getId());
+        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getUuid());
         $this->assertNotNull($attribute);
 
         $products = \iterator_to_array(
@@ -815,7 +815,7 @@ class ProductRepositoryTest extends SuluTestCase
         $this->entityManager->flush();
         $this->entityManager->clear();
 
-        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getId());
+        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getUuid());
         $this->assertNotNull($attribute);
 
         $products = \iterator_to_array(
@@ -854,8 +854,8 @@ class ProductRepositoryTest extends SuluTestCase
         $this->entityManager->flush();
         $this->entityManager->clear();
 
-        $material = $this->entityManager->getRepository(Attribute::class)->find($material->getId());
-        $finish = $this->entityManager->getRepository(Attribute::class)->find($finish->getId());
+        $material = $this->entityManager->getRepository(Attribute::class)->find($material->getUuid());
+        $finish = $this->entityManager->getRepository(Attribute::class)->find($finish->getUuid());
         $this->assertNotNull($material);
         $this->assertNotNull($finish);
 
@@ -901,8 +901,8 @@ class ProductRepositoryTest extends SuluTestCase
         $this->entityManager->flush();
         $this->entityManager->clear();
 
-        $material = $this->entityManager->getRepository(Attribute::class)->find($material->getId());
-        $finish = $this->entityManager->getRepository(Attribute::class)->find($finish->getId());
+        $material = $this->entityManager->getRepository(Attribute::class)->find($material->getUuid());
+        $finish = $this->entityManager->getRepository(Attribute::class)->find($finish->getUuid());
         $this->assertNotNull($material);
         $this->assertNotNull($finish);
 
@@ -927,7 +927,7 @@ class ProductRepositoryTest extends SuluTestCase
         [, $attribute] = $this->createLiveProductWithTextAttributeValue('AV-NOMATCH', 'material-nomatch', 'Brass');
         $this->entityManager->clear();
 
-        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getId());
+        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getUuid());
         $this->assertNotNull($attribute);
 
         $products = \iterator_to_array(
@@ -1446,15 +1446,16 @@ class ProductRepositoryTest extends SuluTestCase
         /** @var AttributeRepositoryInterface $attributeRepository */
         $attributeRepository = $container->get(AttributeRepositoryInterface::class);
 
-        $group = $groupRepository->create();
+        $group = $groupRepository->createNew();
         $groupRepository->save($group);
 
-        $attribute = $attributeRepository->create($group);
+        $attribute = $attributeRepository->createNew($group);
         $attribute->setKey('color');
         $attribute->setType(AttributeInterface::TYPE_TEXT);
         $attributeRepository->save($attribute);
 
-        $family = $this->productFamilyRepository->create();
+        $family = $this->productFamilyRepository->createNew();
+        $family->setKey(\uniqid('family-'));
         $family->addFamilyAttribute(new ProductFamilyAttribute($family, $attribute));
         $this->productFamilyRepository->save($family);
 
@@ -1467,7 +1468,7 @@ class ProductRepositoryTest extends SuluTestCase
         $this->entityManager->flush();
 
         $uuid = $product->getUuid();
-        $attributeId = $attribute->getId();
+        $attributeUuid = $attribute->getUuid();
         $this->entityManager->clear();
 
         $selects = [
@@ -1489,11 +1490,11 @@ class ProductRepositoryTest extends SuluTestCase
             }
 
             foreach ($productFamily->getFamilyAttributes() as $familyAttribute) {
-                $familyAttributes[] = $familyAttribute->getAttribute()->getId();
+                $familyAttributes[] = $familyAttribute->getAttribute()->getUuid();
             }
         }
 
-        $this->assertSame([$attributeId], $familyAttributes);
+        $this->assertSame([$attributeUuid], $familyAttributes);
         $this->assertSame($queriesBefore, $this->countQueries(), 'walking the family graph must not query');
     }
 
@@ -1580,7 +1581,7 @@ class ProductRepositoryTest extends SuluTestCase
         [$product, $attribute] = $this->createProductWhoseDraftDiffersFromLive('LIVE-AV', 'DRAFT-AV', 'Brass', 'Steel', 'material');
         $this->entityManager->clear();
 
-        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getId());
+        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getUuid());
         $this->assertNotNull($attribute);
 
         $byDraftValue = \iterator_to_array($this->repository->findBy([

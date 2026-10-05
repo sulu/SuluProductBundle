@@ -52,8 +52,8 @@ class ProductFamilyResourceLoaderTest extends TestCase
 
     public function testLoadMapsFamiliesByUuidInTheRequestedLocale(): void
     {
-        $speakon = $this->createFamily('uuid-1', 'SPK', ['en' => 'speakON', 'de' => 'speakON DE']);
-        $ethercon = $this->createFamily('uuid-2', null, ['de' => 'etherCON']);
+        $speakon = $this->createFamily('uuid-1', 'speakon', 'SPK', ['en' => 'speakON', 'de' => 'speakON DE']);
+        $ethercon = $this->createFamily('uuid-2', 'ethercon', null, ['de' => 'etherCON']);
 
         $this->productFamilyRepository->findBy(['uuids' => ['uuid-1', 'uuid-2']])
             ->willReturn([$speakon, $ethercon])
@@ -63,11 +63,11 @@ class ProductFamilyResourceLoaderTest extends TestCase
 
         $this->assertSame(['uuid-1', 'uuid-2'], \array_keys($loaded));
         $this->assertSame(
-            ['uuid' => 'uuid-1', 'externalIdentifier' => 'SPK', 'name' => 'speakON'],
+            ['uuid' => 'uuid-1', 'key' => 'speakon', 'externalIdentifier' => 'SPK', 'name' => 'speakON'],
             $this->scalarContent($loaded['uuid-1']),
         );
         $this->assertSame(
-            ['uuid' => 'uuid-2', 'externalIdentifier' => null, 'name' => null],
+            ['uuid' => 'uuid-2', 'key' => 'ethercon', 'externalIdentifier' => null, 'name' => null],
             $this->scalarContent($loaded['uuid-2']),
         );
     }
@@ -77,7 +77,7 @@ class ProductFamilyResourceLoaderTest extends TestCase
     {
         $image = $this->createStub(MediaInterface::class);
         $image->method('getId')->willReturn(5);
-        $family = $this->createFamily('uuid-1', 'SPK', ['en' => 'speakON']);
+        $family = $this->createFamily('uuid-1', 'speakon', 'SPK', ['en' => 'speakON']);
         $family->setImage($image);
 
         $this->productFamilyRepository->findBy(['uuids' => ['uuid-1']])->willReturn([$family]);
@@ -98,20 +98,12 @@ class ProductFamilyResourceLoaderTest extends TestCase
     public function testLoadWithoutImageResolvesAnEmptyImage(): void
     {
         $this->productFamilyRepository->findBy(['uuids' => ['uuid-1']])
-            ->willReturn([$this->createFamily('uuid-1', 'SPK', ['en' => 'speakON'])]);
+            ->willReturn([$this->createFamily('uuid-1', 'speakon', 'SPK', ['en' => 'speakON'])]);
 
         $content = $this->loader->load(['uuid-1'], 'en')['uuid-1']->getContent();
         $this->assertIsArray($content);
         $this->assertInstanceOf(ContentView::class, $content['image']);
         $this->assertNull($content['image']->getContent());
-    }
-
-    public function testLoadSkipsAFamilyWithoutUuid(): void
-    {
-        $this->productFamilyRepository->findBy(['uuids' => ['uuid-1']])
-            ->willReturn([new ProductFamily()]);
-
-        $this->assertSame([], $this->loader->load(['uuid-1'], 'en'));
     }
 
     public function testLoadWithoutLocaleQueriesNothing(): void
@@ -143,10 +135,10 @@ class ProductFamilyResourceLoaderTest extends TestCase
     /**
      * @param array<string, string> $names
      */
-    private function createFamily(string $uuid, ?string $externalIdentifier, array $names): ProductFamily
+    private function createFamily(string $uuid, string $key, ?string $externalIdentifier, array $names): ProductFamily
     {
-        $family = new ProductFamily();
-        $family->setUuid($uuid);
+        $family = new ProductFamily($uuid);
+        $family->setKey($key);
         $family->setExternalIdentifier($externalIdentifier);
         foreach ($names as $locale => $name) {
             $family->addTranslation(new ProductFamilyTranslation($family, $locale, $name));

@@ -90,7 +90,7 @@ class AttributeFieldFactoryTest extends TestCase
      * @return ObjectProphecy<AttributeInterface>
      */
     private function attribute(
-        int $id,
+        string $uuid,
         string $key,
         string $type,
         array $config,
@@ -100,7 +100,7 @@ class AttributeFieldFactoryTest extends TestCase
         ?string $defaultLocaleTranslationName = null,
     ): ObjectProphecy {
         $attribute = $this->prophesize(AttributeInterface::class);
-        $attribute->getId()->willReturn($id);
+        $attribute->getUuid()->willReturn($uuid);
         $attribute->getKey()->willReturn($key);
         $attribute->getType()->willReturn($type);
         $attribute->getConfig()->willReturn($config);
@@ -143,7 +143,7 @@ class AttributeFieldFactoryTest extends TestCase
 
     public function testReturnsNullWhenAttributeTypeIsUnknown(): void
     {
-        $attribute = $this->attribute(1, 'color', AttributeInterface::TYPE_TEXT, [], 'Color');
+        $attribute = $this->attribute('0198c3e2-0000-7000-8000-000000000001', 'color', AttributeInterface::TYPE_TEXT, [], 'Color');
         $familyAttribute = $this->familyAttribute($attribute->reveal());
 
         self::assertNull($this->factory()->build($familyAttribute->reveal(), 'en'));
@@ -151,7 +151,7 @@ class AttributeFieldFactoryTest extends TestCase
 
     public function testReturnsNullWhenTemplateIsNotFormMetadata(): void
     {
-        $attribute = $this->attribute(1, 'weight', AttributeInterface::TYPE_NUMBER, [], 'Weight');
+        $attribute = $this->attribute('0198c3e2-0000-7000-8000-000000000001', 'weight', AttributeInterface::TYPE_NUMBER, [], 'Weight');
         $familyAttribute = $this->familyAttribute($attribute->reveal());
 
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])->willReturn(null);
@@ -161,7 +161,7 @@ class AttributeFieldFactoryTest extends TestCase
 
     public function testReturnsNullWhenTemplateHasNoValueField(): void
     {
-        $attribute = $this->attribute(1, 'weight', AttributeInterface::TYPE_NUMBER, [], 'Weight');
+        $attribute = $this->attribute('0198c3e2-0000-7000-8000-000000000001', 'weight', AttributeInterface::TYPE_NUMBER, [], 'Weight');
         $familyAttribute = $this->familyAttribute($attribute->reveal());
 
         $fragment = new FormMetadata();
@@ -172,9 +172,9 @@ class AttributeFieldFactoryTest extends TestCase
         self::assertNull($this->factory()->build($familyAttribute->reveal(), 'en'));
     }
 
-    public function testBuildsSchemaPropertyKeyedByAttributeId(): void
+    public function testBuildsSchemaPropertyKeyedByAttributeUuid(): void
     {
-        $attribute = $this->attribute(7, 'weight', AttributeInterface::TYPE_NUMBER, ['min' => 0, 'max' => 10], 'Weight');
+        $attribute = $this->attribute('0198c3e2-0000-7000-8000-000000000007', 'weight', AttributeInterface::TYPE_NUMBER, ['min' => 0, 'max' => 10], 'Weight');
         $familyAttribute = $this->familyAttribute($attribute->reveal(), true);
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
             ->willReturn($this->fragmentWithValueField());
@@ -182,14 +182,26 @@ class AttributeFieldFactoryTest extends TestCase
         $property = $this->factory()->buildSchemaProperty($familyAttribute->reveal(), 'en');
 
         self::assertNotNull($property);
-        self::assertSame('7', $property->getName());
+        self::assertSame('0198c3e2-0000-7000-8000-000000000007', $property->getName());
         self::assertTrue($property->isMandatory());
         self::assertSame(['type' => 'number', 'minimum' => 0.0, 'maximum' => 10.0], $property->toJsonSchema());
     }
 
+    public function testFieldAndSchemaPropertyAreNamedByAttributeUuid(): void
+    {
+        $uuid = '0198c3e2-0000-7000-8000-000000000001';
+        $attribute = $this->attribute($uuid, 'weight', AttributeInterface::TYPE_NUMBER, [], 'Weight');
+        $familyAttribute = $this->familyAttribute($attribute->reveal())->reveal();
+        $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
+            ->willReturn($this->fragmentWithValueField());
+
+        self::assertSame('attribute_' . $uuid, $this->factory()->build($familyAttribute, 'en')?->getName());
+        self::assertSame($uuid, $this->factory()->buildSchemaProperty($familyAttribute, 'en')?->getName());
+    }
+
     public function testSchemaPropertyIsNullWithoutField(): void
     {
-        $attribute = $this->attribute(7, 'weight', 'unknown', [], 'Weight');
+        $attribute = $this->attribute('0198c3e2-0000-7000-8000-000000000007', 'weight', 'unknown', [], 'Weight');
         $familyAttribute = $this->familyAttribute($attribute->reveal());
 
         self::assertNull($this->factory()->buildSchemaProperty($familyAttribute->reveal(), 'en'));
@@ -197,7 +209,7 @@ class AttributeFieldFactoryTest extends TestCase
 
     public function testBuildsFieldWithTranslationForRequestedLocaleAndNoUnit(): void
     {
-        $attribute = $this->attribute(7, 'weight', AttributeInterface::TYPE_NUMBER, [], 'Weight', '<b>Heavy</b> item');
+        $attribute = $this->attribute('0198c3e2-0000-7000-8000-000000000007', 'weight', AttributeInterface::TYPE_NUMBER, [], 'Weight', '<b>Heavy</b> item');
         $familyAttribute = $this->familyAttribute($attribute->reveal(), true);
 
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
@@ -206,7 +218,7 @@ class AttributeFieldFactoryTest extends TestCase
         $field = $this->factory()->build($familyAttribute->reveal(), 'en');
 
         self::assertNotNull($field);
-        self::assertSame('attribute_7', $field->getName());
+        self::assertSame('attribute_0198c3e2-0000-7000-8000-000000000007', $field->getName());
         self::assertSame('number', $field->getType());
         self::assertSame('Weight', $field->getLabel('en'));
         self::assertTrue($field->isRequired());
@@ -221,7 +233,7 @@ class AttributeFieldFactoryTest extends TestCase
     public function testFallsBackToDefaultLocaleTranslationWhenRequestedLocaleHasNone(): void
     {
         $attribute = $this->attribute(
-            2,
+            '0198c3e2-0000-7000-8000-000000000002',
             'weight',
             AttributeInterface::TYPE_NUMBER,
             [],
@@ -245,7 +257,7 @@ class AttributeFieldFactoryTest extends TestCase
 
     public function testFallsBackToAttributeKeyWhenNoTranslationExists(): void
     {
-        $attribute = $this->attribute(3, 'weight', AttributeInterface::TYPE_NUMBER, [], null);
+        $attribute = $this->attribute('0198c3e2-0000-7000-8000-000000000003', 'weight', AttributeInterface::TYPE_NUMBER, [], null);
         $familyAttribute = $this->familyAttribute($attribute->reveal());
 
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
@@ -260,7 +272,7 @@ class AttributeFieldFactoryTest extends TestCase
 
     public function testAppendsUnitSymbolToLabelWhenAttributeHasUnitConfigured(): void
     {
-        $attribute = $this->attribute(4, 'length', AttributeInterface::TYPE_NUMBER, ['unit' => 'MILLIMETER'], 'Length');
+        $attribute = $this->attribute('0198c3e2-0000-7000-8000-000000000004', 'length', AttributeInterface::TYPE_NUMBER, ['unit' => 'MILLIMETER'], 'Length');
         $familyAttribute = $this->familyAttribute($attribute->reveal());
 
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
@@ -269,14 +281,14 @@ class AttributeFieldFactoryTest extends TestCase
         $field = $this->factory()->build($familyAttribute->reveal(), 'en');
 
         self::assertNotNull($field);
-        self::assertSame('attribute_4', $field->getName());
+        self::assertSame('attribute_0198c3e2-0000-7000-8000-000000000004', $field->getName());
         self::assertSame('Length (mm)', $field->getLabel('en'));
         self::assertSame(12, $field->getColSpan());
     }
 
     public function testIgnoresUnknownUnitKey(): void
     {
-        $attribute = $this->attribute(5, 'length', AttributeInterface::TYPE_NUMBER, ['unit' => 'NOPE'], 'Length');
+        $attribute = $this->attribute('0198c3e2-0000-7000-8000-000000000005', 'length', AttributeInterface::TYPE_NUMBER, ['unit' => 'NOPE'], 'Length');
         $familyAttribute = $this->familyAttribute($attribute->reveal());
 
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])

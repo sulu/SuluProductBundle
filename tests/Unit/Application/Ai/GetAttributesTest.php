@@ -15,6 +15,7 @@ namespace Sulu\Product\Tests\Unit\Application\Ai;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Product\Application\Ai\GetAttributes;
@@ -44,15 +45,10 @@ class GetAttributesTest extends TestCase
         $this->getAttributes = new GetAttributes($this->attributeRepository->reveal(), new MeasurementRegistry(null));
     }
 
-    private function setId(object $entity, int $id): void
-    {
-        (new \ReflectionProperty($entity::class, 'id'))->setValue($entity, $id);
-    }
-
     public function testInvokeReturnsTranslatedTextAttribute(): void
     {
-        $group = new AttributeGroup();
-        $this->setId($group, 1);
+        $group = new AttributeGroup('group-1');
+        $group->setCreated(new \DateTimeImmutable('2026-01-01'));
         $group->addTranslation(new AttributeGroupTranslation($group, 'en', 'General'));
 
         $attribute = new Attribute($group);
@@ -61,7 +57,11 @@ class GetAttributesTest extends TestCase
         $attribute->setPosition(0);
         $attribute->addTranslation(new AttributeTranslation($attribute, 'en', 'Color'));
 
-        $this->attributeRepository->findBy()->willReturn([$attribute]);
+        $this->attributeRepository->findBy([], [
+            AttributeRepositoryInterface::SELECT_ATTRIBUTE_TRANSLATIONS => true,
+            AttributeRepositoryInterface::SELECT_ATTRIBUTE_GROUP => true,
+            AttributeRepositoryInterface::SELECT_ATTRIBUTE_OPTIONS => true,
+        ])->willReturn([$attribute])->shouldBeCalledOnce();
 
         $result = ($this->getAttributes)('en');
 
@@ -77,26 +77,26 @@ class GetAttributesTest extends TestCase
 
     public function testInvokeFallsBackToKeyWhenTranslationMissing(): void
     {
-        $group = new AttributeGroup();
-        $this->setId($group, 1);
+        $group = new AttributeGroup('group-1');
+        $group->setCreated(new \DateTimeImmutable('2026-01-01'));
 
         $attribute = new Attribute($group);
         $attribute->setKey('size');
         $attribute->setType(AttributeInterface::TYPE_TEXT);
         $attribute->setPosition(0);
 
-        $this->attributeRepository->findBy()->willReturn([$attribute]);
+        $this->attributeRepository->findBy(Argument::cetera())->willReturn([$attribute]);
 
         $result = ($this->getAttributes)('en');
 
         $this->assertSame('size', $result[0]['name']);
-        $this->assertSame('', $result[0]['group']);
+        $this->assertSame('group-1', $result[0]['group']);
     }
 
     public function testInvokeResolvesUnitSymbolFromConfig(): void
     {
-        $group = new AttributeGroup();
-        $this->setId($group, 1);
+        $group = new AttributeGroup('group-1');
+        $group->setCreated(new \DateTimeImmutable('2026-01-01'));
 
         $attribute = new Attribute($group);
         $attribute->setKey('level');
@@ -104,7 +104,7 @@ class GetAttributesTest extends TestCase
         $attribute->setPosition(0);
         $attribute->setConfig(['unit' => 'DECIBEL']);
 
-        $this->attributeRepository->findBy()->willReturn([$attribute]);
+        $this->attributeRepository->findBy(Argument::cetera())->willReturn([$attribute]);
 
         $result = ($this->getAttributes)('en');
 
@@ -113,8 +113,8 @@ class GetAttributesTest extends TestCase
 
     public function testInvokeReturnsOptionsWithTranslatedLabels(): void
     {
-        $group = new AttributeGroup();
-        $this->setId($group, 1);
+        $group = new AttributeGroup('group-1');
+        $group->setCreated(new \DateTimeImmutable('2026-01-01'));
 
         $attribute = new Attribute($group);
         $attribute->setKey('color');
@@ -128,7 +128,7 @@ class GetAttributesTest extends TestCase
         $untranslatedOption = new AttributeOption($attribute, 'blue');
         $attribute->addOption($untranslatedOption);
 
-        $this->attributeRepository->findBy()->willReturn([$attribute]);
+        $this->attributeRepository->findBy(Argument::cetera())->willReturn([$attribute]);
 
         $result = ($this->getAttributes)('en');
 
@@ -140,12 +140,12 @@ class GetAttributesTest extends TestCase
 
     public function testInvokeOrdersByGroupThenPosition(): void
     {
-        $groupA = new AttributeGroup();
-        $this->setId($groupA, 2);
+        $groupA = new AttributeGroup('group-1');
+        $groupA->setCreated(new \DateTimeImmutable('2026-01-02'));
         $groupA->addTranslation(new AttributeGroupTranslation($groupA, 'en', 'B Group'));
 
-        $groupB = new AttributeGroup();
-        $this->setId($groupB, 1);
+        $groupB = new AttributeGroup('group-2');
+        $groupB->setCreated(new \DateTimeImmutable('2026-01-01'));
         $groupB->addTranslation(new AttributeGroupTranslation($groupB, 'en', 'A Group'));
 
         $second = new Attribute($groupA);
@@ -158,7 +158,7 @@ class GetAttributesTest extends TestCase
         $first->setType(AttributeInterface::TYPE_TEXT);
         $first->setPosition(0);
 
-        $this->attributeRepository->findBy()->willReturn([$second, $first]);
+        $this->attributeRepository->findBy(Argument::cetera())->willReturn([$second, $first]);
 
         $result = ($this->getAttributes)('en');
 
@@ -167,12 +167,12 @@ class GetAttributesTest extends TestCase
 
     public function testInvokeFiltersByGroupSubstringCaseInsensitive(): void
     {
-        $matching = new AttributeGroup();
-        $this->setId($matching, 1);
+        $matching = new AttributeGroup('group-1');
+        $matching->setCreated(new \DateTimeImmutable('2026-01-01'));
         $matching->addTranslation(new AttributeGroupTranslation($matching, 'en', 'Electrical Specs'));
 
-        $other = new AttributeGroup();
-        $this->setId($other, 2);
+        $other = new AttributeGroup('group-2');
+        $other->setCreated(new \DateTimeImmutable('2026-01-01'));
         $other->addTranslation(new AttributeGroupTranslation($other, 'en', 'Mechanical'));
 
         $matchingAttribute = new Attribute($matching);
@@ -185,7 +185,7 @@ class GetAttributesTest extends TestCase
         $otherAttribute->setType(AttributeInterface::TYPE_NUMBER);
         $otherAttribute->setPosition(0);
 
-        $this->attributeRepository->findBy()->willReturn([$matchingAttribute, $otherAttribute]);
+        $this->attributeRepository->findBy(Argument::cetera())->willReturn([$matchingAttribute, $otherAttribute]);
 
         $result = ($this->getAttributes)('en', 'electrical');
 
@@ -194,7 +194,7 @@ class GetAttributesTest extends TestCase
 
     public function testInvokeReturnsEmptyArrayWhenNoAttributes(): void
     {
-        $this->attributeRepository->findBy()->willReturn([]);
+        $this->attributeRepository->findBy(Argument::cetera())->willReturn([]);
 
         $this->assertSame([], ($this->getAttributes)('en'));
     }

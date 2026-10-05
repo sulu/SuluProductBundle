@@ -53,7 +53,7 @@ final class ProductSchemaLoader implements LoaderInterface
 
         $fields = $index->fields;
         $fields[Enhancer::FIELD] = new Field\ObjectField(Enhancer::FIELD, [
-            Enhancer::PRODUCT_FAMILY_ID_FIELD => new Field\TextField(Enhancer::PRODUCT_FAMILY_ID_FIELD, searchable: false, filterable: true, facet: true),
+            Enhancer::PRODUCT_FAMILY_KEY_FIELD => new Field\TextField(Enhancer::PRODUCT_FAMILY_KEY_FIELD, searchable: false, filterable: true, facet: true),
             Enhancer::TEXT_VALUES_FIELD => new Field\TextField(Enhancer::TEXT_VALUES_FIELD, multiple: true, searchable: false, filterable: true, facet: true),
             Enhancer::NUMERIC_VALUES_FIELD => new Field\ObjectField(Enhancer::NUMERIC_VALUES_FIELD, $this->loadNumericFields()),
         ]);

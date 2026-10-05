@@ -3,26 +3,16 @@
                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
     <entity name="Sulu\Product\Domain\Model\AttributeGroup" table="pr_attribute_groups">
-        <id name="id" type="integer" column="id">
-            <generator strategy="AUTO"/>
+        <id name="uuid" type="string" column="uuid" length="36">
+            <generator strategy="NONE"/>
         </id>
 
-        <field name="uuid" type="guid" nullable="true" unique="true"/>
         <field name="externalIdentifier" type="string" length="255" nullable="true" column="external_identifier"/>
         <field name="defaultLocale" type="string" length="5" nullable="true" column="default_locale"/>
 
         <one-to-many field="translations"
                      target-entity="Sulu\Product\Domain\Model\AttributeGroupTranslationInterface"
                      mapped-by="group">
-            <cascade>
-                <cascade-persist/>
-            </cascade>
-        </one-to-many>
-
-        <one-to-many field="groupAttributes"
-                     target-entity="Sulu\Product\Domain\Model\AttributeGroupAttributeInterface"
-                     mapped-by="group"
-                     orphan-removal="true">
             <cascade>
                 <cascade-persist/>
             </cascade>

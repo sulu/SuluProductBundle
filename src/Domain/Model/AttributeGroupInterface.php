@@ -21,11 +21,7 @@ interface AttributeGroupInterface extends AuditableInterface
     public const FORM_KEY = 'attribute_group_details';
     public const LIST_KEY = 'attribute_groups';
 
-    public function getId(): int;
-
-    public function getUuid(): ?string;
-
-    public function setUuid(string $uuid): self;
+    public function getUuid(): string;
 
     public function getExternalIdentifier(): ?string;
 
@@ -40,11 +36,4 @@ interface AttributeGroupInterface extends AuditableInterface
     public function addTranslation(AttributeGroupTranslationInterface $translation): self;
 
     public function removeTranslation(AttributeGroupTranslationInterface $translation): self;
-
-    /** @return AttributeGroupAttributeInterface[] */
-    public function getGroupAttributes(): array;
-
-    public function addGroupAttribute(AttributeGroupAttributeInterface $groupAttribute): self;
-
-    public function removeGroupAttribute(AttributeGroupAttributeInterface $groupAttribute): self;
 }

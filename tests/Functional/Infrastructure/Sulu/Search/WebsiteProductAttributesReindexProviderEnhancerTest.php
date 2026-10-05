@@ -213,7 +213,7 @@ class WebsiteProductAttributesReindexProviderEnhancerTest extends SuluTestCase
      * @param array<string, string> $options option key => english name
      * @param array<string, mixed> $config
      */
-    private function createAttribute(string $key, string $name, string $type, bool $localized, array $options = [], array $config = [], bool $filterable = true): int
+    private function createAttribute(string $key, string $name, string $type, bool $localized, array $options = [], array $config = [], bool $filterable = true): string
     {
         $container = self::getContainer();
         /** @var AttributeGroupRepositoryInterface $groupRepository */
@@ -223,10 +223,10 @@ class WebsiteProductAttributesReindexProviderEnhancerTest extends SuluTestCase
         /** @var EntityManagerInterface $entityManager */
         $entityManager = $container->get('doctrine.orm.entity_manager');
 
-        $group = $groupRepository->create();
+        $group = $groupRepository->createNew();
         $groupRepository->save($group);
 
-        $attribute = $attributeRepository->create($group);
+        $attribute = $attributeRepository->createNew($group);
         $attribute->setKey($key);
         $attribute->setType($type);
         $attribute->setLocalized($localized);
@@ -241,24 +241,18 @@ class WebsiteProductAttributesReindexProviderEnhancerTest extends SuluTestCase
         $attributeRepository->save($attribute);
         $entityManager->flush();
 
-        return $attribute->getId();
+        return $attribute->getUuid();
     }
 
     /**
-     * @param array<int, array{required?: bool, variantSpecific?: bool}> $attributes keyed by attribute id
+     * @param array<string, array{required?: bool, variantSpecific?: bool}> $attributes keyed by attribute id
      */
     private function createProductFamily(array $attributes = []): string
     {
-        /** @var AttributeRepositoryInterface $attributeRepository */
-        $attributeRepository = self::getContainer()->get(AttributeRepositoryInterface::class);
-
         $normalized = [];
         foreach ($attributes as $attributeId => $entry) {
-            $attribute = $attributeRepository->findOneBy(['id' => $attributeId]);
-            $this->assertNotNull($attribute);
-
             $normalized[] = [
-                'id' => $attribute->getUuid(),
+                'id' => $attributeId,
                 'required' => $entry['required'] ?? false,
                 'variantSpecific' => $entry['variantSpecific'] ?? false,
             ];
@@ -267,6 +261,7 @@ class WebsiteProductAttributesReindexProviderEnhancerTest extends SuluTestCase
         $this->client->request('POST', '/admin/api/product-families.json?locale=en', [], [], [], \json_encode(\array_filter([
             'locale' => 'en',
             'name' => 'Test Family',
+            'key' => \uniqid('family-'),
             'attributes' => $normalized ?: null,
         ], static fn ($value) => null !== $value)) ?: null);
         $this->assertHttpStatusCode(201, $this->client->getResponse());
@@ -326,7 +321,7 @@ class WebsiteProductAttributesReindexProviderEnhancerTest extends SuluTestCase
     }
 
     /**
-     * @param array<int, mixed> $attributes attribute id => value
+     * @param array<string, mixed> $attributes attribute id => value
      */
     private function putAttributes(string $id, array $attributes): void
     {
@@ -338,7 +333,7 @@ class WebsiteProductAttributesReindexProviderEnhancerTest extends SuluTestCase
     }
 
     /**
-     * @param array<int, mixed> $attributes attribute id => value
+     * @param array<string, mixed> $attributes attribute id => value
      */
     private function putVariantAttributes(string $parentId, string $id, array $attributes): void
     {

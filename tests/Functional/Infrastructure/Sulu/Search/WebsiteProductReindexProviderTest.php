@@ -60,7 +60,7 @@ class WebsiteProductReindexProviderTest extends SuluTestCase
         $this->assertSame('Plain', $plain['title']);
         $plainProduct = $plain['product'];
         $this->assertIsArray($plainProduct);
-        $this->assertSame($familyId, $plainProduct['productFamilyId']);
+        $this->assertSame('test-family', $plainProduct['productFamilyKey']);
         $this->assertArrayNotHasKey('code', $plainProduct, 'The code is only searchable, through the content.');
         $plainUrl = $plain['url'];
         $this->assertIsString($plainUrl);
@@ -205,6 +205,7 @@ class WebsiteProductReindexProviderTest extends SuluTestCase
         $this->client->request('POST', '/admin/api/product-families.json?locale=en', [], [], [], \json_encode([
             'locale' => 'en',
             'name' => 'Test Family',
+            'key' => 'test-family',
         ]) ?: null);
         $this->assertHttpStatusCode(201, $this->client->getResponse());
         $data = \json_decode((string) $this->client->getResponse()->getContent(), true);

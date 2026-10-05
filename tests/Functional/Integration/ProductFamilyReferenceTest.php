@@ -136,7 +136,7 @@ final class ProductFamilyReferenceTest extends SuluTestCase
     private function saveFamily(string $method, ?string $familyId, array $data): string
     {
         $url = '/admin/api/product-families' . (null !== $familyId ? '/' . $familyId : '') . '.json?locale=en';
-        $this->client->request($method, $url, [], [], [], \json_encode(['locale' => 'en', ...$data]) ?: null);
+        $this->client->request($method, $url, [], [], [], \json_encode(['locale' => 'en', ...('POST' === $method ? ['key' => \uniqid('family-')] : []), ...$data]) ?: null);
         $this->assertHttpStatusCode('POST' === $method ? 201 : 200, $this->client->getResponse());
 
         $response = \json_decode((string) $this->client->getResponse()->getContent(), true);

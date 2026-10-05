@@ -18,6 +18,7 @@ use PHPUnit\Framework\Attributes\Depends;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Product\UserInterface\Controller\Admin\AttributeController;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
+use Symfony\Component\Uid\Uuid;
 
 #[CoversClass(AttributeController::class)]
 class AttributeControllerTest extends SuluTestCase
@@ -375,9 +376,9 @@ class AttributeControllerTest extends SuluTestCase
 
         $data = \json_decode((string) $response->getContent(), true);
         $this->assertIsArray($data);
-        /** @var array{options: list<array{id: int, type: string, key: string, name: string}>} $data */
+        /** @var array{options: list<array{id: string, type: string, key: string, name: string}>} $data */
         $this->assertCount(2, $data['options']);
-        $this->assertGreaterThan(0, $data['options'][0]['id']);
+        $this->assertTrue(Uuid::isValid($data['options'][0]['id']));
         $this->assertSame('option', $data['options'][0]['type']);
         $this->assertSame('small', $data['options'][0]['key']);
         $this->assertSame('Small', $data['options'][0]['name']);
@@ -479,21 +480,21 @@ class AttributeControllerTest extends SuluTestCase
     }
 
     /**
-     * @return list<array{id: int, key: string, name: string}>
+     * @return list<array{id: string, key: string, name: string}>
      */
     private function getOptions(string $id): array
     {
         $this->client->request('GET', '/admin/api/attributes/' . $id . '.json?locale=en');
         $this->assertHttpStatusCode(200, $this->client->getResponse());
 
-        /** @var array{options: list<array{id: int, key: string, name: string}>} $data */
+        /** @var array{options: list<array{id: string, key: string, name: string}>} $data */
         $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
 
         return $data['options'];
     }
 
     /**
-     * @param list<array{id?: int, key: string, name: string}> $options
+     * @param list<array{id?: string, key: string, name: string}> $options
      */
     private function putOptions(string $id, array $options): void
     {

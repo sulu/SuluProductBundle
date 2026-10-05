@@ -146,8 +146,7 @@ class ProductDetailsDataMapperTest extends TestCase
 
     public function testSetsProductFamily(): void
     {
-        $family = new ProductFamily();
-        $family->setUuid('fam-uuid');
+        $family = new ProductFamily('fam-uuid');
 
         /** @var ObjectProphecy<ProductFamilyInterface> $familyMock */
         $familyMock = $this->prophesize(ProductFamilyInterface::class);

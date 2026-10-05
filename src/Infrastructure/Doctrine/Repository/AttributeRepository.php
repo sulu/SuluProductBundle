@@ -19,14 +19,15 @@ use Doctrine\ORM\NoResultException;
 use Doctrine\ORM\QueryBuilder;
 use Sulu\Product\Domain\Exception\AttributeNotFoundException;
 use Sulu\Product\Domain\Model\Attribute;
+use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeGroupInterface;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
-use Symfony\Component\Uid\Uuid;
 use Webmozart\Assert\Assert;
 
 /**
  * @phpstan-import-type AttributeRepositoryFilters from AttributeRepositoryInterface
+ * @phpstan-import-type AttributeRepositorySelects from AttributeRepositoryInterface
  */
 final class AttributeRepository implements AttributeRepositoryInterface
 {
@@ -40,12 +41,9 @@ final class AttributeRepository implements AttributeRepositoryInterface
         $this->entityRepository = $repo;
     }
 
-    public function create(AttributeGroupInterface $group): AttributeInterface
+    public function createNew(AttributeGroupInterface $group, ?string $uuid = null): AttributeInterface
     {
-        $attribute = new Attribute($group);
-        $attribute->setUuid(Uuid::v7()->toRfc4122());
-
-        return $attribute;
+        return new Attribute($group, $uuid);
     }
 
     public function findOneBy(array $filters): ?AttributeInterface
@@ -76,20 +74,23 @@ final class AttributeRepository implements AttributeRepositoryInterface
         return $attribute;
     }
 
-    public function findBy(array $filters = []): array
+    public function findBy(array $filters = [], array $selects = []): array
     {
-        $queryBuilder = $this->createQueryBuilder($filters);
+        $queryBuilder = $this->createQueryBuilder($filters, $selects);
 
         /** @var list<AttributeInterface> $result */
         $result = $queryBuilder->getQuery()->getResult();
+
+        $this->preloadCollections($result, $selects);
 
         return $result;
     }
 
     /**
      * @param AttributeRepositoryFilters $filters
+     * @param AttributeRepositorySelects $selects
      */
-    public function createQueryBuilder(array $filters): QueryBuilder
+    public function createQueryBuilder(array $filters, array $selects = []): QueryBuilder
     {
         $queryBuilder = $this->entityRepository->createQueryBuilder('attribute');
 
@@ -107,13 +108,6 @@ final class AttributeRepository implements AttributeRepositoryInterface
                 ->setParameter('key', $key);
         }
 
-        $id = $filters['id'] ?? null;
-        if (null !== $id) {
-            Assert::integer($id); // @phpstan-ignore staticMethod.alreadyNarrowedType
-            $queryBuilder->andWhere('attribute.id = :id')
-                ->setParameter('id', $id);
-        }
-
         $externalIdentifier = $filters['externalIdentifier'] ?? null;
         if (null !== $externalIdentifier) {
             Assert::string($externalIdentifier); // @phpstan-ignore staticMethod.alreadyNarrowedType
@@ -121,7 +115,59 @@ final class AttributeRepository implements AttributeRepositoryInterface
                 ->setParameter('externalIdentifier', $externalIdentifier);
         }
 
+        // selects
+        if ($selects[self::SELECT_ATTRIBUTE_TRANSLATIONS] ?? false) {
+            $queryBuilder
+                ->addSelect('attributeTranslation')
+                ->leftJoin('attribute.translations', 'attributeTranslation');
+        }
+
+        if ($selects[self::SELECT_ATTRIBUTE_GROUP] ?? false) {
+            $queryBuilder
+                ->addSelect('attributeGroup')
+                ->innerJoin('attribute.group', 'attributeGroup');
+        }
+
         return $queryBuilder;
+    }
+
+    /**
+     * Own queries, joined they would multiply the rows of the main query. Hydrating them fills the
+     * collections of the loaded entities, the results themselves are not needed.
+     *
+     * @param list<AttributeInterface> $attributes
+     * @param AttributeRepositorySelects $selects
+     */
+    private function preloadCollections(array $attributes, array $selects): void
+    {
+        if ([] === $attributes) {
+            return;
+        }
+
+        if ($selects[self::SELECT_ATTRIBUTE_GROUP] ?? false) {
+            $this->entityManager->createQueryBuilder()
+                ->select('attributeGroup', 'attributeGroupTranslation')
+                ->from(AttributeGroup::class, 'attributeGroup')
+                ->leftJoin('attributeGroup.translations', 'attributeGroupTranslation')
+                ->where('attributeGroup IN (:groups)')
+                ->setParameter('groups', \array_values(\array_unique(
+                    \array_map(static fn (AttributeInterface $attribute): string => $attribute->getGroup()->getUuid(), $attributes),
+                )))
+                ->getQuery()
+                ->getResult();
+        }
+
+        if ($selects[self::SELECT_ATTRIBUTE_OPTIONS] ?? false) {
+            $this->entityManager->createQueryBuilder()
+                ->select('attribute', 'option', 'optionTranslation')
+                ->from(Attribute::class, 'attribute')
+                ->leftJoin('attribute.options', 'option')
+                ->leftJoin('option.translations', 'optionTranslation')
+                ->where('attribute IN (:attributes)')
+                ->setParameter('attributes', $attributes)
+                ->getQuery()
+                ->getResult();
+        }
     }
 
     /** @param array<string, mixed> $criteria */

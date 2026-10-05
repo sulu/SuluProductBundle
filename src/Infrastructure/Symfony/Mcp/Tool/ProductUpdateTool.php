@@ -63,7 +63,7 @@ final class ProductUpdateTool
 
     /**
      * @param array<string, mixed>|null $content
-     * @param array<int, mixed>|null $attributes
+     * @param array<string, mixed>|null $attributes
      * @param array<string, mixed>|null $details
      * @param array<string, mixed>|null $excerpt
      * @param array<string, mixed>|null $seo
@@ -73,7 +73,7 @@ final class ProductUpdateTool
     #[McpTool(
         name: 'sulu_product_update',
         title: 'Update Product',
-        description: 'Update an existing product. Reads the current state, merges your changes and writes back, so pass only what should change. "attributes" is a map keyed by the INTEGER attribute id (sulu_attribute_list) and is merged into the existing values. Pass null for an id to clear it. Changing "productFamily" changes which attributes the product may carry. This tool does not change a product\'s type or parent: use sulu_product_variant_update for variants. The product stays a draft. Call sulu_content_publish (resourceKey: products) to make changes live.',
+        description: 'Update an existing product. Reads the current state, merges your changes and writes back, so pass only what should change. "attributes" is a map keyed by the attribute UUID (sulu_attribute_list) and is merged into the existing values. Pass null for a UUID to clear it. Changing "productFamily" changes which attributes the product may carry. This tool does not change a product\'s type or parent: use sulu_product_variant_update for variants. The product stays a draft. Call sulu_content_publish (resourceKey: products) to make changes live.',
         annotations: new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false),
     )]
     #[DangerousTool('product_write')]
@@ -92,7 +92,7 @@ final class ProductUpdateTool
         ?string $template = null,
         #[Schema(type: 'object', description: 'Template field values as a flat object, e.g. {"description": "<p>…</p>"}. Merged into the current content. May include a "blocks" tree; block _ids are assigned automatically.', additionalProperties: true)]
         ?array $content = null,
-        #[Schema(type: 'object', description: 'Attribute values keyed by the INTEGER attribute id, e.g. {"12": "red"}. Merged into the existing values; pass null for an id to clear that attribute.', additionalProperties: true)]
+        #[Schema(type: 'object', description: 'Attribute values keyed by the attribute UUID, e.g. {"<attribute uuid>": "red"}. Merged into the existing values; pass null for a UUID to clear that attribute.', additionalProperties: true)]
         ?array $attributes = null,
         #[Schema(type: 'object', description: 'Detail fields, e.g. {"shortDescription": "<p>…</p>"}. Media fields take {"id": <mediaId>}.', additionalProperties: true)]
         ?array $details = null,
@@ -218,7 +218,7 @@ final class ProductUpdateTool
         } catch (\Throwable $e) {
             return [
                 'error' => \sprintf('Failed to update product %s: %s', $uuid, $e->getMessage()),
-                'hint' => 'Verify "code" stays unique and that every attribute the family marks required is still set. Attribute keys are the integer ids from sulu_attribute_list.',
+                'hint' => 'Verify "code" stays unique and that every attribute the family marks required is still set. Attribute keys are the UUIDs from sulu_attribute_list.',
             ];
         }
     }

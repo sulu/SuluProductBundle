@@ -62,9 +62,9 @@ class CreateProductMessageTest extends TestCase
 
     public function testGetAttributes(): void
     {
-        $message = new CreateProductMessage(['locale' => 'en', 'productFamily' => 'fam-1', 'attributes' => [7 => 42.0]]);
+        $message = new CreateProductMessage(['locale' => 'en', 'productFamily' => 'fam-1', 'attributes' => ['weight-uuid' => 42.0]]);
 
-        $this->assertSame([7 => 42.0], $message->getAttributes());
+        $this->assertSame(['weight-uuid' => 42.0], $message->getAttributes());
     }
 
     public function testGetAttributesDefaultsToEmpty(): void

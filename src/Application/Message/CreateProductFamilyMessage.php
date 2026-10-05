@@ -22,6 +22,7 @@ namespace Sulu\Product\Application\Message;
  * @phpstan-type CreateProductFamilyMessageData array{
  *     locale: string,
  *     name: string,
+ *     key: string,
  *     description?: string|null,
  *     image?: array{id: int}|null,
  *     attributes?: list<ProductFamilyAttributeMessageData>|null,
@@ -54,6 +55,11 @@ class CreateProductFamilyMessage
     public function getImageId(): ?int
     {
         return $this->data['image']['id'] ?? null;
+    }
+
+    public function getKey(): string
+    {
+        return $this->data['key'];
     }
 
     /**

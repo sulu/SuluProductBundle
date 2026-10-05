@@ -50,16 +50,11 @@ class ProductControllerTest extends SuluTestCase
         \restore_exception_handler();
     }
 
-    private function createProductFamily(?int $attributeId = null, bool $required = true): string
+    private function createProductFamily(?string $attributeUuid = null, bool $required = true): string
     {
         $attributes = [];
-        if (null !== $attributeId) {
-            /** @var AttributeRepositoryInterface $attributeRepository */
-            $attributeRepository = self::getContainer()->get(AttributeRepositoryInterface::class);
-            $attribute = $attributeRepository->findOneBy(['id' => $attributeId]);
-            $this->assertNotNull($attribute);
-
-            $attributes[] = ['id' => $attribute->getUuid(), 'required' => $required, 'variantSpecific' => false];
+        if (null !== $attributeUuid) {
+            $attributes[] = ['id' => $attributeUuid, 'required' => $required, 'variantSpecific' => false];
         }
 
         $this->client->request(
@@ -71,6 +66,7 @@ class ProductControllerTest extends SuluTestCase
             \json_encode(\array_filter([
                 'locale' => 'en',
                 'name' => 'Test Family',
+                'key' => \uniqid('family-'),
                 'description' => null,
                 'attributes' => $attributes ?: null,
             ], static fn ($v) => null !== $v)) ?: null,
@@ -85,7 +81,7 @@ class ProductControllerTest extends SuluTestCase
     }
 
     /**
-     * @param array<int, mixed> $attributes values for the family's required attributes, which create enforces
+     * @param array<string, mixed> $attributes values for the family's required attributes, which create enforces
      */
     private function createProduct(
         string $familyId,
@@ -122,7 +118,7 @@ class ProductControllerTest extends SuluTestCase
         return $id;
     }
 
-    private function createRequiredAttribute(): int
+    private function createRequiredAttribute(): string
     {
         $container = self::getContainer();
 
@@ -133,10 +129,10 @@ class ProductControllerTest extends SuluTestCase
         /** @var EntityManagerInterface $em */
         $em = $container->get('doctrine.orm.entity_manager');
 
-        $group = $groupRepository->create();
+        $group = $groupRepository->createNew();
         $groupRepository->save($group);
 
-        $attribute = $attributeRepository->create($group);
+        $attribute = $attributeRepository->createNew($group);
         $attribute->setKey('weight');
         $attribute->setType(AttributeInterface::TYPE_NUMBER);
         $attribute->addTranslation(new AttributeTranslation($attribute, 'en', 'Weight'));
@@ -144,10 +140,10 @@ class ProductControllerTest extends SuluTestCase
 
         $em->flush();
 
-        return $attribute->getId();
+        return $attribute->getUuid();
     }
 
-    private function createLocalizedAttribute(): int
+    private function createLocalizedAttribute(): string
     {
         $container = self::getContainer();
 
@@ -158,10 +154,10 @@ class ProductControllerTest extends SuluTestCase
         /** @var EntityManagerInterface $em */
         $em = $container->get('doctrine.orm.entity_manager');
 
-        $group = $groupRepository->create();
+        $group = $groupRepository->createNew();
         $groupRepository->save($group);
 
-        $attribute = $attributeRepository->create($group);
+        $attribute = $attributeRepository->createNew($group);
         $attribute->setKey('localized_weight');
         $attribute->setType(AttributeInterface::TYPE_NUMBER);
         $attribute->setLocalized(true);
@@ -170,10 +166,10 @@ class ProductControllerTest extends SuluTestCase
 
         $em->flush();
 
-        return $attribute->getId();
+        return $attribute->getUuid();
     }
 
-    private function createTextAttribute(): int
+    private function createTextAttribute(): string
     {
         $container = self::getContainer();
 
@@ -184,10 +180,10 @@ class ProductControllerTest extends SuluTestCase
         /** @var EntityManagerInterface $em */
         $em = $container->get('doctrine.orm.entity_manager');
 
-        $group = $groupRepository->create();
+        $group = $groupRepository->createNew();
         $groupRepository->save($group);
 
-        $attribute = $attributeRepository->create($group);
+        $attribute = $attributeRepository->createNew($group);
         $attribute->setKey('description');
         $attribute->setType(AttributeInterface::TYPE_TEXT);
         $attribute->addTranslation(new AttributeTranslation($attribute, 'en', 'Description'));
@@ -195,10 +191,10 @@ class ProductControllerTest extends SuluTestCase
 
         $em->flush();
 
-        return $attribute->getId();
+        return $attribute->getUuid();
     }
 
-    private function createOptionsAttribute(): int
+    private function createOptionsAttribute(): string
     {
         $container = self::getContainer();
 
@@ -209,10 +205,10 @@ class ProductControllerTest extends SuluTestCase
         /** @var EntityManagerInterface $em */
         $em = $container->get('doctrine.orm.entity_manager');
 
-        $group = $groupRepository->create();
+        $group = $groupRepository->createNew();
         $groupRepository->save($group);
 
-        $attribute = $attributeRepository->create($group);
+        $attribute = $attributeRepository->createNew($group);
         $attribute->setKey('color');
         $attribute->setType(AttributeInterface::TYPE_OPTIONS);
         $attribute->addTranslation(new AttributeTranslation($attribute, 'en', 'Color'));
@@ -225,7 +221,7 @@ class ProductControllerTest extends SuluTestCase
 
         $em->flush();
 
-        return $attribute->getId();
+        return $attribute->getUuid();
     }
 
     public function testGetEmptyList(): void
@@ -483,9 +479,9 @@ class ProductControllerTest extends SuluTestCase
     public function testPutWithMissingRequiredAttributeReturns422(): void
     {
         self::purgeDatabase();
-        $attributeId = $this->createRequiredAttribute();
-        $familyId = $this->createProductFamily($attributeId);
-        $id = $this->createProduct($familyId, attributes: [$attributeId => 12.5]);
+        $attributeUuid = $this->createRequiredAttribute();
+        $familyId = $this->createProductFamily($attributeUuid);
+        $id = $this->createProduct($familyId, attributes: [$attributeUuid => 12.5]);
 
         // PUT with attributes key but empty value for required attribute
         $this->client->request(
@@ -496,7 +492,7 @@ class ProductControllerTest extends SuluTestCase
             [],
             \json_encode([
                 'locale' => 'en',
-                'attributes' => [$attributeId => null],
+                'attributes' => [$attributeUuid => null],
             ]) ?: null,
         );
 
@@ -511,15 +507,15 @@ class ProductControllerTest extends SuluTestCase
     public function testLocalizedAttributeValueIsStoredPerLocale(): void
     {
         self::purgeDatabase();
-        $attributeId = $this->createLocalizedAttribute();
-        $familyId = $this->createProductFamily($attributeId, false);
+        $attributeUuid = $this->createLocalizedAttribute();
+        $familyId = $this->createProductFamily($attributeUuid, false);
         $id = $this->createProduct($familyId);
 
-        $this->putAttributes($id, 'en', [$attributeId => 100.0]);
-        $this->putAttributes($id, 'de', [$attributeId => 200.0], 'Mein Produkt');
+        $this->putAttributes($id, 'en', [$attributeUuid => 100.0]);
+        $this->putAttributes($id, 'de', [$attributeUuid => 200.0], 'Mein Produkt');
 
-        $this->assertEqualsWithDelta(100.0, $this->getAttributeValue($id, 'en', $attributeId), 0.0001);
-        $this->assertEqualsWithDelta(200.0, $this->getAttributeValue($id, 'de', $attributeId), 0.0001);
+        $this->assertEqualsWithDelta(100.0, $this->getAttributeValue($id, 'en', $attributeUuid), 0.0001);
+        $this->assertEqualsWithDelta(200.0, $this->getAttributeValue($id, 'de', $attributeUuid), 0.0001);
     }
 
     public function testOptionsAttributeValueIsStoredAsOptionRelation(): void
@@ -559,13 +555,13 @@ class ProductControllerTest extends SuluTestCase
 
         /** @var AttributeRepositoryInterface $attributeRepository */
         $attributeRepository = self::getContainer()->get(AttributeRepositoryInterface::class);
-        $attribute = $attributeRepository->findOneBy(['id' => $attributeId]);
+        $attribute = $attributeRepository->findOneBy(['uuid' => $attributeId]);
         $this->assertNotNull($attribute);
         $attributeUuid = $attribute->getUuid();
 
         $this->client->request('GET', '/admin/api/attributes/' . $attributeUuid . '.json?locale=en');
         $this->assertHttpStatusCode(200, $this->client->getResponse());
-        /** @var array{key: string, name: string, type: string, options: list<array{id: int, key: string, name: string}>} $data */
+        /** @var array{key: string, name: string, type: string, options: list<array{id: string, key: string, name: string}>} $data */
         $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
         foreach ($data['options'] as $index => $option) {
             if ('blue' === $option['key']) {
@@ -597,7 +593,7 @@ class ProductControllerTest extends SuluTestCase
         $this->assertSame('navy', $this->getStoredOptionKey($id, $attributeId, DimensionContentInterface::STAGE_LIVE));
     }
 
-    private function getStoredOptionKey(string $id, int $attributeId, string $stage): ?string
+    private function getStoredOptionKey(string $id, string $attributeId, string $stage): ?string
     {
         /** @var EntityManagerInterface $em */
         $em = self::getContainer()->get('doctrine.orm.entity_manager');
@@ -623,7 +619,7 @@ class ProductControllerTest extends SuluTestCase
     }
 
     /**
-     * @param array<int, mixed> $attributes
+     * @param array<string, mixed> $attributes
      */
     private function putAttributes(string $id, string $locale, array $attributes, ?string $title = null): void
     {
@@ -643,7 +639,7 @@ class ProductControllerTest extends SuluTestCase
         $this->assertHttpStatusCode(200, $this->client->getResponse());
     }
 
-    private function getAttributeValue(string $id, string $locale, int $attributeId): mixed
+    private function getAttributeValue(string $id, string $locale, string $attributeUuid): mixed
     {
         $this->client->request('GET', '/admin/api/products/' . $id . '.json?locale=' . $locale);
         $response = $this->client->getResponse();
@@ -653,7 +649,7 @@ class ProductControllerTest extends SuluTestCase
         $this->assertIsArray($data);
         $this->assertIsArray($data['attributes']);
 
-        return $data['attributes'][$attributeId] ?? null;
+        return $data['attributes'][$attributeUuid] ?? null;
     }
 
     public function testDelete(): void
@@ -880,11 +876,11 @@ class ProductControllerTest extends SuluTestCase
     {
         self::purgeDatabase();
 
-        $attributeId = $this->createTextAttribute();
+        $attributeUuid = $this->createTextAttribute();
 
         // Create a family with the text attribute enabled (not required)
-        $familyId = $this->createProductFamily($attributeId);
-        $id = $this->createProduct($familyId, attributes: [$attributeId => 'Something']);
+        $familyId = $this->createProductFamily($attributeUuid);
+        $id = $this->createProduct($familyId, attributes: [$attributeUuid => 'Something']);
 
         // Pass an integer (not a string) for a text attribute → triggers Webmozart Assert::string()
         $this->client->request(
@@ -895,7 +891,7 @@ class ProductControllerTest extends SuluTestCase
             [],
             \json_encode([
                 'locale' => 'en',
-                'attributes' => [$attributeId => 12345],
+                'attributes' => [$attributeUuid => 12345],
             ]) ?: null,
         );
 
@@ -910,8 +906,8 @@ class ProductControllerTest extends SuluTestCase
     public function testPostWithMissingRequiredAttributeReturns422(): void
     {
         self::purgeDatabase();
-        $attributeId = $this->createRequiredAttribute();
-        $familyId = $this->createProductFamily($attributeId);
+        $attributeUuid = $this->createRequiredAttribute();
+        $familyId = $this->createProductFamily($attributeUuid);
 
         $this->client->request(
             'POST',
@@ -924,7 +920,7 @@ class ProductControllerTest extends SuluTestCase
                 'title' => 'My Product',
                 'url' => '/post-missing-required-attribute',
                 'productFamily' => $familyId,
-                'attributes' => [$attributeId => null],
+                'attributes' => [$attributeUuid => null],
             ]) ?: null,
         );
 
@@ -967,8 +963,8 @@ class ProductControllerTest extends SuluTestCase
     public function testPostWithInvalidAttributeTypeReturns400(): void
     {
         self::purgeDatabase();
-        $attributeId = $this->createTextAttribute();
-        $familyId = $this->createProductFamily($attributeId);
+        $attributeUuid = $this->createTextAttribute();
+        $familyId = $this->createProductFamily($attributeUuid);
 
         $this->client->request(
             'POST',
@@ -981,7 +977,7 @@ class ProductControllerTest extends SuluTestCase
                 'title' => 'My Product',
                 'url' => '/post-invalid-attribute-type',
                 'productFamily' => $familyId,
-                'attributes' => [$attributeId => 12345],
+                'attributes' => [$attributeUuid => 12345],
             ]) ?: null,
         );
 

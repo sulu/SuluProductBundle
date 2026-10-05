@@ -46,14 +46,13 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
     {
         return new CreateProductFamilyMessageHandler(
             $this->familyRepository->reveal(),
-            [new ProductFamilyMapper($this->attributeRepository->reveal(), $this->prophesize(MediaRepositoryInterface::class)->reveal())],
+            [new ProductFamilyMapper($this->attributeRepository->reveal(), $this->prophesize(MediaRepositoryInterface::class)->reveal(), $this->familyRepository->reveal())],
         );
     }
 
     private function attributeWithUuid(string $uuid): Attribute
     {
-        $attribute = new Attribute(new AttributeGroup());
-        $attribute->setUuid($uuid);
+        $attribute = new Attribute(new AttributeGroup(), $uuid);
         $attribute->setKey('attr-' . $uuid);
 
         return $attribute;
@@ -62,7 +61,8 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
     public function testCreateFamilyWithTranslationAndAttributes(): void
     {
         $family = new ProductFamily();
-        $this->familyRepository->create()->willReturn($family);
+        $this->familyRepository->createNew()->willReturn($family);
+        $this->familyRepository->findOneBy(['key' => 'family'])->willReturn(null);
         $this->familyRepository->save($family)->shouldBeCalledOnce();
 
         $attribute = $this->attributeWithUuid('uuid-7');
@@ -72,6 +72,7 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
         $result = ($handler)(new CreateProductFamilyMessage([
             'locale' => 'en',
             'name' => 'My Family',
+            'key' => 'family',
             'description' => 'desc',
             'attributes' => [
                 ['id' => 'uuid-7', 'required' => true, 'variantSpecific' => false],
@@ -93,7 +94,8 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
     public function testCreateSkipsMissingAttribute(): void
     {
         $family = new ProductFamily();
-        $this->familyRepository->create()->willReturn($family);
+        $this->familyRepository->createNew()->willReturn($family);
+        $this->familyRepository->findOneBy(['key' => 'family'])->willReturn(null);
         $this->familyRepository->save($family)->shouldBeCalledOnce();
         $this->attributeRepository->findOneBy(['uuid' => 'uuid-99'])->willReturn(null);
 
@@ -101,6 +103,7 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
         ($handler)(new CreateProductFamilyMessage([
             'locale' => 'en',
             'name' => 'My Family',
+            'key' => 'family',
             'attributes' => [
                 ['id' => 'uuid-99', 'required' => false, 'variantSpecific' => false],
             ],
@@ -112,7 +115,8 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
     public function testCreateFamilyPersistsVariantFlag(): void
     {
         $family = new ProductFamily();
-        $this->familyRepository->create()->willReturn($family);
+        $this->familyRepository->createNew()->willReturn($family);
+        $this->familyRepository->findOneBy(['key' => 'family'])->willReturn(null);
         $this->familyRepository->save($family)->shouldBeCalledOnce();
 
         $attribute = $this->attributeWithUuid('uuid-7');
@@ -122,6 +126,7 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
         ($handler)(new CreateProductFamilyMessage([
             'locale' => 'en',
             'name' => 'My Family',
+            'key' => 'family',
             'attributes' => [
                 ['id' => 'uuid-7', 'required' => false, 'variantSpecific' => true],
             ],

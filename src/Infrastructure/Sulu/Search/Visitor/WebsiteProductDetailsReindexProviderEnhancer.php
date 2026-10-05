@@ -32,7 +32,7 @@ final class WebsiteProductDetailsReindexProviderEnhancer implements WebsiteProdu
             ->leftJoin('unlocalizedDimensionContent.productFamily', 'productFamily')
             ->leftJoin('productFamily.translations', 'productFamilyTranslation', Join::WITH, 'productFamilyTranslation.locale = dimensionContent.locale')
             ->addSelect('unlocalizedDimensionContent.externalIdentifier')
-            ->addSelect('productFamily.uuid AS productFamilyId')
+            ->addSelect('productFamily.key AS productFamilyKey')
             ->addSelect('productFamilyTranslation.name AS productFamilyName')
             ->addSelect('dimensionContent.detailsData')
             ->addSelect('unlocalizedDimensionContent.detailsData AS unlocalizedDetailsData');

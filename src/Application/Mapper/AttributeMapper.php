@@ -17,7 +17,6 @@ use Sulu\Product\Application\Message\CreateAttributeMessage;
 use Sulu\Product\Application\Message\ModifyAttributeMessage;
 use Sulu\Product\Domain\Exception\AttributeOptionKeyNotUniqueException;
 use Sulu\Product\Domain\Exception\InvalidDateDisplayFormatException;
-use Sulu\Product\Domain\Model\AttributeGroupAttribute;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeOption;
 use Sulu\Product\Domain\Model\AttributeOptionTranslation;
@@ -99,10 +98,6 @@ final class AttributeMapper implements AttributeMapperInterface
         } else {
             $attribute->setPosition($this->attributeRepository->findNextPositionInGroup($attributeGroup));
         }
-
-        $groupAttr = new AttributeGroupAttribute($attributeGroup, $attribute);
-        $groupAttr->setPosition($attribute->getPosition());
-        $attributeGroup->addGroupAttribute($groupAttr);
     }
 
     private function syncPosition(AttributeInterface $attribute, ?int $newPosition): void
@@ -166,7 +161,7 @@ final class AttributeMapper implements AttributeMapperInterface
 
         $existingOptions = [];
         foreach ($attribute->getOptions() as $option) {
-            $existingOptions[$option->getId()] = $option;
+            $existingOptions[$option->getUuid()] = $option;
         }
 
         // An option keeps its id when its key changes; a duplicated block carries its source's id, so only the first claims it.
