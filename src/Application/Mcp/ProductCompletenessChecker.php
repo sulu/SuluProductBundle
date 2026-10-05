@@ -34,6 +34,7 @@ final readonly class ProductCompletenessChecker
     public function __construct(
         private MetadataProviderInterface $formMetadataProvider,
         private WebspaceManagerInterface $webspaceManager,
+        private ProductUrlHelper $urlHelper,
     ) {
     }
 
@@ -45,6 +46,19 @@ final readonly class ProductCompletenessChecker
     public function check(ProductInterface $product, array $normalized, string $locale): array
     {
         $recommendations = [];
+
+        // A variant has no content, url, category, tag or SEO of its own. Only its details can be set.
+        if ($product->isType(ProductInterface::TYPE_VARIANT)) {
+            $details = \is_array($normalized['details'] ?? null) ? $normalized['details'] : [];
+            foreach ($this->mediaFields(ProductInterface::FORM_KEY, 'details', $locale) as $field => $multiple) {
+                if (self::isEmptyMedia($details[$field] ?? null)) {
+                    $recommendations[] = self::mediaRecommendation('details', $field, $multiple);
+                }
+            }
+
+            return $recommendations;
+        }
+
         $withVariants = $product->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         // A parent that holds variants has no code or url of its own.
@@ -53,7 +67,7 @@ final readonly class ProductCompletenessChecker
         }
 
         if (!$withVariants && !self::hasUrl($normalized)) {
-            $recommendations[] = 'No url. Pass content.url as {"page": {"uuid": "<page uuid>", "path": "<page path>"}, "suffix": "/<slug>"}. Copy the page from a sibling product (sulu_product_get).';
+            $recommendations[] = 'No url. ' . $this->urlHelper->instruction();
         }
 
         if (self::isEmpty($normalized['excerptCategories'] ?? null)) {

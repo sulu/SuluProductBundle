@@ -85,6 +85,24 @@ final class ProductCompletenessCheckerTest extends TestCase
         $this->assertStringNotContainsString('No url.', $text);
     }
 
+    public function testAVariantOnlyGetsTheDetailsHints(): void
+    {
+        $checker = CompletenessCheckerFactory::create($this->mediaProvider(), ['en', 'de']);
+        $variant = $this->productWithLocales(['en']);
+        $variant->setType(ProductInterface::TYPE_VARIANT);
+
+        $recommendations = $checker->check($variant, ['title' => 'Shirt red'], 'en');
+
+        $text = \implode("\n", $recommendations);
+        $this->assertCount(2, $recommendations);
+        $this->assertStringContainsString('details.image', $text);
+        $this->assertStringContainsString('details.documents', $text);
+        $this->assertStringNotContainsString('No url.', $text);
+        $this->assertStringNotContainsString('sulu_category_list', $text);
+        $this->assertStringNotContainsString('seo.', $text);
+        $this->assertStringNotContainsString('"de"', $text);
+    }
+
     public function testLocalesFromTheUnlocalizedDimensionCountAsContent(): void
     {
         $checker = CompletenessCheckerFactory::create(null, ['en', 'de', 'fr']);

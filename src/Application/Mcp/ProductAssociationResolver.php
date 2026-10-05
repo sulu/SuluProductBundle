@@ -16,6 +16,7 @@ namespace Sulu\Product\Application\Mcp;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
 use Sulu\Product\Domain\Exception\InvalidProductAssociationException;
+use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 
 /**
@@ -106,6 +107,14 @@ final readonly class ProductAssociationResolver
             throw new InvalidProductAssociationException(
                 \sprintf('No product with UUID or code "%s".', $reference),
                 'Find the product with sulu_product_list first. Create it before associating it.',
+            );
+        }
+
+        // The admin product list leaves variants out, so its Associations tab cannot show a link to one.
+        if ($product->isType(ProductInterface::TYPE_VARIANT)) {
+            throw new InvalidProductAssociationException(
+                \sprintf('"%s" is a variant and cannot be an association target.', $reference),
+                'Associate the parent product instead. Find it with sulu_product_list.',
             );
         }
 

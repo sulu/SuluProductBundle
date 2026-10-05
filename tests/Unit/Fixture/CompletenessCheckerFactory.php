@@ -41,6 +41,6 @@ final class CompletenessCheckerFactory
         $webspaceManager = (new Prophet())->prophesize(WebspaceManagerInterface::class);
         $webspaceManager->getWebspaceCollection()->willReturn(new WebspaceCollection(['website' => $webspace]));
 
-        return new ProductCompletenessChecker($metadataProvider ?? new ArrayMetadataProvider(), $webspaceManager->reveal());
+        return new ProductCompletenessChecker($metadataProvider ?? new ArrayMetadataProvider(), $webspaceManager->reveal(), ProductUrlHelperFactory::create());
     }
 }

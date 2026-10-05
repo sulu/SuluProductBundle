@@ -38,6 +38,7 @@ use Sulu\Product\Tests\Unit\Fixture\ArrayMetadataProvider;
 use Sulu\Product\Tests\Unit\Fixture\CompletenessCheckerFactory;
 use Sulu\Product\Tests\Unit\Fixture\FixedBlockIdGenerator;
 use Sulu\Product\Tests\Unit\Fixture\ProductContentMetadata;
+use Sulu\Product\Tests\Unit\Fixture\ProductUrlHelperFactory;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
@@ -68,6 +69,7 @@ final class ProductCreateToolTest extends TestCase
             $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
             $this->associationResolver(),
             CompletenessCheckerFactory::create(),
+            ProductUrlHelperFactory::create(),
         );
     }
 
@@ -291,6 +293,18 @@ final class ProductCreateToolTest extends TestCase
         $this->assertStringContainsString('sulu_product_update', \is_string($result['warning'] ?? null) ? $result['warning'] : '');
     }
 
+    public function testCreateProductDoesNotWarnForAProductWithVariants(): void
+    {
+        $product = new Product('new-uuid');
+        $product->setType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $this->captureMessage($product);
+
+        $result = $this->tool->createProduct('en', 'family-uuid', 'Shirt');
+
+        $this->assertTrue($result['success']);
+        $this->assertArrayNotHasKey('warning', $result);
+    }
+
     public function testCreateProductDoesNotWarnWhenTheProductHasAUrl(): void
     {
         $this->captureMessage(new Product('new-uuid'));
@@ -482,6 +496,7 @@ final class ProductCreateToolTest extends TestCase
             $adminLinkGenerator ?? $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
             $this->associationResolver(),
             CompletenessCheckerFactory::create(),
+            ProductUrlHelperFactory::create(),
         );
     }
 

@@ -22,6 +22,7 @@ use Sulu\Product\Application\Mcp\ProductAssociationResolver;
 use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
 use Sulu\Product\Domain\Exception\InvalidProductAssociationException;
 use Sulu\Product\Domain\Model\Product;
+use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 
 #[CoversClass(ProductAssociationResolver::class)]
@@ -87,6 +88,18 @@ final class ProductAssociationResolverTest extends TestCase
         $this->expectExceptionMessage('itself');
 
         $this->resolver->resolve(['accessory' => ['a-uuid']], 'en', 'a-uuid');
+    }
+
+    public function testItRejectsAVariantAsTarget(): void
+    {
+        $variant = new Product('v-uuid');
+        $variant->setType(ProductInterface::TYPE_VARIANT);
+        $this->repository->findOneBy(['uuid' => 'v-uuid'])->willReturn($variant);
+
+        $this->expectException(InvalidProductAssociationException::class);
+        $this->expectExceptionMessage('variant');
+
+        $this->resolver->resolve(['accessory' => ['v-uuid']], 'en');
     }
 
     public function testItRejectsAValueThatIsNotAList(): void

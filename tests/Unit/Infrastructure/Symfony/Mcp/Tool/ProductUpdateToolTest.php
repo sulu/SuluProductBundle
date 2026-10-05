@@ -40,6 +40,7 @@ use Sulu\Product\Tests\Unit\Fixture\ArrayMetadataProvider;
 use Sulu\Product\Tests\Unit\Fixture\CompletenessCheckerFactory;
 use Sulu\Product\Tests\Unit\Fixture\FixedBlockIdGenerator;
 use Sulu\Product\Tests\Unit\Fixture\ProductContentMetadata;
+use Sulu\Product\Tests\Unit\Fixture\ProductUrlHelperFactory;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
@@ -74,6 +75,7 @@ final class ProductUpdateToolTest extends TestCase
             $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
             $this->associationResolver(),
             CompletenessCheckerFactory::create(),
+            ProductUrlHelperFactory::create(),
         );
     }
 
@@ -336,6 +338,27 @@ final class ProductUpdateToolTest extends TestCase
         $this->assertStringContainsString('sulu_product_update', \is_string($result['warning'] ?? null) ? $result['warning'] : '');
     }
 
+    public function testUpdateProductDoesNotWarnForAProductWithVariants(): void
+    {
+        $product = new Product('uuid-1');
+        $product->setType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $this->productRepository->getOneBy(Argument::cetera())->willReturn($product);
+        $this->contentManager->resolve(Argument::cetera())->willReturn(new ProductDimensionContent(new Product()));
+        $this->contentManager->normalize(Argument::cetera())->willReturn(['title' => 'Shirt']);
+        $this->messageBus->dispatch(Argument::type(Envelope::class), Argument::cetera())
+            ->will(function(array $args) use ($product): Envelope {
+                /** @var Envelope $envelope */
+                $envelope = $args[0];
+
+                return $envelope->with(new HandledStamp($product, 'handler'));
+            });
+
+        $result = $this->tool->updateProduct('uuid-1', 'en', title: 'Shirt');
+
+        $this->assertTrue($result['success']);
+        $this->assertArrayNotHasKey('warning', $result);
+    }
+
     public function testUpdateProductListsRecommendationsForAnIncompleteProduct(): void
     {
         $this->givenProduct(['title' => 'Shirt']);
@@ -423,6 +446,7 @@ final class ProductUpdateToolTest extends TestCase
             $adminLinkGenerator ?? $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
             $this->associationResolver(),
             CompletenessCheckerFactory::create(),
+            ProductUrlHelperFactory::create(),
         );
     }
 

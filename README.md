@@ -299,6 +299,7 @@ extension for the resource key `products`. The MCP bundle's generic tools (`sulu
 | `sulu_product_get` | Get one product with its attribute values. Also resolves a variant. |
 | `sulu_product_variant_list` | List the variants of a product. |
 | `sulu_product_family_list` | List the product families. |
+| `sulu_product_association_type_list` | List the association types, such as accessory or alternative, that `associations` of the create and update tools take. |
 | `sulu_attribute_list` | List the attributes with their keys, types and options. |
 | `sulu_attribute_value_list` | List the values products carry for one attribute, with the value to search by. |
 | `sulu_product_get_products` | Search published products by keyword, article code or family. |

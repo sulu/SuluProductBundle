@@ -31,6 +31,7 @@ use Sulu\Mcp\Domain\Security\RequiresPermission;
 use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushStamp;
 use Sulu\Product\Application\Mcp\ProductAssociationResolver;
 use Sulu\Product\Application\Mcp\ProductCompletenessChecker;
+use Sulu\Product\Application\Mcp\ProductUrlHelper;
 use Sulu\Product\Application\Message\CreateProductMessage;
 use Sulu\Product\Domain\Exception\InvalidProductAssociationException;
 use Sulu\Product\Domain\Model\ProductInterface;
@@ -47,7 +48,6 @@ final class ProductCreateTool
     use HandleTrait;
     use BlockDataNormalizerTrait;
     use ShadowTrait;
-    use ProductUrlTrait;
 
     /**
      * "variant" is excluded: only ProductVariantController validates the parent's type.
@@ -68,6 +68,7 @@ final class ProductCreateTool
         private readonly AdminLinkGeneratorInterface $adminLinkGenerator,
         private readonly ProductAssociationResolver $associationResolver,
         private readonly ProductCompletenessChecker $completenessChecker,
+        private readonly ProductUrlHelper $urlHelper,
     ) {
         $this->messageBus = $messageBus;
     }
@@ -85,7 +86,7 @@ final class ProductCreateTool
     #[McpTool(
         name: 'sulu_product_create',
         title: 'Create Product',
-        description: 'Create a new product (draft). Workflow: 1) Call sulu_product_family_list to pick a family. "productFamily" is its UUID and is mandatory, because the family decides which attributes the product has. 2) Pass attribute values in "attributes" as a map keyed by the attribute UUID, e.g. attributes={"<attribute uuid>": "red"}. Get those UUIDs from sulu_attribute_list. Attributes the family marks required must be present or the save is rejected. Template fields go in "content" as a flat object. Call sulu_get_context for the product templates. Link related products with "associations" and set categories and tags through "excerpt". Set type="product_with_variants" when the product should hold variants; its variant-specific attributes then belong on the variants, not here. To create the variants themselves use sulu_product_variant_create. This tool cannot create them. The product is created as a draft. A product needs a "url" to be reachable on the website. Without it the product has no route and no page. Pass it inside "content" as {"url": {"page": {"uuid": "<uuid of the listing page>", "path": "<its path, e.g. /products>"}, "suffix": "/<slug>"}}. When you give only the page, the suffix is generated from the title. Copy the page from a sibling product with sulu_product_get (field "url"). Fill "code" when the datasheet or the user gives one. The result carries a "warning" when the product has no url: fix it with sulu_product_update before publishing. The result lists "recommendations" for things that are still empty. Fill what the datasheet or the user gives you and ask the user for the rest. Never invent values to empty the list. Call sulu_content_publish (resourceKey: products) to make it live.',
+        description: 'Create a new product (draft). Workflow: 1) Call sulu_product_family_list to pick a family. "productFamily" is its UUID and is mandatory, because the family decides which attributes the product has. 2) Pass attribute values in "attributes" as a map keyed by the attribute UUID, e.g. attributes={"<attribute uuid>": "red"}. Get those UUIDs from sulu_attribute_list. Attributes the family marks required must be present or the save is rejected. Template fields go in "content" as a flat object. Call sulu_get_context for the product templates. Link related products with "associations" and set categories and tags through "excerpt". Set type="product_with_variants" when the product should hold variants; its variant-specific attributes then belong on the variants, not here. To create the variants themselves use sulu_product_variant_create. This tool cannot create them. The product is created as a draft. A product needs a "url" to be reachable on the website. Without it the product has no route and no page. Pass it inside "content" as "url". Its shape depends on the route type of the installation: a string such as "/hat-red" for the type "route", or {"page": {"uuid": "<uuid of the listing page>", "path": "<its path, e.g. /products>"}, "suffix": "/<slug>"} for "page_tree_route". With a page and no suffix, the suffix is generated from the title. Copy the shape from a sibling product with sulu_product_get (field "url"). The warning names the shape this installation takes. Fill "code" when the datasheet or the user gives one. The result carries a "warning" when the product has no url: fix it with sulu_product_update before publishing. The result lists "recommendations" for things that are still empty. Fill what the datasheet or the user gives you and ask the user for the rest. Never invent values to empty the list. Call sulu_content_publish (resourceKey: products) to make it live.',
         annotations: new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false),
     )]
     #[DangerousTool('product_write')]
@@ -106,7 +107,7 @@ final class ProductCreateTool
         ?string $type = null,
         #[Schema(description: 'Template key. Defaults to the bundle default ("product") when omitted.')]
         ?string $template = null,
-        #[Schema(type: 'object', description: 'Template field values as a flat object, e.g. {"description": "<p>…</p>"}. Call sulu_get_context to see the product templates and their fields. May include the route as "url" ({"page": {"uuid", "path"}, "suffix"}) and a "blocks" tree; block _ids are assigned automatically.', additionalProperties: true)]
+        #[Schema(type: 'object', description: 'Template field values as a flat object, e.g. {"description": "<p>…</p>"}. Call sulu_get_context to see the product templates and their fields. May include the route as "url" (a string, or {"page": {"uuid", "path"}, "suffix"}, see the tool description) and a "blocks" tree; block _ids are assigned automatically.', additionalProperties: true)]
         ?array $content = null,
         #[Schema(type: 'object', description: 'Attribute values keyed by the attribute UUID from sulu_attribute_list, e.g. {"<attribute uuid>": "red"}. Keys that are not attributes of the product\'s family are ignored.', additionalProperties: true)]
         ?array $attributes = null,
@@ -167,7 +168,7 @@ final class ProductCreateTool
                 $data['details'] = $details;
             }
 
-            $data = $this->completeUrlSuffix($data);
+            $data = $this->urlHelper->completeUrlSuffix($data, $locale);
 
             $data = $this->contentMetadataMapper->applyExcerpt($data, $excerpt, $locale);
             if (isset($data['error'])) {
@@ -206,8 +207,8 @@ final class ProductCreateTool
                 'data' => $this->contentManager->normalize($dimensionContent),
             ];
 
-            if (!$this->hasProductUrl($result['data'])) {
-                $result['warning'] = self::URL_WARNING;
+            if (!$product->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS) && !ProductCompletenessChecker::hasUrl($result['data'])) {
+                $result['warning'] = $this->urlHelper->warning();
             }
 
             $recommendations = $this->completenessChecker->check($product, $result['data'], $locale);

@@ -32,6 +32,7 @@ use Sulu\Mcp\Domain\Security\RequiresPermission;
 use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushStamp;
 use Sulu\Product\Application\Mcp\ProductAssociationResolver;
 use Sulu\Product\Application\Mcp\ProductCompletenessChecker;
+use Sulu\Product\Application\Mcp\ProductUrlHelper;
 use Sulu\Product\Application\Message\ModifyProductMessage;
 use Sulu\Product\Domain\Exception\InvalidProductAssociationException;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
@@ -51,7 +52,6 @@ final class ProductUpdateTool
     use BlockDataNormalizerTrait;
     use ContentNormalizerTrait;
     use ShadowTrait;
-    use ProductUrlTrait;
     use LoadsProductLocaleTrait;
 
     public function __construct(
@@ -64,6 +64,7 @@ final class ProductUpdateTool
         private readonly AdminLinkGeneratorInterface $adminLinkGenerator,
         private readonly ProductAssociationResolver $associationResolver,
         private readonly ProductCompletenessChecker $completenessChecker,
+        private readonly ProductUrlHelper $urlHelper,
     ) {
         $this->messageBus = $messageBus;
     }
@@ -81,7 +82,7 @@ final class ProductUpdateTool
     #[McpTool(
         name: 'sulu_product_update',
         title: 'Update Product',
-        description: 'Update an existing product. Reads the current state, merges your changes and writes back, so pass only what should change. If the product has no content in "locale" yet, this call creates that locale. Then pass all localized fields (title, content, excerpt, seo), because there is nothing to merge into. Code, family and attributes are shared across locales and stay as they are. "attributes" is a map keyed by the attribute UUID (sulu_attribute_list) and is merged into the existing values. Pass null for a UUID to clear it. "associations" links other products by type and replaces the list of each type you pass. "excerpt" carries categories and tags. Changing "productFamily" changes which attributes the product may carry. This tool does not change a product\'s type or parent: use sulu_product_variant_update for variants. The product stays a draft. A product needs a "url" to be reachable on the website. Without it the product has no route and no page. Pass it inside "content" as {"url": {"page": {"uuid": "<uuid of the listing page>", "path": "<its path, e.g. /products>"}, "suffix": "/<slug>"}}. When you give only the page, the suffix is generated from the title. Copy the page from a sibling product with sulu_product_get (field "url"). Set "code" when the datasheet or the user gives one. The result carries a "warning" when the product has no url in this locale: fix it before publishing. The result lists "recommendations" for things that are still empty. Fill what the datasheet or the user gives you and ask the user for the rest. Never invent values to empty the list. Call sulu_content_publish (resourceKey: products) to make changes live.',
+        description: 'Update an existing product. Reads the current state, merges your changes and writes back, so pass only what should change. If the product has no content in "locale" yet, this call creates that locale. Then pass all localized fields (title, content, excerpt, seo), because there is nothing to merge into. Code, family and attributes are shared across locales and stay as they are. "attributes" is a map keyed by the attribute UUID (sulu_attribute_list) and is merged into the existing values. Pass null for a UUID to clear it. "associations" links other products by type and replaces the list of each type you pass. "excerpt" carries categories and tags. Changing "productFamily" changes which attributes the product may carry. This tool does not change a product\'s type or parent: use sulu_product_variant_update for variants. The product stays a draft. A product needs a "url" to be reachable on the website. Without it the product has no route and no page. Pass it inside "content" as "url". Its shape depends on the route type of the installation: a string such as "/hat-red" for the type "route", or {"page": {"uuid": "<uuid of the listing page>", "path": "<its path, e.g. /products>"}, "suffix": "/<slug>"} for "page_tree_route". With a page and no suffix, the suffix is generated from the title. Copy the shape from a sibling product with sulu_product_get (field "url"). The warning names the shape this installation takes. Set "code" when the datasheet or the user gives one. The result carries a "warning" when the product has no url in this locale: fix it before publishing. The result lists "recommendations" for things that are still empty. Fill what the datasheet or the user gives you and ask the user for the rest. Never invent values to empty the list. Call sulu_content_publish (resourceKey: products) to make changes live.',
         annotations: new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false),
     )]
     #[DangerousTool('product_write')]
@@ -98,7 +99,7 @@ final class ProductUpdateTool
         #[Schema(description: 'UUID of a different product family. Changing it changes which attributes apply.')]
         ?string $productFamily = null,
         ?string $template = null,
-        #[Schema(type: 'object', description: 'Template field values as a flat object, e.g. {"description": "<p>…</p>"}. Merged into the current content. May include the route as "url" ({"page": {"uuid", "path"}, "suffix"}) and a "blocks" tree; block _ids are assigned automatically.', additionalProperties: true)]
+        #[Schema(type: 'object', description: 'Template field values as a flat object, e.g. {"description": "<p>…</p>"}. Merged into the current content. May include the route as "url" (a string, or {"page": {"uuid", "path"}, "suffix"}, see the tool description) and a "blocks" tree; block _ids are assigned automatically.', additionalProperties: true)]
         ?array $content = null,
         #[Schema(type: 'object', description: 'Attribute values keyed by the attribute UUID, e.g. {"<attribute uuid>": "red"}. Merged into the existing values; pass null for a UUID to clear that attribute.', additionalProperties: true)]
         ?array $attributes = null,
@@ -161,7 +162,7 @@ final class ProductUpdateTool
                 $data['details'] = \array_replace($current, $details);
             }
 
-            $data = $this->completeUrlSuffix($data);
+            $data = $this->urlHelper->completeUrlSuffix($data, $locale);
 
             $data = $this->contentMetadataMapper->applyExcerpt($data, $excerpt, $locale);
             if (isset($data['error'])) {
@@ -205,8 +206,8 @@ final class ProductUpdateTool
                 'data' => $this->compactContent($normalized, $this->detectBlockProperties($normalized)),
             ];
 
-            if (!$this->hasProductUrl($normalized)) {
-                $result['warning'] = self::URL_WARNING;
+            if (!$updated->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS) && !ProductCompletenessChecker::hasUrl($normalized)) {
+                $result['warning'] = $this->urlHelper->warning();
             }
 
             $recommendations = $this->completenessChecker->check($updated, $normalized, $locale);
