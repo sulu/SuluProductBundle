@@ -1466,7 +1466,8 @@ final class SuluProductBundle extends AbstractBundle
             ->arg('$routeType', '%sulu_product.route.type%')
             ->arg('$routeParams', '%sulu_product.route.params%')
             ->arg('$pathCleanup', new Reference('sulu_route.path_cleanup'))
-            ->arg('$resourceLocatorGenerator', new Reference('sulu_route.resource_locator_generator'));
+            ->arg('$resourceLocatorGenerator', new Reference('sulu_route.resource_locator_generator'))
+            ->arg('$formMetadataProvider', new Reference('sulu_admin.form_metadata_provider'));
 
         $services->set(ProductCompletenessChecker::class)
             ->arg('$formMetadataProvider', new Reference('sulu_admin.form_metadata_provider'))

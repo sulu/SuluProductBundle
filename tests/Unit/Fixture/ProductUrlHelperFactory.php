@@ -15,7 +15,12 @@ namespace Sulu\Product\Tests\Unit\Fixture;
 
 use Prophecy\Argument;
 use Prophecy\Prophet;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\TagMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\MetadataProviderInterface;
 use Sulu\Product\Application\Mcp\ProductUrlHelper;
+use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Route\Application\ResourceLocator\PathCleanup\PathCleanup;
 use Sulu\Route\Application\ResourceLocator\ResourceLocatorGenerator;
 use Sulu\Route\Application\ResourceLocator\RouteSchemaEvaluator;
@@ -31,8 +36,12 @@ final class ProductUrlHelperFactory
     /**
      * @param list<string> $takenSlugs routes that exist already
      */
-    public static function create(string $routeType = 'page_tree_route', array $takenSlugs = [], string $routeSchema = "/products/{implode('-', object)}"): ProductUrlHelper
-    {
+    public static function create(
+        string $routeType = 'page_tree_route',
+        array $takenSlugs = [],
+        string $routeSchema = "/products/{implode('-', object)}",
+        ?MetadataProviderInterface $formMetadataProvider = null,
+    ): ProductUrlHelper {
         $prophet = new Prophet();
         $pathCleanup = new PathCleanup(new AsciiSlugger(), []);
 
@@ -52,6 +61,29 @@ final class ProductUrlHelperFactory
             ['route_schema' => $routeSchema],
             $pathCleanup,
             $generator,
+            $formMetadataProvider ?? self::detailsForm(),
         );
+    }
+
+    /**
+     * The product form as the bundle ships it: the title is the only route part, the code is a field
+     * of the form that the route generator of the admin never receives.
+     */
+    public static function detailsForm(): ArrayMetadataProvider
+    {
+        $title = new FieldMetadata('title');
+        $title->setType('text_line');
+        $tag = new TagMetadata();
+        $tag->setName('sulu.rlp.part');
+        $title->addTag($tag);
+
+        $code = new FieldMetadata('code');
+        $code->setType('text_line');
+
+        $details = new FormMetadata();
+        $details->addItem($title);
+        $details->addItem($code);
+
+        return new ArrayMetadataProvider([ProductInterface::FORM_KEY => $details]);
     }
 }

@@ -15,7 +15,11 @@ namespace Sulu\Product\Tests\Unit\Application\Mcp;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Product\Application\Mcp\ProductUrlHelper;
+use Sulu\Product\Domain\Model\ProductInterface;
+use Sulu\Product\Tests\Unit\Fixture\ArrayMetadataProvider;
 use Sulu\Product\Tests\Unit\Fixture\ProductUrlHelperFactory;
 
 #[CoversClass(ProductUrlHelper::class)]
@@ -60,11 +64,38 @@ final class ProductUrlHelperTest extends TestCase
         $this->assertStringContainsString('"/products/hemd-fuer-maenner"', $instruction);
     }
 
-    public function testTheExampleReadsEveryFieldTheRouteSchemaReads(): void
+    public function testTheExampleBuildsTheUrlFromTheRoutePartsOnly(): void
     {
-        $helper = ProductUrlHelperFactory::create('route', [], "/shop/{object['code']}-{object['title']}");
+        $helper = ProductUrlHelperFactory::create('route');
 
-        $this->assertStringContainsString('"/shop/sch-3-probe"', $helper->warning(['title' => 'Probe', 'code' => 'SCH-3', 'excerpt' => ['x' => 'y']], 'en'));
+        $warning = $helper->warning([
+            'title' => 'Probe',
+            'uuid' => 'd9b8a1c2-0000-4000-8000-000000000001',
+            'code' => 'SCH-3',
+            'description' => 'A long text that does not belong in a url.',
+            'excerpt' => ['x' => 'y'],
+        ], 'en');
+
+        $this->assertStringContainsString('"/products/probe"', $warning);
+        $this->assertStringNotContainsString('sch-3', $warning);
+    }
+
+    public function testWithoutARoutePartTheExampleIsTheSiblingPattern(): void
+    {
+        $form = new FormMetadata();
+        $form->addItem(new FieldMetadata('title'));
+        $provider = new ArrayMetadataProvider([ProductInterface::FORM_KEY => $form]);
+
+        $helper = ProductUrlHelperFactory::create('route', [], "/products/{implode('-', object)}", $provider);
+
+        $this->assertStringContainsString('e.g. the pattern of a sibling product', $helper->warning(['title' => 'Probe'], 'en'));
+    }
+
+    public function testAMissingFormLeavesTheSiblingPattern(): void
+    {
+        $helper = ProductUrlHelperFactory::create('route', [], "/products/{implode('-', object)}", new ArrayMetadataProvider());
+
+        $this->assertStringContainsString('e.g. the pattern of a sibling product', $helper->warning(['title' => 'Probe'], 'en'));
     }
 
     public function testAWarningWithATitleShowsTheExample(): void

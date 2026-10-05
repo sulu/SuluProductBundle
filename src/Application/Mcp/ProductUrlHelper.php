@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Application\Mcp;
 
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\MetadataProviderInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Route\Application\ResourceLocator\PathCleanup\PathCleanupInterface;
 use Sulu\Route\Application\ResourceLocator\ResourceLocatorGeneratorInterface;
@@ -29,6 +31,7 @@ use Sulu\Route\Application\ResourceLocator\ResourceLocatorRequest;
 final readonly class ProductUrlHelper
 {
     private const PAGE_TREE_ROUTE = 'page_tree_route';
+    private const ROUTE_PART_TAG = 'sulu.rlp.part';
 
     /**
      * @param array<string, scalar|null> $routeParams the params of the route field, "route_schema" among them
@@ -38,6 +41,7 @@ final readonly class ProductUrlHelper
         private array $routeParams,
         private PathCleanupInterface $pathCleanup,
         private ResourceLocatorGeneratorInterface $resourceLocatorGenerator,
+        private MetadataProviderInterface $formMetadataProvider,
     ) {
     }
 
@@ -59,12 +63,7 @@ final readonly class ProductUrlHelper
             return 'Pass content.url as {"page": {"uuid": "<page uuid>", "path": "<page path>"}, "suffix": "/<slug>"}. Copy the page from a sibling product (sulu_product_get).';
         }
 
-        $parts = [];
-        foreach ($content as $key => $value) {
-            if (\is_string($value) && '' !== \trim($value)) {
-                $parts[$key] = $value;
-            }
-        }
+        $parts = $this->routeParts($content, $locale);
 
         $example = [] !== $parts
             ? \sprintf('"%s"', $this->generateUrl($parts, $locale, $resourceId))
@@ -79,6 +78,43 @@ final readonly class ProductUrlHelper
     public function warning(array $content, string $locale, ?string $resourceId = null): string
     {
         return 'The product has no url, so it has no route and no page on the website. Set the url with sulu_product_update before publishing. ' . $this->instruction($content, $locale, $resourceId);
+    }
+
+    /**
+     * The admin sends only the fields tagged "sulu.rlp.part" to the route generator, the title of a
+     * product. Any other field would end up in the default route_schema, which implodes all of them.
+     *
+     * @param array<string, mixed> $content
+     *
+     * @return array<string, string>
+     */
+    private function routeParts(array $content, string $locale): array
+    {
+        try {
+            $metadata = $this->formMetadataProvider->getMetadata(ProductInterface::FORM_KEY, $locale, []);
+        } catch (\Throwable) {
+            return [];
+        }
+
+        if (!$metadata instanceof FormMetadata) {
+            return [];
+        }
+
+        $parts = [];
+        foreach ($metadata->getFlatFieldMetadata() as $field) {
+            $value = $content[$field->getName()] ?? null;
+            if (!\is_string($value) || '' === \trim($value)) {
+                continue;
+            }
+
+            foreach ($field->getTags() as $tag) {
+                if (self::ROUTE_PART_TAG === $tag->getName()) {
+                    $parts[$field->getName()] = $value;
+                }
+            }
+        }
+
+        return $parts;
     }
 
     /**
