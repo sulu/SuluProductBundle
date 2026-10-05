@@ -20,7 +20,7 @@ use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 
 /**
  * Stands in for an AttributeTypeInterface a bundle consumer might register whose readValue()
- * does not return the string|float|null this bundle's own built-in types return.
+ * returns something other than string|float|null.
  */
 final class BooleanAttributeTypeFake implements AttributeTypeInterface
 {

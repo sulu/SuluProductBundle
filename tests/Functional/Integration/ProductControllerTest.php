@@ -143,6 +143,31 @@ class ProductControllerTest extends SuluTestCase
         return $attribute->getUuid();
     }
 
+    private function createBooleanAttribute(): string
+    {
+        $container = self::getContainer();
+
+        /** @var AttributeGroupRepositoryInterface $groupRepository */
+        $groupRepository = $container->get(AttributeGroupRepositoryInterface::class);
+        /** @var AttributeRepositoryInterface $attributeRepository */
+        $attributeRepository = $container->get(AttributeRepositoryInterface::class);
+        /** @var EntityManagerInterface $em */
+        $em = $container->get('doctrine.orm.entity_manager');
+
+        $group = $groupRepository->createNew();
+        $groupRepository->save($group);
+
+        $attribute = $attributeRepository->createNew($group);
+        $attribute->setKey('waterproof');
+        $attribute->setType(AttributeInterface::TYPE_BOOLEAN);
+        $attribute->addTranslation(new AttributeTranslation($attribute, 'en', 'Waterproof'));
+        $attributeRepository->save($attribute);
+
+        $em->flush();
+
+        return $attribute->getUuid();
+    }
+
     private function createLocalizedAttribute(): string
     {
         $container = self::getContainer();
@@ -502,6 +527,29 @@ class ProductControllerTest extends SuluTestCase
         $data = \json_decode((string) $response->getContent(), true);
         $this->assertIsArray($data);
         $this->assertArrayHasKey('detail', $data);
+    }
+
+    public function testRequiredBooleanAttributeAcceptsFalseAndRejectsNull(): void
+    {
+        self::purgeDatabase();
+        $attributeId = $this->createBooleanAttribute();
+        $familyId = $this->createProductFamily($attributeId);
+        $id = $this->createProduct($familyId, attributes: [$attributeId => 'false']);
+
+        $this->assertSame('false', $this->getAttributeValue($id, 'en', $attributeId));
+
+        $this->putAttributes($id, 'en', [$attributeId => true]);
+        $this->assertSame('true', $this->getAttributeValue($id, 'en', $attributeId));
+
+        $this->client->request(
+            'PUT',
+            '/admin/api/products/' . $id . '.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode(['locale' => 'en', 'attributes' => [$attributeId => null]]) ?: null,
+        );
+        $this->assertHttpStatusCode(422, $this->client->getResponse());
     }
 
     public function testLocalizedAttributeValueIsStoredPerLocale(): void

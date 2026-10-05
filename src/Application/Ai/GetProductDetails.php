@@ -138,6 +138,9 @@ final class GetProductDetails
         foreach ($values as $value) {
             $attribute = $value->getAttribute();
             $display = $this->valueFormatter->format($value, $locale);
+            if (\is_bool($display)) {
+                $display = $display ? 'true' : 'false';
+            }
 
             if (null === $display || '' === \trim($display)) {
                 continue;

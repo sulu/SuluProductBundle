@@ -15,6 +15,7 @@ namespace Sulu\Product\Tests\Functional\HttpKernel;
 
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Product\Domain\Model\AttributeGroupTranslation;
 use Sulu\Product\Domain\Model\AttributeInterface;
@@ -134,6 +135,54 @@ class ProductAttributesMetadataTest extends SuluTestCase
         }
     }
 
+    /**
+     * @return iterable<string, array{bool, list<array{name: string, title: string}>}>
+     */
+    public static function provideBooleanChoices(): iterable
+    {
+        yield 'required' => [true, [['name' => 'true', 'title' => 'Yes'], ['name' => 'false', 'title' => 'No']]];
+        yield 'optional' => [false, [['name' => '', 'title' => 'Please choose'], ['name' => 'true', 'title' => 'Yes'], ['name' => 'false', 'title' => 'No']]];
+    }
+
+    /**
+     * @param list<array{name: string, title: string}> $expectedChoices
+     */
+    #[DataProvider('provideBooleanChoices')]
+    public function testBooleanAttributeIsAYesNoSelect(bool $required, array $expectedChoices): void
+    {
+        $waterproof = $this->createAttribute('waterproof', 'Waterproof', 'Features', type: AttributeInterface::TYPE_BOOLEAN)->getUuid();
+
+        $this->client->request('POST', '/admin/api/product-families.json?locale=en', [], [], [], \json_encode([
+            'locale' => 'en',
+            'name' => 'Boots',
+            'key' => 'boots',
+            'description' => null,
+            'attributes' => [['id' => $waterproof, 'required' => $required, 'variantSpecific' => false]],
+        ]) ?: null);
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+        /** @var array{id: string} $family */
+        $family = \json_decode((string) $this->client->getResponse()->getContent(), true);
+
+        $this->client->request('GET', '/admin/metadata/form/product_attributes?productFamily=' . $family['id'] . '&locale=en');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        /** @var array{form: array<string, array{items: array<string, array{type: string, options: array{values: array{value: list<array{name: string, title: string}>}}}>}>} $data */
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $section = \reset($data['form']);
+        $this->assertNotFalse($section);
+        $field = \reset($section['items']);
+        $this->assertNotFalse($field);
+
+        $this->assertSame('single_select', $field['type']);
+        $this->assertSame(
+            $expectedChoices,
+            \array_map(
+                static fn (array $option): array => ['name' => $option['name'], 'title' => $option['title']],
+                $field['options']['values']['value'],
+            ),
+        );
+    }
+
     public function testMetadataWithoutSelectorIsEmpty(): void
     {
         $this->client->request('GET', '/admin/metadata/form/product_attributes');
@@ -146,7 +195,7 @@ class ProductAttributesMetadataTest extends SuluTestCase
     /**
      * @param array<string, mixed> $config
      */
-    private function createAttribute(string $key, string $name, string $groupName, array $config = []): AttributeInterface
+    private function createAttribute(string $key, string $name, string $groupName, array $config = [], string $type = AttributeInterface::TYPE_TEXT): AttributeInterface
     {
         $container = self::getContainer();
 
@@ -164,7 +213,7 @@ class ProductAttributesMetadataTest extends SuluTestCase
 
         $attribute = $attributeRepository->createNew($group);
         $attribute->setKey($key);
-        $attribute->setType(AttributeInterface::TYPE_TEXT);
+        $attribute->setType($type);
         $attribute->setConfig($config);
         $attribute->setDefaultLocale('en');
         $attribute->addTranslation(new AttributeTranslation($attribute, 'en', $name));

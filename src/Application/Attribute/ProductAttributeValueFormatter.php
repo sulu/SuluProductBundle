@@ -19,7 +19,7 @@ use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 
 /**
  * A value as displayed: option name, text or number with its display format and unit, date in its
- * display format or the locale's default.
+ * display format or the locale's default, boolean as true or false, so a template can test it.
  */
 class ProductAttributeValueFormatter
 {
@@ -28,7 +28,7 @@ class ProductAttributeValueFormatter
     ) {
     }
 
-    public function format(ProductAttributeValueInterface $productAttributeValue, string $locale): ?string
+    public function format(ProductAttributeValueInterface $productAttributeValue, string $locale): string|bool|null
     {
         $attribute = $productAttributeValue->getAttribute();
 
@@ -38,6 +38,7 @@ class ProductAttributeValueFormatter
             AttributeInterface::TYPE_TEXT => $this->applyDisplayFormat($attribute, $productAttributeValue->getText()),
             AttributeInterface::TYPE_NUMBER => $this->applyDisplayFormat($attribute, $productAttributeValue->getNumber()),
             AttributeInterface::TYPE_DATE => $this->formatDate($attribute, $productAttributeValue->getNumber(), $locale),
+            AttributeInterface::TYPE_BOOLEAN => $this->formatBoolean($productAttributeValue->getNumber()),
             default => null,
         };
     }
@@ -85,5 +86,10 @@ class ProductAttributeValueFormatter
         );
 
         return $formatter->format(new \DateTimeImmutable('@' . (int) $timestamp)) ?: null;
+    }
+
+    private function formatBoolean(?float $number): ?bool
+    {
+        return null === $number ? null : 0.0 !== $number;
     }
 }

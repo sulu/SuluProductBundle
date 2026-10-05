@@ -46,7 +46,7 @@ class ProductAttributeTwigExtensionTest extends TestCase
     }
 
     /**
-     * @return array<string, array{key: string, label: string, type: string, value: mixed, formattedValue: string, position: int, group: array{key: string, label: string}}>
+     * @return array<string, array{key: string, label: string, type: string, value: mixed, formattedValue: string|bool, position: int, group: array{key: string, label: string}}>
      */
     private function attributesOf(ProductDimensionContent $content, string $locale = 'de'): array
     {
@@ -356,6 +356,19 @@ class ProductAttributeTwigExtensionTest extends TestCase
         } finally {
             \date_default_timezone_set($defaultTimezone);
         }
+    }
+
+    public function testBooleanFalseIsKeptAsABool(): void
+    {
+        $content = $this->createContent();
+        $attribute = $this->createAttribute('waterproof', 'Wasserdicht', $this->createGroup('0198c3e2-0000-7000-8000-000000000001', 'Eins'), 1);
+        $attribute->setType(AttributeInterface::TYPE_BOOLEAN);
+
+        $value = new ProductAttributeValue($content, $attribute, $attribute->getKey());
+        $value->setNumber(0.0);
+        $content->addAttribute($value);
+
+        self::assertFalse($this->attributesOf($content)['waterproof']['formattedValue']);
     }
 
     public function testDateValueWithoutATimestampIsDropped(): void
