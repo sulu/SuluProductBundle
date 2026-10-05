@@ -41,6 +41,7 @@ use Sulu\Product\Tests\Unit\Fixture\CompletenessCheckerFactory;
 use Sulu\Product\Tests\Unit\Fixture\FixedBlockIdGenerator;
 use Sulu\Product\Tests\Unit\Fixture\ProductContentMetadata;
 use Sulu\Product\Tests\Unit\Fixture\ProductUrlHelperFactory;
+use Sulu\Product\Tests\Unit\Fixture\ProjectLocalesFactory;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
@@ -76,6 +77,7 @@ final class ProductUpdateToolTest extends TestCase
             $this->associationResolver(),
             CompletenessCheckerFactory::create(),
             ProductUrlHelperFactory::create(),
+            ProjectLocalesFactory::create(),
         );
     }
 
@@ -447,6 +449,7 @@ final class ProductUpdateToolTest extends TestCase
             $this->associationResolver(),
             CompletenessCheckerFactory::create(),
             ProductUrlHelperFactory::create(),
+            ProjectLocalesFactory::create(),
         );
     }
 
@@ -537,5 +540,18 @@ final class ProductUpdateToolTest extends TestCase
         $this->productRepository->findOneBy(['code' => 'BELT-1', 'locale' => 'en', 'stage' => DimensionContentInterface::STAGE_DRAFT, 'loadGhost' => true])->willReturn(new Product('belt-uuid'));
 
         return new ProductAssociationResolver($this->productRepository->reveal(), new ProductAssociationTypeRegistry(['accessory' => ['label' => 'Accessory'], 'alternative' => ['label' => 'Alternative']]));
+    }
+
+    public function testUpdateProductRejectsALocaleNoWebspaceHas(): void
+    {
+        $this->productRepository->getOneBy(Argument::cetera())->shouldNotBeCalled();
+        $this->messageBus->dispatch(Argument::cetera())->shouldNotBeCalled();
+
+        $result = $this->tool->updateProduct('uuid-1', 'xx', title: 'Shirt');
+
+        $this->assertIsString($result['error'] ?? null);
+        $this->assertIsString($result['hint'] ?? null);
+        $this->assertStringContainsString('"xx"', $result['error']);
+        $this->assertStringContainsString('"en", "de"', $result['hint']);
     }
 }

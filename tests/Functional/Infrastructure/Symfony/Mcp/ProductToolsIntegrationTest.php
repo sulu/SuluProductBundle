@@ -63,7 +63,7 @@ class ProductToolsIntegrationTest extends SuluTestCase
     {
         $uuid = $this->createProduct($this->createFamily(), 'Shirt', 'SHIRT-2');
 
-        $result = $this->getTool()->getProduct('fr', $uuid);
+        $result = $this->getTool()->getProduct('de', $uuid);
 
         $this->assertSame([], $result['data'] ?? null);
         $hint = $result['hint'] ?? null;

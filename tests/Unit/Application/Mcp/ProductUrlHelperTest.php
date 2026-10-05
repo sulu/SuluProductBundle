@@ -27,7 +27,7 @@ final class ProductUrlHelperTest extends TestCase
 
         $this->assertTrue($helper->isPageBased());
         $this->assertStringContainsString('"suffix"', $helper->instruction());
-        $this->assertStringContainsString('"suffix"', $helper->warning());
+        $this->assertStringContainsString('"suffix"', $helper->warning([], 'en'));
     }
 
     public function testThePlainRouteTypeAsksForAString(): void
@@ -36,7 +36,47 @@ final class ProductUrlHelperTest extends TestCase
 
         $this->assertFalse($helper->isPageBased());
         $this->assertStringContainsString('path string', $helper->instruction());
-        $this->assertStringNotContainsString('"page"', $helper->warning());
+        $this->assertStringNotContainsString('"page"', $helper->warning([], 'en'));
+    }
+
+    public function testTheExampleFollowsTheRouteSchema(): void
+    {
+        $instruction = ProductUrlHelperFactory::create('route')->instruction('Dup Check', 'en');
+
+        $this->assertStringContainsString('"/products/dup-check"', $instruction);
+    }
+
+    public function testTheExampleIsUniqueAmongTheExistingRoutes(): void
+    {
+        $helper = ProductUrlHelperFactory::create('route', ['/products/dup-check']);
+
+        $this->assertStringContainsString('"/products/dup-check-1"', $helper->warning(['title' => 'Dup Check'], 'en', 'uuid-1'));
+    }
+
+    public function testTheExampleUsesTheSlugOfTheAdmin(): void
+    {
+        $instruction = ProductUrlHelperFactory::create('route')->instruction('Hemd für Männer', 'de');
+
+        $this->assertStringContainsString('"/products/hemd-fuer-maenner"', $instruction);
+    }
+
+    public function testAWarningWithATitleShowsTheExample(): void
+    {
+        $this->assertStringContainsString('"/products/shirt"', ProductUrlHelperFactory::create('route')->warning(['title' => 'Shirt'], 'en'));
+        $this->assertStringContainsString('sibling product', ProductUrlHelperFactory::create('route')->warning(['title' => 5], 'en'));
+    }
+
+    public function testWithoutATitleTheExampleIsTheSiblingPattern(): void
+    {
+        $this->assertStringContainsString('e.g. the pattern of a sibling product', ProductUrlHelperFactory::create('route')->instruction());
+        $this->assertStringContainsString('e.g. the pattern of a sibling product', ProductUrlHelperFactory::create('route')->instruction('  '));
+    }
+
+    public function testATitleWithoutASlugLeavesTheUrlWithoutASuffix(): void
+    {
+        $data = ['title' => '!!!', 'url' => ['page' => ['uuid' => 'p', 'path' => '/products']]];
+
+        $this->assertSame($data, ProductUrlHelperFactory::create()->completeUrlSuffix($data, 'en'));
     }
 
     public function testTheSuffixMatchesTheSlugOfTheAdmin(): void

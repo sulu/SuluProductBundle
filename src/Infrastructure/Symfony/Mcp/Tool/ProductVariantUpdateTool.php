@@ -26,9 +26,11 @@ use Sulu\Mcp\Domain\Security\DangerousTool;
 use Sulu\Mcp\Domain\Security\PermissionRequirement;
 use Sulu\Mcp\Domain\Security\RequiresPermission;
 use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushStamp;
+use Sulu\Product\Application\Mcp\ProjectLocales;
 use Sulu\Product\Application\Mcp\VariantParentResolver;
 use Sulu\Product\Application\Message\ModifyProductMessage;
 use Sulu\Product\Domain\Exception\InvalidVariantParentException;
+use Sulu\Product\Domain\Exception\UnknownLocaleException;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
@@ -52,6 +54,7 @@ final class ProductVariantUpdateTool
         private readonly ProductRepositoryInterface $productRepository,
         private readonly VariantParentResolver $variantParentResolver,
         private readonly AdminLinkGeneratorInterface $adminLinkGenerator,
+        private readonly ProjectLocales $projectLocales,
     ) {
         $this->messageBus = $messageBus;
     }
@@ -157,6 +160,11 @@ final class ProductVariantUpdateTool
             }
 
             return $result;
+        } catch (UnknownLocaleException $e) {
+            return [
+                'error' => $e->getMessage(),
+                'hint' => $e->getHint(),
+            ];
         } catch (\Throwable $e) {
             return [
                 'error' => \sprintf('Failed to update variant %s: %s', $uuid, $e->getMessage()),

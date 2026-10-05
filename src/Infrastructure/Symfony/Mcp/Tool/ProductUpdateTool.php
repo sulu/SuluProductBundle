@@ -33,9 +33,11 @@ use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushS
 use Sulu\Product\Application\Mcp\ProductAssociationResolver;
 use Sulu\Product\Application\Mcp\ProductCompletenessChecker;
 use Sulu\Product\Application\Mcp\ProductUrlHelper;
+use Sulu\Product\Application\Mcp\ProjectLocales;
 use Sulu\Product\Application\Message\ModifyProductMessage;
 use Sulu\Product\Domain\Exception\InvalidProductAssociationException;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
+use Sulu\Product\Domain\Exception\UnknownLocaleException;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
@@ -65,6 +67,7 @@ final class ProductUpdateTool
         private readonly ProductAssociationResolver $associationResolver,
         private readonly ProductCompletenessChecker $completenessChecker,
         private readonly ProductUrlHelper $urlHelper,
+        private readonly ProjectLocales $projectLocales,
     ) {
         $this->messageBus = $messageBus;
     }
@@ -82,7 +85,7 @@ final class ProductUpdateTool
     #[McpTool(
         name: 'sulu_product_update',
         title: 'Update Product',
-        description: 'Update an existing product. Reads the current state, merges your changes and writes back, so pass only what should change. If the product has no content in "locale" yet, this call creates that locale. Then pass all localized fields (title, content, excerpt, seo), because there is nothing to merge into. Code, family and attributes are shared across locales and stay as they are. "attributes" is a map keyed by the attribute UUID (sulu_attribute_list) and is merged into the existing values. Pass null for a UUID to clear it. "associations" links other products by type and replaces the list of each type you pass. "excerpt" carries categories and tags. Changing "productFamily" changes which attributes the product may carry. This tool does not change a product\'s type or parent: use sulu_product_variant_update for variants. The product stays a draft. A product needs a "url" to be reachable on the website. Without it the product has no route and no page. Pass it inside "content" as "url". Its shape depends on the route type of the installation: a string such as "/hat-red" for the type "route", or {"page": {"uuid": "<uuid of the listing page>", "path": "<its path, e.g. /products>"}, "suffix": "/<slug>"} for "page_tree_route". With a page and no suffix, the suffix is generated from the title. Copy the shape from a sibling product with sulu_product_get (field "url"). The warning names the shape this installation takes. Set "code" when the datasheet or the user gives one. The result carries a "warning" when the product has no url in this locale: fix it before publishing. The result lists "recommendations" for things that are still empty. Fill what the datasheet or the user gives you and ask the user for the rest. Never invent values to empty the list. Call sulu_content_publish (resourceKey: products) to make changes live.',
+        description: 'Update an existing product. Reads the current state, merges your changes and writes back, so pass only what should change. If the product has no content in "locale" yet, this call creates that locale. Then pass all localized fields (title, content, excerpt, seo), because there is nothing to merge into. Code, family and attributes are shared across locales and stay as they are. "attributes" is a map keyed by the attribute UUID (sulu_attribute_list) and is merged into the existing values. Pass null for a UUID to clear it. "associations" links other products by type and replaces the list of each type you pass. "excerpt" carries categories and tags. Changing "productFamily" changes which attributes the product may carry. This tool does not change a product\'s type or parent: use sulu_product_variant_update for variants. The product stays a draft. A product needs a "url" to be reachable on the website. Without it the product has no route and no page. Pass it inside "content" as "url". Its shape depends on the route type of the installation: a path string that follows the route_schema, such as "/products/hat-red", for the type "route", or {"page": {"uuid": "<uuid of the listing page>", "path": "<its path, e.g. /products>"}, "suffix": "/<slug>"} for "page_tree_route". With a page and no suffix, the suffix is generated from the title. Copy the shape from a sibling product with sulu_product_get (field "url"). The warning names the shape this installation takes. Set "code" when the datasheet or the user gives one. The result carries a "warning" when the product has no url in this locale: fix it before publishing. The result lists "recommendations" for things that are still empty. Fill what the datasheet or the user gives you and ask the user for the rest. Never invent values to empty the list. Call sulu_content_publish (resourceKey: products) to make changes live.',
         annotations: new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false),
     )]
     #[DangerousTool('product_write')]
@@ -207,7 +210,7 @@ final class ProductUpdateTool
             ];
 
             if (!$updated->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS) && !ProductCompletenessChecker::hasUrl($normalized)) {
-                $result['warning'] = $this->urlHelper->warning();
+                $result['warning'] = $this->urlHelper->warning($normalized, $locale, $updated->getUuid());
             }
 
             $recommendations = $this->completenessChecker->check($updated, $normalized, $locale);
@@ -230,6 +233,11 @@ final class ProductUpdateTool
                 'hint' => 'Verify the UUID. Use sulu_product_list to find products.',
             ];
         } catch (InvalidProductAssociationException $e) {
+            return [
+                'error' => $e->getMessage(),
+                'hint' => $e->getHint(),
+            ];
+        } catch (UnknownLocaleException $e) {
             return [
                 'error' => $e->getMessage(),
                 'hint' => $e->getHint(),

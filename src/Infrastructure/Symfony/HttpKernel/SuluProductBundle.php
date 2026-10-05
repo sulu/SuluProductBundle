@@ -42,6 +42,7 @@ use Sulu\Product\Application\Mapper\ProductParentMapper;
 use Sulu\Product\Application\Mcp\ProductAssociationResolver;
 use Sulu\Product\Application\Mcp\ProductCompletenessChecker;
 use Sulu\Product\Application\Mcp\ProductUrlHelper;
+use Sulu\Product\Application\Mcp\ProjectLocales;
 use Sulu\Product\Application\Mcp\VariantParentResolver;
 use Sulu\Product\Application\MessageHandler\ApplyWorkflowTransitionProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\CopyLocaleProductMessageHandler;
@@ -1458,9 +1459,14 @@ final class SuluProductBundle extends AbstractBundle
         $services->set(ProductAssociationResolver::class)
             ->autowire();
 
+        $services->set(ProjectLocales::class)
+            ->arg('$webspaceManager', new Reference('sulu_core.webspace.webspace_manager'));
+
         $services->set(ProductUrlHelper::class)
             ->arg('$routeType', '%sulu_product.route.type%')
-            ->arg('$pathCleanup', new Reference('sulu_route.path_cleanup'));
+            ->arg('$routeParams', '%sulu_product.route.params%')
+            ->arg('$pathCleanup', new Reference('sulu_route.path_cleanup'))
+            ->arg('$resourceLocatorGenerator', new Reference('sulu_route.resource_locator_generator'));
 
         $services->set(ProductCompletenessChecker::class)
             ->arg('$formMetadataProvider', new Reference('sulu_admin.form_metadata_provider'))

@@ -34,6 +34,7 @@ use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductVariantUpdateTool;
+use Sulu\Product\Tests\Unit\Fixture\ProjectLocalesFactory;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
@@ -69,6 +70,7 @@ final class ProductVariantUpdateToolTest extends TestCase
                 $this->productFamilyRepository->reveal(),
             ),
             $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
+            ProjectLocalesFactory::create(),
         );
     }
 
@@ -239,6 +241,7 @@ final class ProductVariantUpdateToolTest extends TestCase
             $this->productRepository->reveal(),
             new VariantParentResolver($this->productRepository->reveal(), $this->productFamilyRepository->reveal()),
             $adminLinkGenerator->reveal(),
+            ProjectLocalesFactory::create(),
         );
         $this->givenVariantOfParent([]);
 
@@ -278,5 +281,18 @@ final class ProductVariantUpdateToolTest extends TestCase
         $this->assertStringContainsString('already in use', $result['error']);
         $this->assertIsString($result['hint']);
         $this->assertNotEmpty($result['hint']);
+    }
+
+    public function testUpdateVariantRejectsALocaleNoWebspaceHas(): void
+    {
+        $this->givenVariantOfParent([]);
+        $this->messageBus->dispatch(Argument::cetera())->shouldNotBeCalled();
+
+        $result = $this->tool->updateProductVariant('xx', 'parent-uuid', 'variant-uuid', title: 'x');
+
+        $this->assertIsString($result['error'] ?? null);
+        $this->assertIsString($result['hint'] ?? null);
+        $this->assertStringContainsString('"xx"', $result['error']);
+        $this->assertStringContainsString('"en", "de"', $result['hint']);
     }
 }

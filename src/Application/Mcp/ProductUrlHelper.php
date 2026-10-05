@@ -13,7 +13,10 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Application\Mcp;
 
+use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Route\Application\ResourceLocator\PathCleanup\PathCleanupInterface;
+use Sulu\Route\Application\ResourceLocator\ResourceLocatorGeneratorInterface;
+use Sulu\Route\Application\ResourceLocator\ResourceLocatorRequest;
 
 /**
  * The product route is only created when the saved data carries a "url". Without it the product
@@ -27,9 +30,14 @@ final readonly class ProductUrlHelper
 {
     private const PAGE_TREE_ROUTE = 'page_tree_route';
 
+    /**
+     * @param array<string, scalar|null> $routeParams the params of the route field, "route_schema" among them
+     */
     public function __construct(
         private string $routeType,
+        private array $routeParams,
         private PathCleanupInterface $pathCleanup,
+        private ResourceLocatorGeneratorInterface $resourceLocatorGenerator,
     ) {
     }
 
@@ -39,20 +47,46 @@ final readonly class ProductUrlHelper
     }
 
     /**
-     * How to pass the url, in the words of the configured route type.
+     * How to pass the url, in the words of the configured route type. The example is what the route
+     * generator of the admin makes of the title: it follows the route_schema and is not taken yet.
      */
-    public function instruction(): string
+    public function instruction(?string $title = null, string $locale = 'en', ?string $resourceId = null): string
     {
         if ($this->isPageBased()) {
             return 'Pass content.url as {"page": {"uuid": "<page uuid>", "path": "<page path>"}, "suffix": "/<slug>"}. Copy the page from a sibling product (sulu_product_get).';
         }
 
-        return 'Pass content.url as the path string, e.g. "/<slug>". Copy the pattern from a sibling product (sulu_product_get).';
+        $example = null !== $title && '' !== \trim($title)
+            ? \sprintf('"%s"', $this->generateUrl($title, $locale, $resourceId))
+            : 'the pattern of a sibling product';
+
+        return \sprintf('Pass content.url as the path string, e.g. %s. Copy the pattern from a sibling product (sulu_product_get).', $example);
     }
 
-    public function warning(): string
+    /**
+     * @param array<string, mixed> $content the normalized content, its title makes the example
+     */
+    public function warning(array $content, string $locale, ?string $resourceId = null): string
     {
-        return 'The product has no url, so it has no route and no page on the website. Set the url with sulu_product_update before publishing. ' . $this->instruction();
+        $title = $content['title'] ?? null;
+
+        return 'The product has no url, so it has no route and no page on the website. Set the url with sulu_product_update before publishing. ' . $this->instruction(\is_string($title) ? $title : null, $locale, $resourceId);
+    }
+
+    private function generateUrl(string $title, string $locale, ?string $resourceId): string
+    {
+        $routeSchema = $this->routeParams['route_schema'] ?? null;
+
+        return $this->resourceLocatorGenerator->generate(new ResourceLocatorRequest(
+            ['title' => $title],
+            $locale,
+            null,
+            ProductInterface::RESOURCE_KEY,
+            $resourceId,
+            null,
+            null,
+            \is_string($routeSchema) ? $routeSchema : null,
+        ));
     }
 
     /**

@@ -83,7 +83,7 @@ final readonly class ProductCompletenessChecker
         }
 
         if (!$withVariants && !self::hasUrl($normalized)) {
-            $recommendations[] = 'No url. ' . $this->urlHelper->instruction();
+            $recommendations[] = 'No url. ' . $this->urlHelper->instruction(self::titleOf($normalized), $locale, $product->getUuid());
         }
 
         if (self::isEmpty($normalized['excerptCategories'] ?? null)) {
@@ -213,6 +213,14 @@ final readonly class ProductCompletenessChecker
             $field,
             $multiple ? '{"ids": [<mediaId>, …]}' : '{"id": <mediaId>}',
         );
+    }
+
+    /**
+     * @param array<string, mixed> $normalized
+     */
+    private static function titleOf(array $normalized): ?string
+    {
+        return \is_string($normalized['title'] ?? null) ? $normalized['title'] : null;
     }
 
     private static function isEmpty(mixed $value): bool

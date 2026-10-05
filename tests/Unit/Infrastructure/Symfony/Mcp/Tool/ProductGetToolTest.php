@@ -29,6 +29,7 @@ use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductGetTool;
 use Sulu\Product\Tests\Unit\Fixture\CompletenessCheckerFactory;
+use Sulu\Product\Tests\Unit\Fixture\ProjectLocalesFactory;
 
 #[CoversClass(ProductGetTool::class)]
 final class ProductGetToolTest extends TestCase
@@ -50,6 +51,7 @@ final class ProductGetToolTest extends TestCase
             $this->productRepository->reveal(),
             $this->contentManager->reveal(),
             CompletenessCheckerFactory::create(),
+            ProjectLocalesFactory::create(),
         );
     }
 
@@ -200,5 +202,17 @@ final class ProductGetToolTest extends TestCase
         $this->assertIsString($result['error']);
         $this->assertStringContainsString('database gone', $result['error']);
         $this->assertNotEmpty($result['hint']);
+    }
+
+    public function testGetProductRejectsALocaleNoWebspaceHas(): void
+    {
+        $this->productRepository->getOneBy(Argument::cetera())->shouldNotBeCalled();
+
+        $result = $this->tool->getProduct('xx', 'product-uuid');
+
+        $this->assertIsString($result['error'] ?? null);
+        $this->assertIsString($result['hint'] ?? null);
+        $this->assertStringContainsString('"xx"', $result['error']);
+        $this->assertStringContainsString('"en", "de"', $result['hint']);
     }
 }
