@@ -197,6 +197,7 @@ class ProductAdminTest extends TestCase
             PermissionTypes::EDIT,
             PermissionTypes::DELETE,
             PermissionTypes::LIVE,
+            PermissionTypes::REVIEW,
         ], $contexts['Sulu']['Product'][ProductAdmin::SECURITY_CONTEXT]);
     }
 
