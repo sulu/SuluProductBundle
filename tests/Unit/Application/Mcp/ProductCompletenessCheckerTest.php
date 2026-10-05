@@ -85,22 +85,31 @@ final class ProductCompletenessCheckerTest extends TestCase
         $this->assertStringNotContainsString('No url.', $text);
     }
 
-    public function testAVariantOnlyGetsTheDetailsHints(): void
+    public function testAVariantGetsCodeUrlLocaleAndDetailsHintsButNoContentHints(): void
     {
         $checker = CompletenessCheckerFactory::create($this->mediaProvider(), ['en', 'de']);
         $variant = $this->productWithLocales(['en']);
         $variant->setType(ProductInterface::TYPE_VARIANT);
 
-        $recommendations = $checker->check($variant, ['title' => 'Shirt red'], 'en');
+        $text = \implode("\n", $checker->check($variant, ['title' => 'Shirt red'], 'en'));
 
-        $text = \implode("\n", $recommendations);
-        $this->assertCount(2, $recommendations);
+        $this->assertStringContainsString('No code.', $text);
+        $this->assertStringContainsString('sulu_product_variant_update', $text);
+        $this->assertStringContainsString('No url. The url of a variant is set in the admin', $text);
         $this->assertStringContainsString('details.image', $text);
         $this->assertStringContainsString('details.documents', $text);
-        $this->assertStringNotContainsString('No url.', $text);
+        $this->assertStringContainsString('No content in "de"', $text);
         $this->assertStringNotContainsString('sulu_category_list', $text);
         $this->assertStringNotContainsString('seo.', $text);
-        $this->assertStringNotContainsString('"de"', $text);
+    }
+
+    public function testACompleteVariantGetsNoCodeOrUrlHint(): void
+    {
+        $checker = CompletenessCheckerFactory::create(null, ['en']);
+        $variant = $this->productWithLocales(['en']);
+        $variant->setType(ProductInterface::TYPE_VARIANT);
+
+        $this->assertSame([], $checker->check($variant, ['code' => 'V-1', 'url' => '/products/v-1'], 'en'));
     }
 
     public function testLocalesFromTheUnlocalizedDimensionCountAsContent(): void

@@ -47,13 +47,29 @@ final readonly class ProductCompletenessChecker
     {
         $recommendations = [];
 
-        // A variant has no content, url, category, tag or SEO of its own. Only its details can be set.
+        // A variant has its own code, url and locales, but no content, category, tag or SEO. Its details are set with sulu_product_variant_update.
         if ($product->isType(ProductInterface::TYPE_VARIANT)) {
+            if (self::isEmpty($normalized['code'] ?? null)) {
+                $recommendations[] = 'No code. Pass code to sulu_product_variant_update with the SKU from the datasheet. If there is none, derive one that follows the pattern of the codes of the other variants and is not taken yet.';
+            }
+
+            if (!self::hasUrl($normalized)) {
+                $recommendations[] = 'No url. The url of a variant is set in the admin, because the variant tools have no url parameter.';
+            }
+
             $details = \is_array($normalized['details'] ?? null) ? $normalized['details'] : [];
             foreach ($this->mediaFields(ProductInterface::FORM_KEY, 'details', $locale) as $field => $multiple) {
                 if (self::isEmptyMedia($details[$field] ?? null)) {
                     $recommendations[] = self::mediaRecommendation('details', $field, $multiple);
                 }
+            }
+
+            $missingLocales = $this->missingLocales($product, $locale);
+            if ([] !== $missingLocales) {
+                $recommendations[] = \sprintf(
+                    'No content in %s. Call sulu_product_variant_update with each of these locales and pass the title.',
+                    \implode(', ', \array_map(static fn (string $missing): string => '"' . $missing . '"', $missingLocales)),
+                );
             }
 
             return $recommendations;
