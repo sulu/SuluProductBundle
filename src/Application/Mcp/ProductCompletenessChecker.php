@@ -71,11 +71,11 @@ final readonly class ProductCompletenessChecker
         }
 
         if (self::isEmpty($normalized['excerptCategories'] ?? null)) {
-            $recommendations[] = 'No categories. Pass excerpt.excerptCategories with category ids, list them with sulu_category_list.';
+            $recommendations[] = 'No categories. Pick the fitting ones from sulu_category_list and pass their ids as excerpt.excerptCategories. They do not have to come from the source.';
         }
 
         if (self::isEmpty($normalized['excerptTags'] ?? null)) {
-            $recommendations[] = 'No tags. Pass excerpt.excerptTags with tag ids, list them with sulu_tag_list.';
+            $recommendations[] = 'No tags. Pick the fitting ones from sulu_tag_list and pass their ids as excerpt.excerptTags. They do not have to come from the source.';
         }
 
         $seo = \is_array($normalized['seo'] ?? null) ? $normalized['seo'] : [];
