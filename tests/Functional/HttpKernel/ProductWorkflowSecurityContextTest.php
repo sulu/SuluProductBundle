@@ -30,8 +30,8 @@ class ProductWorkflowSecurityContextTest extends SuluTestCase
     }
 
     /**
-     * Without a security context on the resource no workflow transition of a product can be authorized:
-     * the request list answers 400 and a publish without the live permission fails with a 500.
+     * The workflow resolver returns the product security context for the product resource. Without the
+     * context on the resource, a publish needs no permission: view, add and edit are enough.
      */
     public function testAProductWorkflowTransitionIsAuthorizedAgainstTheProductContext(): void
     {
