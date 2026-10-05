@@ -422,6 +422,31 @@ final class ProductCreateToolTest extends TestCase
         $this->assertSame(['accessory' => ['pot-uuid', 'belt-uuid'], 'alternative' => []], $data['associations'] ?? null);
     }
 
+    public function testCreateProductResolvesAssociationsGivenInContent(): void
+    {
+        $captured = $this->captureMessage(new Product('new-uuid'));
+
+        $result = $this->toolWithContentMetadata()->createProduct('en', 'family-uuid', 'Shirt', content: ['associations' => ['accessory' => ['BELT-1']]]);
+
+        $this->assertTrue($result['success']);
+        $message = $captured();
+        $this->assertInstanceOf(CreateProductMessage::class, $message);
+        /** @var array<string, mixed> $data */
+        $data = $message->getData();
+        $this->assertSame(['accessory' => ['belt-uuid']], $data['associations'] ?? null);
+    }
+
+    public function testCreateProductRejectsAnUnknownTargetGivenInContent(): void
+    {
+        $this->messageBus->dispatch(Argument::cetera())->shouldNotBeCalled();
+
+        $result = $this->toolWithContentMetadata()->createProduct('en', 'family-uuid', 'Shirt', content: ['associations' => ['accessory' => ['missing']]]);
+
+        $this->assertArrayNotHasKey('success', $result);
+        $this->assertIsString($result['error']);
+        $this->assertStringContainsString('missing', $result['error']);
+    }
+
     public function testCreateProductRejectsAnUnknownAssociationType(): void
     {
         $this->messageBus->dispatch(Argument::cetera())->shouldNotBeCalled();

@@ -467,6 +467,48 @@ final class ProductUpdateToolTest extends TestCase
         $this->assertSame(['accessory' => ['pot-uuid', 'belt-uuid'], 'alternative' => ['alt-uuid']], $data['associations'] ?? null);
     }
 
+    public function testUpdateProductResolvesAssociationsGivenInContent(): void
+    {
+        $captured = $this->givenProduct(['title' => 'Shirt']);
+
+        $result = $this->tool->updateProduct('uuid-1', 'en', content: ['associations' => ['accessory' => ['BELT-1']]]);
+
+        $this->assertTrue($result['success']);
+        $message = $captured();
+        $this->assertInstanceOf(ModifyProductMessage::class, $message);
+        /** @var array<string, mixed> $data */
+        $data = $message->getData();
+        $this->assertSame(['accessory' => ['belt-uuid']], $data['associations'] ?? null);
+    }
+
+    public function testUpdateProductRejectsAVariantTargetGivenInContent(): void
+    {
+        $this->givenProduct(['title' => 'Shirt']);
+        $variant = new Product('variant-uuid');
+        $variant->setType(ProductInterface::TYPE_VARIANT);
+        $this->productRepository->findOneBy(['uuid' => 'variant-uuid'])->willReturn($variant);
+        $this->messageBus->dispatch(Argument::cetera())->shouldNotBeCalled();
+
+        $result = $this->tool->updateProduct('uuid-1', 'en', content: ['associations' => ['accessory' => ['variant-uuid']]]);
+
+        $this->assertArrayNotHasKey('success', $result);
+        $this->assertIsString($result['error']);
+        $this->assertStringContainsString('variant', $result['error']);
+    }
+
+    public function testTheAssociationsParameterWinsOverTheOneInContent(): void
+    {
+        $captured = $this->givenProduct(['title' => 'Shirt']);
+
+        $this->tool->updateProduct('uuid-1', 'en', content: ['associations' => ['accessory' => ['BELT-1']]], associations: ['alternative' => ['pot-uuid']]);
+
+        $message = $captured();
+        $this->assertInstanceOf(ModifyProductMessage::class, $message);
+        /** @var array<string, mixed> $data */
+        $data = $message->getData();
+        $this->assertSame(['alternative' => ['pot-uuid']], $data['associations'] ?? null);
+    }
+
     public function testUpdateProductClearsAnAssociationTypeWithAnEmptyList(): void
     {
         $captured = $this->givenProduct(['associations' => ['accessory' => ['old-uuid']]]);
