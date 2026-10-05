@@ -1555,6 +1555,8 @@ final class SuluProductBundle extends AbstractBundle
                                 'list' => 'sulu_product.get_products',
                                 'detail' => 'sulu_product.get_product',
                             ],
+                            // Workflow transitions and their requests are authorized against it.
+                            'security_context' => ProductAdmin::SECURITY_CONTEXT,
                         ],
                         ProductInterface::LIST_KEY_VERSIONS => [
                             'routes' => [
