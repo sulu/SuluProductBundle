@@ -48,37 +48,48 @@ final readonly class ProductUrlHelper
 
     /**
      * How to pass the url, in the words of the configured route type. The example is what the route
-     * generator of the admin makes of the title: it follows the route_schema and is not taken yet.
+     * generator of the admin makes of the content: it follows the route_schema, reads the same fields
+     * and is not taken yet.
+     *
+     * @param array<string, mixed> $content the normalized content of the product
      */
-    public function instruction(?string $title = null, string $locale = 'en', ?string $resourceId = null): string
+    public function instruction(array $content = [], string $locale = 'en', ?string $resourceId = null): string
     {
         if ($this->isPageBased()) {
             return 'Pass content.url as {"page": {"uuid": "<page uuid>", "path": "<page path>"}, "suffix": "/<slug>"}. Copy the page from a sibling product (sulu_product_get).';
         }
 
-        $example = null !== $title && '' !== \trim($title)
-            ? \sprintf('"%s"', $this->generateUrl($title, $locale, $resourceId))
+        $parts = [];
+        foreach ($content as $key => $value) {
+            if (\is_string($value) && '' !== \trim($value)) {
+                $parts[$key] = $value;
+            }
+        }
+
+        $example = [] !== $parts
+            ? \sprintf('"%s"', $this->generateUrl($parts, $locale, $resourceId))
             : 'the pattern of a sibling product';
 
         return \sprintf('Pass content.url as the path string, e.g. %s. Copy the pattern from a sibling product (sulu_product_get).', $example);
     }
 
     /**
-     * @param array<string, mixed> $content the normalized content, its title makes the example
+     * @param array<string, mixed> $content the normalized content, it makes the example
      */
     public function warning(array $content, string $locale, ?string $resourceId = null): string
     {
-        $title = $content['title'] ?? null;
-
-        return 'The product has no url, so it has no route and no page on the website. Set the url with sulu_product_update before publishing. ' . $this->instruction(\is_string($title) ? $title : null, $locale, $resourceId);
+        return 'The product has no url, so it has no route and no page on the website. Set the url with sulu_product_update before publishing. ' . $this->instruction($content, $locale, $resourceId);
     }
 
-    private function generateUrl(string $title, string $locale, ?string $resourceId): string
+    /**
+     * @param array<string, string> $parts
+     */
+    private function generateUrl(array $parts, string $locale, ?string $resourceId): string
     {
         $routeSchema = $this->routeParams['route_schema'] ?? null;
 
         return $this->resourceLocatorGenerator->generate(new ResourceLocatorRequest(
-            ['title' => $title],
+            $parts,
             $locale,
             null,
             ProductInterface::RESOURCE_KEY,

@@ -41,7 +41,7 @@ final class ProductUrlHelperTest extends TestCase
 
     public function testTheExampleFollowsTheRouteSchema(): void
     {
-        $instruction = ProductUrlHelperFactory::create('route')->instruction('Dup Check', 'en');
+        $instruction = ProductUrlHelperFactory::create('route')->instruction(['title' => 'Dup Check'], 'en');
 
         $this->assertStringContainsString('"/products/dup-check"', $instruction);
     }
@@ -55,9 +55,16 @@ final class ProductUrlHelperTest extends TestCase
 
     public function testTheExampleUsesTheSlugOfTheAdmin(): void
     {
-        $instruction = ProductUrlHelperFactory::create('route')->instruction('Hemd für Männer', 'de');
+        $instruction = ProductUrlHelperFactory::create('route')->instruction(['title' => 'Hemd für Männer'], 'de');
 
         $this->assertStringContainsString('"/products/hemd-fuer-maenner"', $instruction);
+    }
+
+    public function testTheExampleReadsEveryFieldTheRouteSchemaReads(): void
+    {
+        $helper = ProductUrlHelperFactory::create('route', [], "/shop/{object['code']}-{object['title']}");
+
+        $this->assertStringContainsString('"/shop/sch-3-probe"', $helper->warning(['title' => 'Probe', 'code' => 'SCH-3', 'excerpt' => ['x' => 'y']], 'en'));
     }
 
     public function testAWarningWithATitleShowsTheExample(): void
@@ -69,7 +76,7 @@ final class ProductUrlHelperTest extends TestCase
     public function testWithoutATitleTheExampleIsTheSiblingPattern(): void
     {
         $this->assertStringContainsString('e.g. the pattern of a sibling product', ProductUrlHelperFactory::create('route')->instruction());
-        $this->assertStringContainsString('e.g. the pattern of a sibling product', ProductUrlHelperFactory::create('route')->instruction('  '));
+        $this->assertStringContainsString('e.g. the pattern of a sibling product', ProductUrlHelperFactory::create('route')->instruction(['title' => '  ', 'code' => 5]));
     }
 
     public function testATitleWithoutASlugLeavesTheUrlWithoutASuffix(): void

@@ -31,7 +31,7 @@ final class ProductUrlHelperFactory
     /**
      * @param list<string> $takenSlugs routes that exist already
      */
-    public static function create(string $routeType = 'page_tree_route', array $takenSlugs = []): ProductUrlHelper
+    public static function create(string $routeType = 'page_tree_route', array $takenSlugs = [], string $routeSchema = "/products/{implode('-', object)}"): ProductUrlHelper
     {
         $prophet = new Prophet();
         $pathCleanup = new PathCleanup(new AsciiSlugger(), []);
@@ -49,7 +49,7 @@ final class ProductUrlHelperFactory
 
         return new ProductUrlHelper(
             $routeType,
-            ['route_schema' => "/products/{implode('-', object)}"],
+            ['route_schema' => $routeSchema],
             $pathCleanup,
             $generator,
         );
