@@ -15,6 +15,7 @@ namespace Sulu\Product\Tests\Functional\Integration;
 
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Depends;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Content\Tests\Functional\Traits\CreateMediaTrait;
@@ -84,6 +85,35 @@ class ProductFamilyControllerTest extends SuluTestCase
         $this->assertNotNull($item['created']);
         $this->assertArrayHasKey('changed', $item);
         $this->assertNotNull($item['changed']);
+    }
+
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function provideInvalidKeys(): iterable
+    {
+        yield 'empty' => ['  ', 'ProductFamily key is required.'];
+        yield 'too long' => [\str_repeat('ä', 256), 'ProductFamily key must not exceed 255 characters.'];
+    }
+
+    #[DataProvider('provideInvalidKeys')]
+    public function testPostRejectsAnInvalidKey(string $key, string $detail): void
+    {
+        $this->client->request(
+            'POST',
+            '/admin/api/product-families.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode(['locale' => 'en', 'name' => 'Shoes', 'key' => $key]) ?: null,
+        );
+
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(400, $response);
+
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertSame($detail, $data['detail']);
     }
 
     public function testPost(): string

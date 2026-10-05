@@ -13,12 +13,17 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Tests\Functional\Repository;
 
+use Doctrine\Bundle\DoctrineBundle\Middleware\BacktraceDebugDataHolder;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Product\Domain\Exception\AttributeNotFoundException;
 use Sulu\Product\Domain\Model\AttributeGroupInterface;
+use Sulu\Product\Domain\Model\AttributeGroupTranslation;
 use Sulu\Product\Domain\Model\AttributeInterface;
+use Sulu\Product\Domain\Model\AttributeOption;
+use Sulu\Product\Domain\Model\AttributeOptionInterface;
+use Sulu\Product\Domain\Model\AttributeOptionTranslation;
 use Sulu\Product\Domain\Model\AttributeTranslation;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
@@ -396,12 +401,12 @@ class AttributeRepositoryTest extends SuluTestCase
     {
         $group = $this->createGroup();
 
-        $a = $this->repository->create($group);
+        $a = $this->repository->createNew($group);
         $a->setKey('findby-a');
         $a->setType(AttributeInterface::TYPE_TEXT);
         $this->repository->save($a);
 
-        $b = $this->repository->create($group);
+        $b = $this->repository->createNew($group);
         $b->setKey('findby-b');
         $b->setType(AttributeInterface::TYPE_TEXT);
         $this->repository->save($b);
@@ -420,12 +425,12 @@ class AttributeRepositoryTest extends SuluTestCase
     {
         $group = $this->createGroup();
 
-        $a = $this->repository->create($group);
+        $a = $this->repository->createNew($group);
         $a->setKey('findby-key-match');
         $a->setType(AttributeInterface::TYPE_TEXT);
         $this->repository->save($a);
 
-        $b = $this->repository->create($group);
+        $b = $this->repository->createNew($group);
         $b->setKey('findby-key-other');
         $b->setType(AttributeInterface::TYPE_TEXT);
         $this->repository->save($b);
@@ -470,5 +475,57 @@ class AttributeRepositoryTest extends SuluTestCase
 
         $this->assertSame(2, $this->repository->countBy(['group' => $group]));
         $this->assertSame(1, $this->repository->countBy(['group' => $other]));
+    }
+
+    public function testFindByWithSelectsLoadsTranslationsGroupsAndOptionsInThreeQueries(): void
+    {
+        foreach (['first', 'second'] as $groupName) {
+            $group = $this->groupRepository->createNew();
+            $group->addTranslation(new AttributeGroupTranslation($group, 'en', $groupName));
+            $this->groupRepository->save($group);
+
+            foreach (['colour', 'size'] as $key) {
+                $attribute = $this->repository->createNew($group);
+                $attribute->setKey($groupName . '-' . $key);
+                $attribute->setType(AttributeInterface::TYPE_OPTIONS);
+                $attribute->addTranslation(new AttributeTranslation($attribute, 'en', $key));
+                $option = new AttributeOption($attribute, 'a');
+                $option->addTranslation(new AttributeOptionTranslation($option, 'en', 'A'));
+                $attribute->addOption($option);
+                $this->repository->save($attribute);
+            }
+        }
+
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        /** @var BacktraceDebugDataHolder $debugDataHolder */
+        $debugDataHolder = self::getContainer()->get('doctrine.debug_data_holder');
+        $debugDataHolder->reset();
+
+        $attributes = $this->repository->findBy(selects: [
+            AttributeRepositoryInterface::SELECT_ATTRIBUTE_TRANSLATIONS => true,
+            AttributeRepositoryInterface::SELECT_ATTRIBUTE_GROUP => true,
+            AttributeRepositoryInterface::SELECT_ATTRIBUTE_OPTIONS => true,
+        ]);
+
+        $names = [];
+        foreach ($attributes as $attribute) {
+            $names[] = \implode('/', [
+                $attribute->getGroup()->getTranslation('en')?->getName(),
+                $attribute->getTranslation('en')?->getName(),
+                ...\array_map(
+                    static fn (AttributeOptionInterface $option): ?string => $option->getTranslation('en')?->getName(),
+                    $attribute->getOptions(),
+                ),
+            ]);
+        }
+
+        \sort($names);
+        $this->assertSame(['first/colour/A', 'first/size/A', 'second/colour/A', 'second/size/A'], $names);
+
+        /** @var list<array{sql: string}> $queries */
+        $queries = $debugDataHolder->getData()['default'] ?? [];
+        $this->assertCount(3, $queries, \implode("\n", \array_column($queries, 'sql')));
     }
 }

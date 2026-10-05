@@ -23,9 +23,18 @@ use Sulu\Product\Domain\Model\AttributeInterface;
  *     key?: string,
  *     externalIdentifier?: string,
  * }
+ * @phpstan-type AttributeRepositorySelects array{
+ *     with-attribute-translations?: bool,
+ *     with-attribute-group?: bool,
+ *     with-attribute-options?: bool,
+ * }
  */
 interface AttributeRepositoryInterface
 {
+    public const SELECT_ATTRIBUTE_TRANSLATIONS = 'with-attribute-translations';
+    public const SELECT_ATTRIBUTE_GROUP = 'with-attribute-group';
+    public const SELECT_ATTRIBUTE_OPTIONS = 'with-attribute-options';
+
     public function createNew(AttributeGroupInterface $group, ?string $uuid = null): AttributeInterface;
 
     /**
@@ -35,10 +44,11 @@ interface AttributeRepositoryInterface
 
     /**
      * @param AttributeRepositoryFilters $filters
+     * @param AttributeRepositorySelects $selects
      *
      * @return list<AttributeInterface>
      */
-    public function findBy(array $filters = []): array;
+    public function findBy(array $filters = [], array $selects = []): array;
 
     /**
      * @param AttributeRepositoryFilters $filters

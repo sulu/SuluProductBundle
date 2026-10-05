@@ -20,7 +20,7 @@ use Sulu\Component\Security\Authorization\PermissionTypes;
 use Sulu\Mcp\Domain\Security\PermissionRequirement;
 use Sulu\Mcp\Domain\Security\RequiresPermission;
 use Sulu\Product\Domain\Model\AttributeInterface;
-use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
+use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeAdmin;
 
 /**
@@ -32,7 +32,7 @@ final class AttributeListTool
     private const ALLOWED_SORT_ORDERS = ['asc', 'desc'];
 
     public function __construct(
-        private readonly AttributeGroupRepositoryInterface $attributeGroupRepository,
+        private readonly AttributeRepositoryInterface $attributeRepository,
     ) {
     }
 
@@ -42,7 +42,7 @@ final class AttributeListTool
     #[McpTool(
         name: 'sulu_attribute_list',
         title: 'List Product Attributes',
-        description: 'List product attributes, paginated. Each entry names its attribute group. The "id" of each attribute is the key to use in the "attributes" map of sulu_product_create, sulu_product_update and the variant tools, e.g. an attribute with id 12 is written as {"12": "red"}. "type" tells you what a value looks like: "text" a string, "number" a number, "date" an ISO-8601 date, "options" one of the listed option keys. Which attributes actually apply to a given product, and which are required or variant axes, depends on its family. See sulu_product_family_list.',
+        description: 'List product attributes, paginated. Each entry names its attribute group. The "id" of each attribute is its UUID and the key to use in the "attributes" map of sulu_product_create, sulu_product_update and the variant tools, e.g. {"<id>": "red"}. "type" tells you what a value looks like: "text" a string, "number" a number, "date" an ISO-8601 date, "options" one of the listed option keys. Which attributes actually apply to a given product, and which are required or variant axes, depends on its family. See sulu_product_family_list.',
         annotations: new ToolAnnotations(readOnlyHint: true, openWorldHint: false),
     )]
     #[RequiresPermission(requirements: [
@@ -68,21 +68,16 @@ final class AttributeListTool
         try {
             $attributes = [];
 
-            $groups = $this->attributeGroupRepository->findBy(selects: [
-                AttributeGroupRepositoryInterface::SELECT_GROUP_TRANSLATIONS => true,
-                AttributeGroupRepositoryInterface::SELECT_GROUP_ATTRIBUTES => true,
-                AttributeGroupRepositoryInterface::SELECT_GROUP_ATTRIBUTE_TRANSLATIONS => true,
-            ]);
-
-            foreach ($groups as $group) {
-                $groupName = $group->getTranslation($locale)?->getName();
-
-                foreach ($group->getGroupAttributes() as $groupAttribute) {
-                    $attributes[] = $this->describeAttribute($groupAttribute->getAttribute(), $locale) + [
-                        'group' => $groupName,
-                        'groupUuid' => $group->getUuid(),
-                    ];
-                }
+            foreach ($this->attributeRepository->findBy(selects: [
+                AttributeRepositoryInterface::SELECT_ATTRIBUTE_TRANSLATIONS => true,
+                AttributeRepositoryInterface::SELECT_ATTRIBUTE_GROUP => true,
+                AttributeRepositoryInterface::SELECT_ATTRIBUTE_OPTIONS => true,
+            ]) as $attribute) {
+                $group = $attribute->getGroup();
+                $attributes[] = $this->describeAttribute($attribute, $locale) + [
+                    'group' => $group->getTranslation($locale)?->getName(),
+                    'groupUuid' => $group->getUuid(),
+                ];
             }
 
             \usort($attributes, static function(array $a, array $b) use ($sortBy, $sortOrder): int {
@@ -114,7 +109,7 @@ final class AttributeListTool
     private function describeAttribute(AttributeInterface $attribute, string $locale): array
     {
         $described = [
-            'id' => $attribute->getId(),
+            'id' => $attribute->getUuid(),
             'key' => $attribute->getKey(),
             'type' => $attribute->getType(),
             'name' => $attribute->getTranslation($locale)?->getName() ?? $attribute->getKey(),

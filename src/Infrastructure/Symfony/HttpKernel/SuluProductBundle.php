@@ -68,8 +68,8 @@ use Sulu\Product\Domain\Event\ProductTranslationCopiedEvent;
 use Sulu\Product\Domain\Event\ProductTranslationRemovedEvent;
 use Sulu\Product\Domain\Event\ProductTranslationRestoredEvent;
 use Sulu\Product\Domain\Event\ProductWorkflowTransitionAppliedEvent;
-use Sulu\Product\Domain\Exception\ProductVariantParentNotFoundException;
 use Sulu\Product\Domain\Exception\ProductFamilyKeyNotUniqueException;
+use Sulu\Product\Domain\Exception\ProductVariantParentNotFoundException;
 use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
@@ -1504,19 +1504,6 @@ final class SuluProductBundle extends AbstractBundle
                 ],
             ],
         );
-        if ($builder->hasExtension('fos_rest')) {
-            $builder->prependExtensionConfig(
-                'fos_rest',
-                [
-                    'exception' => [
-                        'codes' => [
-                            ProductFamilyKeyNotUniqueException::class => 409,
-                        ],
-                    ],
-                ],
-            );
-        }
-
         if ($builder->hasExtension('sulu_admin')) {
             $builder->prependExtensionConfig(
                 'sulu_admin',
@@ -1715,6 +1702,7 @@ final class SuluProductBundle extends AbstractBundle
                 [
                     'exception' => [
                         'codes' => [
+                            ProductFamilyKeyNotUniqueException::class => 409,
                             ProductVariantParentNotFoundException::class => 409,
                         ],
                     ],

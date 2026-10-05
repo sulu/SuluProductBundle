@@ -55,6 +55,7 @@ final class ProductFamilyListToolTest extends TestCase
 
         $this->fieldDescriptorFactory->getFieldDescriptors(Argument::cetera())->willReturn([
             'id' => new DoctrineFieldDescriptor('id', 'id', 'FamilyEntity'),
+            'key' => new DoctrineFieldDescriptor('key', 'key', 'FamilyEntity'),
             'name' => new DoctrineFieldDescriptor('name', 'name', 'FamilyEntity'),
         ]);
 
@@ -76,7 +77,7 @@ final class ProductFamilyListToolTest extends TestCase
 
     public function testListFamiliesExposesAttributeFlagsThatDecideWhereAValueBelongs(): void
     {
-        $this->listBuilder->execute()->willReturn([['id' => 'family-uuid', 'name' => 'Shirts']]);
+        $this->listBuilder->execute()->willReturn([['id' => 'family-uuid', 'key' => 'shirts', 'name' => 'Shirts']]);
         $this->listBuilder->count()->willReturn(1);
 
         $this->productFamilyRepository->findOneBy(['uuid' => 'family-uuid'])->willReturn($this->family());
@@ -88,19 +89,20 @@ final class ProductFamilyListToolTest extends TestCase
         $family = $result['families'][0];
         $this->assertIsArray($family);
         $this->assertSame('family-uuid', $family['uuid']);
+        $this->assertSame('shirts', $family['key']);
         $this->assertSame('Shirts', $family['name']);
 
         $attributes = $family['attributes'];
         $this->assertIsArray($attributes);
         $this->assertCount(2, $attributes);
 
-        $byId = \array_column($attributes, null, 'attributeId');
-        $this->assertIsArray($byId[10]);
-        $this->assertTrue($byId[10]['required']);
-        $this->assertFalse($byId[10]['variantSpecific']);
-        $this->assertIsArray($byId[11]);
-        $this->assertTrue($byId[11]['variantSpecific']);
-        $this->assertSame('Colour', $byId[11]['name']);
+        $byUuid = \array_column($attributes, null, 'attributeId');
+        $this->assertIsArray($byUuid['material-uuid']);
+        $this->assertTrue($byUuid['material-uuid']['required']);
+        $this->assertFalse($byUuid['material-uuid']['variantSpecific']);
+        $this->assertIsArray($byUuid['colour-uuid']);
+        $this->assertTrue($byUuid['colour-uuid']['variantSpecific']);
+        $this->assertSame('Colour', $byUuid['colour-uuid']['name']);
     }
 
     public function testListFamiliesSetsPagingOnTheListBuilderNotFromTheRequest(): void
@@ -155,14 +157,12 @@ final class ProductFamilyListToolTest extends TestCase
 
     private function family(): ProductFamily
     {
-        $family = new ProductFamily();
-        $family->setUuid('family-uuid');
+        $family = new ProductFamily('family-uuid');
 
         $group = new AttributeGroup();
 
-        foreach ([10 => ['material', 'Material', true, false], 11 => ['colour', 'Colour', false, true]] as $id => [$key, $name, $required, $variantSpecific]) {
-            $attribute = new Attribute($group);
-            (new \ReflectionProperty($attribute, 'id'))->setValue($attribute, $id);
+        foreach (['material-uuid' => ['material', 'Material', true, false], 'colour-uuid' => ['colour', 'Colour', false, true]] as $uuid => [$key, $name, $required, $variantSpecific]) {
+            $attribute = new Attribute($group, $uuid);
             $attribute->setKey($key);
             $attribute->addTranslation(new AttributeTranslation($attribute, 'en', $name));
 
@@ -187,7 +187,7 @@ final class ProductFamilyListToolTest extends TestCase
         $this->listBuilder->execute()->willReturn([
             'not-a-row',
             ['name' => 'Row without an id'],
-            ['id' => 'gone', 'name' => 'Gone'],
+            ['id' => 'gone', 'key' => 'gone', 'name' => 'Gone'],
         ]);
         $this->listBuilder->count()->willReturn(3);
 
@@ -196,7 +196,7 @@ final class ProductFamilyListToolTest extends TestCase
         $result = $this->tool->listProductFamilies('en');
 
         $this->assertSame(
-            [['uuid' => 'gone', 'name' => 'Gone', 'attributes' => []]],
+            [['uuid' => 'gone', 'key' => 'gone', 'name' => 'Gone', 'attributes' => []]],
             $result['families'],
         );
     }

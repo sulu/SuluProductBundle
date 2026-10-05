@@ -47,19 +47,23 @@ final class GetAttributes
     {
         $group = null !== $group ? \trim($group) : null;
 
-        $attributes = $this->attributeRepository->findBy();
+        $attributes = $this->attributeRepository->findBy(selects: [
+            AttributeRepositoryInterface::SELECT_ATTRIBUTE_TRANSLATIONS => true,
+            AttributeRepositoryInterface::SELECT_ATTRIBUTE_GROUP => true,
+            AttributeRepositoryInterface::SELECT_ATTRIBUTE_OPTIONS => true,
+        ]);
 
         \usort(
             $attributes,
-            static fn (AttributeInterface $a, AttributeInterface $b): int => [$a->getGroup()->getId(), $a->getPosition()]
-                <=> [$b->getGroup()->getId(), $b->getPosition()],
+            static fn (AttributeInterface $a, AttributeInterface $b): int => [$a->getGroup()->getCreated(), $a->getGroup()->getUuid(), $a->getPosition()]
+                <=> [$b->getGroup()->getCreated(), $b->getGroup()->getUuid(), $b->getPosition()],
         );
 
         $results = [];
 
         foreach ($attributes as $attribute) {
             $groupTranslation = $attribute->getGroup()->getTranslation($locale);
-            $groupName = $groupTranslation?->getName() ?? $attribute->getGroup()->getUuid() ?? '';
+            $groupName = $groupTranslation?->getName() ?? $attribute->getGroup()->getUuid();
 
             if (null !== $group && '' !== $group && !\str_contains(\mb_strtolower($groupName), \mb_strtolower($group))) {
                 continue;

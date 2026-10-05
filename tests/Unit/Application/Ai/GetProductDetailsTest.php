@@ -168,8 +168,7 @@ class GetProductDetailsTest extends TestCase
     {
         [$product, , $unlocalized] = $this->buildProduct('en');
 
-        $group = new AttributeGroup();
-        $group->setUuid('group-uuid');
+        $group = new AttributeGroup('group-uuid');
 
         $attribute = new Attribute($group);
         $attribute->setKey('material');

@@ -68,9 +68,10 @@ class ProductAttributeTwigExtensionTest extends TestCase
         return $content;
     }
 
-    private function createGroup(string $uuid, string $name): AttributeGroup
+    private function createGroup(string $uuid, string $name, string $created = '2026-01-01'): AttributeGroup
     {
         $group = new AttributeGroup($uuid);
+        $group->setCreated(new \DateTimeImmutable($created));
         $group->addTranslation(new AttributeGroupTranslation($group, 'de', $name));
 
         return $group;
@@ -119,7 +120,9 @@ class ProductAttributeTwigExtensionTest extends TestCase
     {
         $content = new ProductDimensionContent(new Product());
         foreach ($values as $key => $text) {
-            $attribute = new Attribute(new AttributeGroup());
+            $group = new AttributeGroup();
+            $group->setCreated(new \DateTimeImmutable('2026-01-01'));
+            $attribute = new Attribute($group);
             $attribute->setKey($key);
             $attribute->setType(AttributeInterface::TYPE_TEXT);
 
@@ -148,12 +151,12 @@ class ProductAttributeTwigExtensionTest extends TestCase
         self::assertSame(['weight'], \array_keys($groups[1]['attributes']));
     }
 
-    public function testGroupsSortByUuid(): void
+    public function testGroupsSortByCreation(): void
     {
         $content = $this->createContent();
 
-        $this->addTextValue($content, $this->createAttribute('a', 'A', $this->createGroup('0198c3e2-0000-7000-8000-00000000000b', 'Later'), 1), 'x');
-        $this->addTextValue($content, $this->createAttribute('b', 'B', $this->createGroup('0198c3e2-0000-7000-8000-00000000000a', 'Earlier'), 1), 'y');
+        $this->addTextValue($content, $this->createAttribute('a', 'A', $this->createGroup('0198c3e2-0000-7000-8000-00000000000a', 'Later', '2026-01-02'), 1), 'x');
+        $this->addTextValue($content, $this->createAttribute('b', 'B', $this->createGroup('0198c3e2-0000-7000-8000-00000000000b', 'Earlier', '2026-01-01'), 1), 'y');
 
         $groups = $this->extension()->groupAttributes($content->getAttributes(), 'de');
 

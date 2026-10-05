@@ -729,7 +729,7 @@ class ProductRepositoryTest extends SuluTestCase
         /** @var AttributeGroupRepositoryInterface $attributeGroupRepository */
         $attributeGroupRepository = $container->get(AttributeGroupRepositoryInterface::class);
 
-        $group = $attributeGroupRepository->create();
+        $group = $attributeGroupRepository->createNew();
         $attributeGroupRepository->save($group);
 
         $attribute = new Attribute($group);
@@ -747,7 +747,7 @@ class ProductRepositoryTest extends SuluTestCase
         $this->createLiveProductWithTextAttributeValue('AV-2', 'material-other', 'Steel');
         $this->entityManager->clear();
 
-        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getId());
+        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getUuid());
         $this->assertNotNull($attribute);
 
         $products = \iterator_to_array(
@@ -780,7 +780,7 @@ class ProductRepositoryTest extends SuluTestCase
         $this->entityManager->flush();
         $this->entityManager->clear();
 
-        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getId());
+        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getUuid());
         $this->assertNotNull($attribute);
 
         $products = \iterator_to_array(
@@ -815,7 +815,7 @@ class ProductRepositoryTest extends SuluTestCase
         $this->entityManager->flush();
         $this->entityManager->clear();
 
-        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getId());
+        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getUuid());
         $this->assertNotNull($attribute);
 
         $products = \iterator_to_array(
@@ -854,8 +854,8 @@ class ProductRepositoryTest extends SuluTestCase
         $this->entityManager->flush();
         $this->entityManager->clear();
 
-        $material = $this->entityManager->getRepository(Attribute::class)->find($material->getId());
-        $finish = $this->entityManager->getRepository(Attribute::class)->find($finish->getId());
+        $material = $this->entityManager->getRepository(Attribute::class)->find($material->getUuid());
+        $finish = $this->entityManager->getRepository(Attribute::class)->find($finish->getUuid());
         $this->assertNotNull($material);
         $this->assertNotNull($finish);
 
@@ -901,8 +901,8 @@ class ProductRepositoryTest extends SuluTestCase
         $this->entityManager->flush();
         $this->entityManager->clear();
 
-        $material = $this->entityManager->getRepository(Attribute::class)->find($material->getId());
-        $finish = $this->entityManager->getRepository(Attribute::class)->find($finish->getId());
+        $material = $this->entityManager->getRepository(Attribute::class)->find($material->getUuid());
+        $finish = $this->entityManager->getRepository(Attribute::class)->find($finish->getUuid());
         $this->assertNotNull($material);
         $this->assertNotNull($finish);
 
@@ -927,7 +927,7 @@ class ProductRepositoryTest extends SuluTestCase
         [, $attribute] = $this->createLiveProductWithTextAttributeValue('AV-NOMATCH', 'material-nomatch', 'Brass');
         $this->entityManager->clear();
 
-        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getId());
+        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getUuid());
         $this->assertNotNull($attribute);
 
         $products = \iterator_to_array(
@@ -1581,7 +1581,7 @@ class ProductRepositoryTest extends SuluTestCase
         [$product, $attribute] = $this->createProductWhoseDraftDiffersFromLive('LIVE-AV', 'DRAFT-AV', 'Brass', 'Steel', 'material');
         $this->entityManager->clear();
 
-        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getId());
+        $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getUuid());
         $this->assertNotNull($attribute);
 
         $byDraftValue = \iterator_to_array($this->repository->findBy([
