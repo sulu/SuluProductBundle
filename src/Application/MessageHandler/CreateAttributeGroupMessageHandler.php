@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Application\MessageHandler;
 
+use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
 use Sulu\Product\Application\Message\CreateAttributeGroupMessage;
+use Sulu\Product\Domain\Event\AttributeGroupCreatedEvent;
 use Sulu\Product\Domain\Model\AttributeGroupInterface;
 use Sulu\Product\Domain\Model\AttributeGroupTranslation;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
@@ -22,6 +24,7 @@ final class CreateAttributeGroupMessageHandler
 {
     public function __construct(
         private AttributeGroupRepositoryInterface $attributeGroupRepository,
+        private DomainEventCollectorInterface $domainEventCollector,
     ) {
     }
 
@@ -39,6 +42,10 @@ final class CreateAttributeGroupMessageHandler
         $group->addTranslation($translation);
 
         $this->attributeGroupRepository->save($group);
+
+        $this->domainEventCollector->collect(
+            new AttributeGroupCreatedEvent($group, $message->getLocale(), $message->getData()),
+        );
 
         return $group;
     }

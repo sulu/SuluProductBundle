@@ -29,6 +29,9 @@ interface AttributeOptionInterface
 
     public function getTranslation(string $locale): ?AttributeOptionTranslationInterface;
 
+    /** @return iterable<AttributeOptionTranslationInterface> */
+    public function getTranslations(): iterable;
+
     public function addTranslation(AttributeOptionTranslationInterface $translation): self;
 
     public function removeTranslation(AttributeOptionTranslationInterface $translation): self;

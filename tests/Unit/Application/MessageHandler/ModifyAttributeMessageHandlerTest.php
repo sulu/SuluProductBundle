@@ -14,11 +14,14 @@ declare(strict_types=1);
 namespace Sulu\Product\Tests\Unit\Application\MessageHandler;
 
 use PHPUnit\Framework\TestCase;
+use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
+use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
 use Sulu\Product\Application\Mapper\AttributeMapper;
 use Sulu\Product\Application\Message\ModifyAttributeMessage;
 use Sulu\Product\Application\MessageHandler\ModifyAttributeMessageHandler;
+use Sulu\Product\Domain\Event\AttributeModifiedEvent;
 use Sulu\Product\Domain\Exception\AttributeNotFoundException;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
@@ -34,8 +37,12 @@ class ModifyAttributeMessageHandlerTest extends TestCase
     /** @var ObjectProphecy<AttributeRepositoryInterface> */
     private ObjectProphecy $attributeRepository;
 
+    /** @var ObjectProphecy<DomainEventCollectorInterface> */
+    private ObjectProphecy $domainEventCollector;
+
     protected function setUp(): void
     {
+        $this->domainEventCollector = $this->prophesize(DomainEventCollectorInterface::class);
         $this->attributeRepository = $this->prophesize(AttributeRepositoryInterface::class);
     }
 
@@ -44,6 +51,7 @@ class ModifyAttributeMessageHandlerTest extends TestCase
         return new ModifyAttributeMessageHandler(
             $this->attributeRepository->reveal(),
             [new AttributeMapper($this->attributeRepository->reveal())],
+            $this->domainEventCollector->reveal(),
         );
     }
 
@@ -61,6 +69,8 @@ class ModifyAttributeMessageHandlerTest extends TestCase
 
     public function testModifyAttributeUpdatesKeyButNotType(): void
     {
+        $this->domainEventCollector->collect(Argument::type(AttributeModifiedEvent::class))->shouldBeCalledOnce();
+
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setKey('original-key');
         $attribute->setType('text');

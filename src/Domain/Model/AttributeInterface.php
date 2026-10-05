@@ -43,6 +43,9 @@ interface AttributeInterface extends AuditableInterface
 
     public function getTranslation(string $locale): ?AttributeTranslationInterface;
 
+    /** @return iterable<AttributeTranslationInterface> */
+    public function getTranslations(): iterable;
+
     public function addTranslation(AttributeTranslationInterface $translation): self;
 
     public function removeTranslation(AttributeTranslationInterface $translation): self;

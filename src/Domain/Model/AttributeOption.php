@@ -84,6 +84,11 @@ class AttributeOption implements AttributeOptionInterface
         return $translation ?: null;
     }
 
+    public function getTranslations(): iterable
+    {
+        return $this->translations;
+    }
+
     public function addTranslation(AttributeOptionTranslationInterface $translation): self
     {
         if (!$this->translations->contains($translation)) {

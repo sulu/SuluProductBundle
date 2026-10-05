@@ -137,5 +137,21 @@
     "sulu_product.product_status.available": "Verfügbar",
     "sulu_product.product_status.discontinued": "Eingestellt",
     "sulu_product.invalid_status": "Der Status \"{status}\" ist kein gültiger Produktstatus.",
-    "sulu_product.associations": "Verknüpfungen"
+    "sulu_product.associations": "Verknüpfungen",
+    "sulu_product.attribute_key_already_used": "Der Key \"{key}\" wird bereits von einem anderen Attribut verwendet.",
+    "sulu_activity.resource.attributes": "Attribut",
+    "sulu_activity.description.attributes.created": "{userFullName} hat das Attribut \"{resourceTitle}\" erstellt",
+    "sulu_activity.description.attributes.modified": "{userFullName} hat das Attribut \"{resourceTitle}\" geändert",
+    "sulu_activity.description.attributes.removed": "{userFullName} hat das Attribut \"{resourceTitle}\" gelöscht",
+    "sulu_activity.description.attributes.restored": "{userFullName} hat das Attribut \"{resourceTitle}\" wiederhergestellt",
+    "sulu_activity.resource.attribute_groups": "Attributgruppe",
+    "sulu_activity.description.attribute_groups.created": "{userFullName} hat die Attributgruppe \"{resourceTitle}\" erstellt",
+    "sulu_activity.description.attribute_groups.modified": "{userFullName} hat die Attributgruppe \"{resourceTitle}\" geändert",
+    "sulu_activity.description.attribute_groups.removed": "{userFullName} hat die Attributgruppe \"{resourceTitle}\" gelöscht",
+    "sulu_activity.description.attribute_groups.restored": "{userFullName} hat die Attributgruppe \"{resourceTitle}\" wiederhergestellt",
+    "sulu_activity.resource.product_families": "Produktfamilie",
+    "sulu_activity.description.product_families.created": "{userFullName} hat die Produktfamilie \"{resourceTitle}\" erstellt",
+    "sulu_activity.description.product_families.modified": "{userFullName} hat die Produktfamilie \"{resourceTitle}\" geändert",
+    "sulu_activity.description.product_families.removed": "{userFullName} hat die Produktfamilie \"{resourceTitle}\" gelöscht",
+    "sulu_activity.description.product_families.restored": "{userFullName} hat die Produktfamilie \"{resourceTitle}\" wiederhergestellt"
 }

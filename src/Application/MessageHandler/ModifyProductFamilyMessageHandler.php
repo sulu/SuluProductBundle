@@ -13,8 +13,10 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Application\MessageHandler;
 
+use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
 use Sulu\Product\Application\Mapper\ProductFamilyMapperInterface;
 use Sulu\Product\Application\Message\ModifyProductFamilyMessage;
+use Sulu\Product\Domain\Event\ProductFamilyModifiedEvent;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 
@@ -28,6 +30,7 @@ final class ModifyProductFamilyMessageHandler
         private ProductFamilyRepositoryInterface $productFamilyRepository,
         /** @var iterable<ProductFamilyMapperInterface> */
         private iterable $productFamilyMappers,
+        private DomainEventCollectorInterface $domainEventCollector,
     ) {
     }
 
@@ -40,6 +43,10 @@ final class ModifyProductFamilyMessageHandler
         }
 
         $this->productFamilyRepository->save($family);
+
+        $this->domainEventCollector->collect(
+            new ProductFamilyModifiedEvent($family, $message->getLocale(), $message->getData()),
+        );
 
         return $family;
     }

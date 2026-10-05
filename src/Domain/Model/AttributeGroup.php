@@ -78,6 +78,11 @@ class AttributeGroup implements AttributeGroupInterface
         return $translation ?: null;
     }
 
+    public function getTranslations(): iterable
+    {
+        return $this->translations;
+    }
+
     public function addTranslation(AttributeGroupTranslationInterface $translation): self
     {
         if (!$this->translations->contains($translation)) {

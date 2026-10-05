@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Infrastructure\Sulu\Admin;
 
+use Sulu\Bundle\ActivityBundle\Infrastructure\Sulu\Admin\View\ActivityViewBuilderFactoryInterface;
 use Sulu\Bundle\AdminBundle\Admin\Admin;
 use Sulu\Bundle\AdminBundle\Admin\Navigation\NavigationItemCollection;
 use Sulu\Bundle\AdminBundle\Admin\View\ToolbarAction;
@@ -39,6 +40,7 @@ class AttributeAdmin extends Admin
         private ViewBuilderFactoryInterface $viewBuilderFactory,
         private SecurityCheckerInterface $securityChecker,
         private LocalizationManagerInterface $localizationManager,
+        private ActivityViewBuilderFactoryInterface $activityViewBuilderFactory,
     ) {
     }
 
@@ -115,6 +117,23 @@ class AttributeAdmin extends Admin
                 ->addToolbarActions($editToolbarActions)
                 ->setParent(static::EDIT_TABS_VIEW),
         );
+
+        if ($this->activityViewBuilderFactory->hasActivityListPermission()) {
+            $insightsViewName = static::EDIT_TABS_VIEW . '.insights';
+            $viewCollection->add(
+                $this->viewBuilderFactory->createResourceTabViewBuilder($insightsViewName, '/insights')
+                    ->setResourceKey(AttributeInterface::RESOURCE_KEY)
+                    ->setTabOrder(6144)
+                    ->setTabTitle('sulu_admin.insights')
+                    ->setTitleProperty('')
+                    ->setParent(static::EDIT_TABS_VIEW),
+            );
+            $viewCollection->add(
+                $this->activityViewBuilderFactory
+                    ->createActivityListViewBuilder($insightsViewName . '.activity', '/activities', AttributeInterface::RESOURCE_KEY)
+                    ->setParent($insightsViewName),
+            );
+        }
     }
 
     public function getSecurityContexts(): array

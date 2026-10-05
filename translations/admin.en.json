@@ -137,5 +137,21 @@
     "sulu_product.product_status.available": "Available",
     "sulu_product.product_status.discontinued": "Discontinued",
     "sulu_product.invalid_status": "The status \"{status}\" is not a valid product status.",
-    "sulu_product.associations": "Associations"
+    "sulu_product.associations": "Associations",
+    "sulu_product.attribute_key_already_used": "The key \"{key}\" is already used by another attribute.",
+    "sulu_activity.resource.attributes": "Attribute",
+    "sulu_activity.description.attributes.created": "{userFullName} has created the attribute \"{resourceTitle}\"",
+    "sulu_activity.description.attributes.modified": "{userFullName} has changed the attribute \"{resourceTitle}\"",
+    "sulu_activity.description.attributes.removed": "{userFullName} has removed the attribute \"{resourceTitle}\"",
+    "sulu_activity.description.attributes.restored": "{userFullName} has restored the attribute \"{resourceTitle}\"",
+    "sulu_activity.resource.attribute_groups": "Attribute group",
+    "sulu_activity.description.attribute_groups.created": "{userFullName} has created the attribute group \"{resourceTitle}\"",
+    "sulu_activity.description.attribute_groups.modified": "{userFullName} has changed the attribute group \"{resourceTitle}\"",
+    "sulu_activity.description.attribute_groups.removed": "{userFullName} has removed the attribute group \"{resourceTitle}\"",
+    "sulu_activity.description.attribute_groups.restored": "{userFullName} has restored the attribute group \"{resourceTitle}\"",
+    "sulu_activity.resource.product_families": "Product family",
+    "sulu_activity.description.product_families.created": "{userFullName} has created the product family \"{resourceTitle}\"",
+    "sulu_activity.description.product_families.modified": "{userFullName} has changed the product family \"{resourceTitle}\"",
+    "sulu_activity.description.product_families.removed": "{userFullName} has removed the product family \"{resourceTitle}\"",
+    "sulu_activity.description.product_families.restored": "{userFullName} has restored the product family \"{resourceTitle}\""
 }

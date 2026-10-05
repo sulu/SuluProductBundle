@@ -14,10 +14,13 @@ declare(strict_types=1);
 namespace Sulu\Product\Tests\Unit\Application\MessageHandler;
 
 use PHPUnit\Framework\TestCase;
+use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
+use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
 use Sulu\Product\Application\Message\ModifyAttributeGroupMessage;
 use Sulu\Product\Application\MessageHandler\ModifyAttributeGroupMessageHandler;
+use Sulu\Product\Domain\Event\AttributeGroupModifiedEvent;
 use Sulu\Product\Domain\Exception\AttributeGroupNotFoundException;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeGroupTranslation;
@@ -30,8 +33,12 @@ class ModifyAttributeGroupMessageHandlerTest extends TestCase
     /** @var ObjectProphecy<AttributeGroupRepositoryInterface> */
     private ObjectProphecy $attributeGroupRepository;
 
+    /** @var ObjectProphecy<DomainEventCollectorInterface> */
+    private ObjectProphecy $domainEventCollector;
+
     protected function setUp(): void
     {
+        $this->domainEventCollector = $this->prophesize(DomainEventCollectorInterface::class);
         $this->attributeGroupRepository = $this->prophesize(AttributeGroupRepositoryInterface::class);
     }
 
@@ -39,6 +46,7 @@ class ModifyAttributeGroupMessageHandlerTest extends TestCase
     {
         return new ModifyAttributeGroupMessageHandler(
             $this->attributeGroupRepository->reveal(),
+            $this->domainEventCollector->reveal(),
         );
     }
 
@@ -66,6 +74,8 @@ class ModifyAttributeGroupMessageHandlerTest extends TestCase
 
     public function testModifyAttributeGroupCreatesTranslationWhenMissing(): void
     {
+        $this->domainEventCollector->collect(Argument::type(AttributeGroupModifiedEvent::class))->shouldBeCalledOnce();
+
         $group = new AttributeGroup();
 
         $this->attributeGroupRepository->getOneBy(['uuid' => 'group-uuid'])

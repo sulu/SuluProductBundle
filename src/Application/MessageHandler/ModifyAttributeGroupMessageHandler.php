@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Application\MessageHandler;
 
+use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
 use Sulu\Product\Application\Message\ModifyAttributeGroupMessage;
+use Sulu\Product\Domain\Event\AttributeGroupModifiedEvent;
 use Sulu\Product\Domain\Model\AttributeGroupInterface;
 use Sulu\Product\Domain\Model\AttributeGroupTranslation;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
@@ -22,6 +24,7 @@ final class ModifyAttributeGroupMessageHandler
 {
     public function __construct(
         private AttributeGroupRepositoryInterface $attributeGroupRepository,
+        private DomainEventCollectorInterface $domainEventCollector,
     ) {
     }
 
@@ -39,6 +42,10 @@ final class ModifyAttributeGroupMessageHandler
         $translation->setDescription($message->getDescription());
 
         $this->attributeGroupRepository->save($group);
+
+        $this->domainEventCollector->collect(
+            new AttributeGroupModifiedEvent($group, $message->getLocale(), $message->getData()),
+        );
 
         return $group;
     }

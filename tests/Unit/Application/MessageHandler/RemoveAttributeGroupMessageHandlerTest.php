@@ -14,13 +14,19 @@ declare(strict_types=1);
 namespace Sulu\Product\Tests\Unit\Application\MessageHandler;
 
 use PHPUnit\Framework\TestCase;
+use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
+use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
+use Sulu\Bundle\TrashBundle\Application\TrashManager\TrashManagerInterface;
 use Sulu\Product\Application\Message\RemoveAttributeGroupMessage;
 use Sulu\Product\Application\MessageHandler\RemoveAttributeGroupMessageHandler;
+use Sulu\Product\Domain\Event\AttributeGroupRemovedEvent;
 use Sulu\Product\Domain\Exception\AttributeGroupNotEmptyException;
 use Sulu\Product\Domain\Exception\AttributeGroupNotFoundException;
 use Sulu\Product\Domain\Model\AttributeGroup;
+use Sulu\Product\Domain\Model\AttributeGroupInterface;
+use Sulu\Product\Domain\Model\AttributeGroupTranslation;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 
@@ -34,8 +40,12 @@ class RemoveAttributeGroupMessageHandlerTest extends TestCase
     /** @var ObjectProphecy<AttributeRepositoryInterface> */
     private ObjectProphecy $attributeRepository;
 
+    /** @var ObjectProphecy<DomainEventCollectorInterface> */
+    private ObjectProphecy $domainEventCollector;
+
     protected function setUp(): void
     {
+        $this->domainEventCollector = $this->prophesize(DomainEventCollectorInterface::class);
         $this->attributeGroupRepository = $this->prophesize(AttributeGroupRepositoryInterface::class);
         $this->attributeRepository = $this->prophesize(AttributeRepositoryInterface::class);
     }
@@ -55,6 +65,7 @@ class RemoveAttributeGroupMessageHandlerTest extends TestCase
         $handler = new RemoveAttributeGroupMessageHandler(
             $this->attributeGroupRepository->reveal(),
             $this->attributeRepository->reveal(),
+            $this->domainEventCollector->reveal(),
         );
 
         ($handler)(new RemoveAttributeGroupMessage('group-uuid'));
@@ -73,6 +84,7 @@ class RemoveAttributeGroupMessageHandlerTest extends TestCase
         $handler = new RemoveAttributeGroupMessageHandler(
             $this->attributeGroupRepository->reveal(),
             $this->attributeRepository->reveal(),
+            $this->domainEventCollector->reveal(),
         );
 
         $this->expectException(AttributeGroupNotEmptyException::class);
@@ -88,10 +100,38 @@ class RemoveAttributeGroupMessageHandlerTest extends TestCase
         $handler = new RemoveAttributeGroupMessageHandler(
             $this->attributeGroupRepository->reveal(),
             $this->attributeRepository->reveal(),
+            $this->domainEventCollector->reveal(),
         );
 
         $this->expectException(AttributeGroupNotFoundException::class);
 
         ($handler)(new RemoveAttributeGroupMessage('non-existent'));
+    }
+
+    public function testRemoveAttributeGroupStoresTrashItemAndCollectsEvent(): void
+    {
+        $group = new AttributeGroup();
+        $group->setDefaultLocale('en');
+        $group->addTranslation(new AttributeGroupTranslation($group, 'en', 'Physical'));
+        $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid'])->willReturn($group);
+        $this->attributeRepository->countBy(['group' => $group])->willReturn(0);
+
+        $trashManager = $this->prophesize(TrashManagerInterface::class);
+        $trashManager->store(AttributeGroupInterface::RESOURCE_KEY, $group)->shouldBeCalledOnce();
+        $this->attributeGroupRepository->remove($group)->shouldBeCalledOnce();
+        $this->domainEventCollector->collect(Argument::that(
+            static fn (AttributeGroupRemovedEvent $event) => 'group-uuid' === $event->getResourceId()
+                && 'Physical' === $event->getResourceTitle()
+                && 'en' === $event->getResourceTitleLocale(),
+        ))->shouldBeCalledOnce();
+
+        $handler = new RemoveAttributeGroupMessageHandler(
+            $this->attributeGroupRepository->reveal(),
+            $this->attributeRepository->reveal(),
+            $this->domainEventCollector->reveal(),
+            $trashManager->reveal(),
+        );
+
+        ($handler)(new RemoveAttributeGroupMessage('group-uuid'));
     }
 }
