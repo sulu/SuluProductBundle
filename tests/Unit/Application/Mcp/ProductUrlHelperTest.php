@@ -17,6 +17,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\MetadataInterface;
 use Sulu\Product\Application\Mcp\ProductUrlHelper;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Tests\Unit\Fixture\ArrayMetadataProvider;
@@ -94,6 +95,14 @@ final class ProductUrlHelperTest extends TestCase
     public function testAMissingFormLeavesTheSiblingPattern(): void
     {
         $helper = ProductUrlHelperFactory::create('route', [], "/products/{implode('-', object)}", new ArrayMetadataProvider());
+
+        $this->assertStringContainsString('e.g. the pattern of a sibling product', $helper->warning(['title' => 'Probe'], 'en'));
+    }
+
+    public function testAFormOfAnotherKindLeavesTheSiblingPattern(): void
+    {
+        $provider = (new ArrayMetadataProvider())->setDefault($this->createStub(MetadataInterface::class));
+        $helper = ProductUrlHelperFactory::create('route', [], "/products/{implode('-', object)}", $provider);
 
         $this->assertStringContainsString('e.g. the pattern of a sibling product', $helper->warning(['title' => 'Probe'], 'en'));
     }
