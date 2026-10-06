@@ -450,6 +450,60 @@ class ProductAdminTest extends TestCase
         $children = $save->getOptions()['toolbarActions'];
         $childTypes = \array_map(static fn (ToolbarAction $action): string => $action->getType(), $children);
         $this->assertContains('sulu_content.request_for_publish', $childTypes);
+
+        foreach ($this->getPublishEntries($children) as $entry) {
+            $this->assertStringContainsString('(false)', $this->getVisibleCondition($entry));
+        }
+    }
+
+    public function testDetailsEditViewShowsPublishEntriesWithLivePermission(): void
+    {
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(true);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::ADD)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::DELETE)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::LIVE)->willReturn(true);
+        $this->securityChecker->hasPermission(ActivityAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(false);
+
+        $viewCollection = new ViewCollection();
+        $this->admin->configureViews($viewCollection);
+
+        /** @var ToolbarAction[] $toolbarActions */
+        $toolbarActions = $viewCollection->get(ProductAdmin::EDIT_TABS_VIEW . '.details')->getView()->getOption('toolbarActions');
+        /** @var ToolbarAction[] $children */
+        $children = $toolbarActions[0]->getOptions()['toolbarActions'];
+
+        $entries = $this->getPublishEntries($children);
+        $this->assertCount(2, $entries);
+        foreach ($entries as $entry) {
+            $this->assertStringContainsString('_permissions.live', $this->getVisibleCondition($entry));
+            $this->assertStringNotContainsString('(false)', $this->getVisibleCondition($entry));
+        }
+    }
+
+    private function getVisibleCondition(ToolbarAction $action): string
+    {
+        $condition = $action->getOptions()['visible_condition'] ?? null;
+        $this->assertIsString($condition);
+
+        return $condition;
+    }
+
+    /**
+     * @param ToolbarAction[] $children
+     *
+     * @return ToolbarAction[]
+     */
+    private function getPublishEntries(array $children): array
+    {
+        $entries = \array_values(\array_filter(
+            $children,
+            static fn (ToolbarAction $action): bool => 'sulu_admin.publish' === $action->getType()
+                || ('sulu_admin.save' === $action->getType() && 'sulu_admin.save_publish' === ($action->getOptions()['label'] ?? null)),
+        ));
+        $this->assertCount(2, $entries);
+
+        return $entries;
     }
 
     public function testConfigureViewsWithActivityInsightsView(): void

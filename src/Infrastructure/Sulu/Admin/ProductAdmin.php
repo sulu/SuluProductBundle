@@ -155,9 +155,13 @@ class ProductAdmin extends Admin
         );
 
         // Details form — edit mode
-        // Products have no webspace, so the factory's default conditions on `_permissions` fit as they are.
+        // Products send no `_permissions`, so the factory's default publish condition is always true.
+        // Without `live` the publish entries must be hidden here, or Publish answers 403.
         $workflowToolbarActions = $this->contentViewBuilderFactory->getWorkflowTransitionRequestToolbarActions(
             ProductInterface::class,
+            publishVisibleCondition: $this->securityChecker->hasPermission(static::SECURITY_CONTEXT, PermissionTypes::LIVE)
+                ? '(!_permissions || _permissions.live)'
+                : 'false',
         );
         $editToolbarActions = [
             $workflowToolbarActions['save'],
