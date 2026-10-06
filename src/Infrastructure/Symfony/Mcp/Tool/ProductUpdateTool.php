@@ -171,7 +171,7 @@ final class ProductUpdateTool
                 $data['details'] = \array_replace($current, $details);
             }
 
-            $data = $this->urlHelper->completeUrlSuffix($data, $locale);
+            $data = $this->urlHelper->completeUrlSuffix($data, $locale, $uuid);
 
             $data = $this->contentMetadataMapper->applyExcerpt($data, $excerpt, $locale);
             if (isset($data['error'])) {

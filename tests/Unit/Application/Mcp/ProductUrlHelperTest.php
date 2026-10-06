@@ -15,6 +15,8 @@ namespace Sulu\Product\Tests\Unit\Application\Mcp;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Prophecy\Argument;
+use Prophecy\Prophet;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\MetadataInterface;
@@ -22,6 +24,12 @@ use Sulu\Product\Application\Mcp\ProductUrlHelper;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Tests\Unit\Fixture\ArrayMetadataProvider;
 use Sulu\Product\Tests\Unit\Fixture\ProductUrlHelperFactory;
+use Sulu\Route\Application\ResourceLocator\PathCleanup\PathCleanup;
+use Sulu\Route\Application\ResourceLocator\ResourceLocatorGenerator;
+use Sulu\Route\Application\ResourceLocator\RouteSchemaEvaluator;
+use Sulu\Route\Domain\Repository\RouteRepositoryInterface;
+use Symfony\Component\String\Slugger\AsciiSlugger;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[CoversClass(ProductUrlHelper::class)]
 final class ProductUrlHelperTest extends TestCase
@@ -150,5 +158,86 @@ final class ProductUrlHelperTest extends TestCase
         $data = ['title' => 'Shirt', 'url' => '/hat-red'];
 
         $this->assertSame($data, ProductUrlHelperFactory::create('route')->completeUrlSuffix($data, 'en'));
+    }
+
+    public function testATakenSuffixGetsANumberBelowThePage(): void
+    {
+        $helper = ProductUrlHelperFactory::create('page_tree_route', ['/products/dup-check'], pageRouteSlug: '/products');
+
+        $data = $helper->completeUrlSuffix(
+            ['title' => 'Dup Check', 'url' => ['page' => ['uuid' => 'page-uuid', 'path' => '/products']]],
+            'en',
+        );
+
+        $url = $data['url'] ?? null;
+        $this->assertIsArray($url);
+        $this->assertSame('/dup-check-1', $url['suffix'] ?? null);
+    }
+
+    public function testATakenSuffixOfAnotherPageStaysFree(): void
+    {
+        $helper = ProductUrlHelperFactory::create('page_tree_route', ['/other/dup-check'], pageRouteSlug: '/products');
+
+        $data = $helper->completeUrlSuffix(
+            ['title' => 'Dup Check', 'url' => ['page' => ['uuid' => 'page-uuid', 'path' => '/products']]],
+            'en',
+        );
+
+        $url = $data['url'] ?? null;
+        $this->assertIsArray($url);
+        $this->assertSame('/dup-check', $url['suffix'] ?? null);
+    }
+
+    public function testTheSuffixIgnoresTheProductPathOfTheRouteSchema(): void
+    {
+        $data = ProductUrlHelperFactory::create()->completeUrlSuffix(
+            ['title' => 'Shirt', 'url' => ['page' => ['uuid' => 'p', 'path' => '/shop']]],
+            'en',
+        );
+
+        $url = $data['url'] ?? null;
+        $this->assertIsArray($url);
+        $this->assertSame('/shirt', $url['suffix'] ?? null);
+    }
+
+    public function testAPageWithoutUuidLeavesTheUrl(): void
+    {
+        $data = ['title' => 'Shirt', 'url' => ['page' => ['path' => '/products']]];
+
+        $this->assertSame($data, ProductUrlHelperFactory::create()->completeUrlSuffix($data, 'en'));
+    }
+
+    public function testTheSuffixOfTheProductItselfIsNotTaken(): void
+    {
+        $prophet = new Prophet();
+        $repository = $prophet->prophesize(RouteRepositoryInterface::class);
+        $repository->findOneBy(Argument::any())->willReturn(null);
+        $repository->existBy(Argument::that(
+            static fn (array $criteria): bool => ['resourceKey' => 'products', 'resourceId' => 'uuid-1'] === ($criteria['excludeResource'] ?? null),
+        ))->willReturn(false);
+        $repository->existBy(Argument::any())->willReturn(true);
+
+        $helper = new ProductUrlHelper(
+            'page_tree_route',
+            ['route_schema' => "/{implode('-', object)}"],
+            new ResourceLocatorGenerator(
+                $repository->reveal(),
+                new RouteSchemaEvaluator(
+                    $prophet->prophesize(TranslatorInterface::class)->reveal(),
+                    new PathCleanup(new AsciiSlugger(), []),
+                ),
+            ),
+            ProductUrlHelperFactory::detailsForm(),
+        );
+
+        $data = $helper->completeUrlSuffix(
+            ['title' => 'Shirt', 'url' => ['page' => ['uuid' => 'p', 'path' => '/products']]],
+            'en',
+            'uuid-1',
+        );
+
+        $url = $data['url'] ?? null;
+        $this->assertIsArray($url);
+        $this->assertSame('/shirt', $url['suffix'] ?? null);
     }
 }

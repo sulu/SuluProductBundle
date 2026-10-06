@@ -24,6 +24,7 @@ use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Route\Application\ResourceLocator\PathCleanup\PathCleanup;
 use Sulu\Route\Application\ResourceLocator\ResourceLocatorGenerator;
 use Sulu\Route\Application\ResourceLocator\RouteSchemaEvaluator;
+use Sulu\Route\Domain\Model\Route;
 use Sulu\Route\Domain\Repository\RouteRepositoryInterface;
 use Symfony\Component\String\Slugger\AsciiSlugger;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -35,12 +36,14 @@ final class ProductUrlHelperFactory
 {
     /**
      * @param list<string> $takenSlugs routes that exist already
+     * @param string|null $pageRouteSlug the slug of the route of the page "page-uuid", the parent of a page tree url
      */
     public static function create(
         string $routeType = 'page_tree_route',
         array $takenSlugs = [],
         string $routeSchema = "/products/{implode('-', object)}",
         ?MetadataProviderInterface $formMetadataProvider = null,
+        ?string $pageRouteSlug = null,
     ): ProductUrlHelper {
         $prophet = new Prophet();
         $pathCleanup = new PathCleanup(new AsciiSlugger(), []);
@@ -51,6 +54,12 @@ final class ProductUrlHelperFactory
         ))->willReturn(true);
         $routeRepository->existBy(Argument::any())->willReturn(false);
 
+        if (null !== $pageRouteSlug) {
+            $routeRepository->findOneBy(Argument::that(
+                static fn (array $criteria): bool => 'page-uuid' === ($criteria['resourceId'] ?? null),
+            ))->willReturn(new Route('pages', 'page-uuid', 'en', $pageRouteSlug));
+        }
+
         $generator = new ResourceLocatorGenerator(
             $routeRepository->reveal(),
             new RouteSchemaEvaluator($prophet->prophesize(TranslatorInterface::class)->reveal(), $pathCleanup),
@@ -59,7 +68,6 @@ final class ProductUrlHelperFactory
         return new ProductUrlHelper(
             $routeType,
             ['route_schema' => $routeSchema],
-            $pathCleanup,
             $generator,
             $formMetadataProvider ?? self::detailsForm(),
         );

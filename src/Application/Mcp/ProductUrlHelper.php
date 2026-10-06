@@ -16,7 +16,6 @@ namespace Sulu\Product\Application\Mcp;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\MetadataProviderInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
-use Sulu\Route\Application\ResourceLocator\PathCleanup\PathCleanupInterface;
 use Sulu\Route\Application\ResourceLocator\ResourceLocatorGeneratorInterface;
 use Sulu\Route\Application\ResourceLocator\ResourceLocatorRequest;
 
@@ -31,6 +30,7 @@ use Sulu\Route\Application\ResourceLocator\ResourceLocatorRequest;
 final readonly class ProductUrlHelper
 {
     private const PAGE_TREE_ROUTE = 'page_tree_route';
+    private const PAGE_RESOURCE_KEY = 'pages';
     private const ROUTE_PART_TAG = 'sulu.rlp.part';
 
     /**
@@ -39,7 +39,6 @@ final readonly class ProductUrlHelper
     public function __construct(
         private string $routeType,
         private array $routeParams,
-        private PathCleanupInterface $pathCleanup,
         private ResourceLocatorGeneratorInterface $resourceLocatorGenerator,
         private MetadataProviderInterface $formMetadataProvider,
     ) {
@@ -120,9 +119,10 @@ final readonly class ProductUrlHelper
     /**
      * @param array<string, string> $parts
      */
-    private function generateUrl(array $parts, string $locale, ?string $resourceId): string
+    private function generateUrl(array $parts, string $locale, ?string $resourceId, ?string $pageUuid = null): string
     {
-        $routeSchema = $this->routeParams['route_schema'] ?? null;
+        // The configured schema starts with the product path and would repeat the path of the page.
+        $routeSchema = null === $pageUuid ? ($this->routeParams['route_schema'] ?? null) : null;
 
         return $this->resourceLocatorGenerator->generate(new ResourceLocatorRequest(
             $parts,
@@ -130,21 +130,23 @@ final readonly class ProductUrlHelper
             null,
             ProductInterface::RESOURCE_KEY,
             $resourceId,
-            null,
-            null,
+            $pageUuid,
+            null !== $pageUuid ? self::PAGE_RESOURCE_KEY : null,
             \is_string($routeSchema) ? $routeSchema : null,
+            null !== $pageUuid,
         ));
     }
 
     /**
      * Fills a missing suffix of a page based url from the title, so that the agent only has to name the page.
-     * The slug comes from the same service as the route generation, so it matches the url of the admin.
+     * The suffix comes from the route generator with the page as parent, as the admin field asks it,
+     * so it is not taken below the page yet.
      *
      * @param array<string, mixed> $data
      *
      * @return array<string, mixed>
      */
-    public function completeUrlSuffix(array $data, string $locale): array
+    public function completeUrlSuffix(array $data, string $locale, ?string $resourceId = null): array
     {
         $url = $data['url'] ?? null;
         $title = $data['title'] ?? null;
@@ -157,7 +159,17 @@ final readonly class ProductUrlHelper
             return $data;
         }
 
-        $slug = \trim($this->pathCleanup->cleanup($title, $locale), '/');
+        $pageUuid = $url['page']['uuid'] ?? null;
+        if (!\is_string($pageUuid) || '' === $pageUuid) {
+            return $data;
+        }
+
+        $parts = $this->routeParts($data, $locale);
+        if ([] === $parts) {
+            $parts = ['title' => $title];
+        }
+
+        $slug = \trim($this->generateUrl($parts, $locale, $resourceId, $pageUuid), '/');
         if ('' === $slug) {
             return $data;
         }
