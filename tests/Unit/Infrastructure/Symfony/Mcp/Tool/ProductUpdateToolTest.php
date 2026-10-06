@@ -21,11 +21,15 @@ use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Content\Application\ContentManager\ContentManagerInterface;
+use Sulu\Content\Domain\Exception\ContentNotFoundException;
+use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Mcp\Application\AdminLink\AdminLinkGeneratorInterface;
 use Sulu\Mcp\Application\Content\BlockDataValidator;
 use Sulu\Mcp\Application\Content\ContentMetadataMapper;
 use Sulu\Mcp\Application\Metadata\MetadataLocaleResolver;
+use Sulu\Product\Application\Mcp\ProductAssociationResolver;
 use Sulu\Product\Application\Message\ModifyProductMessage;
+use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
@@ -33,8 +37,11 @@ use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductUpdateTool;
 use Sulu\Product\Tests\Unit\Fixture\ArrayMetadataProvider;
+use Sulu\Product\Tests\Unit\Fixture\CompletenessCheckerFactory;
 use Sulu\Product\Tests\Unit\Fixture\FixedBlockIdGenerator;
 use Sulu\Product\Tests\Unit\Fixture\ProductContentMetadata;
+use Sulu\Product\Tests\Unit\Fixture\ProductUrlHelperFactory;
+use Sulu\Product\Tests\Unit\Fixture\ProjectLocalesFactory;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
@@ -67,6 +74,10 @@ final class ProductUpdateToolTest extends TestCase
             new BlockDataValidator($this->formMetadataProvider(), new MetadataLocaleResolver(new TokenStorage(), 'en')),
             FixedBlockIdGenerator::returning('b1', 'b2', 'b3'),
             $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
+            $this->associationResolver(),
+            CompletenessCheckerFactory::create(),
+            ProductUrlHelperFactory::create(),
+            ProjectLocalesFactory::create(),
         );
     }
 
@@ -154,6 +165,8 @@ final class ProductUpdateToolTest extends TestCase
         $variant->setParent($parent);
 
         $this->productRepository->getOneBy(Argument::cetera())->willReturn($variant);
+        $this->contentManager->resolve(Argument::cetera())->willReturn(new ProductDimensionContent(new Product()));
+        $this->contentManager->normalize(Argument::cetera())->willReturn([]);
         $this->messageBus->dispatch(Argument::cetera())->shouldNotBeCalled();
 
         $result = $this->tool->updateProduct('variant-uuid', 'en', productFamily: 'other-family');
@@ -176,6 +189,38 @@ final class ProductUpdateToolTest extends TestCase
         $this->assertIsString($result['error']);
         $this->assertStringContainsString('missing', $result['error']);
         $this->assertNotEmpty($result['hint']);
+    }
+
+    public function testUpdateProductCreatesANewLocaleOfAnExistingProduct(): void
+    {
+        $product = new Product('uuid-1');
+        $this->productRepository->getOneBy(['uuid' => 'uuid-1'], Argument::type('array'))->willReturn($product);
+        $calls = 0;
+        $this->contentManager->resolve(Argument::cetera())->will(function() use (&$calls, $product): ProductDimensionContent {
+            if (1 === ++$calls) {
+                throw new ContentNotFoundException($product, []);
+            }
+
+            return new ProductDimensionContent(new Product());
+        });
+        $this->contentManager->normalize(Argument::cetera())->willReturn([]);
+
+        $captured = null;
+        $this->messageBus->dispatch(Argument::type(Envelope::class), Argument::cetera())
+            ->will(function(array $args) use ($product, &$captured): Envelope {
+                /** @var Envelope $envelope */
+                $envelope = $args[0];
+                $captured = $envelope->getMessage();
+
+                return $envelope->with(new HandledStamp($product, 'handler'));
+            });
+
+        $result = $this->tool->updateProduct('uuid-1', 'de', title: 'Hemd');
+
+        $this->assertTrue($result['success']);
+        $this->assertInstanceOf(ModifyProductMessage::class, $captured);
+        $this->assertSame('de', $captured->getLocale());
+        $this->assertSame('Hemd', $captured->getData()['title'] ?? null);
     }
 
     public function testUpdateProductMethodHasMcpToolAttribute(): void
@@ -285,6 +330,89 @@ final class ProductUpdateToolTest extends TestCase
         $this->assertStringContainsString('seo', $result['error']);
     }
 
+    public function testUpdateProductWarnsWhenTheProductHasNoUrl(): void
+    {
+        $this->givenProduct(['title' => 'Shirt']);
+
+        $result = $this->tool->updateProduct('uuid-1', 'en', title: 'Shirt');
+
+        $this->assertTrue($result['success']);
+        $this->assertStringContainsString('sulu_product_update', \is_string($result['warning'] ?? null) ? $result['warning'] : '');
+    }
+
+    public function testUpdateProductDoesNotWarnForAProductWithVariants(): void
+    {
+        $product = new Product('uuid-1');
+        $product->setType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $this->productRepository->getOneBy(Argument::cetera())->willReturn($product);
+        $this->contentManager->resolve(Argument::cetera())->willReturn(new ProductDimensionContent(new Product()));
+        $this->contentManager->normalize(Argument::cetera())->willReturn(['title' => 'Shirt']);
+        $this->messageBus->dispatch(Argument::type(Envelope::class), Argument::cetera())
+            ->will(function(array $args) use ($product): Envelope {
+                /** @var Envelope $envelope */
+                $envelope = $args[0];
+
+                return $envelope->with(new HandledStamp($product, 'handler'));
+            });
+
+        $result = $this->tool->updateProduct('uuid-1', 'en', title: 'Shirt');
+
+        $this->assertTrue($result['success']);
+        $this->assertArrayNotHasKey('warning', $result);
+    }
+
+    public function testUpdateProductListsRecommendationsForAnIncompleteProduct(): void
+    {
+        $this->givenProduct(['title' => 'Shirt']);
+
+        $result = $this->tool->updateProduct('uuid-1', 'en', title: 'Shirt');
+
+        $this->assertTrue($result['success']);
+        $this->assertIsArray($result['recommendations'] ?? null);
+        $this->assertStringContainsString('excerpt.excerptCategories', \implode("\n", \array_filter($result['recommendations'], 'is_string')));
+    }
+
+    public function testUpdateProductOmitsRecommendationsForACompleteProduct(): void
+    {
+        $this->givenProduct([
+            'title' => 'Shirt',
+            'code' => 'S-1',
+            'url' => ['page' => ['uuid' => 'p', 'path' => '/products'], 'suffix' => '/shirt'],
+            'excerptCategories' => [1],
+            'excerptTags' => [2],
+            'seo' => ['title' => 'Shirt', 'description' => 'A shirt'],
+        ]);
+
+        $result = $this->tool->updateProduct('uuid-1', 'en', title: 'Shirt');
+
+        $this->assertArrayNotHasKey('recommendations', $result);
+    }
+
+    public function testUpdateProductDoesNotWarnWhenTheProductHasAUrl(): void
+    {
+        $this->givenProduct(['title' => 'Shirt', 'url' => ['page' => ['uuid' => 'p', 'path' => '/products'], 'suffix' => '/shirt']]);
+
+        $result = $this->tool->updateProduct('uuid-1', 'en', title: 'Shirt');
+
+        $this->assertArrayNotHasKey('warning', $result);
+    }
+
+    public function testUpdateProductGeneratesTheUrlSuffixFromTheTitle(): void
+    {
+        $captured = $this->givenProduct(['title' => 'Monstera']);
+
+        $this->tool->updateProduct('uuid-1', 'en', content: ['url' => ['page' => ['uuid' => 'p', 'path' => '/products']]]);
+
+        $message = $captured();
+        $this->assertInstanceOf(ModifyProductMessage::class, $message);
+        /** @var array<string, mixed> $data */
+        $data = $message->getData();
+        $this->assertSame(
+            ['page' => ['uuid' => 'p', 'path' => '/products'], 'suffix' => '/monstera'],
+            $data['url'] ?? null,
+        );
+    }
+
     public function testUpdateProductReturnsTheAdminUrl(): void
     {
         $adminLinkGenerator = $this->prophesize(AdminLinkGeneratorInterface::class);
@@ -318,6 +446,154 @@ final class ProductUpdateToolTest extends TestCase
             new BlockDataValidator(ProductContentMetadata::provider(), new MetadataLocaleResolver(new TokenStorage(), 'en')),
             FixedBlockIdGenerator::returning('b1', 'b2', 'b3'),
             $adminLinkGenerator ?? $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
+            $this->associationResolver(),
+            CompletenessCheckerFactory::create(),
+            ProductUrlHelperFactory::create(),
+            ProjectLocalesFactory::create(),
         );
+    }
+
+    public function testUpdateProductReplacesOnlyThePassedAssociationTypes(): void
+    {
+        $captured = $this->givenProduct(['title' => 'Shirt', 'associations' => ['accessory' => ['old-uuid'], 'alternative' => ['alt-uuid']]]);
+
+        $result = $this->tool->updateProduct('uuid-1', 'en', associations: ['accessory' => ['pot-uuid', 'BELT-1']]);
+
+        $this->assertTrue($result['success']);
+        $message = $captured();
+        $this->assertInstanceOf(ModifyProductMessage::class, $message);
+        /** @var array<string, mixed> $data */
+        $data = $message->getData();
+        $this->assertSame(['accessory' => ['pot-uuid', 'belt-uuid'], 'alternative' => ['alt-uuid']], $data['associations'] ?? null);
+    }
+
+    public function testUpdateProductResolvesAssociationsGivenInContent(): void
+    {
+        $captured = $this->givenProduct(['title' => 'Shirt']);
+
+        $result = $this->tool->updateProduct('uuid-1', 'en', content: ['associations' => ['accessory' => ['BELT-1']]]);
+
+        $this->assertTrue($result['success']);
+        $message = $captured();
+        $this->assertInstanceOf(ModifyProductMessage::class, $message);
+        /** @var array<string, mixed> $data */
+        $data = $message->getData();
+        $this->assertSame(['accessory' => ['belt-uuid']], $data['associations'] ?? null);
+    }
+
+    public function testUpdateProductRejectsAVariantTargetGivenInContent(): void
+    {
+        $this->givenProduct(['title' => 'Shirt']);
+        $variant = new Product('variant-uuid');
+        $variant->setType(ProductInterface::TYPE_VARIANT);
+        $this->productRepository->findOneBy(['uuid' => 'variant-uuid'])->willReturn($variant);
+        $this->messageBus->dispatch(Argument::cetera())->shouldNotBeCalled();
+
+        $result = $this->tool->updateProduct('uuid-1', 'en', content: ['associations' => ['accessory' => ['variant-uuid']]]);
+
+        $this->assertArrayNotHasKey('success', $result);
+        $this->assertIsString($result['error']);
+        $this->assertStringContainsString('variant', $result['error']);
+    }
+
+    public function testTheAssociationsParameterWinsOverTheOneInContent(): void
+    {
+        $captured = $this->givenProduct(['title' => 'Shirt']);
+
+        $this->tool->updateProduct('uuid-1', 'en', content: ['associations' => ['accessory' => ['BELT-1']]], associations: ['alternative' => ['pot-uuid']]);
+
+        $message = $captured();
+        $this->assertInstanceOf(ModifyProductMessage::class, $message);
+        /** @var array<string, mixed> $data */
+        $data = $message->getData();
+        $this->assertSame(['alternative' => ['pot-uuid']], $data['associations'] ?? null);
+    }
+
+    public function testUpdateProductClearsAnAssociationTypeWithAnEmptyList(): void
+    {
+        $captured = $this->givenProduct(['associations' => ['accessory' => ['old-uuid']]]);
+
+        $this->tool->updateProduct('uuid-1', 'en', associations: ['accessory' => []]);
+
+        $message = $captured();
+        $this->assertInstanceOf(ModifyProductMessage::class, $message);
+        /** @var array<string, mixed> $data */
+        $data = $message->getData();
+        $this->assertSame(['accessory' => []], $data['associations'] ?? null);
+    }
+
+    public function testUpdateProductLeavesAssociationsAloneWhenNoneArePassed(): void
+    {
+        $captured = $this->givenProduct(['associations' => ['accessory' => ['old-uuid']]]);
+
+        $this->tool->updateProduct('uuid-1', 'en', title: 'x');
+
+        $message = $captured();
+        $this->assertInstanceOf(ModifyProductMessage::class, $message);
+        /** @var array<string, mixed> $data */
+        $data = $message->getData();
+        $this->assertSame(['accessory' => ['old-uuid']], $data['associations'] ?? null);
+    }
+
+    public function testUpdateProductRejectsAnAssociationWithItself(): void
+    {
+        $this->givenProduct([]);
+        $this->messageBus->dispatch(Argument::cetera())->shouldNotBeCalled();
+
+        $result = $this->tool->updateProduct('uuid-1', 'en', associations: ['alternative' => ['uuid-1']]);
+
+        $this->assertArrayNotHasKey('success', $result);
+        $this->assertIsString($result['error']);
+        $this->assertStringContainsString('itself', $result['error']);
+    }
+
+    public function testUpdateProductRejectsAnUnknownAssociationType(): void
+    {
+        $this->givenProduct([]);
+        $this->messageBus->dispatch(Argument::cetera())->shouldNotBeCalled();
+
+        $result = $this->tool->updateProduct('uuid-1', 'en', associations: ['bogus' => ['pot-uuid']]);
+
+        $this->assertIsString($result['error']);
+        $this->assertStringContainsString('bogus', $result['error']);
+        $this->assertIsString($result['hint']);
+        $this->assertStringContainsString('sulu_product_association_type_list', $result['hint']);
+    }
+
+    public function testUpdateProductSendsExcerptCategoriesAndTags(): void
+    {
+        $captured = $this->givenProduct(['excerptCategories' => [1]]);
+
+        $this->toolWithContentMetadata()->updateProduct('uuid-1', 'en', excerpt: ['excerptCategories' => [3], 'excerptTags' => [4]]);
+
+        $message = $captured();
+        $this->assertInstanceOf(ModifyProductMessage::class, $message);
+        /** @var array<string, mixed> $data */
+        $data = $message->getData();
+        $this->assertSame([3], $data['excerptCategories'] ?? null);
+        $this->assertSame([4], $data['excerptTags'] ?? null);
+    }
+
+    private function associationResolver(): ProductAssociationResolver
+    {
+        $this->productRepository->findOneBy(['uuid' => 'pot-uuid'])->willReturn(new Product('pot-uuid'));
+        $this->productRepository->findOneBy(['uuid' => 'uuid-1'])->willReturn(new Product('uuid-1'));
+        $this->productRepository->findOneBy(['uuid' => 'BELT-1'])->willReturn(null);
+        $this->productRepository->findOneBy(['code' => 'BELT-1', 'locale' => 'en', 'stage' => DimensionContentInterface::STAGE_DRAFT, 'loadGhost' => true])->willReturn(new Product('belt-uuid'));
+
+        return new ProductAssociationResolver($this->productRepository->reveal(), new ProductAssociationTypeRegistry(['accessory' => ['label' => 'Accessory'], 'alternative' => ['label' => 'Alternative']]));
+    }
+
+    public function testUpdateProductRejectsALocaleNoWebspaceHas(): void
+    {
+        $this->productRepository->getOneBy(Argument::cetera())->shouldNotBeCalled();
+        $this->messageBus->dispatch(Argument::cetera())->shouldNotBeCalled();
+
+        $result = $this->tool->updateProduct('uuid-1', 'xx', title: 'Shirt');
+
+        $this->assertIsString($result['error'] ?? null);
+        $this->assertIsString($result['hint'] ?? null);
+        $this->assertStringContainsString('"xx"', $result['error']);
+        $this->assertStringContainsString('"en", "de"', $result['hint']);
     }
 }

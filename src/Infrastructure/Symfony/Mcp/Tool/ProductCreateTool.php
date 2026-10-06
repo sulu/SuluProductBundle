@@ -29,7 +29,11 @@ use Sulu\Mcp\Domain\Security\DangerousTool;
 use Sulu\Mcp\Domain\Security\PermissionRequirement;
 use Sulu\Mcp\Domain\Security\RequiresPermission;
 use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushStamp;
+use Sulu\Product\Application\Mcp\ProductAssociationResolver;
+use Sulu\Product\Application\Mcp\ProductCompletenessChecker;
+use Sulu\Product\Application\Mcp\ProductUrlHelper;
 use Sulu\Product\Application\Message\CreateProductMessage;
+use Sulu\Product\Domain\Exception\InvalidProductAssociationException;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 use Symfony\Component\Messenger\Envelope;
@@ -62,6 +66,9 @@ final class ProductCreateTool
         private readonly BlockDataValidator $blockDataValidator,
         private readonly BlockIdGeneratorInterface $blockIdGenerator,
         private readonly AdminLinkGeneratorInterface $adminLinkGenerator,
+        private readonly ProductAssociationResolver $associationResolver,
+        private readonly ProductCompletenessChecker $completenessChecker,
+        private readonly ProductUrlHelper $urlHelper,
     ) {
         $this->messageBus = $messageBus;
     }
@@ -72,13 +79,14 @@ final class ProductCreateTool
      * @param array<string, mixed>|null $details
      * @param array<string, mixed>|null $excerpt
      * @param array<string, mixed>|null $seo
+     * @param array<string, mixed>|null $associations
      *
      * @return array<string, mixed>
      */
     #[McpTool(
         name: 'sulu_product_create',
         title: 'Create Product',
-        description: 'Create a new product (draft). Workflow: 1) Call sulu_product_family_list to pick a family. "productFamily" is its UUID and is mandatory, because the family decides which attributes the product has. 2) Pass attribute values in "attributes" as a map keyed by the attribute UUID, e.g. attributes={"<attribute uuid>": "red"}. Get those UUIDs from sulu_attribute_list. Attributes the family marks required must be present or the save is rejected. Template fields go in "content" as a flat object. Call sulu_get_context for the product templates. Set type="product_with_variants" when the product should hold variants; its variant-specific attributes then belong on the variants, not here. To create the variants themselves use sulu_product_variant_create. This tool cannot create them. The product is created as a draft: call sulu_content_publish (resourceKey: products) to make it live.',
+        description: 'Create a new product (draft). Workflow: 1) Call sulu_product_family_list to pick a family. "productFamily" is its UUID and is mandatory, because the family decides which attributes the product has. 2) Pass attribute values in "attributes" as a map keyed by the attribute UUID, e.g. attributes={"<attribute uuid>": "red"}. Get those UUIDs from sulu_attribute_list. Attributes the family marks required must be present or the save is rejected. Template fields go in "content" as a flat object. Call sulu_get_context for the product templates. Link related products with "associations" and set categories and tags through "excerpt". Set type="product_with_variants" when the product should hold variants; its variant-specific attributes then belong on the variants, not here. To create the variants themselves use sulu_product_variant_create. This tool cannot create them. The product is created as a draft. A product needs a "url" to be reachable on the website. Without it the product has no route and no page. Pass it inside "content" as "url". Its shape depends on the route type of the installation: a path string that follows the route_schema, such as "/products/hat-red", for the type "route", or {"page": {"uuid": "<uuid of the listing page>", "path": "<its path, e.g. /products>"}, "suffix": "/<slug>"} for "page_tree_route". With a page and no suffix, the suffix is generated from the title. Copy the shape from a sibling product with sulu_product_get (field "url"). The warning names the shape this installation takes. Fill "code" when the datasheet or the user gives one. The result carries a "warning" when the product has no url: fix it with sulu_product_update before publishing. The result lists "recommendations" for things that are still empty. Fill what the datasheet or the user gives you and ask the user for the rest. Never invent datasheet values such as titles, descriptions, SEO texts, media or attribute values. Codes, categories and tags may be derived, as the hints say. Call sulu_content_publish (resourceKey: products) to make it live.',
         annotations: new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false),
     )]
     #[DangerousTool('product_write')]
@@ -99,16 +107,18 @@ final class ProductCreateTool
         ?string $type = null,
         #[Schema(description: 'Template key. Defaults to the bundle default ("product") when omitted.')]
         ?string $template = null,
-        #[Schema(type: 'object', description: 'Template field values as a flat object, e.g. {"description": "<p>…</p>"}. Call sulu_get_context to see the product templates and their fields. May include a "blocks" tree; block _ids are assigned automatically.', additionalProperties: true)]
+        #[Schema(type: 'object', description: 'Template field values as a flat object, e.g. {"description": "<p>…</p>"}. Call sulu_get_context to see the product templates and their fields. May include the route as "url" (a string, or {"page": {"uuid", "path"}, "suffix"}, see the tool description) and a "blocks" tree; block _ids are assigned automatically.', additionalProperties: true)]
         ?array $content = null,
         #[Schema(type: 'object', description: 'Attribute values keyed by the attribute UUID from sulu_attribute_list, e.g. {"<attribute uuid>": "red"}. Keys that are not attributes of the product\'s family are ignored.', additionalProperties: true)]
         ?array $attributes = null,
-        #[Schema(type: 'object', description: 'Detail fields, e.g. {"shortDescription": "<p>…</p>", "image": {"id": 12}}. Media fields take {"id": <mediaId>}.', additionalProperties: true)]
+        #[Schema(type: 'object', description: 'Detail fields, e.g. {"shortDescription": "<p>…</p>", "image": {"id": 12}, "documents": {"ids": [34, 35]}}. "image" is one media item as {"id": <mediaId>}. "documents" is a list of media items as {"ids": [<mediaId>, …]}. Get media ids from sulu_media_list or sulu_media_upload.', additionalProperties: true)]
         ?array $details = null,
-        #[Schema(type: 'object', description: 'Optional excerpt/teaser fields keyed by the project\'s excerpt field names. Media fields take {"id": <mediaId>}. Call sulu_get_context for the exact field list.', additionalProperties: true)]
+        #[Schema(type: 'object', description: 'Optional excerpt/teaser fields keyed by the project\'s excerpt field names. Media fields take {"id": <mediaId>}. Categories and tags go in "excerptCategories" and "excerptTags" as lists of INTEGER ids from sulu_category_list and sulu_tag_list. Call sulu_get_context for the exact field list.', additionalProperties: true)]
         ?array $excerpt = null,
         #[Schema(type: 'object', description: 'Optional SEO fields keyed by the project\'s SEO field names. Call sulu_get_context for the exact field list.', additionalProperties: true)]
         ?array $seo = null,
+        #[Schema(type: 'object', description: 'Optional links to other products, keyed by association type: {"accessory": ["<uuid or code>"], "alternative": ["<uuid or code>"]}. Get the keys from sulu_product_association_type_list. The products must already exist. The links are shared by all locales.', additionalProperties: true)]
+        ?array $associations = null,
         #[Schema(type: 'boolean', description: 'Optional "Shadow" setting: when true this locale serves the content of "shadowLocale" instead of its own. Omit to leave it unchanged, pass false to remove the shadow. Cannot be combined with a link.')]
         ?bool $shadowOn = null,
         #[Schema(type: 'string', description: 'The locale mirrored when shadowOn is true, e.g. "en". The eligible locales are returned as "shadowLocales" by the matching get tool.')]
@@ -132,6 +142,10 @@ final class ProductCreateTool
             }
 
             $normalizedContent = $this->stringifyKeys($this->assignBlockIds($normalizedContent, $this->blockIdGenerator));
+
+            // Links in "content" would skip the resolver that rejects variants and unknown products.
+            $associations ??= \is_array($normalizedContent['associations'] ?? null) ? $normalizedContent['associations'] : null;
+            unset($normalizedContent['associations']);
 
             $data = \array_merge($normalizedContent, [
                 'locale' => $locale,
@@ -158,6 +172,8 @@ final class ProductCreateTool
                 $data['details'] = $details;
             }
 
+            $data = $this->urlHelper->completeUrlSuffix($data, $locale);
+
             $data = $this->contentMetadataMapper->applyExcerpt($data, $excerpt, $locale);
             if (isset($data['error'])) {
                 return $data;
@@ -165,6 +181,10 @@ final class ProductCreateTool
             $data = $this->contentMetadataMapper->applySeo($data, $seo, $locale);
             if (isset($data['error'])) {
                 return $data;
+            }
+
+            if (null !== $associations) {
+                $data['associations'] = $this->associationResolver->resolve($associations, $locale);
             }
 
             if ($validationError = $this->validateShadow($shadowOn, $shadowLocale, $locale, [])) {
@@ -191,6 +211,15 @@ final class ProductCreateTool
                 'data' => $this->contentManager->normalize($dimensionContent),
             ];
 
+            if (!$product->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS) && !ProductCompletenessChecker::hasUrl($result['data'])) {
+                $result['warning'] = $this->urlHelper->warning($result['data'], $locale, $product->getUuid());
+            }
+
+            $recommendations = $this->completenessChecker->check($product, $result['data'], $locale);
+            if ([] !== $recommendations) {
+                $result['recommendations'] = $recommendations;
+            }
+
             $adminUrl = $this->adminLinkGenerator->generate('product', [
                 'locale' => $locale,
                 'uuid' => $product->getUuid(),
@@ -200,6 +229,11 @@ final class ProductCreateTool
             }
 
             return $result;
+        } catch (InvalidProductAssociationException $e) {
+            return [
+                'error' => $e->getMessage(),
+                'hint' => $e->getHint(),
+            ];
         } catch (\Throwable $e) {
             return [
                 'error' => \sprintf('Failed to create product "%s": %s', $title, $e->getMessage()),

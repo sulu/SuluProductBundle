@@ -670,6 +670,19 @@ class ProductRepositoryTest extends SuluTestCase
         $this->assertSame($matching->getUuid(), $loaded->getUuid());
     }
 
+    public function testFindOneByCodeWithLoadGhostFindsAProductWithoutContentInTheLocale(): void
+    {
+        [$product] = $this->createLiveProductWithTitleCodeAndFamily('Widget Pro', 'CODE-GHOST', 'Fasteners');
+        $this->entityManager->clear();
+
+        $this->assertNull($this->repository->findOneBy(['code' => 'CODE-GHOST', 'locale' => 'de', 'stage' => 'live']));
+
+        $loaded = $this->repository->findOneBy(['code' => 'CODE-GHOST', 'locale' => 'de', 'stage' => 'live', 'loadGhost' => true]);
+
+        $this->assertInstanceOf(ProductInterface::class, $loaded);
+        $this->assertSame($product->getUuid(), $loaded->getUuid());
+    }
+
     public function testFindByCodeWithoutLocaleOrStageThrows(): void
     {
         $this->expectException(\InvalidArgumentException::class);

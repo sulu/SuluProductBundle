@@ -20,6 +20,7 @@ use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Content\Application\ContentManager\ContentManagerInterface;
+use Sulu\Content\Domain\Exception\ContentNotFoundException;
 use Sulu\Mcp\Application\AdminLink\AdminLinkGeneratorInterface;
 use Sulu\Product\Application\Mcp\VariantParentResolver;
 use Sulu\Product\Application\Message\ModifyProductMessage;
@@ -33,6 +34,7 @@ use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductVariantUpdateTool;
+use Sulu\Product\Tests\Unit\Fixture\ProjectLocalesFactory;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
@@ -68,6 +70,7 @@ final class ProductVariantUpdateToolTest extends TestCase
                 $this->productFamilyRepository->reveal(),
             ),
             $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
+            ProjectLocalesFactory::create(),
         );
     }
 
@@ -238,12 +241,32 @@ final class ProductVariantUpdateToolTest extends TestCase
             $this->productRepository->reveal(),
             new VariantParentResolver($this->productRepository->reveal(), $this->productFamilyRepository->reveal()),
             $adminLinkGenerator->reveal(),
+            ProjectLocalesFactory::create(),
         );
         $this->givenVariantOfParent([]);
 
         $result = $tool->updateProductVariant('en', 'parent-uuid', 'variant-uuid', title: 'x');
 
         $this->assertSame('https://admin.example/variant', $result['admin_url'] ?? null);
+    }
+
+    public function testUpdateVariantCreatesANewLocale(): void
+    {
+        $captured = $this->givenVariantOfParent([]);
+        $calls = 0;
+        $this->contentManager->resolve(Argument::cetera())->will(function() use (&$calls): ProductDimensionContent {
+            if (1 === ++$calls) {
+                throw new ContentNotFoundException(new Product('variant-uuid'), []);
+            }
+
+            return new ProductDimensionContent(new Product());
+        });
+
+        $this->tool->updateProductVariant('de', 'parent-uuid', 'variant-uuid', title: 'Rot');
+
+        $message = $captured();
+        $this->assertInstanceOf(ModifyProductMessage::class, $message);
+        $this->assertSame('Rot', $message->getData()['title'] ?? null);
     }
 
     public function testUpdateVariantReturnsErrorOnFailure(): void
@@ -258,5 +281,18 @@ final class ProductVariantUpdateToolTest extends TestCase
         $this->assertStringContainsString('already in use', $result['error']);
         $this->assertIsString($result['hint']);
         $this->assertNotEmpty($result['hint']);
+    }
+
+    public function testUpdateVariantRejectsALocaleNoWebspaceHas(): void
+    {
+        $this->givenVariantOfParent([]);
+        $this->messageBus->dispatch(Argument::cetera())->shouldNotBeCalled();
+
+        $result = $this->tool->updateProductVariant('xx', 'parent-uuid', 'variant-uuid', title: 'x');
+
+        $this->assertIsString($result['error'] ?? null);
+        $this->assertIsString($result['hint'] ?? null);
+        $this->assertStringContainsString('"xx"', $result['error']);
+        $this->assertStringContainsString('"en", "de"', $result['hint']);
     }
 }
