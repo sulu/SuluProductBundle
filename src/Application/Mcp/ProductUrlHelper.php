@@ -140,7 +140,7 @@ final readonly class ProductUrlHelper
     /**
      * Fills a missing suffix of a page based url from the title, so that the agent only has to name the page.
      * The suffix comes from the route generator with the page as parent and its default schema,
-     * so it is not taken below the page yet.
+     * so it is not taken below the page yet, as long as the page has a url in this locale.
      *
      * @param array<string, mixed> $data
      *
