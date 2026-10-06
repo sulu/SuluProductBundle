@@ -66,6 +66,7 @@ class RemoveAttributeGroupMessageHandlerTest extends TestCase
             $this->attributeGroupRepository->reveal(),
             $this->attributeRepository->reveal(),
             $this->domainEventCollector->reveal(),
+            $this->createStub(TrashManagerInterface::class),
         );
 
         ($handler)(new RemoveAttributeGroupMessage('group-uuid'));
@@ -85,6 +86,7 @@ class RemoveAttributeGroupMessageHandlerTest extends TestCase
             $this->attributeGroupRepository->reveal(),
             $this->attributeRepository->reveal(),
             $this->domainEventCollector->reveal(),
+            $this->createStub(TrashManagerInterface::class),
         );
 
         $this->expectException(AttributeGroupNotEmptyException::class);
@@ -101,6 +103,7 @@ class RemoveAttributeGroupMessageHandlerTest extends TestCase
             $this->attributeGroupRepository->reveal(),
             $this->attributeRepository->reveal(),
             $this->domainEventCollector->reveal(),
+            $this->createStub(TrashManagerInterface::class),
         );
 
         $this->expectException(AttributeGroupNotFoundException::class);

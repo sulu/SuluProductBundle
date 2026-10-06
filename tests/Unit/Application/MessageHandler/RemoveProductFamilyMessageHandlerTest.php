@@ -56,6 +56,7 @@ class RemoveProductFamilyMessageHandlerTest extends TestCase
             $this->familyRepository->reveal(),
             $this->productRepository->reveal(),
             $this->domainEventCollector->reveal(),
+            $this->createStub(TrashManagerInterface::class),
         );
     }
 

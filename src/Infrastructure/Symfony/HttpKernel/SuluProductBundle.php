@@ -811,7 +811,7 @@ final class SuluProductBundle extends AbstractBundle
             ->args([
                 new Reference('sulu_product.attribute_repository'),
                 new Reference('sulu_activity.domain_event_collector'),
-                new Reference('sulu_trash.trash_manager', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                new Reference('sulu_trash.trash_manager'),
             ])
             ->tag('messenger.message_handler');
 
@@ -886,7 +886,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.product_family_repository'),
                 new Reference('sulu_product.product_repository'),
                 new Reference('sulu_activity.domain_event_collector'),
-                new Reference('sulu_trash.trash_manager', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                new Reference('sulu_trash.trash_manager'),
             ])
             ->tag('messenger.message_handler');
 
@@ -912,7 +912,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.attribute_group_repository'),
                 new Reference('sulu_product.attribute_repository'),
                 new Reference('sulu_activity.domain_event_collector'),
-                new Reference('sulu_trash.trash_manager', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                new Reference('sulu_trash.trash_manager'),
             ])
             ->tag('messenger.message_handler');
 

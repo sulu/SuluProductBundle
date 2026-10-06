@@ -86,6 +86,7 @@ class AttributeOptionTest extends TestCase
 
         $this->assertSame($translation, $option->getTranslation('en'));
         $this->assertNull($option->getTranslation('de'));
+        $this->assertSame([$translation], \iterator_to_array($option->getTranslations(), false));
     }
 
     public function testAddTranslationIsFluentAndDeduplicates(): void

@@ -29,7 +29,7 @@ final class RemoveAttributeGroupMessageHandler
         private AttributeGroupRepositoryInterface $attributeGroupRepository,
         private AttributeRepositoryInterface $attributeRepository,
         private DomainEventCollectorInterface $domainEventCollector,
-        private ?TrashManagerInterface $trashManager = null,
+        private TrashManagerInterface $trashManager,
     ) {
     }
 
@@ -46,7 +46,7 @@ final class RemoveAttributeGroupMessageHandler
             throw new AttributeGroupNotEmptyException($message->getUuid(), $attributeCount);
         }
 
-        $this->trashManager?->store(AttributeGroupInterface::RESOURCE_KEY, $group);
+        $this->trashManager->store(AttributeGroupInterface::RESOURCE_KEY, $group);
 
         $this->attributeGroupRepository->remove($group);
 

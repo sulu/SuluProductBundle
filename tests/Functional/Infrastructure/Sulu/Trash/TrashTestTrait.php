@@ -63,20 +63,25 @@ trait TrashTestTrait
     }
 
     /**
+     * @param array<string, mixed> $restoreFormData
+     *
      * @return array<string, mixed>
      */
-    private function restoreTrashItem(int $trashItemId, int $expectedStatus = 200): array
+    private function restoreTrashItem(int $trashItemId, int $expectedStatus = 200, array $restoreFormData = []): array
     {
-        return $this->requestJson('POST', '/admin/api/trash-items/' . $trashItemId . '.json?action=restore', [], $expectedStatus);
+        return $this->requestJson('POST', '/admin/api/trash-items/' . $trashItemId . '.json?action=restore', $restoreFormData, $expectedStatus);
     }
 
     /**
      * The admin navigates to the restored item with these values, so each has to be the uuid.
+     * The response carries nothing else, so no creator or other entity data leaks.
      *
      * @param array<string, mixed> $restored
      */
     private function assertRestoreNavigatesTo(string $handlerServiceId, array $restored, string $expectedId): void
     {
+        $this->assertSame(['id' => $expectedId], $restored);
+
         /** @var RestoreConfigurationProviderInterface $handler */
         $handler = self::getContainer()->get($handlerServiceId);
         $resultToView = $handler->getConfiguration()->getResultToView() ?? [];
@@ -94,7 +99,7 @@ trait TrashTestTrait
     {
         $activities = $this->getClearedEntityManager()->getRepository(ActivityInterface::class)->findBy(
             ['resourceKey' => $resourceKey, 'resourceId' => $resourceId],
-            ['timestamp' => 'ASC'],
+            ['timestamp' => 'ASC', 'id' => 'ASC'],
         );
 
         return \array_map(static fn (ActivityInterface $activity) => $activity->getType(), $activities);

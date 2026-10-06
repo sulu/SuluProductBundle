@@ -30,6 +30,7 @@ use Sulu\Product\Domain\Model\AttributeOption;
 use Sulu\Product\Domain\Model\AttributeOptionTranslation;
 use Sulu\Product\Domain\Model\AttributeTranslation;
 use Sulu\Product\Domain\Model\ProductFamilyAttribute;
+use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
@@ -38,6 +39,7 @@ use Webmozart\Assert\Assert;
 
 /**
  * Product attribute values are removed with the attribute by the database and are not restored.
+ * Links to a family that is gone are dropped.
  *
  * @phpstan-type AttributeRestoreData array{
  *     key: string,
@@ -48,7 +50,7 @@ use Webmozart\Assert\Assert;
  *     filterable: bool,
  *     externalIdentifier: string|null,
  *     defaultLocale: string|null,
- *     groupUuid: string|null,
+ *     groupUuid: string,
  *     created: string,
  *     creatorId: int|null,
  *     translations: list<array{locale: string, name: string, description: string|null}>,
@@ -124,6 +126,22 @@ final class AttributeTrashItemHandler implements
             ->getQuery()
             ->getArrayResult();
 
+        // A family in the trash keeps its link here too, so either one can be restored first.
+        /** @var TrashItemInterface $familyTrashItem */
+        foreach ($this->entityManager->getRepository(TrashItemInterface::class)->findBy(['resourceKey' => ProductFamilyInterface::RESOURCE_KEY]) as $familyTrashItem) {
+            /** @var list<array{attributeUuid: string, required: bool, variantSpecific: bool}> $familyTrashLinks */
+            $familyTrashLinks = $familyTrashItem->getRestoreData()['familyAttributes'] ?? [];
+            foreach ($familyTrashLinks as $familyTrashLink) {
+                if ($familyTrashLink['attributeUuid'] === $attribute->getUuid()) {
+                    $familyAttributes[] = [
+                        'familyUuid' => $familyTrashItem->getResourceId(),
+                        'required' => $familyTrashLink['required'],
+                        'variantSpecific' => $familyTrashLink['variantSpecific'],
+                    ];
+                }
+            }
+        }
+
         $data = [
             'key' => $attribute->getKey(),
             'type' => $attribute->getType(),
@@ -154,6 +172,9 @@ final class AttributeTrashItemHandler implements
         );
     }
 
+    /**
+     * @param array{groupUuid?: string} $restoreFormData
+     */
     public function restore(TrashItemInterface $trashItem, array $restoreFormData = []): object
     {
         /** @var AttributeRestoreData $data */
@@ -163,9 +184,10 @@ final class AttributeTrashItemHandler implements
             throw new AttributeKeyNotUniqueException($data['key']);
         }
 
-        $group = null !== $data['groupUuid'] ? $this->attributeGroupRepository->findOneBy(['uuid' => $data['groupUuid']]) : null;
+        $groupUuid = $restoreFormData['groupUuid'] ?? $data['groupUuid'];
+        $group = $this->attributeGroupRepository->findOneBy(['uuid' => $groupUuid]);
         if (null === $group) {
-            throw new AttributeGroupNotFoundException(['uuid' => $data['groupUuid']]);
+            throw new AttributeGroupNotFoundException(['uuid' => $groupUuid]);
         }
 
         $attribute = $this->attributeRepository->createNew($group, $trashItem->getResourceId());
@@ -181,11 +203,15 @@ final class AttributeTrashItemHandler implements
         $attribute->setCreated(new \DateTimeImmutable($data['created']));
         $attribute->setCreator(null !== $data['creatorId'] ? $this->entityManager->find(UserInterface::class, $data['creatorId']) : null);
 
-        // Takes its old position back, the attributes from there on move down by one.
-        foreach ($this->attributeRepository->findByGroupWithPositionAtLeast($group, $data['position']) as $other) {
-            $other->setPosition($other->getPosition() + 1);
+        // Takes its old position back, the attributes from there on move down by one; in another group it goes last.
+        if ($groupUuid === $data['groupUuid']) {
+            foreach ($this->attributeRepository->findByGroupWithPositionAtLeast($group, $data['position']) as $other) {
+                $other->setPosition($other->getPosition() + 1);
+            }
+            $attribute->setPosition($data['position']);
+        } else {
+            $attribute->setPosition($this->attributeRepository->findNextPositionInGroup($group));
         }
-        $attribute->setPosition($data['position']);
 
         foreach ($data['translations'] as $translationData) {
             $translation = new AttributeTranslation($attribute, $translationData['locale'], $translationData['name']);
@@ -220,11 +246,11 @@ final class AttributeTrashItemHandler implements
 
         $this->domainEventCollector->collect(new AttributeRestoredEvent($attribute, $data));
 
-        return $attribute;
+        return new RestoreResult($attribute->getUuid());
     }
 
     public function getConfiguration(): RestoreConfiguration
     {
-        return new RestoreConfiguration(null, AttributeAdmin::EDIT_TABS_VIEW, ['uuid' => 'id']);
+        return new RestoreConfiguration('restore_attribute', AttributeAdmin::EDIT_TABS_VIEW, ['id' => 'id']);
     }
 }

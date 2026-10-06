@@ -28,6 +28,24 @@
         </join>
     </joins>
 
+    <joins name="productFamilyTranslation" ref="productFamily">
+        <join>
+            <entity-name>productFamilyTranslation</entity-name>
+            <field-name>Sulu\Product\Domain\Model\ProductFamilyInterface.translations</field-name>
+            <method>LEFT</method>
+            <condition>productFamilyTranslation.locale = :locale</condition>
+        </join>
+    </joins>
+
+    <joins name="productFamilyDefaultTranslation" ref="productFamily">
+        <join>
+            <entity-name>productFamilyDefaultTranslation</entity-name>
+            <field-name>Sulu\Product\Domain\Model\ProductFamilyInterface.translations</field-name>
+            <method>LEFT</method>
+            <condition>productFamilyDefaultTranslation.locale = Sulu\Product\Domain\Model\ProductFamilyInterface.defaultLocale</condition>
+        </join>
+    </joins>
+
     <joins name="ghostDimensionContent" ref="unlocalizedDimensionContent">
         <join>
             <entity-name>ghostDimensionContent</entity-name>
@@ -134,6 +152,19 @@
                 </params>
             </filter>
         </property>
+
+        <case-property name="productFamilyName" translation="sulu_product.product_family" visibility="yes">
+            <field>
+                <field-name>name</field-name>
+                <entity-name>productFamilyTranslation</entity-name>
+                <joins ref="productFamilyTranslation"/>
+            </field>
+            <field>
+                <field-name>name</field-name>
+                <entity-name>productFamilyDefaultTranslation</entity-name>
+                <joins ref="productFamilyDefaultTranslation"/>
+            </field>
+        </case-property>
 
         <property name="created" translation="sulu_admin.created" visibility="no">
             <field-name>created</field-name>

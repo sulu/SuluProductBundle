@@ -118,11 +118,11 @@ final class AttributeGroupTrashItemHandler implements
 
         $this->domainEventCollector->collect(new AttributeGroupRestoredEvent($group, $data));
 
-        return $group;
+        return new RestoreResult($group->getUuid());
     }
 
     public function getConfiguration(): RestoreConfiguration
     {
-        return new RestoreConfiguration(null, AttributeGroupAdmin::EDIT_TABS_VIEW, ['uuid' => 'id']);
+        return new RestoreConfiguration(null, AttributeGroupAdmin::EDIT_TABS_VIEW, ['id' => 'id']);
     }
 }

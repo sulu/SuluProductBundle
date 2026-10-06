@@ -65,6 +65,7 @@ class RemoveAttributeMessageHandlerTest extends TestCase
         $handler = new RemoveAttributeMessageHandler(
             $this->attributeRepository->reveal(),
             $this->domainEventCollector->reveal(),
+            $this->createStub(TrashManagerInterface::class),
         );
 
         ($handler)(new RemoveAttributeMessage($identifier));
@@ -80,6 +81,7 @@ class RemoveAttributeMessageHandlerTest extends TestCase
         $handler = new RemoveAttributeMessageHandler(
             $this->attributeRepository->reveal(),
             $this->domainEventCollector->reveal(),
+            $this->createStub(TrashManagerInterface::class),
         );
 
         $this->expectException(AttributeNotFoundException::class);

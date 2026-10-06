@@ -25,7 +25,7 @@ final class RemoveAttributeMessageHandler
     public function __construct(
         private AttributeRepositoryInterface $attributeRepository,
         private DomainEventCollectorInterface $domainEventCollector,
-        private ?TrashManagerInterface $trashManager = null,
+        private TrashManagerInterface $trashManager,
     ) {
     }
 
@@ -33,7 +33,7 @@ final class RemoveAttributeMessageHandler
     {
         $attribute = $this->attributeRepository->getOneBy($message->getIdentifier());
 
-        $this->trashManager?->store(AttributeInterface::RESOURCE_KEY, $attribute);
+        $this->trashManager->store(AttributeInterface::RESOURCE_KEY, $attribute);
 
         $this->attributeRepository->remove($attribute);
 

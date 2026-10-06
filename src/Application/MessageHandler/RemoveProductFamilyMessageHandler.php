@@ -29,7 +29,7 @@ final class RemoveProductFamilyMessageHandler
         private ProductFamilyRepositoryInterface $productFamilyRepository,
         private ProductRepositoryInterface $productRepository,
         private DomainEventCollectorInterface $domainEventCollector,
-        private ?TrashManagerInterface $trashManager = null,
+        private TrashManagerInterface $trashManager,
     ) {
     }
 
@@ -45,7 +45,7 @@ final class RemoveProductFamilyMessageHandler
             throw new ProductFamilyHasProductsException($message->getUuid());
         }
 
-        $this->trashManager?->store(ProductFamilyInterface::RESOURCE_KEY, $family);
+        $this->trashManager->store(ProductFamilyInterface::RESOURCE_KEY, $family);
 
         $this->productFamilyRepository->remove($family);
 

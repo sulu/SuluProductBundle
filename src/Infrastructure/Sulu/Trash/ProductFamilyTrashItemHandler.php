@@ -25,6 +25,7 @@ use Sulu\Bundle\TrashBundle\Domain\Repository\TrashItemRepositoryInterface;
 use Sulu\Component\Security\Authentication\UserInterface;
 use Sulu\Product\Domain\Event\ProductFamilyRestoredEvent;
 use Sulu\Product\Domain\Exception\ProductFamilyKeyNotUniqueException;
+use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\ProductFamilyAttribute;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Model\ProductFamilyTranslation;
@@ -34,6 +35,8 @@ use Sulu\Product\Infrastructure\Sulu\Admin\ProductFamilyAdmin;
 use Webmozart\Assert\Assert;
 
 /**
+ * Links to an attribute that is gone are dropped.
+ *
  * @phpstan-type ProductFamilyRestoreData array{
  *     key: string,
  *     externalIdentifier: string|null,
@@ -89,6 +92,22 @@ final class ProductFamilyTrashItemHandler implements
                 'required' => $familyAttribute->isRequired(),
                 'variantSpecific' => $familyAttribute->isVariantSpecific(),
             ];
+        }
+
+        // An attribute in the trash keeps its link here too, so either one can be restored first.
+        /** @var TrashItemInterface $attributeTrashItem */
+        foreach ($this->entityManager->getRepository(TrashItemInterface::class)->findBy(['resourceKey' => AttributeInterface::RESOURCE_KEY]) as $attributeTrashItem) {
+            /** @var list<array{familyUuid: string, required: bool, variantSpecific: bool}> $attributeTrashLinks */
+            $attributeTrashLinks = $attributeTrashItem->getRestoreData()['familyAttributes'] ?? [];
+            foreach ($attributeTrashLinks as $attributeTrashLink) {
+                if ($attributeTrashLink['familyUuid'] === $family->getUuid()) {
+                    $familyAttributes[] = [
+                        'attributeUuid' => $attributeTrashItem->getResourceId(),
+                        'required' => $attributeTrashLink['required'],
+                        'variantSpecific' => $attributeTrashLink['variantSpecific'],
+                    ];
+                }
+            }
         }
 
         $data = [
@@ -156,11 +175,11 @@ final class ProductFamilyTrashItemHandler implements
 
         $this->domainEventCollector->collect(new ProductFamilyRestoredEvent($family, $data));
 
-        return $family;
+        return new RestoreResult($family->getUuid());
     }
 
     public function getConfiguration(): RestoreConfiguration
     {
-        return new RestoreConfiguration(null, ProductFamilyAdmin::EDIT_TABS_VIEW, ['uuid' => 'id']);
+        return new RestoreConfiguration(null, ProductFamilyAdmin::EDIT_TABS_VIEW, ['id' => 'id']);
     }
 }
