@@ -1625,6 +1625,10 @@ final class SuluProductBundle extends AbstractBundle
                             ],
                             // Workflow transitions and their requests are authorized against it.
                             'security_context' => ProductAdmin::SECURITY_CONTEXT,
+                            // Deep links, e.g. in notifications, open the product edit view.
+                            'views' => [
+                                'detail' => ProductAdmin::EDIT_TABS_VIEW,
+                            ],
                         ],
                         ProductInterface::LIST_KEY_VERSIONS => [
                             'routes' => [
