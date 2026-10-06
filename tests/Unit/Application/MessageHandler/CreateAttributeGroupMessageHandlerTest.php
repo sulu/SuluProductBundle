@@ -14,10 +14,13 @@ declare(strict_types=1);
 namespace Sulu\Product\Tests\Unit\Application\MessageHandler;
 
 use PHPUnit\Framework\TestCase;
+use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
+use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
 use Sulu\Product\Application\Message\CreateAttributeGroupMessage;
 use Sulu\Product\Application\MessageHandler\CreateAttributeGroupMessageHandler;
+use Sulu\Product\Domain\Event\AttributeGroupCreatedEvent;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 
@@ -28,8 +31,12 @@ class CreateAttributeGroupMessageHandlerTest extends TestCase
     /** @var ObjectProphecy<AttributeGroupRepositoryInterface> */
     private ObjectProphecy $attributeGroupRepository;
 
+    /** @var ObjectProphecy<DomainEventCollectorInterface> */
+    private ObjectProphecy $domainEventCollector;
+
     protected function setUp(): void
     {
+        $this->domainEventCollector = $this->prophesize(DomainEventCollectorInterface::class);
         $this->attributeGroupRepository = $this->prophesize(AttributeGroupRepositoryInterface::class);
     }
 
@@ -37,11 +44,14 @@ class CreateAttributeGroupMessageHandlerTest extends TestCase
     {
         return new CreateAttributeGroupMessageHandler(
             $this->attributeGroupRepository->reveal(),
+            $this->domainEventCollector->reveal(),
         );
     }
 
     public function testCreateAttributeGroup(): void
     {
+        $this->domainEventCollector->collect(Argument::type(AttributeGroupCreatedEvent::class))->shouldBeCalledOnce();
+
         $group = new AttributeGroup();
 
         $this->attributeGroupRepository->createNew()

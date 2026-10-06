@@ -1154,6 +1154,28 @@ class ProductControllerTest extends SuluTestCase
         $this->assertSame([$plainInA], $this->listIds(['publishedState' => 'published']));
     }
 
+    public function testListShowsTheProductFamilyName(): void
+    {
+        self::purgeDatabase();
+        $familyId = $this->createProductFamily();
+        $productId = $this->createProduct($familyId, 'Product In Family');
+
+        // a locale without a family translation falls back to the family's default locale
+        foreach (['en', 'de'] as $locale) {
+            $this->client->request('GET', '/admin/api/products.json?locale=' . $locale . '&fields=id,productFamilyName&flat=true');
+            $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+            $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+            $this->assertIsArray($data);
+            $this->assertIsArray($data['_embedded']);
+            $this->assertIsArray($data['_embedded']['products']);
+            $this->assertSame(
+                [$productId => 'Test Family'],
+                \array_column($data['_embedded']['products'], 'productFamilyName', 'id'),
+            );
+        }
+    }
+
     /**
      * @param array<string, string> $filter
      *

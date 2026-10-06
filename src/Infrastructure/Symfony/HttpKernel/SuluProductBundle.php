@@ -73,6 +73,8 @@ use Sulu\Product\Domain\Event\ProductTranslationCopiedEvent;
 use Sulu\Product\Domain\Event\ProductTranslationRemovedEvent;
 use Sulu\Product\Domain\Event\ProductTranslationRestoredEvent;
 use Sulu\Product\Domain\Event\ProductWorkflowTransitionAppliedEvent;
+use Sulu\Product\Domain\Exception\AttributeGroupNotFoundException;
+use Sulu\Product\Domain\Exception\AttributeKeyNotUniqueException;
 use Sulu\Product\Domain\Exception\ProductFamilyKeyNotUniqueException;
 use Sulu\Product\Domain\Exception\ProductVariantParentNotFoundException;
 use Sulu\Product\Domain\Measurement\MeasurementRegistry;
@@ -174,6 +176,9 @@ use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductReindexTaxonom
 use Sulu\Product\Infrastructure\Sulu\Search\WebsiteProductIndexListener;
 use Sulu\Product\Infrastructure\Sulu\Search\WebsiteProductReindexProvider;
 use Sulu\Product\Infrastructure\Sulu\Sitemap\ProductsSitemapProvider;
+use Sulu\Product\Infrastructure\Sulu\Trash\AttributeGroupTrashItemHandler;
+use Sulu\Product\Infrastructure\Sulu\Trash\AttributeTrashItemHandler;
+use Sulu\Product\Infrastructure\Sulu\Trash\ProductFamilyTrashItemHandler;
 use Sulu\Product\Infrastructure\Sulu\Trash\ProductTrashItemHandler;
 use Sulu\Product\Infrastructure\Symfony\Mcp\AdminLink\ProductAdminLinkProvider as McpProductAdminLinkProvider;
 use Sulu\Product\Infrastructure\Symfony\Mcp\AdminLink\ProductVariantAdminLinkProvider as McpProductVariantAdminLinkProvider;
@@ -716,6 +721,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_admin.view_builder_factory'),
                 new Reference('sulu_security.security_checker'),
                 new Reference('sulu.core.localization_manager'),
+                new Reference('sulu_activity.activity_list_view_builder_factory'),
             ])
             ->tag('sulu.context', ['context' => 'admin'])
             ->tag('sulu.admin');
@@ -787,6 +793,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.attribute_repository'),
                 tagged_iterator('sulu_product.attribute_mapper'),
                 new Reference('sulu_product.attribute_group_repository'),
+                new Reference('sulu_activity.domain_event_collector'),
             ])
             ->tag('messenger.message_handler');
 
@@ -795,6 +802,7 @@ final class SuluProductBundle extends AbstractBundle
             ->args([
                 new Reference('sulu_product.attribute_repository'),
                 tagged_iterator('sulu_product.attribute_mapper'),
+                new Reference('sulu_activity.domain_event_collector'),
             ])
             ->tag('messenger.message_handler');
 
@@ -802,6 +810,8 @@ final class SuluProductBundle extends AbstractBundle
             ->class(RemoveAttributeMessageHandler::class)
             ->args([
                 new Reference('sulu_product.attribute_repository'),
+                new Reference('sulu_activity.domain_event_collector'),
+                new Reference('sulu_trash.trash_manager'),
             ])
             ->tag('messenger.message_handler');
 
@@ -857,6 +867,7 @@ final class SuluProductBundle extends AbstractBundle
             ->args([
                 new Reference('sulu_product.product_family_repository'),
                 tagged_iterator('sulu_product.product_family_mapper'),
+                new Reference('sulu_activity.domain_event_collector'),
             ])
             ->tag('messenger.message_handler');
 
@@ -865,6 +876,7 @@ final class SuluProductBundle extends AbstractBundle
             ->args([
                 new Reference('sulu_product.product_family_repository'),
                 tagged_iterator('sulu_product.product_family_mapper'),
+                new Reference('sulu_activity.domain_event_collector'),
             ])
             ->tag('messenger.message_handler');
 
@@ -873,6 +885,8 @@ final class SuluProductBundle extends AbstractBundle
             ->args([
                 new Reference('sulu_product.product_family_repository'),
                 new Reference('sulu_product.product_repository'),
+                new Reference('sulu_activity.domain_event_collector'),
+                new Reference('sulu_trash.trash_manager'),
             ])
             ->tag('messenger.message_handler');
 
@@ -880,6 +894,7 @@ final class SuluProductBundle extends AbstractBundle
             ->class(CreateAttributeGroupMessageHandler::class)
             ->args([
                 new Reference('sulu_product.attribute_group_repository'),
+                new Reference('sulu_activity.domain_event_collector'),
             ])
             ->tag('messenger.message_handler');
 
@@ -887,6 +902,7 @@ final class SuluProductBundle extends AbstractBundle
             ->class(ModifyAttributeGroupMessageHandler::class)
             ->args([
                 new Reference('sulu_product.attribute_group_repository'),
+                new Reference('sulu_activity.domain_event_collector'),
             ])
             ->tag('messenger.message_handler');
 
@@ -895,6 +911,8 @@ final class SuluProductBundle extends AbstractBundle
             ->args([
                 new Reference('sulu_product.attribute_group_repository'),
                 new Reference('sulu_product.attribute_repository'),
+                new Reference('sulu_activity.domain_event_collector'),
+                new Reference('sulu_trash.trash_manager'),
             ])
             ->tag('messenger.message_handler');
 
@@ -904,6 +922,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_admin.view_builder_factory'),
                 new Reference('sulu_security.security_checker'),
                 new Reference('sulu.core.localization_manager'),
+                new Reference('sulu_activity.activity_list_view_builder_factory'),
             ])
             ->tag('sulu.context', ['context' => 'admin'])
             ->tag('sulu.admin');
@@ -927,6 +946,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_admin.view_builder_factory'),
                 new Reference('sulu_security.security_checker'),
                 new Reference('sulu.core.localization_manager'),
+                new Reference('sulu_activity.activity_list_view_builder_factory'),
             ])
             ->tag('sulu.context', ['context' => 'admin'])
             ->tag('sulu.admin');
@@ -1282,6 +1302,45 @@ final class SuluProductBundle extends AbstractBundle
                     new Reference('sulu_content.content_normalizer'),
                     new Reference('sulu_content.content_merger'),
                     new Reference('sulu_content.content_persister'),
+                    new Reference('sulu_activity.domain_event_collector'),
+                ])
+                ->tag('sulu_trash.store_trash_item_handler')
+                ->tag('sulu_trash.restore_trash_item_handler')
+                ->tag('sulu_trash.restore_configuration_provider');
+
+            $services->set('sulu_product.attribute_trash_item_handler')
+                ->class(AttributeTrashItemHandler::class)
+                ->args([
+                    new Reference('sulu_trash.trash_item_repository'),
+                    new Reference('sulu_product.attribute_repository'),
+                    new Reference('sulu_product.attribute_group_repository'),
+                    new Reference('sulu_product.product_family_repository'),
+                    new Reference('doctrine.orm.entity_manager'),
+                    new Reference('sulu_activity.domain_event_collector'),
+                ])
+                ->tag('sulu_trash.store_trash_item_handler')
+                ->tag('sulu_trash.restore_trash_item_handler')
+                ->tag('sulu_trash.restore_configuration_provider');
+
+            $services->set('sulu_product.attribute_group_trash_item_handler')
+                ->class(AttributeGroupTrashItemHandler::class)
+                ->args([
+                    new Reference('sulu_trash.trash_item_repository'),
+                    new Reference('sulu_product.attribute_group_repository'),
+                    new Reference('doctrine.orm.entity_manager'),
+                    new Reference('sulu_activity.domain_event_collector'),
+                ])
+                ->tag('sulu_trash.store_trash_item_handler')
+                ->tag('sulu_trash.restore_trash_item_handler')
+                ->tag('sulu_trash.restore_configuration_provider');
+
+            $services->set('sulu_product.product_family_trash_item_handler')
+                ->class(ProductFamilyTrashItemHandler::class)
+                ->args([
+                    new Reference('sulu_trash.trash_item_repository'),
+                    new Reference('sulu_product.product_family_repository'),
+                    new Reference('sulu_product.attribute_repository'),
+                    new Reference('doctrine.orm.entity_manager'),
                     new Reference('sulu_activity.domain_event_collector'),
                 ])
                 ->tag('sulu_trash.store_trash_item_handler')
@@ -1736,6 +1795,8 @@ final class SuluProductBundle extends AbstractBundle
                 [
                     'exception' => [
                         'codes' => [
+                            AttributeGroupNotFoundException::class => 404,
+                            AttributeKeyNotUniqueException::class => 409,
                             ProductFamilyKeyNotUniqueException::class => 409,
                             ProductVariantParentNotFoundException::class => 409,
                         ],

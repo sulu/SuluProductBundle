@@ -17,11 +17,16 @@ use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
+use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
+use Sulu\Bundle\TrashBundle\Application\TrashManager\TrashManagerInterface;
 use Sulu\Product\Application\Message\RemoveProductFamilyMessage;
 use Sulu\Product\Application\MessageHandler\RemoveProductFamilyMessageHandler;
+use Sulu\Product\Domain\Event\ProductFamilyRemovedEvent;
 use Sulu\Product\Domain\Exception\ProductFamilyHasProductsException;
 use Sulu\Product\Domain\Exception\ProductFamilyNotFoundException;
 use Sulu\Product\Domain\Model\ProductFamily;
+use Sulu\Product\Domain\Model\ProductFamilyInterface;
+use Sulu\Product\Domain\Model\ProductFamilyTranslation;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 
@@ -35,8 +40,12 @@ class RemoveProductFamilyMessageHandlerTest extends TestCase
     /** @var ObjectProphecy<ProductRepositoryInterface> */
     private ObjectProphecy $productRepository;
 
+    /** @var ObjectProphecy<DomainEventCollectorInterface> */
+    private ObjectProphecy $domainEventCollector;
+
     protected function setUp(): void
     {
+        $this->domainEventCollector = $this->prophesize(DomainEventCollectorInterface::class);
         $this->familyRepository = $this->prophesize(ProductFamilyRepositoryInterface::class);
         $this->productRepository = $this->prophesize(ProductRepositoryInterface::class);
     }
@@ -46,6 +55,8 @@ class RemoveProductFamilyMessageHandlerTest extends TestCase
         return new RemoveProductFamilyMessageHandler(
             $this->familyRepository->reveal(),
             $this->productRepository->reveal(),
+            $this->domainEventCollector->reveal(),
+            $this->createStub(TrashManagerInterface::class),
         );
     }
 
@@ -77,5 +88,32 @@ class RemoveProductFamilyMessageHandlerTest extends TestCase
 
         $this->expectException(ProductFamilyHasProductsException::class);
         ($this->createHandler())(new RemoveProductFamilyMessage('f'));
+    }
+
+    public function testRemoveStoresTrashItemAndCollectsEvent(): void
+    {
+        $family = new ProductFamily();
+        $family->setDefaultLocale('en');
+        $family->addTranslation(new ProductFamilyTranslation($family, 'en', 'Apparel'));
+        $this->familyRepository->findOneBy(['uuid' => 'f'])->willReturn($family);
+        $this->productRepository->existBy(['productFamilyUuid' => 'f'])->willReturn(false);
+
+        $trashManager = $this->prophesize(TrashManagerInterface::class);
+        $trashManager->store(ProductFamilyInterface::RESOURCE_KEY, $family)->shouldBeCalledOnce();
+        $this->familyRepository->remove($family)->shouldBeCalledOnce();
+        $this->domainEventCollector->collect(Argument::that(
+            static fn (ProductFamilyRemovedEvent $event) => 'f' === $event->getResourceId()
+                && 'Apparel' === $event->getResourceTitle()
+                && 'en' === $event->getResourceTitleLocale(),
+        ))->shouldBeCalledOnce();
+
+        $handler = new RemoveProductFamilyMessageHandler(
+            $this->familyRepository->reveal(),
+            $this->productRepository->reveal(),
+            $this->domainEventCollector->reveal(),
+            $trashManager->reveal(),
+        );
+
+        ($handler)(new RemoveProductFamilyMessage('f'));
     }
 }

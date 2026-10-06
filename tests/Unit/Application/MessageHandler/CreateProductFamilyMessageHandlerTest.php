@@ -14,12 +14,15 @@ declare(strict_types=1);
 namespace Sulu\Product\Tests\Unit\Application\MessageHandler;
 
 use PHPUnit\Framework\TestCase;
+use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
+use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
 use Sulu\Bundle\MediaBundle\Entity\MediaRepositoryInterface;
 use Sulu\Product\Application\Mapper\ProductFamilyMapper;
 use Sulu\Product\Application\Message\CreateProductFamilyMessage;
 use Sulu\Product\Application\MessageHandler\CreateProductFamilyMessageHandler;
+use Sulu\Product\Domain\Event\ProductFamilyCreatedEvent;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\ProductFamily;
@@ -36,8 +39,12 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
     /** @var ObjectProphecy<AttributeRepositoryInterface> */
     private ObjectProphecy $attributeRepository;
 
+    /** @var ObjectProphecy<DomainEventCollectorInterface> */
+    private ObjectProphecy $domainEventCollector;
+
     protected function setUp(): void
     {
+        $this->domainEventCollector = $this->prophesize(DomainEventCollectorInterface::class);
         $this->familyRepository = $this->prophesize(ProductFamilyRepositoryInterface::class);
         $this->attributeRepository = $this->prophesize(AttributeRepositoryInterface::class);
     }
@@ -47,6 +54,7 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
         return new CreateProductFamilyMessageHandler(
             $this->familyRepository->reveal(),
             [new ProductFamilyMapper($this->attributeRepository->reveal(), $this->prophesize(MediaRepositoryInterface::class)->reveal(), $this->familyRepository->reveal())],
+            $this->domainEventCollector->reveal(),
         );
     }
 
@@ -60,6 +68,8 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
 
     public function testCreateFamilyWithTranslationAndAttributes(): void
     {
+        $this->domainEventCollector->collect(Argument::type(ProductFamilyCreatedEvent::class))->shouldBeCalledOnce();
+
         $family = new ProductFamily();
         $this->familyRepository->createNew()->willReturn($family);
         $this->familyRepository->findOneBy(['key' => 'family'])->willReturn(null);

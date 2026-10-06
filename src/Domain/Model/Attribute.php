@@ -110,6 +110,11 @@ class Attribute implements AttributeInterface
         return $translation ?: null;
     }
 
+    public function getTranslations(): iterable
+    {
+        return $this->translations;
+    }
+
     public function addTranslation(AttributeTranslationInterface $translation): self
     {
         if (!$this->translations->contains($translation)) {

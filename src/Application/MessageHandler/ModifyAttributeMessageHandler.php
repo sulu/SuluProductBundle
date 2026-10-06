@@ -13,8 +13,10 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Application\MessageHandler;
 
+use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
 use Sulu\Product\Application\Mapper\AttributeMapperInterface;
 use Sulu\Product\Application\Message\ModifyAttributeMessage;
+use Sulu\Product\Domain\Event\AttributeModifiedEvent;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 
@@ -24,6 +26,7 @@ final class ModifyAttributeMessageHandler
         private AttributeRepositoryInterface $attributeRepository,
         /** @var iterable<AttributeMapperInterface> */
         private iterable $attributeMappers,
+        private DomainEventCollectorInterface $domainEventCollector,
     ) {
     }
 
@@ -36,6 +39,10 @@ final class ModifyAttributeMessageHandler
         }
 
         $this->attributeRepository->save($attribute);
+
+        $this->domainEventCollector->collect(
+            new AttributeModifiedEvent($attribute, $message->getLocale(), $message->getData()),
+        );
 
         return $attribute;
     }

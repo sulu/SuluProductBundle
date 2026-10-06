@@ -107,6 +107,7 @@ class AttributeTest extends TestCase
         $this->assertSame($en, $attribute->getTranslation('en'));
         $this->assertSame($de, $attribute->getTranslation('de'));
         $this->assertNull($attribute->getTranslation('fr'));
+        $this->assertSame([$en, $de], \iterator_to_array($attribute->getTranslations(), false));
     }
 
     public function testAddTranslationIsFluentAndDeduplicates(): void

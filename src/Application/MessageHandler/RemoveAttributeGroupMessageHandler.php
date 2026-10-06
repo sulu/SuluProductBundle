@@ -13,9 +13,13 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Application\MessageHandler;
 
+use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
+use Sulu\Bundle\TrashBundle\Application\TrashManager\TrashManagerInterface;
 use Sulu\Product\Application\Message\RemoveAttributeGroupMessage;
+use Sulu\Product\Domain\Event\AttributeGroupRemovedEvent;
 use Sulu\Product\Domain\Exception\AttributeGroupNotEmptyException;
 use Sulu\Product\Domain\Exception\AttributeGroupNotFoundException;
+use Sulu\Product\Domain\Model\AttributeGroupInterface;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 
@@ -24,6 +28,8 @@ final class RemoveAttributeGroupMessageHandler
     public function __construct(
         private AttributeGroupRepositoryInterface $attributeGroupRepository,
         private AttributeRepositoryInterface $attributeRepository,
+        private DomainEventCollectorInterface $domainEventCollector,
+        private TrashManagerInterface $trashManager,
     ) {
     }
 
@@ -40,6 +46,15 @@ final class RemoveAttributeGroupMessageHandler
             throw new AttributeGroupNotEmptyException($message->getUuid(), $attributeCount);
         }
 
+        $this->trashManager->store(AttributeGroupInterface::RESOURCE_KEY, $group);
+
         $this->attributeGroupRepository->remove($group);
+
+        $titleLocale = $group->getDefaultLocale();
+        $this->domainEventCollector->collect(new AttributeGroupRemovedEvent(
+            $message->getUuid(),
+            null !== $titleLocale ? $group->getTranslation($titleLocale)?->getName() : null,
+            $titleLocale,
+        ));
     }
 }

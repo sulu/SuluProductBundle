@@ -65,6 +65,7 @@ class AttributeGroupTest extends TestCase
         $this->assertSame($en, $group->getTranslation('en'));
         $this->assertSame($de, $group->getTranslation('de'));
         $this->assertNull($group->getTranslation('fr'));
+        $this->assertSame([$en, $de], \iterator_to_array($group->getTranslations(), false));
     }
 
     public function testAddTranslationDeduplicates(): void

@@ -13,9 +13,13 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Application\MessageHandler;
 
+use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
+use Sulu\Bundle\TrashBundle\Application\TrashManager\TrashManagerInterface;
 use Sulu\Product\Application\Message\RemoveProductFamilyMessage;
+use Sulu\Product\Domain\Event\ProductFamilyRemovedEvent;
 use Sulu\Product\Domain\Exception\ProductFamilyHasProductsException;
 use Sulu\Product\Domain\Exception\ProductFamilyNotFoundException;
+use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 
@@ -24,6 +28,8 @@ final class RemoveProductFamilyMessageHandler
     public function __construct(
         private ProductFamilyRepositoryInterface $productFamilyRepository,
         private ProductRepositoryInterface $productRepository,
+        private DomainEventCollectorInterface $domainEventCollector,
+        private TrashManagerInterface $trashManager,
     ) {
     }
 
@@ -39,6 +45,15 @@ final class RemoveProductFamilyMessageHandler
             throw new ProductFamilyHasProductsException($message->getUuid());
         }
 
+        $this->trashManager->store(ProductFamilyInterface::RESOURCE_KEY, $family);
+
         $this->productFamilyRepository->remove($family);
+
+        $titleLocale = $family->getDefaultLocale();
+        $this->domainEventCollector->collect(new ProductFamilyRemovedEvent(
+            $message->getUuid(),
+            null !== $titleLocale ? $family->getTranslation($titleLocale)?->getName() : null,
+            $titleLocale,
+        ));
     }
 }

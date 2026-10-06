@@ -17,6 +17,8 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
+use Sulu\Bundle\ActivityBundle\Infrastructure\Sulu\Admin\ActivityAdmin;
+use Sulu\Bundle\ActivityBundle\Infrastructure\Sulu\Admin\View\ActivityViewBuilderFactory;
 use Sulu\Bundle\AdminBundle\Admin\Navigation\NavigationItemCollection;
 use Sulu\Bundle\AdminBundle\Admin\View\ViewBuilderFactory;
 use Sulu\Bundle\AdminBundle\Admin\View\ViewCollection;
@@ -46,11 +48,14 @@ class AttributeGroupAdminTest extends TestCase
         $this->securityChecker = $this->prophesize(SecurityCheckerInterface::class);
         $this->localizationManager = $this->prophesize(LocalizationManagerInterface::class);
         $this->localizationManager->getLocales()->willReturn(['en', 'de']);
+        $this->securityChecker->hasPermission(ActivityAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)
+            ->willReturn(false);
 
         $this->admin = new AttributeGroupAdmin(
             $this->viewBuilderFactory,
             $this->securityChecker->reveal(),
             $this->localizationManager->reveal(),
+            new ActivityViewBuilderFactory($this->viewBuilderFactory, $this->securityChecker->reveal()),
         );
     }
 
@@ -154,5 +159,24 @@ class AttributeGroupAdminTest extends TestCase
         $this->assertTrue($viewCollection->has(AttributeGroupAdmin::ADD_TABS_VIEW . '.details'));
         $this->assertTrue($viewCollection->has(AttributeGroupAdmin::EDIT_TABS_VIEW . '.details'));
         $this->assertTrue($viewCollection->has(AttributeGroupAdmin::ATTRIBUTES_LIST_VIEW));
+    }
+
+    public function testConfigureViewsAddsActivityTabWithActivityPermission(): void
+    {
+        $this->securityChecker->hasPermission(AttributeGroupAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)
+            ->willReturn(true);
+        $this->securityChecker->hasPermission(AttributeGroupAdmin::SECURITY_CONTEXT, PermissionTypes::ADD)
+            ->willReturn(false);
+        $this->securityChecker->hasPermission(AttributeGroupAdmin::SECURITY_CONTEXT, PermissionTypes::DELETE)
+            ->willReturn(false);
+        $this->securityChecker->hasPermission(ActivityAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)
+            ->willReturn(true);
+
+        $viewCollection = new ViewCollection();
+        $this->admin->configureViews($viewCollection);
+
+        $this->assertCount(8, $viewCollection->all());
+        $this->assertTrue($viewCollection->has(AttributeGroupAdmin::EDIT_TABS_VIEW . '.insights'));
+        $this->assertTrue($viewCollection->has(AttributeGroupAdmin::EDIT_TABS_VIEW . '.insights.activity'));
     }
 }
