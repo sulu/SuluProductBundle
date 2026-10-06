@@ -39,6 +39,7 @@ use Sulu\Product\Tests\Unit\Fixture\CompletenessCheckerFactory;
 use Sulu\Product\Tests\Unit\Fixture\FixedBlockIdGenerator;
 use Sulu\Product\Tests\Unit\Fixture\ProductContentMetadata;
 use Sulu\Product\Tests\Unit\Fixture\ProductUrlHelperFactory;
+use Sulu\Product\Tests\Unit\Fixture\ProjectLocalesFactory;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
@@ -70,6 +71,7 @@ final class ProductCreateToolTest extends TestCase
             $this->associationResolver(),
             CompletenessCheckerFactory::create(),
             ProductUrlHelperFactory::create(),
+            ProjectLocalesFactory::create(),
         );
     }
 
@@ -522,6 +524,7 @@ final class ProductCreateToolTest extends TestCase
             $this->associationResolver(),
             CompletenessCheckerFactory::create(),
             ProductUrlHelperFactory::create(),
+            ProjectLocalesFactory::create(),
         );
     }
 
@@ -547,5 +550,18 @@ final class ProductCreateToolTest extends TestCase
         return static function() use (&$captured): ?object {
             return $captured;
         };
+    }
+
+    public function testCreateProductRejectsALocaleNoWebspaceHas(): void
+    {
+        $this->messageBus->dispatch(Argument::cetera())->shouldNotBeCalled();
+
+        $result = $this->tool->createProduct('xx', 'family-uuid', 'Shirt');
+
+        $this->assertArrayNotHasKey('success', $result);
+        $this->assertIsString($result['error'] ?? null);
+        $this->assertIsString($result['hint'] ?? null);
+        $this->assertStringContainsString('"xx"', $result['error']);
+        $this->assertStringContainsString('"en", "de"', $result['hint']);
     }
 }
