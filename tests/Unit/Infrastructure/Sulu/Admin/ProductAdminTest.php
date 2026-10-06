@@ -15,20 +15,30 @@ namespace Sulu\Product\Tests\Unit\Infrastructure\Sulu\Admin;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Bundle\ActivityBundle\Infrastructure\Sulu\Admin\ActivityAdmin;
 use Sulu\Bundle\ActivityBundle\Infrastructure\Sulu\Admin\View\ActivityViewBuilderFactory;
 use Sulu\Bundle\AdminBundle\Admin\Navigation\NavigationItemCollection;
+use Sulu\Bundle\AdminBundle\Admin\View\DropdownToolbarAction;
 use Sulu\Bundle\AdminBundle\Admin\View\FormViewBuilder;
 use Sulu\Bundle\AdminBundle\Admin\View\PreviewFormViewBuilder;
 use Sulu\Bundle\AdminBundle\Admin\View\ToolbarAction;
 use Sulu\Bundle\AdminBundle\Admin\View\ViewBuilderFactory;
 use Sulu\Bundle\AdminBundle\Admin\View\ViewCollection;
+use Sulu\Bundle\PreviewBundle\Preview\Object\PreviewObjectProviderRegistry;
 use Sulu\Component\Localization\Manager\LocalizationManagerInterface;
 use Sulu\Component\Security\Authorization\PermissionTypes;
 use Sulu\Component\Security\Authorization\SecurityCheckerInterface;
+use Sulu\Content\Application\ContentMetadataInspector\ContentMetadataInspectorInterface;
+use Sulu\Content\Application\RequestWorkflow\RequestWorkflowResolverInterface;
+use Sulu\Content\Application\Security\WorkflowTransitionRequestSecurityContextResolverInterface;
+use Sulu\Content\Infrastructure\Sulu\Admin\ContentViewBuilderFactory;
+use Sulu\Content\Infrastructure\Sulu\Admin\ContentViewBuilderFactoryInterface;
 use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
+use Sulu\Product\Domain\Model\ProductDimensionContent;
+use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeGroupAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
@@ -68,6 +78,26 @@ class ProductAdminTest extends TestCase
             $this->localizationManager->reveal(),
             $this->activityViewBuilderFactory,
             new ProductAssociationTypeRegistry([]),
+            $this->createContentViewBuilderFactory(),
+        );
+    }
+
+    private function createContentViewBuilderFactory(): ContentViewBuilderFactoryInterface
+    {
+        $inspector = $this->prophesize(ContentMetadataInspectorInterface::class);
+        $inspector->getDimensionContentClass(ProductInterface::class)->willReturn(ProductDimensionContent::class);
+
+        $requestWorkflowResolver = $this->prophesize(RequestWorkflowResolverInterface::class);
+        $requestWorkflowResolver->resolveTemplateKeysWithWorkflow(Argument::cetera())->willReturn(['default']);
+
+        return new ContentViewBuilderFactory(
+            $this->viewBuilderFactory,
+            new PreviewObjectProviderRegistry([]),
+            $inspector->reveal(),
+            $this->securityChecker->reveal(),
+            $requestWorkflowResolver->reveal(),
+            $this->prophesize(WorkflowTransitionRequestSecurityContextResolverInterface::class)->reveal(),
+            [],
         );
     }
 
@@ -381,6 +411,7 @@ class ProductAdminTest extends TestCase
             $this->localizationManager->reveal(),
             $this->activityViewBuilderFactory,
             new ProductAssociationTypeRegistry(['alternative' => ['label' => 'sulu_product.association_type_alternative']]),
+            $this->createContentViewBuilderFactory(),
         );
 
         $viewCollection = new ViewCollection();
@@ -391,6 +422,34 @@ class ProductAdminTest extends TestCase
 
         $toolbarActions = $viewCollection->get(ProductAdmin::EDIT_TABS_VIEW . '.associations')->getView()->getOption('toolbarActions');
         $this->assertNotEmpty($toolbarActions);
+    }
+
+    public function testDetailsEditViewHasWorkflowRequestToolbarActions(): void
+    {
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(true);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::ADD)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::DELETE)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::LIVE)->willReturn(false);
+        $this->securityChecker->hasPermission(ActivityAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(false);
+
+        $viewCollection = new ViewCollection();
+        $this->admin->configureViews($viewCollection);
+
+        /** @var ToolbarAction[] $toolbarActions */
+        $toolbarActions = $viewCollection->get(ProductAdmin::EDIT_TABS_VIEW . '.details')->getView()->getOption('toolbarActions');
+
+        $types = \array_map(static fn (ToolbarAction $action): string => $action->getType(), $toolbarActions);
+        $this->assertNotContains('sulu_admin.save_with_publishing', $types);
+        $this->assertContains('sulu_content.review_workflow_transition_request', $types);
+
+        $save = $toolbarActions[0];
+        $this->assertInstanceOf(DropdownToolbarAction::class, $save);
+        $this->assertSame('sulu_admin.save', $save->getOptions()['label']);
+        /** @var ToolbarAction[] $children */
+        $children = $save->getOptions()['toolbarActions'];
+        $childTypes = \array_map(static fn (ToolbarAction $action): string => $action->getType(), $children);
+        $this->assertContains('sulu_content.request_for_publish', $childTypes);
     }
 
     public function testConfigureViewsWithActivityInsightsView(): void

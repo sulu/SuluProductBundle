@@ -24,6 +24,7 @@ use Sulu\Bundle\AdminBundle\Admin\View\ViewCollection;
 use Sulu\Component\Localization\Manager\LocalizationManagerInterface;
 use Sulu\Component\Security\Authorization\PermissionTypes;
 use Sulu\Component\Security\Authorization\SecurityCheckerInterface;
+use Sulu\Content\Infrastructure\Sulu\Admin\ContentViewBuilderFactoryInterface;
 use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
 use Sulu\Product\Domain\Model\ProductInterface;
 
@@ -45,6 +46,7 @@ class ProductAdmin extends Admin
         private LocalizationManagerInterface $localizationManager,
         private ActivityViewBuilderFactoryInterface $activityViewBuilderFactory,
         private ProductAssociationTypeRegistry $associationTypeRegistry,
+        private ContentViewBuilderFactoryInterface $contentViewBuilderFactory,
     ) {
     }
 
@@ -153,14 +155,13 @@ class ProductAdmin extends Admin
         );
 
         // Details form — edit mode
+        // Products have no webspace, so the factory's default conditions on `_permissions` fit as they are.
+        $workflowToolbarActions = $this->contentViewBuilderFactory->getWorkflowTransitionRequestToolbarActions(
+            ProductInterface::class,
+        );
         $editToolbarActions = [
-            new ToolbarAction(
-                'sulu_admin.save_with_publishing',
-                [
-                    'publish_visible_condition' => '(!_permissions || _permissions.live)',
-                    'save_visible_condition' => '(!_permissions || _permissions.edit)',
-                ]
-            ),
+            $workflowToolbarActions['save'],
+            $workflowToolbarActions['approval'],
         ];
         if ($this->securityChecker->hasPermission(static::SECURITY_CONTEXT, PermissionTypes::DELETE)) {
             $editToolbarActions[] = new ToolbarAction('sulu_admin.delete');
