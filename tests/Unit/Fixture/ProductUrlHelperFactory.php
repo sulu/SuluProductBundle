@@ -24,6 +24,7 @@ use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Route\Application\ResourceLocator\PathCleanup\PathCleanup;
 use Sulu\Route\Application\ResourceLocator\ResourceLocatorGenerator;
 use Sulu\Route\Application\ResourceLocator\RouteSchemaEvaluator;
+use Sulu\Route\Domain\Model\Route;
 use Sulu\Route\Domain\Repository\RouteRepositoryInterface;
 use Symfony\Component\String\Slugger\AsciiSlugger;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -35,21 +36,38 @@ final class ProductUrlHelperFactory
 {
     /**
      * @param list<string> $takenSlugs routes that exist already
+     * @param string|null $pageRouteSlug the slug of the route of the page "page-uuid", the parent of a page tree url
+     * @param string|null $ownProductUuid the product whose own routes do not count as taken
      */
     public static function create(
         string $routeType = 'page_tree_route',
         array $takenSlugs = [],
         string $routeSchema = "/products/{implode('-', object)}",
         ?MetadataProviderInterface $formMetadataProvider = null,
+        ?string $pageRouteSlug = null,
+        ?string $ownProductUuid = null,
     ): ProductUrlHelper {
         $prophet = new Prophet();
         $pathCleanup = new PathCleanup(new AsciiSlugger(), []);
 
         $routeRepository = $prophet->prophesize(RouteRepositoryInterface::class);
+        if (null !== $ownProductUuid) {
+            $routeRepository->existBy(Argument::that(
+                static fn (array $criteria): bool => ['resourceKey' => 'products', 'resourceId' => $ownProductUuid] === ($criteria['excludeResource'] ?? null),
+            ))->willReturn(false);
+        }
         $routeRepository->existBy(Argument::that(
             static fn (array $criteria): bool => \in_array($criteria['slug'] ?? null, $takenSlugs, true),
         ))->willReturn(true);
         $routeRepository->existBy(Argument::any())->willReturn(false);
+
+        if (null !== $pageRouteSlug) {
+            $routeRepository->findOneBy([
+                'resourceKey' => 'pages',
+                'resourceId' => 'page-uuid',
+                'locale' => 'en',
+            ])->willReturn(new Route('pages', 'page-uuid', 'en', $pageRouteSlug));
+        }
 
         $generator = new ResourceLocatorGenerator(
             $routeRepository->reveal(),
@@ -59,7 +77,6 @@ final class ProductUrlHelperFactory
         return new ProductUrlHelper(
             $routeType,
             ['route_schema' => $routeSchema],
-            $pathCleanup,
             $generator,
             $formMetadataProvider ?? self::detailsForm(),
         );

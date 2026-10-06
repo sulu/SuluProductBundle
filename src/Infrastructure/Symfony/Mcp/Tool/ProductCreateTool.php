@@ -32,8 +32,10 @@ use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushS
 use Sulu\Product\Application\Mcp\ProductAssociationResolver;
 use Sulu\Product\Application\Mcp\ProductCompletenessChecker;
 use Sulu\Product\Application\Mcp\ProductUrlHelper;
+use Sulu\Product\Application\Mcp\ProjectLocales;
 use Sulu\Product\Application\Message\CreateProductMessage;
 use Sulu\Product\Domain\Exception\InvalidProductAssociationException;
+use Sulu\Product\Domain\Exception\UnknownLocaleException;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 use Symfony\Component\Messenger\Envelope;
@@ -69,6 +71,7 @@ final class ProductCreateTool
         private readonly ProductAssociationResolver $associationResolver,
         private readonly ProductCompletenessChecker $completenessChecker,
         private readonly ProductUrlHelper $urlHelper,
+        private readonly ProjectLocales $projectLocales,
     ) {
         $this->messageBus = $messageBus;
     }
@@ -124,6 +127,15 @@ final class ProductCreateTool
         #[Schema(type: 'string', description: 'The locale mirrored when shadowOn is true, e.g. "en". The eligible locales are returned as "shadowLocales" by the matching get tool.')]
         ?string $shadowLocale = null,
     ): array {
+        try {
+            $this->projectLocales->assertExists($locale);
+        } catch (UnknownLocaleException $e) {
+            return [
+                'error' => $e->getMessage(),
+                'hint' => $e->getHint(),
+            ];
+        }
+
         if (null !== $type && !\in_array($type, self::CREATABLE_TYPES, true)) {
             return [
                 'error' => \sprintf('Unsupported product type "%s".', $type),

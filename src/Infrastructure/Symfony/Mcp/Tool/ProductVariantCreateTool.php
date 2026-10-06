@@ -25,9 +25,11 @@ use Sulu\Mcp\Domain\Security\DangerousTool;
 use Sulu\Mcp\Domain\Security\PermissionRequirement;
 use Sulu\Mcp\Domain\Security\RequiresPermission;
 use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushStamp;
+use Sulu\Product\Application\Mcp\ProjectLocales;
 use Sulu\Product\Application\Mcp\VariantParentResolver;
 use Sulu\Product\Application\Message\CreateProductMessage;
 use Sulu\Product\Domain\Exception\InvalidVariantParentException;
+use Sulu\Product\Domain\Exception\UnknownLocaleException;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 use Symfony\Component\Messenger\Envelope;
@@ -47,6 +49,7 @@ final class ProductVariantCreateTool
         private readonly ContentManagerInterface $contentManager,
         private readonly VariantParentResolver $variantParentResolver,
         private readonly AdminLinkGeneratorInterface $adminLinkGenerator,
+        private readonly ProjectLocales $projectLocales,
     ) {
         $this->messageBus = $messageBus;
     }
@@ -81,6 +84,15 @@ final class ProductVariantCreateTool
         #[Schema(type: 'object', description: 'Detail fields, e.g. {"shortDescription": "<p>…</p>"}. Media fields take {"id": <mediaId>}.', additionalProperties: true)]
         ?array $details = null,
     ): array {
+        try {
+            $this->projectLocales->assertExists($locale);
+        } catch (UnknownLocaleException $e) {
+            return [
+                'error' => $e->getMessage(),
+                'hint' => $e->getHint(),
+            ];
+        }
+
         try {
             $parent = $this->variantParentResolver->resolveParent($parentUuid);
             $family = $this->variantParentResolver->resolveFamily($parent);

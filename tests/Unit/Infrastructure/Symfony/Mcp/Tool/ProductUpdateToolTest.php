@@ -413,6 +413,35 @@ final class ProductUpdateToolTest extends TestCase
         );
     }
 
+    public function testUpdateProductKeepsItsOwnSlugWhenTheSuffixIsGenerated(): void
+    {
+        $tool = new ProductUpdateTool(
+            $this->messageBus->reveal(),
+            $this->contentManager->reveal(),
+            $this->productRepository->reveal(),
+            new ContentMetadataMapper(new ArrayMetadataProvider()),
+            new BlockDataValidator($this->formMetadataProvider(), new MetadataLocaleResolver(new TokenStorage(), 'en')),
+            FixedBlockIdGenerator::returning('b1', 'b2', 'b3'),
+            $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
+            $this->associationResolver(),
+            CompletenessCheckerFactory::create(),
+            ProductUrlHelperFactory::create(takenSlugs: ['/shirt'], ownProductUuid: 'uuid-1'),
+            ProjectLocalesFactory::create(),
+        );
+        $captured = $this->givenProduct(['title' => 'Shirt']);
+
+        $tool->updateProduct('uuid-1', 'en', content: ['url' => ['page' => ['uuid' => 'p', 'path' => '/products']]]);
+
+        $message = $captured();
+        $this->assertInstanceOf(ModifyProductMessage::class, $message);
+        /** @var array<string, mixed> $data */
+        $data = $message->getData();
+        $this->assertSame(
+            ['page' => ['uuid' => 'p', 'path' => '/products'], 'suffix' => '/shirt'],
+            $data['url'] ?? null,
+        );
+    }
+
     public function testUpdateProductReturnsTheAdminUrl(): void
     {
         $adminLinkGenerator = $this->prophesize(AdminLinkGeneratorInterface::class);

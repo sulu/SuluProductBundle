@@ -34,6 +34,7 @@ use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductVariantCreateTool;
+use Sulu\Product\Tests\Unit\Fixture\ProjectLocalesFactory;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
@@ -68,6 +69,7 @@ final class ProductVariantCreateToolTest extends TestCase
                 $this->productFamilyRepository->reveal(),
             ),
             $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
+            ProjectLocalesFactory::create(),
         );
     }
 
@@ -255,6 +257,7 @@ final class ProductVariantCreateToolTest extends TestCase
             $this->contentManager->reveal(),
             new VariantParentResolver($this->productRepository->reveal(), $this->productFamilyRepository->reveal()),
             $adminLinkGenerator->reveal(),
+            ProjectLocalesFactory::create(),
         );
 
         $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => ['shared-uuid' => false]]));
@@ -263,5 +266,19 @@ final class ProductVariantCreateToolTest extends TestCase
         $result = $tool->createProductVariant('en', 'parent-uuid', 'Red');
 
         $this->assertSame('https://admin.example/variant', $result['admin_url'] ?? null);
+    }
+
+    public function testCreateVariantRejectsALocaleNoWebspaceHas(): void
+    {
+        $this->productRepository->getOneBy(Argument::cetera())->shouldNotBeCalled();
+        $this->messageBus->dispatch(Argument::cetera())->shouldNotBeCalled();
+
+        $result = $this->tool->createProductVariant('xx', 'parent-uuid', 'Red');
+
+        $this->assertArrayNotHasKey('success', $result);
+        $this->assertIsString($result['error'] ?? null);
+        $this->assertIsString($result['hint'] ?? null);
+        $this->assertStringContainsString('"xx"', $result['error']);
+        $this->assertStringContainsString('"en", "de"', $result['hint']);
     }
 }
