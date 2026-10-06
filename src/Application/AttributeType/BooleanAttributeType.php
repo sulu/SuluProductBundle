@@ -53,11 +53,10 @@ final class BooleanAttributeType extends AbstractAttributeType
         $choices = [self::TRUE => 'sulu_admin.yes', self::FALSE => 'sulu_admin.no'];
         if (!$field->isRequired()) {
             // An empty name is the admin's "no value" option, so an optional attribute can be cleared.
-            $choices = ['' => 'sulu_admin.please_choose'] + $choices;
+            $choices = ['' => 'sulu_product.not_specified'] + $choices;
         }
 
         foreach ($choices as $value => $title) {
-            $value = (string) $value;
             $valueOption = new OptionMetadata();
             $valueOption->setName($value);
             $valueOption->setValue('' !== $value ? $value : null);

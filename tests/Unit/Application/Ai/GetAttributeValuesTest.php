@@ -200,6 +200,33 @@ class GetAttributeValuesTest extends TestCase
         $this->assertSame([['value' => 'May 1, 2024', 'searchValue' => '1714521600', 'count' => 1]], $result['values']);
     }
 
+    public function testInvokeFormatsBooleanValuesAsTrueOrFalse(): void
+    {
+        $group = new AttributeGroup();
+        $attribute = new Attribute($group);
+        $attribute->setKey('waterproof');
+        $attribute->setType(AttributeInterface::TYPE_BOOLEAN);
+        $this->attributeRepository->findOneBy(['key' => 'waterproof'])->willReturn($attribute);
+
+        $yes = new ProductAttributeValue($this->dimensionContent(), $attribute, 'waterproof');
+        $yes->setNumber(1.0);
+        $no = new ProductAttributeValue($this->dimensionContent(), $attribute, 'waterproof');
+        $no->setNumber(0.0);
+
+        $this->productAttributeValueRepository->countValues([
+            'attribute' => $attribute,
+            'locale' => 'en',
+            'stage' => 'live',
+        ], 15)->willReturn([['value' => $yes, 'count' => 3], ['value' => $no, 'count' => 1]]);
+
+        $result = ($this->getAttributeValues)('waterproof', 'en');
+
+        $this->assertSame([
+            ['value' => 'true', 'searchValue' => '1', 'count' => 3],
+            ['value' => 'false', 'searchValue' => '0', 'count' => 1],
+        ], $result['values']);
+    }
+
     public function testInvokeUsesTranslatedOptionLabel(): void
     {
         $group = new AttributeGroup();

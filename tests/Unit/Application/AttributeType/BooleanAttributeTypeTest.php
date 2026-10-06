@@ -66,7 +66,7 @@ class BooleanAttributeTypeTest extends TestCase
         self::assertSame(['', 'true', 'false'], \array_map(static fn (OptionMetadata $option) => $option->getName(), $options));
         self::assertNull($options[0]->getValue());
         self::assertSame(
-            ['de:sulu_admin.please_choose', 'de:sulu_admin.yes', 'de:sulu_admin.no'],
+            ['de:sulu_product.not_specified', 'de:sulu_admin.yes', 'de:sulu_admin.no'],
             \array_map(static fn (OptionMetadata $option) => $option->getTitle('de'), $options),
         );
     }

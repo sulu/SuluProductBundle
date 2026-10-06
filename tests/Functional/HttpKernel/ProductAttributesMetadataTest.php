@@ -141,7 +141,7 @@ class ProductAttributesMetadataTest extends SuluTestCase
     public static function provideBooleanChoices(): iterable
     {
         yield 'required' => [true, [['name' => 'true', 'title' => 'Yes'], ['name' => 'false', 'title' => 'No']]];
-        yield 'optional' => [false, [['name' => '', 'title' => 'Please choose'], ['name' => 'true', 'title' => 'Yes'], ['name' => 'false', 'title' => 'No']]];
+        yield 'optional' => [false, [['name' => '', 'title' => 'Not specified'], ['name' => 'true', 'title' => 'Yes'], ['name' => 'false', 'title' => 'No']]];
     }
 
     /**

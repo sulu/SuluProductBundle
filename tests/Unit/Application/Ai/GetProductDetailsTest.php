@@ -164,6 +164,37 @@ class GetProductDetailsTest extends TestCase
         $this->assertSame([], $result['specGroups']);
     }
 
+    public function testInvokeShowsBooleanValuesAsTrueOrFalse(): void
+    {
+        [$product, , $unlocalized] = $this->buildProduct('en');
+
+        $group = new AttributeGroup();
+        $group->addTranslation(new AttributeGroupTranslation($group, 'en', 'Features'));
+
+        $waterproof = new Attribute($group);
+        $waterproof->setKey('waterproof');
+        $waterproof->setType(AttributeInterface::TYPE_BOOLEAN);
+        $waterproof->addTranslation(new AttributeTranslation($waterproof, 'en', 'Waterproof'));
+
+        $value = new ProductAttributeValue($unlocalized, $waterproof, 'waterproof');
+        $value->setNumber(0.0);
+        $unlocalized->addAttribute($value);
+
+        $this->productRepository->getOneBy([
+            'code' => 'ABC-1',
+            'locale' => 'en',
+            'stage' => DimensionContentInterface::STAGE_LIVE,
+        ])->willReturn($product);
+
+        $result = ($this->getProductDetails)('ABC-1', 'en');
+
+        $this->assertSame([
+            ['label' => 'Features', 'attributes' => [
+                ['label' => 'Waterproof', 'value' => 'false'],
+            ]],
+        ], $result['specGroups']);
+    }
+
     public function testInvokeFallsBackToAttributeKeyAndGroupUuidWhenTranslationsMissing(): void
     {
         [$product, , $unlocalized] = $this->buildProduct('en');
