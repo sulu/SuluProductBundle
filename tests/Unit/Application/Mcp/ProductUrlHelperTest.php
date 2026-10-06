@@ -215,7 +215,10 @@ final class ProductUrlHelperTest extends TestCase
         $repository->existBy(Argument::that(
             static fn (array $criteria): bool => ['resourceKey' => 'products', 'resourceId' => 'uuid-1'] === ($criteria['excludeResource'] ?? null),
         ))->willReturn(false);
-        $repository->existBy(Argument::any())->willReturn(true);
+        $repository->existBy(Argument::that(
+            static fn (array $criteria): bool => '/shirt' === ($criteria['slug'] ?? null),
+        ))->willReturn(true);
+        $repository->existBy(Argument::any())->willReturn(false);
 
         $helper = new ProductUrlHelper(
             'page_tree_route',
@@ -234,6 +237,23 @@ final class ProductUrlHelperTest extends TestCase
             ['title' => 'Shirt', 'url' => ['page' => ['uuid' => 'p', 'path' => '/products']]],
             'en',
             'uuid-1',
+        );
+
+        $url = $data['url'] ?? null;
+        $this->assertIsArray($url);
+        $this->assertSame('/shirt', $url['suffix'] ?? null);
+    }
+
+    public function testWithoutARoutePartTheSuffixComesFromTheTitle(): void
+    {
+        $form = new FormMetadata();
+        $form->addItem(new FieldMetadata('title'));
+        $provider = new ArrayMetadataProvider([ProductInterface::FORM_KEY => $form]);
+        $helper = ProductUrlHelperFactory::create('page_tree_route', [], "/products/{implode('-', object)}", $provider);
+
+        $data = $helper->completeUrlSuffix(
+            ['title' => 'Shirt', 'url' => ['page' => ['uuid' => 'p', 'path' => '/products']]],
+            'en',
         );
 
         $url = $data['url'] ?? null;

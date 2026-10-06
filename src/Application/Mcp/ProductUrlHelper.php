@@ -139,7 +139,7 @@ final readonly class ProductUrlHelper
 
     /**
      * Fills a missing suffix of a page based url from the title, so that the agent only has to name the page.
-     * The suffix comes from the route generator with the page as parent, as the admin field asks it,
+     * The suffix comes from the route generator with the page as parent and its default schema,
      * so it is not taken below the page yet.
      *
      * @param array<string, mixed> $data
