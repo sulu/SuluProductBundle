@@ -166,6 +166,31 @@ class WebsiteProductAttributesReindexProviderEnhancerTest extends SuluTestCase
         $this->assertContains('Colour: Red', $document['content']);
     }
 
+    public function testABooleanAddsItsLabelOnlyWhenTrue(): void
+    {
+        self::purgeDatabase();
+
+        $waterproofId = $this->createAttribute('waterproof', 'Waterproof', AttributeInterface::TYPE_BOOLEAN, false);
+        $dimmableId = $this->createAttribute('dimmable', 'Dimmable', AttributeInterface::TYPE_BOOLEAN, false);
+        $fragileId = $this->createAttribute('fragile', 'Fragile', AttributeInterface::TYPE_BOOLEAN, false, [], [], false);
+        $familyId = $this->createProductFamily([$waterproofId => [], $dimmableId => [], $fragileId => []]);
+        $productId = $this->createProduct($familyId, 'Cable', ProductInterface::TYPE_PRODUCT);
+        $this->putAttributes($productId, [$waterproofId => 'true', $dimmableId => 'false', $fragileId => 'true']);
+        $this->publish($productId);
+
+        /** @var EngineInterface $engine */
+        $engine = self::getContainer()->get('cmsig_seal.engine.default');
+
+        $document = $engine->getDocument('website', 'products__' . $productId . '__en');
+        $product = $document['product'];
+        $this->assertIsArray($product);
+        $this->assertSame(['waterproof:true', 'dimmable:false'], $product['attributes_text_values']);
+        $this->assertIsArray($document['content']);
+        $this->assertContains('Waterproof', $document['content']);
+        $this->assertContains('Fragile', $document['content'], 'A non-filterable boolean is still searchable.');
+        $this->assertNotContains('Dimmable', $document['content']);
+    }
+
     public function testASecondReindexInTheSameProcessReadsTheCurrentValues(): void
     {
         self::purgeDatabase();

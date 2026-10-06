@@ -16,6 +16,7 @@ namespace Sulu\Product\Infrastructure\Sulu\Search\Visitor;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Product\Application\AttributeType\BooleanAttributeType;
 use Sulu\Product\Application\AttributeType\DateAttributeType;
 use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Model\Attribute;
@@ -72,7 +73,7 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
     }
 
     /**
-     * Prefixes the value with its attribute key, so options attributes share one field.
+     * Prefixes the value with its attribute key, so options and boolean attributes share one field.
      */
     public static function textValue(string $attributeKey, string $value): string
     {
@@ -156,6 +157,18 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
                     break;
                 case AttributeInterface::TYPE_TEXT:
                     $display = $valueRow['text'];
+                    break;
+                case AttributeInterface::TYPE_BOOLEAN:
+                    if (null !== $valueRow['number']) {
+                        $isTrue = 0.0 !== $valueRow['number'];
+                        if ($filterable) {
+                            $textValues[] = self::textValue($key, $isTrue ? BooleanAttributeType::TRUE : BooleanAttributeType::FALSE);
+                        }
+                        // Only yes adds the label, so a search for it does not find the products answered with no.
+                        if ($isTrue) {
+                            $content[] = $this->translate($attribute['labels'], $locale, $attribute['defaultLocale']) ?? $key;
+                        }
+                    }
                     break;
             }
 
