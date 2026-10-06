@@ -73,6 +73,9 @@ final class GetAttributeValues
         $searchValues = [];
         foreach ($groups as $group) {
             $value = $this->valueFormatter->format($group['value'], $locale);
+            if (\is_bool($value)) {
+                $value = $value ? 'true' : 'false';
+            }
 
             if (null === $value || '' === \trim($value)) {
                 continue;

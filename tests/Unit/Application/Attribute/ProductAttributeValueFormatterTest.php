@@ -95,6 +95,22 @@ class ProductAttributeValueFormatterTest extends TestCase
         $this->assertNull($this->formatter->format($value, 'en'));
     }
 
+    public function testBooleanFormatsToABool(): void
+    {
+        $value = $this->value(AttributeInterface::TYPE_BOOLEAN);
+
+        $value->setNumber(1.0);
+        $this->assertTrue($this->formatter->format($value, 'de'));
+
+        $value->setNumber(0.0);
+        $this->assertFalse($this->formatter->format($value, 'de'));
+    }
+
+    public function testBooleanWithoutAValueFormatsToNull(): void
+    {
+        $this->assertNull($this->formatter->format($this->value(AttributeInterface::TYPE_BOOLEAN), 'en'));
+    }
+
     public function testUnknownTypeFormatsToNull(): void
     {
         $this->assertNull($this->formatter->format($this->value('custom_boolean'), 'en'));

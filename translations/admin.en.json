@@ -24,6 +24,8 @@
     "sulu_product.type_text": "Text",
     "sulu_product.type_options": "Options",
     "sulu_product.type_date": "Date",
+    "sulu_product.type_boolean": "Yes/No",
+    "sulu_product.not_specified": "Not specified",
     "sulu_product.option": "Option",
     "sulu_product.product": "Product",
     "sulu_product.product_type": "Type",

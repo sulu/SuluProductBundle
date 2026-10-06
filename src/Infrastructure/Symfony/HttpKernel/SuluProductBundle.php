@@ -28,6 +28,7 @@ use Sulu\Product\Application\Ai\SearchProductsByAttributes;
 use Sulu\Product\Application\Attribute\ProductAttributeValueFormatter;
 use Sulu\Product\Application\AttributeType\AttributeTypeInterface;
 use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
+use Sulu\Product\Application\AttributeType\BooleanAttributeType;
 use Sulu\Product\Application\AttributeType\DateAttributeType;
 use Sulu\Product\Application\AttributeType\NumberAttributeType;
 use Sulu\Product\Application\AttributeType\OptionsAttributeType;
@@ -511,6 +512,13 @@ final class SuluProductBundle extends AbstractBundle
 
         $services->set('sulu_product.attribute_type_options')
             ->class(OptionsAttributeType::class)
+            ->tag('sulu_product.attribute_type');
+
+        $services->set('sulu_product.attribute_type_boolean')
+            ->class(BooleanAttributeType::class)
+            ->args([
+                new Reference('translator'),
+            ])
             ->tag('sulu_product.attribute_type');
 
         // Product mappers

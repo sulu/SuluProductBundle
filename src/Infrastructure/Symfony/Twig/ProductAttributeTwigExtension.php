@@ -24,7 +24,7 @@ use Twig\TwigFunction;
  * Combines a product's and a variant's attribute values, formats them and folds them into their
  * attribute groups for display.
  *
- * @phpstan-type ResolvedAttribute array{key: string, label: string, type: string, value: mixed, formattedValue: string, position: int, group: array{key: string, label: string}}
+ * @phpstan-type ResolvedAttribute array{key: string, label: string, type: string, value: mixed, formattedValue: string|bool, position: int, group: array{key: string, label: string}}
  */
 class ProductAttributeTwigExtension extends AbstractExtension
 {
@@ -140,7 +140,7 @@ class ProductAttributeTwigExtension extends AbstractExtension
      * The value as displayed, see ProductAttributeValueFormatter. Without a locale the request's;
      * null for an empty value or without any locale.
      */
-    public function formatValue(ProductAttributeValueInterface $productAttributeValue, ?string $locale = null): ?string
+    public function formatValue(ProductAttributeValueInterface $productAttributeValue, ?string $locale = null): string|bool|null
     {
         $locale ??= $this->requestAnalyzer->getCurrentLocalization()?->getLocale();
 
