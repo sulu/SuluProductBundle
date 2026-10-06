@@ -30,6 +30,7 @@ final class AttributeMapper implements AttributeMapperInterface
         AttributeInterface::TYPE_NUMBER,
         AttributeInterface::TYPE_DATE,
         AttributeInterface::TYPE_OPTIONS,
+        AttributeInterface::TYPE_BOOLEAN,
     ];
 
     public function __construct(private AttributeRepositoryInterface $attributeRepository)

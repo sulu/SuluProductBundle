@@ -52,7 +52,7 @@
         </property>
 
         <property name="filterable" type="checkbox" colspan="2"
-                  disabledCondition='type != "number" &amp;&amp; type != "date" &amp;&amp; type != "options"'>
+                  disabledCondition='type != "number" &amp;&amp; type != "date" &amp;&amp; type != "options" &amp;&amp; type != "boolean"'>
             <meta>
                 <title>sulu_product.filterable</title>
             </meta>

@@ -145,22 +145,23 @@ Switching the option on or off adds or removes the whole `product` field, so the
 | field | use |
 |---|---|
 | `productFamilyKey` | the key of the product family, empty only for a product without a family; filterable and facet |
-| `attributes_text_values` | one `<attributeKey>:<optionKey>` entry per value of a filterable options attribute, filterable and facet |
+| `attributes_text_values` | one `<attributeKey>:<optionKey>` entry per value of a filterable options attribute, `<attributeKey>:true` or `<attributeKey>:false` for a filterable boolean attribute, filterable and facet |
 | `attributes_numeric_values.<attributeKey>` | the values of a filterable number or date attribute, filterable and facet |
 
 Only attributes with Filterable on get a filter field. An attribute key is reduced to letters, digits
 and `_`, and prefixed with `a_` unless it starts with a letter. A variant carries its own values plus
 those of its parent that the family does not mark variant-specific. The values of every attribute,
-filterable or not, are added to the searchable `content` as `<label>: <value>`.
+filterable or not, are added to the searchable `content` as `<label>: <value>`; a boolean adds only
+its label and only when true, so a search for it does not find the products answered with no.
 
 The product family name, external identifier, short description and details image are indexed
 without this option: the first three as `content`, the image where neither the template nor the
 excerpt has one.
 
-Options attributes need no field of their own, so adding one changes no schema. A number or date
-attribute does, when it is created filterable or its Filterable flag or key changes: the loader
-reads the attribute table, and the live index only learns the change when it is recreated, which is
-never automatic:
+Options and boolean attributes need no field of their own, so adding one changes no
+schema. A number or date attribute does, when it is created filterable or its Filterable flag or key
+changes: the loader reads the attribute table, and the live index only learns the change when it is
+recreated, which is never automatic:
 
     bin/console cmsig:seal:reindex --index website --drop
 

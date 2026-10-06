@@ -267,6 +267,7 @@ class AttributeMapperTest extends TestCase
         yield 'number' => ['number', true];
         yield 'date' => ['date', true];
         yield 'options' => ['options', true];
+        yield 'boolean' => ['boolean', true];
         yield 'text' => ['text', false];
     }
 

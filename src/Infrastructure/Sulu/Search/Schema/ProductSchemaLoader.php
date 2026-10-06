@@ -24,8 +24,8 @@ use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductAttributesRein
 
 /**
  * Adds the `product` object field to the website index: the family, the text values of the
- * filterable options attributes, and one field per filterable number or date attribute; a date is
- * stored in the number column.
+ * filterable options and boolean attributes, and one field per filterable number or date attribute;
+ * a date is stored in the number column.
  *
  * @internal
  */
