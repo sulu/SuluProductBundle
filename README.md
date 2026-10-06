@@ -158,10 +158,10 @@ The product family name, external identifier, short description and details imag
 without this option: the first three as `content`, the image where neither the template nor the
 excerpt has one.
 
-Options attributes need no field of their own, so adding one changes no schema. A number or date
-attribute does, when it is created filterable or its Filterable flag or key changes: the loader
-reads the attribute table, and the live index only learns the change when it is recreated, which is
-never automatic:
+Options and boolean attributes need no field of their own, so adding one changes no
+schema. A number or date attribute does, when it is created filterable or its Filterable flag or key
+changes: the loader reads the attribute table, and the live index only learns the change when it is
+recreated, which is never automatic:
 
     bin/console cmsig:seal:reindex --index website --drop
 
