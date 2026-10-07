@@ -14,12 +14,15 @@ declare(strict_types=1);
 namespace Sulu\Product\Tests\Unit\Infrastructure\Sulu\Content\Resolver;
 
 use PHPUnit\Framework\Attributes\CoversClass;
+use Sulu\Content\Application\ContentResolver\Value\ContentView;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Product\Application\Routing\VariantRouting;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductResolver;
+use Sulu\Route\Domain\Model\Route;
 
 #[CoversClass(ProductResolver::class)]
 class ProductResolverTest extends ProductResolverTestCase
@@ -90,6 +93,42 @@ class ProductResolverTest extends ProductResolverTestCase
         self::assertArrayNotHasKey('url', $this->resolveContent($this->createContent(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS)));
         self::assertArrayHasKey('url', $this->resolveContent($this->createContent(ProductInterface::TYPE_PRODUCT)));
         self::assertArrayHasKey('url', $this->resolveContent($this->createContent(ProductInterface::TYPE_VARIANT)));
+    }
+
+    public function testAProductWithVariantsCarriesItsUrlInQueryParameterMode(): void
+    {
+        $content = $this->createContent(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $content->setRoute(new Route('products', 'parent-uuid', 'de', '/t-shirt'));
+
+        $resolved = $this->resolveContent(
+            $content,
+            resolver: $this->createResolver(variantSlugResolver: $this->createVariantSlugResolver(VariantRouting::QueryParameter)),
+        );
+
+        self::assertArrayHasKey('url', $resolved);
+        self::assertInstanceOf(ContentView::class, $resolved['url']);
+        self::assertSame('/t-shirt', $resolved['url']->getContent());
+    }
+
+    public function testAVariantIsLinkedByItsProductUrlInQueryParameterMode(): void
+    {
+        $parent = new Product('parent-uuid');
+        $parent->setType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $variant = new Product('variant-uuid');
+        $variant->setParent($parent);
+
+        $content = new ProductDimensionContent($variant);
+        $content->setLocale('de');
+        $content->setStage('live');
+        $content->setCode('T-SHIRT RED');
+
+        $resolved = $this->resolveContent(
+            $content,
+            resolver: $this->createResolver(variantSlugResolver: $this->createVariantSlugResolver(VariantRouting::QueryParameter, '/t-shirt')),
+        );
+
+        self::assertInstanceOf(ContentView::class, $resolved['url']);
+        self::assertSame('/t-shirt?variant=T-SHIRT%20RED', $resolved['url']->getContent());
     }
 
     public function testAReferenceResolvesVariantsWhenItAsksForThem(): void

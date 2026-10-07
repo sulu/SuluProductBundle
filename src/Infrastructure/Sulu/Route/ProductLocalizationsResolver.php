@@ -15,11 +15,14 @@ namespace Sulu\Product\Infrastructure\Sulu\Route;
 
 use Sulu\Content\Application\ContentLocalizationsResolver\ContentLocalizationsResolverInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Product\Application\Routing\VariantRouting;
+use Sulu\Product\Application\Routing\VariantSlugResolver;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 
 /**
  * The localizations of a product page. A variant URL renders its product, but links the other
- * locales to the variant's own URLs.
+ * locales to the variant: in `route` mode to the variant's own URLs, in `query_parameter` mode to
+ * the product's URLs plus `?variant=<code>` where the variant is published.
  *
  * @internal
  */
@@ -28,6 +31,7 @@ class ProductLocalizationsResolver implements ContentLocalizationsResolverInterf
     public function __construct(
         private readonly ContentLocalizationsResolverInterface $routeLocalizationsResolver,
         private readonly CurrentVariantProvider $currentVariantProvider,
+        private readonly VariantSlugResolver $variantSlugResolver,
     ) {
     }
 
@@ -37,10 +41,27 @@ class ProductLocalizationsResolver implements ContentLocalizationsResolverInterf
             ? $this->currentVariantProvider->getCurrentVariant($dimensionContent)
             : null;
 
-        if (null !== $variantContent) {
+        if (null !== $variantContent && !$this->variantSlugResolver->isQueryParameter()) {
             return $this->routeLocalizationsResolver->resolve($variantContent, $webspaceKey);
         }
 
-        return $this->routeLocalizationsResolver->resolve($dimensionContent, $webspaceKey);
+        $localizations = $this->routeLocalizationsResolver->resolve($dimensionContent, $webspaceKey);
+        if (null === $variantContent) {
+            return $localizations;
+        }
+
+        $code = $variantContent->getCode();
+        $variantLocales = $variantContent->getAvailableLocales() ?? [];
+
+        foreach ($localizations as $locale => $localization) {
+            // a locale without a product route links the start page, a locale without the variant the product
+            if (null === $code || !$localization['alternate'] || !\in_array($locale, $variantLocales, true)) {
+                continue;
+            }
+
+            $localizations[$locale]['url'] = VariantRouting::appendVariant($localization['url'], $code);
+        }
+
+        return $localizations;
     }
 }

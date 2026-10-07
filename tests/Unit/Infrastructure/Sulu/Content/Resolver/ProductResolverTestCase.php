@@ -19,13 +19,18 @@ use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataLoaderInterface;
 use Sulu\Bundle\AdminBundle\Metadata\MetadataProviderInterface;
 use Sulu\Bundle\HttpCacheBundle\ReferenceStore\ReferenceStore;
 use Sulu\Bundle\HttpCacheBundle\ReferenceStore\ReferenceStoreInterface;
+use Sulu\Content\Application\ContentAggregator\ContentAggregatorInterface;
 use Sulu\Content\Application\ContentResolver\Value\ContentView;
 use Sulu\Content\Application\MetadataResolver\MetadataResolver;
+use Sulu\Product\Application\Routing\VariantRouting;
+use Sulu\Product\Application\Routing\VariantSlugResolver;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductResolver;
 use Sulu\Product\Infrastructure\Sulu\Route\CurrentVariantProvider;
 use Sulu\Product\Infrastructure\Sulu\Route\ProductRouteDefaultsProvider;
+use Sulu\Route\Domain\Model\Route;
+use Sulu\Route\Domain\Repository\RouteRepositoryInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -47,6 +52,7 @@ abstract class ProductResolverTestCase extends TestCase
         ?ReferenceStoreInterface $referenceStore = null,
         array $variantProperties = ['title' => 'product.title', 'url' => 'product.url', 'code' => 'product.code', 'status' => 'product.status', 'position' => 'product.position'],
         ?ProductDimensionContentInterface $currentVariant = null,
+        ?VariantSlugResolver $variantSlugResolver = null,
     ): ProductResolver {
         $requestStack = new RequestStack();
         $requestStack->push(new Request(attributes: [ProductRouteDefaultsProvider::VARIANT_ATTRIBUTE => $currentVariant]));
@@ -56,10 +62,26 @@ abstract class ProductResolverTestCase extends TestCase
             $formMetadataProvider ?? $this->noAssociationFields(),
             $metadataResolver ?? $this->noResolvedItems(),
             $productRepository ?? $this->noVariants(),
-            new CurrentVariantProvider($requestStack),
+            new CurrentVariantProvider(
+                $requestStack,
+                $this->createStub(ProductRepositoryInterface::class),
+                $this->createStub(ContentAggregatorInterface::class),
+                VariantRouting::Route,
+            ),
             $referenceStore ?? new ReferenceStore(),
+            $variantSlugResolver ?? $this->createVariantSlugResolver(VariantRouting::Route),
             $variantProperties,
         );
+    }
+
+    protected function createVariantSlugResolver(VariantRouting $routing, ?string $productSlug = null): VariantSlugResolver
+    {
+        $routeRepository = $this->createStub(RouteRepositoryInterface::class);
+        $routeRepository->method('findFirstBy')->willReturn(
+            null === $productSlug ? null : new Route('products', 'parent-uuid', 'en', $productSlug),
+        );
+
+        return new VariantSlugResolver($routeRepository, $routing);
     }
 
     /**

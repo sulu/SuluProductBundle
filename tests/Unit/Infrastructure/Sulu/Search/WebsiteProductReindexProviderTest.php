@@ -23,6 +23,7 @@ use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
+use Sulu\Product\Application\Routing\VariantRouting;
 use Sulu\Product\Domain\Model\ProductDimensionContentAdditionalWebspace;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
@@ -163,6 +164,43 @@ class WebsiteProductReindexProviderTest extends TestCase
         $this->assertSame(ProductInterface::RESOURCE_KEY, $results[0]['resourceKey']);
         $this->assertSame(['NC3'], $results[0]['content'], 'The code is only searchable, not a field of its own.');
         $this->assertArrayNotHasKey('product', $results[0], 'The product field belongs to the attributes enhancer.');
+    }
+
+    public function testProvideLinksAVariantByItsProductUrlInQueryParameterMode(): void
+    {
+        $row = static fn (string $productId, ?string $parentId, ?string $code, ?string $slug, ?string $parentSlug): array => [
+            'productId' => $productId,
+            'parentId' => $parentId,
+            'code' => $code,
+            'authored' => null,
+            'changed' => new \DateTimeImmutable('2024-01-02'),
+            'title' => $productId,
+            'locale' => 'en',
+            'mainWebspace' => 'main',
+            'dimensionContentId' => 7,
+            'slug' => $slug,
+            'parentSlug' => $parentSlug,
+        ];
+
+        $this->dimensionQuery->getResult()->willReturn([
+            $row('red', 'shirt', 'RED 1', '/stale-variant-route', '/t-shirt'),
+            $row('plain', null, 'PLAIN', '/plain', null),
+            $row('orphan', 'gone', 'ORPHAN', null, null),
+            $row('nocode', 'shirt', null, null, '/t-shirt'),
+        ]);
+        $this->additionalQuery->getResult()->willReturn([]);
+
+        $this->dimensionContentQb->addSelect('parentRoute.slug AS parentSlug')
+            ->willReturn($this->dimensionContentQb->reveal())->shouldBeCalled();
+
+        $provider = new WebsiteProductReindexProvider($this->entityManager->reveal(), [], VariantRouting::QueryParameter);
+
+        $results = \iterator_to_array($provider->provide(new ReindexConfig()));
+
+        $this->assertSame(
+            ['/t-shirt?variant=RED%201', '/plain', '', ''],
+            \array_column($results, 'url'),
+        );
     }
 
     public function testProvidePagesAfterTheLastDimensionContentIdOfTheBatch(): void

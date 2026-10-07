@@ -21,6 +21,8 @@ use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Application\Ai\GetProductDetails;
 use Sulu\Product\Application\Ai\ProductUrlGenerator;
 use Sulu\Product\Application\Attribute\ProductAttributeValueFormatter;
+use Sulu\Product\Application\Routing\VariantRouting;
+use Sulu\Product\Application\Routing\VariantSlugResolver;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
 use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Model\Attribute;
@@ -35,6 +37,7 @@ use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Tests\Unit\Application\Ai\Fixtures\FakeRouteGenerator;
 use Sulu\Route\Domain\Model\Route;
+use Sulu\Route\Domain\Repository\RouteRepositoryInterface;
 
 #[CoversClass(GetProductDetails::class)]
 class GetProductDetailsTest extends TestCase
@@ -52,7 +55,7 @@ class GetProductDetailsTest extends TestCase
         $this->getProductDetails = new GetProductDetails(
             $this->productRepository->reveal(),
             new ProductAttributeValueFormatter(new MeasurementRegistry()),
-            new ProductUrlGenerator(new FakeRouteGenerator()),
+            new ProductUrlGenerator(new FakeRouteGenerator(), new VariantSlugResolver($this->createStub(RouteRepositoryInterface::class), VariantRouting::Route)),
         );
     }
 

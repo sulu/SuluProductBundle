@@ -19,9 +19,12 @@ use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Sulu\Product\Application\Ai\GetProducts;
 use Sulu\Product\Application\Ai\ProductUrlGenerator;
+use Sulu\Product\Application\Routing\VariantRouting;
+use Sulu\Product\Application\Routing\VariantSlugResolver;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\GetProductsTool;
 use Sulu\Product\Tests\Unit\Application\Ai\Fixtures\FakeRouteGenerator;
+use Sulu\Route\Domain\Repository\RouteRepositoryInterface;
 
 #[CoversClass(GetProductsTool::class)]
 class GetProductsToolTest extends TestCase
@@ -33,7 +36,7 @@ class GetProductsToolTest extends TestCase
         $productRepository = $this->prophesize(ProductRepositoryInterface::class);
         $productRepository->findBy(Argument::cetera())->shouldNotBeCalled();
 
-        $tool = new GetProductsTool(new GetProducts($productRepository->reveal(), new ProductUrlGenerator(new FakeRouteGenerator())));
+        $tool = new GetProductsTool(new GetProducts($productRepository->reveal(), new ProductUrlGenerator(new FakeRouteGenerator(), new VariantSlugResolver($this->createStub(RouteRepositoryInterface::class), VariantRouting::Route))));
 
         $result = $tool->search('en');
 

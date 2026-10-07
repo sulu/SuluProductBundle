@@ -21,6 +21,8 @@ use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Application\Ai\GetRelatedProducts;
 use Sulu\Product\Application\Ai\ProductUrlGenerator;
+use Sulu\Product\Application\Routing\VariantRouting;
+use Sulu\Product\Application\Routing\VariantSlugResolver;
 use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
 use Sulu\Product\Domain\Model\Product;
@@ -30,6 +32,7 @@ use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Tests\Unit\Application\Ai\Fixtures\FakeRouteGenerator;
 use Sulu\Route\Domain\Model\Route;
+use Sulu\Route\Domain\Repository\RouteRepositoryInterface;
 
 #[CoversClass(GetRelatedProducts::class)]
 class GetRelatedProductsTest extends TestCase
@@ -53,7 +56,7 @@ class GetRelatedProductsTest extends TestCase
         $this->getRelatedProducts = new GetRelatedProducts(
             $this->productRepository->reveal(),
             $this->associationTypeRegistry,
-            new ProductUrlGenerator(new FakeRouteGenerator()),
+            new ProductUrlGenerator(new FakeRouteGenerator(), new VariantSlugResolver($this->createStub(RouteRepositoryInterface::class), VariantRouting::Route)),
         );
     }
 

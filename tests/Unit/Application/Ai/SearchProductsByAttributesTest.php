@@ -22,6 +22,8 @@ use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Application\Ai\AttributeFilter;
 use Sulu\Product\Application\Ai\ProductUrlGenerator;
 use Sulu\Product\Application\Ai\SearchProductsByAttributes;
+use Sulu\Product\Application\Routing\VariantRouting;
+use Sulu\Product\Application\Routing\VariantSlugResolver;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\Product;
@@ -32,6 +34,7 @@ use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Tests\Unit\Application\Ai\Fixtures\FakeRouteGenerator;
 use Sulu\Route\Domain\Model\Route;
+use Sulu\Route\Domain\Repository\RouteRepositoryInterface;
 use Symfony\AI\Agent\Toolbox\ToolCallArgumentResolver;
 use Symfony\AI\Agent\Toolbox\ToolFactory\ReflectionToolFactory;
 use Symfony\AI\Platform\Result\ToolCall;
@@ -56,7 +59,7 @@ class SearchProductsByAttributesTest extends TestCase
         $this->searchProductsByAttributes = new SearchProductsByAttributes(
             $this->productRepository->reveal(),
             $this->attributeRepository->reveal(),
-            new ProductUrlGenerator(new FakeRouteGenerator()),
+            new ProductUrlGenerator(new FakeRouteGenerator(), new VariantSlugResolver($this->createStub(RouteRepositoryInterface::class), VariantRouting::Route)),
         );
     }
 

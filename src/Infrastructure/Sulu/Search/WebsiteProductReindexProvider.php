@@ -18,6 +18,7 @@ use CmsIg\Seal\Reindex\ReindexProviderInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Product\Application\Routing\VariantRouting;
 use Sulu\Product\Domain\Model\ProductDimensionContentAdditionalWebspace;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
@@ -25,7 +26,8 @@ use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductReindexProvide
 
 /**
  * One document per published leaf: a product without variants, or a variant. A product that has
- * variants is represented by them, so it gets no document of its own.
+ * variants is represented by them, so it gets no document of its own. In `query_parameter` mode a
+ * variant's URL is its product's slug plus `?variant=<code>`.
  *
  * @phpstan-type Product array{
  *     productId: string,
@@ -36,6 +38,7 @@ use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductReindexProvide
  *     code: string|null,
  *     mainWebspace: string|null,
  *     slug: string|null,
+ *     parentSlug?: string|null,
  *     authored: \DateTimeImmutable|null,
  *     changed: \DateTimeImmutable,
  * }
@@ -63,6 +66,7 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
     public function __construct(
         EntityManagerInterface $entityManager,
         private readonly iterable $enhancers = [],
+        private readonly VariantRouting $routing = VariantRouting::Route,
     ) {
         $this->dimensionContentRepository = $entityManager->getRepository(ProductDimensionContentInterface::class);
         $this->additionalWebspacesRepository = $entityManager->getRepository(ProductDimensionContentAdditionalWebspace::class);
@@ -117,12 +121,29 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
             'locale' => $row['locale'],
             'webspaces' => $webspaces[$webspaceKey] ?? [],
             'title' => '',
-            'url' => (string) $row['slug'],
+            'url' => (string) $this->resolveUrl($row),
             'content' => null !== $row['code'] && '' !== $row['code'] ? [$row['code']] : [],
             'mediaId' => '',
             'authoredAt' => ($row['authored'] ?? $row['changed'])->format('c'),
             'metadata' => [],
         ];
+    }
+
+    /**
+     * @param Product $row
+     */
+    private function resolveUrl(array $row): ?string
+    {
+        if (VariantRouting::Route === $this->routing || null === $row['parentId']) {
+            return $row['slug'];
+        }
+
+        $parentSlug = $row['parentSlug'] ?? null;
+        if (null === $parentSlug || null === $row['code'] || '' === $row['code']) {
+            return null;
+        }
+
+        return VariantRouting::appendVariant($parentSlug, $row['code']);
     }
 
     /**
@@ -166,6 +187,21 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
             ->where('dimensionContent.id IN (:dimensionContentIds)')
             ->setParameter('dimensionContentIds', $dimensionContentIds)
             ->orderBy('dimensionContent.id', 'ASC');
+
+        if (VariantRouting::QueryParameter === $this->routing) {
+            $queryBuilder
+                ->leftJoin(
+                    $this->dimensionContentRepository->getClassName(),
+                    'parentDimensionContent',
+                    'WITH',
+                    'IDENTITY(parentDimensionContent.product) = IDENTITY(product.parent)'
+                    . ' AND parentDimensionContent.locale = dimensionContent.locale'
+                    . ' AND parentDimensionContent.stage = dimensionContent.stage'
+                    . ' AND parentDimensionContent.version = dimensionContent.version',
+                )
+                ->leftJoin('parentDimensionContent.route', 'parentRoute')
+                ->addSelect('parentRoute.slug AS parentSlug');
+        }
 
         foreach ($this->enhancers as $enhancer) {
             $enhancer->enhanceQuery($queryBuilder);
