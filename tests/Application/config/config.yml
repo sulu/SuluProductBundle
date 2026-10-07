@@ -22,3 +22,8 @@ sulu_product:
     search:
         website:
             additional_product_filters: true
+
+# An empty `resources` list covers every resource, products included.
+sulu_content:
+    request_workflows:
+        default: ~

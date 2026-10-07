@@ -485,6 +485,57 @@ class ProductAdminTest extends TestCase
         }
     }
 
+    public function testDetailsAddViewHasWorkflowRequestToolbarActions(): void
+    {
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(true);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::ADD)->willReturn(true);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::DELETE)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::LIVE)->willReturn(false);
+        $this->securityChecker->hasPermission(ActivityAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(false);
+
+        $viewCollection = new ViewCollection();
+        $this->admin->configureViews($viewCollection);
+
+        /** @var ToolbarAction[] $toolbarActions */
+        $toolbarActions = $viewCollection->get(ProductAdmin::ADD_TABS_VIEW . '.details')->getView()->getOption('toolbarActions');
+
+        $this->assertCount(1, $toolbarActions);
+        $save = $toolbarActions[0];
+        $this->assertInstanceOf(DropdownToolbarAction::class, $save);
+        /** @var ToolbarAction[] $children */
+        $children = $save->getOptions()['toolbarActions'];
+        $childTypes = \array_map(static fn (ToolbarAction $action): string => $action->getType(), $children);
+        $this->assertContains('sulu_content.request_for_publish', $childTypes);
+
+        foreach ($this->getPublishEntries($children) as $entry) {
+            $this->assertStringContainsString('(false)', $this->getVisibleCondition($entry));
+        }
+    }
+
+    public function testDetailsAddViewShowsPublishEntriesWithLivePermission(): void
+    {
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(true);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::ADD)->willReturn(true);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::DELETE)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::LIVE)->willReturn(true);
+        $this->securityChecker->hasPermission(ActivityAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(false);
+
+        $viewCollection = new ViewCollection();
+        $this->admin->configureViews($viewCollection);
+
+        /** @var ToolbarAction[] $toolbarActions */
+        $toolbarActions = $viewCollection->get(ProductAdmin::ADD_TABS_VIEW . '.details')->getView()->getOption('toolbarActions');
+        /** @var ToolbarAction[] $children */
+        $children = $toolbarActions[0]->getOptions()['toolbarActions'];
+
+        foreach ($this->getPublishEntries($children) as $entry) {
+            $this->assertStringContainsString('_permissions.live', $this->getVisibleCondition($entry));
+            $this->assertStringNotContainsString('(false)', $this->getVisibleCondition($entry));
+        }
+    }
+
     private function getVisibleCondition(ToolbarAction $action): string
     {
         $condition = $action->getOptions()['visible_condition'] ?? null;

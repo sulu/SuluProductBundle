@@ -189,6 +189,8 @@ final class ProductController implements SecuredControllerInterface
             return new JsonResponse(['detail' => 'Invalid attribute value provided.'], 400);
         }
 
+        $this->handleAction($request, $product->getUuid());
+
         $response = $this->getAction($request, $product->getUuid());
         $response->setStatusCode(201);
 

@@ -290,6 +290,58 @@ class ProductControllerTest extends SuluTestCase
         $this->assertNotEmpty($id);
     }
 
+    public function testPostAppliesTheActionToTheCreatedProduct(): void
+    {
+        self::purgeDatabase();
+        $familyId = $this->createProductFamily();
+
+        $this->client->request(
+            'POST',
+            '/admin/api/products.json?locale=en&action=publish',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'title' => 'My Product',
+                'productFamily' => $familyId,
+            ]) ?: null,
+        );
+
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(201, $response);
+
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertSame('published', $data['workflowPlace']);
+    }
+
+    public function testPostRequestsAReviewOfTheCreatedProduct(): void
+    {
+        self::purgeDatabase();
+        $familyId = $this->createProductFamily();
+
+        $this->client->request(
+            'POST',
+            '/admin/api/products.json?locale=en&action=request_for_review',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'title' => 'My Product',
+                'productFamily' => $familyId,
+            ]) ?: null,
+        );
+
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(201, $response);
+
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertSame('review', $data['workflowPlace']);
+    }
+
     public function testPostProductWithVariantsWithoutUrlCreatesNoRoute(): void
     {
         self::purgeDatabase();
