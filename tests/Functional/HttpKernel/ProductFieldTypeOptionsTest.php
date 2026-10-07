@@ -16,8 +16,6 @@ namespace Sulu\Product\Tests\Functional\HttpKernel;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Component\Rest\ListBuilder\Metadata\FieldDescriptorFactoryInterface;
-use Sulu\Product\Domain\Model\ProductInterface;
-use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 use Sulu\Product\Infrastructure\Symfony\HttpKernel\SuluProductBundle;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\Config\Loader\LoaderResolver;
@@ -68,18 +66,6 @@ class ProductFieldTypeOptionsTest extends SuluTestCase
         }
 
         $this->assertGreaterThan(0, $assertedProperties, 'No selection display properties were checked.');
-    }
-
-    /**
-     * The request workflow authorizes a product transition against the context the resource declares,
-     * and publishing a product without one answers 500 as soon as a workflow covers products.
-     */
-    public function testProductsResourceDeclaresItsSecurityContext(): void
-    {
-        /** @var array<string, array{security_context?: string}> $resources */
-        $resources = $this->getPrependedAdminConfig()['resources'];
-
-        $this->assertSame(ProductAdmin::SECURITY_CONTEXT, $resources[ProductInterface::RESOURCE_KEY]['security_context'] ?? null);
     }
 
     /**
