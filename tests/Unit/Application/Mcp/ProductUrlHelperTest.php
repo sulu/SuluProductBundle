@@ -19,6 +19,7 @@ use Prophecy\Argument;
 use Prophecy\Prophet;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\TagMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\MetadataInterface;
 use Sulu\Product\Application\Mcp\ProductUrlHelper;
 use Sulu\Product\Domain\Model\ProductInterface;
@@ -125,6 +126,65 @@ final class ProductUrlHelperTest extends TestCase
     {
         $this->assertStringContainsString('e.g. the pattern of a sibling product', ProductUrlHelperFactory::create('route')->instruction());
         $this->assertStringContainsString('e.g. the pattern of a sibling product', ProductUrlHelperFactory::create('route')->instruction(['title' => '  ', 'code' => 5]));
+    }
+
+    public function testAMissingPathUrlIsGeneratedFromTheTitle(): void
+    {
+        $data = ProductUrlHelperFactory::create('route')->completeUrl(['title' => 'Dup Check', 'code' => 'x-1'], 'en');
+
+        $this->assertSame('/products/dup-check', $data['url']);
+    }
+
+    public function testAGeneratedPathUrlIsUniqueAmongTheExistingRoutes(): void
+    {
+        $helper = ProductUrlHelperFactory::create('route', ['/products/dup-check']);
+
+        $this->assertSame('/products/dup-check-1', $helper->completeUrl(['title' => 'Dup Check'], 'en')['url']);
+    }
+
+    public function testAGivenUrlIsNeverReplaced(): void
+    {
+        $data = ['title' => 'Dup Check', 'url' => '/shop/dup'];
+
+        $this->assertSame($data, ProductUrlHelperFactory::create('route')->completeUrl($data, 'en'));
+    }
+
+    public function testAnEmptyUrlIsGeneratedFromTheTitle(): void
+    {
+        $data = ProductUrlHelperFactory::create('route')->completeUrl(['title' => 'Dup Check', 'url' => ''], 'en');
+
+        $this->assertSame('/products/dup-check', $data['url']);
+    }
+
+    public function testAVariantUrlFollowsTheRoutePartsOfTheVariantForm(): void
+    {
+        $name = new FieldMetadata('name');
+        $name->setType('text_line');
+        $tag = new TagMetadata();
+        $tag->setName('sulu.rlp.part');
+        $name->addTag($tag);
+        $form = new FormMetadata();
+        $form->addItem($name);
+
+        $helper = ProductUrlHelperFactory::create('route', formMetadataProvider: new ArrayMetadataProvider([ProductInterface::FORM_KEY_VARIANT => $form]));
+        $data = ['title' => 'Ignored', 'name' => 'Alpha'];
+
+        $this->assertSame('/products/alpha', $helper->completeUrl($data, 'en', ProductInterface::FORM_KEY_VARIANT)['url']);
+        $this->assertSame('/products/ignored', $helper->completeUrl($data, 'en')['url']);
+    }
+
+    public function testAPageBasedUrlIsNotGeneratedWithoutAPage(): void
+    {
+        $data = ['title' => 'Dup Check'];
+
+        $this->assertSame($data, ProductUrlHelperFactory::create('page_tree_route')->completeUrl($data, 'en'));
+    }
+
+    public function testWithoutATitleNoUrlIsGenerated(): void
+    {
+        $data = ['title' => '  '];
+
+        $this->assertSame($data, ProductUrlHelperFactory::create('route')->completeUrl($data, 'en'));
     }
 
     public function testATitleWithoutASlugLeavesTheUrlWithoutASuffix(): void

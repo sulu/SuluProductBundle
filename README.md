@@ -318,9 +318,9 @@ extension for the resource key `products`. The MCP bundle's generic tools (`sulu
 | `sulu_attribute_value_list` | List the values products carry for one attribute, with the value to search by. |
 | `sulu_product_get_products` | Search published products by keyword, article code or family. |
 | `sulu_product_search_products_by_attributes` | Search products by attribute values. |
-| `sulu_product_create` | Create a product draft. Needs `product_write`. |
+| `sulu_product_create` | Create a product draft. With the route type `route` and without `content.url`, the URL is generated from the title. Needs `product_write`. |
 | `sulu_product_update` | Update a product draft. Needs `product_write`. |
-| `sulu_product_variant_create` | Create a variant draft. Needs `product_write`. |
+| `sulu_product_variant_create` | Create a variant draft. With the route type `route` and without `url`, the URL is generated from the title. Needs `product_write`. |
 | `sulu_product_variant_update` | Update a variant draft. Needs `product_write`. |
 
 Every product or variant that these tools return carries `resourceKey` (`products`) next to its `uuid`. For a product, `sulu_admin_link_generate` takes `resourceKey`, `resourceId` (the product `uuid`) and `locale`. A variant has no admin link yet. The two search tools return the article `code` per row and no `uuid`.
