@@ -14,9 +14,12 @@ declare(strict_types=1);
 namespace Sulu\Product\Tests\Functional\HttpKernel;
 
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
+use Sulu\Content\Application\WorkflowTransitionRequest\Event\WorkflowTransitionRequestActionEvent;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Infrastructure\Sulu\Activity\ProductWorkflowTransitionRequestSubscriber;
 use Sulu\Product\Infrastructure\Symfony\HttpKernel\SuluProductBundle;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 class SuluProductBundleTest extends SuluTestCase
 {
@@ -33,6 +36,23 @@ class SuluProductBundleTest extends SuluTestCase
 
         $this->assertTrue($container->has(ProductRepositoryInterface::class));
         $this->assertTrue($container->has(AttributeRepositoryInterface::class));
+    }
+
+    public function testRegistersTheWorkflowTransitionRequestSubscriber(): void
+    {
+        self::bootKernel();
+
+        /** @var EventDispatcherInterface $dispatcher */
+        $dispatcher = self::getContainer()->get('event_dispatcher');
+
+        $subscribers = [];
+        foreach ($dispatcher->getListeners(WorkflowTransitionRequestActionEvent::class) as $listener) {
+            if (\is_array($listener)) {
+                $subscribers[] = $listener[0]::class;
+            }
+        }
+
+        $this->assertContains(ProductWorkflowTransitionRequestSubscriber::class, $subscribers);
     }
 
     public function testBundleClassExists(): void

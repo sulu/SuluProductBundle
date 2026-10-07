@@ -115,6 +115,7 @@ use Sulu\Product\Infrastructure\Doctrine\Repository\AttributeRepository;
 use Sulu\Product\Infrastructure\Doctrine\Repository\ProductAttributeValueRepository;
 use Sulu\Product\Infrastructure\Doctrine\Repository\ProductFamilyRepository;
 use Sulu\Product\Infrastructure\Doctrine\Repository\ProductRepository;
+use Sulu\Product\Infrastructure\Sulu\Activity\ProductWorkflowTransitionRequestSubscriber;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeFieldFactory;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeGroupAdmin;
@@ -1261,6 +1262,16 @@ final class SuluProductBundle extends AbstractBundle
             ->class(ProductAssociationReferenceCleanupSubscriber::class)
             ->args([
                 new Reference('sulu_reference.reference_repository'),
+            ])
+            ->tag('kernel.event_subscriber');
+
+        // Activity
+        $services->set('sulu_product.product_workflow_transition_request_subscriber')
+            ->class(ProductWorkflowTransitionRequestSubscriber::class)
+            ->args([
+                new Reference('sulu_product.product_repository'),
+                new Reference('sulu_activity.domain_event_collector'),
+                new Reference('sulu_activity.domain_event_dispatcher'),
             ])
             ->tag('kernel.event_subscriber');
 
