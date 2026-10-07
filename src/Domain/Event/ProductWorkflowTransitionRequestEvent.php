@@ -25,7 +25,7 @@ class ProductWorkflowTransitionRequestEvent extends DomainEvent
      * @param array<string, scalar|null> $context
      */
     public function __construct(
-        private ProductInterface $article,
+        private ProductInterface $product,
         private string $action,
         private string $locale,
         private array $context,
@@ -35,7 +35,7 @@ class ProductWorkflowTransitionRequestEvent extends DomainEvent
 
     public function getProduct(): ProductInterface
     {
-        return $this->article;
+        return $this->product;
     }
 
     public function getAction(): string
@@ -63,7 +63,7 @@ class ProductWorkflowTransitionRequestEvent extends DomainEvent
 
     public function getResourceId(): string
     {
-        return (string) $this->article->getUuid();
+        return (string) $this->product->getUuid();
     }
 
     public function getResourceLocale(): ?string
@@ -73,7 +73,7 @@ class ProductWorkflowTransitionRequestEvent extends DomainEvent
 
     public function getResourceTitle(): ?string
     {
-        $dimensionContentCollection = new DimensionContentCollection($this->article->getDimensionContents(), [], ProductDimensionContent::class);
+        $dimensionContentCollection = new DimensionContentCollection($this->product->getDimensionContents(), [], ProductDimensionContent::class);
 
         return $dimensionContentCollection->getDimensionContent(['locale' => $this->locale])?->getTitle();
     }

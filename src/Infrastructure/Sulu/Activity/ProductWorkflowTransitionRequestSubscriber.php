@@ -52,7 +52,7 @@ class ProductWorkflowTransitionRequestSubscriber implements EventSubscriberInter
         $locale = $event->getLocale();
 
         // The content of the request's locale is loaded, so the event can resolve the title.
-        $article = $this->productRepository->findOneBy(
+        $product = $this->productRepository->findOneBy(
             ['uuid' => $event->getResourceId()],
             [
                 ProductRepositoryInterface::SELECT_PRODUCT_CONTENT => [
@@ -65,11 +65,11 @@ class ProductWorkflowTransitionRequestSubscriber implements EventSubscriberInter
             ],
         );
 
-        if (null === $article) {
+        if (null === $product) {
             return;
         }
 
-        $domainEvent = new ProductWorkflowTransitionRequestEvent($article, $event->getAction(), $locale, $event->getContext());
+        $domainEvent = new ProductWorkflowTransitionRequestEvent($product, $event->getAction(), $locale, $event->getContext());
 
         // The verdicts were written outside the unit of work, so no flush follows that would store a
         // collected activity.

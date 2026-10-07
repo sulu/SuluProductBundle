@@ -69,12 +69,15 @@ class ProductWorkflowTransitionRequestSubscriberTest extends TestCase
 
     public function testCollectsTheDomainEventForItsResourceKey(): void
     {
-        $article = $this->prophesize(ProductInterface::class)->reveal();
-        $this->productRepository->findOneBy(['uuid' => 'resource-1'], Argument::type('array'))->willReturn($article);
+        $product = $this->prophesize(ProductInterface::class)->reveal();
+        $this->productRepository->findOneBy(['uuid' => 'resource-1'], Argument::withEntry(
+            ProductRepositoryInterface::SELECT_PRODUCT_CONTENT,
+            Argument::withEntry('dimensionAttributes', Argument::withEntry('locale', ['de'])),
+        ))->willReturn($product);
 
         $this->domainEventCollector->collect(Argument::that(
             static fn (object $event) => $event instanceof ProductWorkflowTransitionRequestEvent
-                && $article === $event->getProduct()
+                && $product === $event->getProduct()
                 && 'workflow_transition_request.approved' === $event->getEventType()
                 && 'de' === $event->getResourceLocale()
                 && ['comment' => 'Fine'] === $event->getEventContext(),
@@ -89,8 +92,11 @@ class ProductWorkflowTransitionRequestSubscriberTest extends TestCase
 
     public function testDispatchesValidatedRightAwayInsteadOfCollectingIt(): void
     {
-        $article = $this->prophesize(ProductInterface::class)->reveal();
-        $this->productRepository->findOneBy(['uuid' => 'resource-1'], Argument::type('array'))->willReturn($article);
+        $product = $this->prophesize(ProductInterface::class)->reveal();
+        $this->productRepository->findOneBy(['uuid' => 'resource-1'], Argument::withEntry(
+            ProductRepositoryInterface::SELECT_PRODUCT_CONTENT,
+            Argument::withEntry('dimensionAttributes', Argument::withEntry('locale', ['de'])),
+        ))->willReturn($product);
 
         $this->domainEventDispatcher->dispatch(Argument::that(
             static fn (object $event) => $event instanceof ProductWorkflowTransitionRequestEvent
