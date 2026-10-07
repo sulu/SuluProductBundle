@@ -72,10 +72,15 @@ final class ProductController implements SecuredControllerInterface
         $this->messageBus = $messageBus;
     }
 
+    /**
+     * Lists every product with a route in the requested locale, which is what a product selection offers.
+     * The admin product list passes `excludeVariants` instead: all products except variants, which are
+     * edited through their parent's variants tab.
+     */
     public function cgetAction(Request $request): Response
     {
-        /** @var DoctrineFieldDescriptorInterface[] $fieldDescriptors */
-        $fieldDescriptors = $this->fieldDescriptorFactory->getFieldDescriptors(ProductInterface::RESOURCE_KEY);
+        /** @var array<string, DoctrineFieldDescriptorInterface> $fieldDescriptors */
+        $fieldDescriptors = $this->fieldDescriptorFactory->getFieldDescriptors(ProductInterface::LIST_KEY);
 
         /** @var DoctrineListBuilder $listBuilder */
         $listBuilder = $this->listBuilderFactory->create(ProductInterface::class);
@@ -85,12 +90,16 @@ final class ProductController implements SecuredControllerInterface
         $listBuilder->addSelectField($fieldDescriptors['published']);
         $listBuilder->addSelectField($fieldDescriptors['publishedState']);
         $listBuilder->setParameter('locale', $this->getLocale($request));
-        // Variants are edited through their parent's variants tab and must not show up in the main list.
-        $listBuilder->where(
-            $fieldDescriptors['type'],
-            ProductInterface::TYPE_VARIANT,
-            ListBuilderInterface::WHERE_COMPARATOR_UNEQUAL,
-        );
+
+        if ($request->query->getBoolean('excludeVariants')) {
+            $listBuilder->where(
+                $fieldDescriptors['type'],
+                ProductInterface::TYPE_VARIANT,
+                ListBuilderInterface::WHERE_COMPARATOR_UNEQUAL,
+            );
+        } else {
+            $listBuilder->where($fieldDescriptors['url'], null, ListBuilderInterface::WHERE_COMPARATOR_UNEQUAL);
+        }
 
         $listRepresentation = new PaginatedRepresentation(
             $listBuilder->execute(),

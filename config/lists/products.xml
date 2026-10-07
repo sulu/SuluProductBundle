@@ -55,6 +55,14 @@
         </join>
     </joins>
 
+    <joins name="route" ref="dimensionContent">
+        <join>
+            <entity-name>route</entity-name>
+            <field-name>dimensionContent.route</field-name>
+            <method>LEFT</method>
+        </join>
+    </joins>
+
     <joins name="creator" ref="dimensionContent">
         <join>
             <entity-name>%sulu.model.user.class%</entity-name>
@@ -134,9 +142,16 @@
                     <param name="options" type="collection">
                         <param name="product" value="sulu_product.product_type_product"/>
                         <param name="product_with_variants" value="sulu_product.product_type_product_with_variants"/>
+                        <param name="variant" value="sulu_product.product_type_variant"/>
                     </param>
                 </params>
             </filter>
+        </property>
+
+        <property name="url" translation="sulu_product.url" visibility="no">
+            <field-name>slug</field-name>
+            <entity-name>route</entity-name>
+            <joins ref="route"/>
         </property>
 
         <property name="productFamily" translation="sulu_product.product_family" visibility="never">

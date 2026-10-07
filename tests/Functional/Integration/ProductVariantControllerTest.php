@@ -262,7 +262,7 @@ class ProductVariantControllerTest extends SuluTestCase
         $this->assertSame($parentId, $variant->getParent()->getUuid());
 
         // ... and must never show up in the main product list.
-        $this->client->request('GET', '/admin/api/products.json?locale=en');
+        $this->client->request('GET', '/admin/api/products.json?excludeVariants=true&locale=en');
         $this->assertHttpStatusCode(200, $this->client->getResponse());
         $listData = \json_decode((string) $this->client->getResponse()->getContent(), true);
         $this->assertIsArray($listData);

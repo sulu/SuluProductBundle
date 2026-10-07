@@ -19,8 +19,6 @@ use Sulu\Bundle\AdminBundle\SmartContent\Configuration\BuilderInterface;
 use Sulu\Bundle\AdminBundle\SmartContent\SmartContentQueryEnhancer;
 use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
 use Sulu\Page\Domain\Model\PageInterface;
-use Sulu\Product\Domain\Model\ProductInterface;
-use Sulu\Route\Domain\Model\Route;
 
 readonly class PageTreeProductSmartContentProvider extends ProductSmartContentProvider
 {
@@ -68,21 +66,10 @@ readonly class PageTreeProductSmartContentProvider extends ProductSmartContentPr
             return;
         }
 
-        $locale = $filters['locale'] ?? null;
         $includeSubFolders = $filters['includeSubFolders'] ?? false;
 
-        $queryBuilder->join(
-            Route::class,
-            'productRoute',
-            'WITH',
-            'productRoute.resourceKey = :productResourceKey
-             AND productRoute.resourceId = ' . $alias . '.uuid
-             AND productRoute.locale = :routeLocale'
-        );
-        $queryBuilder->setParameter('productResourceKey', ProductInterface::RESOURCE_KEY);
-        $queryBuilder->setParameter('routeLocale', $locale);
-
-        $queryBuilder->join('productRoute.parentRoute', 'parentRoute');
+        $queryBuilder->join(self::LINKED_CONTENT_ALIAS . '.route', 'linkedRoute');
+        $queryBuilder->join('linkedRoute.parentRoute', 'parentRoute');
 
         if (!$includeSubFolders) {
             $queryBuilder->andWhere('parentRoute.resourceId = :dataSource');

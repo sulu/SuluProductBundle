@@ -26,11 +26,11 @@ use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Bundle\AdminBundle\SmartContent\SmartContentQueryEnhancer;
 use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
 use Sulu\Page\Domain\Model\PageInterface;
+use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\PageTreeProductSmartContentProvider;
-use Sulu\Route\Domain\Model\Route;
 
 #[CoversClass(PageTreeProductSmartContentProvider::class)]
 class PageTreeProductSmartContentProviderTest extends TestCase
@@ -50,6 +50,7 @@ class PageTreeProductSmartContentProviderTest extends TestCase
         /** @var ObjectProphecy<EntityRepository<ProductInterface>> $productRepository */
         $productRepository = $this->prophesize(EntityRepository::class);
         $this->productRepository = $productRepository;
+        $productRepository->getClassName()->willReturn(Product::class);
 
         /** @var ObjectProphecy<EntityRepository<ProductDimensionContentInterface>> $dimensionContentRepository */
         $dimensionContentRepository = $this->prophesize(EntityRepository::class);
@@ -153,7 +154,7 @@ class PageTreeProductSmartContentProviderTest extends TestCase
         $query->getSingleScalarResult()->willReturn(0);
         $queryBuilder->getQuery()->willReturn($query->reveal());
 
-        $this->productRepository->createQueryBuilder('product')->willReturn($queryBuilder->reveal());
+        $this->productRepository->createQueryBuilder('linkedProduct')->willReturn($queryBuilder->reveal());
 
         $filters = $this->minimalFilters();
         $filters['dataSource'] = null;
@@ -173,7 +174,7 @@ class PageTreeProductSmartContentProviderTest extends TestCase
         $query->getSingleScalarResult()->willReturn(0);
         $queryBuilder->getQuery()->willReturn($query->reveal());
 
-        $this->productRepository->createQueryBuilder('product')->willReturn($queryBuilder->reveal());
+        $this->productRepository->createQueryBuilder('linkedProduct')->willReturn($queryBuilder->reveal());
 
         $filters = $this->minimalFilters();
         $filters['dataSource'] = '';
@@ -193,7 +194,7 @@ class PageTreeProductSmartContentProviderTest extends TestCase
         $query->getSingleScalarResult()->willReturn(3);
         $queryBuilder->getQuery()->willReturn($query->reveal());
 
-        $this->productRepository->createQueryBuilder('product')->willReturn($queryBuilder->reveal());
+        $this->productRepository->createQueryBuilder('linkedProduct')->willReturn($queryBuilder->reveal());
 
         $filters = $this->minimalFilters();
         $filters['dataSource'] = 'page-uuid';
@@ -203,19 +204,9 @@ class PageTreeProductSmartContentProviderTest extends TestCase
 
         $this->assertSame(3, $result);
 
-        // Assert Route join was called
-        $queryBuilder->join(
-            Route::class,
-            'productRoute',
-            Argument::any(),
-            Argument::any(),
-        )->shouldHaveBeenCalled();
-
         // Assert parentRoute join was called
-        $queryBuilder->join(
-            'productRoute.parentRoute',
-            'parentRoute',
-        )->shouldHaveBeenCalled();
+        $queryBuilder->join('linkedProductContent.route', 'linkedRoute')->shouldHaveBeenCalled();
+        $queryBuilder->join('linkedRoute.parentRoute', 'parentRoute')->shouldHaveBeenCalled();
 
         // Assert direct parent route filter (no subfolders)
         $queryBuilder->andWhere('parentRoute.resourceId = :dataSource')->shouldHaveBeenCalled();
@@ -238,7 +229,7 @@ class PageTreeProductSmartContentProviderTest extends TestCase
         $query->getSingleScalarResult()->willReturn(5);
         $queryBuilder->getQuery()->willReturn($query->reveal());
 
-        $this->productRepository->createQueryBuilder('product')->willReturn($queryBuilder->reveal());
+        $this->productRepository->createQueryBuilder('linkedProduct')->willReturn($queryBuilder->reveal());
 
         $filters = $this->minimalFilters();
         $filters['dataSource'] = 'page-uuid';
@@ -248,19 +239,9 @@ class PageTreeProductSmartContentProviderTest extends TestCase
 
         $this->assertSame(5, $result);
 
-        // Assert Route join was called
-        $queryBuilder->join(
-            Route::class,
-            'productRoute',
-            Argument::any(),
-            Argument::any(),
-        )->shouldHaveBeenCalled();
-
         // Assert parentRoute join was called
-        $queryBuilder->join(
-            'productRoute.parentRoute',
-            'parentRoute',
-        )->shouldHaveBeenCalled();
+        $queryBuilder->join('linkedProductContent.route', 'linkedRoute')->shouldHaveBeenCalled();
+        $queryBuilder->join('linkedRoute.parentRoute', 'parentRoute')->shouldHaveBeenCalled();
 
         // Assert page tree joins for dataSourcePage
         $queryBuilder->join(

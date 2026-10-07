@@ -253,7 +253,7 @@ class ProductControllerTest extends SuluTestCase
     {
         self::purgeDatabase();
 
-        $this->client->request('GET', '/admin/api/products.json?locale=en');
+        $this->client->request('GET', '/admin/api/products.json?excludeVariants=true&locale=en');
         $response = $this->client->getResponse();
 
         $this->assertHttpStatusCode(200, $response);
@@ -842,7 +842,7 @@ class ProductControllerTest extends SuluTestCase
         $this->createProduct($familyId);
 
         // GET list with at least one product triggers the normalizeDateTimes loop body
-        $this->client->request('GET', '/admin/api/products.json?locale=en');
+        $this->client->request('GET', '/admin/api/products.json?excludeVariants=true&locale=en');
         $response = $this->client->getResponse();
 
         $this->assertHttpStatusCode(200, $response);
@@ -882,7 +882,7 @@ class ProductControllerTest extends SuluTestCase
         $childId = $data['id'];
         $this->assertIsString($childId);
 
-        $this->client->request('GET', '/admin/api/products.json?locale=en');
+        $this->client->request('GET', '/admin/api/products.json?excludeVariants=true&locale=en');
         $response = $this->client->getResponse();
         $this->assertHttpStatusCode(200, $response);
 
@@ -895,6 +895,66 @@ class ProductControllerTest extends SuluTestCase
         $this->assertContains($topLevelId, $ids);
         $this->assertContains($parentId, $ids);
         $this->assertNotContains($childId, $ids);
+    }
+
+    public function testGetListWithoutExcludeVariantsOffersEveryProductWithARoute(): void
+    {
+        self::purgeDatabase();
+        $familyId = $this->createProductFamily();
+        $simpleId = $this->createProduct($familyId, 'Simple Product');
+        $parentId = $this->createProduct($familyId, 'Variant Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+
+        $this->client->request(
+            'POST',
+            '/admin/api/products/' . $parentId . '/variants.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'code' => 'VARIANT-CHILD',
+                'title' => 'Variant Child Product',
+                'url' => '/variant-child-product',
+            ]) ?: null,
+        );
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($data);
+        $variantId = $data['id'];
+        $this->assertIsString($variantId);
+
+        $this->client->request(
+            'POST',
+            '/admin/api/products/' . $parentId . '/variants.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode(['locale' => 'en', 'code' => 'VARIANT-NO-URL', 'title' => 'Variant Without Url']) ?: null,
+        );
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+
+        $this->client->request('GET', '/admin/api/products.json?locale=en&fields=id,name,type');
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(200, $response);
+
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertIsArray($data['_embedded']);
+        $this->assertIsArray($data['_embedded']['products']);
+        $types = \array_column($data['_embedded']['products'], 'type', 'id');
+        \ksort($types);
+        $expected = [$simpleId => ProductInterface::TYPE_PRODUCT, $variantId => ProductInterface::TYPE_VARIANT];
+        \ksort($expected);
+
+        $this->assertSame($expected, $types);
+
+        // a selection loads its selected items through the same list
+        $this->client->request('GET', '/admin/api/products.json?locale=en&fields=id,name&ids=' . $variantId);
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertIsArray($data['_embedded']);
+        $this->assertIsArray($data['_embedded']['products']);
+        $this->assertSame(['Variant Child Product'], \array_column($data['_embedded']['products'], 'name'));
     }
 
     public function testGetReturnsTemplateOnlyWhenContentMissing(): void
@@ -1103,7 +1163,7 @@ class ProductControllerTest extends SuluTestCase
         $this->assertNull($product->getParent());
 
         // ... and it must still show up in the main list (not hidden as if it were a variant).
-        $this->client->request('GET', '/admin/api/products.json?locale=en');
+        $this->client->request('GET', '/admin/api/products.json?excludeVariants=true&locale=en');
         $this->assertHttpStatusCode(200, $this->client->getResponse());
         $listData = \json_decode((string) $this->client->getResponse()->getContent(), true);
         $this->assertIsArray($listData);
@@ -1162,7 +1222,7 @@ class ProductControllerTest extends SuluTestCase
 
         // a locale without a family translation falls back to the family's default locale
         foreach (['en', 'de'] as $locale) {
-            $this->client->request('GET', '/admin/api/products.json?locale=' . $locale . '&fields=id,productFamilyName&flat=true');
+            $this->client->request('GET', '/admin/api/products.json?excludeVariants=true&locale=' . $locale . '&fields=id,productFamilyName&flat=true');
             $this->assertHttpStatusCode(200, $this->client->getResponse());
 
             $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
@@ -1183,7 +1243,7 @@ class ProductControllerTest extends SuluTestCase
      */
     private function listIds(array $filter): array
     {
-        $this->client->request('GET', '/admin/api/products.json?locale=en', ['filter' => $filter]);
+        $this->client->request('GET', '/admin/api/products.json?excludeVariants=true&locale=en', ['filter' => $filter]);
         $this->assertHttpStatusCode(200, $this->client->getResponse());
 
         $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
@@ -1230,7 +1290,7 @@ class ProductControllerTest extends SuluTestCase
         $this->assertHttpStatusCode(200, $this->client->getResponse());
 
         // the list does not ask for either field, the indicator needs them anyway
-        $this->client->request('GET', '/admin/api/products.json?locale=en&fields=name,id&flat=true');
+        $this->client->request('GET', '/admin/api/products.json?excludeVariants=true&locale=en&fields=name,id&flat=true');
         $response = $this->client->getResponse();
         $this->assertHttpStatusCode(200, $response);
 
