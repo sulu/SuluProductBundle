@@ -72,41 +72,15 @@ final class ProductController implements SecuredControllerInterface
         $this->messageBus = $messageBus;
     }
 
+    /**
+     * Lists every product with a route in the requested locale, which is what a product selection offers.
+     * The admin product list passes `excludeVariants` instead: all products except variants, which are
+     * edited through their parent's variants tab.
+     */
     public function cgetAction(Request $request): Response
     {
-        return $this->createListResponse(
-            $request,
-            ProductInterface::LIST_KEY,
-            static function(DoctrineListBuilder $listBuilder, array $fieldDescriptors): void {
-                // Variants are edited through their parent's variants tab and must not show up in the main list.
-                $listBuilder->where(
-                    $fieldDescriptors['type'],
-                    ProductInterface::TYPE_VARIANT,
-                    ListBuilderInterface::WHERE_COMPARATOR_UNEQUAL,
-                );
-            },
-        );
-    }
-
-    public function cgetLinkableAction(Request $request): Response
-    {
-        return $this->createListResponse(
-            $request,
-            ProductInterface::LIST_KEY_LINKABLE,
-            static function(DoctrineListBuilder $listBuilder, array $fieldDescriptors): void {
-                // a product is linkable exactly when its content in the requested locale has a route
-                $listBuilder->where($fieldDescriptors['url'], null, ListBuilderInterface::WHERE_COMPARATOR_UNEQUAL);
-            },
-        );
-    }
-
-    /**
-     * @param callable(DoctrineListBuilder, array<string, DoctrineFieldDescriptorInterface>): void $restrict
-     */
-    private function createListResponse(Request $request, string $listKey, callable $restrict): Response
-    {
         /** @var array<string, DoctrineFieldDescriptorInterface> $fieldDescriptors */
-        $fieldDescriptors = $this->fieldDescriptorFactory->getFieldDescriptors($listKey);
+        $fieldDescriptors = $this->fieldDescriptorFactory->getFieldDescriptors(ProductInterface::LIST_KEY);
 
         /** @var DoctrineListBuilder $listBuilder */
         $listBuilder = $this->listBuilderFactory->create(ProductInterface::class);
@@ -116,19 +90,28 @@ final class ProductController implements SecuredControllerInterface
         $listBuilder->addSelectField($fieldDescriptors['published']);
         $listBuilder->addSelectField($fieldDescriptors['publishedState']);
         $listBuilder->setParameter('locale', $this->getLocale($request));
-        $restrict($listBuilder, $fieldDescriptors);
+
+        if ($request->query->getBoolean('excludeVariants')) {
+            $listBuilder->where(
+                $fieldDescriptors['type'],
+                ProductInterface::TYPE_VARIANT,
+                ListBuilderInterface::WHERE_COMPARATOR_UNEQUAL,
+            );
+        } else {
+            $listBuilder->where($fieldDescriptors['url'], null, ListBuilderInterface::WHERE_COMPARATOR_UNEQUAL);
+        }
 
         $listRepresentation = new PaginatedRepresentation(
             $listBuilder->execute(),
-            $listKey,
+            ProductInterface::RESOURCE_KEY,
             (int) $listBuilder->getCurrentPage(),
             (int) $listBuilder->getLimit(),
             $listBuilder->count(),
         );
 
-        /** @var array{_embedded: array<string, array<int, array<string, mixed>>>} $list */
+        /** @var array{_embedded: array{products: array<int, array<string, mixed>>}} $list */
         $list = $listRepresentation->toArray();
-        foreach ($list['_embedded'][$listKey] as &$item) {
+        foreach ($list['_embedded'][ProductInterface::RESOURCE_KEY] as &$item) {
             // the admin expects a boolean, the list builder returns the raw workflow place
             $item['publishedState'] = WorkflowInterface::WORKFLOW_PLACE_PUBLISHED === ($item['publishedState'] ?? null);
         }

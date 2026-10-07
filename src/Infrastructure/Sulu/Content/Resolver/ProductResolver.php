@@ -44,6 +44,8 @@ class ProductResolver implements ResolverInterface
 
     private const ASSOCIATIONS_FIELD_PREFIX = 'associations/';
 
+    private const PARENT_PREFIX = 'parent.';
+
     /**
      * @param array<string, string> $variantProperties the properties each entry of `variants` carries
      */
@@ -76,7 +78,12 @@ class ProductResolver implements ResolverInterface
             ? null
             : [...$this->filterProperties($this->getDefaultProperties()), ...$this->filterProperties($properties)];
 
+        $parentRequested = $this->extractParentProperties($requested);
         $content = $this->resolveProduct($dimensionContent, $locale, $requested);
+
+        if ([] !== $parentRequested) {
+            $content = [...$content, ...$this->resolveParent($dimensionContent, $parentRequested)];
+        }
 
         // A variant URL renders its product as the page, a reference never carries the variant.
         $variantContent = null === $requested ? $this->currentVariantProvider->getCurrentVariant($dimensionContent) : null;
@@ -124,6 +131,61 @@ class ProductResolver implements ResolverInterface
             if (null !== $variants) {
                 $content[$this->outputKey($requested, 'variants')] = $variants;
             }
+        }
+
+        return $content;
+    }
+
+    /**
+     * Removes the `parent.` names from `$requested` and returns them without that prefix.
+     *
+     * @param array<string, string>|null $requested
+     *
+     * @return array<string, string>
+     */
+    private function extractParentProperties(?array &$requested): array
+    {
+        $parentRequested = [];
+        foreach ($requested ?? [] as $key => $name) {
+            if (\str_starts_with($name, self::PARENT_PREFIX)) {
+                $parentRequested[$key] = \substr($name, \strlen(self::PARENT_PREFIX));
+                unset($requested[$key]);
+            }
+        }
+
+        return $parentRequested;
+    }
+
+    /**
+     * Resolves each `product.parent.<name>` of a reference to the variant's parent at its own output
+     * key, so core maps it like any other field; `null` for a product without parent. The shared
+     * metadata loads the parent once for all keys.
+     *
+     * @param array<string, string> $parentRequested
+     *
+     * @return array<string, ContentView>
+     */
+    private function resolveParent(ProductDimensionContentInterface $dimensionContent, array $parentRequested): array
+    {
+        $parent = $dimensionContent->getResource()->getParent();
+        if (null === $parent) {
+            return \array_map(static fn () => ContentView::create(null, []), $parentRequested);
+        }
+
+        $metadata = ['properties' => \array_map(static fn (string $name) => self::getPrefix() . $name, $parentRequested)];
+
+        $content = [];
+        foreach (\array_keys($parentRequested) as $key) {
+            $content[$key] = ContentView::createResolvableWithReferences(
+                id: $parent->getUuid(),
+                resourceLoaderKey: ProductResourceLoader::getKey(),
+                resourceKey: ProductInterface::RESOURCE_KEY,
+                view: [],
+                closure: static fn (mixed $resolved): mixed => \is_array($resolved) && \is_array($resolved['content'] ?? null)
+                    ? $resolved['content'][$key] ?? null
+                    : null,
+                metadata: $metadata,
+            );
         }
 
         return $content;

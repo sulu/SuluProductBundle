@@ -32,9 +32,6 @@ interface ProductInterface extends AuditableInterface, ContentRichEntityInterfac
 
     public const LIST_KEY_VERSIONS = 'products_versions';
 
-    /** Lists what a product selection offers: every product with a route in the requested locale. */
-    public const LIST_KEY_LINKABLE = 'linkable_products';
-
     public const TYPE_PRODUCT = 'product';
     public const TYPE_PRODUCT_WITH_VARIANTS = 'product_with_variants';
     public const TYPE_VARIANT = 'variant';

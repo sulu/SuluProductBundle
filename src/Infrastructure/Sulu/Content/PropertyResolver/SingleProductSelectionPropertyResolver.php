@@ -51,7 +51,7 @@ class SingleProductSelectionPropertyResolver implements PropertyResolverInterfac
                 'properties' => \array_merge(
                     $params['properties'] ?? [],
                     [
-                        'title' => 'title',
+                        'title' => 'product.title',
                         'url' => 'url',
                     ],
                 ),

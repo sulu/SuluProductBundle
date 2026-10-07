@@ -77,6 +77,30 @@ class ProductSmartContentProviderTest extends SuluTestCase
         self::assertSame(3, $this->provider->countBy($this->filters()));
     }
 
+    /** Without a sort the variants stay together under their product, and the result carries no order column. */
+    public function testKeepsVariantsUnderTheirProduct(): void
+    {
+        $sofa = $this->createProduct(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS, 'Sofa');
+        $lamp = $this->createProduct(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS, 'Lamp');
+        $sofaBlue = $this->createProduct(ProductInterface::TYPE_VARIANT, 'Sofa Blue', $sofa, position: 2, slug: '/sofa-blue');
+        $lampSteel = $this->createProduct(ProductInterface::TYPE_VARIANT, 'Lamp Steel', $lamp, position: 2, slug: '/lamp-steel');
+        $sofaGrey = $this->createProduct(ProductInterface::TYPE_VARIANT, 'Sofa Grey', $sofa, position: 1, slug: '/sofa-grey');
+        $lampBrass = $this->createProduct(ProductInterface::TYPE_VARIANT, 'Lamp Brass', $lamp, position: 1, slug: '/lamp-brass');
+        $this->entityManager->flush();
+
+        $result = $this->provider->findFlatBy($this->filters(), []);
+
+        $sofaVariants = [$sofaGrey->getUuid(), $sofaBlue->getUuid()];
+        $lampVariants = [$lampBrass->getUuid(), $lampSteel->getUuid()];
+        self::assertSame(
+            \strcmp($sofa->getUuid(), $lamp->getUuid()) < 0
+                ? [...$sofaVariants, ...$lampVariants]
+                : [...$lampVariants, ...$sofaVariants],
+            \array_column($result, 'id'),
+        );
+        self::assertSame(['id', 'title'], \array_keys($result[0] ?? []));
+    }
+
     public function testMatchesAVariantByTheTagsOfItsProduct(): void
     {
         $tag = new Tag();
