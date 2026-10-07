@@ -68,7 +68,7 @@ final class ProductVariantUpdateTool
     #[McpTool(
         name: 'sulu_product_variant_update',
         title: 'Update Product Variant',
-        description: 'Update a variant of a product. Both the parent UUID and the variant UUID are required, and the variant must actually belong to that parent. The family stays inherited from the parent and cannot be changed here. If the variant has no content in "locale" yet, this call creates that locale. Then pass the localized fields (title, details), because there is nothing to merge into. In "attributes" pass only variant axes (the attributes the family marks variantSpecific), keyed by their attribute UUID; they are merged into the existing values and shared attributes are dropped. The variant stays a draft: publish it individually with sulu_content_publish (resourceKey: products, the variant\'s uuid), which only works while its parent is published in that locale.',
+        description: 'Update a variant of a product. Both the parent UUID and the variant UUID are required, and the variant must actually belong to that parent. The family stays inherited from the parent and cannot be changed here. If the variant has no content in "locale" yet, this call creates that locale. Then pass the localized fields (title, details), because there is nothing to merge into. In "attributes" pass only variant axes (the attributes the family marks variantSpecific), keyed by their attribute UUID; they are merged into the existing values and shared attributes are dropped. The variant stays a draft: publish it individually with sulu_content_publish (resourceKey: products, the variant\'s uuid), which only works while its parent is published in that locale. The result carries "resourceKey" ("products").',
         annotations: new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false),
     )]
     #[DangerousTool('product_write')]
@@ -147,6 +147,7 @@ final class ProductVariantUpdateTool
             $result = [
                 'success' => true,
                 'uuid' => $updated->getUuid(),
+                'resourceKey' => ProductInterface::RESOURCE_KEY,
                 'parent' => $parentUuid,
                 'data' => $this->compactContent($normalized, $this->detectBlockProperties($normalized)),
             ];

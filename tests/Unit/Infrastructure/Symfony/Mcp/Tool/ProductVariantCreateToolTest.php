@@ -82,6 +82,7 @@ final class ProductVariantCreateToolTest extends TestCase
 
         $this->assertTrue($result['success']);
         $this->assertSame('variant-uuid', $result['uuid']);
+        $this->assertSame(ProductInterface::RESOURCE_KEY, $result['resourceKey']);
         $this->assertSame('parent-uuid', $result['parent']);
 
         $message = $captured();

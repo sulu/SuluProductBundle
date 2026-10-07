@@ -53,7 +53,7 @@ final class ProductListTool
     #[McpTool(
         name: 'sulu_product_list',
         title: 'List Products',
-        description: 'List products with optional filters. Returns lightweight summaries (title, code, status, family, workflow state). Use sulu_product_get for a single product\'s full data. Variants are excluded by default because they belong to their parent; set includeVariants=true to list them too, or use sulu_product_variant_list for one parent\'s variants. Results are paginated via "page" and "limit".',
+        description: 'List products with optional filters. Returns lightweight summaries (title, code, status, family, workflow state). Use sulu_product_get for a single product\'s full data. Variants are excluded by default because they belong to their parent; set includeVariants=true to list them too, or use sulu_product_variant_list for one parent\'s variants. Results are paginated via "page" and "limit". Every product or variant in the result carries "resourceKey" ("products"). To link to a product (not a variant) in the admin, call sulu_admin_link_generate with `resourceKey` ("products"), `resourceId` (the product\'s uuid) and `locale`.',
         annotations: new ToolAnnotations(readOnlyHint: true, openWorldHint: false),
     )]
     #[RequiresPermission(requirements: [
@@ -149,6 +149,7 @@ final class ProductListTool
 
             $results[] = [
                 'uuid' => $product->getUuid(),
+                'resourceKey' => ProductInterface::RESOURCE_KEY,
                 'type' => $product->getType(),
                 'parent' => $product->getParent()?->getUuid(),
                 'data' => $summary,

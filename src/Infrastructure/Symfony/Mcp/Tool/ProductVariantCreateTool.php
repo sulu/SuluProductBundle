@@ -63,7 +63,7 @@ final class ProductVariantCreateTool
     #[McpTool(
         name: 'sulu_product_variant_create',
         title: 'Create Product Variant',
-        description: 'Create a variant of an existing product (draft). The parent must be a product of type "product_with_variants". A plain product or another variant is rejected, because variants cannot be nested. The variant inherits its parent\'s product family, so there is no productFamily parameter. In "attributes" pass only the variant axes: the attributes the family marks variantSpecific (see sulu_product_family_list), keyed by their attribute UUID. Shared attributes belong on the parent and are dropped here; a variant-specific attribute the family marks required must be present. Variants are published individually with sulu_content_publish (resourceKey: products, the variant\'s uuid), and only after the parent is published in that locale; publishing the parent leaves its variants unpublished, and unpublishing the parent unpublishes its variants.',
+        description: 'Create a variant of an existing product (draft). The parent must be a product of type "product_with_variants". A plain product or another variant is rejected, because variants cannot be nested. The variant inherits its parent\'s product family, so there is no productFamily parameter. In "attributes" pass only the variant axes: the attributes the family marks variantSpecific (see sulu_product_family_list), keyed by their attribute UUID. Shared attributes belong on the parent and are dropped here; a variant-specific attribute the family marks required must be present. Variants are published individually with sulu_content_publish (resourceKey: products, the variant\'s uuid), and only after the parent is published in that locale; publishing the parent leaves its variants unpublished, and unpublishing the parent unpublishes its variants. The result carries "resourceKey" ("products").',
         annotations: new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false),
     )]
     #[DangerousTool('product_write')]
@@ -139,6 +139,7 @@ final class ProductVariantCreateTool
             $result = [
                 'success' => true,
                 'uuid' => $variant->getUuid(),
+                'resourceKey' => ProductInterface::RESOURCE_KEY,
                 'parent' => $parentUuid,
                 'data' => $this->contentManager->normalize($dimensionContent),
             ];
