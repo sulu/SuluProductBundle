@@ -87,6 +87,7 @@ final class ProductCreateToolTest extends TestCase
 
         $this->assertTrue($result['success']);
         $this->assertSame('new-uuid', $result['uuid']);
+        $this->assertSame(ProductInterface::RESOURCE_KEY, $result['resourceKey']);
     }
 
     public function testCreateProductListsRecommendationsForAnIncompleteProduct(): void

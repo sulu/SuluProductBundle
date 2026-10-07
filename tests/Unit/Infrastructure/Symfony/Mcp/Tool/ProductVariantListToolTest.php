@@ -22,6 +22,7 @@ use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Content\Application\ContentManager\ContentManagerInterface;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
+use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductVariantListTool;
 
@@ -73,6 +74,7 @@ final class ProductVariantListToolTest extends TestCase
         $variant = $result['variants'][0];
         $this->assertIsArray($variant);
         $this->assertSame('variant-1', $variant['uuid']);
+        $this->assertSame(ProductInterface::RESOURCE_KEY, $variant['resourceKey']);
         $this->assertIsArray($variant['data']);
         $this->assertSame(['11' => 'red'], $variant['data']['attributes']);
     }

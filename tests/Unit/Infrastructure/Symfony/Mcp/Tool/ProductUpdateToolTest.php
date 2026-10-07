@@ -88,6 +88,7 @@ final class ProductUpdateToolTest extends TestCase
         $result = $this->tool->updateProduct('uuid-1', 'en', attributes: ['size-uuid' => 'L']);
 
         $this->assertTrue($result['success']);
+        $this->assertSame(ProductInterface::RESOURCE_KEY, $result['resourceKey']);
 
         $message = $captured();
         $this->assertInstanceOf(ModifyProductMessage::class, $message);

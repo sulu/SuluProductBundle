@@ -310,6 +310,8 @@ extension for the resource key `products`. The MCP bundle's generic tools (`sulu
 | `sulu_product_variant_create` | Create a variant draft. Needs `product_write`. |
 | `sulu_product_variant_update` | Update a variant draft. Needs `product_write`. |
 
+Every product or variant that these tools return carries `resourceKey` (`products`) next to its `uuid`. A variant uses the same key as its product. Together with the locale they are what the MCP bundle's admin link tool needs. The two search tools return the article `code` per row and no `uuid`.
+
 The tools check the caller's permissions on these security contexts:
 
 - `sulu.product.products`: view for the product and variant read tools, the two search tools and `sulu_attribute_value_list`, because it returns values and counts of products. Edit for the update tools, edit and add for the create tools.

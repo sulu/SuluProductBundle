@@ -81,6 +81,8 @@ final class ProductVariantUpdateToolTest extends TestCase
         $result = $this->tool->updateProductVariant('en', 'parent-uuid', 'variant-uuid', attributes: ['axis-uuid' => 'L']);
 
         $this->assertTrue($result['success']);
+        $this->assertSame('variant-uuid', $result['uuid']);
+        $this->assertSame(ProductInterface::RESOURCE_KEY, $result['resourceKey']);
         $this->assertSame('parent-uuid', $result['parent']);
 
         $message = $captured();

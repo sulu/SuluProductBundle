@@ -69,6 +69,7 @@ final class ProductListToolTest extends TestCase
         $product = $result['products'][0];
         $this->assertIsArray($product);
         $this->assertSame('uuid-1', $product['uuid']);
+        $this->assertSame(ProductInterface::RESOURCE_KEY, $product['resourceKey']);
         $this->assertIsArray($product['data']);
         $this->assertSame('Shirt', $product['data']['title']);
         $this->assertArrayNotHasKey('blocks', $product['data']);

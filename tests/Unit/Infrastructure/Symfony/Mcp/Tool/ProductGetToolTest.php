@@ -68,6 +68,7 @@ final class ProductGetToolTest extends TestCase
 
         $this->assertSame('product-uuid', $result['uuid']);
         $this->assertSame('en', $result['locale']);
+        $this->assertSame(ProductInterface::RESOURCE_KEY, $result['resourceKey']);
         $this->assertSame(ProductInterface::TYPE_PRODUCT, $result['type']);
         $this->assertNull($result['parent']);
         $this->assertIsArray($result['data']);
@@ -120,6 +121,7 @@ final class ProductGetToolTest extends TestCase
         $result = $this->tool->getProduct('en', 'variant-uuid');
 
         $this->assertSame(ProductInterface::TYPE_VARIANT, $result['type']);
+        $this->assertSame(ProductInterface::RESOURCE_KEY, $result['resourceKey']);
         $this->assertSame('parent-uuid', $result['parent']);
     }
 
@@ -149,6 +151,7 @@ final class ProductGetToolTest extends TestCase
         $this->assertArrayNotHasKey('error', $result);
         $this->assertSame('product-uuid', $result['uuid']);
         $this->assertSame('de', $result['locale']);
+        $this->assertSame(ProductInterface::RESOURCE_KEY, $result['resourceKey']);
         $this->assertSame([], $result['data']);
         $this->assertIsString($result['hint']);
         $this->assertStringContainsString('sulu_product_update', $result['hint']);
