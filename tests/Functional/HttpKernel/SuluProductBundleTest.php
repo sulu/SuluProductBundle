@@ -47,7 +47,7 @@ class SuluProductBundleTest extends SuluTestCase
 
         $subscribers = [];
         foreach ($dispatcher->getListeners(WorkflowTransitionRequestActionEvent::class) as $listener) {
-            if (\is_array($listener)) {
+            if (\is_array($listener) && \is_object($listener[0])) {
                 $subscribers[] = $listener[0]::class;
             }
         }
