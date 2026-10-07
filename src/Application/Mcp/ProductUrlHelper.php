@@ -87,10 +87,10 @@ final readonly class ProductUrlHelper
      *
      * @return array<string, string>
      */
-    private function routeParts(array $content, string $locale): array
+    private function routeParts(array $content, string $locale, string $formKey = ProductInterface::FORM_KEY): array
     {
         try {
-            $metadata = $this->formMetadataProvider->getMetadata(ProductInterface::FORM_KEY, $locale, []);
+            $metadata = $this->formMetadataProvider->getMetadata($formKey, $locale, []);
         } catch (\Throwable) {
             return [];
         }
@@ -142,17 +142,18 @@ final readonly class ProductUrlHelper
      * url needs a page that only the agent can name, so it is left alone and the warning asks for it.
      *
      * @param array<string, mixed> $data
+     * @param string $formKey the form whose "sulu.rlp.part" fields the admin sends for this kind of product
      *
      * @return array<string, mixed>
      */
-    public function completeUrl(array $data, string $locale): array
+    public function completeUrl(array $data, string $locale, string $formKey = ProductInterface::FORM_KEY): array
     {
         $title = $data['title'] ?? null;
         if ($this->isPageBased() || isset($data['url']) || !\is_string($title) || '' === \trim($title)) {
             return $data;
         }
 
-        $parts = $this->routeParts($data, $locale);
+        $parts = $this->routeParts($data, $locale, $formKey);
         if ([] === $parts) {
             $parts = ['title' => $title];
         }
