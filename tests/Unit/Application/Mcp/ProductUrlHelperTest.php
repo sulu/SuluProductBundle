@@ -149,6 +149,13 @@ final class ProductUrlHelperTest extends TestCase
         $this->assertSame($data, ProductUrlHelperFactory::create('route')->completeUrl($data, 'en'));
     }
 
+    public function testAnEmptyUrlIsGeneratedFromTheTitle(): void
+    {
+        $data = ProductUrlHelperFactory::create('route')->completeUrl(['title' => 'Dup Check', 'url' => ''], 'en');
+
+        $this->assertSame('/products/dup-check', $data['url']);
+    }
+
     public function testAVariantUrlFollowsTheRoutePartsOfTheVariantForm(): void
     {
         $name = new FieldMetadata('name');

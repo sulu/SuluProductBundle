@@ -149,7 +149,7 @@ final readonly class ProductUrlHelper
     public function completeUrl(array $data, string $locale, string $formKey = ProductInterface::FORM_KEY): array
     {
         $title = $data['title'] ?? null;
-        if ($this->isPageBased() || isset($data['url']) || !\is_string($title) || '' === \trim($title)) {
+        if ($this->isPageBased() || (isset($data['url']) && '' !== $data['url']) || !\is_string($title) || '' === \trim($title)) {
             return $data;
         }
 
