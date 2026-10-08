@@ -29,10 +29,34 @@ content package reads the route property off the template metadata. A template d
 
 ## Variant URLs
 
-A variant owns its route: the URL field is mandatory on the variant overlay, so every variant
-carries an address of its own. A product with variants owns none, it is reached through its
+Who owns the route of a product with variants is set once for the project:
+
+```yaml
+sulu_product:
+    variants:
+        routing: route # default, or "query_parameter"
+```
+
+With `route` a variant owns its route: the URL field is mandatory on the variant overlay, so every
+variant carries an address of its own. A product with variants owns none, it is reached through its
 variants, which is why the field is hidden for that type and the route guard drops one that
 reaches such a product programmatically.
+
+With `query_parameter` the product with variants owns the route, edited on its details tab, and a
+variant has none: the field is removed from the variant overlay and the route guard drops a
+variant's route. A variant is reached as `<product URL>?variant=<code>`, which renders the product
+with the variant as `product.currentVariant`. Without the parameter, or with a code that names no
+published variant of the product, the page renders the product with `currentVariant` null. Every
+URL the bundle emits for a variant takes that form: `product.url`, the entries of
+`product.variants`, teasers, the website search and the AI tools. The language switcher
+keeps `?variant=` in the locales the variant is published in. The sitemap lists the product only.
+The canonical URL of a variant page is the product URL without `?variant=`; the project template
+sets it.
+
+The mode is chosen when a project is set up. Switching it later leaves the existing routes as they
+are, so the project migrates them itself. With `query_parameter` a cache without tag support does
+not purge the `?variant=` pages of a product by path; a tag-capable cache, which Sulu configures by
+default, purges them with the product and its variants.
 
 ## Variant publishing
 

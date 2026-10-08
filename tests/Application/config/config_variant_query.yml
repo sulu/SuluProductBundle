@@ -1,0 +1,8 @@
+sulu_product:
+    variants:
+        routing: query_parameter
+
+services:
+    # Silences the expected 404 log, which a separate test process reports as an error.
+    logger:
+        class: Psr\Log\NullLogger

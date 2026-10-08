@@ -22,12 +22,15 @@ use Sulu\Bundle\AdminBundle\Teaser\Configuration\TeaserConfiguration;
 use Sulu\Bundle\AdminBundle\Teaser\TeaserTagPropertyExtractor;
 use Sulu\Content\Application\ContentAggregator\ContentAggregatorInterface;
 use Sulu\Content\Domain\Exception\ContentNotFoundException;
+use Sulu\Product\Application\Routing\VariantRouting;
+use Sulu\Product\Application\Routing\VariantSlugResolver;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\ProductTeaserProvider;
 use Sulu\Route\Domain\Model\Route;
+use Sulu\Route\Domain\Repository\RouteRepositoryInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[CoversClass(ProductTeaserProvider::class)]
@@ -62,6 +65,7 @@ class ProductTeaserProviderTest extends TestCase
             $this->contentAggregator->reveal(),
             $this->translator->reveal(),
             $this->teaserTagPropertyExtractor->reveal(),
+            new VariantSlugResolver($this->prophesize(RouteRepositoryInterface::class)->reveal(), VariantRouting::Route),
         );
     }
 
@@ -260,6 +264,52 @@ class ProductTeaserProviderTest extends TestCase
         $this->assertSame('/products/nc3fx-b', $teasers[0]->getUrl());
         $this->assertSame('', $teasers[0]->getDescription());
         $this->assertNull($teasers[0]->getMediaId());
+    }
+
+    public function testFindLinksAVariantByItsProductUrlInQueryParameterMode(): void
+    {
+        $parent = new Product('parent-uuid');
+        $variant = new Product('variant-uuid');
+        $variant->setParent($parent);
+
+        $variantContent = $this->createDimensionContent($variant);
+        $variantContent->getResource()->willReturn($variant);
+        $variantContent->getCode()->willReturn('NC3FX-B');
+        $variantContent->getExcerptTitle()->willReturn(null);
+        $variantContent->getTitle()->willReturn('NC3FX-B');
+        $variantContent->getExcerptDescription()->willReturn(null);
+        $variantContent->getExcerptMore()->willReturn(null);
+        $variantContent->getExcerptImage()->willReturn([]);
+        $variantContent->getResourceId()->willReturn('variant-uuid');
+        $variantContent->getMainWebspace()->willReturn('main');
+        $variantContent->getAdditionalWebspaces()->willReturn([]);
+        $variantContent->getTemplateKey()->willReturn(null);
+        $variantContent->getLocale()->willReturn('en');
+
+        $this->productRepository->findBy(Argument::cetera())
+            ->willReturn((static function() use ($variant) {
+                yield $variant;
+            })());
+
+        $this->contentAggregator->aggregate($variant, Argument::type('array'))
+            ->willReturn($variantContent->reveal());
+
+        $routeRepository = $this->prophesize(RouteRepositoryInterface::class);
+        $routeRepository->findFirstBy(['resourceKey' => 'products', 'resourceId' => 'parent-uuid', 'locale' => 'en'])
+            ->willReturn(new Route('products', 'parent-uuid', 'en', '/products/nc3fx'));
+
+        $provider = new ProductTeaserProvider(
+            $this->productRepository->reveal(),
+            $this->contentAggregator->reveal(),
+            $this->translator->reveal(),
+            $this->teaserTagPropertyExtractor->reveal(),
+            new VariantSlugResolver($routeRepository->reveal(), VariantRouting::QueryParameter),
+        );
+
+        $teasers = $provider->find(['variant-uuid'], 'en');
+
+        $this->assertCount(1, $teasers);
+        $this->assertSame('/products/nc3fx?variant=NC3FX-B', $teasers[0]->getUrl());
     }
 
     /**

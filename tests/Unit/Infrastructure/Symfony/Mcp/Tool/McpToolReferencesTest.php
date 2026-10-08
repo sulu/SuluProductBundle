@@ -23,9 +23,12 @@ use Sulu\Product\Application\Ai\AttributeFilter;
 use Sulu\Product\Application\Ai\GetProducts;
 use Sulu\Product\Application\Ai\ProductUrlGenerator;
 use Sulu\Product\Application\Ai\SearchProductsByAttributes;
+use Sulu\Product\Application\Routing\VariantRouting;
+use Sulu\Product\Application\Routing\VariantSlugResolver;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Tests\Unit\Application\Ai\Fixtures\FakeRouteGenerator;
+use Sulu\Route\Domain\Repository\RouteRepositoryInterface;
 
 /**
  * Every sulu_* tool name mentioned in a description must be a registered tool.
@@ -95,7 +98,7 @@ class McpToolReferencesTest extends TestCase
         $productRepository->findBy(Argument::cetera())->willReturn([]);
         $attributeRepository = $this->prophesize(AttributeRepositoryInterface::class);
         $attributeRepository->findOneBy(Argument::cetera())->willReturn(null);
-        $urlGenerator = new ProductUrlGenerator(new FakeRouteGenerator());
+        $urlGenerator = new ProductUrlGenerator(new FakeRouteGenerator(), new VariantSlugResolver($this->createStub(RouteRepositoryInterface::class), VariantRouting::Route));
 
         $getProducts = new GetProducts($productRepository->reveal(), $urlGenerator);
         $search = new SearchProductsByAttributes($productRepository->reveal(), $attributeRepository->reveal(), $urlGenerator);

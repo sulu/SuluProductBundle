@@ -14,18 +14,25 @@ declare(strict_types=1);
 namespace Sulu\Product\Infrastructure\Doctrine\EventListener;
 
 use Doctrine\ORM\Event\OnFlushEventArgs;
+use Sulu\Product\Application\Routing\VariantRouting;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Route\Domain\Model\Route;
 
 /**
- * A product with variants is reached through its variants, so it never owns a route. Dropped on
- * flush rather than in the form, so no programmatic write can leave one behind.
+ * Drops the route of a product that does not own one: in `route` mode a product with variants, in
+ * `query_parameter` mode a variant. Dropped on flush rather than in the form, so no programmatic
+ * write can leave one behind.
  *
  * @internal
  */
-class ProductWithVariantsRouteGuard
+class ProductRouteOwnerGuard
 {
+    public function __construct(
+        private readonly VariantRouting $routing,
+    ) {
+    }
+
     public function onFlush(OnFlushEventArgs $eventArgs): void
     {
         $entityManager = $eventArgs->getObjectManager();
@@ -46,7 +53,7 @@ class ProductWithVariantsRouteGuard
                 continue;
             }
 
-            if (!$entity->getResource()->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS)) {
+            if ($this->ownsRoute($entity->getResource())) {
                 continue;
             }
 
@@ -60,5 +67,13 @@ class ProductWithVariantsRouteGuard
                 $entityManager->detach($route);
             }
         }
+    }
+
+    private function ownsRoute(ProductInterface $product): bool
+    {
+        return match ($this->routing) {
+            VariantRouting::Route => !$product->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS),
+            VariantRouting::QueryParameter => null === $product->getParent(),
+        };
     }
 }

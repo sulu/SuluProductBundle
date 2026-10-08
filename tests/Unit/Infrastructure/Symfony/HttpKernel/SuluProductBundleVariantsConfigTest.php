@@ -16,6 +16,7 @@ namespace Sulu\Product\Tests\Unit\Infrastructure\Symfony\HttpKernel;
 use PHPUnit\Framework\TestCase;
 use Sulu\Product\Infrastructure\Symfony\HttpKernel\SuluProductBundle;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\ConfigurationExtensionInterface;
@@ -44,14 +45,41 @@ class SuluProductBundleVariantsConfigTest extends TestCase
         );
     }
 
+    public function testVariantsOwnTheirRoutesByDefault(): void
+    {
+        self::assertSame('route', $this->processVariants([])['routing']);
+    }
+
+    public function testTheProductCanOwnTheRoute(): void
+    {
+        self::assertSame('query_parameter', $this->processVariants(['routing' => 'query_parameter'])['routing']);
+    }
+
+    public function testAnUnknownRoutingIsRejected(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->processVariants(['routing' => 'attributes']);
+    }
+
     /**
-     * Runs the bundle's prepend and the project config through the configuration, as the kernel does.
-     *
      * @param array<string, string> $projectProperties
      *
      * @return array<string, string>
      */
     private function processVariantProperties(array $projectProperties): array
+    {
+        return $this->processVariants(['properties' => $projectProperties])['properties'];
+    }
+
+    /**
+     * Runs the bundle's prepend and the project config through the configuration, as the kernel does.
+     *
+     * @param array<string, mixed> $projectVariants
+     *
+     * @return array{routing: string, properties: array<string, string>}
+     */
+    private function processVariants(array $projectVariants): array
     {
         $builder = new ContainerBuilder();
         $builder->setParameter('kernel.environment', 'test');
@@ -63,14 +91,14 @@ class SuluProductBundleVariantsConfigTest extends TestCase
         $extension->prepend($builder);
 
         $configs = $builder->getExtensionConfig('sulu_product');
-        $configs[] = ['variants' => ['properties' => $projectProperties]];
+        $configs[] = ['variants' => $projectVariants];
 
         $configuration = $extension->getConfiguration([], $builder);
         self::assertInstanceOf(ConfigurationInterface::class, $configuration);
 
-        /** @var array{variants: array{properties: array<string, string>}} $processed */
+        /** @var array{variants: array{routing: string, properties: array<string, string>}} $processed */
         $processed = (new Processor())->processConfiguration($configuration, $configs);
 
-        return $processed['variants']['properties'];
+        return $processed['variants'];
     }
 }

@@ -21,6 +21,8 @@ use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Application\Ai\GetProducts;
 use Sulu\Product\Application\Ai\ProductUrlGenerator;
+use Sulu\Product\Application\Routing\VariantRouting;
+use Sulu\Product\Application\Routing\VariantSlugResolver;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductFamilyTranslation;
@@ -28,6 +30,7 @@ use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Tests\Unit\Application\Ai\Fixtures\FakeRouteGenerator;
 use Sulu\Route\Domain\Model\Route;
+use Sulu\Route\Domain\Repository\RouteRepositoryInterface;
 
 #[CoversClass(GetProducts::class)]
 class GetProductsTest extends TestCase
@@ -42,7 +45,7 @@ class GetProductsTest extends TestCase
     protected function setUp(): void
     {
         $this->productRepository = $this->prophesize(ProductRepositoryInterface::class);
-        $this->getProducts = new GetProducts($this->productRepository->reveal(), new ProductUrlGenerator(new FakeRouteGenerator()));
+        $this->getProducts = new GetProducts($this->productRepository->reveal(), new ProductUrlGenerator(new FakeRouteGenerator(), new VariantSlugResolver($this->createStub(RouteRepositoryInterface::class), VariantRouting::Route)));
     }
 
     public function testInvokeWithoutQueryOrFamilyReturnsNoMatchWithoutQuerying(): void
