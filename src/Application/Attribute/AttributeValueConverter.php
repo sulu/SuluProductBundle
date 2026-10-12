@@ -25,7 +25,8 @@ use Webmozart\Assert\Assert;
  * Converts the value of an attribute between the admin API and its rows. The fields of the
  * attribute type's form fragment (`product_attribute_<type>`) tell which values it has: a single
  * field is the value itself, several fields make an object keyed by their names. A field is stored
- * in the row of its name, a multi select in one row per selected option, named by the option's key.
+ * in the row of its name, a multi select in one row per selected option, named by the option's uuid:
+ * unlike the key, it never changes and has no variants a case-insensitive unique index would confuse.
  */
 final class AttributeValueConverter
 {
@@ -70,8 +71,8 @@ final class AttributeValueConverter
         }
 
         // Its rows are named by the option keys, which could not be told from the rows of other fields.
-        if (\count($fields) > 1 && \in_array('multi_select', $fields, true)) {
-            throw new \LogicException(\sprintf('The form fragment of attribute type "%s" mixes a multi_select with other fields.', $type));
+        if (\count($fields) > 1 && \in_array('select', $fields, true)) {
+            throw new \LogicException(\sprintf('The form fragment of attribute type "%s" mixes a select with other fields.', $type));
         }
 
         return $this->fields[$type] = $fields;
@@ -165,11 +166,25 @@ final class AttributeValueConverter
      */
     private function readField(AttributeInterface $attribute, string $name, string $type, array $rows): mixed
     {
-        if ('multi_select' === $type) {
-            return [] === $rows ? null : \array_map(
-                static fn (ProductAttributeValueInterface $row): ?string => $row->getAttributeOptionKey(),
-                \array_values($rows),
-            );
+        if ('select' === $type) {
+            // A deleted option leaves its row without an option.
+            $optionKeys = \array_values(\array_filter(
+                \array_map(static fn (ProductAttributeValueInterface $row): ?string => $row->getAttributeOptionKey(), $rows),
+                static fn (?string $optionKey): bool => null !== $optionKey,
+            ));
+
+            if ([] === $optionKeys) {
+                return null;
+            }
+
+            // The rows come in no order, the attribute's options have one.
+            $order = [];
+            foreach ($attribute->getOptions() as $option) {
+                $order[] = $option->getKey();
+            }
+            \usort($optionKeys, static fn (string $a, string $b): int => \array_search($a, $order, true) <=> \array_search($b, $order, true));
+
+            return $optionKeys;
         }
 
         $row = $rows[$name] ?? null;
@@ -193,7 +208,7 @@ final class AttributeValueConverter
      */
     private function writeField(AttributeInterface $attribute, string $name, string $type, mixed $raw): array
     {
-        if ('multi_select' === $type) {
+        if ('select' === $type) {
             return $this->writeOptions($attribute, $raw);
         }
 
@@ -226,7 +241,7 @@ final class AttributeValueConverter
         $rows = [];
         foreach ($raw as $optionKey) {
             $option = $this->toOption($attribute, $optionKey);
-            $rows[$option->getKey()] = new AttributeRowData(option: $option);
+            $rows[$option->getUuid()] = new AttributeRowData(option: $option);
         }
 
         return $rows;

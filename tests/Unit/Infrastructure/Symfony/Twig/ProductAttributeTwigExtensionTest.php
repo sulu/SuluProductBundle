@@ -237,6 +237,38 @@ class ProductAttributeTwigExtensionTest extends TestCase
         self::assertSame('Schwarz', $colour['formattedValue']);
     }
 
+    public function testMultiOptionsValuesResolveToTheTranslatedOptionNames(): void
+    {
+        $content = $this->createContent();
+        $attribute = $this->createAttribute('colours', 'Farben', $this->createGroup('0198c3e2-0000-7000-8000-000000000001', 'Eins'), 1);
+        $attribute->setType(AttributeInterface::TYPE_MULTI_OPTIONS);
+
+        foreach (['red' => 'Rot', 'blue' => 'Blau'] as $optionKey => $name) {
+            $option = new AttributeOption($attribute, $optionKey);
+            $attribute->addOption($option);
+            $option->addTranslation(new AttributeOptionTranslation($option, 'de', $name));
+            $content->addAttribute(new ProductAttributeValue($content, $attribute, $attribute->getKey(), $option, $option->getUuid()));
+        }
+
+        $colours = $this->attributesOf($content)['colours'];
+        self::assertSame(['red', 'blue'], $colours['value']);
+        self::assertSame('Rot, Blau', $colours['formattedValue']);
+        self::assertSame(AttributeInterface::TYPE_MULTI_OPTIONS, $colours['type']);
+    }
+
+    public function testMultiOptionsWithoutASelectionIsDropped(): void
+    {
+        $content = $this->createContent();
+        $attribute = $this->createAttribute('colours', 'Farben', $this->createGroup('0198c3e2-0000-7000-8000-000000000001', 'Eins'), 1);
+        $attribute->setType(AttributeInterface::TYPE_MULTI_OPTIONS);
+        $attribute->addOption(new AttributeOption($attribute, 'red'));
+
+        // the row of a deleted option has no option
+        $content->addAttribute(new ProductAttributeValue($content, $attribute, $attribute->getKey(), null, 'red'));
+
+        self::assertSame([], $this->attributesOf($content));
+    }
+
     public function testDisplayFormatIgnoredForOptionsAttribute(): void
     {
         $content = $this->createContent();
@@ -382,6 +414,20 @@ class ProductAttributeTwigExtensionTest extends TestCase
         $content->addAttribute($value);
 
         self::assertFalse($this->attributesOf($content)['waterproof']['formattedValue']);
+    }
+
+    public function testBooleanOfTheWebsiteIsFormattedAsBefore(): void
+    {
+        $attribute = $this->createAttribute('waterproof', 'Wasserdicht', $this->createGroup('0198c3e2-0000-7000-8000-000000000001', 'Eins'), 1);
+        $attribute->setType(AttributeInterface::TYPE_BOOLEAN);
+
+        foreach ([true, false] as $value) {
+            $groups = $this->extension()->groupAttributes([['attribute' => $attribute, 'value' => $value]], 'de');
+
+            $resolved = $groups[0]['attributes']['waterproof'];
+            self::assertSame($value, $resolved['value']);
+            self::assertSame($value, $resolved['formattedValue']);
+        }
     }
 
     public function testDateValueWithoutATimestampIsDropped(): void

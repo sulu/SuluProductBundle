@@ -52,7 +52,7 @@
         </property>
 
         <property name="filterable" type="checkbox" colspan="2"
-                  disabledCondition='type != "number" &amp;&amp; type != "date" &amp;&amp; type != "options" &amp;&amp; type != "boolean"'>
+                  disabledCondition='type != "number" &amp;&amp; type != "date" &amp;&amp; type != "options" &amp;&amp; type != "multi_options" &amp;&amp; type != "boolean"'>
             <meta>
                 <title>sulu_product.filterable</title>
             </meta>
@@ -129,7 +129,7 @@
             </meta>
         </property>
 
-        <block name="options" default-type="option" colspan="12" visibleCondition='type == "options"'>
+        <block name="options" default-type="option" colspan="12" visibleCondition='type == "options" || type == "multi_options"'>
             <meta>
                 <title>sulu_product.options</title>
             </meta>

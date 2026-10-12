@@ -100,8 +100,9 @@ Map it to a key of its own, since keys are shared across prefixes:
 ```
 
 `product.attributes` maps each attribute key to its `attribute` and its `value`, in the shape the
-admin API uses: a number, a text, an option key, a date as `Y-m-d`, `true` or `false`, and for an
-attribute whose form has several fields an object keyed by their names.
+admin API uses: a number, a text, an option key, a date as `Y-m-d`, a list of option keys for a
+multi select, and for an attribute whose form has several fields an object keyed by their names.
+A boolean is a real `true` or `false` here (the admin API has the strings `"true"` and `"false"`).
 
 ```twig
 {{ product.attributes.weight.value }}
@@ -141,12 +142,14 @@ An attribute type is its key and a form fragment `config/forms/AttributeType/pro
 whose fields are the values of the attribute. One field named `value` gives a plain value
 (`{"<uuid>": 12.5}`), several fields give an object keyed by their names (a range has `from` and
 `to`). Every field is stored in a row of its own, named by the field (the value key), so a second
-row for the same attribute and name cannot exist. A `multi_select` field must be the only field of
-its fragment and is stored in one row per selected option, named by the option key.
+row for the same attribute and name cannot exist. A `select` field (a multi select) must be the only field of
+its fragment and is stored in one row per selected option, named by the option's uuid.
 
-A field's type decides how it is stored: `number`, `date` (as `Y-m-d`), `text_line`,
-`single_select` and `multi_select`. Register a type class implementing `AttributeTypeInterface`
-(key, and the options each field of the fragment needs) as a service; it is tagged automatically.
+A field's type decides how it is stored: `number`, `date` (a timestamp, the admin API has `Y-m-d`),
+`text_line`, `single_select` (a boolean attribute stores 1 or 0) and `select`. Register a
+type class implementing `AttributeTypeInterface` (key, and the options each field of the fragment
+needs) as a service; it is tagged automatically. The website shows such a type by its display
+format; the search index and the filters only know the built-in types.
 
 ## Product family selection
 

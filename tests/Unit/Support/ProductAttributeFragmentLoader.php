@@ -32,6 +32,7 @@ final class ProductAttributeFragmentLoader implements FormMetadataLoaderInterfac
         'text' => 'text_line',
         'date' => 'date',
         'options' => 'single_select',
+        'multi_options' => 'select',
         'boolean' => 'single_select',
     ];
 

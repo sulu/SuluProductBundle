@@ -23,8 +23,11 @@ use Sulu\Bundle\TrashBundle\Domain\Repository\TrashItemRepositoryInterface;
 use Sulu\Content\Application\ContentManager\ContentManagerInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Model\AttributeInterface;
+use Sulu\Product\Domain\Model\AttributeOption;
+use Sulu\Product\Domain\Model\AttributeOptionTranslation;
 use Sulu\Product\Domain\Model\AttributeTranslation;
 use Sulu\Product\Domain\Model\Product;
+use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
@@ -183,6 +186,36 @@ class ProductVariantControllerTest extends SuluTestCase
         $attribute->setType($type);
         $attribute->setLocalized($localized);
         $attribute->addTranslation(new AttributeTranslation($attribute, 'en', $name));
+        $attributeRepository->save($attribute);
+
+        $em->flush();
+
+        return $attribute->getUuid();
+    }
+
+    private function createMultiOptionsAttribute(): string
+    {
+        $container = self::getContainer();
+
+        /** @var AttributeGroupRepositoryInterface $groupRepository */
+        $groupRepository = $container->get(AttributeGroupRepositoryInterface::class);
+        /** @var AttributeRepositoryInterface $attributeRepository */
+        $attributeRepository = $container->get(AttributeRepositoryInterface::class);
+        /** @var EntityManagerInterface $em */
+        $em = $container->get('doctrine.orm.entity_manager');
+
+        $group = $groupRepository->createNew();
+        $groupRepository->save($group);
+
+        $attribute = $attributeRepository->createNew($group);
+        $attribute->setKey('colours');
+        $attribute->setType(AttributeInterface::TYPE_MULTI_OPTIONS);
+        $attribute->addTranslation(new AttributeTranslation($attribute, 'en', 'Colours'));
+        foreach (['red' => 'Red', 'blue' => 'Blue', 'green' => 'Green'] as $key => $name) {
+            $option = new AttributeOption($attribute, $key);
+            $option->addTranslation(new AttributeOptionTranslation($option, 'en', $name));
+            $attribute->addOption($option);
+        }
         $attributeRepository->save($attribute);
 
         $em->flush();
@@ -1899,6 +1932,233 @@ class ProductVariantControllerTest extends SuluTestCase
         }
 
         $this->assertEquals(['from' => null, 'to' => 3.0], $this->getVariantAttribute($parentId, $childId, $rangeUuid));
+    }
+
+    public function testMultiOptionsAxisAttributeRoundTripsAsAListStoredOneRowPerOption(): void
+    {
+        self::purgeDatabase();
+
+        $attributeId = $this->createMultiOptionsAttribute();
+        $familyId = $this->createProductFamily([$attributeId => ['variantSpecific' => true]]);
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $childId = $this->createVariant($parentId);
+
+        $this->assertNull($this->getVariantAttribute($parentId, $childId, $attributeId));
+
+        $this->putVariantAttribute($parentId, $childId, $attributeId, ['red', 'blue']);
+        $this->assertEqualsCanonicalizing(['red', 'blue'], $this->getVariantAttribute($parentId, $childId, $attributeId));
+        $this->assertSame(['blue', 'red'], $this->getStoredMultiOptionKeys($childId, $attributeId));
+
+        $this->putVariantAttribute($parentId, $childId, $attributeId, ['blue', 'green']);
+        $this->assertEqualsCanonicalizing(['blue', 'green'], $this->getVariantAttribute($parentId, $childId, $attributeId));
+        $this->assertSame(['blue', 'green'], $this->getStoredMultiOptionKeys($childId, $attributeId));
+    }
+
+    public function testMultiOptionsAxisAttributeIsReturnedWhenCreatingTheVariant(): void
+    {
+        self::purgeDatabase();
+
+        $attributeId = $this->createMultiOptionsAttribute();
+        $familyId = $this->createProductFamily([$attributeId => ['variantSpecific' => true]]);
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+
+        $this->client->request(
+            'POST',
+            '/admin/api/products/' . $parentId . '/variants.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'code' => 'MULTI-1',
+                'title' => 'Variant',
+                'attributes' => [$attributeId => ['red', 'green']],
+            ]) ?: null,
+        );
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+        $created = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($created);
+        $this->assertIsArray($created['attributes']);
+        $this->assertEqualsCanonicalizing(['red', 'green'], $created['attributes'][$attributeId]);
+    }
+
+    /**
+     * @return iterable<string, array{mixed}>
+     */
+    public static function provideEmptyMultiOptions(): iterable
+    {
+        yield 'an empty list' => [[]];
+        yield 'null' => [null];
+    }
+
+    #[DataProvider('provideEmptyMultiOptions')]
+    public function testEmptyMultiOptionsClearsTheVariantAttribute(mixed $empty): void
+    {
+        self::purgeDatabase();
+
+        $attributeId = $this->createMultiOptionsAttribute();
+        $familyId = $this->createProductFamily([$attributeId => ['variantSpecific' => true]]);
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $childId = $this->createVariant($parentId);
+
+        $this->putVariantAttribute($parentId, $childId, $attributeId, ['red', 'blue']);
+        $this->putVariantAttribute($parentId, $childId, $attributeId, $empty);
+
+        $this->assertNull($this->getVariantAttribute($parentId, $childId, $attributeId));
+        $this->assertSame([], $this->getStoredMultiOptionKeys($childId, $attributeId));
+    }
+
+    public function testMultiOptionsOfAVariantStoresDuplicatesOnce(): void
+    {
+        self::purgeDatabase();
+
+        $attributeId = $this->createMultiOptionsAttribute();
+        $familyId = $this->createProductFamily([$attributeId => ['variantSpecific' => true]]);
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $childId = $this->createVariant($parentId);
+
+        $this->putVariantAttribute($parentId, $childId, $attributeId, ['red', 'blue', 'red']);
+
+        $this->assertEqualsCanonicalizing(['red', 'blue'], $this->getVariantAttribute($parentId, $childId, $attributeId));
+        $this->assertSame(['blue', 'red'], $this->getStoredMultiOptionKeys($childId, $attributeId));
+    }
+
+    /**
+     * @return iterable<string, array{mixed}>
+     */
+    public static function provideInvalidMultiOptions(): iterable
+    {
+        yield 'an unknown option' => [['red', 'purple']];
+        yield 'a string' => ['red'];
+        yield 'an object' => [['a' => 'red']];
+        yield 'a number in the list' => [[1]];
+    }
+
+    #[DataProvider('provideInvalidMultiOptions')]
+    public function testInvalidMultiOptionsOfAVariantReturns400AndKeepsTheValue(mixed $invalid): void
+    {
+        self::purgeDatabase();
+
+        $attributeId = $this->createMultiOptionsAttribute();
+        $familyId = $this->createProductFamily([$attributeId => ['variantSpecific' => true]]);
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $childId = $this->createVariant($parentId);
+        $this->putVariantAttribute($parentId, $childId, $attributeId, ['red', 'blue']);
+
+        $this->client->request(
+            'PUT',
+            '/admin/api/products/' . $parentId . '/variants/' . $childId . '.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode(['locale' => 'en', 'attributes' => [$attributeId => $invalid]]) ?: null,
+        );
+
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(400, $response);
+        $this->assertSame(
+            ['detail' => 'Invalid attribute value provided.'],
+            \json_decode((string) $response->getContent(), true),
+        );
+        $this->assertEqualsCanonicalizing(['red', 'blue'], $this->getVariantAttribute($parentId, $childId, $attributeId));
+        $this->assertSame(['blue', 'red'], $this->getStoredMultiOptionKeys($childId, $attributeId));
+    }
+
+    public function testRequiredMultiOptionsAxisAttributeNeedsAtLeastOneSelectedOption(): void
+    {
+        self::purgeDatabase();
+
+        $attributeId = $this->createMultiOptionsAttribute();
+        $familyId = $this->createProductFamily([$attributeId => ['required' => true, 'variantSpecific' => true]]);
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+
+        foreach ([[$attributeId => []], [$attributeId => null]] as $attributes) {
+            $this->client->request(
+                'POST',
+                '/admin/api/products/' . $parentId . '/variants.json?locale=en',
+                [],
+                [],
+                [],
+                \json_encode([
+                    'locale' => 'en',
+                    'code' => 'MULTI-1',
+                    'title' => 'Variant',
+                    'attributes' => $attributes,
+                ]) ?: null,
+            );
+            $this->assertHttpStatusCode(422, $this->client->getResponse());
+        }
+
+        $this->client->request(
+            'POST',
+            '/admin/api/products/' . $parentId . '/variants.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'code' => 'MULTI-2',
+                'title' => 'Variant',
+                'attributes' => [$attributeId => ['green']],
+            ]) ?: null,
+        );
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+        $created = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($created);
+        $childId = $created['id'];
+        $this->assertIsString($childId);
+
+        foreach ([null, []] as $empty) {
+            $this->client->request(
+                'PUT',
+                '/admin/api/products/' . $parentId . '/variants/' . $childId . '.json?locale=en',
+                [],
+                [],
+                [],
+                \json_encode(['locale' => 'en', 'attributes' => [$attributeId => $empty]]) ?: null,
+            );
+            $this->assertHttpStatusCode(422, $this->client->getResponse());
+        }
+
+        $this->assertSame(['green'], $this->getVariantAttribute($parentId, $childId, $attributeId));
+
+        $this->putVariantAttribute($parentId, $childId, $attributeId, ['blue']);
+        $this->assertSame(['blue'], $this->getVariantAttribute($parentId, $childId, $attributeId));
+    }
+
+    /**
+     * The option keys of the draft rows stored for the attribute, sorted; every row is named by the uuid of its option.
+     *
+     * @return list<string>
+     */
+    private function getStoredMultiOptionKeys(string $productId, string $attributeId): array
+    {
+        /** @var EntityManagerInterface $em */
+        $em = self::getContainer()->get('doctrine.orm.entity_manager');
+        $em->clear();
+
+        /** @var list<array{valueKey: string, optionUuid: string, optionKey: string}> $rows */
+        $rows = $em->createQueryBuilder()
+            ->select('attributeValue.valueKey AS valueKey', 'attributeOption.uuid AS optionUuid', 'attributeOption.key AS optionKey')
+            ->from(ProductAttributeValue::class, 'attributeValue')
+            ->innerJoin('attributeValue.productDimensionContent', 'dimensionContent')
+            ->innerJoin('dimensionContent.product', 'product')
+            ->innerJoin('attributeValue.attributeOption', 'attributeOption')
+            ->where('product.uuid = :uuid')
+            ->andWhere('dimensionContent.stage = :stage')
+            ->andWhere('IDENTITY(attributeValue.attribute) = :attributeId')
+            ->setParameter('uuid', $productId)
+            ->setParameter('stage', DimensionContentInterface::STAGE_DRAFT)
+            ->setParameter('attributeId', $attributeId)
+            ->orderBy('attributeOption.key')
+            ->getQuery()
+            ->getArrayResult();
+
+        foreach ($rows as $row) {
+            $this->assertSame($row['optionUuid'], $row['valueKey']);
+        }
+
+        return \array_column($rows, 'optionKey');
     }
 
     private function putVariantAttribute(string $parentId, string $childId, string $attributeUuid, mixed $value): void

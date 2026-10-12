@@ -166,6 +166,100 @@ class WebsiteProductAttributesReindexProviderEnhancerTest extends SuluTestCase
         $this->assertContains('Colour: Red', $document['content']);
     }
 
+    public function testMultiOptionsAddsAFilterValuePerSelectedOptionAndTheirNamesToTheContent(): void
+    {
+        self::purgeDatabase();
+
+        $coloursId = $this->createAttribute('colours', 'Colours', AttributeInterface::TYPE_MULTI_OPTIONS, false, ['red' => 'Red', 'blue' => 'Blue', 'green' => 'Green']);
+        $familyId = $this->createProductFamily([$coloursId => []]);
+        $productId = $this->createProduct($familyId, 'Cable', ProductInterface::TYPE_PRODUCT);
+        $otherId = $this->createProduct($familyId, 'Wire', ProductInterface::TYPE_PRODUCT);
+        $this->putAttributes($productId, [$coloursId => ['red', 'blue']]);
+        $this->putAttributes($otherId, [$coloursId => ['green']]);
+        $this->publish($productId);
+        $this->publish($otherId);
+
+        /** @var EngineInterface $engine */
+        $engine = self::getContainer()->get('cmsig_seal.engine.default');
+
+        $document = $engine->getDocument('website', 'products__' . $productId . '__en');
+        $product = $document['product'];
+        $this->assertIsArray($product);
+        $this->assertIsArray($product['attributes_text_values']);
+        $this->assertEqualsCanonicalizing(['colours:red', 'colours:blue'], $product['attributes_text_values']);
+        $this->assertSame([], $product['attributes_numeric_values']);
+        $this->assertIsArray($document['content']);
+        $this->assertTrue(
+            \in_array('Colours: Red, Blue', $document['content'], true) || \in_array('Colours: Blue, Red', $document['content'], true),
+            'The option names, not their keys, are searchable.',
+        );
+
+        $other = $engine->getDocument('website', 'products__' . $otherId . '__en');
+        $otherProduct = $other['product'];
+        $this->assertIsArray($otherProduct);
+        $this->assertSame(['colours:green'], $otherProduct['attributes_text_values']);
+        $this->assertIsArray($other['content']);
+        $this->assertContains('Colours: Green', $other['content']);
+    }
+
+    public function testANonFilterableMultiOptionsIsOnlySearchable(): void
+    {
+        self::purgeDatabase();
+
+        $coloursId = $this->createAttribute('colours', 'Colours', AttributeInterface::TYPE_MULTI_OPTIONS, false, ['red' => 'Red', 'blue' => 'Blue'], [], false);
+        $familyId = $this->createProductFamily([$coloursId => []]);
+        $productId = $this->createProduct($familyId, 'Cable', ProductInterface::TYPE_PRODUCT);
+        $this->putAttributes($productId, [$coloursId => ['blue']]);
+        $this->publish($productId);
+
+        /** @var EngineInterface $engine */
+        $engine = self::getContainer()->get('cmsig_seal.engine.default');
+
+        $document = $engine->getDocument('website', 'products__' . $productId . '__en');
+        $product = $document['product'];
+        $this->assertIsArray($product);
+        $this->assertSame([], $product['attributes_text_values']);
+        $this->assertIsArray($document['content']);
+        $this->assertContains('Colours: Blue', $document['content']);
+    }
+
+    public function testAMultiOptionsRowWithoutAnOptionIsIgnored(): void
+    {
+        self::purgeDatabase();
+
+        $coloursId = $this->createAttribute('colours', 'Colours', AttributeInterface::TYPE_MULTI_OPTIONS, false, ['red' => 'Red', 'blue' => 'Blue']);
+        $familyId = $this->createProductFamily([$coloursId => []]);
+        $productId = $this->createProduct($familyId, 'Cable', ProductInterface::TYPE_PRODUCT);
+        $this->putAttributes($productId, [$coloursId => ['red', 'blue']]);
+        // The row of an option that was deleted keeps its value key, the option's uuid, but has no option.
+        $blueOptionUuid = self::getEntityManager()->createQueryBuilder()
+            ->select('attributeOption.uuid')
+            ->from(AttributeOption::class, 'attributeOption')
+            ->where('attributeOption.key = :key')
+            ->setParameter('key', 'blue')
+            ->getQuery()
+            ->getSingleScalarResult();
+        self::getEntityManager()->createQueryBuilder()
+            ->update(ProductAttributeValue::class, 'value')
+            ->set('value.attributeOption', ':noOption')
+            ->where('value.valueKey = :valueKey')
+            ->setParameter('noOption', null)
+            ->setParameter('valueKey', $blueOptionUuid)
+            ->getQuery()
+            ->execute();
+        $this->publish($productId);
+
+        /** @var EngineInterface $engine */
+        $engine = self::getContainer()->get('cmsig_seal.engine.default');
+
+        $document = $engine->getDocument('website', 'products__' . $productId . '__en');
+        $product = $document['product'];
+        $this->assertIsArray($product);
+        $this->assertSame(['colours:red'], $product['attributes_text_values']);
+        $this->assertIsArray($document['content']);
+        $this->assertContains('Colours: Red', $document['content']);
+    }
+
     public function testARangeIsOnlySearchable(): void
     {
         self::purgeDatabase();

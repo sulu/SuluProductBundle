@@ -91,13 +91,6 @@ class ProductAttributeValue implements ProductAttributeValueInterface
         return $this;
     }
 
-    public function getValue(): mixed
-    {
-        return $this->getAttributeOptionKey()
-            ?? $this->number
-            ?? $this->text;
-    }
-
     public function getProductDimensionContent(): ProductDimensionContentInterface
     {
         return $this->productDimensionContent;

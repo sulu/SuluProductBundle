@@ -88,6 +88,31 @@ class GetAttributeValuesTest extends TestCase
         $this->assertSame('unknown_attribute', $result['status']);
     }
 
+    public function testInvokeOfARangeAttributeListsNoValues(): void
+    {
+        $attribute = new Attribute(new AttributeGroup());
+        $attribute->setKey('temperature');
+        $attribute->setType(AttributeInterface::TYPE_RANGE);
+        $this->attributeRepository->findOneBy(['key' => 'temperature'])->willReturn($attribute);
+        $this->productAttributeValueRepository->countValues(Argument::cetera())->shouldNotBeCalled();
+
+        $getAttributeValues = new GetAttributeValues(
+            $this->attributeRepository->reveal(),
+            $this->productAttributeValueRepository->reveal(),
+            new ProductAttributeValueFormatter(new MeasurementRegistry()),
+            ProductAttributeFragmentLoader::converter(['range' => ['from' => 'number', 'to' => 'number']]),
+        );
+
+        $result = $getAttributeValues('temperature', 'en');
+
+        $this->assertSame('ok', $result['status']);
+        $this->assertSame([], $result['values']);
+        $this->assertSame(
+            'This attribute has several values per product, e.g. a range, so there are no single values to list.',
+            $result['instruction'],
+        );
+    }
+
     public function testInvokeCountsTextValuesMostCommonFirst(): void
     {
         $group = new AttributeGroup();

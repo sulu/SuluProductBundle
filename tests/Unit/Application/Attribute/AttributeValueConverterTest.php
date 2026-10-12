@@ -54,7 +54,7 @@ class AttributeValueConverterTest extends TestCase
         AttributeInterface::TYPE_TEXT => ['value' => 'text_line'],
         AttributeInterface::TYPE_OPTIONS => ['value' => 'single_select'],
         AttributeInterface::TYPE_BOOLEAN => ['value' => 'single_select'],
-        self::MULTI_SELECT => ['value' => 'multi_select'],
+        self::MULTI_SELECT => ['value' => 'select'],
         self::DIMENSIONS => ['width' => 'number', 'height' => 'number'],
         self::UNSUPPORTED => ['value' => 'checkbox'],
     ];
@@ -99,7 +99,7 @@ class AttributeValueConverterTest extends TestCase
     public function testGetFieldsRejectsAMultiSelectBesideOtherFields(): void
     {
         $loader = $this->prophesize(FormMetadataLoaderInterface::class);
-        $loader->getMetadata('product_attribute_custom', 'en', [])->willReturn($this->fragment(['name' => 'text_line', 'tags' => 'multi_select']));
+        $loader->getMetadata('product_attribute_custom', 'en', [])->willReturn($this->fragment(['name' => 'text_line', 'tags' => 'select']));
 
         $this->expectException(\LogicException::class);
 
@@ -186,12 +186,42 @@ class AttributeValueConverterTest extends TestCase
             $this->row($attribute, 'red', ['option' => 'red']),
         ];
 
-        self::assertSame(['green', 'red'], $this->converter()->read($attribute, $rows));
+        self::assertSame(['red', 'green'], $this->converter()->read($attribute, $rows));
+    }
+
+    public function testReadMultiSelectKeepsAnOptionNamedZero(): void
+    {
+        $attribute = $this->attribute(self::MULTI_SELECT);
+        $attribute->addOption(new AttributeOption($attribute, '0'));
+        $rows = [$this->row($attribute, '0', ['option' => '0']), $this->row($attribute, 'green', ['option' => 'green'])];
+
+        self::assertSame(['green', '0'], $this->converter()->read($attribute, $rows));
+        self::assertSame(['0'], $this->converter()->read($attribute, [$rows[0]]));
     }
 
     public function testReadMultiSelectWithoutRowsIsNull(): void
     {
         self::assertNull($this->converter()->read($this->attribute(self::MULTI_SELECT), []));
+    }
+
+    public function testReadMultiSelectSkipsRowsWithoutOption(): void
+    {
+        $attribute = $this->attribute(self::MULTI_SELECT);
+        $rows = [
+            $this->row($attribute, 'green', ['option' => 'green']),
+            $this->row($attribute, 'deleted', []),
+            $this->row($attribute, 'red', ['option' => 'red']),
+        ];
+
+        self::assertSame(['red', 'green'], $this->converter()->read($attribute, $rows));
+    }
+
+    public function testReadMultiSelectWithOnlyRowsWithoutOptionIsNull(): void
+    {
+        $attribute = $this->attribute(self::MULTI_SELECT);
+        $rows = [$this->row($attribute, 'deleted', []), $this->row($attribute, 'gone', [])];
+
+        self::assertNull($this->converter()->read($attribute, $rows));
     }
 
     public function testReadObjectReturnsTheValueOfEveryField(): void
@@ -425,24 +455,34 @@ class AttributeValueConverterTest extends TestCase
         $this->converter()->write($this->attribute(AttributeInterface::TYPE_DATE), '2024-02-30');
     }
 
-    public function testWriteMultiSelectCreatesOneRowPerOptionNamedByItsKey(): void
+    public function testWriteMultiSelectCreatesOneRowPerOptionNamedByItsUuid(): void
     {
         $attribute = $this->attribute(self::MULTI_SELECT);
+        $green = $attribute->getOption('green');
+        $red = $attribute->getOption('red');
+        self::assertNotNull($green);
+        self::assertNotNull($red);
 
         $rows = $this->converter()->write($attribute, ['green', 'red']);
 
-        self::assertSame(['green', 'red'], \array_keys($rows));
-        self::assertSame($attribute->getOption('green'), $rows['green']->option);
-        self::assertSame($attribute->getOption('red'), $rows['red']->option);
-        self::assertNull($rows['green']->number);
-        self::assertNull($rows['green']->text);
+        self::assertSame([$green->getUuid(), $red->getUuid()], \array_keys($rows));
+        self::assertSame($green, $rows[$green->getUuid()]->option);
+        self::assertSame($red, $rows[$red->getUuid()]->option);
+        self::assertNull($rows[$green->getUuid()]->number);
+        self::assertNull($rows[$green->getUuid()]->text);
     }
 
     public function testWriteMultiSelectCollapsesDuplicatesOntoOneRow(): void
     {
-        $rows = $this->converter()->write($this->attribute(self::MULTI_SELECT), ['red', 'green', 'red']);
+        $attribute = $this->attribute(self::MULTI_SELECT);
+        $red = $attribute->getOption('red');
+        $green = $attribute->getOption('green');
+        self::assertNotNull($red);
+        self::assertNotNull($green);
 
-        self::assertSame(['red', 'green'], \array_keys($rows));
+        $rows = $this->converter()->write($attribute, ['red', 'green', 'red']);
+
+        self::assertSame([$red->getUuid(), $green->getUuid()], \array_keys($rows));
     }
 
     public function testWriteObjectCreatesARowPerGivenField(): void

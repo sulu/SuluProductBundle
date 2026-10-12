@@ -34,12 +34,29 @@ class ProductAttributeValueFormatter
     {
         return match ($attribute->getType()) {
             AttributeInterface::TYPE_OPTIONS => $this->formatOption($attribute, $value, $locale),
-            AttributeInterface::TYPE_TEXT, AttributeInterface::TYPE_NUMBER => $this->applyDisplayFormat($attribute, $value),
+            AttributeInterface::TYPE_MULTI_OPTIONS => $this->formatOptions($attribute, $value, $locale),
             AttributeInterface::TYPE_DATE => $this->formatDate($attribute, $value, $locale),
             AttributeInterface::TYPE_BOOLEAN => $this->formatBoolean($value),
             AttributeInterface::TYPE_RANGE => $this->formatRange($attribute, $value),
-            default => null,
+            default => $this->applyDisplayFormat($attribute, $value),
         };
+    }
+
+    /**
+     * The names of the selected options, separated by commas.
+     */
+    private function formatOptions(AttributeInterface $attribute, mixed $optionKeys, string $locale): ?string
+    {
+        if (!\is_array($optionKeys)) {
+            return null;
+        }
+
+        $names = \array_filter(
+            \array_map(fn (mixed $optionKey): ?string => $this->formatOption($attribute, $optionKey, $locale), $optionKeys),
+            static fn (?string $name): bool => null !== $name,
+        );
+
+        return [] === $names ? null : \implode(', ', $names);
     }
 
     private function formatOption(AttributeInterface $attribute, mixed $optionKey, string $locale): ?string
@@ -123,6 +140,10 @@ class ProductAttributeValueFormatter
 
     private function formatBoolean(mixed $value): ?bool
     {
+        if (\is_bool($value)) {
+            return $value;
+        }
+
         return \is_string($value) ? AttributeValueConverter::TRUE === $value : null;
     }
 }

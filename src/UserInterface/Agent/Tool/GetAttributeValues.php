@@ -61,6 +61,14 @@ final class GetAttributeValues
             ];
         }
 
+        if (\count($this->attributeValueConverter->getFields($attribute)) > 1) {
+            return [
+                'values' => [],
+                'status' => 'ok',
+                'instruction' => 'This attribute has several values per product, e.g. a range, so there are no single values to list.',
+            ];
+        }
+
         $limit = \max(1, \min($limit, self::MAX_LIMIT));
 
         $groups = $this->productAttributeValueRepository->countValues([

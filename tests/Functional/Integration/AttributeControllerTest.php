@@ -723,6 +723,71 @@ class AttributeControllerTest extends SuluTestCase
         }
     }
 
+    public function testMultiOptionsAttributeKeepsItsOptionsAndIsFilterable(): void
+    {
+        self::purgeDatabase();
+        $groupId = $this->createGroup();
+
+        $payload = [
+            'locale' => 'en',
+            'key' => 'colours',
+            'name' => 'Colours',
+            'type' => 'multi_options',
+            'group' => $groupId,
+            'filterable' => true,
+            'options' => [
+                ['key' => 'red', 'name' => 'Red'],
+                ['key' => 'blue', 'name' => 'Blue'],
+            ],
+        ];
+
+        $this->client->request('POST', '/admin/api/attributes.json?locale=en', [], [], [], \json_encode($payload) ?: null);
+        $postResponse = $this->client->getResponse();
+        $this->assertHttpStatusCode(201, $postResponse);
+        $postData = \json_decode((string) $postResponse->getContent(), true);
+        $this->assertIsArray($postData);
+        $id = $postData['id'];
+        $this->assertIsString($id);
+        $this->assertTrue($postData['filterable']);
+
+        $options = $this->assertMultiOptionsAttribute($id, true, [['red', 'Red'], ['blue', 'Blue']]);
+
+        $payload['filterable'] = false;
+        $payload['options'] = [
+            ['id' => $options[0]['id'], 'key' => 'red', 'name' => 'Red'],
+            ['id' => $options[1]['id'], 'key' => 'blue', 'name' => 'Navy'],
+            ['key' => 'green', 'name' => 'Green'],
+        ];
+        $this->client->request('PUT', '/admin/api/attributes/' . $id . '.json?locale=en', [], [], [], \json_encode($payload) ?: null);
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        $this->assertMultiOptionsAttribute($id, false, [['red', 'Red'], ['blue', 'Navy'], ['green', 'Green']]);
+    }
+
+    /**
+     * @param list<array{string, string}> $expectedOptions key and name of each option
+     *
+     * @return list<array{id: string, key: string, name: string}>
+     */
+    private function assertMultiOptionsAttribute(string $id, bool $expectedFilterable, array $expectedOptions): array
+    {
+        $this->client->request('GET', '/admin/api/attributes/' . $id . '.json?locale=en');
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(200, $response);
+
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertSame('multi_options', $data['type']);
+        $this->assertSame($expectedFilterable, $data['filterable']);
+        /** @var array{options: list<array{id: string, key: string, name: string}>} $data */
+        $this->assertSame(
+            $expectedOptions,
+            \array_map(static fn (array $option): array => [$option['key'], $option['name']], $data['options']),
+        );
+
+        return $data['options'];
+    }
+
     public function testRangeAttributeRoundTripsItsConfigAndIsNeverFilterable(): void
     {
         self::purgeDatabase();

@@ -26,7 +26,7 @@ interface ProductAttributeValueInterface
 
     /**
      * Names this row among the rows of one attribute, unique per dimension content and attribute.
-     * A field of the attribute's form, e.g. "from" and "to" of a range, or the selected option's key.
+     * A field of the attribute's form, e.g. "from" and "to" of a range, or the selected option's uuid.
      */
     public function getValueKey(): string;
 
@@ -39,8 +39,6 @@ interface ProductAttributeValueInterface
     public function getText(): ?string;
 
     public function setText(?string $text): self;
-
-    public function getValue(): mixed;
 
     public function getProductDimensionContent(): ProductDimensionContentInterface;
 

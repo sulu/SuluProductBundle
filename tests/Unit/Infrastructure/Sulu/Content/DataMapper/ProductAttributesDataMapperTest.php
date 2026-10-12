@@ -53,7 +53,7 @@ class ProductAttributesDataMapperTest extends TestCase
         $this->mapper = new ProductAttributesDataMapper(
             ProductAttributeFragmentLoader::converter([
                 'range' => ['from' => 'number', 'to' => 'number'],
-                'multi_options' => ['value' => 'multi_select'],
+                'multi_options' => ['value' => 'select'],
             ]),
         );
     }
@@ -449,7 +449,7 @@ class ProductAttributesDataMapperTest extends TestCase
         $this->assertSame(['from', 'to'], \array_keys($this->rowsByValueKey($fixture['loc'])));
     }
 
-    public function testRowsOfAMultiSelectAreKeyedByOption(): void
+    public function testRowsOfAMultiSelectAreKeyedByOptionUuid(): void
     {
         $fixture = $this->makeRealFixture('multi_options');
         $attribute = $fixture['attribute'];
@@ -462,12 +462,12 @@ class ProductAttributesDataMapperTest extends TestCase
         $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [$uuid => ['red', 'blue']]]);
 
         $rows = $this->rowsByValueKey($fixture['unloc']);
-        $this->assertSame(['red', 'blue'], \array_keys($rows));
-        $this->assertSame($red, $rows['red']->getAttributeOption());
+        $this->assertSame([$red->getUuid(), $blue->getUuid()], \array_keys($rows));
+        $this->assertSame($red, $rows[$red->getUuid()]->getAttributeOption());
 
         $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [$uuid => ['blue']]]);
 
-        $this->assertSame(['blue'], \array_keys($this->rowsByValueKey($fixture['unloc'])));
+        $this->assertSame([$blue->getUuid()], \array_keys($this->rowsByValueKey($fixture['unloc'])));
     }
 
     public function testInvalidValueChangesNoRow(): void
@@ -505,6 +505,34 @@ class ProductAttributesDataMapperTest extends TestCase
         $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [$fixture['attribute']->getUuid() => ['from' => 1]]]);
 
         $this->assertSame(['from'], \array_keys($this->rowsByValueKey($fixture['unloc'])));
+    }
+
+    public function testRequiredMultiSelectWhoseOptionWasDeletedThrows(): void
+    {
+        $fixture = $this->makeRealFixture('multi_options', required: true);
+        $attribute = $fixture['attribute'];
+        $red = new AttributeOption($attribute, 'red');
+        $attribute->addOption($red);
+        $deletedOptionRow = new ProductAttributeValue($fixture['unloc'], $attribute, 'multi_options', valueKey: $red->getUuid());
+        $fixture['unloc']->addAttribute($deletedOptionRow);
+
+        $this->expectException(RequiredProductAttributeMissingException::class);
+        $this->expectExceptionMessage('multi_options');
+
+        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => []]);
+    }
+
+    public function testRequiredMultiSelectWithAnExistingOptionPasses(): void
+    {
+        $fixture = $this->makeRealFixture('multi_options', required: true);
+        $attribute = $fixture['attribute'];
+        $red = new AttributeOption($attribute, 'red');
+        $attribute->addOption($red);
+        $fixture['unloc']->addAttribute(new ProductAttributeValue($fixture['unloc'], $attribute, 'multi_options', $red, $red->getUuid()));
+
+        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => []]);
+
+        $this->assertSame([$red->getUuid()], \array_keys($this->rowsByValueKey($fixture['unloc'])));
     }
 
     /**

@@ -115,6 +115,33 @@ class ProductAttributeValueRepositoryTest extends SuluTestCase
         return $value;
     }
 
+    private function createMultiOptionsAttribute(): AttributeInterface
+    {
+        $attribute = $this->createAttribute('colours');
+        $attribute->setType(AttributeInterface::TYPE_MULTI_OPTIONS);
+        $attribute->addOption(new AttributeOption($attribute, 'red'));
+        $attribute->addOption(new AttributeOption($attribute, 'blue'));
+        $this->entityManager->flush();
+
+        return $attribute;
+    }
+
+    /**
+     * A row of a multi_options attribute: its value key is the uuid of its option.
+     */
+    private function createOptionValue(
+        AttributeInterface $attribute,
+        ProductDimensionContentInterface $dimensionContent,
+        string $optionKey,
+    ): ProductAttributeValue {
+        $option = $attribute->getOption($optionKey);
+        $this->assertNotNull($option);
+        $value = new ProductAttributeValue($dimensionContent, $attribute, $attribute->getKey(), $option, $option->getUuid());
+        $this->entityManager->persist($value);
+
+        return $value;
+    }
+
     public function testSecondValueWithTheSameValueKeyIsRejected(): void
     {
         $attribute = $this->createAttribute();
@@ -133,6 +160,44 @@ class ProductAttributeValueRepositoryTest extends SuluTestCase
         [, $dimensionContent] = $this->createProductWithDimensionContent(null, 'live', 0);
         $this->createValue($attribute, $dimensionContent, '1', 'from');
         $this->createValue($attribute, $dimensionContent, '2', 'to');
+        $this->entityManager->flush();
+
+        $this->assertCount(2, $this->repository->findBy(['attribute' => $attribute]));
+    }
+
+    public function testTwoRowsOfOneOptionAreRejected(): void
+    {
+        $attribute = $this->createMultiOptionsAttribute();
+        [, $dimensionContent] = $this->createProductWithDimensionContent(null, 'live', 0);
+        $this->createOptionValue($attribute, $dimensionContent, 'red');
+        $this->createOptionValue($attribute, $dimensionContent, 'red');
+
+        $this->expectException(UniqueConstraintViolationException::class);
+
+        $this->entityManager->flush();
+    }
+
+    public function testRowsOfDifferentOptionsAreAllowed(): void
+    {
+        $attribute = $this->createMultiOptionsAttribute();
+        [, $dimensionContent] = $this->createProductWithDimensionContent(null, 'live', 0);
+        $this->createOptionValue($attribute, $dimensionContent, 'red');
+        $this->createOptionValue($attribute, $dimensionContent, 'blue');
+        $this->entityManager->flush();
+
+        $this->assertCount(2, $this->repository->findBy(['attribute' => $attribute]));
+    }
+
+    public function testRowsOfOptionsDifferingOnlyInCaseAreAllowedBecauseTheirValueKeysAreUuids(): void
+    {
+        $attribute = $this->createAttribute('sizes');
+        $attribute->setType(AttributeInterface::TYPE_MULTI_OPTIONS);
+        $attribute->addOption(new AttributeOption($attribute, 'XL'));
+        $attribute->addOption(new AttributeOption($attribute, 'xl'));
+        $this->entityManager->flush();
+        [, $dimensionContent] = $this->createProductWithDimensionContent(null, 'live', 0);
+        $this->createOptionValue($attribute, $dimensionContent, 'XL');
+        $this->createOptionValue($attribute, $dimensionContent, 'xl');
         $this->entityManager->flush();
 
         $this->assertCount(2, $this->repository->findBy(['attribute' => $attribute]));

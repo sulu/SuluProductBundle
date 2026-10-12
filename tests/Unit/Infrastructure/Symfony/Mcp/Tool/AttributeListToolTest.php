@@ -93,6 +93,27 @@ final class AttributeListToolTest extends TestCase
         $this->assertSame([['key' => 'xl', 'name' => 'Extra Large']], $attribute['options']);
     }
 
+    public function testListAttributesIncludesOptionsForMultiOptionsAttributes(): void
+    {
+        $group = new AttributeGroup();
+        $attribute = $this->attribute($group, 'colours-uuid', 'colours', AttributeInterface::TYPE_MULTI_OPTIONS, 'Colours');
+
+        $red = new AttributeOption($attribute, 'red');
+        $red->addTranslation(new AttributeOptionTranslation($red, 'en', 'Red'));
+        $attribute->addOption($red);
+        $attribute->addOption(new AttributeOption($attribute, 'blue'));
+
+        $this->attributeRepository->findBy(Argument::cetera())->willReturn([$attribute]);
+
+        $result = $this->tool->listAttributes('en');
+
+        $this->assertIsArray($result['attributes']);
+        $attribute = $result['attributes'][0];
+        $this->assertIsArray($attribute);
+        $this->assertSame(AttributeInterface::TYPE_MULTI_OPTIONS, $attribute['type']);
+        $this->assertSame([['key' => 'red', 'name' => 'Red'], ['key' => 'blue', 'name' => 'blue']], $attribute['options']);
+    }
+
     public function testListAttributesFallsBackToTheKeyWhenALocaleIsMissing(): void
     {
         $group = new AttributeGroup();
