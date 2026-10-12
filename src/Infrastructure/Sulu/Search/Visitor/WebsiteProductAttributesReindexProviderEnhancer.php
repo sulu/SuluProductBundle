@@ -138,9 +138,11 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
                         if ($filterable) {
                             $numericValues[self::numericField($key)] = [$valueRow['number']];
                         }
-                        $display = \rtrim(\rtrim(\number_format($valueRow['number'], 10, '.', ''), '0'), '.');
-                        $display .= null !== $attribute['unit'] ? ' ' . $attribute['unit'] : '';
+                        $display = $this->formatNumber($valueRow['number'], $attribute['unit']);
                     }
+                    break;
+                case AttributeInterface::TYPE_RANGE:
+                    $display = $this->formatRange($rows['from']['number'] ?? null, $rows['to']['number'] ?? null, $attribute['unit']);
                     break;
                 case AttributeInterface::TYPE_DATE:
                     if (null !== $valueRow['number']) {
@@ -192,6 +194,28 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
         ];
 
         return $document;
+    }
+
+    private function formatNumber(float $number, ?string $unit): string
+    {
+        $display = \rtrim(\rtrim(\number_format($number, 10, '.', ''), '0'), '.');
+
+        return null !== $unit ? $display . ' ' . $unit : $display;
+    }
+
+    /**
+     * "from – to", or "≥ from" / "≤ to" for a range open on one side, like the website renders it.
+     */
+    private function formatRange(?float $from, ?float $to, ?string $unit): ?string
+    {
+        $display = match (true) {
+            null !== $from && null !== $to => $this->formatNumber($from, null) . ' – ' . $this->formatNumber($to, null),
+            null !== $from => '≥ ' . $this->formatNumber($from, null),
+            null !== $to => '≤ ' . $this->formatNumber($to, null),
+            default => null,
+        };
+
+        return null !== $display && null !== $unit ? $display . ' ' . $unit : $display;
     }
 
     /**

@@ -16,6 +16,7 @@ namespace Sulu\Product\Tests\Functional\Integration;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Bundle\TrashBundle\Application\TrashManager\TrashManagerInterface;
 use Sulu\Bundle\TrashBundle\Domain\Repository\TrashItemRepositoryInterface;
@@ -1553,6 +1554,201 @@ class ProductVariantControllerTest extends SuluTestCase
             ['detail' => 'Invalid attribute value provided.'],
             \json_decode((string) $response->getContent(), true),
         );
+    }
+
+    public function testRangeAxisAttributeRoundTripsAsAnObject(): void
+    {
+        self::purgeDatabase();
+
+        $rangeUuid = $this->createAttribute('temperature', 'Temperature', AttributeInterface::TYPE_RANGE);
+        $familyId = $this->createProductFamily([$rangeUuid => ['variantSpecific' => true]]);
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $childId = $this->createVariant($parentId);
+
+        $this->assertNull($this->getVariantAttribute($parentId, $childId, $rangeUuid));
+
+        $this->putVariantAttribute($parentId, $childId, $rangeUuid, ['from' => -20, 'to' => 60]);
+        $this->assertEquals(['from' => -20.0, 'to' => 60.0], $this->getVariantAttribute($parentId, $childId, $rangeUuid));
+
+        $this->putVariantAttribute($parentId, $childId, $rangeUuid, ['from' => 5]);
+        $this->assertEquals(['from' => 5.0, 'to' => null], $this->getVariantAttribute($parentId, $childId, $rangeUuid));
+
+        $this->putVariantAttribute($parentId, $childId, $rangeUuid, ['to' => 7.5]);
+        $this->assertEquals(['from' => null, 'to' => 7.5], $this->getVariantAttribute($parentId, $childId, $rangeUuid));
+    }
+
+    public function testRangeAxisAttributeIsReturnedWhenCreatingTheVariant(): void
+    {
+        self::purgeDatabase();
+
+        $rangeUuid = $this->createAttribute('temperature', 'Temperature', AttributeInterface::TYPE_RANGE);
+        $familyId = $this->createProductFamily([$rangeUuid => ['variantSpecific' => true]]);
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+
+        $this->client->request(
+            'POST',
+            '/admin/api/products/' . $parentId . '/variants.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'code' => 'RANGE-1',
+                'title' => 'Variant',
+                'attributes' => [$rangeUuid => ['from' => 1, 'to' => 2]],
+            ]) ?: null,
+        );
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+        $created = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($created);
+        $this->assertIsArray($created['attributes']);
+        $this->assertEquals(['from' => 1.0, 'to' => 2.0], $created['attributes'][$rangeUuid]);
+    }
+
+    /**
+     * @return iterable<string, array{mixed}>
+     */
+    public static function provideEmptyRanges(): iterable
+    {
+        yield 'null' => [null];
+        yield 'an empty object' => [[]];
+        yield 'both bounds null' => [['from' => null, 'to' => null]];
+    }
+
+    #[DataProvider('provideEmptyRanges')]
+    public function testEmptyRangeClearsTheVariantAttribute(mixed $empty): void
+    {
+        self::purgeDatabase();
+
+        $rangeUuid = $this->createAttribute('temperature', 'Temperature', AttributeInterface::TYPE_RANGE);
+        $familyId = $this->createProductFamily([$rangeUuid => ['variantSpecific' => true]]);
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $childId = $this->createVariant($parentId);
+
+        $this->putVariantAttribute($parentId, $childId, $rangeUuid, ['from' => 1, 'to' => 2]);
+        $this->putVariantAttribute($parentId, $childId, $rangeUuid, $empty);
+
+        $this->assertNull($this->getVariantAttribute($parentId, $childId, $rangeUuid));
+    }
+
+    /**
+     * @return iterable<string, array{mixed}>
+     */
+    public static function provideInvalidRanges(): iterable
+    {
+        yield 'a non-numeric bound' => [['from' => 'low', 'to' => 5]];
+        yield 'an unknown field' => [['foo' => 1]];
+        yield 'a plain number' => [5];
+    }
+
+    #[DataProvider('provideInvalidRanges')]
+    public function testInvalidRangeOfAVariantReturns400AndKeepsTheValue(mixed $invalid): void
+    {
+        self::purgeDatabase();
+
+        $rangeUuid = $this->createAttribute('temperature', 'Temperature', AttributeInterface::TYPE_RANGE);
+        $familyId = $this->createProductFamily([$rangeUuid => ['variantSpecific' => true]]);
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $childId = $this->createVariant($parentId);
+        $this->putVariantAttribute($parentId, $childId, $rangeUuid, ['from' => 1, 'to' => 2]);
+
+        $this->client->request(
+            'PUT',
+            '/admin/api/products/' . $parentId . '/variants/' . $childId . '.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode(['locale' => 'en', 'attributes' => [$rangeUuid => $invalid]]) ?: null,
+        );
+
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(400, $response);
+        $this->assertSame(
+            ['detail' => 'Invalid attribute value provided.'],
+            \json_decode((string) $response->getContent(), true),
+        );
+        $this->assertEquals(['from' => 1.0, 'to' => 2.0], $this->getVariantAttribute($parentId, $childId, $rangeUuid));
+    }
+
+    public function testRequiredRangeAxisAttributeNeedsAtLeastOneBound(): void
+    {
+        self::purgeDatabase();
+
+        $rangeUuid = $this->createAttribute('temperature', 'Temperature', AttributeInterface::TYPE_RANGE);
+        $familyId = $this->createProductFamily([$rangeUuid => ['required' => true, 'variantSpecific' => true]]);
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+
+        $this->client->request(
+            'POST',
+            '/admin/api/products/' . $parentId . '/variants.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'code' => 'RANGE-1',
+                'title' => 'Variant',
+                'attributes' => [$rangeUuid => ['from' => null, 'to' => null]],
+            ]) ?: null,
+        );
+        $this->assertHttpStatusCode(422, $this->client->getResponse());
+
+        $this->client->request(
+            'POST',
+            '/admin/api/products/' . $parentId . '/variants.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'code' => 'RANGE-2',
+                'title' => 'Variant',
+                'attributes' => [$rangeUuid => ['to' => 3]],
+            ]) ?: null,
+        );
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+        $created = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($created);
+        $childId = $created['id'];
+        $this->assertIsString($childId);
+
+        foreach ([null, [], ['from' => null, 'to' => null]] as $empty) {
+            $this->client->request(
+                'PUT',
+                '/admin/api/products/' . $parentId . '/variants/' . $childId . '.json?locale=en',
+                [],
+                [],
+                [],
+                \json_encode(['locale' => 'en', 'attributes' => [$rangeUuid => $empty]]) ?: null,
+            );
+            $this->assertHttpStatusCode(422, $this->client->getResponse());
+        }
+
+        $this->assertEquals(['from' => null, 'to' => 3.0], $this->getVariantAttribute($parentId, $childId, $rangeUuid));
+    }
+
+    private function putVariantAttribute(string $parentId, string $childId, string $attributeUuid, mixed $value): void
+    {
+        $this->client->request(
+            'PUT',
+            '/admin/api/products/' . $parentId . '/variants/' . $childId . '.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode(['locale' => 'en', 'attributes' => [$attributeUuid => $value]]) ?: null,
+        );
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+    }
+
+    private function getVariantAttribute(string $parentId, string $childId, string $attributeUuid): mixed
+    {
+        $this->client->request('GET', '/admin/api/products/' . $parentId . '/variants/' . $childId . '.json?locale=en');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertIsArray($data['attributes']);
+
+        return $data['attributes'][$attributeUuid] ?? null;
     }
 
     /**

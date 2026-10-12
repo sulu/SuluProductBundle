@@ -124,4 +124,52 @@ class ProductResolverAttributesTest extends SuluTestCase
         self::assertInstanceOf(AttributeInterface::class, $attribute);
         self::assertSame('Mechanische Daten', $attribute->getGroup()->getTranslation('de')?->getName());
     }
+
+    public function testRangeAttributeResolvesToItsBounds(): void
+    {
+        $group = $this->attributeGroupRepository->createNew();
+        $group->addTranslation(new AttributeGroupTranslation($group, 'de', 'Technische Daten'));
+        $this->attributeGroupRepository->save($group);
+
+        $attribute = $this->attributeRepository->createNew($group);
+        $attribute->setKey('temperature');
+        $attribute->setType(AttributeInterface::TYPE_RANGE);
+        $attribute->setPosition(1);
+        $attribute->addTranslation(new AttributeTranslation($attribute, 'de', 'Temperatur'));
+        $this->attributeRepository->save($attribute);
+
+        $this->entityManager->flush();
+
+        $product = $this->productRepository->createNew();
+
+        $dimensionContent = $product->createDimensionContent();
+        $dimensionContent->setLocale('de');
+        $dimensionContent->setStage('draft');
+        $dimensionContent->setTemplateKey('product');
+        $product->addDimensionContent($dimensionContent);
+
+        foreach (['from' => -20.0, 'to' => 60.0] as $valueKey => $number) {
+            $value = new ProductAttributeValue($dimensionContent, $attribute, $attribute->getKey(), valueKey: $valueKey);
+            $value->setNumber($number);
+            $dimensionContent->addAttribute($value);
+        }
+
+        $this->productRepository->add($product);
+        $this->entityManager->persist($dimensionContent);
+        $this->entityManager->flush();
+
+        $result = $this->contentResolver->resolve($dimensionContent);
+
+        self::assertArrayHasKey('product', $result);
+        $productData = $result['product'];
+        self::assertIsArray($productData);
+        $attributes = $productData['attributes'];
+        self::assertIsArray($attributes);
+        self::assertArrayHasKey('temperature', $attributes);
+
+        $temperature = $attributes['temperature'];
+        self::assertIsArray($temperature);
+        self::assertSame(['from' => -20.0, 'to' => 60.0], $temperature['value']);
+        self::assertInstanceOf(AttributeInterface::class, $temperature['attribute']);
+    }
 }

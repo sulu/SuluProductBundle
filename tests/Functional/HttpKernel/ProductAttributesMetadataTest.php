@@ -183,6 +183,115 @@ class ProductAttributesMetadataTest extends SuluTestCase
         );
     }
 
+    /**
+     * @return iterable<string, array{bool}>
+     */
+    public static function provideRequired(): iterable
+    {
+        yield 'required' => [true];
+        yield 'optional' => [false];
+    }
+
+    #[DataProvider('provideRequired')]
+    public function testRangeAttributeIsASectionOfItsTwoBounds(bool $required): void
+    {
+        $range = $this->createAttribute('temperature', 'Temperature', 'Features', ['unit' => 'CELSIUS', 'min' => -50, 'max' => 150, 'step' => 0.5], AttributeInterface::TYPE_RANGE);
+        $familyId = $this->createFamily([['id' => $range->getUuid(), 'required' => $required, 'variantSpecific' => false]]);
+
+        $this->client->request('GET', '/admin/metadata/form/product_attributes?productFamily=' . $familyId . '&locale=en');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        /** @var array{form: array<string, array{items: array<string, array{type: string, label: string, items: array<string, array{type: string, label: string, required: bool, colSpan: int, options: array<string, array{value: string}>}>}>}>} $data */
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $group = \reset($data['form']);
+        $this->assertNotFalse($group);
+        $this->assertSame(['attribute_' . $range->getUuid()], \array_keys($group['items']));
+
+        $section = $group['items']['attribute_' . $range->getUuid()];
+        $this->assertSame('section', $section['type']);
+        $this->assertSame('Temperature (°C)', $section['label']);
+        $this->assertSame(['from', 'to'], \array_keys($section['items']));
+
+        foreach (['from' => 'From', 'to' => 'To'] as $name => $label) {
+            $field = $section['items'][$name];
+            $this->assertSame('number', $field['type']);
+            $this->assertSame($label, $field['label']);
+            $this->assertSame($required, $field['required']);
+            $this->assertSame(6, $field['colSpan']);
+            $this->assertSame('-50', $field['options']['min']['value']);
+            $this->assertSame('150', $field['options']['max']['value']);
+            $this->assertSame('0.5', $field['options']['step']['value']);
+        }
+    }
+
+    public function testNumberAttributeStaysAPlainField(): void
+    {
+        $weight = $this->createAttribute('weight', 'Weight', 'Dimensions', ['unit' => 'KILOGRAM'], AttributeInterface::TYPE_NUMBER);
+        $familyId = $this->createFamily([['id' => $weight->getUuid(), 'required' => false, 'variantSpecific' => false]]);
+
+        $this->client->request('GET', '/admin/metadata/form/product_attributes?productFamily=' . $familyId . '&locale=en');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        /** @var array{form: array<string, array{items: array<string, array{type: string, label: string}>}>} $data */
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $group = \reset($data['form']);
+        $this->assertNotFalse($group);
+        $this->assertSame(['attribute_' . $weight->getUuid()], \array_keys($group['items']));
+        $this->assertSame('number', $group['items']['attribute_' . $weight->getUuid()]['type']);
+        $this->assertSame('Weight (kg)', $group['items']['attribute_' . $weight->getUuid()]['label']);
+    }
+
+    public function testDetailsFormSchemaValidatesARangeAsAnObjectOfItsBounds(): void
+    {
+        $required = $this->createAttribute('temperature', 'Temperature', 'Features', ['min' => -50, 'max' => 150], AttributeInterface::TYPE_RANGE);
+        $optional = $this->createAttribute('humidity', 'Humidity', 'Features', [], AttributeInterface::TYPE_RANGE);
+        $this->createFamily([
+            ['id' => $required->getUuid(), 'required' => true, 'variantSpecific' => false],
+            ['id' => $optional->getUuid(), 'required' => false, 'variantSpecific' => false],
+        ]);
+
+        $this->client->request('GET', '/admin/metadata/form/product_details');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+        /** @var array{schema: mixed} $details */
+        $details = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $encoded = \json_encode($details['schema']) ?: '';
+
+        $bound = '{"anyOf":[{"type":"null"},{"type":"number","minimum":-50,"maximum":150}]}';
+        $this->assertStringContainsString(
+            '"' . $required->getUuid() . '":{"type":"object","properties":{"from":' . $bound . ',"to":' . $bound . '}}',
+            $encoded,
+            'A required range is an object, its bounds are not required themselves.',
+        );
+
+        $openBound = '{"anyOf":[{"type":"null"},{"type":"number"}]}';
+        $this->assertStringContainsString(
+            '"' . $optional->getUuid() . '":{"anyOf":[{"type":"null"},{"type":"object","properties":{"from":' . $openBound . ',"to":' . $openBound . '}}]}',
+            $encoded,
+            'An optional range may also be null.',
+        );
+        $this->assertStringContainsString('"required":["' . $required->getUuid() . '"]', $encoded);
+        $this->assertStringNotContainsString('"required":["' . $required->getUuid() . '","' . $optional->getUuid() . '"]', $encoded);
+    }
+
+    /**
+     * @param list<array{id: string, required: bool, variantSpecific: bool}> $attributes
+     */
+    private function createFamily(array $attributes): string
+    {
+        $this->client->request('POST', '/admin/api/product-families.json?locale=en', [], [], [], \json_encode([
+            'locale' => 'en',
+            'name' => 'Sensors',
+            'key' => 'sensors',
+            'description' => null,
+            'attributes' => $attributes,
+        ]) ?: null);
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+        /** @var array{id: string} $family */
+        $family = \json_decode((string) $this->client->getResponse()->getContent(), true);
+
+        return $family['id'];
+    }
+
     public function testMetadataWithoutSelectorIsEmpty(): void
     {
         $this->client->request('GET', '/admin/metadata/form/product_attributes');

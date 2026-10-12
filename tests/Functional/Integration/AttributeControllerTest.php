@@ -723,6 +723,57 @@ class AttributeControllerTest extends SuluTestCase
         }
     }
 
+    public function testRangeAttributeRoundTripsItsConfigAndIsNeverFilterable(): void
+    {
+        self::purgeDatabase();
+        $groupId = $this->createGroup();
+
+        $payload = [
+            'locale' => 'en',
+            'key' => 'temperature',
+            'name' => 'Temperature',
+            'type' => 'range',
+            'group' => $groupId,
+            'filterable' => true,
+            'config' => ['unit' => 'CELSIUS', 'min' => -50, 'max' => 150, 'displayFormat' => '%from% to %to% %unit%'],
+        ];
+
+        $this->client->request('POST', '/admin/api/attributes.json?locale=en', [], [], [], \json_encode($payload) ?: null);
+        $postResponse = $this->client->getResponse();
+        $this->assertHttpStatusCode(201, $postResponse);
+        $postData = \json_decode((string) $postResponse->getContent(), true);
+        $this->assertIsArray($postData);
+        $id = $postData['id'];
+        $this->assertIsString($id);
+
+        $this->assertRangeAttribute($id, 'Temperature', ['unit' => 'CELSIUS', 'min' => -50, 'max' => 150, 'displayFormat' => '%from% to %to% %unit%']);
+
+        $payload['name'] = 'Operating temperature';
+        $payload['config'] = ['unit' => 'CELSIUS', 'min' => 0, 'max' => 100, 'step' => 0.5];
+        $this->client->request('PUT', '/admin/api/attributes/' . $id . '.json?locale=en', [], [], [], \json_encode($payload) ?: null);
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        $this->assertRangeAttribute($id, 'Operating temperature', ['unit' => 'CELSIUS', 'min' => 0, 'max' => 100, 'step' => 0.5]);
+    }
+
+    /**
+     * @param array<string, mixed> $expectedConfig
+     */
+    private function assertRangeAttribute(string $id, string $expectedName, array $expectedConfig): void
+    {
+        $this->client->request('GET', '/admin/api/attributes/' . $id . '.json?locale=en');
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(200, $response);
+
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertSame('range', $data['type']);
+        $this->assertSame($expectedName, $data['name']);
+        $this->assertSame('temperature', $data['measurementFamily']);
+        $this->assertFalse($data['filterable'], 'A range has no filter field.');
+        $this->assertEquals($expectedConfig, $data['config']);
+    }
+
     public function testRejectsADateDisplayFormatThatRendersNoDateOnCreateAndUpdate(): void
     {
         self::purgeDatabase();

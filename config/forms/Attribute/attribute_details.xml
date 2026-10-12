@@ -75,14 +75,14 @@
         </property>
 
         <property name="measurementFamily" type="single_measurement_family_selection" colspan="6"
-                  visibleCondition='type == "number"'>
+                  visibleCondition='type == "number" || type == "range"'>
             <meta>
                 <title>sulu_product.measurement_family</title>
             </meta>
         </property>
 
         <property name="config/unit" type="single_measurement_unit_selection" colspan="6"
-                  visibleCondition='type == "number"'
+                  visibleCondition='type == "number" || type == "range"'
                   disabledCondition="!measurementFamily">
             <meta>
                 <title>sulu_product.unit</title>
@@ -95,28 +95,28 @@
         </property>
 
         <property name="config/min" type="number" colspan="4"
-                  visibleCondition='type == "number"'>
+                  visibleCondition='type == "number" || type == "range"'>
             <meta>
                 <title>sulu_product.min</title>
             </meta>
         </property>
 
         <property name="config/max" type="number" colspan="4"
-                  visibleCondition='type == "number"'>
+                  visibleCondition='type == "number" || type == "range"'>
             <meta>
                 <title>sulu_product.max</title>
             </meta>
         </property>
 
         <property name="config/step" type="number" colspan="4"
-                  visibleCondition='type == "number"'>
+                  visibleCondition='type == "number" || type == "range"'>
             <meta>
                 <title>sulu_product.step</title>
             </meta>
         </property>
 
         <property name="config/displayFormat" type="text_line"
-                  visibleCondition='type == "text" || type == "number" || type == "date"'>
+                  visibleCondition='type == "text" || type == "number" || type == "date" || type == "range"'>
             <meta>
                 <title>sulu_product.display_format</title>
                 <info_text>sulu_product.display_format_info_text</info_text>
