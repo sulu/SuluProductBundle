@@ -34,6 +34,7 @@ use Sulu\Product\Application\Message\ModifyProductMessage;
 use Sulu\Product\Application\Message\RemoveProductMessage;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
 use Sulu\Product\Domain\Exception\RequiredProductAttributeMissingException;
+use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
@@ -348,7 +349,7 @@ final class ProductVariantController implements SecuredControllerInterface
     private function stripInheritedAttributes(ProductFamilyInterface $family, array $attributes): array
     {
         foreach ($family->getFamilyAttributes() as $familyAttribute) {
-            if (!$familyAttribute->isVariantSpecific()) {
+            if (ProductFamilyAttributeInterface::MODE_SHARED === $familyAttribute->getMode()) {
                 unset($attributes[$familyAttribute->getAttribute()->getUuid()]);
             }
         }

@@ -62,7 +62,7 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
     }
 
     /**
-     * @param list<array{id: string, required: bool, variantSpecific: bool}> $attributes
+     * @param list<array{id: string, required: bool, mode: 'shared'|'variantSpecific'|'overridable'}> $attributes
      */
     private function message(string $uuid, string $name, ?string $description = null, array $attributes = []): ModifyProductFamilyMessage
     {
@@ -136,7 +136,7 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
         $this->attributeRepository->findOneBy(['uuid' => 'uuid-7'])->willReturn($attribute);
 
         ($this->createHandler())($this->message('f', 'Name', null, [
-            ['id' => 'uuid-7', 'required' => true, 'variantSpecific' => false],
+            ['id' => 'uuid-7', 'required' => true, 'mode' => 'shared'],
         ]));
 
         $familyAttributes = $family->getFamilyAttributes();
@@ -158,7 +158,7 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
         $this->attributeRepository->findOneBy(['uuid' => 'uuid-7'])->shouldNotBeCalled();
 
         ($this->createHandler())($this->message('f', 'Name', null, [
-            ['id' => 'uuid-7', 'required' => true, 'variantSpecific' => false],
+            ['id' => 'uuid-7', 'required' => true, 'mode' => 'shared'],
         ]));
 
         $this->assertCount(1, $family->getFamilyAttributes());
@@ -176,7 +176,7 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
         $this->familyRepository->save($family)->shouldBeCalledOnce();
 
         ($this->createHandler())($this->message('f', 'Name', null, [
-            ['id' => 'uuid-1', 'required' => false, 'variantSpecific' => false],
+            ['id' => 'uuid-1', 'required' => false, 'mode' => 'shared'],
         ]));
 
         $familyAttributes = $family->getFamilyAttributes();
@@ -207,7 +207,7 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
         $this->attributeRepository->findOneBy(['uuid' => 'uuid-99'])->willReturn(null);
 
         ($this->createHandler())($this->message('f', 'Name', null, [
-            ['id' => 'uuid-99', 'required' => false, 'variantSpecific' => false],
+            ['id' => 'uuid-99', 'required' => false, 'mode' => 'shared'],
         ]));
 
         $this->assertCount(0, $family->getFamilyAttributes());
@@ -223,12 +223,12 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
         $this->attributeRepository->findOneBy(['uuid' => 'uuid-7'])->willReturn($attribute);
 
         ($this->createHandler())($this->message('f', 'Name', null, [
-            ['id' => 'uuid-7', 'required' => false, 'variantSpecific' => true],
+            ['id' => 'uuid-7', 'required' => false, 'mode' => 'variantSpecific'],
         ]));
 
         $familyAttributes = $family->getFamilyAttributes();
         $this->assertCount(1, $familyAttributes);
-        $this->assertTrue($familyAttributes[0]->isVariantSpecific());
+        $this->assertSame('variantSpecific', $familyAttributes[0]->getMode());
     }
 
     public function testUpdatesVariantOnExistingFamilyAttribute(): void
@@ -236,7 +236,7 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
         $family = new ProductFamily();
         $attribute = $this->attributeWithUuid('uuid-7');
         $existing = new ProductFamilyAttribute($family, $attribute);
-        $existing->setVariantSpecific(false);
+        $existing->setMode('shared');
         $family->addFamilyAttribute($existing);
 
         $this->familyRepository->getOneBy(['uuid' => 'f'])->willReturn($family);
@@ -244,9 +244,9 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
         $this->attributeRepository->findOneBy(['uuid' => 'uuid-7'])->shouldNotBeCalled();
 
         ($this->createHandler())($this->message('f', 'Name', null, [
-            ['id' => 'uuid-7', 'required' => false, 'variantSpecific' => true],
+            ['id' => 'uuid-7', 'required' => false, 'mode' => 'variantSpecific'],
         ]));
 
-        $this->assertTrue($existing->isVariantSpecific());
+        $this->assertSame('variantSpecific', $existing->getMode());
     }
 }

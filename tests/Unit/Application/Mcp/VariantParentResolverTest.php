@@ -147,35 +147,37 @@ final class VariantParentResolverTest extends TestCase
         $this->resolver->assertVariantOwnedByParent('parent-uuid', 'variant-uuid');
     }
 
-    public function testStripInheritedAttributesKeepsOnlyVariantAxes(): void
+    public function testStripInheritedAttributesKeepsAxesAndOverrides(): void
     {
         $family = $this->familyWithAttributes([
-            'shared-uuid' => false, // shared -> stripped
-            'axis-uuid' => true, // variant axis -> kept
+            'shared-uuid' => 'shared', // stripped
+            'axis-uuid' => 'variantSpecific', // kept
+            'override-uuid' => 'overridable', // kept
         ]);
 
         $stripped = $this->resolver->stripInheritedAttributes($family, [
             'shared-uuid' => 'shared value',
             'axis-uuid' => 'red',
+            'override-uuid' => 'blue',
             'unknown-uuid' => 'unknown attribute is left untouched',
         ]);
 
-        $this->assertSame(['axis-uuid' => 'red', 'unknown-uuid' => 'unknown attribute is left untouched'], $stripped);
+        $this->assertSame(['axis-uuid' => 'red', 'override-uuid' => 'blue', 'unknown-uuid' => 'unknown attribute is left untouched'], $stripped);
     }
 
     /**
-     * @param array<string, bool> $variantSpecificByAttributeUuid
+     * @param array<string, string> $modeByAttributeUuid
      */
-    private function familyWithAttributes(array $variantSpecificByAttributeUuid): ProductFamilyInterface
+    private function familyWithAttributes(array $modeByAttributeUuid): ProductFamilyInterface
     {
         $family = new ProductFamily();
         $group = new AttributeGroup();
 
-        foreach ($variantSpecificByAttributeUuid as $attributeUuid => $variantSpecific) {
+        foreach ($modeByAttributeUuid as $attributeUuid => $mode) {
             $attribute = new Attribute($group, $attributeUuid);
 
             $familyAttribute = new ProductFamilyAttribute($family, $attribute);
-            $familyAttribute->setVariantSpecific($variantSpecific);
+            $familyAttribute->setMode($mode);
             $family->addFamilyAttribute($familyAttribute);
         }
 

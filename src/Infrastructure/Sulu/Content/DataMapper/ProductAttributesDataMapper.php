@@ -123,11 +123,7 @@ class ProductAttributesDataMapper implements DataMapperInterface
     private function assertRequiredSatisfied(array $familyAttributes, array $values, string $productType): void
     {
         foreach ($familyAttributes as $attributeUuid => $familyAttribute) {
-            if (!$familyAttribute->isRequired()) {
-                continue;
-            }
-
-            if (!$familyAttribute->isAvailable($productType)) {
+            if (!$familyAttribute->isRequiredFor($productType)) {
                 continue;
             }
 

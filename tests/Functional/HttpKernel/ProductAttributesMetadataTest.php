@@ -58,8 +58,8 @@ class ProductAttributesMetadataTest extends SuluTestCase
             'key' => 'shoes',
             'description' => null,
             'attributes' => [
-                ['id' => $weight->getUuid(), 'required' => true, 'variantSpecific' => false],
-                ['id' => $colour->getUuid(), 'required' => false, 'variantSpecific' => true],
+                ['id' => $weight->getUuid(), 'required' => true, 'mode' => 'shared'],
+                ['id' => $colour->getUuid(), 'required' => false, 'mode' => 'variantSpecific'],
             ],
         ]) ?: null);
         $this->assertHttpStatusCode(201, $this->client->getResponse());
@@ -108,7 +108,7 @@ class ProductAttributesMetadataTest extends SuluTestCase
             'name' => 'Shoes',
             'key' => 'shoes',
             'description' => null,
-            'attributes' => [['id' => $weight->getUuid(), 'required' => true, 'variantSpecific' => false]],
+            'attributes' => [['id' => $weight->getUuid(), 'required' => true, 'mode' => 'shared']],
         ]) ?: null);
         $this->assertHttpStatusCode(201, $this->client->getResponse());
         /** @var array{id: string} $family */
@@ -157,7 +157,7 @@ class ProductAttributesMetadataTest extends SuluTestCase
             'name' => 'Boots',
             'key' => 'boots',
             'description' => null,
-            'attributes' => [['id' => $waterproof, 'required' => $required, 'variantSpecific' => false]],
+            'attributes' => [['id' => $waterproof, 'required' => $required, 'mode' => 'shared']],
         ]) ?: null);
         $this->assertHttpStatusCode(201, $this->client->getResponse());
         /** @var array{id: string} $family */

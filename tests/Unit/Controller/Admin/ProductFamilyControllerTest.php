@@ -33,6 +33,7 @@ use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\UserInterface\Controller\Admin\ProductFamilyController;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
@@ -142,8 +143,8 @@ class ProductFamilyControllerTest extends TestCase
                 // The submitted list is normalised as-is; entries without an id are dropped.
                 return $message instanceof CreateProductFamilyMessage
                     && [
-                        ['id' => 'uuid-9', 'required' => false, 'variantSpecific' => false],
-                        ['id' => 'uuid-10', 'required' => false, 'variantSpecific' => false],
+                        ['id' => 'uuid-9', 'required' => false, 'mode' => 'shared'],
+                        ['id' => 'uuid-10', 'required' => false, 'mode' => 'shared'],
                     ] === $message->getAttributes();
             }),
             Argument::any(),
@@ -187,7 +188,7 @@ class ProductFamilyControllerTest extends TestCase
                 $message = $envelope->getMessage();
 
                 return $message instanceof CreateProductFamilyMessage
-                    && [['id' => 'uuid-9', 'required' => false, 'variantSpecific' => true]] === $message->getAttributes();
+                    && [['id' => 'uuid-9', 'required' => false, 'mode' => 'variantSpecific']] === $message->getAttributes();
             }),
             Argument::any(),
         )
@@ -205,7 +206,7 @@ class ProductFamilyControllerTest extends TestCase
                 'key' => 'new-family',
                 'description' => null,
                 'attributes' => [
-                    ['id' => 'uuid-9', 'required' => false, 'variantSpecific' => true],
+                    ['id' => 'uuid-9', 'required' => false, 'mode' => 'variantSpecific'],
                 ],
             ],
         );
@@ -213,6 +214,24 @@ class ProductFamilyControllerTest extends TestCase
         $response = $this->createController()->postAction($request);
 
         $this->assertSame(201, $response->getStatusCode());
+    }
+
+    public function testPostActionRejectsAnUnknownMode(): void
+    {
+        $this->messageBus->dispatch(Argument::any(), Argument::any())->shouldNotBeCalled();
+
+        $request = new Request(
+            ['locale' => 'en'],
+            [
+                'name' => 'New Family',
+                'key' => 'new-family',
+                'attributes' => [['id' => 'uuid-9', 'required' => false, 'mode' => 'everywhere']],
+            ],
+        );
+
+        $this->expectException(BadRequestHttpException::class);
+
+        $this->createController()->postAction($request);
     }
 
     public function testPostActionTrimsKey(): void

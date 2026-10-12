@@ -261,7 +261,7 @@ final class ProductVariantCreateToolTest extends TestCase
             $attribute = new Attribute($group, $attributeUuid);
 
             $familyAttribute = new ProductFamilyAttribute($family, $attribute);
-            $familyAttribute->setVariantSpecific($variantSpecific);
+            $familyAttribute->setMode($variantSpecific ? 'variantSpecific' : 'shared');
             $family->addFamilyAttribute($familyAttribute);
         }
 

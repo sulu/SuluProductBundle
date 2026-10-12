@@ -23,6 +23,7 @@ use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeOption;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
+use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
 use Symfony\Contracts\Service\ResetInterface;
 
 /**
@@ -32,7 +33,7 @@ use Symfony\Contracts\Service\ResetInterface;
  *     optionKey: string|null,
  *     number: float|null,
  *     text: string|null,
- *     variantSpecific: bool,
+ *     mode: string|null,
  * }
  * @phpstan-type AttributeDefinition array{
  *     key: string,
@@ -198,7 +199,7 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
     {
         $merged = $this->productAttributeValues($productId, $locale);
         foreach (null !== $parentId ? $this->productAttributeValues($parentId, $locale) : [] as $attributeUuid => $valueRow) {
-            if (!$valueRow['variantSpecific'] && !isset($merged[$attributeUuid])) {
+            if (ProductFamilyAttributeInterface::MODE_VARIANT_SPECIFIC !== $valueRow['mode'] && !isset($merged[$attributeUuid])) {
                 $merged[$attributeUuid] = $valueRow;
             }
         }
@@ -250,7 +251,7 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
      */
     private function loadAttributeValues(array $productIds): array
     {
-        /** @var iterable<array{productId: string, locale: string|null, attributeUuid: string, optionKey: string|null, number: float|null, text: string|null, variantSpecific: bool|null}> $rows */
+        /** @var iterable<array{productId: string, locale: string|null, attributeUuid: string, optionKey: string|null, number: float|null, text: string|null, mode: string|null}> $rows */
         $rows = $this->entityManager->createQueryBuilder()
             ->from(ProductAttributeValue::class, 'value')
             ->innerJoin('value.productDimensionContent', 'dimensionContent')
@@ -262,7 +263,7 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
             ->addSelect('attributeOption.key AS optionKey')
             ->addSelect('value.number')
             ->addSelect('value.text')
-            ->addSelect('familyAttribute.variantSpecific')
+            ->addSelect('familyAttribute.mode')
             ->where('dimensionContent.stage = :stage')
             ->andWhere('dimensionContent.version = :version')
             ->andWhere('dimensionContent.product IN (:productIds)')
@@ -279,7 +280,7 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
                 'optionKey' => $row['optionKey'],
                 'number' => $row['number'],
                 'text' => '' !== $text ? $text : null,
-                'variantSpecific' => true === $row['variantSpecific'],
+                'mode' => $row['mode'],
             ];
         }
 

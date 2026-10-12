@@ -45,7 +45,7 @@ use Webmozart\Assert\Assert;
  *     created: string,
  *     creatorId: int|null,
  *     translations: list<array{locale: string, name: string, description: string|null}>,
- *     familyAttributes: list<array{attributeUuid: string, required: bool, variantSpecific: bool}>,
+ *     familyAttributes: list<array{attributeUuid: string, required: bool, mode?: string, variantSpecific?: bool}>,
  * }
  *
  * @internal
@@ -90,21 +90,21 @@ final class ProductFamilyTrashItemHandler implements
             $familyAttributes[] = [
                 'attributeUuid' => $familyAttribute->getAttribute()->getUuid(),
                 'required' => $familyAttribute->isRequired(),
-                'variantSpecific' => $familyAttribute->isVariantSpecific(),
+                'mode' => $familyAttribute->getMode(),
             ];
         }
 
         // An attribute in the trash keeps its link here too, so either one can be restored first.
         /** @var TrashItemInterface $attributeTrashItem */
         foreach ($this->entityManager->getRepository(TrashItemInterface::class)->findBy(['resourceKey' => AttributeInterface::RESOURCE_KEY]) as $attributeTrashItem) {
-            /** @var list<array{familyUuid: string, required: bool, variantSpecific: bool}> $attributeTrashLinks */
+            /** @var list<array{familyUuid: string, required: bool, mode?: string, variantSpecific?: bool}> $attributeTrashLinks */
             $attributeTrashLinks = $attributeTrashItem->getRestoreData()['familyAttributes'] ?? [];
             foreach ($attributeTrashLinks as $attributeTrashLink) {
                 if ($attributeTrashLink['familyUuid'] === $family->getUuid()) {
                     $familyAttributes[] = [
                         'attributeUuid' => $attributeTrashItem->getResourceId(),
                         'required' => $attributeTrashLink['required'],
-                        'variantSpecific' => $attributeTrashLink['variantSpecific'],
+                        'mode' => FamilyAttributeModeRestoreData::mode($attributeTrashLink),
                     ];
                 }
             }
@@ -167,7 +167,7 @@ final class ProductFamilyTrashItemHandler implements
 
             $familyAttribute = new ProductFamilyAttribute($family, $attribute);
             $familyAttribute->setRequired($familyAttributeData['required']);
-            $familyAttribute->setVariantSpecific($familyAttributeData['variantSpecific']);
+            $familyAttribute->setMode(FamilyAttributeModeRestoreData::mode($familyAttributeData));
             $family->addFamilyAttribute($familyAttribute);
         }
 
