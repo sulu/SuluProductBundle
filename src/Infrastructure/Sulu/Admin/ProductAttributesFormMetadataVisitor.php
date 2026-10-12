@@ -72,7 +72,7 @@ class ProductAttributesFormMetadataVisitor implements FormMetadataVisitorInterfa
                 continue;
             }
 
-            $field = $this->attributeFieldFactory->build($familyAttribute, $locale);
+            $field = $this->attributeFieldFactory->build($familyAttribute, $locale, $productType);
             if (null === $field) {
                 continue;
             }

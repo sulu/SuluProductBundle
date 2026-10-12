@@ -27,11 +27,13 @@ use Sulu\Product\Application\Message\ModifyProductFamilyMessage;
 use Sulu\Product\Application\Message\RemoveProductFamilyMessage;
 use Sulu\Product\Domain\Exception\ProductFamilyHasProductsException;
 use Sulu\Product\Domain\Exception\ProductFamilyNotFoundException;
+use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\HandleTrait;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -173,7 +175,7 @@ final class ProductFamilyController implements SecuredControllerInterface
      *   name: string,
      *   description: string|null,
      *   image: array{id: int}|null,
-     *   attributes: list<array{id: string, required: bool, variantSpecific: bool}>,
+     *   attributes: list<array{id: string, required: bool, mode: 'shared'|'variantSpecific'|'overridable'}>,
      * }
      */
     private function getData(Request $request): array
@@ -196,7 +198,7 @@ final class ProductFamilyController implements SecuredControllerInterface
     }
 
     /**
-     * @return list<array{id: string, required: bool, variantSpecific: bool}>
+     * @return list<array{id: string, required: bool, mode: 'shared'|'variantSpecific'|'overridable'}>
      */
     private function extractAttributes(Request $request): array
     {
@@ -210,10 +212,29 @@ final class ProductFamilyController implements SecuredControllerInterface
             $attributes[] = [
                 'id' => $attribute['id'],
                 'required' => (bool) ($attribute['required'] ?? false),
-                'variantSpecific' => (bool) ($attribute['variantSpecific'] ?? false),
+                'mode' => $this->extractMode($attribute['mode'] ?? null),
             ];
         }
 
         return $attributes;
+    }
+
+    /**
+     * @return 'shared'|'variantSpecific'|'overridable'
+     */
+    private function extractMode(mixed $mode): string
+    {
+        if (null === $mode) {
+            return ProductFamilyAttributeInterface::MODE_SHARED;
+        }
+
+        if (!\is_string($mode) || !\in_array($mode, ProductFamilyAttributeInterface::MODES, true)) {
+            throw new BadRequestHttpException(\sprintf(
+                'Invalid attribute mode, expected one of: %s.',
+                \implode(', ', ProductFamilyAttributeInterface::MODES),
+            ));
+        }
+
+        return $mode;
     }
 }

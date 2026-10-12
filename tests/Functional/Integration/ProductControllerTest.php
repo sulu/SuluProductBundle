@@ -54,7 +54,7 @@ class ProductControllerTest extends SuluTestCase
     {
         $attributes = [];
         if (null !== $attributeUuid) {
-            $attributes[] = ['id' => $attributeUuid, 'required' => $required, 'variantSpecific' => false];
+            $attributes[] = ['id' => $attributeUuid, 'required' => $required, 'mode' => 'shared'];
         }
 
         $this->client->request(

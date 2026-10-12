@@ -52,7 +52,7 @@ class WebsiteProductAttributesReindexProviderEnhancerTest extends SuluTestCase
 
         $familyId = $this->createProductFamily([
             $weightId => [],
-            $colourId => ['variantSpecific' => true],
+            $colourId => ['mode' => 'variantSpecific'],
             $noteId => [],
         ]);
         $parentId = $this->createProduct($familyId, 'Cable', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
@@ -270,7 +270,7 @@ class WebsiteProductAttributesReindexProviderEnhancerTest extends SuluTestCase
     }
 
     /**
-     * @param array<string, array{required?: bool, variantSpecific?: bool}> $attributes keyed by attribute id
+     * @param array<string, array{required?: bool, mode?: string}> $attributes keyed by attribute id
      */
     private function createProductFamily(array $attributes = []): string
     {
@@ -279,7 +279,7 @@ class WebsiteProductAttributesReindexProviderEnhancerTest extends SuluTestCase
             $normalized[] = [
                 'id' => $attributeId,
                 'required' => $entry['required'] ?? false,
-                'variantSpecific' => $entry['variantSpecific'] ?? false,
+                'mode' => $entry['mode'] ?? 'shared',
             ];
         }
 

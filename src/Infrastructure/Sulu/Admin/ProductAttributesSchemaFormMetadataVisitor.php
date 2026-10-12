@@ -169,7 +169,7 @@ class ProductAttributesSchemaFormMetadataVisitor implements FormMetadataVisitorI
                 continue;
             }
 
-            $property = $this->attributeFieldFactory->buildSchemaProperty($familyAttribute, $locale);
+            $property = $this->attributeFieldFactory->buildSchemaProperty($familyAttribute, $locale, $productType);
             if (null === $property) {
                 continue;
             }

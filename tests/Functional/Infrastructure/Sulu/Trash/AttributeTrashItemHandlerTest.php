@@ -78,7 +78,7 @@ class AttributeTrashItemHandlerTest extends SuluTestCase
         $familyId = $this->postForId('/admin/api/product-families.json?locale=en', [
             'key' => 'apparel',
             'name' => 'Apparel',
-            'attributes' => [['id' => $attributeId, 'required' => true, 'variantSpecific' => true]],
+            'attributes' => [['id' => $attributeId, 'required' => true, 'mode' => 'variantSpecific']],
         ]);
 
         self::getEntityManager()->createQueryBuilder()
@@ -138,7 +138,7 @@ class AttributeTrashItemHandlerTest extends SuluTestCase
         );
 
         $family = $this->requestJson('GET', '/admin/api/product-families/' . $familyId . '.json?locale=en');
-        $this->assertSame([['id' => $attributeId, 'required' => true, 'variantSpecific' => true]], $family['attributes']);
+        $this->assertSame([['id' => $attributeId, 'required' => true, 'mode' => 'variantSpecific']], $family['attributes']);
 
         $this->assertSame(
             ['created', 'modified', 'removed', 'restored'],
@@ -207,7 +207,7 @@ class AttributeTrashItemHandlerTest extends SuluTestCase
         $familyId = $this->postForId('/admin/api/product-families.json?locale=en', [
             'key' => 'apparel',
             'name' => 'Apparel',
-            'attributes' => [['id' => $attributeId, 'required' => true, 'variantSpecific' => false]],
+            'attributes' => [['id' => $attributeId, 'required' => true, 'mode' => 'shared']],
         ]);
 
         $this->client->request('DELETE', '/admin/api/attributes/' . $attributeId . '.json');
@@ -240,7 +240,7 @@ class AttributeTrashItemHandlerTest extends SuluTestCase
         $familyId = $this->postForId('/admin/api/product-families.json?locale=en', [
             'key' => 'apparel',
             'name' => 'Apparel',
-            'attributes' => [['id' => $attributeId, 'required' => true, 'variantSpecific' => true]],
+            'attributes' => [['id' => $attributeId, 'required' => true, 'mode' => 'variantSpecific']],
         ]);
 
         $attributeUri = '/admin/api/attributes/' . $attributeId . '.json';
@@ -257,7 +257,7 @@ class AttributeTrashItemHandlerTest extends SuluTestCase
         }
 
         $family = $this->requestJson('GET', $familyUri . '?locale=en');
-        $this->assertSame([['id' => $attributeId, 'required' => true, 'variantSpecific' => true]], $family['attributes']);
+        $this->assertSame([['id' => $attributeId, 'required' => true, 'mode' => 'variantSpecific']], $family['attributes']);
     }
 
     public function testRestoreIntoSelectedGroup(): void
