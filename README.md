@@ -261,7 +261,7 @@ a Symfony AI agent can look up products for a chatbot. Without that package the 
 composer require symfony/ai-agent
 ```
 
-Each tool is a plain `#[AsTool]` class in `UserInterface\Ai`. It loads and runs without
+Each tool is a plain `#[AsTool]` class in `UserInterface\Agent\Tool`. It loads and runs without
 `symfony/ai-agent`, so the classes are always registered (`sulu_product.ai_<name>`) and only the
 `ai.tool` tag depends on the package. A project that wants the same lookups through a different
 integration (e.g. MCP) can depend on these services directly.

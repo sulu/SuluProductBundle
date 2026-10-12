@@ -11,7 +11,7 @@ declare(strict_types=1);
  * with this source code in the file LICENSE.
  */
 
-namespace Sulu\Product\Tests\Unit\UserInterface\Ai;
+namespace Sulu\Product\Tests\Unit\UserInterface\Agent\Tool;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -19,8 +19,8 @@ use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
-use Sulu\Product\Tests\Unit\UserInterface\Ai\Fixtures\FakeRouteGenerator;
-use Sulu\Product\UserInterface\Ai\ProductUrlGenerator;
+use Sulu\Product\Tests\Unit\UserInterface\Agent\Tool\Fixtures\FakeRouteGenerator;
+use Sulu\Product\UserInterface\Agent\Tool\ProductUrlGenerator;
 use Sulu\Route\Application\Routing\Generator\RouteGeneratorInterface;
 use Sulu\Route\Domain\Exception\MissingRequestContextParameterException;
 use Sulu\Route\Domain\Model\Route;

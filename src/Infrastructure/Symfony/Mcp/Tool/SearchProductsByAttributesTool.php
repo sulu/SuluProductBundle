@@ -20,8 +20,8 @@ use Sulu\Component\Security\Authorization\PermissionTypes;
 use Sulu\Mcp\Domain\Security\PermissionRequirement;
 use Sulu\Mcp\Domain\Security\RequiresPermission;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
-use Sulu\Product\UserInterface\Ai\AttributeFilter;
-use Sulu\Product\UserInterface\Ai\SearchProductsByAttributes;
+use Sulu\Product\UserInterface\Agent\Tool\AttributeFilter;
+use Sulu\Product\UserInterface\Agent\Tool\SearchProductsByAttributes;
 
 /**
  * @internal

@@ -11,7 +11,7 @@ declare(strict_types=1);
  * with this source code in the file LICENSE.
  */
 
-namespace Sulu\Product\UserInterface\Ai;
+namespace Sulu\Product\UserInterface\Agent\Tool;
 
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Route\Application\Routing\Generator\RouteGeneratorInterface;

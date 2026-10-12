@@ -11,11 +11,11 @@ declare(strict_types=1);
  * with this source code in the file LICENSE.
  */
 
-namespace Sulu\Product\Tests\Unit\UserInterface\Ai;
+namespace Sulu\Product\Tests\Unit\UserInterface\Agent\Tool;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
-use Sulu\Product\UserInterface\Ai\AttributeFilter;
+use Sulu\Product\UserInterface\Agent\Tool\AttributeFilter;
 
 #[CoversClass(AttributeFilter::class)]
 class AttributeFilterTest extends TestCase

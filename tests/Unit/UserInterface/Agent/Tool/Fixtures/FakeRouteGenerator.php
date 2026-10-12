@@ -11,7 +11,7 @@ declare(strict_types=1);
  * with this source code in the file LICENSE.
  */
 
-namespace Sulu\Product\Tests\Unit\UserInterface\Ai\Fixtures;
+namespace Sulu\Product\Tests\Unit\UserInterface\Agent\Tool\Fixtures;
 
 use Sulu\Route\Application\Routing\Generator\RouteGeneratorInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;

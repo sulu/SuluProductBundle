@@ -11,7 +11,7 @@ declare(strict_types=1);
  * with this source code in the file LICENSE.
  */
 
-namespace Sulu\Product\Tests\Unit\UserInterface\Ai;
+namespace Sulu\Product\Tests\Unit\UserInterface\Agent\Tool;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -24,9 +24,9 @@ use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductFamilyTranslation;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
-use Sulu\Product\Tests\Unit\UserInterface\Ai\Fixtures\FakeRouteGenerator;
-use Sulu\Product\UserInterface\Ai\GetProducts;
-use Sulu\Product\UserInterface\Ai\ProductUrlGenerator;
+use Sulu\Product\Tests\Unit\UserInterface\Agent\Tool\Fixtures\FakeRouteGenerator;
+use Sulu\Product\UserInterface\Agent\Tool\GetProducts;
+use Sulu\Product\UserInterface\Agent\Tool\ProductUrlGenerator;
 use Sulu\Route\Domain\Model\Route;
 
 #[CoversClass(GetProducts::class)]

@@ -22,9 +22,9 @@ use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\SearchProductsByAttributesTool;
-use Sulu\Product\Tests\Unit\UserInterface\Ai\Fixtures\FakeRouteGenerator;
-use Sulu\Product\UserInterface\Ai\ProductUrlGenerator;
-use Sulu\Product\UserInterface\Ai\SearchProductsByAttributes;
+use Sulu\Product\Tests\Unit\UserInterface\Agent\Tool\Fixtures\FakeRouteGenerator;
+use Sulu\Product\UserInterface\Agent\Tool\ProductUrlGenerator;
+use Sulu\Product\UserInterface\Agent\Tool\SearchProductsByAttributes;
 
 #[CoversClass(SearchProductsByAttributesTool::class)]
 class SearchProductsByAttributesToolTest extends TestCase

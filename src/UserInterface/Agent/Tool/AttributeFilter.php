@@ -11,7 +11,7 @@ declare(strict_types=1);
  * with this source code in the file LICENSE.
  */
 
-namespace Sulu\Product\UserInterface\Ai;
+namespace Sulu\Product\UserInterface\Agent\Tool;
 
 /**
  * One attribute filter of sulu_product_search_products_by_attributes. A value object instead of an

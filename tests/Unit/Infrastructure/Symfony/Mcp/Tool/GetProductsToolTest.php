@@ -19,9 +19,9 @@ use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\GetProductsTool;
-use Sulu\Product\Tests\Unit\UserInterface\Ai\Fixtures\FakeRouteGenerator;
-use Sulu\Product\UserInterface\Ai\GetProducts;
-use Sulu\Product\UserInterface\Ai\ProductUrlGenerator;
+use Sulu\Product\Tests\Unit\UserInterface\Agent\Tool\Fixtures\FakeRouteGenerator;
+use Sulu\Product\UserInterface\Agent\Tool\GetProducts;
+use Sulu\Product\UserInterface\Agent\Tool\ProductUrlGenerator;
 
 #[CoversClass(GetProductsTool::class)]
 class GetProductsToolTest extends TestCase

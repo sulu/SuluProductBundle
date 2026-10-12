@@ -16,7 +16,7 @@ namespace Sulu\Product\Tests\Unit\Infrastructure\Symfony\HttpKernel;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Product\Infrastructure\Symfony\HttpKernel\SuluProductBundle;
-use Sulu\Product\UserInterface\Ai\GetProducts;
+use Sulu\Product\UserInterface\Agent\Tool\GetProducts;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Config\FileLocator;

@@ -21,11 +21,11 @@ use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
-use Sulu\Product\Tests\Unit\UserInterface\Ai\Fixtures\FakeRouteGenerator;
-use Sulu\Product\UserInterface\Ai\AttributeFilter;
-use Sulu\Product\UserInterface\Ai\GetProducts;
-use Sulu\Product\UserInterface\Ai\ProductUrlGenerator;
-use Sulu\Product\UserInterface\Ai\SearchProductsByAttributes;
+use Sulu\Product\Tests\Unit\UserInterface\Agent\Tool\Fixtures\FakeRouteGenerator;
+use Sulu\Product\UserInterface\Agent\Tool\AttributeFilter;
+use Sulu\Product\UserInterface\Agent\Tool\GetProducts;
+use Sulu\Product\UserInterface\Agent\Tool\ProductUrlGenerator;
+use Sulu\Product\UserInterface\Agent\Tool\SearchProductsByAttributes;
 
 /**
  * Every sulu_* tool name mentioned in a description must be a registered tool.

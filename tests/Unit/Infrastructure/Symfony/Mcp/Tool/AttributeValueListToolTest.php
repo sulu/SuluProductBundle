@@ -22,7 +22,7 @@ use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductAttributeValueRepositoryInterface;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\AttributeValueListTool;
-use Sulu\Product\UserInterface\Ai\GetAttributeValues;
+use Sulu\Product\UserInterface\Agent\Tool\GetAttributeValues;
 
 #[CoversClass(AttributeValueListTool::class)]
 class AttributeValueListToolTest extends TestCase
