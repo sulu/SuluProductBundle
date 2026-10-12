@@ -26,6 +26,7 @@
     "sulu_product.type_date": "Datum",
     "sulu_product.type_boolean": "Ja/Nein",
     "sulu_product.type_range": "Bereich",
+    "sulu_product.type_multi_options": "Mehrfachauswahl",
     "sulu_product.not_specified": "Keine Angabe",
     "sulu_product.option": "Option",
     "sulu_product.product": "Produkt",

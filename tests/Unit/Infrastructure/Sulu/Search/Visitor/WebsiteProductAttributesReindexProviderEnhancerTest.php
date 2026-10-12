@@ -107,6 +107,96 @@ class WebsiteProductAttributesReindexProviderEnhancerTest extends TestCase
         $this->assertSame(['temperature: -20 – 60', 'weight: 2.5'], $document['content']);
     }
 
+    public function testMultiOptionsAddsItsLabelAndOptionNamesToTheContent(): void
+    {
+        $document = $this->enhanceDocument(
+            [
+                $this->optionRow('multi-1', 'red'),
+                $this->optionRow('multi-1', 'blue'),
+                $this->optionRow('multi-1', 'green'),
+            ],
+            [$this->multiOptionsAttribute(true)],
+            [['attributeUuid' => 'multi-1', 'locale' => 'en', 'name' => 'Colours']],
+            [
+                ['attributeUuid' => 'multi-1', 'optionKey' => 'red', 'locale' => 'en', 'name' => 'Red'],
+                ['attributeUuid' => 'multi-1', 'optionKey' => 'blue', 'locale' => 'de', 'name' => 'Blau'],
+                ['attributeUuid' => 'multi-1', 'optionKey' => 'blue', 'locale' => 'en', 'name' => 'Blue'],
+            ],
+        );
+
+        // "green" has no translation and falls back to its key.
+        $this->assertSame(['Colours: Red, Blue, green'], $document['content']);
+    }
+
+    public function testMultiOptionsFallsBackToTheDefaultLocaleOfTheAttribute(): void
+    {
+        $document = $this->enhanceDocument(
+            [$this->optionRow('multi-1', 'red')],
+            [['defaultLocale' => 'de'] + $this->multiOptionsAttribute(false)],
+            [['attributeUuid' => 'multi-1', 'locale' => 'de', 'name' => 'Farben']],
+            [['attributeUuid' => 'multi-1', 'optionKey' => 'red', 'locale' => 'de', 'name' => 'Rot']],
+        );
+
+        $this->assertSame(['Farben: Rot'], $document['content']);
+    }
+
+    public function testAFilterableMultiOptionsAddsOneTextValuePerSelectedOption(): void
+    {
+        $document = $this->enhanceDocument(
+            [
+                $this->optionRow('multi-1', 'red'),
+                $this->optionRow('multi-1', 'blue'),
+            ],
+            [$this->multiOptionsAttribute(true)],
+        );
+
+        $this->assertIsArray($document['product']);
+        $this->assertSame(['colours:red', 'colours:blue'], $document['product']['attributes_text_values']);
+        $this->assertSame([], $document['product']['attributes_numeric_values']);
+    }
+
+    public function testANonFilterableMultiOptionsAddsNoTextValues(): void
+    {
+        $document = $this->enhanceDocument(
+            [
+                $this->optionRow('multi-1', 'red'),
+                $this->optionRow('multi-1', 'blue'),
+            ],
+            [$this->multiOptionsAttribute(false)],
+        );
+
+        $this->assertIsArray($document['product']);
+        $this->assertSame([], $document['product']['attributes_text_values']);
+        $this->assertSame(['colours: red, blue'], $document['content']);
+    }
+
+    public function testMultiOptionsIgnoresRowsWithoutAnOptionKey(): void
+    {
+        $document = $this->enhanceDocument(
+            [
+                $this->optionRow('multi-1', null),
+                $this->optionRow('multi-1', 'red'),
+            ],
+            [$this->multiOptionsAttribute(true)],
+        );
+
+        $this->assertIsArray($document['product']);
+        $this->assertSame(['colours:red'], $document['product']['attributes_text_values']);
+        $this->assertSame(['colours: red'], $document['content']);
+    }
+
+    public function testMultiOptionsWithOnlyRowsWithoutAnOptionKeyAddsNothing(): void
+    {
+        $document = $this->enhanceDocument(
+            [$this->optionRow('multi-1', null)],
+            [$this->multiOptionsAttribute(true)],
+        );
+
+        $this->assertIsArray($document['product']);
+        $this->assertSame([], $document['product']['attributes_text_values']);
+        $this->assertSame([], $document['content']);
+    }
+
     public function testANumberKeepsItsFilterFieldAndContent(): void
     {
         $document = $this->enhanceDocument(
@@ -129,15 +219,35 @@ class WebsiteProductAttributesReindexProviderEnhancerTest extends TestCase
     }
 
     /**
+     * A stored multi_options row: one per selected option, its value key is the option key. A row
+     * without an option is what a deleted option leaves behind.
+     *
+     * @return array{productId: string, locale: string|null, attributeUuid: string, valueKey: string, optionKey: string|null, number: float|null, text: string|null, variantSpecific: bool}
+     */
+    private function optionRow(string $attributeUuid, ?string $optionKey): array
+    {
+        return ['optionKey' => $optionKey] + $this->valueRow($attributeUuid, $optionKey ?? 'deleted', null);
+    }
+
+    /**
+     * @return array{uuid: string, key: string, type: string, filterable: bool, config: array<string, mixed>, defaultLocale: string|null}
+     */
+    private function multiOptionsAttribute(bool $filterable): array
+    {
+        return ['uuid' => 'multi-1', 'key' => 'colours', 'type' => AttributeInterface::TYPE_MULTI_OPTIONS, 'filterable' => $filterable, 'config' => [], 'defaultLocale' => null];
+    }
+
+    /**
      * Runs the enhancer for product-1 on an empty document, with the database answering the given rows.
      *
      * @param list<array<string, mixed>> $valueRows the attribute values of product-1
      * @param list<array<string, mixed>> $attributeRows the known attributes
      * @param list<array<string, mixed>> $labelRows the attribute names
+     * @param list<array<string, mixed>> $optionRows the option names
      *
      * @return array<string, mixed>
      */
-    private function enhanceDocument(array $valueRows, array $attributeRows, array $labelRows = []): array
+    private function enhanceDocument(array $valueRows, array $attributeRows, array $labelRows = [], array $optionRows = []): array
     {
         $queryBuilder = $this->prophesize(QueryBuilder::class);
         foreach (['from', 'select', 'addSelect', 'innerJoin', 'leftJoin', 'where', 'andWhere', 'setParameter'] as $method) {
@@ -148,7 +258,7 @@ class WebsiteProductAttributesReindexProviderEnhancerTest extends TestCase
         $query = $this->prophesize(Query::class);
         $query->toIterable()->willReturn($valueRows);
         // Labels, options, attributes.
-        $query->getArrayResult()->willReturn($labelRows, [], $attributeRows);
+        $query->getArrayResult()->willReturn($labelRows, $optionRows, $attributeRows);
         $queryBuilder->getQuery()->willReturn($query->reveal());
 
         $entityManager = $this->prophesize(EntityManagerInterface::class);

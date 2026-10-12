@@ -160,6 +160,20 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
                         $display = $this->translate($attribute['options'][$valueRow['optionKey']] ?? [], $locale, $attribute['defaultLocale']) ?? $valueRow['optionKey'];
                     }
                     break;
+                case AttributeInterface::TYPE_MULTI_OPTIONS:
+                    $names = [];
+                    foreach ($rows as $optionRow) {
+                        if (null === $optionRow['optionKey']) {
+                            continue;
+                        }
+
+                        if ($filterable) {
+                            $textValues[] = self::textValue($key, $optionRow['optionKey']);
+                        }
+                        $names[] = $this->translate($attribute['options'][$optionRow['optionKey']] ?? [], $locale, $attribute['defaultLocale']) ?? $optionRow['optionKey'];
+                    }
+                    $display = [] !== $names ? \implode(', ', $names) : null;
+                    break;
                 case AttributeInterface::TYPE_TEXT:
                     $display = $valueRow['text'];
                     break;

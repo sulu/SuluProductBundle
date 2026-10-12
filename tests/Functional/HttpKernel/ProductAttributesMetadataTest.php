@@ -19,6 +19,8 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Product\Domain\Model\AttributeGroupTranslation;
 use Sulu\Product\Domain\Model\AttributeInterface;
+use Sulu\Product\Domain\Model\AttributeOption;
+use Sulu\Product\Domain\Model\AttributeOptionTranslation;
 use Sulu\Product\Domain\Model\AttributeTranslation;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
@@ -224,6 +226,57 @@ class ProductAttributesMetadataTest extends SuluTestCase
         }
     }
 
+    #[DataProvider('provideRequired')]
+    public function testMultiOptionsAttributeIsAMultiSelectOfItsOptions(bool $required): void
+    {
+        $colours = $this->createAttribute('colours', 'Colours', 'Appearance', [], AttributeInterface::TYPE_MULTI_OPTIONS, ['red' => 'Red', 'blue' => 'Blue']);
+        $familyId = $this->createFamily([['id' => $colours->getUuid(), 'required' => $required, 'variantSpecific' => false]]);
+
+        $this->client->request('GET', '/admin/metadata/form/product_attributes?productFamily=' . $familyId . '&locale=en');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        /** @var array{form: array<string, array{items: array<string, array{type: string, label: string, required: bool, options: array{values: array{value: list<array{name: string, title: string}>}}}>}>} $data */
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $group = \reset($data['form']);
+        $this->assertNotFalse($group);
+        $this->assertSame(['attribute_' . $colours->getUuid()], \array_keys($group['items']));
+
+        $field = $group['items']['attribute_' . $colours->getUuid()];
+        $this->assertSame('select', $field['type']);
+        $this->assertSame('Colours', $field['label']);
+        $this->assertSame($required, $field['required']);
+        $this->assertSame(
+            [['name' => 'red', 'title' => 'Red'], ['name' => 'blue', 'title' => 'Blue']],
+            \array_map(
+                static fn (array $option): array => ['name' => $option['name'], 'title' => $option['title']],
+                $field['options']['values']['value'],
+            ),
+        );
+    }
+
+    public function testDetailsFormSchemaOnlyRequiresAMandatoryMultiOptionsToBePresent(): void
+    {
+        $required = $this->createAttribute('colours', 'Colours', 'Appearance', [], AttributeInterface::TYPE_MULTI_OPTIONS, ['red' => 'Red']);
+        $optional = $this->createAttribute('finishes', 'Finishes', 'Appearance', [], AttributeInterface::TYPE_MULTI_OPTIONS, ['matte' => 'Matte']);
+        $this->createFamily([
+            ['id' => $required->getUuid(), 'required' => true, 'variantSpecific' => false],
+            ['id' => $optional->getUuid(), 'required' => false, 'variantSpecific' => false],
+        ]);
+
+        $this->client->request('GET', '/admin/metadata/form/product_details');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+        /** @var array{schema: mixed} $details */
+        $details = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $encoded = \json_encode($details['schema']) ?: '';
+
+        // The select field has no property mapper: the schema only demands a required selection to be present.
+        $this->assertStringContainsString(
+            '"attributes":{"type":"object","required":["' . $required->getUuid() . '"]}',
+            $encoded,
+        );
+        $this->assertStringNotContainsString($optional->getUuid(), $encoded);
+    }
+
     public function testNumberAttributeStaysAPlainField(): void
     {
         $weight = $this->createAttribute('weight', 'Weight', 'Dimensions', ['unit' => 'KILOGRAM'], AttributeInterface::TYPE_NUMBER);
@@ -303,8 +356,9 @@ class ProductAttributesMetadataTest extends SuluTestCase
 
     /**
      * @param array<string, mixed> $config
+     * @param array<string, string> $options option key => english name
      */
-    private function createAttribute(string $key, string $name, string $groupName, array $config = [], string $type = AttributeInterface::TYPE_TEXT): AttributeInterface
+    private function createAttribute(string $key, string $name, string $groupName, array $config = [], string $type = AttributeInterface::TYPE_TEXT, array $options = []): AttributeInterface
     {
         $container = self::getContainer();
 
@@ -326,6 +380,11 @@ class ProductAttributesMetadataTest extends SuluTestCase
         $attribute->setConfig($config);
         $attribute->setDefaultLocale('en');
         $attribute->addTranslation(new AttributeTranslation($attribute, 'en', $name));
+        foreach ($options as $optionKey => $optionName) {
+            $option = new AttributeOption($attribute, $optionKey);
+            $option->addTranslation(new AttributeOptionTranslation($option, 'en', $optionName));
+            $attribute->addOption($option);
+        }
         $attributeRepository->save($attribute);
 
         $entityManager->flush();

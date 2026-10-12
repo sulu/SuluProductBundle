@@ -388,6 +388,11 @@ class ProductResolver implements ResolverInterface
         $attributes = [];
 
         foreach ($this->attributeValueConverter->readAll($dimensionContent->getAttributes()) as $attributeValue) {
+            // The admin API has a boolean as the string "true" or "false"; "false" would be truthy in a template.
+            if (AttributeInterface::TYPE_BOOLEAN === $attributeValue['attribute']->getType() && \is_string($attributeValue['value'])) {
+                $attributeValue['value'] = AttributeValueConverter::TRUE === $attributeValue['value'];
+            }
+
             $attributes[$attributeValue['attribute']->getKey()] = $attributeValue;
         }
 

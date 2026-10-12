@@ -276,6 +276,39 @@ class ProductControllerTest extends SuluTestCase
         return $attribute->getUuid();
     }
 
+    /**
+     * @param array<string, string> $options the names by option key
+     */
+    private function createMultiOptionsAttribute(string $key = 'colours', array $options = ['red' => 'Red', 'blue' => 'Blue', 'green' => 'Green']): string
+    {
+        $container = self::getContainer();
+
+        /** @var AttributeGroupRepositoryInterface $groupRepository */
+        $groupRepository = $container->get(AttributeGroupRepositoryInterface::class);
+        /** @var AttributeRepositoryInterface $attributeRepository */
+        $attributeRepository = $container->get(AttributeRepositoryInterface::class);
+        /** @var EntityManagerInterface $em */
+        $em = $container->get('doctrine.orm.entity_manager');
+
+        $group = $groupRepository->createNew();
+        $groupRepository->save($group);
+
+        $attribute = $attributeRepository->createNew($group);
+        $attribute->setKey($key);
+        $attribute->setType(AttributeInterface::TYPE_MULTI_OPTIONS);
+        $attribute->addTranslation(new AttributeTranslation($attribute, 'en', 'Colours'));
+        foreach ($options as $optionKey => $name) {
+            $option = new AttributeOption($attribute, $optionKey);
+            $option->addTranslation(new AttributeOptionTranslation($option, 'en', $name));
+            $attribute->addOption($option);
+        }
+        $attributeRepository->save($attribute);
+
+        $em->flush();
+
+        return $attribute->getUuid();
+    }
+
     public function testGetEmptyList(): void
     {
         self::purgeDatabase();
@@ -864,6 +897,342 @@ class ProductControllerTest extends SuluTestCase
         $this->assertEquals(['from' => 10.0, 'to' => null], $this->getAttributeValue($id, 'en', $attributeId));
     }
 
+    public function testMultiOptionsAttributeValueRoundTripsAsAListStoredOneRowPerOption(): void
+    {
+        self::purgeDatabase();
+        $attributeId = $this->createMultiOptionsAttribute();
+        $familyId = $this->createProductFamily($attributeId, false);
+        $id = $this->createProduct($familyId);
+
+        $this->assertNull($this->getAttributeValue($id, 'en', $attributeId));
+
+        $this->putAttributes($id, 'en', [$attributeId => ['red', 'blue']]);
+
+        $this->assertEqualsCanonicalizing(['red', 'blue'], $this->getAttributeValue($id, 'en', $attributeId));
+        $this->assertSame(['blue', 'red'], $this->getStoredMultiOptionKeys($id, $attributeId, DimensionContentInterface::STAGE_DRAFT));
+        $this->assertSame([], $this->getStoredMultiOptionKeys($id, $attributeId, DimensionContentInterface::STAGE_LIVE));
+
+        $this->client->request('POST', '/admin/api/products/' . $id . '.json?locale=en&action=publish');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        $this->assertSame(['blue', 'red'], $this->getStoredMultiOptionKeys($id, $attributeId, DimensionContentInterface::STAGE_LIVE));
+    }
+
+    public function testReplacingTheSelectionOfAMultiOptionsAttributeRemovesAndAddsRows(): void
+    {
+        self::purgeDatabase();
+        $attributeId = $this->createMultiOptionsAttribute();
+        $familyId = $this->createProductFamily($attributeId, false);
+        $id = $this->createProduct($familyId);
+
+        $this->putAttributes($id, 'en', [$attributeId => ['red', 'blue']]);
+        $this->putAttributes($id, 'en', [$attributeId => ['blue', 'green']]);
+
+        $this->assertEqualsCanonicalizing(['blue', 'green'], $this->getAttributeValue($id, 'en', $attributeId));
+        $this->assertSame(['blue', 'green'], $this->getStoredMultiOptionKeys($id, $attributeId, DimensionContentInterface::STAGE_DRAFT));
+    }
+
+    /**
+     * @return iterable<string, array{mixed}>
+     */
+    public static function provideEmptyMultiOptions(): iterable
+    {
+        yield 'an empty list' => [[]];
+        yield 'null' => [null];
+    }
+
+    #[DataProvider('provideEmptyMultiOptions')]
+    public function testEmptyMultiOptionsClearsTheAttribute(mixed $empty): void
+    {
+        self::purgeDatabase();
+        $attributeId = $this->createMultiOptionsAttribute();
+        $familyId = $this->createProductFamily($attributeId, false);
+        $id = $this->createProduct($familyId);
+
+        $this->putAttributes($id, 'en', [$attributeId => ['red', 'blue']]);
+        $this->putAttributes($id, 'en', [$attributeId => $empty]);
+
+        $this->assertNull($this->getAttributeValue($id, 'en', $attributeId));
+        $this->assertSame([], $this->getStoredMultiOptionKeys($id, $attributeId, DimensionContentInterface::STAGE_DRAFT));
+    }
+
+    public function testMultiOptionsAttributeStoresDuplicatesOnce(): void
+    {
+        self::purgeDatabase();
+        $attributeId = $this->createMultiOptionsAttribute();
+        $familyId = $this->createProductFamily($attributeId, false);
+        $id = $this->createProduct($familyId);
+
+        $this->putAttributes($id, 'en', [$attributeId => ['red', 'blue', 'red']]);
+
+        $this->assertEqualsCanonicalizing(['red', 'blue'], $this->getAttributeValue($id, 'en', $attributeId));
+        $this->assertSame(['blue', 'red'], $this->getStoredMultiOptionKeys($id, $attributeId, DimensionContentInterface::STAGE_DRAFT));
+    }
+
+    /**
+     * @return iterable<string, array{mixed}>
+     */
+    public static function provideInvalidMultiOptions(): iterable
+    {
+        yield 'an unknown option' => [['red', 'purple']];
+        yield 'only an unknown option' => [['purple']];
+        yield 'a string' => ['red'];
+        yield 'an object' => [['a' => 'red']];
+        yield 'a number in the list' => [[1]];
+        yield 'a nested list' => [[['red']]];
+        yield 'a boolean' => [true];
+    }
+
+    #[DataProvider('provideInvalidMultiOptions')]
+    public function testInvalidMultiOptionsReturns400AndKeepsTheValue(mixed $invalid): void
+    {
+        self::purgeDatabase();
+        $attributeId = $this->createMultiOptionsAttribute();
+        $familyId = $this->createProductFamily($attributeId, false);
+        $id = $this->createProduct($familyId);
+        $this->putAttributes($id, 'en', [$attributeId => ['red', 'blue']]);
+
+        $this->client->request(
+            'PUT',
+            '/admin/api/products/' . $id . '.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode(['locale' => 'en', 'attributes' => [$attributeId => $invalid]]) ?: null,
+        );
+
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(400, $response);
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertArrayHasKey('detail', $data);
+
+        $this->assertEqualsCanonicalizing(['red', 'blue'], $this->getAttributeValue($id, 'en', $attributeId));
+        $this->assertSame(['blue', 'red'], $this->getStoredMultiOptionKeys($id, $attributeId, DimensionContentInterface::STAGE_DRAFT));
+    }
+
+    public function testRequiredMultiOptionsNeedsAtLeastOneSelectedOption(): void
+    {
+        self::purgeDatabase();
+        $attributeId = $this->createMultiOptionsAttribute();
+        $familyId = $this->createProductFamily($attributeId);
+
+        foreach ([[$attributeId => []], [$attributeId => null], []] as $attributes) {
+            $this->client->request(
+                'POST',
+                '/admin/api/products.json?locale=en',
+                [],
+                [],
+                [],
+                \json_encode(\array_filter([
+                    'locale' => 'en',
+                    'title' => 'My Product',
+                    'url' => '/post-multi-options-without-selection',
+                    'productFamily' => $familyId,
+                    'attributes' => $attributes ?: null,
+                ], static fn ($value) => null !== $value)) ?: null,
+            );
+            $this->assertHttpStatusCode(422, $this->client->getResponse());
+        }
+
+        $id = $this->createProduct($familyId, attributes: [$attributeId => ['green']]);
+        $this->assertEqualsCanonicalizing(['green'], $this->getAttributeValue($id, 'en', $attributeId));
+
+        foreach ([null, []] as $empty) {
+            $this->client->request(
+                'PUT',
+                '/admin/api/products/' . $id . '.json?locale=en',
+                [],
+                [],
+                [],
+                \json_encode(['locale' => 'en', 'attributes' => [$attributeId => $empty]]) ?: null,
+            );
+            $this->assertHttpStatusCode(422, $this->client->getResponse());
+        }
+
+        $this->putAttributes($id, 'en', [$attributeId => ['blue']]);
+        $this->assertEqualsCanonicalizing(['blue'], $this->getAttributeValue($id, 'en', $attributeId));
+    }
+
+    public function testRenamingAnOptionKeyKeepsTheSelectionOfAMultiOptionsAttribute(): void
+    {
+        self::purgeDatabase();
+        $attributeId = $this->createMultiOptionsAttribute();
+        $familyId = $this->createProductFamily($attributeId, false);
+        $id = $this->createProduct($familyId);
+        $this->putAttributes($id, 'en', [$attributeId => ['red', 'blue']]);
+
+        $this->client->request('GET', '/admin/api/attributes/' . $attributeId . '.json?locale=en');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+        /** @var array{key: string, name: string, type: string, options: list<array{id: string, key: string, name: string}>} $data */
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        foreach ($data['options'] as $index => $option) {
+            if ('blue' === $option['key']) {
+                $data['options'][$index]['key'] = 'navy';
+            }
+        }
+        $this->client->request(
+            'PUT',
+            '/admin/api/attributes/' . $attributeId . '.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode(['locale' => 'en', 'key' => $data['key'], 'name' => $data['name'], 'type' => $data['type'], 'options' => $data['options']]) ?: null,
+        );
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        $this->assertEqualsCanonicalizing(['red', 'navy'], $this->getAttributeValue($id, 'en', $attributeId));
+
+        $this->putAttributes($id, 'en', [$attributeId => ['navy', 'green']]);
+        $this->assertEqualsCanonicalizing(['navy', 'green'], $this->getAttributeValue($id, 'en', $attributeId));
+        $this->assertSame(['green', 'navy'], $this->getStoredMultiOptionKeys($id, $attributeId, DimensionContentInterface::STAGE_DRAFT));
+    }
+
+    public function testDeletingAnOptionRemovesItFromTheSelectionOfAMultiOptionsAttribute(): void
+    {
+        self::purgeDatabase();
+        $attributeId = $this->createMultiOptionsAttribute();
+        $familyId = $this->createProductFamily($attributeId, false);
+        $id = $this->createProduct($familyId);
+        $this->putAttributes($id, 'en', [$attributeId => ['red', 'blue']]);
+
+        $this->client->request('GET', '/admin/api/attributes/' . $attributeId . '.json?locale=en');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+        /** @var array{key: string, name: string, type: string, options: list<array{id: string, key: string, name: string}>} $data */
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $options = \array_values(\array_filter($data['options'], static fn (array $option): bool => 'blue' !== $option['key']));
+        $this->client->request(
+            'PUT',
+            '/admin/api/attributes/' . $attributeId . '.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode(['locale' => 'en', 'key' => $data['key'], 'name' => $data['name'], 'type' => $data['type'], 'options' => $options]) ?: null,
+        );
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        $this->assertEqualsCanonicalizing(['red'], $this->getAttributeValue($id, 'en', $attributeId));
+    }
+
+    public function testOptionsDifferingOnlyInCaseAreStoredAsSeparateRows(): void
+    {
+        self::purgeDatabase();
+        $attributeId = $this->createMultiOptionsAttribute('sizes', ['XL' => 'XL', 'xl' => 'xl']);
+        $familyId = $this->createProductFamily($attributeId, false);
+        $id = $this->createProduct($familyId);
+
+        $this->putAttributes($id, 'en', [$attributeId => ['XL', 'xl']]);
+
+        $this->assertEqualsCanonicalizing(['XL', 'xl'], $this->getAttributeValue($id, 'en', $attributeId));
+        $this->assertEqualsCanonicalizing(['XL', 'xl'], $this->getStoredMultiOptionKeys($id, $attributeId, DimensionContentInterface::STAGE_DRAFT));
+
+        $this->client->request('POST', '/admin/api/products/' . $id . '.json?locale=en&action=publish');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+        $this->assertEqualsCanonicalizing(['XL', 'xl'], $this->getStoredMultiOptionKeys($id, $attributeId, DimensionContentInterface::STAGE_LIVE));
+    }
+
+    public function testSwitchingToAnOptionDifferingOnlyInCaseInsertsAndDeletesInOneRequest(): void
+    {
+        self::purgeDatabase();
+        $attributeId = $this->createMultiOptionsAttribute('sizes', ['XL' => 'XL', 'xl' => 'xl']);
+        $familyId = $this->createProductFamily($attributeId, false);
+        $id = $this->createProduct($familyId);
+        $this->putAttributes($id, 'en', [$attributeId => ['XL']]);
+
+        $this->putAttributes($id, 'en', [$attributeId => ['xl']]);
+
+        $this->assertSame(['xl'], $this->getAttributeValue($id, 'en', $attributeId));
+        $this->assertSame(['xl'], $this->getStoredMultiOptionKeys($id, $attributeId, DimensionContentInterface::STAGE_DRAFT));
+    }
+
+    public function testRenamingAnOptionKeyOnlyInCaseKeepsTheSelectionAndAcceptsTheNewKey(): void
+    {
+        self::purgeDatabase();
+        $attributeId = $this->createMultiOptionsAttribute();
+        $familyId = $this->createProductFamily($attributeId, false);
+        $id = $this->createProduct($familyId);
+        $this->putAttributes($id, 'en', [$attributeId => ['red']]);
+
+        $this->renameAttributeOption($attributeId, 'red', 'Red');
+
+        $this->assertSame(['Red'], $this->getAttributeValue($id, 'en', $attributeId));
+
+        $this->putAttributes($id, 'en', [$attributeId => ['Red']]);
+
+        $this->assertSame(['Red'], $this->getAttributeValue($id, 'en', $attributeId));
+        $this->assertSame(['Red'], $this->getStoredMultiOptionKeys($id, $attributeId, DimensionContentInterface::STAGE_DRAFT));
+
+        $this->client->request('POST', '/admin/api/products/' . $id . '.json?locale=en&action=publish');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+        $this->assertSame(['Red'], $this->getStoredMultiOptionKeys($id, $attributeId, DimensionContentInterface::STAGE_LIVE));
+    }
+
+    public function testRequiredMultiOptionsWhoseSelectedOptionWasDeletedIsMissing(): void
+    {
+        self::purgeDatabase();
+        $attributeId = $this->createMultiOptionsAttribute();
+        $familyId = $this->createProductFamily($attributeId);
+        $id = $this->createProduct($familyId, attributes: [$attributeId => ['red']]);
+
+        $this->deleteAttributeOption($attributeId, 'red');
+        $this->assertNull($this->getAttributeValue($id, 'en', $attributeId));
+
+        $this->client->request(
+            'PUT',
+            '/admin/api/products/' . $id . '.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode(['locale' => 'en', 'title' => 'Renamed', 'attributes' => []]) ?: null,
+        );
+        $this->assertHttpStatusCode(422, $this->client->getResponse());
+
+        $this->putAttributes($id, 'en', [$attributeId => ['blue']]);
+        $this->assertSame(['blue'], $this->getAttributeValue($id, 'en', $attributeId));
+    }
+
+    private function renameAttributeOption(string $attributeId, string $from, string $to): void
+    {
+        $this->putAttributeOptions($attributeId, static function(array $options) use ($from, $to): array {
+            foreach ($options as $index => $option) {
+                if ($from === $option['key']) {
+                    $options[$index]['key'] = $to;
+                }
+            }
+
+            return $options;
+        });
+    }
+
+    private function deleteAttributeOption(string $attributeId, string $key): void
+    {
+        $this->putAttributeOptions(
+            $attributeId,
+            static fn (array $options): array => \array_values(\array_filter($options, static fn (array $option): bool => $key !== $option['key'])),
+        );
+    }
+
+    /**
+     * @param callable(list<array{id: string, key: string, name: string}>): list<array{id: string, key: string, name: string}> $change
+     */
+    private function putAttributeOptions(string $attributeId, callable $change): void
+    {
+        $this->client->request('GET', '/admin/api/attributes/' . $attributeId . '.json?locale=en');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+        /** @var array{key: string, name: string, type: string, options: list<array{id: string, key: string, name: string}>} $data */
+        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
+
+        $this->client->request(
+            'PUT',
+            '/admin/api/attributes/' . $attributeId . '.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode(['locale' => 'en', 'key' => $data['key'], 'name' => $data['name'], 'type' => $data['type'], 'options' => $change($data['options'])]) ?: null,
+        );
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+    }
+
     /**
      * The values stored for the attribute of the draft, by value key.
      *
@@ -892,6 +1261,41 @@ class ProductControllerTest extends SuluTestCase
             ->getArrayResult();
 
         return \array_column($rows, 'number', 'valueKey');
+    }
+
+    /**
+     * The option keys of the rows stored for the attribute, sorted; every row is named by the uuid of its option.
+     *
+     * @return list<string>
+     */
+    private function getStoredMultiOptionKeys(string $id, string $attributeId, string $stage): array
+    {
+        /** @var EntityManagerInterface $em */
+        $em = self::getContainer()->get('doctrine.orm.entity_manager');
+        $em->clear();
+
+        /** @var list<array{valueKey: string, optionUuid: string, optionKey: string}> $rows */
+        $rows = $em->createQueryBuilder()
+            ->select('attributeValue.valueKey AS valueKey', 'attributeOption.uuid AS optionUuid', 'attributeOption.key AS optionKey')
+            ->from(ProductAttributeValue::class, 'attributeValue')
+            ->innerJoin('attributeValue.productDimensionContent', 'dimensionContent')
+            ->innerJoin('dimensionContent.product', 'product')
+            ->innerJoin('attributeValue.attributeOption', 'attributeOption')
+            ->where('product.uuid = :uuid')
+            ->andWhere('dimensionContent.stage = :stage')
+            ->andWhere('IDENTITY(attributeValue.attribute) = :attributeId')
+            ->setParameter('uuid', $id)
+            ->setParameter('stage', $stage)
+            ->setParameter('attributeId', $attributeId)
+            ->orderBy('attributeOption.key')
+            ->getQuery()
+            ->getArrayResult();
+
+        foreach ($rows as $row) {
+            $this->assertSame($row['optionUuid'], $row['valueKey']);
+        }
+
+        return \array_column($rows, 'optionKey');
     }
 
     private function getStoredOptionKey(string $id, string $attributeId, string $stage): ?string
