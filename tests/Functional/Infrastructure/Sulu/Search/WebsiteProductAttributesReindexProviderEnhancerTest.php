@@ -166,6 +166,30 @@ class WebsiteProductAttributesReindexProviderEnhancerTest extends SuluTestCase
         $this->assertContains('Colour: Red', $document['content']);
     }
 
+    public function testARangeIsOnlySearchable(): void
+    {
+        self::purgeDatabase();
+
+        $temperatureId = $this->createAttribute('temperature', 'Temperature', AttributeInterface::TYPE_RANGE, false, [], ['unit' => 'CELSIUS']);
+        $lengthId = $this->createAttribute('length', 'Length', AttributeInterface::TYPE_RANGE, false);
+        $familyId = $this->createProductFamily([$temperatureId => [], $lengthId => []]);
+        $productId = $this->createProduct($familyId, 'Cable', ProductInterface::TYPE_PRODUCT);
+        $this->putAttributes($productId, [$temperatureId => ['from' => -20, 'to' => 60], $lengthId => ['from' => 1.5]]);
+        $this->publish($productId);
+
+        /** @var EngineInterface $engine */
+        $engine = self::getContainer()->get('cmsig_seal.engine.default');
+
+        $document = $engine->getDocument('website', 'products__' . $productId . '__en');
+        $product = $document['product'];
+        $this->assertIsArray($product);
+        $this->assertSame([], $product['attributes_numeric_values']);
+        $this->assertSame([], $product['attributes_text_values']);
+        $this->assertIsArray($document['content']);
+        $this->assertContains('Temperature: -20 – 60 °C', $document['content']);
+        $this->assertContains('Length: ≥ 1.5', $document['content']);
+    }
+
     public function testABooleanAddsItsLabelOnlyWhenTrue(): void
     {
         self::purgeDatabase();

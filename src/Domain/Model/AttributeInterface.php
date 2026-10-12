@@ -22,6 +22,7 @@ interface AttributeInterface extends AuditableInterface
     public const TYPE_OPTIONS = 'options';
     public const TYPE_DATE = 'date';
     public const TYPE_BOOLEAN = 'boolean';
+    public const TYPE_RANGE = 'range';
 
     public const RESOURCE_KEY = 'attributes';
     public const FORM_KEY = 'attribute_details';

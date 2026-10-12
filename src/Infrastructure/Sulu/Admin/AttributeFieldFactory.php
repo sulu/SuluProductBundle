@@ -16,10 +16,17 @@ namespace Sulu\Product\Infrastructure\Sulu\Admin;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataLoaderInterface;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\ItemMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\SectionMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\AnyOfsMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\NullMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\ObjectMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadataMapperRegistry;
 use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
 use Sulu\Product\Domain\Measurement\MeasurementRegistry;
+use Sulu\Product\Domain\Model\AttributeInterface;
+use Sulu\Product\Domain\Model\AttributeTranslationInterface;
 use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
 
 /**
@@ -57,72 +64,123 @@ class AttributeFieldFactory
 
     /**
      * The JSON schema of the attribute's value, keyed by attribute uuid like the submitted values.
+     * An attribute with several fields is an object of them, none of which is required itself: a
+     * required attribute only needs the object, the data mapper asks for at least one value.
      *
      * @return PropertyMetadata|null null when the attribute has no field
      */
     public function buildSchemaProperty(ProductFamilyAttributeInterface $familyAttribute, string $locale, string $productType): ?PropertyMetadata
     {
-        $field = $this->buildField($familyAttribute, $locale, $productType, $familyAttribute->getAttribute()->getUuid());
-        if (null === $field) {
+        $uuid = $familyAttribute->getAttribute()->getUuid();
+        $fields = $this->buildFields($familyAttribute, $locale, $productType, $uuid);
+
+        if ([] === $fields) {
             return null;
         }
 
+        if (1 === \count($fields)) {
+            return $this->mapField($fields[0]);
+        }
+
+        $properties = [];
+        foreach ($fields as $field) {
+            $field->setRequired(false);
+            $properties[] = $this->mapField($field);
+        }
+
+        $object = new ObjectMetadata($properties);
+        $required = $familyAttribute->isRequiredFor($productType);
+
+        return new PropertyMetadata($uuid, $required, $required ? $object : new AnyOfsMetadata([new NullMetadata(), $object]));
+    }
+
+    /**
+     * One field, or a section of the fields for an attribute whose form fragment has several.
+     *
+     * @return FieldMetadata|SectionMetadata|null null when the attribute's type is unknown or has no form fragment
+     */
+    public function build(ProductFamilyAttributeInterface $familyAttribute, string $locale, string $productType): FieldMetadata|SectionMetadata|null
+    {
+        $name = self::NAME_PREFIX . $familyAttribute->getAttribute()->getUuid();
+        $fields = $this->buildFields($familyAttribute, $locale, $productType, $name);
+
+        if (\count($fields) <= 1) {
+            return $fields[0] ?? null;
+        }
+
+        $attribute = $familyAttribute->getAttribute();
+        $section = new SectionMetadata($name);
+        $section->setLabel($this->buildLabel($this->getName($attribute, $locale), $attribute->getConfig()), $locale);
+
+        foreach ($fields as $field) {
+            $section->addItem($field);
+        }
+
+        return $section;
+    }
+
+    /**
+     * The fields of the attribute type's form fragment, configured for the attribute. A single one
+     * is named and labelled after the attribute, several keep the names and labels of the fragment.
+     *
+     * @return list<FieldMetadata>
+     */
+    private function buildFields(
+        ProductFamilyAttributeInterface $familyAttribute,
+        string $locale,
+        string $productType,
+        string $name,
+    ): array {
+        $attribute = $familyAttribute->getAttribute();
+
+        if (!$this->attributeTypeRegistry->has($attribute->getType())) {
+            return [];
+        }
+
+        $type = $this->attributeTypeRegistry->get($attribute->getType());
+        $templates = $this->resolveTemplateFields('product_attribute_' . $attribute->getType(), $locale);
+        $single = 1 === \count($templates);
+
+        $fields = [];
+        foreach ($templates as $template) {
+            $field = $this->cloneFieldWithName($template, $single ? $name : $template->getName());
+            $field->setRequired($familyAttribute->isRequiredFor($productType));
+
+            if ($single) {
+                $field->setLabel($this->buildLabel($this->getName($attribute, $locale), $attribute->getConfig()), $locale);
+
+                $description = $this->getTranslation($attribute, $locale)?->getDescription();
+                if (null !== $description) {
+                    $field->setDescription(\strip_tags($description), $locale);
+                }
+            } elseif (null !== $label = $template->getLabel($locale)) {
+                $field->setLabel($label, $locale);
+            }
+
+            $type->configureField($field, $attribute, $locale);
+
+            $fields[] = $field;
+        }
+
+        return $fields;
+    }
+
+    private function mapField(FieldMetadata $field): PropertyMetadata
+    {
         return $this->propertyMetadataMapperRegistry->has($field->getType())
             ? $this->propertyMetadataMapperRegistry->get($field->getType())->mapPropertyMetadata($field)
             : new PropertyMetadata($field->getName(), $field->isRequired());
     }
 
-    /**
-     * @return FieldMetadata|null null when the attribute's type is unknown or has no form fragment
-     */
-    public function build(ProductFamilyAttributeInterface $familyAttribute, string $locale, string $productType): ?FieldMetadata
+    private function getTranslation(AttributeInterface $attribute, string $locale): ?AttributeTranslationInterface
     {
-        return $this->buildField(
-            $familyAttribute,
-            $locale,
-            $productType,
-            self::NAME_PREFIX . $familyAttribute->getAttribute()->getUuid(),
-        );
+        return $attribute->getTranslation($locale)
+            ?? (($defaultLocale = $attribute->getDefaultLocale()) !== null ? $attribute->getTranslation($defaultLocale) : null);
     }
 
-    /**
-     * @return FieldMetadata|null null when the attribute's type is unknown or has no form fragment
-     */
-    private function buildField(
-        ProductFamilyAttributeInterface $familyAttribute,
-        string $locale,
-        string $productType,
-        string $name,
-    ): ?FieldMetadata {
-        $attribute = $familyAttribute->getAttribute();
-
-        if (!$this->attributeTypeRegistry->has($attribute->getType())) {
-            return null;
-        }
-
-        $type = $this->attributeTypeRegistry->get($attribute->getType());
-
-        $template = $this->resolveTemplateField('product_attribute_' . $attribute->getType(), $locale);
-
-        if (null === $template) {
-            return null;
-        }
-
-        $translation = $attribute->getTranslation($locale)
-            ?? (($defaultLocale = $attribute->getDefaultLocale()) !== null ? $attribute->getTranslation($defaultLocale) : null);
-
-        $field = $this->cloneFieldWithName($template, $name);
-        $field->setLabel($this->buildLabel($translation?->getName() ?? $attribute->getKey(), $attribute->getConfig()), $locale);
-        $field->setRequired($familyAttribute->isRequiredFor($productType));
-
-        $description = $translation?->getDescription();
-        if (null !== $description) {
-            $field->setDescription(\strip_tags($description), $locale);
-        }
-
-        $type->configureField($field, $attribute, $locale);
-
-        return $field;
+    private function getName(AttributeInterface $attribute, string $locale): string
+    {
+        return $this->getTranslation($attribute, $locale)?->getName() ?? $attribute->getKey();
     }
 
     /**
@@ -140,20 +198,20 @@ class AttributeFieldFactory
         return $name . ' (' . $unit->getSymbol() . ')';
     }
 
-    private function resolveTemplateField(string $formKey, string $locale): ?FieldMetadata
+    /**
+     * @return list<FieldMetadata>
+     */
+    private function resolveTemplateFields(string $formKey, string $locale): array
     {
         $fragment = $this->formMetadataLoader->getMetadata($formKey, $locale, []);
         if (!$fragment instanceof FormMetadata) {
-            return null;
+            return [];
         }
 
-        foreach ($fragment->getItems() as $item) {
-            if ($item instanceof FieldMetadata && 'value' === $item->getName()) {
-                return $item;
-            }
-        }
-
-        return null;
+        return \array_values(\array_filter(
+            $fragment->getItems(),
+            static fn (ItemMetadata $item): bool => $item instanceof FieldMetadata,
+        ));
     }
 
     private function cloneFieldWithName(FieldMetadata $template, string $name): FieldMetadata

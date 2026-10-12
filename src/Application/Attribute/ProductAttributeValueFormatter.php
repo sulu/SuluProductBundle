@@ -37,6 +37,7 @@ class ProductAttributeValueFormatter
             AttributeInterface::TYPE_TEXT, AttributeInterface::TYPE_NUMBER => $this->applyDisplayFormat($attribute, $value),
             AttributeInterface::TYPE_DATE => $this->formatDate($attribute, $value, $locale),
             AttributeInterface::TYPE_BOOLEAN => $this->formatBoolean($value),
+            AttributeInterface::TYPE_RANGE => $this->formatRange($attribute, $value),
             default => null,
         };
     }
@@ -50,8 +51,31 @@ class ProductAttributeValueFormatter
         return $attribute->getOption($optionKey)?->getTranslation($locale)?->getName() ?? $optionKey;
     }
 
-    /** An editor can set a unit and a display format per attribute; without them the value renders bare. */
-    private function applyDisplayFormat(AttributeInterface $attribute, mixed $value): ?string
+    /**
+     * A range renders as "from – to", open on one side as "≥ from" or "≤ to". Its display format may
+     * also place each bound on its own with %from% and %to%, a missing one as empty.
+     */
+    private function formatRange(AttributeInterface $attribute, mixed $range): ?string
+    {
+        $from = \is_array($range) && \is_float($range['from'] ?? null) ? (string) $range['from'] : '';
+        $to = \is_array($range) && \is_float($range['to'] ?? null) ? (string) $range['to'] : '';
+
+        $value = match (true) {
+            '' !== $from && '' !== $to => $from . ' – ' . $to,
+            '' !== $from => '≥ ' . $from,
+            '' !== $to => '≤ ' . $to,
+            default => null,
+        };
+
+        return $this->applyDisplayFormat($attribute, $value, ['%from%' => $from, '%to%' => $to]);
+    }
+
+    /**
+     * An editor can set a unit and a display format per attribute; without them the value renders bare.
+     *
+     * @param array<string, string> $placeholders further placeholders of the type, e.g. a range's bounds
+     */
+    private function applyDisplayFormat(AttributeInterface $attribute, mixed $value, array $placeholders = []): ?string
     {
         if (!\is_string($value) && !\is_int($value) && !\is_float($value) || '' === $value) {
             return null;
@@ -67,7 +91,9 @@ class ProductAttributeValueFormatter
         $unitKey = $config['unit'] ?? null;
         $unit = \is_string($unitKey) ? $this->measurementRegistry->findUnit($unitKey) : null;
 
-        return \trim(\str_replace(['%value%', '%unit%'], [(string) $value, $unit?->getSymbol() ?? ''], $format));
+        $placeholders = ['%value%' => (string) $value, '%unit%' => $unit?->getSymbol() ?? ''] + $placeholders;
+
+        return \trim(\str_replace(\array_keys($placeholders), \array_values($placeholders), $format));
     }
 
     /**

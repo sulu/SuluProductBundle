@@ -15,6 +15,7 @@ namespace Sulu\Product\Tests\Functional\Integration;
 
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Model\AttributeInterface;
@@ -212,6 +213,32 @@ class ProductControllerTest extends SuluTestCase
         $attribute->setKey('description');
         $attribute->setType(AttributeInterface::TYPE_TEXT);
         $attribute->addTranslation(new AttributeTranslation($attribute, 'en', 'Description'));
+        $attributeRepository->save($attribute);
+
+        $em->flush();
+
+        return $attribute->getUuid();
+    }
+
+    private function createRangeAttribute(): string
+    {
+        $container = self::getContainer();
+
+        /** @var AttributeGroupRepositoryInterface $groupRepository */
+        $groupRepository = $container->get(AttributeGroupRepositoryInterface::class);
+        /** @var AttributeRepositoryInterface $attributeRepository */
+        $attributeRepository = $container->get(AttributeRepositoryInterface::class);
+        /** @var EntityManagerInterface $em */
+        $em = $container->get('doctrine.orm.entity_manager');
+
+        $group = $groupRepository->createNew();
+        $groupRepository->save($group);
+
+        $attribute = $attributeRepository->createNew($group);
+        $attribute->setKey('temperature');
+        $attribute->setType(AttributeInterface::TYPE_RANGE);
+        $attribute->setConfig(['unit' => 'CELSIUS', 'min' => -50, 'max' => 150]);
+        $attribute->addTranslation(new AttributeTranslation($attribute, 'en', 'Temperature'));
         $attributeRepository->save($attribute);
 
         $em->flush();
@@ -691,6 +718,180 @@ class ProductControllerTest extends SuluTestCase
 
         $this->assertSame('navy', $this->getStoredOptionKey($id, $attributeId, DimensionContentInterface::STAGE_DRAFT));
         $this->assertSame('navy', $this->getStoredOptionKey($id, $attributeId, DimensionContentInterface::STAGE_LIVE));
+    }
+
+    public function testRangeAttributeValueRoundTripsAsAnObject(): void
+    {
+        self::purgeDatabase();
+        $attributeId = $this->createRangeAttribute();
+        $familyId = $this->createProductFamily($attributeId, false);
+        $id = $this->createProduct($familyId);
+
+        $this->assertNull($this->getAttributeValue($id, 'en', $attributeId));
+
+        $this->putAttributes($id, 'en', [$attributeId => ['from' => -20, 'to' => 60]]);
+        $this->assertEquals(['from' => -20.0, 'to' => 60.0], $this->getAttributeValue($id, 'en', $attributeId));
+        $this->assertSame(['from' => -20.0, 'to' => 60.0], $this->getStoredRangeRows($id, $attributeId));
+
+        $this->putAttributes($id, 'en', [$attributeId => ['from' => 1.5, 'to' => 4]]);
+        $this->assertEquals(['from' => 1.5, 'to' => 4.0], $this->getAttributeValue($id, 'en', $attributeId));
+    }
+
+    public function testRangeAttributeCanBeOpenOnOneSide(): void
+    {
+        self::purgeDatabase();
+        $attributeId = $this->createRangeAttribute();
+        $familyId = $this->createProductFamily($attributeId, false);
+        $id = $this->createProduct($familyId);
+
+        $this->putAttributes($id, 'en', [$attributeId => ['from' => 5]]);
+        $this->assertEquals(['from' => 5.0, 'to' => null], $this->getAttributeValue($id, 'en', $attributeId));
+        $this->assertSame(['from' => 5.0], $this->getStoredRangeRows($id, $attributeId), 'An empty bound has no row.');
+
+        $this->putAttributes($id, 'en', [$attributeId => ['to' => 9]]);
+        $this->assertEquals(['from' => null, 'to' => 9.0], $this->getAttributeValue($id, 'en', $attributeId));
+        $this->assertSame(['to' => 9.0], $this->getStoredRangeRows($id, $attributeId), 'The bound that is no longer submitted is removed.');
+
+        $this->putAttributes($id, 'en', [$attributeId => ['from' => 0, 'to' => null]]);
+        $this->assertEquals(['from' => 0.0, 'to' => null], $this->getAttributeValue($id, 'en', $attributeId), 'Zero is a value.');
+    }
+
+    /**
+     * @return iterable<string, array{mixed}>
+     */
+    public static function provideEmptyRanges(): iterable
+    {
+        yield 'null' => [null];
+        yield 'an empty object' => [[]];
+        yield 'both bounds null' => [['from' => null, 'to' => null]];
+        yield 'an empty string' => [''];
+    }
+
+    #[DataProvider('provideEmptyRanges')]
+    public function testEmptyRangeClearsTheAttribute(mixed $empty): void
+    {
+        self::purgeDatabase();
+        $attributeId = $this->createRangeAttribute();
+        $familyId = $this->createProductFamily($attributeId, false);
+        $id = $this->createProduct($familyId);
+
+        $this->putAttributes($id, 'en', [$attributeId => ['from' => 1, 'to' => 2]]);
+        $this->putAttributes($id, 'en', [$attributeId => $empty]);
+
+        $this->assertNull($this->getAttributeValue($id, 'en', $attributeId));
+        $this->assertSame([], $this->getStoredRangeRows($id, $attributeId));
+    }
+
+    /**
+     * @return iterable<string, array{mixed}>
+     */
+    public static function provideInvalidRanges(): iterable
+    {
+        yield 'a non-numeric bound' => [['from' => 'low', 'to' => 5]];
+        yield 'a non-numeric to' => [['from' => 1, 'to' => 'high']];
+        yield 'a boolean bound' => [['from' => true]];
+        yield 'an unknown field' => [['foo' => 1]];
+        yield 'an unknown field next to a bound' => [['from' => 1, 'foo' => 2]];
+        yield 'a plain number' => [5];
+        yield 'a string' => [['text']];
+    }
+
+    #[DataProvider('provideInvalidRanges')]
+    public function testInvalidRangeReturns400AndKeepsTheValue(mixed $invalid): void
+    {
+        self::purgeDatabase();
+        $attributeId = $this->createRangeAttribute();
+        $familyId = $this->createProductFamily($attributeId, false);
+        $id = $this->createProduct($familyId);
+        $this->putAttributes($id, 'en', [$attributeId => ['from' => 1, 'to' => 2]]);
+
+        $this->client->request(
+            'PUT',
+            '/admin/api/products/' . $id . '.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode(['locale' => 'en', 'attributes' => [$attributeId => $invalid]]) ?: null,
+        );
+
+        $response = $this->client->getResponse();
+        $this->assertHttpStatusCode(400, $response);
+        $data = \json_decode((string) $response->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertArrayHasKey('detail', $data);
+
+        $this->assertEquals(['from' => 1.0, 'to' => 2.0], $this->getAttributeValue($id, 'en', $attributeId));
+    }
+
+    public function testRequiredRangeNeedsAtLeastOneBound(): void
+    {
+        self::purgeDatabase();
+        $attributeId = $this->createRangeAttribute();
+        $familyId = $this->createProductFamily($attributeId);
+
+        $this->client->request(
+            'POST',
+            '/admin/api/products.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'title' => 'My Product',
+                'url' => '/post-range-without-bound',
+                'productFamily' => $familyId,
+                'attributes' => [$attributeId => ['from' => null, 'to' => null]],
+            ]) ?: null,
+        );
+        $this->assertHttpStatusCode(422, $this->client->getResponse());
+
+        $id = $this->createProduct($familyId, attributes: [$attributeId => ['to' => 80]]);
+        $this->assertEquals(['from' => null, 'to' => 80.0], $this->getAttributeValue($id, 'en', $attributeId));
+
+        foreach ([null, [], ['from' => null, 'to' => null]] as $empty) {
+            $this->client->request(
+                'PUT',
+                '/admin/api/products/' . $id . '.json?locale=en',
+                [],
+                [],
+                [],
+                \json_encode(['locale' => 'en', 'attributes' => [$attributeId => $empty]]) ?: null,
+            );
+            $this->assertHttpStatusCode(422, $this->client->getResponse());
+        }
+
+        $this->putAttributes($id, 'en', [$attributeId => ['from' => 10]]);
+        $this->assertEquals(['from' => 10.0, 'to' => null], $this->getAttributeValue($id, 'en', $attributeId));
+    }
+
+    /**
+     * The values stored for the attribute of the draft, by value key.
+     *
+     * @return array<string, float|null>
+     */
+    private function getStoredRangeRows(string $id, string $attributeId): array
+    {
+        /** @var EntityManagerInterface $em */
+        $em = self::getContainer()->get('doctrine.orm.entity_manager');
+        $em->clear();
+
+        /** @var list<array{valueKey: string, number: float|null}> $rows */
+        $rows = $em->createQueryBuilder()
+            ->select('attributeValue.valueKey AS valueKey', 'attributeValue.number AS number')
+            ->from(ProductAttributeValue::class, 'attributeValue')
+            ->innerJoin('attributeValue.productDimensionContent', 'dimensionContent')
+            ->innerJoin('dimensionContent.product', 'product')
+            ->where('product.uuid = :uuid')
+            ->andWhere('dimensionContent.stage = :stage')
+            ->andWhere('IDENTITY(attributeValue.attribute) = :attributeId')
+            ->setParameter('uuid', $id)
+            ->setParameter('stage', DimensionContentInterface::STAGE_DRAFT)
+            ->setParameter('attributeId', $attributeId)
+            ->orderBy('attributeValue.valueKey')
+            ->getQuery()
+            ->getArrayResult();
+
+        return \array_column($rows, 'number', 'valueKey');
     }
 
     private function getStoredOptionKey(string $id, string $attributeId, string $stage): ?string

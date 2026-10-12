@@ -26,6 +26,7 @@ use Sulu\Product\Application\AttributeType\BooleanAttributeType;
 use Sulu\Product\Application\AttributeType\DateAttributeType;
 use Sulu\Product\Application\AttributeType\NumberAttributeType;
 use Sulu\Product\Application\AttributeType\OptionsAttributeType;
+use Sulu\Product\Application\AttributeType\RangeAttributeType;
 use Sulu\Product\Application\AttributeType\TextAttributeType;
 use Sulu\Product\Application\Mapper\AttributeMapper;
 use Sulu\Product\Application\Mapper\AttributeMapperInterface;
@@ -525,6 +526,13 @@ final class SuluProductBundle extends AbstractBundle
             ->class(BooleanAttributeType::class)
             ->args([
                 new Reference('translator'),
+            ])
+            ->tag('sulu_product.attribute_type');
+
+        $services->set('sulu_product.attribute_type_range')
+            ->class(RangeAttributeType::class)
+            ->args([
+                new Reference('sulu_product.attribute_type_number'),
             ])
             ->tag('sulu_product.attribute_type');
 
