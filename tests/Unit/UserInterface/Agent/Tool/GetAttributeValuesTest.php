@@ -30,6 +30,7 @@ use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductAttributeValueRepositoryInterface;
+use Sulu\Product\Tests\Unit\Support\ProductAttributeFragmentLoader;
 use Sulu\Product\UserInterface\Agent\Tool\GetAttributeValues;
 
 #[CoversClass(GetAttributeValues::class)]
@@ -54,6 +55,7 @@ class GetAttributeValuesTest extends TestCase
             $this->attributeRepository->reveal(),
             $this->productAttributeValueRepository->reveal(),
             new ProductAttributeValueFormatter(new MeasurementRegistry()),
+            ProductAttributeFragmentLoader::converter(),
         );
     }
 
@@ -236,6 +238,7 @@ class GetAttributeValuesTest extends TestCase
         $this->attributeRepository->findOneBy(['key' => 'color'])->willReturn($attribute);
 
         $option = new AttributeOption($attribute, 'red');
+        $attribute->addOption($option);
         $option->addTranslation(new AttributeOptionTranslation($option, 'en', 'Red'));
 
         $value = new ProductAttributeValue($this->dimensionContent(), $attribute, 'color');
@@ -261,6 +264,7 @@ class GetAttributeValuesTest extends TestCase
         $this->attributeRepository->findOneBy(['key' => 'color'])->willReturn($attribute);
 
         $option = new AttributeOption($attribute, 'blue');
+        $attribute->addOption($option);
 
         $value = new ProductAttributeValue($this->dimensionContent(), $attribute, 'color');
         $value->setAttributeOption($option);
@@ -349,6 +353,7 @@ class GetAttributeValuesTest extends TestCase
         $this->attributeRepository->findOneBy(['key' => 'finish'])->willReturn($attribute);
 
         $option = new AttributeOption($attribute, 'heavy_duty');
+        $attribute->addOption($option);
         $option->addTranslation(new AttributeOptionTranslation($option, 'en', 'Heavy duty'));
 
         $value = new ProductAttributeValue($this->dimensionContent(), $attribute, 'finish');

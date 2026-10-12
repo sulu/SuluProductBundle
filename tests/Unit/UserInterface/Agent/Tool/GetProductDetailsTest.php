@@ -31,6 +31,7 @@ use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Tests\Unit\Support\ProductAttributeFragmentLoader;
 use Sulu\Product\Tests\Unit\UserInterface\Agent\Tool\Fixtures\FakeRouteGenerator;
 use Sulu\Product\UserInterface\Agent\Tool\GetProductDetails;
 use Sulu\Product\UserInterface\Agent\Tool\ProductUrlGenerator;
@@ -52,6 +53,7 @@ class GetProductDetailsTest extends TestCase
         $this->getProductDetails = new GetProductDetails(
             $this->productRepository->reveal(),
             new ProductAttributeValueFormatter(new MeasurementRegistry()),
+            ProductAttributeFragmentLoader::converter(),
             new ProductUrlGenerator(new FakeRouteGenerator()),
         );
     }

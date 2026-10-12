@@ -14,9 +14,10 @@ declare(strict_types=1);
 namespace Sulu\Product\UserInterface\Agent\Tool;
 
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Product\Application\Attribute\AttributeValueConverter;
 use Sulu\Product\Application\Attribute\ProductAttributeValueFormatter;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
-use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
+use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Symfony\AI\Agent\Toolbox\Attribute\AsTool;
@@ -32,6 +33,7 @@ final class GetProductDetails
     public function __construct(
         private readonly ProductRepositoryInterface $productRepository,
         private readonly ProductAttributeValueFormatter $valueFormatter,
+        private readonly AttributeValueConverter $attributeValueConverter,
         private readonly ProductUrlGenerator $urlGenerator,
     ) {
     }
@@ -104,7 +106,7 @@ final class GetProductDetails
      * A variant holds only its own attribute values, so the parent's are merged in underneath:
      * keyed by attribute key, the variant's value wins.
      *
-     * @return list<ProductAttributeValueInterface>
+     * @return list<array{attribute: AttributeInterface, value: mixed}>
      */
     private function collectAttributeValues(ProductInterface $product, string $locale): array
     {
@@ -115,8 +117,8 @@ final class GetProductDetails
             [$localized, $unlocalized] = $this->findLiveDimensionContents($source, $locale);
 
             foreach ([$unlocalized, $localized] as $dimensionContent) {
-                foreach ($dimensionContent?->getAttributes() ?? [] as $value) {
-                    $merged[$value->getAttribute()->getKey()] = $value;
+                foreach ($this->attributeValueConverter->readAll($dimensionContent?->getAttributes() ?? []) as $attributeValue) {
+                    $merged[$attributeValue['attribute']->getKey()] = $attributeValue;
                 }
             }
         }
@@ -125,7 +127,7 @@ final class GetProductDetails
     }
 
     /**
-     * @param list<ProductAttributeValueInterface> $values
+     * @param list<array{attribute: AttributeInterface, value: mixed}> $values
      *
      * @return list<array{label: string, attributes: list<array{label: string, value: string}>}>
      */
@@ -135,9 +137,8 @@ final class GetProductDetails
         $byGroup = [];
         $groupOrder = [];
 
-        foreach ($values as $value) {
-            $attribute = $value->getAttribute();
-            $display = $this->valueFormatter->format($value, $locale);
+        foreach ($values as ['attribute' => $attribute, 'value' => $value]) {
+            $display = $this->valueFormatter->format($attribute, $value, $locale);
             if (\is_bool($display)) {
                 $display = $display ? 'true' : 'false';
             }

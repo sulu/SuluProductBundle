@@ -20,61 +20,14 @@ use Sulu\Product\Application\AttributeType\NumberAttributeType;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
-use Sulu\Product\Domain\Model\Product;
-use Sulu\Product\Domain\Model\ProductAttributeValue;
-use Sulu\Product\Domain\Model\ProductDimensionContent;
 
 #[CoversClass(NumberAttributeType::class)]
 class NumberAttributeTypeTest extends TestCase
 {
-    public function testKeyAndFormKey(): void
+    public function testKey(): void
     {
         $type = new NumberAttributeType();
         self::assertSame(AttributeInterface::TYPE_NUMBER, $type->getKey());
-        self::assertSame('product_attribute_number', $type->getFormKey());
-    }
-
-    public function testValueRoundTripUsesNumberColumn(): void
-    {
-        $type = new NumberAttributeType();
-        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
-
-        $type->writeValue($value, 42.5);
-
-        self::assertSame(42.5, $value->getNumber());
-        self::assertSame(42.5, $type->readValue($value));
-    }
-
-    public function testWriteNullClearsNumber(): void
-    {
-        $type = new NumberAttributeType();
-        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
-        $type->writeValue($value, 1.0);
-
-        $type->writeValue($value, null);
-
-        self::assertNull($value->getNumber());
-    }
-
-    public function testWriteCoercesNumericStringFromForm(): void
-    {
-        $type = new NumberAttributeType();
-        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
-
-        $type->writeValue($value, '42.5');
-
-        self::assertSame(42.5, $value->getNumber());
-    }
-
-    public function testWriteEmptyStringClearsNumber(): void
-    {
-        $type = new NumberAttributeType();
-        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
-        $type->writeValue($value, 1.0);
-
-        $type->writeValue($value, '');
-
-        self::assertNull($value->getNumber());
     }
 
     public function testConfigureFieldAddsMinMaxStepFromConfig(): void

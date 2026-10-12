@@ -18,8 +18,8 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
-use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
-use Sulu\Product\Application\AttributeType\NumberAttributeType;
+use Sulu\Product\Domain\Model\Attribute;
+use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
@@ -28,6 +28,7 @@ use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\Normalizer\ProductAttributesNormalizer;
+use Sulu\Product\Tests\Unit\Support\ProductAttributeFragmentLoader;
 
 #[CoversClass(ProductAttributesNormalizer::class)]
 class ProductAttributesNormalizerTest extends TestCase
@@ -39,7 +40,7 @@ class ProductAttributesNormalizerTest extends TestCase
     protected function setUp(): void
     {
         $this->normalizer = new ProductAttributesNormalizer(
-            new AttributeTypeRegistry([new NumberAttributeType()]),
+            ProductAttributeFragmentLoader::converter(['range' => ['from' => 'number', 'to' => 'number']]),
         );
     }
 
@@ -162,5 +163,23 @@ class ProductAttributesNormalizerTest extends TestCase
         $attributes = $result['attributes'];
         $this->assertIsArray($attributes);
         $this->assertSame(3.14, $attributes['0198c3e2-0000-7000-8000-000000000007']);
+    }
+
+    public function testEnhanceReadsTheRowsOfAMultiFieldAttributeAsOneObject(): void
+    {
+        $pdc = new ProductDimensionContent(new Product());
+        $attribute = new Attribute(new AttributeGroup());
+        $attribute->setType('range');
+
+        $from = new ProductAttributeValue($pdc, $attribute, 'range', valueKey: 'from');
+        $from->setNumber(1.5);
+        $to = new ProductAttributeValue($pdc, $attribute, 'range', valueKey: 'to');
+        $to->setNumber(4.0);
+        $pdc->addAttribute($from);
+        $pdc->addAttribute($to);
+
+        $result = $this->normalizer->enhance($pdc, []);
+
+        $this->assertSame([$attribute->getUuid() => ['from' => 1.5, 'to' => 4.0]], $result['attributes']);
     }
 }

@@ -25,8 +25,9 @@ use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductResolver;
+use Sulu\Product\Tests\Unit\Support\ProductAttributeFragmentLoader;
 
-/** Values pass through untouched; formatting and grouping are the Twig filter's own test. */
+/** Values come as the admin API has them, unformatted; formatting and grouping are the Twig filter's own test. */
 #[CoversClass(ProductResolver::class)]
 class ProductResolverAttributesTest extends ProductResolverTestCase
 {
@@ -45,7 +46,7 @@ class ProductResolverAttributesTest extends ProductResolverTestCase
         self::assertArrayNotHasKey('attributes', $this->resolveContent($content, ['title' => 'title']));
     }
 
-    public function testReturnsAFlatMapOfValuesKeyedByAttributeKey(): void
+    public function testReturnsAMapOfAttributesAndValuesKeyedByAttributeKey(): void
     {
         $content = $this->createContent();
         $this->addTextValue($content, $this->createAttribute('housing'), 'Zink');
@@ -54,8 +55,28 @@ class ProductResolverAttributesTest extends ProductResolverTestCase
         $attributes = $this->resolveAttributes($content);
 
         self::assertSame(['housing', 'weight'], \array_keys($attributes));
-        self::assertContainsOnlyInstancesOf(ProductAttributeValue::class, $attributes);
-        self::assertSame('48 g', $attributes['weight']->getText());
+        self::assertSame('48 g', $attributes['weight']['value']);
+        self::assertSame('weight', $attributes['weight']['attribute']->getKey());
+    }
+
+    public function testAMultiFieldAttributeResolvesToOneObjectOfItsValues(): void
+    {
+        $content = $this->createContent();
+        $range = $this->createAttribute('range');
+        $range->setType('range');
+        foreach (['from' => 1.5, 'to' => 4.0] as $valueKey => $number) {
+            $row = new ProductAttributeValue($content, $range, 'range', valueKey: $valueKey);
+            $row->setNumber($number);
+            $content->addAttribute($row);
+        }
+        $resolver = $this->createResolver(
+            attributeValueConverter: ProductAttributeFragmentLoader::converter(['range' => ['from' => 'number', 'to' => 'number']]),
+        );
+
+        $attributes = $this->resolveAttributes($content, $resolver);
+
+        self::assertSame(['range'], \array_keys($attributes));
+        self::assertSame(['from' => 1.5, 'to' => 4.0], $attributes['range']['value']);
     }
 
     public function testPassesEveryValueThroughWithoutFormatting(): void
@@ -132,14 +153,14 @@ class ProductResolverAttributesTest extends ProductResolverTestCase
     }
 
     /**
-     * @return array<string, ProductAttributeValue>
+     * @return array<string, array{attribute: AttributeInterface, value: mixed}>
      */
     private function resolveAttributes(ProductDimensionContent $content, ?ProductResolver $resolver = null): array
     {
         $view = $this->resolveContent($content, null, $resolver)['attributes'];
         self::assertInstanceOf(ContentView::class, $view);
 
-        /** @var array<string, ProductAttributeValue> $attributes */
+        /** @var array<string, array{attribute: AttributeInterface, value: mixed}> $attributes */
         $attributes = $view->getContent();
 
         return $attributes;

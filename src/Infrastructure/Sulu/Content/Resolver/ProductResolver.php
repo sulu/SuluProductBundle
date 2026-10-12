@@ -21,8 +21,9 @@ use Sulu\Content\Application\ContentResolver\Resolver\ResolverInterface;
 use Sulu\Content\Application\ContentResolver\Value\ContentView;
 use Sulu\Content\Application\MetadataResolver\MetadataResolver;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Product\Application\Attribute\AttributeValueConverter;
+use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\ProductAssociationInterface;
-use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
@@ -56,6 +57,7 @@ class ProductResolver implements ResolverInterface
         private readonly ProductRepositoryInterface $productRepository,
         private readonly CurrentVariantProvider $currentVariantProvider,
         private readonly ReferenceStoreInterface $referenceStore,
+        private readonly AttributeValueConverter $attributeValueConverter,
         private readonly array $variantProperties = [],
     ) {
     }
@@ -379,14 +381,14 @@ class ProductResolver implements ResolverInterface
     /**
      * Formatting and grouping are the `sulu_product_attribute_groups` Twig filter's job.
      *
-     * @return array<string, ProductAttributeValueInterface>
+     * @return array<string, array{attribute: AttributeInterface, value: mixed}>
      */
     private function getAttributesMapByKey(ProductDimensionContentInterface $dimensionContent): array
     {
         $attributes = [];
 
-        foreach ($dimensionContent->getAttributes() as $value) {
-            $attributes[$value->getAttribute()->getKey()] = $value;
+        foreach ($this->attributeValueConverter->readAll($dimensionContent->getAttributes()) as $attributeValue) {
+            $attributes[$attributeValue['attribute']->getKey()] = $attributeValue;
         }
 
         return $attributes;

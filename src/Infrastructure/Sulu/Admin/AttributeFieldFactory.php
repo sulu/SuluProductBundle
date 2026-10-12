@@ -85,7 +85,7 @@ class AttributeFieldFactory
 
         $type = $this->attributeTypeRegistry->get($attribute->getType());
 
-        $template = $this->resolveTemplateField($type->getFormKey(), $locale);
+        $template = $this->resolveTemplateField('product_attribute_' . $attribute->getType(), $locale);
 
         if (null === $template) {
             return null;

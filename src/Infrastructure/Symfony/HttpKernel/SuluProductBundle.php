@@ -18,6 +18,7 @@ use Sulu\Bundle\PersistenceBundle\DependencyInjection\PersistenceExtensionTrait;
 use Sulu\Bundle\PersistenceBundle\PersistenceBundleTrait;
 use Sulu\Content\Infrastructure\Sulu\Preview\ContentObjectProvider;
 use Sulu\Mcp\Domain\Content\ContentTypeExtensionInterface;
+use Sulu\Product\Application\Attribute\AttributeValueConverter;
 use Sulu\Product\Application\Attribute\ProductAttributeValueFormatter;
 use Sulu\Product\Application\AttributeType\AttributeTypeInterface;
 use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
@@ -645,7 +646,7 @@ final class SuluProductBundle extends AbstractBundle
         $services->set('sulu_product.product_attributes_data_mapper')
             ->class(ProductAttributesDataMapper::class)
             ->args([
-                new Reference('sulu_product.attribute_type_registry'),
+                new Reference('sulu_product.attribute_value_converter'),
             ])
             ->tag('sulu_content.data_mapper', ['priority' => -10]);
 
@@ -675,7 +676,7 @@ final class SuluProductBundle extends AbstractBundle
         $services->set('sulu_product.product_attributes_normalizer')
             ->class(ProductAttributesNormalizer::class)
             ->args([
-                new Reference('sulu_product.attribute_type_registry'),
+                new Reference('sulu_product.attribute_value_converter'),
             ])
             ->tag('sulu_content.normalizer');
 
@@ -952,6 +953,12 @@ final class SuluProductBundle extends AbstractBundle
             ->tag('sulu.context', ['context' => 'admin'])
             ->tag('sulu.admin');
 
+        $services->set('sulu_product.attribute_value_converter')
+            ->class(AttributeValueConverter::class)
+            ->args([
+                new Reference('sulu_admin.xml_form_metadata_loader'),
+            ]);
+
         $services->set('sulu_product.attribute_field_factory')
             ->class(AttributeFieldFactory::class)
             ->args([
@@ -1126,6 +1133,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.product_repository'),
                 new Reference('sulu_product.current_variant_provider'),
                 new Reference('sulu_http_cache.reference_store'),
+                new Reference('sulu_product.attribute_value_converter'),
                 '%sulu_product.variants.properties%',
             ])
             ->tag('sulu_content.content_resolver');
@@ -1486,6 +1494,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.attribute_repository'),
                 new Reference(ProductAttributeValueRepositoryInterface::class),
                 new Reference('sulu_product.product_attribute_value_formatter'),
+                new Reference('sulu_product.attribute_value_converter'),
             ]],
             'sulu_product.ai_search_products_by_attributes' => [SearchProductsByAttributes::class, [
                 new Reference('sulu_product.product_repository'),
@@ -1495,6 +1504,7 @@ final class SuluProductBundle extends AbstractBundle
             'sulu_product.ai_get_product_details' => [GetProductDetails::class, [
                 new Reference('sulu_product.product_repository'),
                 new Reference('sulu_product.product_attribute_value_formatter'),
+                new Reference('sulu_product.attribute_value_converter'),
                 new Reference('sulu_product.product_url_generator'),
             ]],
             'sulu_product.ai_get_related_products' => [GetRelatedProducts::class, [
