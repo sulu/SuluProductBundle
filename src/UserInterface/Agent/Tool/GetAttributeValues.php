@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Sulu\Product\UserInterface\Agent\Tool;
 
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Product\Application\Attribute\AttributeValueConverter;
 use Sulu\Product\Application\Attribute\ProductAttributeValueFormatter;
 use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
@@ -32,6 +33,7 @@ final class GetAttributeValues
         private readonly AttributeRepositoryInterface $attributeRepository,
         private readonly ProductAttributeValueRepositoryInterface $productAttributeValueRepository,
         private readonly ProductAttributeValueFormatter $valueFormatter,
+        private readonly AttributeValueConverter $attributeValueConverter,
     ) {
     }
 
@@ -72,7 +74,11 @@ final class GetAttributeValues
         /** @var array<string, string> $searchValues */
         $searchValues = [];
         foreach ($groups as $group) {
-            $value = $this->valueFormatter->format($group['value'], $locale);
+            $value = $this->valueFormatter->format(
+                $attribute,
+                $this->attributeValueConverter->read($attribute, [$group['value']]),
+                $locale,
+            );
             if (\is_bool($value)) {
                 $value = $value ? 'true' : 'false';
             }

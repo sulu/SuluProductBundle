@@ -99,6 +99,15 @@ Map it to a key of its own, since keys are shared across prefixes:
 </property>
 ```
 
+`product.attributes` maps each attribute key to its `attribute` and its `value`, in the shape the
+admin API uses: a number, a text, an option key, a date as `Y-m-d`, `true` or `false`, and for an
+attribute whose form has several fields an object keyed by their names.
+
+```twig
+{{ product.attributes.weight.value }}
+{{ product.attributes.weight.attribute.key }}
+```
+
 To show a variant's attributes together with its product's, merge them in the template; the
 variant's value wins on the same attribute:
 

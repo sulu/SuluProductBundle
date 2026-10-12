@@ -13,50 +13,17 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Application\AttributeType;
 
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Product\Domain\Model\AttributeInterface;
-use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
-use Webmozart\Assert\Assert;
 
-final class DateAttributeType extends AbstractAttributeType
+final class DateAttributeType implements AttributeTypeInterface
 {
-    public const FORMAT = 'Y-m-d';
-
     public function getKey(): string
     {
         return AttributeInterface::TYPE_DATE;
     }
 
-    public function getFormKey(): string
+    public function configureField(FieldMetadata $field, AttributeInterface $attribute, string $locale): void
     {
-        return 'product_attribute_date';
-    }
-
-    public function readValue(ProductAttributeValueInterface $value): mixed
-    {
-        $timestamp = $value->getNumber();
-
-        if (null === $timestamp) {
-            return null;
-        }
-
-        return (new \DateTimeImmutable('@' . (int) $timestamp))->format(self::FORMAT);
-    }
-
-    public function writeValue(ProductAttributeValueInterface $value, mixed $raw): void
-    {
-        if (null === $raw || '' === $raw) {
-            $value->setNumber(null);
-
-            return;
-        }
-
-        Assert::string($raw);
-
-        $date = \DateTimeImmutable::createFromFormat('!' . self::FORMAT, $raw, new \DateTimeZone('UTC'));
-
-        Assert::isInstanceOf($date, \DateTimeImmutable::class, \sprintf('Expected a date in format "%s", got "%s".', self::FORMAT, $raw));
-        Assert::same($date->format(self::FORMAT), $raw, \sprintf('Expected a valid date in format "%s", got "%s".', self::FORMAT, $raw));
-
-        $value->setNumber((float) $date->getTimestamp());
     }
 }

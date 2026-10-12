@@ -16,19 +16,12 @@ namespace Sulu\Product\Application\AttributeType;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\OptionMetadata;
 use Sulu\Product\Domain\Model\AttributeInterface;
-use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
-use Webmozart\Assert\Assert;
 
-final class OptionsAttributeType extends AbstractAttributeType
+final class OptionsAttributeType implements AttributeTypeInterface
 {
     public function getKey(): string
     {
         return AttributeInterface::TYPE_OPTIONS;
-    }
-
-    public function getFormKey(): string
-    {
-        return 'product_attribute_options';
     }
 
     public function configureField(FieldMetadata $field, AttributeInterface $attribute, string $locale): void
@@ -46,26 +39,5 @@ final class OptionsAttributeType extends AbstractAttributeType
         }
 
         $field->addOption($values);
-    }
-
-    public function readValue(ProductAttributeValueInterface $value): mixed
-    {
-        return $value->getAttributeOptionKey();
-    }
-
-    public function writeValue(ProductAttributeValueInterface $value, mixed $raw): void
-    {
-        if (null === $raw || '' === $raw) {
-            $value->setAttributeOption(null);
-
-            return;
-        }
-
-        Assert::string($raw);
-
-        $option = $value->getAttribute()->getOption($raw);
-        Assert::notNull($option, \sprintf('Attribute "%s" has no option "%s".', $value->getAttributeKey(), $raw));
-
-        $value->setAttributeOption($option);
     }
 }

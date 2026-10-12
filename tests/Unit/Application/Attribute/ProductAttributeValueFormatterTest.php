@@ -22,8 +22,6 @@ use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeOption;
 use Sulu\Product\Domain\Model\AttributeOptionTranslation;
-use Sulu\Product\Domain\Model\Product;
-use Sulu\Product\Domain\Model\ProductAttributeValue;
 
 #[CoversClass(ProductAttributeValueFormatter::class)]
 class ProductAttributeValueFormatterTest extends TestCase
@@ -35,84 +33,107 @@ class ProductAttributeValueFormatterTest extends TestCase
         $this->formatter = new ProductAttributeValueFormatter(new MeasurementRegistry());
     }
 
-    private function value(string $type, string $key = 'attribute'): ProductAttributeValue
+    private function attribute(string $type): Attribute
     {
         $attribute = new Attribute(new AttributeGroup());
-        $attribute->setKey($key);
+        $attribute->setKey('attribute');
         $attribute->setType($type);
 
-        return new ProductAttributeValue((new Product())->createDimensionContent(), $attribute, $key);
+        return $attribute;
     }
 
     public function testNumberWithDisplayFormatAndUnit(): void
     {
-        $value = $this->value(AttributeInterface::TYPE_NUMBER);
-        $value->getAttribute()->setConfig(['displayFormat' => '%value% %unit%', 'unit' => 'MILLIMETER']);
-        $value->setNumber(16.0);
+        $attribute = $this->attribute(AttributeInterface::TYPE_NUMBER);
+        $attribute->setConfig(['displayFormat' => '%value% %unit%', 'unit' => 'MILLIMETER']);
 
-        $this->assertSame('16 mm', $this->formatter->format($value, 'en'));
+        $this->assertSame('16 mm', $this->formatter->format($attribute, 16.0, 'en'));
     }
 
     public function testNumberWithoutDisplayFormatRendersBare(): void
     {
-        $value = $this->value(AttributeInterface::TYPE_NUMBER);
-        $value->setNumber(16.5);
+        $this->assertSame('16.5', $this->formatter->format($this->attribute(AttributeInterface::TYPE_NUMBER), 16.5, 'en'));
+    }
 
-        $this->assertSame('16.5', $this->formatter->format($value, 'en'));
+    public function testTextWithDisplayFormat(): void
+    {
+        $attribute = $this->attribute(AttributeInterface::TYPE_TEXT);
+        $attribute->setConfig(['displayFormat' => 'Size: %value%']);
+
+        $this->assertSame('Size: XL', $this->formatter->format($attribute, 'XL', 'en'));
     }
 
     public function testOptionUsesTheTranslatedNameOrFallsBackToItsKey(): void
     {
-        $value = $this->value(AttributeInterface::TYPE_OPTIONS);
-        $option = new AttributeOption($value->getAttribute(), 'red');
-        $value->setAttributeOption($option);
+        $attribute = $this->attribute(AttributeInterface::TYPE_OPTIONS);
+        $option = new AttributeOption($attribute, 'red');
+        $attribute->addOption($option);
 
-        $this->assertSame('red', $this->formatter->format($value, 'en'));
+        $this->assertSame('red', $this->formatter->format($attribute, 'red', 'en'));
 
         $option->addTranslation(new AttributeOptionTranslation($option, 'en', 'Red'));
 
-        $this->assertSame('Red', $this->formatter->format($value, 'en'));
+        $this->assertSame('Red', $this->formatter->format($attribute, 'red', 'en'));
+        $this->assertSame('red', $this->formatter->format($attribute, 'red', 'de'));
+    }
+
+    public function testUnknownOptionFallsBackToItsKey(): void
+    {
+        $this->assertSame('blue', $this->formatter->format($this->attribute(AttributeInterface::TYPE_OPTIONS), 'blue', 'en'));
+    }
+
+    public function testOptionWithoutAKeyFormatsToNull(): void
+    {
+        $attribute = $this->attribute(AttributeInterface::TYPE_OPTIONS);
+
+        $this->assertNull($this->formatter->format($attribute, null, 'en'));
+        $this->assertNull($this->formatter->format($attribute, ['red'], 'en'));
     }
 
     public function testDateIsFormattedForTheLocale(): void
     {
-        $value = $this->value(AttributeInterface::TYPE_DATE);
-        $value->setNumber((float) (new \DateTimeImmutable('2024-05-01', new \DateTimeZone('UTC')))->getTimestamp());
+        $attribute = $this->attribute(AttributeInterface::TYPE_DATE);
 
-        $this->assertSame('May 1, 2024', $this->formatter->format($value, 'en'));
+        $this->assertSame('May 1, 2024', $this->formatter->format($attribute, '2024-05-01', 'en'));
+        $this->assertSame('01.05.2024', $this->formatter->format($attribute, '2024-05-01', 'de'));
     }
 
-    public function testDateWithoutATimestampFormatsToNull(): void
+    public function testDateUsesTheDisplayFormatAsIcuPattern(): void
     {
-        $this->assertNull($this->formatter->format($this->value(AttributeInterface::TYPE_DATE), 'en'));
+        $attribute = $this->attribute(AttributeInterface::TYPE_DATE);
+        $attribute->setConfig(['displayFormat' => 'd MMMM yyyy']);
+
+        $this->assertSame('1 May 2024', $this->formatter->format($attribute, '2024-05-01', 'en'));
+        $this->assertSame('1 Mai 2024', $this->formatter->format($attribute, '2024-05-01', 'de'));
+    }
+
+    public function testDateWithoutAValueFormatsToNull(): void
+    {
+        $this->assertNull($this->formatter->format($this->attribute(AttributeInterface::TYPE_DATE), null, 'en'));
     }
 
     public function testEmptyValueFormatsToNull(): void
     {
-        $value = $this->value(AttributeInterface::TYPE_TEXT);
-        $value->setText('');
-
-        $this->assertNull($this->formatter->format($value, 'en'));
+        $this->assertNull($this->formatter->format($this->attribute(AttributeInterface::TYPE_TEXT), '', 'en'));
+        $this->assertNull($this->formatter->format($this->attribute(AttributeInterface::TYPE_TEXT), null, 'en'));
+        $this->assertNull($this->formatter->format($this->attribute(AttributeInterface::TYPE_NUMBER), null, 'en'));
     }
 
     public function testBooleanFormatsToABool(): void
     {
-        $value = $this->value(AttributeInterface::TYPE_BOOLEAN);
+        $attribute = $this->attribute(AttributeInterface::TYPE_BOOLEAN);
 
-        $value->setNumber(1.0);
-        $this->assertTrue($this->formatter->format($value, 'de'));
-
-        $value->setNumber(0.0);
-        $this->assertFalse($this->formatter->format($value, 'de'));
+        $this->assertTrue($this->formatter->format($attribute, 'true', 'de'));
+        $this->assertFalse($this->formatter->format($attribute, 'false', 'de'));
     }
 
     public function testBooleanWithoutAValueFormatsToNull(): void
     {
-        $this->assertNull($this->formatter->format($this->value(AttributeInterface::TYPE_BOOLEAN), 'en'));
+        $this->assertNull($this->formatter->format($this->attribute(AttributeInterface::TYPE_BOOLEAN), null, 'en'));
     }
 
     public function testUnknownTypeFormatsToNull(): void
     {
-        $this->assertNull($this->formatter->format($this->value('custom_boolean'), 'en'));
+        $this->assertNull($this->formatter->format($this->attribute('custom_boolean'), 'true', 'en'));
     }
 }

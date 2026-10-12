@@ -20,21 +20,24 @@ use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
-use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
-use Sulu\Product\Application\AttributeType\NumberAttributeType;
 use Sulu\Product\Domain\Exception\RequiredProductAttributeMissingException;
+use Sulu\Product\Domain\Model\Attribute;
+use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
+use Sulu\Product\Domain\Model\AttributeOption;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
+use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductFamilyAttribute;
 use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Value\ProductFamilyAttributeModeEnum;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductAttributesDataMapper;
+use Sulu\Product\Tests\Unit\Support\ProductAttributeFragmentLoader;
 
 #[CoversClass(ProductAttributesDataMapper::class)]
 class ProductAttributesDataMapperTest extends TestCase
@@ -48,7 +51,10 @@ class ProductAttributesDataMapperTest extends TestCase
     protected function setUp(): void
     {
         $this->mapper = new ProductAttributesDataMapper(
-            new AttributeTypeRegistry([new NumberAttributeType()]),
+            ProductAttributeFragmentLoader::converter([
+                'range' => ['from' => 'number', 'to' => 'number'],
+                'multi_options' => ['value' => 'multi_select'],
+            ]),
         );
     }
 
@@ -393,6 +399,159 @@ class ProductAttributesDataMapperTest extends TestCase
         $this->expectExceptionMessage('attr-1');
 
         $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [self::UUID => null]]);
+    }
+
+    public function testCreatesOneRowPerFieldOfAMultiFieldAttribute(): void
+    {
+        $fixture = $this->makeRealFixture('range');
+
+        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [$fixture['attribute']->getUuid() => ['from' => 1.5, 'to' => 9]]]);
+
+        $rows = $this->rowsByValueKey($fixture['unloc']);
+        $this->assertSame(['from', 'to'], \array_keys($rows));
+        $this->assertSame(1.5, $rows['from']->getNumber());
+        $this->assertSame(9.0, $rows['to']->getNumber());
+        $this->assertSame($fixture['familyAttribute'], $rows['from']->getProductFamilyAttribute());
+        $this->assertCount(0, $fixture['loc']->getAttributes());
+    }
+
+    public function testUpdatesCreatesAndRemovesRowsPerValueKey(): void
+    {
+        $fixture = $this->makeRealFixture('range');
+        $uuid = $fixture['attribute']->getUuid();
+        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [$uuid => ['from' => 1, 'to' => 2]]]);
+        $from = $this->rowsByValueKey($fixture['unloc'])['from'];
+
+        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [$uuid => ['from' => 5]]]);
+
+        $rows = $this->rowsByValueKey($fixture['unloc']);
+        $this->assertSame(['from'], \array_keys($rows));
+        $this->assertSame($from, $rows['from']);
+        $this->assertSame(5.0, $from->getNumber());
+
+        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [$uuid => ['from' => 5, 'to' => 7]]]);
+
+        $this->assertSame(['from', 'to'], \array_keys($this->rowsByValueKey($fixture['unloc'])));
+        $this->assertSame(7.0, $this->rowsByValueKey($fixture['unloc'])['to']->getNumber());
+
+        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [$uuid => null]]);
+
+        $this->assertCount(0, $fixture['unloc']->getAttributes());
+    }
+
+    public function testStoresALocalizedMultiFieldAttributeOnTheLocalizedDimensionContent(): void
+    {
+        $fixture = $this->makeRealFixture('range', localized: true);
+
+        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [$fixture['attribute']->getUuid() => ['from' => 1, 'to' => 2]]]);
+
+        $this->assertCount(0, $fixture['unloc']->getAttributes());
+        $this->assertSame(['from', 'to'], \array_keys($this->rowsByValueKey($fixture['loc'])));
+    }
+
+    public function testRowsOfAMultiSelectAreKeyedByOption(): void
+    {
+        $fixture = $this->makeRealFixture('multi_options');
+        $attribute = $fixture['attribute'];
+        $red = new AttributeOption($attribute, 'red');
+        $blue = new AttributeOption($attribute, 'blue');
+        $attribute->addOption($red);
+        $attribute->addOption($blue);
+        $uuid = $attribute->getUuid();
+
+        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [$uuid => ['red', 'blue']]]);
+
+        $rows = $this->rowsByValueKey($fixture['unloc']);
+        $this->assertSame(['red', 'blue'], \array_keys($rows));
+        $this->assertSame($red, $rows['red']->getAttributeOption());
+
+        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [$uuid => ['blue']]]);
+
+        $this->assertSame(['blue'], \array_keys($this->rowsByValueKey($fixture['unloc'])));
+    }
+
+    public function testInvalidValueChangesNoRow(): void
+    {
+        $fixture = $this->makeRealFixture('range');
+        $uuid = $fixture['attribute']->getUuid();
+        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [$uuid => ['from' => 1, 'to' => 2]]]);
+
+        try {
+            $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [$uuid => ['from' => 5, 'to' => 'not a number']]]);
+            $this->fail('The invalid value was accepted.');
+        } catch (\InvalidArgumentException) {
+        }
+
+        $rows = $this->rowsByValueKey($fixture['unloc']);
+        $this->assertSame(['from', 'to'], \array_keys($rows));
+        $this->assertSame(1.0, $rows['from']->getNumber());
+        $this->assertSame(2.0, $rows['to']->getNumber());
+    }
+
+    public function testRequiredMultiFieldAttributeWithoutARowThrows(): void
+    {
+        $fixture = $this->makeRealFixture('range', required: true);
+
+        $this->expectException(RequiredProductAttributeMissingException::class);
+        $this->expectExceptionMessage('range');
+
+        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [$fixture['attribute']->getUuid() => ['from' => null, 'to' => null]]]);
+    }
+
+    public function testRequiredMultiFieldAttributeWithOneRowPasses(): void
+    {
+        $fixture = $this->makeRealFixture('range', required: true);
+
+        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [$fixture['attribute']->getUuid() => ['from' => 1]]]);
+
+        $this->assertSame(['from'], \array_keys($this->rowsByValueKey($fixture['unloc'])));
+    }
+
+    /**
+     * @return array<string, ProductAttributeValueInterface>
+     */
+    private function rowsByValueKey(ProductDimensionContentInterface $dimensionContent): array
+    {
+        $rows = [];
+        foreach ($dimensionContent->getAttributes() as $row) {
+            $rows[$row->getValueKey()] = $row;
+        }
+
+        return $rows;
+    }
+
+    /**
+     * Real objects, so the rows the mapper creates, keeps and removes are the ones in the collections.
+     *
+     * @return array{
+     *     unloc: ProductDimensionContent,
+     *     loc: ProductDimensionContent,
+     *     attribute: Attribute,
+     *     familyAttribute: ProductFamilyAttribute,
+     * }
+     */
+    private function makeRealFixture(string $attributeType, bool $required = false, bool $localized = false): array
+    {
+        $attribute = new Attribute(new AttributeGroup());
+        $attribute->setKey($attributeType);
+        $attribute->setType($attributeType);
+        $attribute->setLocalized($localized);
+
+        $family = new ProductFamily();
+        $familyAttribute = new ProductFamilyAttribute($family, $attribute);
+        $familyAttribute->setRequired($required);
+        $family->addFamilyAttribute($familyAttribute);
+
+        $product = new Product();
+        $unloc = new ProductDimensionContent($product);
+        $unloc->setProductFamily($family);
+
+        return [
+            'unloc' => $unloc,
+            'loc' => new ProductDimensionContent($product),
+            'attribute' => $attribute,
+            'familyAttribute' => $familyAttribute,
+        ];
     }
 
     private function prophesizeNonVariantResource(): ProductInterface

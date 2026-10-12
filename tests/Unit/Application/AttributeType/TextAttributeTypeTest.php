@@ -15,43 +15,27 @@ namespace Sulu\Product\Tests\Unit\Application\AttributeType;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Product\Application\AttributeType\TextAttributeType;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
-use Sulu\Product\Domain\Model\Product;
-use Sulu\Product\Domain\Model\ProductAttributeValue;
-use Sulu\Product\Domain\Model\ProductDimensionContent;
 
 #[CoversClass(TextAttributeType::class)]
 class TextAttributeTypeTest extends TestCase
 {
-    public function testKeyAndFormKey(): void
+    public function testKey(): void
     {
         $type = new TextAttributeType();
         self::assertSame(AttributeInterface::TYPE_TEXT, $type->getKey());
-        self::assertSame('product_attribute_text', $type->getFormKey());
     }
 
-    public function testValueRoundTripUsesTextColumn(): void
+    public function testConfigureFieldLeavesTheFieldAlone(): void
     {
-        $type = new TextAttributeType();
-        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
+        $field = new FieldMetadata('value');
 
-        $type->writeValue($value, 'hello');
+        (new TextAttributeType())->configureField($field, new Attribute(new AttributeGroup()), 'en');
 
-        self::assertSame('hello', $value->getText());
-        self::assertSame('hello', $type->readValue($value));
-    }
-
-    public function testWriteNullClearsText(): void
-    {
-        $type = new TextAttributeType();
-        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
-        $type->writeValue($value, 'world');
-
-        $type->writeValue($value, null);
-
-        self::assertNull($value->getText());
+        self::assertSame([], $field->getOptions());
     }
 }

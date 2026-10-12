@@ -21,7 +21,6 @@ use Sulu\Product\Domain\Model\AttributeGroupTranslation;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeTranslation;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
-use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
@@ -118,9 +117,11 @@ class ProductResolverAttributesTest extends SuluTestCase
         self::assertArrayHasKey('housing', $attributes);
 
         // the values pass through unformatted; the Twig filter renders them
-        $attribute = $attributes['housing'];
-        self::assertInstanceOf(ProductAttributeValueInterface::class, $attribute);
-        self::assertSame('Zink', $attribute->getText());
-        self::assertSame('Mechanische Daten', $attribute->getAttribute()->getGroup()->getTranslation('de')?->getName());
+        $housing = $attributes['housing'];
+        self::assertIsArray($housing);
+        self::assertSame('Zink', $housing['value']);
+        $attribute = $housing['attribute'];
+        self::assertInstanceOf(AttributeInterface::class, $attribute);
+        self::assertSame('Mechanische Daten', $attribute->getGroup()->getTranslation('de')?->getName());
     }
 }

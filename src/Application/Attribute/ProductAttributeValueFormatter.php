@@ -15,7 +15,6 @@ namespace Sulu\Product\Application\Attribute;
 
 use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Model\AttributeInterface;
-use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 
 /**
  * A value as displayed: option name, text or number with its display format and unit, date in its
@@ -28,25 +27,33 @@ class ProductAttributeValueFormatter
     ) {
     }
 
-    public function format(ProductAttributeValueInterface $productAttributeValue, string $locale): string|bool|null
+    /**
+     * @param mixed $value the attribute's value as the admin API has it, see {@see AttributeValueConverter::read()}
+     */
+    public function format(AttributeInterface $attribute, mixed $value, string $locale): string|bool|null
     {
-        $attribute = $productAttributeValue->getAttribute();
-
         return match ($attribute->getType()) {
-            AttributeInterface::TYPE_OPTIONS => $productAttributeValue->getAttributeOption()?->getTranslation($locale)?->getName()
-                ?? $productAttributeValue->getAttributeOptionKey(),
-            AttributeInterface::TYPE_TEXT => $this->applyDisplayFormat($attribute, $productAttributeValue->getText()),
-            AttributeInterface::TYPE_NUMBER => $this->applyDisplayFormat($attribute, $productAttributeValue->getNumber()),
-            AttributeInterface::TYPE_DATE => $this->formatDate($attribute, $productAttributeValue->getNumber(), $locale),
-            AttributeInterface::TYPE_BOOLEAN => $this->formatBoolean($productAttributeValue->getNumber()),
+            AttributeInterface::TYPE_OPTIONS => $this->formatOption($attribute, $value, $locale),
+            AttributeInterface::TYPE_TEXT, AttributeInterface::TYPE_NUMBER => $this->applyDisplayFormat($attribute, $value),
+            AttributeInterface::TYPE_DATE => $this->formatDate($attribute, $value, $locale),
+            AttributeInterface::TYPE_BOOLEAN => $this->formatBoolean($value),
             default => null,
         };
     }
 
-    /** An editor can set a unit and a display format per attribute; without them the value renders bare. */
-    private function applyDisplayFormat(AttributeInterface $attribute, string|float|null $value): ?string
+    private function formatOption(AttributeInterface $attribute, mixed $optionKey, string $locale): ?string
     {
-        if (null === $value || '' === $value) {
+        if (!\is_string($optionKey)) {
+            return null;
+        }
+
+        return $attribute->getOption($optionKey)?->getTranslation($locale)?->getName() ?? $optionKey;
+    }
+
+    /** An editor can set a unit and a display format per attribute; without them the value renders bare. */
+    private function applyDisplayFormat(AttributeInterface $attribute, mixed $value): ?string
+    {
+        if (!\is_string($value) && !\is_int($value) && !\is_float($value) || '' === $value) {
             return null;
         }
 
@@ -68,9 +75,9 @@ class ProductAttributeValueFormatter
      * without one the locale's medium date, because a bare `05.03.2024` names a different month elsewhere.
      * Rendered in UTC, because a date is stored as midnight UTC.
      */
-    private function formatDate(AttributeInterface $attribute, ?float $timestamp, string $locale): ?string
+    private function formatDate(AttributeInterface $attribute, mixed $date, string $locale): ?string
     {
-        if (null === $timestamp) {
+        if (!\is_string($date)) {
             return null;
         }
 
@@ -85,11 +92,11 @@ class ProductAttributeValueFormatter
             \is_string($format) && '' !== $format ? $format : null,
         );
 
-        return $formatter->format(new \DateTimeImmutable('@' . (int) $timestamp)) ?: null;
+        return $formatter->format(new \DateTimeImmutable($date, new \DateTimeZone('UTC'))) ?: null;
     }
 
-    private function formatBoolean(?float $number): ?bool
+    private function formatBoolean(mixed $value): ?bool
     {
-        return null === $number ? null : 0.0 !== $number;
+        return \is_string($value) ? AttributeValueConverter::TRUE === $value : null;
     }
 }

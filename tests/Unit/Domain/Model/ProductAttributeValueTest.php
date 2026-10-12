@@ -42,6 +42,14 @@ class ProductAttributeValueTest extends TestCase
         $this->assertNull($productAttributeValue->getText());
         $this->assertNull($productAttributeValue->getAttributeOption());
         $this->assertNull($productAttributeValue->getValue());
+        $this->assertSame('value', $productAttributeValue->getValueKey());
+    }
+
+    public function testConstructorAssignsValueKey(): void
+    {
+        $productAttributeValue = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'range', valueKey: 'from');
+
+        $this->assertSame('from', $productAttributeValue->getValueKey());
     }
 
     public function testConstructorAssignsAttributeOption(): void

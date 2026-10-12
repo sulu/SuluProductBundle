@@ -16,19 +16,13 @@ namespace Sulu\Product\Application\AttributeType;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\OptionMetadata;
 use Sulu\Product\Domain\Model\AttributeInterface;
-use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Webmozart\Assert\Assert;
 
-final class NumberAttributeType extends AbstractAttributeType
+final class NumberAttributeType implements AttributeTypeInterface
 {
     public function getKey(): string
     {
         return AttributeInterface::TYPE_NUMBER;
-    }
-
-    public function getFormKey(): string
-    {
-        return 'product_attribute_number';
     }
 
     public function configureField(FieldMetadata $field, AttributeInterface $attribute, string $locale): void
@@ -48,23 +42,5 @@ final class NumberAttributeType extends AbstractAttributeType
             $option->setValue((string) $value);
             $field->addOption($option);
         }
-    }
-
-    public function readValue(ProductAttributeValueInterface $value): mixed
-    {
-        return $value->getNumber();
-    }
-
-    public function writeValue(ProductAttributeValueInterface $value, mixed $raw): void
-    {
-        if (null === $raw || '' === $raw) {
-            $value->setNumber(null);
-
-            return;
-        }
-
-        Assert::numeric($raw);
-
-        $value->setNumber((float) $raw);
     }
 }

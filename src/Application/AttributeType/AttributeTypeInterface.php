@@ -15,17 +15,15 @@ namespace Sulu\Product\Application\AttributeType;
 
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Product\Domain\Model\AttributeInterface;
-use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 
+/**
+ * An attribute type is its key and the form fragment `product_attribute_<key>`, whose fields are the
+ * values of the attribute. The type configures each of these fields for an attribute, e.g. its bounds
+ * or its choices.
+ */
 interface AttributeTypeInterface
 {
     public function getKey(): string;
 
-    public function getFormKey(): string;
-
     public function configureField(FieldMetadata $field, AttributeInterface $attribute, string $locale): void;
-
-    public function readValue(ProductAttributeValueInterface $value): mixed;
-
-    public function writeValue(ProductAttributeValueInterface $value, mixed $raw): void;
 }
