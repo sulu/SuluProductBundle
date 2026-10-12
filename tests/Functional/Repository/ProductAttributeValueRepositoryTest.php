@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Tests\Functional\Repository;
 
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
@@ -105,12 +106,50 @@ class ProductAttributeValueRepositoryTest extends SuluTestCase
         AttributeInterface $attribute,
         ProductDimensionContentInterface $dimensionContent,
         string $text,
+        string $valueKey = ProductAttributeValueInterface::DEFAULT_VALUE_KEY,
     ): ProductAttributeValue {
-        $value = new ProductAttributeValue($dimensionContent, $attribute, $attribute->getKey());
+        $value = new ProductAttributeValue($dimensionContent, $attribute, $attribute->getKey(), valueKey: $valueKey);
         $value->setText($text);
         $this->entityManager->persist($value);
 
         return $value;
+    }
+
+    public function testSecondValueWithTheSameValueKeyIsRejected(): void
+    {
+        $attribute = $this->createAttribute();
+        [, $dimensionContent] = $this->createProductWithDimensionContent(null, 'live', 0);
+        $this->createValue($attribute, $dimensionContent, 'Brass');
+        $this->createValue($attribute, $dimensionContent, 'Steel');
+
+        $this->expectException(UniqueConstraintViolationException::class);
+
+        $this->entityManager->flush();
+    }
+
+    public function testValuesWithDifferentValueKeysAreAllowed(): void
+    {
+        $attribute = $this->createAttribute();
+        [, $dimensionContent] = $this->createProductWithDimensionContent(null, 'live', 0);
+        $this->createValue($attribute, $dimensionContent, '1', 'from');
+        $this->createValue($attribute, $dimensionContent, '2', 'to');
+        $this->entityManager->flush();
+
+        $this->assertCount(2, $this->repository->findBy(['attribute' => $attribute]));
+    }
+
+    public function testTheSameValueKeyIsAllowedPerAttributeAndDimensionContent(): void
+    {
+        $attribute = $this->createAttribute('material');
+        $otherAttribute = $this->createAttribute('finish');
+        [, $dimensionContent] = $this->createProductWithDimensionContent(null, 'live', 0);
+        [, $otherDimensionContent] = $this->createProductWithDimensionContent(null, 'draft', 0);
+        $this->createValue($attribute, $dimensionContent, 'Brass');
+        $this->createValue($otherAttribute, $dimensionContent, 'Steel');
+        $this->createValue($attribute, $otherDimensionContent, 'Copper');
+        $this->entityManager->flush();
+
+        $this->assertCount(2, $this->repository->findBy(['attribute' => $attribute]));
     }
 
     public function testFindByAttributeReturnsOnlyMatchingAttributeValues(): void
