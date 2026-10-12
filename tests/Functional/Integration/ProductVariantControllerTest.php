@@ -54,7 +54,7 @@ class ProductVariantControllerTest extends SuluTestCase
     /**
      * Membership in $attributes is the family assignment; there is no separate "enabled" flag.
      *
-     * @param array<string, array{required?: bool, variantSpecific?: bool}> $attributes
+     * @param array<string, array{required?: bool, mode?: string}> $attributes
      */
     private function createProductFamily(array $attributes = []): string
     {
@@ -63,7 +63,7 @@ class ProductVariantControllerTest extends SuluTestCase
             $normalized[] = [
                 'id' => $attributeUuid,
                 'required' => $entry['required'] ?? false,
-                'variantSpecific' => $entry['variantSpecific'] ?? false,
+                'mode' => $entry['mode'] ?? 'shared',
             ];
         }
 
@@ -227,7 +227,7 @@ class ProductVariantControllerTest extends SuluTestCase
         self::purgeDatabase();
 
         $axisUuid = $this->createAttribute('size', 'Size');
-        $familyId = $this->createProductFamily([$axisUuid => ['variantSpecific' => true]]);
+        $familyId = $this->createProductFamily([$axisUuid => ['mode' => 'variantSpecific']]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         $this->client->request(
@@ -388,6 +388,58 @@ class ProductVariantControllerTest extends SuluTestCase
         $this->assertHttpStatusCode(200, $this->client->getResponse());
     }
 
+    public function testOverridableAttributeIsOptionalOnTheVariantAndKeptWhenSubmitted(): void
+    {
+        self::purgeDatabase();
+
+        $overridableUuid = $this->createAttribute('color', 'Color');
+        $familyId = $this->createProductFamily([$overridableUuid => ['required' => true, 'mode' => 'overridable']]);
+        // Required on the product: the default every variant inherits.
+        $parentId = $this->createProduct(
+            $familyId,
+            'Parent Product',
+            ProductInterface::TYPE_PRODUCT_WITH_VARIANTS,
+            [$overridableUuid => 'Red'],
+        );
+
+        // Not required on the variant: leaving it out stores nothing, so the variant inherits.
+        $this->client->request(
+            'POST',
+            '/admin/api/products/' . $parentId . '/variants.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode(['locale' => 'en', 'code' => 'CX3-INH', 'title' => 'Inheriting']) ?: null,
+        );
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+        $inheriting = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($inheriting);
+        $this->assertIsString($inheriting['id']);
+        $this->assertSame([], $this->getPersistedAttributeUuids($inheriting['id']));
+
+        // A submitted override is kept on the variant.
+        $this->client->request(
+            'POST',
+            '/admin/api/products/' . $parentId . '/variants.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode([
+                'locale' => 'en',
+                'code' => 'CX3-OVR',
+                'title' => 'Overriding',
+                'attributes' => [$overridableUuid => 'Blue'],
+            ]) ?: null,
+        );
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+        $overriding = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($overriding);
+        $this->assertIsString($overriding['id']);
+        $this->assertSame([$overridableUuid], $this->getPersistedAttributeUuids($overriding['id']));
+        $this->assertIsArray($overriding['attributes']);
+        $this->assertSame('Blue', $overriding['attributes'][$overridableUuid]);
+    }
+
     public function testInheritedAttributesAreStrippedOnWriteAndNeverReturnedOnVariantRead(): void
     {
         self::purgeDatabase();
@@ -395,8 +447,8 @@ class ProductVariantControllerTest extends SuluTestCase
         $sharedUuid = $this->createAttribute('color', 'Color');
         $axisUuid = $this->createAttribute('size', 'Size');
         $familyId = $this->createProductFamily([
-            $sharedUuid => ['variantSpecific' => false],
-            $axisUuid => ['variantSpecific' => true],
+            $sharedUuid => ['mode' => 'shared'],
+            $axisUuid => ['mode' => 'variantSpecific'],
         ]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
@@ -1031,8 +1083,8 @@ class ProductVariantControllerTest extends SuluTestCase
         $sharedUuid = $this->createAttribute('color', 'Color');
         $axisUuid = $this->createAttribute('size', 'Size');
         $familyId = $this->createProductFamily([
-            $sharedUuid => ['required' => true, 'variantSpecific' => false],
-            $axisUuid => ['variantSpecific' => true],
+            $sharedUuid => ['required' => true, 'mode' => 'shared'],
+            $axisUuid => ['mode' => 'variantSpecific'],
         ]);
         // The parent carries the required shared (non-variant) attribute value.
         $parentId = $this->createProduct(
@@ -1088,7 +1140,7 @@ class ProductVariantControllerTest extends SuluTestCase
 
         $sharedUuid = $this->createAttribute('color', 'Color');
         $familyId = $this->createProductFamily([
-            $sharedUuid => ['required' => true, 'variantSpecific' => false],
+            $sharedUuid => ['required' => true, 'mode' => 'shared'],
         ]);
         $parentId = $this->createProduct($familyId, 'Simple Product', attributes: [$sharedUuid => 'Red']);
 
@@ -1117,7 +1169,7 @@ class ProductVariantControllerTest extends SuluTestCase
         // the axis is only rendered on the variant overlay, so the parent cannot satisfy it
         $axisUuid = $this->createAttribute('size', 'Size');
         $familyId = $this->createProductFamily([
-            $axisUuid => ['required' => true, 'variantSpecific' => true],
+            $axisUuid => ['required' => true, 'mode' => 'variantSpecific'],
         ]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
@@ -1143,7 +1195,7 @@ class ProductVariantControllerTest extends SuluTestCase
 
         $axisUuid = $this->createAttribute('size', 'Size');
         $familyId = $this->createProductFamily([
-            $axisUuid => ['required' => true, 'variantSpecific' => true],
+            $axisUuid => ['required' => true, 'mode' => 'variantSpecific'],
         ]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
@@ -1191,7 +1243,7 @@ class ProductVariantControllerTest extends SuluTestCase
 
         $axisUuid = $this->createAttribute('size', 'Size');
         $familyId = $this->createProductFamily([
-            $axisUuid => ['required' => false, 'variantSpecific' => true],
+            $axisUuid => ['required' => false, 'mode' => 'variantSpecific'],
         ]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
@@ -1464,7 +1516,7 @@ class ProductVariantControllerTest extends SuluTestCase
         self::purgeDatabase();
 
         $axisUuid = $this->createAttribute('size', 'Size');
-        $familyId = $this->createProductFamily([$axisUuid => ['required' => true, 'variantSpecific' => true]]);
+        $familyId = $this->createProductFamily([$axisUuid => ['required' => true, 'mode' => 'variantSpecific']]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         $this->client->request(
@@ -1512,7 +1564,7 @@ class ProductVariantControllerTest extends SuluTestCase
         self::purgeDatabase();
 
         $axisUuid = $this->createAttribute('weight', 'Weight', AttributeInterface::TYPE_NUMBER);
-        $familyId = $this->createProductFamily([$axisUuid => ['variantSpecific' => true]]);
+        $familyId = $this->createProductFamily([$axisUuid => ['mode' => 'variantSpecific']]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         $this->client->request(

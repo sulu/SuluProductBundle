@@ -48,7 +48,7 @@ final class ProductFamilyListTool
     #[McpTool(
         name: 'sulu_product_family_list',
         title: 'List Product Families',
-        description: 'List product families. A family decides which attributes a product can carry, and its UUID is the mandatory "productFamily" argument of sulu_product_create. Its "key" is what the website search filters products by family with. Each family lists its attributes with three flags that determine where a value belongs: "required" means a value must be supplied, and "variantSpecific" means the attribute is a variant axis. Required variant-specific attributes are set on the variant (sulu_product_variant_create), all other required attributes on the product itself. Use "attributeId" as the key in any "attributes" map.',
+        description: 'List product families. A family decides which attributes a product can carry, and its UUID is the mandatory "productFamily" argument of sulu_product_create. Its "key" is what the website search filters products by family with. Each family lists its attributes with two fields that determine where a value belongs: "required" means a value must be supplied, and "mode" says where it lives: "shared" is set on the product and shared by all variants, "variantSpecific" is a variant axis set on each variant, "overridable" is set on the product as the default and a variant may override it. Required variantSpecific attributes are set on the variant (sulu_product_variant_create), all other required attributes on the product itself. Use "attributeId" as the key in any "attributes" map.',
         annotations: new ToolAnnotations(readOnlyHint: true, openWorldHint: false),
     )]
     #[RequiresPermission(requirements: [
@@ -150,7 +150,7 @@ final class ProductFamilyListTool
                 'type' => $attribute->getType(),
                 'name' => $attribute->getTranslation($locale)?->getName() ?? $attribute->getKey(),
                 'required' => $familyAttribute->isRequired(),
-                'variantSpecific' => $familyAttribute->isVariantSpecific(),
+                'mode' => $familyAttribute->getMode(),
             ];
         }
 

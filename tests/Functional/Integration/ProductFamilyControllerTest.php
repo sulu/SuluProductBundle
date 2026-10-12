@@ -243,7 +243,7 @@ class ProductFamilyControllerTest extends SuluTestCase
                 'key' => 'apparel',
                 'description' => null,
                 'attributes' => [
-                    ['id' => $attributeUuid, 'required' => true, 'variantSpecific' => false],
+                    ['id' => $attributeUuid, 'required' => true, 'mode' => 'shared'],
                 ],
             ]) ?: null,
         );
@@ -260,7 +260,7 @@ class ProductFamilyControllerTest extends SuluTestCase
         $this->assertIsArray($data);
         $this->assertIsArray($data['attributes']);
         $this->assertSame(
-            [['id' => $attributeUuid, 'required' => true, 'variantSpecific' => false]],
+            [['id' => $attributeUuid, 'required' => true, 'mode' => 'shared']],
             $data['attributes'],
         );
     }

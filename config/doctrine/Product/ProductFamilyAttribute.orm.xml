@@ -13,9 +13,9 @@
             </options>
         </field>
 
-        <field name="variantSpecific" type="boolean" nullable="false">
+        <field name="mode" type="string" length="32" nullable="false">
             <options>
-                <option name="default">0</option>
+                <option name="default">shared</option>
             </options>
         </field>
 

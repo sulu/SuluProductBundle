@@ -45,9 +45,9 @@ class AttributeFieldFactory
      *
      * @return PropertyMetadata|null null when the attribute has no field
      */
-    public function buildSchemaProperty(ProductFamilyAttributeInterface $familyAttribute, string $locale): ?PropertyMetadata
+    public function buildSchemaProperty(ProductFamilyAttributeInterface $familyAttribute, string $locale, string $productType): ?PropertyMetadata
     {
-        $field = $this->buildField($familyAttribute, $locale, $familyAttribute->getAttribute()->getUuid());
+        $field = $this->buildField($familyAttribute, $locale, $productType, $familyAttribute->getAttribute()->getUuid());
         if (null === $field) {
             return null;
         }
@@ -60,11 +60,12 @@ class AttributeFieldFactory
     /**
      * @return FieldMetadata|null null when the attribute's type is unknown or has no form fragment
      */
-    public function build(ProductFamilyAttributeInterface $familyAttribute, string $locale): ?FieldMetadata
+    public function build(ProductFamilyAttributeInterface $familyAttribute, string $locale, string $productType): ?FieldMetadata
     {
         return $this->buildField(
             $familyAttribute,
             $locale,
+            $productType,
             self::NAME_PREFIX . $familyAttribute->getAttribute()->getUuid(),
         );
     }
@@ -75,6 +76,7 @@ class AttributeFieldFactory
     private function buildField(
         ProductFamilyAttributeInterface $familyAttribute,
         string $locale,
+        string $productType,
         string $name,
     ): ?FieldMetadata {
         $attribute = $familyAttribute->getAttribute();
@@ -96,7 +98,7 @@ class AttributeFieldFactory
 
         $field = $this->cloneFieldWithName($template, $name);
         $field->setLabel($this->buildLabel($translation?->getName() ?? $attribute->getKey(), $attribute->getConfig()), $locale);
-        $field->setRequired($familyAttribute->isRequired());
+        $field->setRequired($familyAttribute->isRequiredFor($productType));
 
         $description = $translation?->getDescription();
         if (null !== $description) {

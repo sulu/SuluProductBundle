@@ -33,7 +33,7 @@ class ProductFamilyAttributeTest extends TestCase
         $this->assertSame($family, $fa->getFamily());
         $this->assertSame($attribute, $fa->getAttribute());
         $this->assertFalse($fa->isRequired());
-        $this->assertFalse($fa->isVariantSpecific());
+        $this->assertSame('shared', $fa->getMode());
     }
 
     public function testSetRequiredIsFluent(): void
@@ -43,11 +43,19 @@ class ProductFamilyAttributeTest extends TestCase
         $this->assertTrue($fa->isRequired());
     }
 
-    public function testSetVariantIsFluent(): void
+    public function testSetModeIsFluent(): void
     {
         $fa = new ProductFamilyAttribute(new ProductFamily(), new Attribute(new AttributeGroup()));
-        $this->assertSame($fa, $fa->setVariantSpecific(true));
-        $this->assertTrue($fa->isVariantSpecific());
+        $this->assertSame($fa, $fa->setMode('variantSpecific'));
+        $this->assertSame('variantSpecific', $fa->getMode());
+    }
+
+    public function testSetModeRejectsUnknownMode(): void
+    {
+        $fa = new ProductFamilyAttribute(new ProductFamily(), new Attribute(new AttributeGroup()));
+
+        $this->expectException(\InvalidArgumentException::class);
+        $fa->setMode('everywhere');
     }
 
     public function testSetAttributeIsFluent(): void
@@ -67,24 +75,58 @@ class ProductFamilyAttributeTest extends TestCase
     }
 
     /**
-     * @return iterable<string, array{0: string, 1: bool, 2: bool}>
+     * @return iterable<string, array{0: string, 1: string, 2: bool}>
      */
     public static function provideAvailability(): iterable
     {
-        yield 'product holds shared' => [ProductInterface::TYPE_PRODUCT, false, true];
-        yield 'product holds variant' => [ProductInterface::TYPE_PRODUCT, true, true];
-        yield 'product with variants holds shared' => [ProductInterface::TYPE_PRODUCT_WITH_VARIANTS, false, true];
-        yield 'product with variants leaves variant' => [ProductInterface::TYPE_PRODUCT_WITH_VARIANTS, true, false];
-        yield 'variant leaves shared' => [ProductInterface::TYPE_VARIANT, false, false];
-        yield 'variant holds variant' => [ProductInterface::TYPE_VARIANT, true, true];
+        yield 'product holds shared' => [ProductInterface::TYPE_PRODUCT, 'shared', true];
+        yield 'product holds variant specific' => [ProductInterface::TYPE_PRODUCT, 'variantSpecific', true];
+        yield 'product holds overridable' => [ProductInterface::TYPE_PRODUCT, 'overridable', true];
+        yield 'product with variants holds shared' => [ProductInterface::TYPE_PRODUCT_WITH_VARIANTS, 'shared', true];
+        yield 'product with variants leaves variant specific' => [ProductInterface::TYPE_PRODUCT_WITH_VARIANTS, 'variantSpecific', false];
+        yield 'product with variants holds overridable' => [ProductInterface::TYPE_PRODUCT_WITH_VARIANTS, 'overridable', true];
+        yield 'variant leaves shared' => [ProductInterface::TYPE_VARIANT, 'shared', false];
+        yield 'variant holds variant specific' => [ProductInterface::TYPE_VARIANT, 'variantSpecific', true];
+        yield 'variant holds overridable' => [ProductInterface::TYPE_VARIANT, 'overridable', true];
     }
 
     #[DataProvider('provideAvailability')]
-    public function testIsAvailable(string $productType, bool $variantSpecific, bool $expected): void
+    public function testIsAvailable(string $productType, string $mode, bool $expected): void
     {
         $fa = new ProductFamilyAttribute(new ProductFamily(), new Attribute(new AttributeGroup()));
-        $fa->setVariantSpecific($variantSpecific);
+        $fa->setMode($mode);
 
         $this->assertSame($expected, $fa->isAvailable($productType));
+    }
+
+    /**
+     * @return iterable<string, array{0: string, 1: string, 2: bool}>
+     */
+    public static function provideRequiredFor(): iterable
+    {
+        yield 'product requires shared' => [ProductInterface::TYPE_PRODUCT_WITH_VARIANTS, 'shared', true];
+        yield 'product with variants requires overridable' => [ProductInterface::TYPE_PRODUCT_WITH_VARIANTS, 'overridable', true];
+        yield 'product with variants does not require variant specific' => [ProductInterface::TYPE_PRODUCT_WITH_VARIANTS, 'variantSpecific', false];
+        yield 'variant requires variant specific' => [ProductInterface::TYPE_VARIANT, 'variantSpecific', true];
+        yield 'variant does not require overridable' => [ProductInterface::TYPE_VARIANT, 'overridable', false];
+        yield 'variant does not require shared' => [ProductInterface::TYPE_VARIANT, 'shared', false];
+        yield 'simple product requires any mode' => [ProductInterface::TYPE_PRODUCT, 'variantSpecific', true];
+    }
+
+    #[DataProvider('provideRequiredFor')]
+    public function testIsRequiredFor(string $productType, string $mode, bool $expected): void
+    {
+        $fa = new ProductFamilyAttribute(new ProductFamily(), new Attribute(new AttributeGroup()));
+        $fa->setMode($mode)->setRequired(true);
+
+        $this->assertSame($expected, $fa->isRequiredFor($productType));
+    }
+
+    public function testIsRequiredForIsFalseWhenNotRequired(): void
+    {
+        $fa = new ProductFamilyAttribute(new ProductFamily(), new Attribute(new AttributeGroup()));
+        $fa->setMode('shared');
+
+        $this->assertFalse($fa->isRequiredFor(ProductInterface::TYPE_PRODUCT));
     }
 }

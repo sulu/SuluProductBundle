@@ -55,7 +55,7 @@ use Webmozart\Assert\Assert;
  *     creatorId: int|null,
  *     translations: list<array{locale: string, name: string, description: string|null}>,
  *     options: list<array{uuid: string, key: string, position: int, translations: list<array{locale: string, name: string}>}>,
- *     familyAttributes: list<array{familyUuid: string, required: bool, variantSpecific: bool}>,
+ *     familyAttributes: list<array{familyUuid: string, required: bool, mode?: string, variantSpecific?: bool}>,
  * }
  *
  * @internal
@@ -116,9 +116,9 @@ final class AttributeTrashItemHandler implements
 
         // The database removes these links with the attribute. Scalar results keep them out of the
         // unit of work, where they would still point at the removed attribute.
-        /** @var list<array{familyUuid: string, required: bool, variantSpecific: bool}> $familyAttributes */
+        /** @var list<array{familyUuid: string, required: bool, mode: string}> $familyAttributes */
         $familyAttributes = $this->entityManager->createQueryBuilder()
-            ->select('family.uuid AS familyUuid', 'familyAttribute.required AS required', 'familyAttribute.variantSpecific AS variantSpecific')
+            ->select('family.uuid AS familyUuid', 'familyAttribute.required AS required', 'familyAttribute.mode AS mode')
             ->from(ProductFamilyAttribute::class, 'familyAttribute')
             ->innerJoin('familyAttribute.family', 'family')
             ->where('familyAttribute.attribute = :attribute')
@@ -129,14 +129,14 @@ final class AttributeTrashItemHandler implements
         // A family in the trash keeps its link here too, so either one can be restored first.
         /** @var TrashItemInterface $familyTrashItem */
         foreach ($this->entityManager->getRepository(TrashItemInterface::class)->findBy(['resourceKey' => ProductFamilyInterface::RESOURCE_KEY]) as $familyTrashItem) {
-            /** @var list<array{attributeUuid: string, required: bool, variantSpecific: bool}> $familyTrashLinks */
+            /** @var list<array{attributeUuid: string, required: bool, mode?: string, variantSpecific?: bool}> $familyTrashLinks */
             $familyTrashLinks = $familyTrashItem->getRestoreData()['familyAttributes'] ?? [];
             foreach ($familyTrashLinks as $familyTrashLink) {
                 if ($familyTrashLink['attributeUuid'] === $attribute->getUuid()) {
                     $familyAttributes[] = [
                         'familyUuid' => $familyTrashItem->getResourceId(),
                         'required' => $familyTrashLink['required'],
-                        'variantSpecific' => $familyTrashLink['variantSpecific'],
+                        'mode' => FamilyAttributeModeRestoreData::mode($familyTrashLink),
                     ];
                 }
             }
@@ -238,7 +238,7 @@ final class AttributeTrashItemHandler implements
 
             $familyAttribute = new ProductFamilyAttribute($family, $attribute);
             $familyAttribute->setRequired($familyAttributeData['required']);
-            $familyAttribute->setVariantSpecific($familyAttributeData['variantSpecific']);
+            $familyAttribute->setMode(FamilyAttributeModeRestoreData::mode($familyAttributeData));
             $family->addFamilyAttribute($familyAttribute);
         }
 

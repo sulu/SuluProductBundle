@@ -99,9 +99,9 @@ final class ProductFamilyListToolTest extends TestCase
         $byUuid = \array_column($attributes, null, 'attributeId');
         $this->assertIsArray($byUuid['material-uuid']);
         $this->assertTrue($byUuid['material-uuid']['required']);
-        $this->assertFalse($byUuid['material-uuid']['variantSpecific']);
+        $this->assertSame('shared', $byUuid['material-uuid']['mode']);
         $this->assertIsArray($byUuid['colour-uuid']);
-        $this->assertTrue($byUuid['colour-uuid']['variantSpecific']);
+        $this->assertSame('variantSpecific', $byUuid['colour-uuid']['mode']);
         $this->assertSame('Colour', $byUuid['colour-uuid']['name']);
     }
 
@@ -168,7 +168,7 @@ final class ProductFamilyListToolTest extends TestCase
 
             $familyAttribute = new ProductFamilyAttribute($family, $attribute);
             $familyAttribute->setRequired($required);
-            $familyAttribute->setVariantSpecific($variantSpecific);
+            $familyAttribute->setMode($variantSpecific ? 'variantSpecific' : 'shared');
             $family->addFamilyAttribute($familyAttribute);
         }
 

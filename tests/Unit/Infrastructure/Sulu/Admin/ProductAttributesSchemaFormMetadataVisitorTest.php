@@ -115,7 +115,7 @@ class ProductAttributesSchemaFormMetadataVisitorTest extends TestCase
             $this->prophesize(ProductFamilyInterface::class)->reveal(),
             $attribute->reveal(),
         );
-        $familyAttribute->setVariantSpecific($variantSpecific);
+        $familyAttribute->setMode($variantSpecific ? 'variantSpecific' : 'shared');
         $familyAttribute->setRequired($required);
 
         return $familyAttribute;
