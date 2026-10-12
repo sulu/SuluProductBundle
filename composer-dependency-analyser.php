@@ -27,7 +27,7 @@ $config->addPathRegexesToExclude([
 $config->ignoreErrorsOnPackageAndPaths(
     'symfony/ai-agent',
     [
-        __DIR__ . '/src/Application/Ai',
+        __DIR__ . '/src/UserInterface/Ai',
         __DIR__ . '/src/Infrastructure/Symfony/HttpKernel/SuluProductBundle.php',
     ],
     [ErrorType::DEV_DEPENDENCY_IN_PROD],
@@ -37,7 +37,7 @@ $config->ignoreErrorsOnPackageAndPaths(
 // from the platform package ai-agent already pulls in.
 $config->ignoreErrorsOnPackageAndPaths(
     'symfony/ai-platform',
-    [__DIR__ . '/tests/Unit/Application/Ai/SearchProductsByAttributesTest.php'],
+    [__DIR__ . '/tests/Unit/UserInterface/Ai/SearchProductsByAttributesTest.php'],
     [ErrorType::SHADOW_DEPENDENCY],
 );
 
