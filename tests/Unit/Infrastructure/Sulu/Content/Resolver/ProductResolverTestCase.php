@@ -29,6 +29,7 @@ use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductResolver;
 use Sulu\Product\Infrastructure\Sulu\Route\CurrentVariantProvider;
 use Sulu\Product\Infrastructure\Sulu\Route\ProductRouteDefaultsProvider;
+use Sulu\Product\Tests\Unit\Support\AttributeTypes;
 use Sulu\Product\Tests\Unit\Support\ProductAttributeFragmentLoader;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -64,6 +65,7 @@ abstract class ProductResolverTestCase extends TestCase
             new CurrentVariantProvider($requestStack),
             $referenceStore ?? new ReferenceStore(),
             $attributeValueConverter ?? ProductAttributeFragmentLoader::converter(),
+            AttributeTypes::formatter(),
             $variantProperties,
         );
     }

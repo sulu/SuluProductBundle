@@ -82,4 +82,27 @@ class BooleanAttributeTypeTest extends TestCase
 
         $this->addToAssertionCount(1);
     }
+
+    public function testFormatValueIsABool(): void
+    {
+        $attribute = new Attribute(new AttributeGroup());
+
+        self::assertTrue($this->type()->formatValue($attribute, 'true', 'de'));
+        self::assertFalse($this->type()->formatValue($attribute, 'false', 'de'));
+        self::assertTrue($this->type()->formatValue($attribute, true, 'de'));
+        self::assertFalse($this->type()->formatValue($attribute, false, 'de'));
+    }
+
+    public function testFormatValueOfAnotherShapeIsNull(): void
+    {
+        $attribute = new Attribute(new AttributeGroup());
+
+        self::assertNull($this->type()->formatValue($attribute, null, 'en'));
+        self::assertNull($this->type()->formatValue($attribute, 1, 'en'));
+    }
+
+    public function testHasNoDisplayFormat(): void
+    {
+        self::assertFalse($this->type()->hasDisplayFormat());
+    }
 }

@@ -28,7 +28,7 @@ use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductResolver;
 use Sulu\Product\Tests\Unit\Support\ProductAttributeFragmentLoader;
 
-/** Values come as the admin API has them, unformatted; formatting and grouping are the Twig filter's own test. */
+/** Values come as the admin API has them; the formatting itself is the types' own test, grouping the Twig filter's. */
 #[CoversClass(ProductResolver::class)]
 class ProductResolverAttributesTest extends ProductResolverTestCase
 {
@@ -57,6 +57,7 @@ class ProductResolverAttributesTest extends ProductResolverTestCase
 
         self::assertSame(['housing', 'weight'], \array_keys($attributes));
         self::assertSame('48 g', $attributes['weight']['value']);
+        self::assertSame('48 g', $attributes['weight']['formattedValue']);
         self::assertSame('weight', $attributes['weight']['attribute']->getKey());
     }
 
@@ -74,6 +75,22 @@ class ProductResolverAttributesTest extends ProductResolverTestCase
 
         self::assertSame(['range'], \array_keys($attributes));
         self::assertSame(['from' => 1.5, 'to' => 4.0], $attributes['range']['value']);
+        self::assertSame('1.5 – 4', $attributes['range']['formattedValue']);
+    }
+
+    public function testFormatsInTheLocaleOfTheContent(): void
+    {
+        $content = $this->createContent('de');
+        $released = $this->createAttribute('released');
+        $released->setType(AttributeInterface::TYPE_DATE);
+        $row = new ProductAttributeValue($content, $released, 'released');
+        $row->setNumber((float) \strtotime('2024-05-01 00:00:00 UTC'));
+        $content->addAttribute($row);
+
+        $attributes = $this->resolveAttributes($content);
+
+        self::assertSame('2024-05-01', $attributes['released']['value']);
+        self::assertSame('01.05.2024', $attributes['released']['formattedValue']);
     }
 
     public function testAnAttributeWithoutValueFieldsResolvesToNull(): void
@@ -83,7 +100,10 @@ class ProductResolverAttributesTest extends ProductResolverTestCase
         $unknown->setType('unknown');
         $this->addTextValue($content, $unknown, 'x');
 
-        self::assertNull($this->resolveAttributes($content)['unknown']['value']);
+        $attributes = $this->resolveAttributes($content);
+
+        self::assertNull($attributes['unknown']['value']);
+        self::assertNull($attributes['unknown']['formattedValue']);
     }
 
     public function testAMultiFieldAttributeWithoutAKnownRowResolvesToNull(): void
@@ -100,7 +120,7 @@ class ProductResolverAttributesTest extends ProductResolverTestCase
         self::assertNull($attributes['range']['value']);
     }
 
-    public function testPassesEveryValueThroughWithoutFormatting(): void
+    public function testKeepsAnAttributeWhoseValueFormatsToNothing(): void
     {
         $content = $this->createContent();
         $this->addTextValue($content, $this->createAttribute('housing'), '');
@@ -174,7 +194,7 @@ class ProductResolverAttributesTest extends ProductResolverTestCase
     }
 
     /**
-     * @return array<string, array{attribute: AttributeInterface, value: mixed}>
+     * @return array<string, array{attribute: AttributeInterface, value: mixed, formattedValue: mixed}>
      */
     private function resolveAttributes(ProductDimensionContent $content, ?ProductResolver $resolver = null): array
     {
@@ -202,7 +222,7 @@ class ProductResolverAttributesTest extends ProductResolverTestCase
      *
      * @param array<array-key, mixed> $views
      *
-     * @return array<string, array{attribute: AttributeInterface, value: mixed}>
+     * @return array<string, array{attribute: AttributeInterface, value: mixed, formattedValue: mixed}>
      */
     private function unwrap(array $views): array
     {
@@ -213,6 +233,7 @@ class ProductResolverAttributesTest extends ProductResolverTestCase
             self::assertIsArray($content);
             self::assertInstanceOf(ContentView::class, $content['attribute']);
             self::assertInstanceOf(ContentView::class, $content['value']);
+            self::assertInstanceOf(ContentView::class, $content['formattedValue']);
 
             $attribute = $content['attribute']->getContent();
             self::assertInstanceOf(AttributeInterface::class, $attribute);
@@ -221,6 +242,7 @@ class ProductResolverAttributesTest extends ProductResolverTestCase
             $attributes[(string) $key] = [
                 'attribute' => $attribute,
                 'value' => \is_array($value) ? \array_map(static fn (mixed $field): mixed => $field instanceof ContentView ? $field->getContent() : $field, $value) : $value,
+                'formattedValue' => $content['formattedValue']->getContent(),
             ];
         }
 

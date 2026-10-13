@@ -39,4 +39,31 @@ class DateAttributeTypeTest extends TestCase
 
         self::assertSame([], $field->getOptions());
     }
+
+    public function testFormatValueRendersTheDateForTheLocale(): void
+    {
+        $attribute = new Attribute(new AttributeGroup());
+
+        self::assertSame('May 1, 2024', (new DateAttributeType())->formatValue($attribute, '2024-05-01', 'en'));
+        self::assertSame('01.05.2024', (new DateAttributeType())->formatValue($attribute, '2024-05-01', 'de'));
+    }
+
+    public function testFormatValueUsesTheDisplayFormatAsIcuPattern(): void
+    {
+        $attribute = new Attribute(new AttributeGroup());
+        $attribute->setConfig(['displayFormat' => 'd MMMM yyyy']);
+
+        self::assertSame('1 May 2024', (new DateAttributeType())->formatValue($attribute, '2024-05-01', 'en'));
+        self::assertSame('1 Mai 2024', (new DateAttributeType())->formatValue($attribute, '2024-05-01', 'de'));
+    }
+
+    public function testFormatValueWithoutADateIsNull(): void
+    {
+        self::assertNull((new DateAttributeType())->formatValue(new Attribute(new AttributeGroup()), null, 'en'));
+    }
+
+    public function testHasADisplayFormat(): void
+    {
+        self::assertTrue((new DateAttributeType())->hasDisplayFormat());
+    }
 }
