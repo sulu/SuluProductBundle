@@ -28,7 +28,7 @@ use Webmozart\Assert\Assert;
  * in the row of its name, a multi select in one row per selected option, named by the option's uuid:
  * unlike the key, it never changes and has no variants a case-insensitive unique index would confuse.
  */
-final class AttributeValueConverter
+class AttributeValueConverter implements AttributeValueConverterInterface
 {
     public const TRUE = 'true';
     public const FALSE = 'false';
@@ -46,11 +46,6 @@ final class AttributeValueConverter
     ) {
     }
 
-    /**
-     * The field types of the attribute type's form fragment by field name, in the fragment's order.
-     *
-     * @return array<string, string>
-     */
     public function getFields(AttributeInterface $attribute): array
     {
         $type = $attribute->getType();
@@ -78,12 +73,6 @@ final class AttributeValueConverter
         return $this->fields[$type] = $fields;
     }
 
-    /**
-     * The value as the admin API and the website see it: the field's value for a single field, an
-     * object of them for several, null when none is set.
-     *
-     * @param iterable<ProductAttributeValueInterface> $rows the rows of the attribute, possibly none
-     */
     public function read(AttributeInterface $attribute, iterable $rows): mixed
     {
         $rowsByKey = [];
@@ -105,13 +94,6 @@ final class AttributeValueConverter
         return [] === \array_filter($values, static fn (mixed $value): bool => null !== $value) ? null : $values;
     }
 
-    /**
-     * The value of every attribute the rows belong to, by attribute uuid.
-     *
-     * @param iterable<ProductAttributeValueInterface> $rows
-     *
-     * @return array<string, array{attribute: AttributeInterface, value: mixed}>
-     */
     public function readAll(iterable $rows): array
     {
         /** @var array<string, array{attribute: AttributeInterface, rows: list<ProductAttributeValueInterface>}> $rowsByAttribute */
@@ -130,12 +112,6 @@ final class AttributeValueConverter
         return $values;
     }
 
-    /**
-     * The rows the value is stored in by value key, none for an empty value. Validates the whole
-     * value, so a rejected value changes nothing.
-     *
-     * @return array<string, array{number?: float, text?: string, option?: AttributeOptionInterface}>
-     */
     public function write(AttributeInterface $attribute, mixed $raw): array
     {
         $fields = $this->getFields($attribute);
@@ -162,9 +138,12 @@ final class AttributeValueConverter
     }
 
     /**
+     * The value of one field of the attribute type's form fragment. Override it to read a field type
+     * of your own, and call the parent for the others.
+     *
      * @param array<string, ProductAttributeValueInterface> $rows by value key
      */
-    private function readField(AttributeInterface $attribute, string $name, string $type, array $rows): mixed
+    protected function readField(AttributeInterface $attribute, string $name, string $type, array $rows): mixed
     {
         if ('select' === $type) {
             // A deleted option leaves its row without an option.
@@ -204,9 +183,12 @@ final class AttributeValueConverter
     }
 
     /**
+     * The rows of one field of the attribute type's form fragment by value key. Override it to write
+     * a field type of your own, and call the parent for the others.
+     *
      * @return array<string, array{number?: float, text?: string, option?: AttributeOptionInterface}>
      */
-    private function writeField(AttributeInterface $attribute, string $name, string $type, mixed $raw): array
+    protected function writeField(AttributeInterface $attribute, string $name, string $type, mixed $raw): array
     {
         if ('select' === $type) {
             return $this->writeOptions($attribute, $raw);
@@ -308,7 +290,7 @@ final class AttributeValueConverter
         return 0.0 !== $number ? self::TRUE : self::FALSE;
     }
 
-    private function unsupported(AttributeInterface $attribute, string $type): \LogicException
+    protected function unsupported(AttributeInterface $attribute, string $type): \LogicException
     {
         return new \LogicException(\sprintf('The form field type "%s" of attribute type "%s" has no value mapping.', $type, $attribute->getType()));
     }

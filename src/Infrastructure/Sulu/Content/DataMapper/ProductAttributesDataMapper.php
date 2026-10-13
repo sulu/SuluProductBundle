@@ -15,7 +15,7 @@ namespace Sulu\Product\Infrastructure\Sulu\Content\DataMapper;
 
 use Sulu\Content\Application\ContentDataMapper\DataMapper\DataMapperInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
-use Sulu\Product\Application\Attribute\AttributeValueConverter;
+use Sulu\Product\Application\Attribute\AttributeValueConverterInterface;
 use Sulu\Product\Domain\Exception\RequiredProductAttributeMissingException;
 use Sulu\Product\Domain\Model\AttributeOptionInterface;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
@@ -26,7 +26,7 @@ use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
 class ProductAttributesDataMapper implements DataMapperInterface
 {
     public function __construct(
-        private readonly AttributeValueConverter $attributeValueConverter,
+        private readonly AttributeValueConverterInterface $attributeValueConverter,
     ) {
     }
 

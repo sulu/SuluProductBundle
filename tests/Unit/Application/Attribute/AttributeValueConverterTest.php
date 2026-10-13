@@ -619,6 +619,28 @@ class AttributeValueConverterTest extends TestCase
         return ['number' => $number, 'text' => $text, 'option' => $option];
     }
 
+    public function testAProjectConverterHandlesAFieldTypeOfItsOwn(): void
+    {
+        $loader = $this->prophesize(FormMetadataLoaderInterface::class);
+        $loader->getMetadata('product_attribute_shade', 'en', [])->willReturn(self::fragment(['value' => 'color_picker']));
+
+        $converter = new class($loader->reveal()) extends AttributeValueConverter {
+            protected function readField(AttributeInterface $attribute, string $name, string $type, array $rows): mixed
+            {
+                return 'color_picker' === $type ? \strtoupper((string) ($rows[$name] ?? null)?->getText()) : parent::readField($attribute, $name, $type, $rows);
+            }
+
+            protected function writeField(AttributeInterface $attribute, string $name, string $type, mixed $raw): array
+            {
+                return 'color_picker' === $type ? [$name => ['text' => \ltrim(\is_string($raw) ? $raw : '', '#')]] : parent::writeField($attribute, $name, $type, $raw);
+            }
+        };
+        $attribute = $this->attribute('shade');
+
+        self::assertSame(['value' => ['text' => 'ff0000']], $converter->write($attribute, '#ff0000'));
+        self::assertSame('FF0000', $converter->read($attribute, [$this->row($attribute, 'value', ['text' => 'ff0000'])]));
+    }
+
     /**
      * @param array<string, array{number?: float, text?: string, option?: AttributeOptionInterface}> $rows
      *

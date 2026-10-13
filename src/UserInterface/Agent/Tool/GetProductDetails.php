@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Sulu\Product\UserInterface\Agent\Tool;
 
 use Sulu\Content\Domain\Model\DimensionContentInterface;
-use Sulu\Product\Application\Attribute\AttributeValueConverter;
+use Sulu\Product\Application\Attribute\AttributeValueConverterInterface;
 use Sulu\Product\Application\Attribute\ProductAttributeValueFormatter;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
 use Sulu\Product\Domain\Model\AttributeInterface;
@@ -33,7 +33,7 @@ final class GetProductDetails
     public function __construct(
         private readonly ProductRepositoryInterface $productRepository,
         private readonly ProductAttributeValueFormatter $valueFormatter,
-        private readonly AttributeValueConverter $attributeValueConverter,
+        private readonly AttributeValueConverterInterface $attributeValueConverter,
         private readonly ProductUrlGenerator $urlGenerator,
     ) {
     }
