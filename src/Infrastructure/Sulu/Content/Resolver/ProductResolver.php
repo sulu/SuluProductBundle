@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Infrastructure\Sulu\Content\Resolver;
 
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataLoaderInterface;
 use Sulu\Bundle\AdminBundle\Metadata\MetadataProviderInterface;
@@ -115,7 +116,7 @@ class ProductResolver implements ResolverInterface
 
         if ($this->isRequested($requested, 'attributes')) {
             $content[$this->outputKey($requested, 'attributes')] = ContentView::create(
-                $this->getAttributesMapByKey($dimensionContent),
+                $this->getAttributesMapByKey($dimensionContent, $locale),
                 [],
             );
         }
@@ -382,22 +383,57 @@ class ProductResolver implements ResolverInterface
     /**
      * Formatting and grouping are the `sulu_product_attribute_groups` Twig filter's job.
      *
-     * @return array<string, array{attribute: AttributeInterface, value: mixed}>
+     * @return array<string, ContentView> each resolving to `{attribute, value}`
      */
-    private function getAttributesMapByKey(ProductDimensionContentInterface $dimensionContent): array
+    private function getAttributesMapByKey(ProductDimensionContentInterface $dimensionContent, string $locale): array
     {
         $attributes = [];
 
         foreach ($this->attributeValueConverter->readAll($dimensionContent->getAttributes()) as $attributeValue) {
-            // The admin API has a boolean as the string "true" or "false"; "false" would be truthy in a template.
-            if (AttributeInterface::TYPE_BOOLEAN === $attributeValue['attribute']->getType() && \is_string($attributeValue['value'])) {
-                $attributeValue['value'] = AttributeValueConverter::TRUE === $attributeValue['value'];
-            }
-
-            $attributes[$attributeValue['attribute']->getKey()] = $attributeValue;
+            $attribute = $attributeValue['attribute'];
+            // Only an array of content views is resolved down to their content.
+            $attributes[$attribute->getKey()] = ContentView::create([
+                'attribute' => ContentView::create($attribute, []),
+                'value' => $this->resolveAttributeValue($attribute, $attributeValue['value'], $locale),
+            ], []);
         }
 
         return $attributes;
+    }
+
+    /**
+     * The fields of the attribute type's form fragment go through the property resolvers of their
+     * type, like the properties of a template: the resolved field itself for a single field, the
+     * resolved fields by name for several.
+     */
+    private function resolveAttributeValue(AttributeInterface $attribute, mixed $value, string $locale): ContentView
+    {
+        // The admin API has a boolean as the string "true" or "false"; "false" would be truthy in a template.
+        if (AttributeInterface::TYPE_BOOLEAN === $attribute->getType() && \is_string($value)) {
+            $value = AttributeValueConverter::TRUE === $value;
+        }
+
+        $fragment = $this->formMetadataLoader->getMetadata('product_attribute_' . $attribute->getType(), $locale, []);
+        $items = [];
+        if ($fragment instanceof FormMetadata) {
+            foreach ($fragment->getItems() as $item) {
+                if ($item instanceof FieldMetadata) {
+                    $items[$item->getName()] = $item;
+                }
+            }
+        }
+
+        if ([] === $items || null === $value) {
+            return ContentView::create($value, []);
+        }
+
+        if (1 !== \count($items)) {
+            return ContentView::create($this->metadataResolver->resolveItems($items, \is_array($value) ? $value : [], $locale), []);
+        }
+
+        $name = \array_key_first($items);
+
+        return $this->metadataResolver->resolveItems($items, [$name => $value], $locale)[$name];
     }
 
     /**
