@@ -22,6 +22,7 @@ use Sulu\Content\Application\ContentResolver\Value\ContentView;
 use Sulu\Content\Application\MetadataResolver\MetadataResolver;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Application\Attribute\AttributeValueConverter;
+use Sulu\Product\Application\Attribute\AttributeValueConverterInterface;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\ProductAssociationInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
@@ -57,7 +58,7 @@ class ProductResolver implements ResolverInterface
         private readonly ProductRepositoryInterface $productRepository,
         private readonly CurrentVariantProvider $currentVariantProvider,
         private readonly ReferenceStoreInterface $referenceStore,
-        private readonly AttributeValueConverter $attributeValueConverter,
+        private readonly AttributeValueConverterInterface $attributeValueConverter,
         private readonly array $variantProperties = [],
     ) {
     }

@@ -14,13 +14,13 @@ declare(strict_types=1);
 namespace Sulu\Product\Infrastructure\Sulu\Content\Normalizer;
 
 use Sulu\Content\Application\ContentNormalizer\Normalizer\NormalizerInterface;
-use Sulu\Product\Application\Attribute\AttributeValueConverter;
+use Sulu\Product\Application\Attribute\AttributeValueConverterInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 
 class ProductAttributesNormalizer implements NormalizerInterface
 {
     public function __construct(
-        private readonly AttributeValueConverter $attributeValueConverter,
+        private readonly AttributeValueConverterInterface $attributeValueConverter,
     ) {
     }
 
