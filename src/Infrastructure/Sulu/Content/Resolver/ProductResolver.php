@@ -402,9 +402,8 @@ class ProductResolver implements ResolverInterface
     }
 
     /**
-     * The fields of the attribute type's form fragment go through the property resolvers of their
-     * type, like the properties of a template: the resolved field itself for a single field, the
-     * resolved fields by name for several.
+     * Resolves the fragment's fields like the properties of a template: the field itself for a single
+     * field, the fields by name for several.
      */
     private function resolveAttributeValue(AttributeInterface $attribute, mixed $value, string $locale): ContentView
     {

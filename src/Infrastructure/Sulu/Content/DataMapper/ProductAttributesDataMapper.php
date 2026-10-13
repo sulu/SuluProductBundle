@@ -101,8 +101,6 @@ class ProductAttributesDataMapper implements DataMapperInterface
     }
 
     /**
-     * Keeps the rows named by the data, creates the missing ones and removes the rest.
-     *
      * @param array<string, ProductAttributeValueInterface> $existingRows by value key
      * @param array<string, array{number?: float, text?: string, option?: AttributeOptionInterface}> $data by value key
      *

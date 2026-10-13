@@ -64,8 +64,7 @@ class AttributeFieldFactory
 
     /**
      * The JSON schema of the attribute's value, keyed by attribute uuid like the submitted values.
-     * An attribute with several fields is an object of them, none of which is required itself: a
-     * required attribute only needs the object, the data mapper asks for at least one value.
+     * Several fields make an object, none of them required: the data mapper asks for at least one value.
      *
      * @return PropertyMetadata|null null when the attribute has no field
      */
@@ -95,9 +94,9 @@ class AttributeFieldFactory
     }
 
     /**
-     * One field, or a section of the fields for an attribute whose form fragment has several.
+     * A section of the fields when the form fragment has several.
      *
-     * @return FieldMetadata|SectionMetadata|null null when the attribute's type is unknown or has no form fragment
+     * @return FieldMetadata|SectionMetadata|null null when the attribute's type has no form fragment
      */
     public function build(ProductFamilyAttributeInterface $familyAttribute, string $locale, string $productType): FieldMetadata|SectionMetadata|null
     {
@@ -120,8 +119,7 @@ class AttributeFieldFactory
     }
 
     /**
-     * The fields of the attribute type's form fragment, configured for the attribute. A single one
-     * is named and labelled after the attribute, several keep the names and labels of the fragment.
+     * A single field is named and labelled after the attribute, several keep the fragment's names and labels.
      *
      * @return list<FieldMetadata>
      */

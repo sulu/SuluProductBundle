@@ -62,7 +62,7 @@ class AttributeValueConverter implements AttributeValueConverterInterface
             }
         }
 
-        // Its rows are named by the option keys, which could not be told from the rows of other fields.
+        // Its rows are named by option uuids, which could not be told from the rows of other fields.
         if (\count($fields) > 1 && \in_array('select', $fields, true)) {
             throw new \LogicException(\sprintf('The form fragment of attribute type "%s" mixes a select with other fields.', $type));
         }
@@ -135,8 +135,7 @@ class AttributeValueConverter implements AttributeValueConverterInterface
     }
 
     /**
-     * The value of one field of the attribute type's form fragment. Override it to read a field type
-     * of your own, and call the parent for the others.
+     * Override to read a field type of your own, and call the parent for the others.
      *
      * @param array<string, ProductAttributeValueInterface> $rows by value key
      */
@@ -180,8 +179,7 @@ class AttributeValueConverter implements AttributeValueConverterInterface
     }
 
     /**
-     * The rows of one field of the attribute type's form fragment by value key. Override it to write
-     * a field type of your own, and call the parent for the others.
+     * Override to write a field type of your own, and call the parent for the others.
      *
      * @return array<string, array{number?: float, text?: string, option?: AttributeOptionInterface}>
      */
@@ -263,8 +261,7 @@ class AttributeValueConverter implements AttributeValueConverterInterface
     }
 
     /**
-     * Read as "true" and "false", because the admin's single_select only takes string values;
-     * written from those or a real bool.
+     * The admin's single_select only takes the strings "true" and "false"; a real bool is accepted too.
      */
     private function toBooleanNumber(mixed $raw): float
     {

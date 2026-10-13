@@ -77,8 +77,8 @@ final class AttributeMapper implements AttributeMapperInterface
     }
 
     /**
-     * PHP turns a digit-only key into an int array key, and the content resolver renumbers those, so
-     * the website's `product.attributes` map, keyed by attribute key, would find another attribute or none.
+     * A digit-only key becomes an int array key, which the content resolver renumbers, so
+     * `product.attributes` on the website would find another attribute or none.
      */
     private function assertKeyIsNotANumber(string $key): void
     {

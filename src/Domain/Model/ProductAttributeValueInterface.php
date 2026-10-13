@@ -25,8 +25,7 @@ interface ProductAttributeValueInterface
     public function getAttributeKey(): string;
 
     /**
-     * Names this row among the rows of one attribute, unique per dimension content and attribute.
-     * A field of the attribute's form, e.g. "from" and "to" of a range, or the selected option's uuid.
+     * The name of this row among the attribute's rows: its form field, e.g. "from", or the selected option's uuid.
      */
     public function getValueKey(): string;
 
