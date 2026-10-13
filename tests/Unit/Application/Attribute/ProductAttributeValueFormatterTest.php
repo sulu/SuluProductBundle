@@ -222,13 +222,32 @@ class ProductAttributeValueFormatterTest extends TestCase
         $this->assertSame('16 mm', $this->formatter->format($attribute, 16, 'en'));
     }
 
-    public function testUnknownTypeFormatsANonScalarValueToNull(): void
+    public function testUnknownTypeFormatsABooleanOrNothingToNull(): void
     {
         $attribute = $this->attribute('custom_range');
 
-        $this->assertNull($this->formatter->format($attribute, ['from' => 1.0, 'to' => 2.0], 'en'));
         $this->assertNull($this->formatter->format($attribute, true, 'en'));
         $this->assertNull($this->formatter->format($attribute, null, 'en'));
+    }
+
+    public function testUnknownTypeJoinsTheNonEmptyValuesOfAnObject(): void
+    {
+        $attribute = $this->attribute('dimensions');
+
+        $this->assertSame(
+            '120, 80.5, boxed',
+            $this->formatter->format($attribute, ['width' => 120, 'height' => 80.5, 'depth' => null, 'note' => 'boxed', 'tags' => ['a'], 'empty' => ''], 'en'),
+        );
+        $this->assertNull($this->formatter->format($attribute, ['width' => null, 'note' => ''], 'en'));
+        $this->assertNull($this->formatter->format($attribute, [], 'en'));
+    }
+
+    public function testUnknownTypePlacesTheValuesOfAnObjectByFieldName(): void
+    {
+        $attribute = $this->attribute('dimensions');
+        $attribute->setConfig(['displayFormat' => '%width% × %height% × %depth% %unit%', 'unit' => 'MILLIMETER']);
+
+        $this->assertSame('120 × 80 ×  mm', $this->formatter->format($attribute, ['width' => 120, 'height' => 80, 'depth' => null], 'en'));
     }
 
     /**
