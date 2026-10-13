@@ -17,9 +17,6 @@ use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeOptionInterface;
 use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 
-/**
- * Converts the value of an attribute between the admin API and its rows.
- */
 interface AttributeValueConverterInterface
 {
     /**
@@ -30,27 +27,23 @@ interface AttributeValueConverterInterface
     public function getFields(AttributeInterface $attribute): array;
 
     /**
-     * The value as the admin API and the website see it: the field's value for a single field, an
-     * object of them for several, null when none is set.
+     * The field's value for a single field, an object of them for several, null when none is set.
      *
      * @param iterable<ProductAttributeValueInterface> $rows the rows of the attribute, possibly none
      */
     public function normalize(AttributeInterface $attribute, iterable $rows): mixed;
 
     /**
-     * The value of every attribute the rows belong to, by attribute uuid.
-     *
      * @param iterable<ProductAttributeValueInterface> $rows
      *
-     * @return array<string, array{attribute: AttributeInterface, value: mixed}>
+     * @return array<string, array{attribute: AttributeInterface, value: mixed}> by attribute uuid
      */
     public function normalizeAll(iterable $rows): array;
 
     /**
-     * The rows the value is stored in by value key, none for an empty value. Validates the whole
-     * value, so a rejected value changes nothing.
+     * Validates the whole value, so a rejected value changes nothing.
      *
-     * @return array<string, array{number?: float, text?: string, option?: AttributeOptionInterface}>
+     * @return array<string, array{number?: float, text?: string, option?: AttributeOptionInterface}> by value key, none for an empty value
      */
     public function denormalize(AttributeInterface $attribute, mixed $raw): array;
 }
