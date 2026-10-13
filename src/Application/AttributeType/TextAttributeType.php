@@ -13,17 +13,12 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Application\AttributeType;
 
-use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Product\Domain\Model\AttributeInterface;
 
-final class TextAttributeType implements AttributeTypeInterface
+final class TextAttributeType extends AbstractAttributeType
 {
     public function getKey(): string
     {
         return AttributeInterface::TYPE_TEXT;
-    }
-
-    public function configureField(FieldMetadata $field, AttributeInterface $attribute, string $locale): void
-    {
     }
 }

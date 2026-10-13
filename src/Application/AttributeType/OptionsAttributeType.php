@@ -17,7 +17,7 @@ use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\OptionMetadata;
 use Sulu\Product\Domain\Model\AttributeInterface;
 
-final class OptionsAttributeType implements AttributeTypeInterface
+final class OptionsAttributeType extends AbstractAttributeType
 {
     public function getKey(): string
     {

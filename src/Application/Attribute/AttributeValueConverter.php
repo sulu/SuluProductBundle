@@ -134,7 +134,7 @@ final class AttributeValueConverter
      * The rows the value is stored in by value key, none for an empty value. Validates the whole
      * value, so a rejected value changes nothing.
      *
-     * @return array<string, AttributeRowData>
+     * @return array<string, array{number?: float, text?: string, option?: AttributeOptionInterface}>
      */
     public function write(AttributeInterface $attribute, mixed $raw): array
     {
@@ -204,7 +204,7 @@ final class AttributeValueConverter
     }
 
     /**
-     * @return array<string, AttributeRowData>
+     * @return array<string, array{number?: float, text?: string, option?: AttributeOptionInterface}>
      */
     private function writeField(AttributeInterface $attribute, string $name, string $type, mixed $raw): array
     {
@@ -217,18 +217,18 @@ final class AttributeValueConverter
         }
 
         return [$name => match ($type) {
-            'number' => new AttributeRowData(number: $this->toNumber($raw)),
-            'date' => new AttributeRowData(number: $this->toTimestamp($raw)),
-            'text_line' => new AttributeRowData(text: $this->toText($raw)),
+            'number' => ['number' => $this->toNumber($raw)],
+            'date' => ['number' => $this->toTimestamp($raw)],
+            'text_line' => ['text' => $this->toText($raw)],
             'single_select' => AttributeInterface::TYPE_BOOLEAN === $attribute->getType()
-                ? new AttributeRowData(number: $this->toBooleanNumber($raw))
-                : new AttributeRowData(option: $this->toOption($attribute, $raw)),
+                ? ['number' => $this->toBooleanNumber($raw)]
+                : ['option' => $this->toOption($attribute, $raw)],
             default => throw $this->unsupported($attribute, $type),
         }];
     }
 
     /**
-     * @return array<string, AttributeRowData>
+     * @return array<string, array{number?: float, text?: string, option?: AttributeOptionInterface}>
      */
     private function writeOptions(AttributeInterface $attribute, mixed $raw): array
     {
@@ -241,7 +241,7 @@ final class AttributeValueConverter
         $rows = [];
         foreach ($raw as $optionKey) {
             $option = $this->toOption($attribute, $optionKey);
-            $rows[$option->getUuid()] = new AttributeRowData(option: $option);
+            $rows[$option->getUuid()] = ['option' => $option];
         }
 
         return $rows;

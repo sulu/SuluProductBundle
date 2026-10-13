@@ -13,17 +13,12 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Application\AttributeType;
 
-use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Product\Domain\Model\AttributeInterface;
 
-final class DateAttributeType implements AttributeTypeInterface
+final class DateAttributeType extends AbstractAttributeType
 {
     public function getKey(): string
     {
         return AttributeInterface::TYPE_DATE;
-    }
-
-    public function configureField(FieldMetadata $field, AttributeInterface $attribute, string $locale): void
-    {
     }
 }
