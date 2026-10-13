@@ -16,12 +16,14 @@ namespace Sulu\Product\Tests\Unit\Application\Mapper;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Product\Application\Mapper\AttributeMapper;
 use Sulu\Product\Application\Message\CreateAttributeMessage;
 use Sulu\Product\Application\Message\ModifyAttributeMessage;
 use Sulu\Product\Domain\Exception\AttributeOptionKeyNotUniqueException;
+use Sulu\Product\Domain\Exception\InvalidAttributeKeyException;
 use Sulu\Product\Domain\Exception\InvalidDateDisplayFormatException;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
@@ -309,6 +311,58 @@ class AttributeMapperTest extends TestCase
         ]));
 
         $this->assertTrue($attribute->isFilterable());
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function provideNumericKeys(): iterable
+    {
+        yield 'digits' => ['10'];
+        yield 'zero' => ['0'];
+        yield 'negative' => ['-5'];
+    }
+
+    #[DataProvider('provideNumericKeys')]
+    public function testMapRejectsAKeyThatIsANumber(string $key): void
+    {
+        $this->expectException(InvalidAttributeKeyException::class);
+
+        $this->mapper->mapAttributeData(new Attribute(new AttributeGroup()), new CreateAttributeMessage([
+            'locale' => 'en',
+            'key' => $key,
+            'type' => 'number',
+            'name' => 'Size',
+            'group' => 'group-uuid',
+        ]));
+    }
+
+    public function testMapModifyRejectsAKeyThatIsANumber(): void
+    {
+        $this->expectException(InvalidAttributeKeyException::class);
+
+        $this->mapper->mapAttributeData(new Attribute(new AttributeGroup()), new ModifyAttributeMessage(['uuid' => 'uuid-1'], [
+            'locale' => 'en',
+            'key' => '10',
+            'type' => 'number',
+            'name' => 'Size',
+        ]));
+    }
+
+    public function testMapAcceptsAKeyWithDigitsAndOtherCharacters(): void
+    {
+        $this->attributeRepository->findNextPositionInGroup(Argument::any())->willReturn(1);
+        $attribute = new Attribute(new AttributeGroup());
+
+        $this->mapper->mapAttributeData($attribute, new CreateAttributeMessage([
+            'locale' => 'en',
+            'key' => '010',
+            'type' => 'number',
+            'name' => 'Size',
+            'group' => 'group-uuid',
+        ]));
+
+        $this->assertSame('010', $attribute->getKey());
     }
 
     public function testMapRejectsADateDisplayFormatThatRendersNoDate(): void

@@ -16,6 +16,7 @@ namespace Sulu\Product\Application\Mapper;
 use Sulu\Product\Application\Message\CreateAttributeMessage;
 use Sulu\Product\Application\Message\ModifyAttributeMessage;
 use Sulu\Product\Domain\Exception\AttributeOptionKeyNotUniqueException;
+use Sulu\Product\Domain\Exception\InvalidAttributeKeyException;
 use Sulu\Product\Domain\Exception\InvalidDateDisplayFormatException;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeOption;
@@ -45,6 +46,8 @@ final class AttributeMapper implements AttributeMapperInterface
             $this->assertDateDisplayFormatRendersADate($message->getConfig()['displayFormat'] ?? null);
         }
 
+        $this->assertKeyIsNotANumber($message->getKey());
+
         $attribute->setKey($message->getKey());
         $attribute->setConfig($message->getConfig());
 
@@ -70,6 +73,17 @@ final class AttributeMapper implements AttributeMapperInterface
             $this->mapCreatePosition($attribute, $message);
         } else {
             $this->syncPosition($attribute, $message->getPosition());
+        }
+    }
+
+    /**
+     * PHP turns a digit-only key into an int array key, and the content resolver renumbers those, so
+     * the website's `product.attributes` map, keyed by attribute key, would find another attribute or none.
+     */
+    private function assertKeyIsNotANumber(string $key): void
+    {
+        if ($key === (string) (int) $key) {
+            throw new InvalidAttributeKeyException($key);
         }
     }
 

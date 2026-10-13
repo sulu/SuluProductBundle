@@ -839,6 +839,46 @@ class AttributeControllerTest extends SuluTestCase
         $this->assertEquals($expectedConfig, $data['config']);
     }
 
+    public function testRejectsAKeyThatIsANumberOnCreateAndUpdate(): void
+    {
+        self::purgeDatabase();
+        $groupId = $this->createGroup();
+
+        $this->client->request(
+            'POST',
+            '/admin/api/attributes.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode(['locale' => 'en', 'key' => '10', 'name' => 'Size', 'type' => 'number', 'group' => $groupId]) ?: null,
+        );
+        $this->assertHttpStatusCode(400, $this->client->getResponse());
+
+        $this->client->request(
+            'POST',
+            '/admin/api/attributes.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode(['locale' => 'en', 'key' => 'size', 'name' => 'Size', 'type' => 'number', 'group' => $groupId]) ?: null,
+        );
+        $postResponse = $this->client->getResponse();
+        $this->assertHttpStatusCode(201, $postResponse);
+        /** @var array{id: string} $created */
+        $created = \json_decode((string) $postResponse->getContent(), true);
+        $uuid = $created['id'];
+
+        $this->client->request(
+            'PUT',
+            '/admin/api/attributes/' . $uuid . '.json?locale=en',
+            [],
+            [],
+            [],
+            \json_encode(['locale' => 'en', 'key' => '10', 'name' => 'Size', 'type' => 'number']) ?: null,
+        );
+        $this->assertHttpStatusCode(400, $this->client->getResponse());
+    }
+
     public function testRejectsADateDisplayFormatThatRendersNoDateOnCreateAndUpdate(): void
     {
         self::purgeDatabase();
