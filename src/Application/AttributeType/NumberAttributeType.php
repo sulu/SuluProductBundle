@@ -25,7 +25,7 @@ final class NumberAttributeType extends AbstractAttributeType
         return AttributeInterface::TYPE_NUMBER;
     }
 
-    public function configureField(FieldMetadata $field, AttributeInterface $attribute, string $locale): void
+    protected function configureField(FieldMetadata $field, AttributeInterface $attribute, string $locale): void
     {
         $config = $attribute->getConfig();
 

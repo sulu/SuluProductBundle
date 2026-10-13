@@ -24,6 +24,7 @@ use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeOption;
 use Sulu\Product\Domain\Model\AttributeOptionTranslation;
+use Sulu\Product\Tests\Unit\Support\FormOf;
 
 #[CoversClass(MultiOptionsAttributeType::class)]
 class MultiOptionsAttributeTypeTest extends TestCase
@@ -44,7 +45,7 @@ class MultiOptionsAttributeTypeTest extends TestCase
 
         $field = new FieldMetadata('value');
         $field->setType('select');
-        $this->type()->configureField($field, $attribute, 'en');
+        $this->type()->configureForm(FormOf::fields($field), $attribute, 'en');
 
         $options = $field->getOptions();
         self::assertSame(['values'], \array_keys($options));
@@ -63,9 +64,9 @@ class MultiOptionsAttributeTypeTest extends TestCase
         $attribute = $this->attributeWithOptions();
 
         $multiOptionsField = new FieldMetadata('value');
-        $this->type()->configureField($multiOptionsField, $attribute, 'en');
+        $this->type()->configureForm(FormOf::fields($multiOptionsField), $attribute, 'en');
         $optionsField = new FieldMetadata('value');
-        (new OptionsAttributeType())->configureField($optionsField, $attribute, 'en');
+        (new OptionsAttributeType())->configureForm(FormOf::fields($optionsField), $attribute, 'en');
 
         self::assertEquals($optionsField->getOptions(), $multiOptionsField->getOptions());
     }

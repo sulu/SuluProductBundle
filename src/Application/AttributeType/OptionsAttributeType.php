@@ -24,7 +24,7 @@ final class OptionsAttributeType extends AbstractAttributeType
         return AttributeInterface::TYPE_OPTIONS;
     }
 
-    public function configureField(FieldMetadata $field, AttributeInterface $attribute, string $locale): void
+    protected function configureField(FieldMetadata $field, AttributeInterface $attribute, string $locale): void
     {
         $values = new OptionMetadata();
         $values->setName('values');

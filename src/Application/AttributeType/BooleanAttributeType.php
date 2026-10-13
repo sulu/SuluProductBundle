@@ -34,7 +34,7 @@ final class BooleanAttributeType extends AbstractAttributeType
         return AttributeInterface::TYPE_BOOLEAN;
     }
 
-    public function configureField(FieldMetadata $field, AttributeInterface $attribute, string $locale): void
+    protected function configureField(FieldMetadata $field, AttributeInterface $attribute, string $locale): void
     {
         $values = new OptionMetadata();
         $values->setName('values');

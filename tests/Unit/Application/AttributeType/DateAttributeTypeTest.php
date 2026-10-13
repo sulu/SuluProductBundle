@@ -20,6 +20,7 @@ use Sulu\Product\Application\AttributeType\DateAttributeType;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
+use Sulu\Product\Tests\Unit\Support\FormOf;
 
 #[CoversClass(DateAttributeType::class)]
 class DateAttributeTypeTest extends TestCase
@@ -34,7 +35,7 @@ class DateAttributeTypeTest extends TestCase
     {
         $field = new FieldMetadata('value');
 
-        (new DateAttributeType())->configureField($field, new Attribute(new AttributeGroup()), 'en');
+        (new DateAttributeType())->configureForm(FormOf::fields($field), new Attribute(new AttributeGroup()), 'en');
 
         self::assertSame([], $field->getOptions());
     }

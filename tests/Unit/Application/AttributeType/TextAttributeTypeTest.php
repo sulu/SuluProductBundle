@@ -20,6 +20,7 @@ use Sulu\Product\Application\AttributeType\TextAttributeType;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
+use Sulu\Product\Tests\Unit\Support\FormOf;
 
 #[CoversClass(TextAttributeType::class)]
 class TextAttributeTypeTest extends TestCase
@@ -34,7 +35,7 @@ class TextAttributeTypeTest extends TestCase
     {
         $field = new FieldMetadata('value');
 
-        (new TextAttributeType())->configureField($field, new Attribute(new AttributeGroup()), 'en');
+        (new TextAttributeType())->configureForm(FormOf::fields($field), new Attribute(new AttributeGroup()), 'en');
 
         self::assertSame([], $field->getOptions());
     }

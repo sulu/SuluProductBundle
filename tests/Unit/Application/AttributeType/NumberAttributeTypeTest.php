@@ -20,6 +20,7 @@ use Sulu\Product\Application\AttributeType\NumberAttributeType;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
+use Sulu\Product\Tests\Unit\Support\FormOf;
 
 #[CoversClass(NumberAttributeType::class)]
 class NumberAttributeTypeTest extends TestCase
@@ -37,7 +38,7 @@ class NumberAttributeTypeTest extends TestCase
         $attribute->setConfig(['min' => 0, 'max' => 100, 'step' => 0.5]);
 
         $field = new FieldMetadata('attribute_1');
-        $type->configureField($field, $attribute, 'en');
+        $type->configureForm(FormOf::fields($field), $attribute, 'en');
 
         $options = $field->getOptions();
         self::assertArrayHasKey('min', $options);
@@ -55,7 +56,7 @@ class NumberAttributeTypeTest extends TestCase
         $attribute->setConfig(['min' => 0]);
 
         $field = new FieldMetadata('attribute_1');
-        $type->configureField($field, $attribute, 'en');
+        $type->configureForm(FormOf::fields($field), $attribute, 'en');
 
         $options = $field->getOptions();
         self::assertArrayHasKey('min', $options);
