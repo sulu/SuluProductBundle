@@ -21,6 +21,8 @@ use Sulu\Bundle\HttpCacheBundle\ReferenceStore\ReferenceStore;
 use Sulu\Bundle\HttpCacheBundle\ReferenceStore\ReferenceStoreInterface;
 use Sulu\Content\Application\ContentResolver\Value\ContentView;
 use Sulu\Content\Application\MetadataResolver\MetadataResolver;
+use Sulu\Content\Application\PropertyResolver\PropertyResolverProviderInterface;
+use Sulu\Content\Application\PropertyResolver\Resolver\DefaultPropertyResolver;
 use Sulu\Product\Application\Attribute\AttributeValueConverter;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
@@ -57,7 +59,7 @@ abstract class ProductResolverTestCase extends TestCase
         return new ProductResolver(
             $formMetadataLoader ?? $this->noDetailFields(),
             $formMetadataProvider ?? $this->noAssociationFields(),
-            $metadataResolver ?? $this->noResolvedItems(),
+            $metadataResolver ?? $this->resolvingByDefault(),
             $productRepository ?? $this->noVariants(),
             new CurrentVariantProvider($requestStack),
             $referenceStore ?? new ReferenceStore(),
@@ -103,12 +105,15 @@ abstract class ProductResolverTestCase extends TestCase
         return $provider;
     }
 
-    protected function noResolvedItems(): MetadataResolver
+    /**
+     * Every field type resolves to its data, as when no property resolver is registered for it.
+     */
+    protected function resolvingByDefault(): MetadataResolver
     {
-        $resolver = $this->createStub(MetadataResolver::class);
-        $resolver->method('resolveItems')->willReturn([]);
+        $provider = $this->createStub(PropertyResolverProviderInterface::class);
+        $provider->method('getPropertyResolver')->willReturn(new DefaultPropertyResolver());
 
-        return $resolver;
+        return new MetadataResolver($provider);
     }
 
     protected function noVariants(): ProductRepositoryInterface

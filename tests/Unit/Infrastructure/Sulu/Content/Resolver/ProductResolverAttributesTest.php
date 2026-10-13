@@ -16,6 +16,7 @@ namespace Sulu\Product\Tests\Unit\Infrastructure\Sulu\Content\Resolver;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Sulu\Content\Application\ContentResolver\Value\ContentView;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Product\Application\Attribute\AttributeValueConverter;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
@@ -69,14 +70,34 @@ class ProductResolverAttributesTest extends ProductResolverTestCase
             $row->setNumber($number);
             $content->addAttribute($row);
         }
-        $resolver = $this->createResolver(
-            attributeValueConverter: ProductAttributeFragmentLoader::converter(['range' => ['from' => 'number', 'to' => 'number']]),
-        );
-
-        $attributes = $this->resolveAttributes($content, $resolver);
+        $attributes = $this->resolveAttributes($content, $this->attributeResolver(['range' => ['from' => 'number', 'to' => 'number']]));
 
         self::assertSame(['range'], \array_keys($attributes));
         self::assertSame(['from' => 1.5, 'to' => 4.0], $attributes['range']['value']);
+    }
+
+    public function testAnAttributeWithoutValueFieldsResolvesToNull(): void
+    {
+        $content = $this->createContent();
+        $unknown = $this->createAttribute('unknown');
+        $unknown->setType('unknown');
+        $this->addTextValue($content, $unknown, 'x');
+
+        self::assertNull($this->resolveAttributes($content)['unknown']['value']);
+    }
+
+    public function testAMultiFieldAttributeWithoutAKnownRowResolvesToNull(): void
+    {
+        $content = $this->createContent();
+        $range = $this->createAttribute('range');
+        $range->setType('range');
+        $row = new ProductAttributeValue($content, $range, 'range', valueKey: 'middle');
+        $row->setNumber(2.0);
+        $content->addAttribute($row);
+
+        $attributes = $this->resolveAttributes($content, $this->attributeResolver(['range' => ['from' => 'number', 'to' => 'number']]));
+
+        self::assertNull($attributes['range']['value']);
     }
 
     public function testPassesEveryValueThroughWithoutFormatting(): void
@@ -149,7 +170,7 @@ class ProductResolverAttributesTest extends ProductResolverTestCase
         $content = $view->getContent();
         self::assertIsArray($content);
 
-        return $content;
+        return $this->unwrap($content);
     }
 
     /**
@@ -157,11 +178,51 @@ class ProductResolverAttributesTest extends ProductResolverTestCase
      */
     private function resolveAttributes(ProductDimensionContent $content, ?ProductResolver $resolver = null): array
     {
-        $view = $this->resolveContent($content, null, $resolver)['attributes'];
+        $view = $this->resolveContent($content, null, $resolver ?? $this->attributeResolver())['attributes'];
         self::assertInstanceOf(ContentView::class, $view);
 
-        /** @var array<string, array{attribute: AttributeInterface, value: mixed}> $attributes */
         $attributes = $view->getContent();
+        self::assertIsArray($attributes);
+
+        return $this->unwrap($attributes);
+    }
+
+    /**
+     * @param array<string, array<string, string>> $fields the field types by field name, by attribute type
+     */
+    private function attributeResolver(array $fields = []): ProductResolver
+    {
+        $loader = new ProductAttributeFragmentLoader($fields);
+
+        return $this->createResolver($loader, attributeValueConverter: new AttributeValueConverter($loader));
+    }
+
+    /**
+     * The attributes as a template gets them, once the content resolver has resolved the content views.
+     *
+     * @param array<array-key, mixed> $views
+     *
+     * @return array<string, array{attribute: AttributeInterface, value: mixed}>
+     */
+    private function unwrap(array $views): array
+    {
+        $attributes = [];
+        foreach ($views as $key => $view) {
+            self::assertInstanceOf(ContentView::class, $view);
+            $content = $view->getContent();
+            self::assertIsArray($content);
+            self::assertInstanceOf(ContentView::class, $content['attribute']);
+            self::assertInstanceOf(ContentView::class, $content['value']);
+
+            $attribute = $content['attribute']->getContent();
+            self::assertInstanceOf(AttributeInterface::class, $attribute);
+
+            $value = $content['value']->getContent();
+            $attributes[(string) $key] = [
+                'attribute' => $attribute,
+                'value' => \is_array($value) ? \array_map(static fn (mixed $field): mixed => $field instanceof ContentView ? $field->getContent() : $field, $value) : $value,
+            ];
+        }
 
         return $attributes;
     }
