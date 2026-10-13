@@ -29,6 +29,7 @@ use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Infrastructure\Sulu\Admin\AttributeFieldFactory;
 use Sulu\Product\UserInterface\Controller\Admin\ProductVariantController;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 
@@ -438,6 +439,53 @@ class ProductVariantControllerTest extends SuluTestCase
         $this->assertSame([$overridableUuid], $this->getPersistedAttributeUuids($overriding['id']));
         $this->assertIsArray($overriding['attributes']);
         $this->assertSame('Blue', $overriding['attributes'][$overridableUuid]);
+    }
+
+    public function testOverridableAttributeShowsParentValueAndFollowsTheOverrideFlag(): void
+    {
+        self::purgeDatabase();
+
+        $uuid = $this->createAttribute('weight', 'Weight');
+        $flag = AttributeFieldFactory::overrideKey($uuid);
+        $familyId = $this->createProductFamily([$uuid => ['required' => false, 'mode' => 'overridable']]);
+        $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS, [$uuid => 'Red']);
+
+        // A flag that is off stores nothing, the read shows the parent's value and the flag off.
+        $this->client->request('POST', '/admin/api/products/' . $parentId . '/variants.json?locale=en', [], [], [], \json_encode([
+            'locale' => 'en', 'code' => 'FLAG-1', 'title' => 'Flagged',
+            'attributes' => [$uuid => 'Red', $flag => false],
+        ]) ?: null);
+        $this->assertHttpStatusCode(201, $this->client->getResponse());
+        $variant = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($variant);
+        $this->assertIsString($variant['id']);
+        $this->assertSame([], $this->getPersistedAttributeUuids($variant['id']));
+        $this->assertSame('Red', $variant['attributes'][$uuid]);
+        $this->assertFalse($variant['attributes'][$flag]);
+
+        // A flag that is on stores the value and reads back on.
+        $this->client->request('PUT', '/admin/api/products/' . $parentId . '/variants/' . $variant['id'] . '.json?locale=en', [], [], [], \json_encode([
+            'locale' => 'en', 'code' => 'FLAG-1', 'title' => 'Flagged',
+            'attributes' => [$uuid => 'Blue', $flag => true],
+        ]) ?: null);
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+        $variant = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($variant);
+        $this->assertSame([$uuid], $this->getPersistedAttributeUuids($variant['id']));
+        $this->assertSame('Blue', $variant['attributes'][$uuid]);
+        $this->assertTrue($variant['attributes'][$flag]);
+
+        // Turning it off again deletes the override even though the old value is still submitted.
+        $this->client->request('PUT', '/admin/api/products/' . $parentId . '/variants/' . $variant['id'] . '.json?locale=en', [], [], [], \json_encode([
+            'locale' => 'en', 'code' => 'FLAG-1', 'title' => 'Flagged',
+            'attributes' => [$uuid => 'Blue', $flag => false],
+        ]) ?: null);
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+        $variant = \json_decode((string) $this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($variant);
+        $this->assertSame([], $this->getPersistedAttributeUuids($variant['id']));
+        $this->assertSame('Red', $variant['attributes'][$uuid]);
+        $this->assertFalse($variant['attributes'][$flag]);
     }
 
     public function testInheritedAttributesAreStrippedOnWriteAndNeverReturnedOnVariantRead(): void

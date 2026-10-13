@@ -19,12 +19,12 @@ publishing and deleting follow their own permissions and flags, so try them when
 
 1. **Discover the vocabulary first.** `sulu_attribute_list` gives every attribute with its `id`,
    `type` and, for `options` attributes, its allowed option keys. `sulu_product_family_list` gives
-   each family's UUID plus, per attribute, the `required` and `variantSpecific` flags.
+   each family's UUID plus, per attribute, `required` and `mode` (`shared`, `variantSpecific` or `overridable`).
 2. **Create the product.** `sulu_product_create` takes the family UUID as `productFamily`. Pass
    values as `attributes={"<colour uuid>": "red", "<width uuid>": 42}`. Every attribute the family marks `required` (and
-   not `variantSpecific`) must be present. For a `product_with_variants` the `variantSpecific` ones
-   belong on the variants. A plain `product` has no variants, so it needs every required attribute,
-   the `variantSpecific` ones included.
+   not `variantSpecific`) must be present; an `overridable` one is the default its variants inherit.
+   For a `product_with_variants` the `variantSpecific` ones belong on the variants. A plain `product`
+   has no variants, so it needs every required attribute, the `variantSpecific` ones included.
 3. **Publish.** `sulu_content_publish` with `resourceKey: products` and the product's UUID.
 
 ## Variants
@@ -53,10 +53,11 @@ variants are created with `sulu_product_variant_create`. `sulu_product_create` r
   spelling of a value is unclear. Filter by its `searchValue`, not the display text.
 - Variants cannot be nested. Only a `product_with_variants` can hold them.
 - A variant inherits its parent's family, so `sulu_product_variant_create` takes no `productFamily`.
-- On a variant, pass only the **variant axes**. These are the attributes the family marks
-  `variantSpecific`. Shared attributes belong on the parent and are dropped from a variant payload.
-- For a `product_with_variants`, required attributes split by level. Variant specific ones are
-  required on the variant. All other required ones are required on the parent. A plain `product`
+- On a variant, pass the **variant axes** (mode `variantSpecific`) and any **overrides** (mode
+  `overridable`, optional: leave one out and the variant inherits the parent's value, send it empty to
+  drop an override). `shared` attributes belong on the parent and are dropped from a variant payload.
+- For a `product_with_variants`, required attributes split by level. `variantSpecific` ones are
+  required on the variant. All other required ones, `overridable` included, are required on the parent. A plain `product`
   needs all required attributes.
 - **Publish the parent first, then each variant.** Publishing the parent does not publish its
   variants. A variant can only be published while its parent is published in that locale.

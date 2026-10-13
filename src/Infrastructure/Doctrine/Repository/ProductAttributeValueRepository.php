@@ -103,6 +103,19 @@ final class ProductAttributeValueRepository implements ProductAttributeValueRepo
                 ->setParameter('attribute', $attribute);
         }
 
+        $attributeUuids = $filters['attributeUuids'] ?? null;
+        if (null !== $attributeUuids) {
+            $queryBuilder->andWhere('IDENTITY(attributeValue.attribute) IN (:attributeUuids)')
+                ->setParameter('attributeUuids', $attributeUuids);
+        }
+
+        $product = $filters['product'] ?? null;
+        if (null !== $product) {
+            Assert::string($product); // @phpstan-ignore staticMethod.alreadyNarrowedType
+            $queryBuilder->andWhere('IDENTITY(dimensionContent.product) = :product')
+                ->setParameter('product', $product);
+        }
+
         $stage = $filters['stage'] ?? null;
         if (null !== $stage) {
             Assert::string($stage); // @phpstan-ignore staticMethod.alreadyNarrowedType

@@ -28,6 +28,7 @@ use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Content\Domain\Model\WorkflowInterface;
 use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
 use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushStamp;
+use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
 use Sulu\Product\Application\Message\ApplyWorkflowTransitionProductMessage;
 use Sulu\Product\Application\Message\CreateProductMessage;
 use Sulu\Product\Application\Message\ModifyProductMessage;
@@ -37,8 +38,10 @@ use Sulu\Product\Domain\Exception\RequiredProductAttributeMissingException;
 use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
+use Sulu\Product\Domain\Repository\ProductAttributeValueRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Infrastructure\Sulu\Admin\AttributeFieldFactory;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -71,6 +74,8 @@ final class ProductVariantController implements SecuredControllerInterface
         private FieldDescriptorFactoryInterface $fieldDescriptorFactory,
         private DoctrineListBuilderFactoryInterface $listBuilderFactory,
         private RestHelperInterface $restHelper,
+        private ProductAttributeValueRepositoryInterface $productAttributeValueRepository,
+        private AttributeTypeRegistry $attributeTypeRegistry,
     ) {
         $this->messageBus = $messageBus;
     }
@@ -118,6 +123,14 @@ final class ProductVariantController implements SecuredControllerInterface
 
     public function getAction(Request $request, string $parentId, string $id): Response
     {
+        return $this->renderVariant($request, $parentId, $id);
+    }
+
+    /**
+     * @param ProductFamilyInterface|null $family the parent's family when the caller already loaded it
+     */
+    private function renderVariant(Request $request, string $parentId, string $id, ?ProductFamilyInterface $family = null): Response
+    {
         $locale = $this->getLocale($request);
         $dimensionAttributes = [
             'locale' => $locale,
@@ -161,7 +174,12 @@ final class ProductVariantController implements SecuredControllerInterface
             ['sulu_admin' => true, 'sulu_admin_product' => true, 'sulu_admin_product_content' => true],
         );
 
-        return new JsonResponse($data);
+        return new JsonResponse($this->applyInheritedAttributes(
+            $data,
+            $parentId,
+            $family ?? $this->findFamily($parentId),
+            $locale,
+        ));
     }
 
     public function postAction(Request $request, string $parentId): Response
@@ -174,8 +192,10 @@ final class ProductVariantController implements SecuredControllerInterface
             ], 409);
         }
 
+        $family = $this->resolveFamily($parent);
+
         /** @var CreateProductMessageData $data */
-        $data = $this->buildData($request, $parentId, $parent);
+        $data = $this->buildData($request, $parentId, $family);
 
         $message = new CreateProductMessage($data);
 
@@ -188,7 +208,7 @@ final class ProductVariantController implements SecuredControllerInterface
             return new JsonResponse(['detail' => 'Invalid attribute value provided.'], 400);
         }
 
-        $response = $this->getAction($request, $parentId, $variant->getUuid());
+        $response = $this->renderVariant($request, $parentId, $variant->getUuid(), $family);
         $response->setStatusCode(201);
 
         return $response;
@@ -199,8 +219,10 @@ final class ProductVariantController implements SecuredControllerInterface
         $parent = $this->getParentOrFail($parentId);
         $this->assertVariantOwnedByParent($parentId, $id);
 
+        $family = $this->resolveFamily($parent);
+
         /** @var ModifyProductMessageData $data */
-        $data = $this->buildData($request, $parentId, $parent);
+        $data = $this->buildData($request, $parentId, $family);
 
         $message = new ModifyProductMessage(['uuid' => $id], $data);
 
@@ -212,7 +234,7 @@ final class ProductVariantController implements SecuredControllerInterface
             return new JsonResponse(['detail' => 'Invalid attribute value provided.'], 400);
         }
 
-        return $this->getAction($request, $parentId, $id);
+        return $this->renderVariant($request, $parentId, $id, $family);
     }
 
     public function deleteAction(Request $request, string $parentId, string $id): Response
@@ -299,9 +321,8 @@ final class ProductVariantController implements SecuredControllerInterface
     /**
      * @return array<string, mixed>
      */
-    private function buildData(Request $request, string $parentId, ProductInterface $parent): array
+    private function buildData(Request $request, string $parentId, ProductFamilyInterface $family): array
     {
-        $family = $this->resolveFamily($parent);
         $requestData = $request->request->all();
 
         $data = \array_replace(
@@ -324,9 +345,97 @@ final class ProductVariantController implements SecuredControllerInterface
         return $data;
     }
 
+    /**
+     * An overridable attribute the variant has no value for shows the parent's value, and every
+     * overridable attribute carries an override flag the admin renders as a toggle; saving reads
+     * the flag back, see {@see self::stripInheritedAttributes()}.
+     *
+     * @param array<string, mixed> $data
+     *
+     * @return array<string, mixed>
+     */
+    private function applyInheritedAttributes(array $data, string $parentId, ?ProductFamilyInterface $family, string $locale): array
+    {
+        if (null === $family) {
+            return $data;
+        }
+
+        $attributes = \is_array($data['attributes'] ?? null) ? $data['attributes'] : [];
+        $inherited = [];
+        $overridable = false;
+
+        foreach ($family->getFamilyAttributes() as $familyAttribute) {
+            if (ProductFamilyAttributeInterface::MODE_OVERRIDABLE !== $familyAttribute->getMode()) {
+                continue;
+            }
+
+            $overridable = true;
+            $uuid = $familyAttribute->getAttribute()->getUuid();
+            $own = $attributes[$uuid] ?? null;
+            $overridden = null !== $own && '' !== $own && [] !== $own;
+            $attributes[AttributeFieldFactory::overrideKey($uuid)] = $overridden;
+
+            if (!$overridden) {
+                $inherited[] = $uuid;
+            }
+        }
+
+        if (!$overridable) {
+            return $data;
+        }
+
+        if ([] !== $inherited) {
+            $attributes = \array_replace($attributes, $this->loadParentValues($parentId, $inherited, $locale));
+        }
+
+        $data['attributes'] = $attributes;
+
+        return $data;
+    }
+
+    /**
+     * The parent's draft values of the given attributes in one query, wire-formatted like the
+     * normalizer does; a localized value wins over an unlocalized one.
+     *
+     * @param list<string> $attributeUuids
+     *
+     * @return array<string, mixed> attribute uuid => value
+     */
+    private function loadParentValues(string $parentId, array $attributeUuids, string $locale): array
+    {
+        $values = $this->productAttributeValueRepository->findBy([
+            'product' => $parentId,
+            'attributeUuids' => $attributeUuids,
+            'stage' => DimensionContentInterface::STAGE_DRAFT,
+            'locale' => $locale,
+        ]);
+
+        $unlocalized = [];
+        $localized = [];
+        foreach ($values as $value) {
+            $attribute = $value->getAttribute();
+            if (!$this->attributeTypeRegistry->has($attribute->getType())) {
+                continue;
+            }
+
+            $wireValue = $this->attributeTypeRegistry->get($attribute->getType())->readValue($value);
+            if (null === $wireValue) {
+                continue;
+            }
+
+            if (null === $value->getProductDimensionContent()->getLocale()) {
+                $unlocalized[$attribute->getUuid()] = $wireValue;
+            } else {
+                $localized[$attribute->getUuid()] = $wireValue;
+            }
+        }
+
+        return \array_replace($unlocalized, $localized);
+    }
+
     private function resolveFamily(ProductInterface $parent): ProductFamilyInterface
     {
-        $family = $this->productFamilyRepository->findOneBy(['productUuid' => $parent->getUuid()]);
+        $family = $this->findFamily($parent->getUuid());
 
         if (null === $family) {
             throw new \RuntimeException(\sprintf(
@@ -336,6 +445,14 @@ final class ProductVariantController implements SecuredControllerInterface
         }
 
         return $family;
+    }
+
+    private function findFamily(string $parentId): ?ProductFamilyInterface
+    {
+        return $this->productFamilyRepository->findOneBy(
+            ['productUuid' => $parentId],
+            [ProductFamilyRepositoryInterface::SELECT_FAMILY_ATTRIBUTES => true],
+        );
     }
 
     /**
@@ -349,9 +466,21 @@ final class ProductVariantController implements SecuredControllerInterface
     private function stripInheritedAttributes(ProductFamilyInterface $family, array $attributes): array
     {
         foreach ($family->getFamilyAttributes() as $familyAttribute) {
+            $uuid = $familyAttribute->getAttribute()->getUuid();
+
             if (ProductFamilyAttributeInterface::MODE_SHARED === $familyAttribute->getMode()) {
-                unset($attributes[$familyAttribute->getAttribute()->getUuid()]);
+                unset($attributes[$uuid]);
             }
+
+            // A submitted flag decides: off clears the override (an empty value deletes it), on keeps the value.
+            $flagKey = AttributeFieldFactory::overrideKey($uuid);
+            if (ProductFamilyAttributeInterface::MODE_OVERRIDABLE === $familyAttribute->getMode()
+                && \array_key_exists($flagKey, $attributes)
+                && !$attributes[$flagKey]
+            ) {
+                $attributes[$uuid] = null;
+            }
+            unset($attributes[$flagKey]);
         }
 
         return $attributes;

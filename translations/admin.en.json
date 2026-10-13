@@ -1,4 +1,5 @@
 {
+    "sulu_product.override": "Override",
     "sulu_product.products": "Products",
     "sulu_product.variants": "Variants",
     "sulu_product.attributes": "Attributes",
