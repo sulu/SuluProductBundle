@@ -15,9 +15,9 @@ namespace Sulu\Product\Infrastructure\Sulu\Content\DataMapper;
 
 use Sulu\Content\Application\ContentDataMapper\DataMapper\DataMapperInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
-use Sulu\Product\Application\Attribute\AttributeRowData;
 use Sulu\Product\Application\Attribute\AttributeValueConverter;
 use Sulu\Product\Domain\Exception\RequiredProductAttributeMissingException;
+use Sulu\Product\Domain\Model\AttributeOptionInterface;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
@@ -104,7 +104,7 @@ class ProductAttributesDataMapper implements DataMapperInterface
      * Keeps the rows named by the data, creates the missing ones and removes the rest.
      *
      * @param array<string, ProductAttributeValueInterface> $existingRows by value key
-     * @param array<string, AttributeRowData> $data by value key
+     * @param array<string, array{number?: float, text?: string, option?: AttributeOptionInterface}> $data by value key
      *
      * @return array<string, ProductAttributeValueInterface>
      */
@@ -125,9 +125,9 @@ class ProductAttributesDataMapper implements DataMapperInterface
                 $targetDimensionContent->addAttribute($row);
             }
 
-            $row->setNumber($rowData->number);
-            $row->setText($rowData->text);
-            $row->setAttributeOption($rowData->option);
+            $row->setNumber($rowData['number'] ?? null);
+            $row->setText($rowData['text'] ?? null);
+            $row->setAttributeOption($rowData['option'] ?? null);
 
             $rows[$valueKey] = $row;
         }

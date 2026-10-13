@@ -22,7 +22,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 /**
  * Yes, no or no value, chosen in a single_select with the values "true" and "false".
  */
-final class BooleanAttributeType implements AttributeTypeInterface
+final class BooleanAttributeType extends AbstractAttributeType
 {
     public function __construct(
         private readonly TranslatorInterface $translator,

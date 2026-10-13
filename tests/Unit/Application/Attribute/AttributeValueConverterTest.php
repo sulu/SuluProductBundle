@@ -22,18 +22,17 @@ use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataLoaderInterface;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\SectionMetadata;
-use Sulu\Product\Application\Attribute\AttributeRowData;
 use Sulu\Product\Application\Attribute\AttributeValueConverter;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeOption;
+use Sulu\Product\Domain\Model\AttributeOptionInterface;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 
 #[CoversClass(AttributeValueConverter::class)]
-#[CoversClass(AttributeRowData::class)]
 class AttributeValueConverterTest extends TestCase
 {
     use ProphecyTrait;
@@ -361,7 +360,7 @@ class AttributeValueConverterTest extends TestCase
 
         $rows = $this->converter()->write($attribute, 'red');
 
-        self::assertSame($attribute->getOption('red'), $rows['value']->option);
+        self::assertSame($attribute->getOption('red'), $rows['value']['option'] ?? null);
     }
 
     /**
@@ -466,10 +465,10 @@ class AttributeValueConverterTest extends TestCase
         $rows = $this->converter()->write($attribute, ['green', 'red']);
 
         self::assertSame([$green->getUuid(), $red->getUuid()], \array_keys($rows));
-        self::assertSame($green, $rows[$green->getUuid()]->option);
-        self::assertSame($red, $rows[$red->getUuid()]->option);
-        self::assertNull($rows[$green->getUuid()]->number);
-        self::assertNull($rows[$green->getUuid()]->text);
+        self::assertSame($green, $rows[$green->getUuid()]['option'] ?? null);
+        self::assertSame($red, $rows[$red->getUuid()]['option'] ?? null);
+        self::assertArrayNotHasKey('number', $rows[$green->getUuid()]);
+        self::assertArrayNotHasKey('text', $rows[$green->getUuid()]);
     }
 
     public function testWriteMultiSelectCollapsesDuplicatesOntoOneRow(): void
@@ -534,9 +533,9 @@ class AttributeValueConverterTest extends TestCase
         $rows = [];
         foreach ($converter->write($attribute, ['width' => 10, 'height' => 20.5]) as $valueKey => $data) {
             $rows[] = $this->row($attribute, $valueKey, [
-                'number' => $data->number,
-                'text' => $data->text,
-                'option' => $data->option?->getKey(),
+                'number' => $data['number'] ?? null,
+                'text' => $data['text'] ?? null,
+                'option' => isset($data['option']) ? $data['option']->getKey() : null,
             ]);
         }
 
@@ -621,14 +620,14 @@ class AttributeValueConverterTest extends TestCase
     }
 
     /**
-     * @param array<string, AttributeRowData> $rows
+     * @param array<string, array{number?: float, text?: string, option?: AttributeOptionInterface}> $rows
      *
      * @return array<string, array{number: float|null, text: string|null, option: string|null}>
      */
     private function toColumns(array $rows): array
     {
         return \array_map(
-            static fn (AttributeRowData $data): array => self::columns($data->number, $data->text, $data->option?->getKey()),
+            static fn (array $data): array => self::columns($data['number'] ?? null, $data['text'] ?? null, ($data['option'] ?? null)?->getKey()),
             $rows,
         );
     }

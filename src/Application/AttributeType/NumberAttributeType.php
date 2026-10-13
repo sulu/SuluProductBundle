@@ -18,7 +18,7 @@ use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\OptionMetadata;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Webmozart\Assert\Assert;
 
-final class NumberAttributeType implements AttributeTypeInterface
+final class NumberAttributeType extends AbstractAttributeType
 {
     public function getKey(): string
     {

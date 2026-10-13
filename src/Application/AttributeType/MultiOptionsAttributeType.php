@@ -19,7 +19,7 @@ use Sulu\Product\Domain\Model\AttributeInterface;
 /**
  * Several of the attribute's options, chosen in a select.
  */
-final class MultiOptionsAttributeType implements AttributeTypeInterface
+final class MultiOptionsAttributeType extends AbstractAttributeType
 {
     public function __construct(
         private readonly OptionsAttributeType $optionsAttributeType,
