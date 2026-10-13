@@ -88,8 +88,6 @@ class ProductAttributeValueFormatter
     }
 
     /**
-     * An editor can set a unit and a display format per attribute; without them the value renders bare.
-     *
      * @param array<string, string> $placeholders further placeholders of the type, e.g. a range's bounds
      */
     private function applyDisplayFormat(AttributeInterface $attribute, mixed $value, array $placeholders = []): ?string
