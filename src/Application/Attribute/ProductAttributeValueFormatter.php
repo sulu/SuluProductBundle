@@ -38,8 +38,32 @@ class ProductAttributeValueFormatter
             AttributeInterface::TYPE_DATE => $this->formatDate($attribute, $value, $locale),
             AttributeInterface::TYPE_BOOLEAN => $this->formatBoolean($value),
             AttributeInterface::TYPE_RANGE => $this->formatRange($attribute, $value),
-            default => $this->applyDisplayFormat($attribute, $value),
+            // The types of a project end up here. Formatting through a method of AttributeTypeInterface,
+            // so that each type owns its website text, would replace this match: worth doing next.
+            default => \is_array($value) ? $this->formatFields($attribute, $value) : $this->applyDisplayFormat($attribute, $value),
         };
+    }
+
+    /**
+     * The non-empty values joined by commas. The display format may place each one by its field name,
+     * e.g. `%width% × %height%`, like a range's `%from%` and `%to%`.
+     *
+     * @param array<array-key, mixed> $fields
+     */
+    private function formatFields(AttributeInterface $attribute, array $fields): ?string
+    {
+        $values = [];
+        $placeholders = [];
+        foreach ($fields as $name => $field) {
+            $text = \is_string($field) || \is_int($field) || \is_float($field) ? (string) $field : '';
+            $placeholders['%' . $name . '%'] = $text;
+
+            if ('' !== $text) {
+                $values[] = $text;
+            }
+        }
+
+        return $this->applyDisplayFormat($attribute, [] === $values ? null : \implode(', ', $values), $placeholders);
     }
 
     private function formatOptions(AttributeInterface $attribute, mixed $optionKeys, string $locale): ?string
