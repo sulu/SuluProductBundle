@@ -16,7 +16,9 @@ namespace Sulu\Product\Tests\Unit\Application\AttributeType;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\OptionMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\SectionMetadata;
 use Sulu\Product\Application\AttributeType\BooleanAttributeType;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
@@ -69,5 +71,15 @@ class BooleanAttributeTypeTest extends TestCase
     private function type(): BooleanAttributeType
     {
         return new BooleanAttributeType(new LocaleKeyTranslator());
+    }
+
+    public function testConfigureFormIgnoresItemsThatAreNotFields(): void
+    {
+        $form = new FormMetadata();
+        $form->addItem(new SectionMetadata('section'));
+
+        $this->type()->configureForm($form, new Attribute(new AttributeGroup()), 'en');
+
+        $this->addToAssertionCount(1);
     }
 }

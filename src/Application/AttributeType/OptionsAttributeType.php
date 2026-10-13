@@ -14,30 +14,37 @@ declare(strict_types=1);
 namespace Sulu\Product\Application\AttributeType;
 
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\OptionMetadata;
 use Sulu\Product\Domain\Model\AttributeInterface;
 
-final class OptionsAttributeType extends AbstractAttributeType
+final class OptionsAttributeType implements AttributeTypeInterface
 {
     public function getKey(): string
     {
         return AttributeInterface::TYPE_OPTIONS;
     }
 
-    protected function configureField(FieldMetadata $field, AttributeInterface $attribute, string $locale): void
+    public function configureForm(FormMetadata $form, AttributeInterface $attribute, string $locale): void
     {
-        $values = new OptionMetadata();
-        $values->setName('values');
-        $values->setType(OptionMetadata::TYPE_COLLECTION);
+        foreach ($form->getItems() as $field) {
+            if (!$field instanceof FieldMetadata) {
+                continue;
+            }
 
-        foreach ($attribute->getOptions() as $option) {
-            $valueOption = new OptionMetadata();
-            $valueOption->setName($option->getKey());
-            $valueOption->setValue($option->getKey());
-            $valueOption->setTitle($option->getTranslation($locale)?->getName() ?? $option->getKey(), $locale);
-            $values->addValueOption($valueOption);
+            $values = new OptionMetadata();
+            $values->setName('values');
+            $values->setType(OptionMetadata::TYPE_COLLECTION);
+
+            foreach ($attribute->getOptions() as $option) {
+                $valueOption = new OptionMetadata();
+                $valueOption->setName($option->getKey());
+                $valueOption->setValue($option->getKey());
+                $valueOption->setTitle($option->getTranslation($locale)?->getName() ?? $option->getKey(), $locale);
+                $values->addValueOption($valueOption);
+            }
+
+            $field->addOption($values);
         }
-
-        $field->addOption($values);
     }
 }

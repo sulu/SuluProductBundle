@@ -17,8 +17,12 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\OptionMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\SectionMetadata;
 use Sulu\Product\Application\AttributeType\OptionsAttributeType;
+use Sulu\Product\Domain\Model\Attribute;
+use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeOptionInterface;
 use Sulu\Product\Domain\Model\AttributeOptionTranslationInterface;
@@ -79,5 +83,15 @@ class OptionsAttributeTypeTest extends TestCase
         self::assertCount(1, $valueOptions);
         self::assertSame('red', $valueOptions[0]->getName());
         self::assertSame('Red', $valueOptions[0]->getTitle('en'));
+    }
+
+    public function testConfigureFormIgnoresItemsThatAreNotFields(): void
+    {
+        $form = new FormMetadata();
+        $form->addItem(new SectionMetadata('section'));
+
+        (new OptionsAttributeType())->configureForm($form, new Attribute(new AttributeGroup()), 'en');
+
+        $this->addToAssertionCount(1);
     }
 }
