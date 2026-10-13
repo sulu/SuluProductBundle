@@ -20,13 +20,13 @@ use Sulu\Content\Application\ContentManager\ContentManagerInterface;
 use Sulu\Mcp\Application\Content\ContentNormalizerTrait;
 use Sulu\Mcp\Domain\Security\PermissionRequirement;
 use Sulu\Mcp\Domain\Security\RequiresPermission;
-use Sulu\Product\Application\Mcp\ProductCompletenessChecker;
-use Sulu\Product\Application\Mcp\ProjectLocales;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
 use Sulu\Product\Domain\Exception\UnknownLocaleException;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
+use Sulu\Product\Infrastructure\Symfony\Mcp\ProductCompletenessChecker;
+use Sulu\Product\Infrastructure\Symfony\Mcp\ProjectLocales;
 
 /**
  * @internal

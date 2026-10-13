@@ -17,14 +17,14 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
-use Sulu\Product\Application\Ai\ProductUrlGenerator;
-use Sulu\Product\Application\Ai\SearchProductsByAttributes;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\SearchProductsByAttributesTool;
-use Sulu\Product\Tests\Unit\Application\Ai\Fixtures\FakeRouteGenerator;
+use Sulu\Product\Tests\Unit\UserInterface\Agent\Tool\Fixtures\FakeRouteGenerator;
+use Sulu\Product\UserInterface\Agent\Tool\ProductUrlGenerator;
+use Sulu\Product\UserInterface\Agent\Tool\SearchProductsByAttributes;
 
 #[CoversClass(SearchProductsByAttributesTool::class)]
 class SearchProductsByAttributesToolTest extends TestCase

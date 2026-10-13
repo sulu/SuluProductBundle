@@ -19,13 +19,13 @@ use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
-use Sulu\Product\Application\Ai\AttributeFilter;
-use Sulu\Product\Application\Ai\GetProducts;
-use Sulu\Product\Application\Ai\ProductUrlGenerator;
-use Sulu\Product\Application\Ai\SearchProductsByAttributes;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
-use Sulu\Product\Tests\Unit\Application\Ai\Fixtures\FakeRouteGenerator;
+use Sulu\Product\Tests\Unit\UserInterface\Agent\Tool\Fixtures\FakeRouteGenerator;
+use Sulu\Product\UserInterface\Agent\Tool\AttributeFilter;
+use Sulu\Product\UserInterface\Agent\Tool\GetProducts;
+use Sulu\Product\UserInterface\Agent\Tool\ProductUrlGenerator;
+use Sulu\Product\UserInterface\Agent\Tool\SearchProductsByAttributes;
 
 /**
  * Every sulu_* tool name mentioned in a description must be a registered tool.

@@ -19,7 +19,7 @@ use Sulu\Component\Localization\Localization;
 use Sulu\Component\Webspace\Manager\WebspaceCollection;
 use Sulu\Component\Webspace\Manager\WebspaceManagerInterface;
 use Sulu\Component\Webspace\Webspace;
-use Sulu\Product\Application\Mcp\ProductCompletenessChecker;
+use Sulu\Product\Infrastructure\Symfony\Mcp\ProductCompletenessChecker;
 
 /**
  * @internal
