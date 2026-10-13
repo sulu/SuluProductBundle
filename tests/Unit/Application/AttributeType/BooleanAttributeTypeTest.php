@@ -22,6 +22,7 @@ use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Tests\Unit\Fixture\LocaleKeyTranslator;
+use Sulu\Product\Tests\Unit\Support\FormOf;
 
 #[CoversClass(BooleanAttributeType::class)]
 class BooleanAttributeTypeTest extends TestCase
@@ -37,7 +38,7 @@ class BooleanAttributeTypeTest extends TestCase
         $field = new FieldMetadata('attribute_1');
         $field->setRequired(true);
 
-        $this->type()->configureField($field, new Attribute(new AttributeGroup()), 'de');
+        $this->type()->configureForm(FormOf::fields($field), new Attribute(new AttributeGroup()), 'de');
 
         $values = $field->getOptions()['values'];
         self::assertSame(OptionMetadata::TYPE_COLLECTION, $values->getType());
@@ -53,7 +54,7 @@ class BooleanAttributeTypeTest extends TestCase
         $field = new FieldMetadata('attribute_1');
         $field->setRequired(false);
 
-        $this->type()->configureField($field, new Attribute(new AttributeGroup()), 'de');
+        $this->type()->configureForm(FormOf::fields($field), new Attribute(new AttributeGroup()), 'de');
 
         $options = $field->getOptions()['values']->getValue();
         self::assertIsArray($options);

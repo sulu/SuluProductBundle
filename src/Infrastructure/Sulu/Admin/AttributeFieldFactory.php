@@ -157,10 +157,16 @@ class AttributeFieldFactory
                 $field->setLabel($label, $locale);
             }
 
-            $type->configureField($field, $attribute, $locale);
-
             $fields[] = $field;
         }
+
+        $form = new FormMetadata();
+        $form->setKey('product_attribute_' . $attribute->getType());
+        foreach ($fields as $field) {
+            $form->addItem($field);
+        }
+
+        $type->configureForm($form, $attribute, $locale);
 
         return $fields;
     }

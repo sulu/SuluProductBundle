@@ -13,17 +13,17 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Application\AttributeType;
 
-use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Product\Domain\Model\AttributeInterface;
 
 /**
  * An attribute type is its key and the form fragment `product_attribute_<key>`, whose fields are the
- * values of the attribute. The type configures each of these fields for an attribute, e.g. its bounds
- * or its choices.
+ * values of the attribute. The type configures the form of these fields for an attribute, e.g. its
+ * bounds or its choices.
  */
 interface AttributeTypeInterface
 {
     public function getKey(): string;
 
-    public function configureField(FieldMetadata $field, AttributeInterface $attribute, string $locale): void;
+    public function configureForm(FormMetadata $form, AttributeInterface $attribute, string $locale): void;
 }

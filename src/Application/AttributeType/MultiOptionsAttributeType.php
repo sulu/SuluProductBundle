@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Application\AttributeType;
 
-use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Product\Domain\Model\AttributeInterface;
 
 /**
@@ -31,8 +31,8 @@ final class MultiOptionsAttributeType extends AbstractAttributeType
         return AttributeInterface::TYPE_MULTI_OPTIONS;
     }
 
-    public function configureField(FieldMetadata $field, AttributeInterface $attribute, string $locale): void
+    public function configureForm(FormMetadata $form, AttributeInterface $attribute, string $locale): void
     {
-        $this->optionsAttributeType->configureField($field, $attribute, $locale);
+        $this->optionsAttributeType->configureForm($form, $attribute, $locale);
     }
 }

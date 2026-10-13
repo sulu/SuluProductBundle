@@ -22,6 +22,7 @@ use Sulu\Product\Application\AttributeType\OptionsAttributeType;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeOptionInterface;
 use Sulu\Product\Domain\Model\AttributeOptionTranslationInterface;
+use Sulu\Product\Tests\Unit\Support\FormOf;
 
 #[CoversClass(OptionsAttributeType::class)]
 class OptionsAttributeTypeTest extends TestCase
@@ -46,7 +47,7 @@ class OptionsAttributeTypeTest extends TestCase
         $field = new FieldMetadata('attribute_1');
         $field->setType('single_select');
 
-        (new OptionsAttributeType())->configureField($field, $attribute->reveal(), 'en');
+        (new OptionsAttributeType())->configureForm(FormOf::fields($field), $attribute->reveal(), 'en');
 
         $valueOptions = $field->getOptions()['values']->getValue();
         self::assertIsArray($valueOptions);
@@ -67,7 +68,7 @@ class OptionsAttributeTypeTest extends TestCase
         $field = new FieldMetadata('attribute_1');
         $field->setType('single_select');
 
-        (new OptionsAttributeType())->configureField($field, $attribute->reveal(), 'en');
+        (new OptionsAttributeType())->configureForm(FormOf::fields($field), $attribute->reveal(), 'en');
 
         $options = $field->getOptions();
         self::assertArrayHasKey('values', $options);
