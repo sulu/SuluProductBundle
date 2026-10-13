@@ -150,13 +150,13 @@ class AttributeValueConverterTest extends TestCase
     {
         $attribute = $this->attribute($type);
 
-        self::assertSame($expected, $this->converter()->read($attribute, [$this->row($attribute, 'value', $columns)]));
+        self::assertSame($expected, $this->converter()->normalize($attribute, [$this->row($attribute, 'value', $columns)]));
     }
 
     #[DataProvider('provideSingleValueRows')]
     public function testReadSingleFieldWithoutRowIsNull(string $type): void
     {
-        self::assertNull($this->converter()->read($this->attribute($type), []));
+        self::assertNull($this->converter()->normalize($this->attribute($type), []));
     }
 
     public function testReadSingleFieldFindsTheRowOfItsName(): void
@@ -167,14 +167,14 @@ class AttributeValueConverterTest extends TestCase
 
         $rows = [$this->row($attribute, 'other', ['number' => 1.0]), $this->row($attribute, 'amount', ['number' => 2.0])];
 
-        self::assertSame(2.0, (new AttributeValueConverter($loader->reveal()))->read($attribute, $rows));
+        self::assertSame(2.0, (new AttributeValueConverter($loader->reveal()))->normalize($attribute, $rows));
     }
 
     public function testReadWithoutFragmentIsNull(): void
     {
         $attribute = $this->attribute(self::NO_FRAGMENT);
 
-        self::assertNull($this->converter()->read($attribute, [$this->row($attribute, 'value', ['number' => 1.0])]));
+        self::assertNull($this->converter()->normalize($attribute, [$this->row($attribute, 'value', ['number' => 1.0])]));
     }
 
     public function testReadMultiSelectReturnsTheOptionKeysInRowOrder(): void
@@ -185,7 +185,7 @@ class AttributeValueConverterTest extends TestCase
             $this->row($attribute, 'red', ['option' => 'red']),
         ];
 
-        self::assertSame(['red', 'green'], $this->converter()->read($attribute, $rows));
+        self::assertSame(['red', 'green'], $this->converter()->normalize($attribute, $rows));
     }
 
     public function testReadMultiSelectKeepsAnOptionNamedZero(): void
@@ -194,13 +194,13 @@ class AttributeValueConverterTest extends TestCase
         $attribute->addOption(new AttributeOption($attribute, '0'));
         $rows = [$this->row($attribute, '0', ['option' => '0']), $this->row($attribute, 'green', ['option' => 'green'])];
 
-        self::assertSame(['green', '0'], $this->converter()->read($attribute, $rows));
-        self::assertSame(['0'], $this->converter()->read($attribute, [$rows[0]]));
+        self::assertSame(['green', '0'], $this->converter()->normalize($attribute, $rows));
+        self::assertSame(['0'], $this->converter()->normalize($attribute, [$rows[0]]));
     }
 
     public function testReadMultiSelectWithoutRowsIsNull(): void
     {
-        self::assertNull($this->converter()->read($this->attribute(self::MULTI_SELECT), []));
+        self::assertNull($this->converter()->normalize($this->attribute(self::MULTI_SELECT), []));
     }
 
     public function testReadMultiSelectSkipsRowsWithoutOption(): void
@@ -212,7 +212,7 @@ class AttributeValueConverterTest extends TestCase
             $this->row($attribute, 'red', ['option' => 'red']),
         ];
 
-        self::assertSame(['red', 'green'], $this->converter()->read($attribute, $rows));
+        self::assertSame(['red', 'green'], $this->converter()->normalize($attribute, $rows));
     }
 
     public function testReadMultiSelectWithOnlyRowsWithoutOptionIsNull(): void
@@ -220,7 +220,7 @@ class AttributeValueConverterTest extends TestCase
         $attribute = $this->attribute(self::MULTI_SELECT);
         $rows = [$this->row($attribute, 'deleted', []), $this->row($attribute, 'gone', [])];
 
-        self::assertNull($this->converter()->read($attribute, $rows));
+        self::assertNull($this->converter()->normalize($attribute, $rows));
     }
 
     public function testReadObjectReturnsTheValueOfEveryField(): void
@@ -231,7 +231,7 @@ class AttributeValueConverterTest extends TestCase
             $this->row($attribute, 'height', ['number' => 20.5]),
         ];
 
-        self::assertSame(['width' => 10.0, 'height' => 20.5], $this->converter()->read($attribute, $rows));
+        self::assertSame(['width' => 10.0, 'height' => 20.5], $this->converter()->normalize($attribute, $rows));
     }
 
     public function testReadObjectIgnoresTheOrderOfTheRows(): void
@@ -242,7 +242,7 @@ class AttributeValueConverterTest extends TestCase
             $this->row($attribute, 'width', ['number' => 10.0]),
         ];
 
-        self::assertSame(['width' => 10.0, 'height' => 20.5], $this->converter()->read($attribute, $rows));
+        self::assertSame(['width' => 10.0, 'height' => 20.5], $this->converter()->normalize($attribute, $rows));
     }
 
     public function testReadObjectFromAGenerator(): void
@@ -253,7 +253,7 @@ class AttributeValueConverterTest extends TestCase
             yield $this->row($attribute, 'width', ['number' => 10.0]);
         })();
 
-        self::assertSame(['width' => 10.0, 'height' => 20.5], $this->converter()->read($attribute, $rows));
+        self::assertSame(['width' => 10.0, 'height' => 20.5], $this->converter()->normalize($attribute, $rows));
     }
 
     public function testReadObjectWithPartialValuesKeepsTheMissingOnesNull(): void
@@ -262,7 +262,7 @@ class AttributeValueConverterTest extends TestCase
 
         self::assertSame(
             ['width' => null, 'height' => 20.5],
-            $this->converter()->read($attribute, [$this->row($attribute, 'height', ['number' => 20.5])]),
+            $this->converter()->normalize($attribute, [$this->row($attribute, 'height', ['number' => 20.5])]),
         );
     }
 
@@ -270,8 +270,8 @@ class AttributeValueConverterTest extends TestCase
     {
         $attribute = $this->attribute(self::DIMENSIONS);
 
-        self::assertNull($this->converter()->read($attribute, []));
-        self::assertNull($this->converter()->read($attribute, [$this->row($attribute, 'width', [])]));
+        self::assertNull($this->converter()->normalize($attribute, []));
+        self::assertNull($this->converter()->normalize($attribute, [$this->row($attribute, 'width', [])]));
     }
 
     public function testReadUnsupportedFieldTypeThrows(): void
@@ -281,7 +281,7 @@ class AttributeValueConverterTest extends TestCase
         $this->expectException(\LogicException::class);
         $this->expectExceptionMessage('The form field type "checkbox" of attribute type "unsupported_attribute" has no value mapping.');
 
-        $this->converter()->read($attribute, [$this->row($attribute, 'value', ['number' => 1.0])]);
+        $this->converter()->normalize($attribute, [$this->row($attribute, 'value', ['number' => 1.0])]);
     }
 
     public function testReadAllGroupsTheRowsByAttribute(): void
@@ -298,7 +298,7 @@ class AttributeValueConverterTest extends TestCase
             yield $this->row($multiSelect, 'green', ['option' => 'green']);
         })();
 
-        $values = $this->converter()->readAll($rows);
+        $values = $this->converter()->normalizeAll($rows);
 
         self::assertSame(['dimensions-uuid', 'number-uuid', 'multi-select-uuid'], \array_keys($values));
         self::assertSame($dimensions, $values['dimensions-uuid']['attribute']);
@@ -311,7 +311,7 @@ class AttributeValueConverterTest extends TestCase
 
     public function testReadAllWithoutRowsIsEmpty(): void
     {
-        self::assertSame([], $this->converter()->readAll([]));
+        self::assertSame([], $this->converter()->normalizeAll([]));
     }
 
     /**
@@ -341,7 +341,7 @@ class AttributeValueConverterTest extends TestCase
     #[DataProvider('provideSingleValueWrites')]
     public function testWriteSingleField(string $type, mixed $raw, array $expected): void
     {
-        self::assertSame($expected, $this->toColumns($this->converter()->write($this->attribute($type), $raw)));
+        self::assertSame($expected, $this->toColumns($this->converter()->denormalize($this->attribute($type), $raw)));
     }
 
     public function testWriteSingleFieldUsesTheFieldName(): void
@@ -349,7 +349,7 @@ class AttributeValueConverterTest extends TestCase
         $loader = $this->prophesize(FormMetadataLoaderInterface::class);
         $loader->getMetadata('product_attribute_amount', 'en', [])->willReturn($this->fragment(['amount' => 'number']));
 
-        $rows = (new AttributeValueConverter($loader->reveal()))->write($this->attribute('amount'), 5);
+        $rows = (new AttributeValueConverter($loader->reveal()))->denormalize($this->attribute('amount'), 5);
 
         self::assertSame(['amount' => self::columns(number: 5.0)], $this->toColumns($rows));
     }
@@ -358,7 +358,7 @@ class AttributeValueConverterTest extends TestCase
     {
         $attribute = $this->attribute(AttributeInterface::TYPE_OPTIONS);
 
-        $rows = $this->converter()->write($attribute, 'red');
+        $rows = $this->converter()->denormalize($attribute, 'red');
 
         self::assertSame($attribute->getOption('red'), $rows['value']['option'] ?? null);
     }
@@ -388,7 +388,7 @@ class AttributeValueConverterTest extends TestCase
     #[DataProvider('provideEmptyWrites')]
     public function testWriteEmptyValueHasNoRows(string $type, mixed $raw): void
     {
-        self::assertSame([], $this->converter()->write($this->attribute($type), $raw));
+        self::assertSame([], $this->converter()->denormalize($this->attribute($type), $raw));
     }
 
     /**
@@ -435,7 +435,7 @@ class AttributeValueConverterTest extends TestCase
             self::UNSUPPORTED === $type ? \LogicException::class : \InvalidArgumentException::class,
         );
 
-        $this->converter()->write($this->attribute($type), $raw);
+        $this->converter()->denormalize($this->attribute($type), $raw);
     }
 
     public function testWriteUnknownOptionNamesAttributeAndOption(): void
@@ -443,7 +443,7 @@ class AttributeValueConverterTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Attribute "attribute" has no option "blue".');
 
-        $this->converter()->write($this->attribute(AttributeInterface::TYPE_OPTIONS), 'blue');
+        $this->converter()->denormalize($this->attribute(AttributeInterface::TYPE_OPTIONS), 'blue');
     }
 
     public function testWriteInvalidDateNamesTheFormat(): void
@@ -451,7 +451,7 @@ class AttributeValueConverterTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected a valid date in format "Y-m-d", got "2024-02-30".');
 
-        $this->converter()->write($this->attribute(AttributeInterface::TYPE_DATE), '2024-02-30');
+        $this->converter()->denormalize($this->attribute(AttributeInterface::TYPE_DATE), '2024-02-30');
     }
 
     public function testWriteMultiSelectCreatesOneRowPerOptionNamedByItsUuid(): void
@@ -462,7 +462,7 @@ class AttributeValueConverterTest extends TestCase
         self::assertNotNull($green);
         self::assertNotNull($red);
 
-        $rows = $this->converter()->write($attribute, ['green', 'red']);
+        $rows = $this->converter()->denormalize($attribute, ['green', 'red']);
 
         self::assertSame([$green->getUuid(), $red->getUuid()], \array_keys($rows));
         self::assertSame($green, $rows[$green->getUuid()]['option'] ?? null);
@@ -479,14 +479,14 @@ class AttributeValueConverterTest extends TestCase
         self::assertNotNull($red);
         self::assertNotNull($green);
 
-        $rows = $this->converter()->write($attribute, ['red', 'green', 'red']);
+        $rows = $this->converter()->denormalize($attribute, ['red', 'green', 'red']);
 
         self::assertSame([$red->getUuid(), $green->getUuid()], \array_keys($rows));
     }
 
     public function testWriteObjectCreatesARowPerGivenField(): void
     {
-        $rows = $this->converter()->write($this->attribute(self::DIMENSIONS), ['width' => 10, 'height' => '20.5']);
+        $rows = $this->converter()->denormalize($this->attribute(self::DIMENSIONS), ['width' => 10, 'height' => '20.5']);
 
         self::assertSame(
             ['width' => self::columns(number: 10.0), 'height' => self::columns(number: 20.5)],
@@ -496,7 +496,7 @@ class AttributeValueConverterTest extends TestCase
 
     public function testWritePartialObjectOnlyCreatesTheGivenRows(): void
     {
-        $rows = $this->converter()->write($this->attribute(self::DIMENSIONS), ['height' => 20.5, 'width' => null]);
+        $rows = $this->converter()->denormalize($this->attribute(self::DIMENSIONS), ['height' => 20.5, 'width' => null]);
 
         self::assertSame(['height' => self::columns(number: 20.5)], $this->toColumns($rows));
     }
@@ -506,7 +506,7 @@ class AttributeValueConverterTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Attribute "attribute" has no field "depth", "length".');
 
-        $this->converter()->write($this->attribute(self::DIMENSIONS), ['width' => 1, 'depth' => 2, 'length' => 3]);
+        $this->converter()->denormalize($this->attribute(self::DIMENSIONS), ['width' => 1, 'depth' => 2, 'length' => 3]);
     }
 
     public function testWriteObjectNeedsAnArray(): void
@@ -514,7 +514,7 @@ class AttributeValueConverterTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected an object for attribute "attribute".');
 
-        $this->converter()->write($this->attribute(self::DIMENSIONS), 'abc');
+        $this->converter()->denormalize($this->attribute(self::DIMENSIONS), 'abc');
     }
 
     public function testWriteWithoutFragmentThrows(): void
@@ -522,7 +522,7 @@ class AttributeValueConverterTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Attribute type "no_fragment_attribute" has no form fragment.');
 
-        $this->converter()->write($this->attribute(self::NO_FRAGMENT), 'value');
+        $this->converter()->denormalize($this->attribute(self::NO_FRAGMENT), 'value');
     }
 
     public function testWrittenRowsReadBackTheSameValue(): void
@@ -531,7 +531,7 @@ class AttributeValueConverterTest extends TestCase
         $converter = $this->converter();
 
         $rows = [];
-        foreach ($converter->write($attribute, ['width' => 10, 'height' => 20.5]) as $valueKey => $data) {
+        foreach ($converter->denormalize($attribute, ['width' => 10, 'height' => 20.5]) as $valueKey => $data) {
             $rows[] = $this->row($attribute, $valueKey, [
                 'number' => $data['number'] ?? null,
                 'text' => $data['text'] ?? null,
@@ -539,7 +539,7 @@ class AttributeValueConverterTest extends TestCase
             ]);
         }
 
-        self::assertSame(['width' => 10.0, 'height' => 20.5], $converter->read($attribute, $rows));
+        self::assertSame(['width' => 10.0, 'height' => 20.5], $converter->normalize($attribute, $rows));
     }
 
     /**
@@ -625,20 +625,20 @@ class AttributeValueConverterTest extends TestCase
         $loader->getMetadata('product_attribute_shade', 'en', [])->willReturn(self::fragment(['value' => 'color_picker']));
 
         $converter = new class($loader->reveal()) extends AttributeValueConverter {
-            protected function readField(AttributeInterface $attribute, string $name, string $type, array $rows): mixed
+            protected function normalizeField(AttributeInterface $attribute, string $name, string $type, array $rows): mixed
             {
-                return 'color_picker' === $type ? \strtoupper((string) ($rows[$name] ?? null)?->getText()) : parent::readField($attribute, $name, $type, $rows);
+                return 'color_picker' === $type ? \strtoupper((string) ($rows[$name] ?? null)?->getText()) : parent::normalizeField($attribute, $name, $type, $rows);
             }
 
-            protected function writeField(AttributeInterface $attribute, string $name, string $type, mixed $raw): array
+            protected function denormalizeField(AttributeInterface $attribute, string $name, string $type, mixed $raw): array
             {
-                return 'color_picker' === $type ? [$name => ['text' => \ltrim(\is_string($raw) ? $raw : '', '#')]] : parent::writeField($attribute, $name, $type, $raw);
+                return 'color_picker' === $type ? [$name => ['text' => \ltrim(\is_string($raw) ? $raw : '', '#')]] : parent::denormalizeField($attribute, $name, $type, $raw);
             }
         };
         $attribute = $this->attribute('shade');
 
-        self::assertSame(['value' => ['text' => 'ff0000']], $converter->write($attribute, '#ff0000'));
-        self::assertSame('FF0000', $converter->read($attribute, [$this->row($attribute, 'value', ['text' => 'ff0000'])]));
+        self::assertSame(['value' => ['text' => 'ff0000']], $converter->denormalize($attribute, '#ff0000'));
+        self::assertSame('FF0000', $converter->normalize($attribute, [$this->row($attribute, 'value', ['text' => 'ff0000'])]));
     }
 
     /**

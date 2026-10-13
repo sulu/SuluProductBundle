@@ -117,7 +117,7 @@ final class GetProductDetails
             [$localized, $unlocalized] = $this->findLiveDimensionContents($source, $locale);
 
             foreach ([$unlocalized, $localized] as $dimensionContent) {
-                foreach ($this->attributeValueConverter->readAll($dimensionContent?->getAttributes() ?? []) as $attributeValue) {
+                foreach ($this->attributeValueConverter->normalizeAll($dimensionContent?->getAttributes() ?? []) as $attributeValue) {
                     $merged[$attributeValue['attribute']->getKey()] = $attributeValue;
                 }
             }

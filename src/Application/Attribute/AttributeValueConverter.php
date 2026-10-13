@@ -22,11 +22,8 @@ use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Webmozart\Assert\Assert;
 
 /**
- * Converts the value of an attribute between the admin API and its rows. The fields of the
- * attribute type's form fragment (`product_attribute_<type>`) tell which values it has: a single
- * field is the value itself, several fields make an object keyed by their names. A field is stored
- * in the row of its name, a multi select in one row per selected option, named by the option's uuid:
- * unlike the key, it never changes and has no variants a case-insensitive unique index would confuse.
+ * A multi select row is named by the option's uuid, not its key: the uuid never changes and has no
+ * variants (`XL`, `xl`) a case-insensitive unique index would confuse.
  */
 class AttributeValueConverter implements AttributeValueConverterInterface
 {
@@ -73,7 +70,7 @@ class AttributeValueConverter implements AttributeValueConverterInterface
         return $this->fields[$type] = $fields;
     }
 
-    public function read(AttributeInterface $attribute, iterable $rows): mixed
+    public function normalize(AttributeInterface $attribute, iterable $rows): mixed
     {
         $rowsByKey = [];
         foreach ($rows as $row) {
@@ -83,18 +80,18 @@ class AttributeValueConverter implements AttributeValueConverterInterface
         $fields = $this->getFields($attribute);
 
         if (1 === \count($fields)) {
-            return $this->readField($attribute, \array_key_first($fields), \current($fields), $rowsByKey);
+            return $this->normalizeField($attribute, \array_key_first($fields), \current($fields), $rowsByKey);
         }
 
         $values = [];
         foreach ($fields as $name => $type) {
-            $values[$name] = $this->readField($attribute, $name, $type, $rowsByKey);
+            $values[$name] = $this->normalizeField($attribute, $name, $type, $rowsByKey);
         }
 
         return [] === \array_filter($values, static fn (mixed $value): bool => null !== $value) ? null : $values;
     }
 
-    public function readAll(iterable $rows): array
+    public function normalizeAll(iterable $rows): array
     {
         /** @var array<string, array{attribute: AttributeInterface, rows: list<ProductAttributeValueInterface>}> $rowsByAttribute */
         $rowsByAttribute = [];
@@ -106,19 +103,19 @@ class AttributeValueConverter implements AttributeValueConverterInterface
 
         $values = [];
         foreach ($rowsByAttribute as $uuid => ['attribute' => $attribute, 'rows' => $attributeRows]) {
-            $values[$uuid] = ['attribute' => $attribute, 'value' => $this->read($attribute, $attributeRows)];
+            $values[$uuid] = ['attribute' => $attribute, 'value' => $this->normalize($attribute, $attributeRows)];
         }
 
         return $values;
     }
 
-    public function write(AttributeInterface $attribute, mixed $raw): array
+    public function denormalize(AttributeInterface $attribute, mixed $raw): array
     {
         $fields = $this->getFields($attribute);
         Assert::notEmpty($fields, \sprintf('Attribute type "%s" has no form fragment.', $attribute->getType()));
 
         if (1 === \count($fields)) {
-            return $this->writeField($attribute, \array_key_first($fields), \current($fields), $raw);
+            return $this->denormalizeField($attribute, \array_key_first($fields), \current($fields), $raw);
         }
 
         if (null === $raw || '' === $raw) {
@@ -131,7 +128,7 @@ class AttributeValueConverter implements AttributeValueConverterInterface
 
         $rows = [];
         foreach ($fields as $name => $type) {
-            $rows += $this->writeField($attribute, $name, $type, $raw[$name] ?? null);
+            $rows += $this->denormalizeField($attribute, $name, $type, $raw[$name] ?? null);
         }
 
         return $rows;
@@ -143,7 +140,7 @@ class AttributeValueConverter implements AttributeValueConverterInterface
      *
      * @param array<string, ProductAttributeValueInterface> $rows by value key
      */
-    protected function readField(AttributeInterface $attribute, string $name, string $type, array $rows): mixed
+    protected function normalizeField(AttributeInterface $attribute, string $name, string $type, array $rows): mixed
     {
         if ('select' === $type) {
             // A deleted option leaves its row without an option.
@@ -188,7 +185,7 @@ class AttributeValueConverter implements AttributeValueConverterInterface
      *
      * @return array<string, array{number?: float, text?: string, option?: AttributeOptionInterface}>
      */
-    protected function writeField(AttributeInterface $attribute, string $name, string $type, mixed $raw): array
+    protected function denormalizeField(AttributeInterface $attribute, string $name, string $type, mixed $raw): array
     {
         if ('select' === $type) {
             return $this->writeOptions($attribute, $raw);

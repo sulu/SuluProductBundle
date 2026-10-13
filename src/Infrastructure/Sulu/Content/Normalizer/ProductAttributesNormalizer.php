@@ -56,7 +56,7 @@ class ProductAttributesNormalizer implements NormalizerInterface
             }
         }
 
-        foreach ($this->attributeValueConverter->readAll($object->getAttributes()) as $uuid => ['value' => $value]) {
+        foreach ($this->attributeValueConverter->normalizeAll($object->getAttributes()) as $uuid => ['value' => $value]) {
             $attributesMap[$uuid] = $value;
         }
 

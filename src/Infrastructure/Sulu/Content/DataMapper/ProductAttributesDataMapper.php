@@ -85,7 +85,7 @@ class ProductAttributesDataMapper implements DataMapperInterface
                 : $unlocalizedDimensionContent;
 
             // Validates the whole value first, so a rejected one changes no row.
-            $rowData = $this->attributeValueConverter->write($attribute, $raw);
+            $rowData = $this->attributeValueConverter->denormalize($attribute, $raw);
 
             $allExisting[$attributeUuid] = $this->writeRows(
                 $familyAttribute,
@@ -153,7 +153,7 @@ class ProductAttributesDataMapper implements DataMapperInterface
             }
 
             $attribute = $familyAttribute->getAttribute();
-            if (null === $this->attributeValueConverter->read($attribute, $rowsByAttribute[$attributeUuid] ?? [])) {
+            if (null === $this->attributeValueConverter->normalize($attribute, $rowsByAttribute[$attributeUuid] ?? [])) {
                 throw new RequiredProductAttributeMissingException($attribute->getKey());
             }
         }

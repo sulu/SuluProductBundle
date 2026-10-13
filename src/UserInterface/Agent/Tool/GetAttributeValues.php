@@ -84,7 +84,7 @@ final class GetAttributeValues
         foreach ($groups as $group) {
             $value = $this->valueFormatter->format(
                 $attribute,
-                $this->attributeValueConverter->read($attribute, [$group['value']]),
+                $this->attributeValueConverter->normalize($attribute, [$group['value']]),
                 $locale,
             );
             if (\is_bool($value)) {

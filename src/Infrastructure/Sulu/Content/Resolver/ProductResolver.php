@@ -389,7 +389,7 @@ class ProductResolver implements ResolverInterface
     {
         $attributes = [];
 
-        foreach ($this->attributeValueConverter->readAll($dimensionContent->getAttributes()) as $attributeValue) {
+        foreach ($this->attributeValueConverter->normalizeAll($dimensionContent->getAttributes()) as $attributeValue) {
             $attribute = $attributeValue['attribute'];
             // Only an array of content views is resolved down to their content.
             $attributes[$attribute->getKey()] = ContentView::create([

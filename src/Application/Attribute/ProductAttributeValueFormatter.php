@@ -28,7 +28,7 @@ class ProductAttributeValueFormatter
     }
 
     /**
-     * @param mixed $value the attribute's value as the admin API has it, see {@see AttributeValueConverter::read()}
+     * @param mixed $value the attribute's value as the admin API has it, see {@see AttributeValueConverter::normalize()}
      */
     public function format(AttributeInterface $attribute, mixed $value, string $locale): string|bool|null
     {
