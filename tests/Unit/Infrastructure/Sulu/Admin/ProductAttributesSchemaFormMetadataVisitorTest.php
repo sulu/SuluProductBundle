@@ -26,7 +26,6 @@ use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadataMapper\Numbe
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\PropertyMetadataMapperRegistry;
 use Sulu\Bundle\AdminBundle\Metadata\SchemaMetadata\SchemaMetadata;
 use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
-use Sulu\Product\Application\AttributeType\NumberAttributeType;
 use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeTranslationInterface;
@@ -37,6 +36,7 @@ use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Value\ProductFamilyAttributeModeEnum;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeFieldFactory;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAttributesSchemaFormMetadataVisitor;
+use Sulu\Product\Tests\Unit\Support\AttributeTypes;
 use Symfony\Component\DependencyInjection\Container;
 
 #[CoversClass(ProductAttributesSchemaFormMetadataVisitor::class)]
@@ -73,7 +73,7 @@ class ProductAttributesSchemaFormMetadataVisitorTest extends TestCase
         return new ProductAttributesSchemaFormMetadataVisitor(
             $this->productFamilyRepository->reveal(),
             new AttributeFieldFactory(
-                new AttributeTypeRegistry([new NumberAttributeType()]),
+                new AttributeTypeRegistry([AttributeTypes::number()]),
                 $formMetadataLoader->reveal(),
                 new MeasurementRegistry(),
                 new PropertyMetadataMapperRegistry($mapperContainer),

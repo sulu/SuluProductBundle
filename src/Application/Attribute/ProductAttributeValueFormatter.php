@@ -13,17 +13,17 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Application\Attribute;
 
-use Sulu\Product\Domain\Measurement\MeasurementRegistry;
+use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
+use Sulu\Product\Application\AttributeType\FormattableAttributeTypeInterface;
 use Sulu\Product\Domain\Model\AttributeInterface;
 
 /**
- * A value as displayed: option name, text or number with its display format and unit, date in its
- * display format or the locale's default, boolean as true or false, so a template can test it.
+ * A value as displayed: by its attribute type when that formats, else as plain text.
  */
 class ProductAttributeValueFormatter
 {
     public function __construct(
-        private readonly MeasurementRegistry $measurementRegistry,
+        private readonly AttributeTypeRegistry $attributeTypeRegistry,
     ) {
     }
 
@@ -32,137 +32,29 @@ class ProductAttributeValueFormatter
      */
     public function format(AttributeInterface $attribute, mixed $value, string $locale): string|bool|null
     {
-        return match ($attribute->getType()) {
-            AttributeInterface::TYPE_OPTIONS => $this->formatOption($attribute, $value, $locale),
-            AttributeInterface::TYPE_MULTI_OPTIONS => $this->formatOptions($attribute, $value, $locale),
-            AttributeInterface::TYPE_DATE => $this->formatDate($attribute, $value, $locale),
-            AttributeInterface::TYPE_BOOLEAN => $this->formatBoolean($value),
-            AttributeInterface::TYPE_RANGE => $this->formatRange($attribute, $value),
-            // The types of a project end up here. Formatting through a method of AttributeTypeInterface,
-            // so that each type owns its website text, would replace this match: worth doing next.
-            default => \is_array($value) ? $this->formatFields($attribute, $value) : $this->applyDisplayFormat($attribute, $value),
-        };
+        $type = $this->attributeTypeRegistry->has($attribute->getType())
+            ? $this->attributeTypeRegistry->get($attribute->getType())
+            : null;
+
+        if ($type instanceof FormattableAttributeTypeInterface) {
+            return $type->formatValue($attribute, $value, $locale);
+        }
+
+        return $this->formatPlain($value);
     }
 
     /**
-     * The non-empty values joined by commas. The display format may place each one by its field name,
-     * e.g. `%width% × %height%`, like a range's `%from%` and `%to%`.
-     *
-     * @param array<array-key, mixed> $fields
+     * The value as text, the non-empty values of several fields joined by commas.
      */
-    private function formatFields(AttributeInterface $attribute, array $fields): ?string
+    private function formatPlain(mixed $value): ?string
     {
-        $values = [];
-        $placeholders = [];
-        foreach ($fields as $name => $field) {
-            $text = \is_string($field) || \is_int($field) || \is_float($field) ? (string) $field : '';
-            $placeholders['%' . $name . '%'] = $text;
-
-            if ('' !== $text) {
-                $values[] = $text;
+        $texts = [];
+        foreach (\is_array($value) ? $value : [$value] as $field) {
+            if ((\is_string($field) || \is_int($field) || \is_float($field)) && '' !== $field) {
+                $texts[] = (string) $field;
             }
         }
 
-        return $this->applyDisplayFormat($attribute, [] === $values ? null : \implode(', ', $values), $placeholders);
-    }
-
-    private function formatOptions(AttributeInterface $attribute, mixed $optionKeys, string $locale): ?string
-    {
-        if (!\is_array($optionKeys)) {
-            return null;
-        }
-
-        $names = \array_filter(
-            \array_map(fn (mixed $optionKey): ?string => $this->formatOption($attribute, $optionKey, $locale), $optionKeys),
-            static fn (?string $name): bool => null !== $name,
-        );
-
-        return [] === $names ? null : \implode(', ', $names);
-    }
-
-    private function formatOption(AttributeInterface $attribute, mixed $optionKey, string $locale): ?string
-    {
-        if (!\is_string($optionKey)) {
-            return null;
-        }
-
-        return $attribute->getOption($optionKey)?->getTranslation($locale)?->getName() ?? $optionKey;
-    }
-
-    /**
-     * Open on one side renders as "≥ from" or "≤ to". The display format may place the bounds with
-     * %from% and %to%.
-     */
-    private function formatRange(AttributeInterface $attribute, mixed $range): ?string
-    {
-        $from = \is_array($range) && \is_float($range['from'] ?? null) ? (string) $range['from'] : '';
-        $to = \is_array($range) && \is_float($range['to'] ?? null) ? (string) $range['to'] : '';
-
-        $value = match (true) {
-            '' !== $from && '' !== $to => $from . ' – ' . $to,
-            '' !== $from => '≥ ' . $from,
-            '' !== $to => '≤ ' . $to,
-            default => null,
-        };
-
-        return $this->applyDisplayFormat($attribute, $value, ['%from%' => $from, '%to%' => $to]);
-    }
-
-    /**
-     * @param array<string, string> $placeholders further placeholders of the type, e.g. a range's bounds
-     */
-    private function applyDisplayFormat(AttributeInterface $attribute, mixed $value, array $placeholders = []): ?string
-    {
-        if (!\is_string($value) && !\is_int($value) && !\is_float($value) || '' === $value) {
-            return null;
-        }
-
-        $config = $attribute->getConfig();
-        $format = $config['displayFormat'] ?? null;
-
-        if (!\is_string($format) || '' === $format) {
-            return (string) $value;
-        }
-
-        $unitKey = $config['unit'] ?? null;
-        $unit = \is_string($unitKey) ? $this->measurementRegistry->findUnit($unitKey) : null;
-
-        $placeholders = ['%value%' => (string) $value, '%unit%' => $unit?->getSymbol() ?? ''] + $placeholders;
-
-        return \trim(\str_replace(\array_keys($placeholders), \array_values($placeholders), $format));
-    }
-
-    /**
-     * The display format is an ICU pattern, still rendered in the locale so month names translate;
-     * without one the locale's medium date, because a bare `05.03.2024` names a different month elsewhere.
-     * Rendered in UTC, because a date is stored as midnight UTC.
-     */
-    private function formatDate(AttributeInterface $attribute, mixed $date, string $locale): ?string
-    {
-        if (!\is_string($date)) {
-            return null;
-        }
-
-        $format = $attribute->getConfig()['displayFormat'] ?? null;
-
-        $formatter = new \IntlDateFormatter(
-            $locale,
-            \IntlDateFormatter::MEDIUM,
-            \IntlDateFormatter::NONE,
-            'UTC',
-            null,
-            \is_string($format) && '' !== $format ? $format : null,
-        );
-
-        return $formatter->format(new \DateTimeImmutable($date, new \DateTimeZone('UTC'))) ?: null;
-    }
-
-    private function formatBoolean(mixed $value): ?bool
-    {
-        if (\is_bool($value)) {
-            return $value;
-        }
-
-        return \is_string($value) ? AttributeValueConverter::TRUE === $value : null;
+        return [] === $texts ? null : \implode(', ', $texts);
     }
 }

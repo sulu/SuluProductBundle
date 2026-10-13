@@ -18,8 +18,6 @@ use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
-use Sulu\Product\Application\Attribute\ProductAttributeValueFormatter;
-use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
@@ -30,6 +28,7 @@ use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductAttributeValueRepositoryInterface;
+use Sulu\Product\Tests\Unit\Support\AttributeTypes;
 use Sulu\Product\Tests\Unit\Support\ProductAttributeFragmentLoader;
 use Sulu\Product\UserInterface\Agent\Tool\GetAttributeValues;
 
@@ -54,7 +53,7 @@ class GetAttributeValuesTest extends TestCase
         $this->getAttributeValues = new GetAttributeValues(
             $this->attributeRepository->reveal(),
             $this->productAttributeValueRepository->reveal(),
-            new ProductAttributeValueFormatter(new MeasurementRegistry()),
+            AttributeTypes::formatter(),
             ProductAttributeFragmentLoader::converter(),
         );
     }
@@ -99,7 +98,7 @@ class GetAttributeValuesTest extends TestCase
         $getAttributeValues = new GetAttributeValues(
             $this->attributeRepository->reveal(),
             $this->productAttributeValueRepository->reveal(),
-            new ProductAttributeValueFormatter(new MeasurementRegistry()),
+            AttributeTypes::formatter(),
             ProductAttributeFragmentLoader::converter(['range' => ['from' => 'number', 'to' => 'number']]),
         );
 

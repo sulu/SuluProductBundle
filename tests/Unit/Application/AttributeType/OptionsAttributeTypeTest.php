@@ -24,7 +24,9 @@ use Sulu\Product\Application\AttributeType\OptionsAttributeType;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
+use Sulu\Product\Domain\Model\AttributeOption;
 use Sulu\Product\Domain\Model\AttributeOptionInterface;
+use Sulu\Product\Domain\Model\AttributeOptionTranslation;
 use Sulu\Product\Domain\Model\AttributeOptionTranslationInterface;
 use Sulu\Product\Tests\Unit\Support\FormOf;
 
@@ -93,5 +95,33 @@ class OptionsAttributeTypeTest extends TestCase
         (new OptionsAttributeType())->configureForm($form, new Attribute(new AttributeGroup()), 'en');
 
         $this->addToAssertionCount(1);
+    }
+
+    public function testFormatValueUsesTheTranslatedNameOrFallsBackToTheKey(): void
+    {
+        $attribute = new Attribute(new AttributeGroup());
+        $option = new AttributeOption($attribute, 'red');
+        $attribute->addOption($option);
+
+        self::assertSame('red', (new OptionsAttributeType())->formatValue($attribute, 'red', 'en'));
+
+        $option->addTranslation(new AttributeOptionTranslation($option, 'en', 'Red'));
+
+        self::assertSame('Red', (new OptionsAttributeType())->formatValue($attribute, 'red', 'en'));
+        self::assertSame('red', (new OptionsAttributeType())->formatValue($attribute, 'red', 'de'));
+        self::assertSame('blue', (new OptionsAttributeType())->formatValue($attribute, 'blue', 'en'));
+    }
+
+    public function testFormatValueWithoutAnOptionKeyIsNull(): void
+    {
+        $attribute = new Attribute(new AttributeGroup());
+
+        self::assertNull((new OptionsAttributeType())->formatValue($attribute, null, 'en'));
+        self::assertNull((new OptionsAttributeType())->formatValue($attribute, ['red'], 'en'));
+    }
+
+    public function testHasNoDisplayFormat(): void
+    {
+        self::assertFalse((new OptionsAttributeType())->hasDisplayFormat());
     }
 }

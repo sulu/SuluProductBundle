@@ -17,8 +17,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Component\Localization\Localization;
 use Sulu\Component\Webspace\Analyzer\RequestAnalyzerInterface;
-use Sulu\Product\Application\Attribute\ProductAttributeValueFormatter;
-use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeGroupTranslation;
@@ -30,6 +28,7 @@ use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Infrastructure\Symfony\Twig\ProductAttributeTwigExtension;
+use Sulu\Product\Tests\Unit\Support\AttributeTypes;
 use Sulu\Product\Tests\Unit\Support\ProductAttributeFragmentLoader;
 use Twig\TwigFunction;
 
@@ -43,7 +42,7 @@ class ProductAttributeTwigExtensionTest extends TestCase
             null === $currentLocale ? null : new Localization($currentLocale),
         );
 
-        return new ProductAttributeTwigExtension(new ProductAttributeValueFormatter(new MeasurementRegistry()), $requestAnalyzer);
+        return new ProductAttributeTwigExtension(AttributeTypes::formatter(), $requestAnalyzer);
     }
 
     /**
@@ -217,6 +216,20 @@ class ProductAttributeTwigExtensionTest extends TestCase
         $this->addTextValue($content, $this->createAttribute('housing', 'Gehäuse', $group, 2), '');
 
         self::assertSame(['weight'], \array_keys($this->attributesOf($content)));
+    }
+
+    public function testAValueTheResolverFormattedIsNotFormattedAgain(): void
+    {
+        $group = $this->createGroup('0198c3e2-0000-7000-8000-000000000001', 'Mechanische Daten');
+        $attributeValues = [
+            ['attribute' => $this->createAttribute('weight', 'Gewicht', $group, 1), 'value' => '48', 'formattedValue' => '48 g'],
+            ['attribute' => $this->createAttribute('housing', 'Gehäuse', $group, 2), 'value' => 'Zink', 'formattedValue' => null],
+        ];
+
+        $attributes = $this->extension()->groupAttributes($attributeValues, 'de')[0]['attributes'];
+
+        self::assertSame(['weight'], \array_keys($attributes));
+        self::assertSame('48 g', $attributes['weight']['formattedValue']);
     }
 
     public function testOptionValuesResolveToTheTranslatedOptionName(): void
@@ -517,29 +530,5 @@ class ProductAttributeTwigExtensionTest extends TestCase
         );
 
         self::assertContains('sulu_product_attribute_groups', $names);
-        self::assertContains('sulu_product_format_attribute_value', $names);
-    }
-
-    public function testFormatValueFormatsASingleValue(): void
-    {
-        $content = $this->createContent();
-        $attribute = $this->createAttribute('voltage', 'Spannung', $this->createGroup('0198c3e2-0000-7000-8000-000000000001', 'Elektrisch'), 1);
-        $attribute->setConfig(['displayFormat' => '< %value% V']);
-        $this->addTextValue($content, $attribute, '50');
-
-        $attributeValue = \array_values($this->read($content))[0];
-
-        self::assertSame('< 50 V', $this->extension()->formatValue($attributeValue, 'de'));
-    }
-
-    public function testFormatValueFallsBackToTheCurrentRequestsLocale(): void
-    {
-        $content = $this->createContent();
-        $this->addTextValue($content, $this->createAttribute('weight', 'Gewicht', $this->createGroup('0198c3e2-0000-7000-8000-000000000001', 'Mechanisch'), 1), '48 g');
-
-        $attributeValue = \array_values($this->read($content))[0];
-
-        self::assertSame('48 g', $this->extension('de')->formatValue($attributeValue));
-        self::assertNull($this->extension()->formatValue($attributeValue), 'no locale to format with');
     }
 }

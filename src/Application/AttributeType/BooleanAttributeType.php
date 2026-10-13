@@ -23,7 +23,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 /**
  * Yes, no or no value, chosen in a single_select with the values "true" and "false".
  */
-final class BooleanAttributeType implements AttributeTypeInterface
+final class BooleanAttributeType implements AttributeTypeInterface, FormattableAttributeTypeInterface
 {
     public function __construct(
         private readonly TranslatorInterface $translator,
@@ -62,5 +62,19 @@ final class BooleanAttributeType implements AttributeTypeInterface
 
             $field->addOption($values);
         }
+    }
+
+    public function formatValue(AttributeInterface $attribute, mixed $value, string $locale): ?bool
+    {
+        if (\is_bool($value)) {
+            return $value;
+        }
+
+        return \is_string($value) ? AttributeValueConverter::TRUE === $value : null;
+    }
+
+    public function hasDisplayFormat(): bool
+    {
+        return false;
     }
 }

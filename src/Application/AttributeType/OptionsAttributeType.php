@@ -18,7 +18,7 @@ use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\OptionMetadata;
 use Sulu\Product\Domain\Model\AttributeInterface;
 
-final class OptionsAttributeType implements AttributeTypeInterface
+final class OptionsAttributeType implements AttributeTypeInterface, FormattableAttributeTypeInterface
 {
     public function getKey(): string
     {
@@ -46,5 +46,22 @@ final class OptionsAttributeType implements AttributeTypeInterface
 
             $field->addOption($values);
         }
+    }
+
+    /**
+     * The option's name in the locale, its key without one.
+     */
+    public function formatValue(AttributeInterface $attribute, mixed $value, string $locale): ?string
+    {
+        if (!\is_string($value)) {
+            return null;
+        }
+
+        return $attribute->getOption($value)?->getTranslation($locale)?->getName() ?? $value;
+    }
+
+    public function hasDisplayFormat(): bool
+    {
+        return false;
     }
 }

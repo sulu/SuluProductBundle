@@ -24,6 +24,7 @@ use Sulu\Content\Application\MetadataResolver\MetadataResolver;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Application\Attribute\AttributeValueConverter;
 use Sulu\Product\Application\Attribute\AttributeValueConverterInterface;
+use Sulu\Product\Application\Attribute\ProductAttributeValueFormatter;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\ProductAssociationInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
@@ -60,6 +61,7 @@ class ProductResolver implements ResolverInterface
         private readonly CurrentVariantProvider $currentVariantProvider,
         private readonly ReferenceStoreInterface $referenceStore,
         private readonly AttributeValueConverterInterface $attributeValueConverter,
+        private readonly ProductAttributeValueFormatter $attributeValueFormatter,
         private readonly array $variantProperties = [],
     ) {
     }
@@ -381,9 +383,9 @@ class ProductResolver implements ResolverInterface
     }
 
     /**
-     * Formatting and grouping are the `sulu_product_attribute_groups` Twig filter's job.
+     * Grouping is the `sulu_product_attribute_groups` Twig filter's job.
      *
-     * @return array<string, ContentView> each resolving to `{attribute, value}`
+     * @return array<string, ContentView> each resolving to `{attribute, value, formattedValue}`
      */
     private function getAttributesMapByKey(ProductDimensionContentInterface $dimensionContent, string $locale): array
     {
@@ -395,6 +397,7 @@ class ProductResolver implements ResolverInterface
             $attributes[$attribute->getKey()] = ContentView::create([
                 'attribute' => ContentView::create($attribute, []),
                 'value' => $this->resolveAttributeValue($attribute, $attributeValue['value'], $locale),
+                'formattedValue' => ContentView::create($this->attributeValueFormatter->format($attribute, $attributeValue['value'], $locale), []),
             ], []);
         }
 

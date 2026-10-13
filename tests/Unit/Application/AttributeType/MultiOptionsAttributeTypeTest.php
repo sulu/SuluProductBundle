@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Sulu\Product\Tests\Unit\Application\AttributeType;
 
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\OptionMetadata;
@@ -83,5 +84,54 @@ class MultiOptionsAttributeTypeTest extends TestCase
         $attribute->addOption(new AttributeOption($attribute, 'blue'));
 
         return $attribute;
+    }
+
+    public function testFormatValueListsTheTranslatedNamesWithKeyFallbacks(): void
+    {
+        $attribute = $this->attributeWithOptions();
+
+        self::assertSame('Red, blue', $this->type()->formatValue($attribute, ['red', 'blue'], 'en'));
+        self::assertSame('red, blue', $this->type()->formatValue($attribute, ['red', 'blue'], 'de'));
+        self::assertSame('blue, Red', $this->type()->formatValue($attribute, ['blue', 'red'], 'en'));
+        self::assertSame('Red, gone', $this->type()->formatValue($attribute, ['red', 'gone'], 'en'));
+    }
+
+    public function testFormatValueKeepsAnOptionNamedZero(): void
+    {
+        $attribute = new Attribute(new AttributeGroup());
+        $attribute->addOption(new AttributeOption($attribute, '0'));
+
+        self::assertSame('0, 1', $this->type()->formatValue($attribute, ['0', '1'], 'en'));
+        self::assertSame('0', $this->type()->formatValue($attribute, ['0'], 'en'));
+    }
+
+    public function testFormatValueSkipsEntriesThatAreNoStrings(): void
+    {
+        $attribute = $this->attributeWithOptions();
+
+        self::assertSame('Red, blue', $this->type()->formatValue($attribute, ['red', 1, null, ['blue'], 'blue'], 'en'));
+        self::assertNull($this->type()->formatValue($attribute, [1, null, ['red'], true], 'en'));
+    }
+
+    /**
+     * @return iterable<string, array{mixed}>
+     */
+    public static function withoutOptionsProvider(): iterable
+    {
+        yield 'null' => [null];
+        yield 'a string' => ['red'];
+        yield 'a number' => [1.0];
+        yield 'an empty list' => [[]];
+    }
+
+    #[DataProvider('withoutOptionsProvider')]
+    public function testFormatValueWithoutOptionsIsNull(mixed $value): void
+    {
+        self::assertNull($this->type()->formatValue($this->attributeWithOptions(), $value, 'en'));
+    }
+
+    public function testHasNoDisplayFormat(): void
+    {
+        self::assertFalse($this->type()->hasDisplayFormat());
     }
 }

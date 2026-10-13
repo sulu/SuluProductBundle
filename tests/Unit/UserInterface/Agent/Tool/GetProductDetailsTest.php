@@ -18,9 +18,7 @@ use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
-use Sulu\Product\Application\Attribute\ProductAttributeValueFormatter;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
-use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeGroupTranslation;
@@ -31,6 +29,7 @@ use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Tests\Unit\Support\AttributeTypes;
 use Sulu\Product\Tests\Unit\Support\ProductAttributeFragmentLoader;
 use Sulu\Product\Tests\Unit\UserInterface\Agent\Tool\Fixtures\FakeRouteGenerator;
 use Sulu\Product\UserInterface\Agent\Tool\GetProductDetails;
@@ -52,7 +51,7 @@ class GetProductDetailsTest extends TestCase
         $this->productRepository = $this->prophesize(ProductRepositoryInterface::class);
         $this->getProductDetails = new GetProductDetails(
             $this->productRepository->reveal(),
-            new ProductAttributeValueFormatter(new MeasurementRegistry()),
+            AttributeTypes::formatter(),
             ProductAttributeFragmentLoader::converter(),
             new ProductUrlGenerator(new FakeRouteGenerator()),
         );
