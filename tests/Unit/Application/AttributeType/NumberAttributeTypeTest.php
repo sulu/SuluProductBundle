@@ -16,6 +16,8 @@ namespace Sulu\Product\Tests\Unit\Application\AttributeType;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\SectionMetadata;
 use Sulu\Product\Application\AttributeType\NumberAttributeType;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
@@ -62,5 +64,18 @@ class NumberAttributeTypeTest extends TestCase
         self::assertArrayHasKey('min', $options);
         self::assertArrayNotHasKey('max', $options);
         self::assertArrayNotHasKey('step', $options);
+    }
+
+    public function testConfigureFormIgnoresItemsThatAreNotFields(): void
+    {
+        $form = new FormMetadata();
+        $form->addItem(new SectionMetadata('section'));
+
+        $type = new NumberAttributeType();
+        $attribute = new Attribute(new AttributeGroup());
+        $attribute->setConfig(['min' => 0]);
+        $type->configureForm($form, $attribute, 'en');
+
+        $this->addToAssertionCount(1);
     }
 }
