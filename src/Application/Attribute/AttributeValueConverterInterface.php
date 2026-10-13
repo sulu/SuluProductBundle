@@ -35,7 +35,7 @@ interface AttributeValueConverterInterface
      *
      * @param iterable<ProductAttributeValueInterface> $rows the rows of the attribute, possibly none
      */
-    public function read(AttributeInterface $attribute, iterable $rows): mixed;
+    public function normalize(AttributeInterface $attribute, iterable $rows): mixed;
 
     /**
      * The value of every attribute the rows belong to, by attribute uuid.
@@ -44,7 +44,7 @@ interface AttributeValueConverterInterface
      *
      * @return array<string, array{attribute: AttributeInterface, value: mixed}>
      */
-    public function readAll(iterable $rows): array;
+    public function normalizeAll(iterable $rows): array;
 
     /**
      * The rows the value is stored in by value key, none for an empty value. Validates the whole
@@ -52,5 +52,5 @@ interface AttributeValueConverterInterface
      *
      * @return array<string, array{number?: float, text?: string, option?: AttributeOptionInterface}>
      */
-    public function write(AttributeInterface $attribute, mixed $raw): array;
+    public function denormalize(AttributeInterface $attribute, mixed $raw): array;
 }

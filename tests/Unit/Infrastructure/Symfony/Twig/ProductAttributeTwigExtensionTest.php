@@ -53,7 +53,7 @@ class ProductAttributeTwigExtensionTest extends TestCase
      */
     private function read(ProductDimensionContent $content): array
     {
-        return ProductAttributeFragmentLoader::converter()->readAll($content->getAttributes());
+        return ProductAttributeFragmentLoader::converter()->normalizeAll($content->getAttributes());
     }
 
     /**

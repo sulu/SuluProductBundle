@@ -149,7 +149,7 @@ A field's type decides how it is stored: `number`, `date` (a timestamp, the admi
 `text_line`, `single_select` (a boolean attribute stores 1 or 0) and `select`. Register a
 type class extending `AbstractAttributeType` (key, and the options each field of the fragment
 needs) as a service; it is tagged automatically. A field type of your own is read and written by a
-converter extending `AttributeValueConverter` (override `readField` and `writeField`, call the parent
+converter extending `AttributeValueConverter` (override `normalizeField` and `denormalizeField`, call the parent
 for the others), registered as the service `sulu_product.attribute_value_converter`; code depends on
 `AttributeValueConverterInterface`. The website shows such a type by its display
 format; the search index and the filters only know the built-in types.
