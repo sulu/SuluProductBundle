@@ -17,8 +17,7 @@ use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Product\Domain\Model\AttributeInterface;
 
 /**
- * Two numbers, "from" and "to", either of which may be empty for a range open on one side. The
- * attribute's min, max and step apply to both.
+ * The attribute's min, max and step apply to both the "from" and the "to" field.
  */
 final class RangeAttributeType implements AttributeTypeInterface
 {

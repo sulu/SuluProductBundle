@@ -28,7 +28,7 @@ class ProductAttributeValueFormatter
     }
 
     /**
-     * @param mixed $value the attribute's value as the admin API has it, see {@see AttributeValueConverter::normalize()}
+     * @param mixed $value as {@see AttributeValueConverter::normalize()} returns it
      */
     public function format(AttributeInterface $attribute, mixed $value, string $locale): string|bool|null
     {
@@ -42,9 +42,6 @@ class ProductAttributeValueFormatter
         };
     }
 
-    /**
-     * The names of the selected options, separated by commas.
-     */
     private function formatOptions(AttributeInterface $attribute, mixed $optionKeys, string $locale): ?string
     {
         if (!\is_array($optionKeys)) {
@@ -69,8 +66,8 @@ class ProductAttributeValueFormatter
     }
 
     /**
-     * A range renders as "from – to", open on one side as "≥ from" or "≤ to". Its display format may
-     * also place each bound on its own with %from% and %to%, a missing one as empty.
+     * Open on one side renders as "≥ from" or "≤ to". The display format may place the bounds with
+     * %from% and %to%.
      */
     private function formatRange(AttributeInterface $attribute, mixed $range): ?string
     {
