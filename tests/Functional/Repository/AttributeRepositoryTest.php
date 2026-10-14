@@ -315,6 +315,28 @@ class AttributeRepositoryTest extends SuluTestCase
         $this->assertSame(6, $this->repository->findNextPositionInGroup($group));
     }
 
+    public function testFindByUuidsReturnsOnlyThoseAttributes(): void
+    {
+        $group = $this->createGroup();
+
+        $uuids = [];
+        foreach (['uuids-a', 'uuids-b', 'uuids-c'] as $key) {
+            $attribute = $this->repository->createNew($group);
+            $attribute->setKey($key);
+            $this->repository->save($attribute);
+            $uuids[$key] = $attribute->getUuid();
+        }
+        $this->entityManager->flush();
+
+        $keys = \array_map(
+            static fn (AttributeInterface $attribute): string => $attribute->getKey(),
+            $this->repository->findBy(['uuids' => [$uuids['uuids-a'], $uuids['uuids-c']]]),
+        );
+
+        \sort($keys);
+        $this->assertSame(['uuids-a', 'uuids-c'], $keys);
+    }
+
     public function testFindByGroupWithPositionAtLeastReturnsMatchingAttributes(): void
     {
         $group = $this->createGroup();

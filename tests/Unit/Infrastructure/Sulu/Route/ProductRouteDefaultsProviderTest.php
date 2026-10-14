@@ -103,6 +103,7 @@ class ProductRouteDefaultsProviderTest extends TestCase
                         DimensionContentQueryEnhancer::SELECT_EXCERPT_CATEGORIES_TRANSLATION => true,
                     ],
                 ],
+                ProductRepositoryInterface::SELECT_PRODUCT_ATTRIBUTES => true,
             ]
         )->willReturn($product);
 
@@ -168,6 +169,7 @@ class ProductRouteDefaultsProviderTest extends TestCase
                         DimensionContentQueryEnhancer::SELECT_EXCERPT_CATEGORIES_TRANSLATION => true,
                     ],
                 ],
+                ProductRepositoryInterface::SELECT_PRODUCT_ATTRIBUTES => true,
             ]
         )->willReturn($product);
 

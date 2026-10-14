@@ -37,6 +37,7 @@ interface ProductRepositoryInterface
      */
     public const SELECT_PRODUCT_CONTENT = 'with-product-content';
     public const SELECT_PRODUCT_FAMILY = 'with-product-family';
+    public const SELECT_PRODUCT_ATTRIBUTES = 'with-product-attributes';
 
     public function createNew(?string $uuid = null): ProductInterface;
 
@@ -56,6 +57,7 @@ interface ProductRepositoryInterface
      *     product_website?: bool,
      *     with-product-content?: bool|array<string, mixed>,
      *     with-product-family?: bool,
+     *     with-product-attributes?: bool,
      * }|array<string, mixed> $selects
      *
      * @throws ProductNotFoundException
@@ -77,6 +79,7 @@ interface ProductRepositoryInterface
      *     product_website?: bool,
      *     with-product-content?: bool|array<string, mixed>,
      *     with-product-family?: bool,
+     *     with-product-attributes?: bool,
      * }|array<string, mixed> $selects
      */
     public function findOneBy(array $filters, array $selects = []): ?ProductInterface;
@@ -128,6 +131,7 @@ interface ProductRepositoryInterface
      *     product_website?: bool,
      *     with-product-content?: bool|array<string, mixed>,
      *     with-product-family?: bool,
+     *     with-product-attributes?: bool,
      * }|array<string, mixed> $selects
      *
      * @return iterable<ProductInterface>

@@ -24,6 +24,7 @@ use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
+use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Webmozart\Assert\Assert;
 
@@ -93,14 +94,21 @@ final class ProductRepository implements ProductRepositoryInterface
      */
     private $productDimensionContentClassName;
 
+    /**
+     * @var AttributeRepositoryInterface
+     */
+    private $attributeRepository;
+
     public function __construct(
         EntityManagerInterface $entityManager,
         DimensionContentQueryEnhancer $dimensionContentQueryEnhancer,
+        AttributeRepositoryInterface $attributeRepository,
     ) {
         $this->entityRepository = $entityManager->getRepository(ProductInterface::class);
         $this->entityDimensionContentRepository = $entityManager->getRepository(ProductDimensionContentInterface::class);
         $this->entityManager = $entityManager;
         $this->dimensionContentQueryEnhancer = $dimensionContentQueryEnhancer;
+        $this->attributeRepository = $attributeRepository;
         $this->productClassName = $this->entityRepository->getClassName();
         $this->productDimensionContentClassName = $this->entityDimensionContentRepository->getClassName();
     }
@@ -123,6 +131,8 @@ final class ProductRepository implements ProductRepositoryInterface
             throw new ProductNotFoundException($filters, 0, $e);
         }
 
+        $this->preloadAttributes([$product], $selects);
+
         return $product;
     }
 
@@ -136,6 +146,8 @@ final class ProductRepository implements ProductRepositoryInterface
         } catch (NoResultException $e) {
             return null;
         }
+
+        $this->preloadAttributes([$product], $selects);
 
         return $product;
     }
@@ -203,6 +215,8 @@ final class ProductRepository implements ProductRepositoryInterface
 
         /** @var iterable<ProductInterface> $products */
         $products = $queryBuilder->getQuery()->getResult();
+
+        $this->preloadAttributes($products, $selects);
 
         foreach ($products as $product) {
             yield $product;
@@ -279,19 +293,12 @@ final class ProductRepository implements ProductRepositoryInterface
      *     product_website?: bool,
      *     with-product-content?: bool|array<string, mixed>,
      *     with-product-family?: bool,
+     *     with-product-attributes?: bool,
      * }|array<string, mixed> $selects
      */
     public function createQueryBuilder(array $filters, array $sortBy = [], array $selects = []): QueryBuilder
     {
-        foreach ($selects as $selectGroup => $value) {
-            if (!$value) {
-                continue;
-            }
-
-            if (isset(self::SELECTS[$selectGroup])) {
-                $selects = \array_replace_recursive($selects, self::SELECTS[$selectGroup]);
-            }
-        }
+        $selects = $this->resolveSelectGroups($selects);
 
         $queryBuilder = $this->entityRepository->createQueryBuilder('product');
 
@@ -555,6 +562,85 @@ final class ProductRepository implements ProductRepositoryInterface
                 ->leftJoin('familyAttribute.attribute', 'familyAttributeAttribute');
         }
 
+        if ($selects[self::SELECT_PRODUCT_ATTRIBUTES] ?? false) {
+            Assert::notFalse($selects[self::SELECT_PRODUCT_CONTENT] ?? false);
+        }
+
         return $queryBuilder;
+    }
+
+    /**
+     * @param array<string, mixed> $selects
+     *
+     * @return array<mixed>
+     */
+    private function resolveSelectGroups(array $selects): array
+    {
+        foreach ($selects as $selectGroup => $value) {
+            if (!$value) {
+                continue;
+            }
+
+            if (isset(self::SELECTS[$selectGroup])) {
+                $selects = \array_replace_recursive($selects, self::SELECTS[$selectGroup]);
+            }
+        }
+
+        return $selects;
+    }
+
+    /**
+     * Own queries, joined they would multiply the rows of the main query. Hydrating them fills the
+     * collections of the loaded entities, the results themselves are not needed.
+     *
+     * @param iterable<ProductInterface> $products
+     * @param array<string, mixed> $selects
+     */
+    private function preloadAttributes(iterable $products, array $selects): void
+    {
+        if (!($this->resolveSelectGroups($selects)[self::SELECT_PRODUCT_ATTRIBUTES] ?? false)) {
+            return;
+        }
+
+        $dimensionContents = [];
+        foreach ($products as $product) {
+            /** @var iterable<ProductDimensionContentInterface> $productDimensionContents */
+            $productDimensionContents = $product->getDimensionContents();
+            foreach ($productDimensionContents as $dimensionContent) {
+                $dimensionContents[] = $dimensionContent;
+            }
+        }
+
+        if ([] === $dimensionContents) {
+            return;
+        }
+
+        $this->entityManager->createQueryBuilder()
+            ->select('dimensionContent', 'attributeValue', 'attribute')
+            ->from($this->productDimensionContentClassName, 'dimensionContent')
+            ->leftJoin('dimensionContent.attributes', 'attributeValue')
+            ->leftJoin('attributeValue.attribute', 'attribute')
+            ->where('dimensionContent IN (:dimensionContents)')
+            ->setParameter('dimensionContents', $dimensionContents)
+            ->getQuery()
+            ->getResult();
+
+        $attributeUuids = [];
+        foreach ($dimensionContents as $dimensionContent) {
+            foreach ($dimensionContent->getAttributes() as $value) {
+                $uuid = $value->getAttribute()->getUuid();
+                $attributeUuids[$uuid] = $uuid;
+            }
+        }
+
+        if ([] === $attributeUuids) {
+            return;
+        }
+
+        $this->attributeRepository->findBy(['uuids' => \array_values($attributeUuids)], [
+            AttributeRepositoryInterface::SELECT_ATTRIBUTE_TRANSLATIONS => true,
+            AttributeRepositoryInterface::SELECT_ATTRIBUTE_GROUP => true,
+            AttributeRepositoryInterface::SELECT_ATTRIBUTE_OPTIONS => true,
+        ]);
     }
 }
