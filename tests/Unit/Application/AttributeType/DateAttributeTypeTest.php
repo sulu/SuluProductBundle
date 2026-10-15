@@ -48,13 +48,31 @@ class DateAttributeTypeTest extends TestCase
         self::assertSame('01.05.2024', (new DateAttributeType())->formatValue($attribute, '2024-05-01', 'de'));
     }
 
-    public function testFormatValueUsesTheDisplayFormatAsIcuPattern(): void
+    public function testFormatValueArrangesTheDisplayFormatSkeletonForTheLocale(): void
     {
         $attribute = new Attribute(new AttributeGroup());
-        $attribute->setConfig(['displayFormat' => 'd MMMM yyyy']);
+        $attribute->setConfig(['displayFormat' => 'yMMMd']);
 
-        self::assertSame('1 May 2024', (new DateAttributeType())->formatValue($attribute, '2024-05-01', 'en'));
-        self::assertSame('1 Mai 2024', (new DateAttributeType())->formatValue($attribute, '2024-05-01', 'de'));
+        self::assertSame('May 1, 2024', (new DateAttributeType())->formatValue($attribute, '2024-05-01', 'en'));
+        self::assertSame('1. Mai 2024', (new DateAttributeType())->formatValue($attribute, '2024-05-01', 'de'));
+        self::assertSame('1 mai 2024', (new DateAttributeType())->formatValue($attribute, '2024-05-01', 'fr'));
+    }
+
+    public function testFormatValueArrangesAFieldOrderOfTheDisplayFormatForTheLocale(): void
+    {
+        $attribute = new Attribute(new AttributeGroup());
+        $attribute->setConfig(['displayFormat' => 'dd.MM.yyyy']);
+
+        self::assertSame('05/01/2024', (new DateAttributeType())->formatValue($attribute, '2024-05-01', 'en'));
+        self::assertSame('01.05.2024', (new DateAttributeType())->formatValue($attribute, '2024-05-01', 'de'));
+    }
+
+    public function testFormatValueWithAnEmptyDisplayFormatUsesTheMediumDate(): void
+    {
+        $attribute = new Attribute(new AttributeGroup());
+        $attribute->setConfig(['displayFormat' => '']);
+
+        self::assertSame('May 1, 2024', (new DateAttributeType())->formatValue($attribute, '2024-05-01', 'en'));
     }
 
     public function testFormatValueWithoutADateIsNull(): void

@@ -399,7 +399,35 @@ class AttributeMapperTest extends TestCase
         ]));
     }
 
-    public function testMapAcceptsQuotedWordsInADateDisplayFormat(): void
+    public function testMapRejectsQuotedWordsInADateDisplayFormat(): void
+    {
+        $this->expectException(InvalidDateDisplayFormatException::class);
+
+        $this->mapper->mapAttributeData(new Attribute(new AttributeGroup()), new CreateAttributeMessage([
+            'locale' => 'en',
+            'key' => 'released',
+            'type' => 'date',
+            'name' => 'Released',
+            'config' => ['displayFormat' => "'Released' MMMM yyyy"],
+            'group' => 'group-uuid',
+        ]));
+    }
+
+    public function testMapRejectsADateDisplayFormatWithoutLetters(): void
+    {
+        $this->expectException(InvalidDateDisplayFormatException::class);
+
+        $this->mapper->mapAttributeData(new Attribute(new AttributeGroup()), new CreateAttributeMessage([
+            'locale' => 'en',
+            'key' => 'released',
+            'type' => 'date',
+            'name' => 'Released',
+            'config' => ['displayFormat' => '. - /'],
+            'group' => 'group-uuid',
+        ]));
+    }
+
+    public function testMapAcceptsASkeletonAsDateDisplayFormat(): void
     {
         $group = new AttributeGroup();
         $attribute = new Attribute($group);
@@ -411,11 +439,11 @@ class AttributeMapperTest extends TestCase
             'key' => 'released',
             'type' => 'date',
             'name' => 'Released',
-            'config' => ['displayFormat' => "'Released' MMMM yyyy"],
+            'config' => ['displayFormat' => 'yMMMM'],
             'group' => 'group-uuid',
         ]));
 
-        $this->assertSame(['displayFormat' => "'Released' MMMM yyyy"], $attribute->getConfig());
+        $this->assertSame(['displayFormat' => 'yMMMM'], $attribute->getConfig());
     }
 
     public function testMapLeavesTheDisplayFormatOfTextUnchecked(): void

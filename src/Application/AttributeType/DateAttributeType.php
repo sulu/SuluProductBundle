@@ -28,9 +28,9 @@ final class DateAttributeType implements AttributeTypeInterface, FormattableAttr
     }
 
     /**
-     * The display format is an ICU pattern, still rendered in the locale so month names translate;
-     * without one the locale's medium date, because a bare `05.03.2024` names a different month elsewhere.
-     * Rendered in UTC, because a date is stored as midnight UTC.
+     * The display format is an ICU skeleton such as `yMMMM`, which the locale arranges, so month names and
+     * their order follow the website language; without one the locale's medium date, because a bare
+     * `05.03.2024` names a different month elsewhere. Rendered in UTC, because a date is stored as midnight UTC.
      */
     public function formatValue(AttributeInterface $attribute, mixed $value, string $locale): ?string
     {
@@ -38,16 +38,12 @@ final class DateAttributeType implements AttributeTypeInterface, FormattableAttr
             return null;
         }
 
-        $format = $attribute->getConfig()['displayFormat'] ?? null;
+        $skeleton = $attribute->getConfig()['displayFormat'] ?? null;
+        $pattern = \is_string($skeleton) && '' !== $skeleton
+            ? (new \IntlDatePatternGenerator($locale))->getBestPattern($skeleton) ?: null
+            : null;
 
-        $formatter = new \IntlDateFormatter(
-            $locale,
-            \IntlDateFormatter::MEDIUM,
-            \IntlDateFormatter::NONE,
-            'UTC',
-            null,
-            \is_string($format) && '' !== $format ? $format : null,
-        );
+        $formatter = new \IntlDateFormatter($locale, \IntlDateFormatter::MEDIUM, \IntlDateFormatter::NONE, 'UTC', null, $pattern);
 
         return $formatter->format(new \DateTimeImmutable($value, new \DateTimeZone('UTC'))) ?: null;
     }
