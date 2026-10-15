@@ -293,7 +293,7 @@ final class ProductRepository implements ProductRepositoryInterface
      *     product_website?: bool,
      *     with-product-content?: bool|array<string, mixed>,
      *     with-product-family?: bool,
-     *     with-product-attributes?: bool,
+     *     with-product-attributes?: bool|array{translations?: bool, group?: bool, options?: bool},
      * }|array<string, mixed> $selects
      */
     public function createQueryBuilder(array $filters, array $sortBy = [], array $selects = []): QueryBuilder
@@ -598,9 +598,12 @@ final class ProductRepository implements ProductRepositoryInterface
      */
     private function preloadAttributes(iterable $products, array $selects): void
     {
-        if (!($this->resolveSelectGroups($selects)[self::SELECT_PRODUCT_ATTRIBUTES] ?? false)) {
+        $attributeSelect = $this->resolveSelectGroups($selects)[self::SELECT_PRODUCT_ATTRIBUTES] ?? false;
+        if (!$attributeSelect) {
             return;
         }
+
+        $attributeSelects = $this->resolveAttributeSelects($attributeSelect);
 
         $dimensionContents = [];
         foreach ($products as $product) {
@@ -616,7 +619,9 @@ final class ProductRepository implements ProductRepositoryInterface
         }
 
         $this->entityManager->createQueryBuilder()
-            ->select('dimensionContent', 'attributeValue', 'attribute')
+            ->select('dimensionContent')
+            ->addSelect('attributeValue')
+            ->addSelect('attribute')
             ->from($this->productDimensionContentClassName, 'dimensionContent')
             ->leftJoin('dimensionContent.attributes', 'attributeValue')
             ->leftJoin('attributeValue.attribute', 'attribute')
@@ -637,10 +642,29 @@ final class ProductRepository implements ProductRepositoryInterface
             return;
         }
 
-        $this->attributeRepository->findBy(['uuids' => \array_values($attributeUuids)], [
-            AttributeRepositoryInterface::SELECT_ATTRIBUTE_TRANSLATIONS => true,
-            AttributeRepositoryInterface::SELECT_ATTRIBUTE_GROUP => true,
-            AttributeRepositoryInterface::SELECT_ATTRIBUTE_OPTIONS => true,
-        ]);
+        if (\in_array(true, $attributeSelects, true)) {
+            $this->attributeRepository->findBy(['uuids' => \array_values($attributeUuids)], $attributeSelects);
+        }
+    }
+
+    /**
+     * @return array{with-attribute-translations: bool, with-attribute-group: bool, with-attribute-options: bool}
+     */
+    private function resolveAttributeSelects(mixed $select): array
+    {
+        if (true === $select) {
+            $select = ['translations' => true, 'group' => true, 'options' => true];
+        }
+
+        Assert::isArray($select, 'The select "' . self::SELECT_PRODUCT_ATTRIBUTES . '" takes true or an array of "translations", "group" and "options", got %s.');
+        foreach (\array_keys($select) as $key) {
+            Assert::oneOf($key, ['translations', 'group', 'options'], 'The select "' . self::SELECT_PRODUCT_ATTRIBUTES . '" knows the keys "translations", "group" and "options", got %s.');
+        }
+
+        return [
+            AttributeRepositoryInterface::SELECT_ATTRIBUTE_TRANSLATIONS => (bool) ($select['translations'] ?? false),
+            AttributeRepositoryInterface::SELECT_ATTRIBUTE_GROUP => (bool) ($select['group'] ?? false),
+            AttributeRepositoryInterface::SELECT_ATTRIBUTE_OPTIONS => (bool) ($select['options'] ?? false),
+        ];
     }
 }

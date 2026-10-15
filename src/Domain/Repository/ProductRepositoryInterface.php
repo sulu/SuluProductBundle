@@ -37,6 +37,13 @@ interface ProductRepositoryInterface
      */
     public const SELECT_PRODUCT_CONTENT = 'with-product-content';
     public const SELECT_PRODUCT_FAMILY = 'with-product-family';
+
+    /**
+     * Loads the values of the product's dimension contents with their attributes in own queries. `true`
+     * adds the attributes' translations, group and options, an array picks them (`translations`, `group`,
+     * `options`); an array with every part false loads only the values and their attributes, an empty
+     * array loads nothing.
+     */
     public const SELECT_PRODUCT_ATTRIBUTES = 'with-product-attributes';
 
     public function createNew(?string $uuid = null): ProductInterface;
@@ -57,7 +64,7 @@ interface ProductRepositoryInterface
      *     product_website?: bool,
      *     with-product-content?: bool|array<string, mixed>,
      *     with-product-family?: bool,
-     *     with-product-attributes?: bool,
+     *     with-product-attributes?: bool|array{translations?: bool, group?: bool, options?: bool},
      * }|array<string, mixed> $selects
      *
      * @throws ProductNotFoundException
@@ -79,7 +86,7 @@ interface ProductRepositoryInterface
      *     product_website?: bool,
      *     with-product-content?: bool|array<string, mixed>,
      *     with-product-family?: bool,
-     *     with-product-attributes?: bool,
+     *     with-product-attributes?: bool|array{translations?: bool, group?: bool, options?: bool},
      * }|array<string, mixed> $selects
      */
     public function findOneBy(array $filters, array $selects = []): ?ProductInterface;
@@ -131,7 +138,7 @@ interface ProductRepositoryInterface
      *     product_website?: bool,
      *     with-product-content?: bool|array<string, mixed>,
      *     with-product-family?: bool,
-     *     with-product-attributes?: bool,
+     *     with-product-attributes?: bool|array{translations?: bool, group?: bool, options?: bool},
      * }|array<string, mixed> $selects
      *
      * @return iterable<ProductInterface>

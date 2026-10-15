@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Sulu\Product\Tests\Functional\Repository;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\PersistentCollection;
 use Doctrine\ORM\QueryBuilder;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -1523,45 +1524,7 @@ class ProductRepositoryTest extends SuluTestCase
     #[DataProvider('provideEntryPoints')]
     public function testSelectProductAttributesLoadsWhatTheValuesReadWithTheProduct(string $method): void
     {
-        $container = self::getContainer();
-        /** @var AttributeGroupRepositoryInterface $groupRepository */
-        $groupRepository = $container->get(AttributeGroupRepositoryInterface::class);
-        /** @var AttributeRepositoryInterface $attributeRepository */
-        $attributeRepository = $container->get(AttributeRepositoryInterface::class);
-
-        $group = $groupRepository->createNew();
-        $group->addTranslation(new AttributeGroupTranslation($group, 'de', 'Optik'));
-        $groupRepository->save($group);
-
-        $values = [];
-        foreach (['finish' => ['Oberflaeche', 'matte', 'Matt'], 'size' => ['Groesse', 'large', 'Gross']] as $key => [$label, $optionKey, $optionName]) {
-            $attribute = $attributeRepository->createNew($group);
-            $attribute->setKey($key);
-            $attribute->setType(AttributeInterface::TYPE_OPTIONS);
-            $attribute->addTranslation(new AttributeTranslation($attribute, 'de', $label));
-            foreach ([$optionKey => $optionName, 'other' => 'Andere'] as $otherKey => $name) {
-                $option = new AttributeOption($attribute, $otherKey);
-                $option->addTranslation(new AttributeOptionTranslation($option, 'de', $name));
-                $attribute->addOption($option);
-            }
-            $attributeRepository->save($attribute);
-            $values[] = [$attribute, $attribute->getOption($optionKey)];
-        }
-
-        // the website loads the unlocalized and the localized dimension content, each with its values
-        $product = $this->repository->createNew();
-        $this->repository->add($product);
-        foreach ($values as $index => [$attribute, $option]) {
-            $dimensionContent = $product->createDimensionContent();
-            $dimensionContent->setLocale(0 === $index ? null : 'de');
-            $product->addDimensionContent($dimensionContent);
-            $dimensionContent->addAttribute(new ProductAttributeValue($dimensionContent, $attribute, $attribute->getKey(), $option));
-            $this->entityManager->persist($dimensionContent);
-        }
-        $this->entityManager->flush();
-
-        $uuid = $product->getUuid();
-        $this->entityManager->clear();
+        $uuid = $this->createProductWithTwoOptionAttributes();
 
         $queriesBefore = $this->countQueries();
 
@@ -1598,6 +1561,78 @@ class ProductRepositoryTest extends SuluTestCase
         yield 'getOneBy' => ['getOneBy'];
         yield 'findOneBy' => ['findOneBy'];
         yield 'findBy' => ['findBy'];
+    }
+
+    /**
+     * An array picks what is loaded next to the values and their attributes; what is not picked stays lazy.
+     *
+     * @param array<string, bool>|true $select
+     * @param list<string> $loaded
+     */
+    #[DataProvider('providePickedParts')]
+    public function testSelectProductAttributesLoadsOnlyThePickedParts(array|bool $select, array $loaded, int $queries): void
+    {
+        $uuid = $this->createProductWithTwoOptionAttributes();
+
+        $queriesBefore = $this->countQueries();
+
+        $product = $this->repository->getOneBy(['uuid' => $uuid], $this->attributeSelects($select));
+
+        $this->assertSame($queriesBefore + $queries, $this->countQueries());
+
+        $found = [];
+        $values = 0;
+        foreach ($product->getDimensionContents() as $dimensionContent) {
+            foreach ($dimensionContent->getAttributes() as $value) {
+                ++$values;
+                $attribute = $value->getAttribute();
+                $group = $attribute->getGroup();
+
+                $found[] = [
+                    'translations' => $this->isInitialized($attribute, 'translations'),
+                    'group' => !$this->entityManager->getUnitOfWork()->isUninitializedObject($group) && $this->isInitialized($group, 'translations'),
+                    'options' => $this->isInitialized($attribute, 'options') && $this->areOptionTranslationsInitialized($attribute),
+                ];
+            }
+        }
+
+        $this->assertSame(2, $values);
+        foreach ($found as $parts) {
+            $this->assertSame($loaded, \array_keys(\array_filter($parts)));
+        }
+    }
+
+    /**
+     * The queries on top of the product: the values with their attributes, the attributes with their
+     * translations (and the group joined), the group's translations, the options with their translations.
+     *
+     * @return iterable<string, array{array<string, bool>|true, list<string>, int}>
+     */
+    public static function providePickedParts(): iterable
+    {
+        yield 'true loads everything' => [true, ['translations', 'group', 'options'], 5];
+        yield 'all keys' => [['translations' => true, 'group' => true, 'options' => true], ['translations', 'group', 'options'], 5];
+        yield 'translations' => [['translations' => true], ['translations'], 3];
+        yield 'group' => [['group' => true], ['group'], 4];
+        yield 'options' => [['options' => true], ['options'], 4];
+        yield 'translations and options' => [['translations' => true, 'options' => true], ['translations', 'options'], 4];
+        yield 'nothing picked loads the values and their attributes' => [['translations' => false], [], 2];
+        yield 'an empty array loads nothing' => [[], [], 1];
+    }
+
+    public function testSelectProductAttributesRejectsAnUnknownPart(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('knows the keys "translations", "group" and "options", got "labels"');
+
+        $product = $this->repository->createNew();
+        $product->addDimensionContent($product->createDimensionContent());
+        $this->repository->add($product);
+        $this->entityManager->flush();
+        $uuid = $product->getUuid();
+        $this->entityManager->clear();
+
+        $this->repository->getOneBy(['uuid' => $uuid], $this->attributeSelects(['labels' => true]));
     }
 
     public function testSelectProductAttributesLoadsSeveralProductsInOneGo(): void
@@ -1688,6 +1723,55 @@ class ProductRepositoryTest extends SuluTestCase
         $this->assertSame($queriesBefore + 1, $this->countQueries());
     }
 
+    /**
+     * A product with two option attributes of one group, one value in the unlocalized and one in the
+     * German dimension content, as the website loads them.
+     */
+    private function createProductWithTwoOptionAttributes(): string
+    {
+        $container = self::getContainer();
+        /** @var AttributeGroupRepositoryInterface $groupRepository */
+        $groupRepository = $container->get(AttributeGroupRepositoryInterface::class);
+        /** @var AttributeRepositoryInterface $attributeRepository */
+        $attributeRepository = $container->get(AttributeRepositoryInterface::class);
+
+        $group = $groupRepository->createNew();
+        $group->addTranslation(new AttributeGroupTranslation($group, 'de', 'Optik'));
+        $groupRepository->save($group);
+
+        $values = [];
+        foreach (['finish' => ['Oberflaeche', 'matte', 'Matt'], 'size' => ['Groesse', 'large', 'Gross']] as $key => [$label, $optionKey, $optionName]) {
+            $attribute = $attributeRepository->createNew($group);
+            $attribute->setKey($key);
+            $attribute->setType(AttributeInterface::TYPE_OPTIONS);
+            $attribute->addTranslation(new AttributeTranslation($attribute, 'de', $label));
+            foreach ([$optionKey => $optionName, 'other' => 'Andere'] as $otherKey => $name) {
+                $option = new AttributeOption($attribute, $otherKey);
+                $option->addTranslation(new AttributeOptionTranslation($option, 'de', $name));
+                $attribute->addOption($option);
+            }
+            $attributeRepository->save($attribute);
+            $values[] = [$attribute, $attribute->getOption($optionKey)];
+        }
+
+        // the website loads the unlocalized and the localized dimension content, each with its values
+        $product = $this->repository->createNew();
+        $this->repository->add($product);
+        foreach ($values as $index => [$attribute, $option]) {
+            $dimensionContent = $product->createDimensionContent();
+            $dimensionContent->setLocale(0 === $index ? null : 'de');
+            $product->addDimensionContent($dimensionContent);
+            $dimensionContent->addAttribute(new ProductAttributeValue($dimensionContent, $attribute, $attribute->getKey(), $option));
+            $this->entityManager->persist($dimensionContent);
+        }
+        $this->entityManager->flush();
+
+        $uuid = $product->getUuid();
+        $this->entityManager->clear();
+
+        return $uuid;
+    }
+
     private function loadWithAttributes(string $method, string $uuid): ProductInterface
     {
         $selects = $this->attributeSelects();
@@ -1699,17 +1783,38 @@ class ProductRepositoryTest extends SuluTestCase
         };
     }
 
+    private function isInitialized(object $entity, string $property): bool
+    {
+        $collection = (new \ReflectionProperty($entity, $property))->getValue($entity);
+        $this->assertInstanceOf(PersistentCollection::class, $collection);
+
+        return $collection->isInitialized();
+    }
+
+    private function areOptionTranslationsInitialized(AttributeInterface $attribute): bool
+    {
+        foreach ($attribute->getOptions() as $option) {
+            if (!$this->isInitialized($option, 'translations')) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     /**
+     * @param array<string, bool>|true $attributes
+     *
      * @return array<string, mixed>
      */
-    private function attributeSelects(): array
+    private function attributeSelects(array|bool $attributes = true): array
     {
         return [
             ProductRepositoryInterface::SELECT_PRODUCT_CONTENT => [
                 'dimensionAttributes' => ['locale' => 'de', 'stage' => DimensionContentInterface::STAGE_DRAFT, 'version' => DimensionContentInterface::CURRENT_VERSION],
                 'selects' => [],
             ],
-            ProductRepositoryInterface::SELECT_PRODUCT_ATTRIBUTES => true,
+            ProductRepositoryInterface::SELECT_PRODUCT_ATTRIBUTES => $attributes,
         ];
     }
 
