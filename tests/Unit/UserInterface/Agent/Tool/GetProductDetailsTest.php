@@ -19,6 +19,7 @@ use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Application\Attribute\ProductAttributeValueFormatter;
+use Sulu\Product\Application\Routing\PerVariantProductSlugProvider;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
 use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Model\Attribute;
@@ -52,7 +53,7 @@ class GetProductDetailsTest extends TestCase
         $this->getProductDetails = new GetProductDetails(
             $this->productRepository->reveal(),
             new ProductAttributeValueFormatter(new MeasurementRegistry()),
-            new ProductUrlGenerator(new FakeRouteGenerator()),
+            new ProductUrlGenerator(new FakeRouteGenerator(), new PerVariantProductSlugProvider()),
         );
     }
 

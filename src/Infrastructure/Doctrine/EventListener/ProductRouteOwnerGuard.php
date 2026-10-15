@@ -14,18 +14,23 @@ declare(strict_types=1);
 namespace Sulu\Product\Infrastructure\Doctrine\EventListener;
 
 use Doctrine\ORM\Event\OnFlushEventArgs;
+use Sulu\Product\Application\Routing\ProductSlugProviderInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
-use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Route\Domain\Model\Route;
 
 /**
- * A product with variants is reached through its variants, so it never owns a route. Dropped on
+ * Drops the route of a product that does not own one, per `sulu_product.variants.routing`. Dropped on
  * flush rather than in the form, so no programmatic write can leave one behind.
  *
  * @internal
  */
-class ProductWithVariantsRouteGuard
+class ProductRouteOwnerGuard
 {
+    public function __construct(
+        private readonly ProductSlugProviderInterface $slugProvider,
+    ) {
+    }
+
     public function onFlush(OnFlushEventArgs $eventArgs): void
     {
         $entityManager = $eventArgs->getObjectManager();
@@ -46,7 +51,7 @@ class ProductWithVariantsRouteGuard
                 continue;
             }
 
-            if (!$entity->getResource()->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS)) {
+            if ($this->slugProvider->ownsRoute($entity->getResource()->getType())) {
                 continue;
             }
 

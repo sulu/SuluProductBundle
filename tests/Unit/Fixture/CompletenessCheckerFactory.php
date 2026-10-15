@@ -19,6 +19,8 @@ use Sulu\Component\Localization\Localization;
 use Sulu\Component\Webspace\Manager\WebspaceCollection;
 use Sulu\Component\Webspace\Manager\WebspaceManagerInterface;
 use Sulu\Component\Webspace\Webspace;
+use Sulu\Product\Application\Routing\PerVariantProductSlugProvider;
+use Sulu\Product\Application\Routing\ProductSlugProviderInterface;
 use Sulu\Product\Infrastructure\Symfony\Mcp\ProductCompletenessChecker;
 
 /**
@@ -29,7 +31,7 @@ final class CompletenessCheckerFactory
     /**
      * @param list<string> $projectLocales
      */
-    public static function create(?MetadataProviderInterface $metadataProvider = null, array $projectLocales = ['en']): ProductCompletenessChecker
+    public static function create(?MetadataProviderInterface $metadataProvider = null, array $projectLocales = ['en'], ?ProductSlugProviderInterface $slugProvider = null): ProductCompletenessChecker
     {
         $webspace = new Webspace();
         $webspace->setKey('website');
@@ -41,6 +43,6 @@ final class CompletenessCheckerFactory
         $webspaceManager = (new Prophet())->prophesize(WebspaceManagerInterface::class);
         $webspaceManager->getWebspaceCollection()->willReturn(new WebspaceCollection(['website' => $webspace]));
 
-        return new ProductCompletenessChecker($metadataProvider ?? new ArrayMetadataProvider(), $webspaceManager->reveal(), ProductUrlHelperFactory::create());
+        return new ProductCompletenessChecker($metadataProvider ?? new ArrayMetadataProvider(), $webspaceManager->reveal(), ProductUrlHelperFactory::create(), $slugProvider ?? new PerVariantProductSlugProvider());
     }
 }
