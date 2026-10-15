@@ -111,6 +111,7 @@ class ProductRouteDefaultsProvider implements RouteDefaultsProviderInterface
                         DimensionContentQueryEnhancer::SELECT_EXCERPT_CATEGORIES_TRANSLATION => true,
                     ],
                 ],
+                ProductRepositoryInterface::SELECT_PRODUCT_ATTRIBUTES => true,
             ],
         );
 

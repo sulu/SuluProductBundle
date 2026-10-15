@@ -1,5 +1,7 @@
 framework:
     workflows: null
+    profiler:
+        collect: false
     messenger:
         transports:
             sync: 'sync://'

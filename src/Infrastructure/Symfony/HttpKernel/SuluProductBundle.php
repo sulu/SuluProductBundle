@@ -1059,6 +1059,7 @@ final class SuluProductBundle extends AbstractBundle
             ->args([
                 new Reference('doctrine.orm.entity_manager'),
                 new Reference('sulu_content.dimension_content_query_enhancer'),
+                new Reference('sulu_product.attribute_repository'),
             ]);
 
         $services->alias(ProductRepositoryInterface::class, 'sulu_product.product_repository');

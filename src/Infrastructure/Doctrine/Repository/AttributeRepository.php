@@ -101,6 +101,13 @@ final class AttributeRepository implements AttributeRepositoryInterface
                 ->setParameter('uuid', $uuid);
         }
 
+        $uuids = $filters['uuids'] ?? null;
+        if (null !== $uuids) {
+            Assert::isArray($uuids); // @phpstan-ignore staticMethod.alreadyNarrowedType
+            $queryBuilder->andWhere('attribute.uuid IN (:uuids)')
+                ->setParameter('uuids', $uuids);
+        }
+
         $key = $filters['key'] ?? null;
         if (null !== $key) {
             Assert::string($key); // @phpstan-ignore staticMethod.alreadyNarrowedType
