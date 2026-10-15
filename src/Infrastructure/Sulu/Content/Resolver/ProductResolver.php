@@ -21,6 +21,7 @@ use Sulu\Content\Application\ContentResolver\Resolver\ResolverInterface;
 use Sulu\Content\Application\ContentResolver\Value\ContentView;
 use Sulu\Content\Application\MetadataResolver\MetadataResolver;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Product\Application\Routing\ProductSlugProviderInterface;
 use Sulu\Product\Domain\Model\ProductAssociationInterface;
 use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
@@ -56,6 +57,7 @@ class ProductResolver implements ResolverInterface
         private readonly ProductRepositoryInterface $productRepository,
         private readonly CurrentVariantProvider $currentVariantProvider,
         private readonly ReferenceStoreInterface $referenceStore,
+        private readonly ProductSlugProviderInterface $slugProvider,
         private readonly array $variantProperties = [],
     ) {
     }
@@ -282,7 +284,7 @@ class ProductResolver implements ResolverInterface
     ): array {
         $masterData = [
             'title' => ContentView::create($dimensionContent->getTitle(), []),
-            'url' => ContentView::create($dimensionContent->getRoute()?->getSlug(), []),
+            'url' => ContentView::create($this->slugProvider->getSlug($dimensionContent), []),
             'code' => ContentView::create($dimensionContent->getCode(), []),
             'externalIdentifier' => ContentView::create($dimensionContent->getExternalIdentifier(), []),
             'productFamily' => $this->resolveProductFamily($dimensionContent, $locale),
@@ -290,8 +292,10 @@ class ProductResolver implements ResolverInterface
             'position' => ContentView::create($dimensionContent->getResource()->getPosition(), []),
         ];
 
-        // A product with variants owns no route, it is reached through its variants.
-        if ($dimensionContent->getResource()->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS)) {
+        // A product with variants that owns no route is reached through its variants.
+        if ($dimensionContent->getResource()->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS)
+            && !$this->slugProvider->ownsRoute(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS)
+        ) {
             unset($masterData['url']);
         }
 

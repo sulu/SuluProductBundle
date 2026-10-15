@@ -19,12 +19,15 @@ use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\MetadataInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Product\Application\Routing\PerProductProductSlugProvider;
+use Sulu\Product\Application\Routing\VariantUrlBuilder;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Symfony\Mcp\ProductCompletenessChecker;
 use Sulu\Product\Tests\Unit\Fixture\ArrayMetadataProvider;
 use Sulu\Product\Tests\Unit\Fixture\CompletenessCheckerFactory;
+use Sulu\Route\Domain\Repository\RouteRepositoryInterface;
 
 #[CoversClass(ProductCompletenessChecker::class)]
 final class ProductCompletenessCheckerTest extends TestCase
@@ -83,6 +86,27 @@ final class ProductCompletenessCheckerTest extends TestCase
 
         $this->assertStringNotContainsString('No code.', $text);
         $this->assertStringNotContainsString('No url.', $text);
+    }
+
+    public function testAProductWithVariantsNeedsAUrlButNoCodeWhenTheProductOwnsTheRoute(): void
+    {
+        $checker = CompletenessCheckerFactory::create(null, ['en'], new PerProductProductSlugProvider($this->createStub(RouteRepositoryInterface::class), new VariantUrlBuilder('variant')));
+        $product = $this->productWithLocales(['en']);
+        $product->setType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+
+        $text = \implode("\n", $checker->check($product, ['title' => 'Shirt'], 'en'));
+
+        $this->assertStringNotContainsString('No code.', $text);
+        $this->assertStringContainsString('No url.', $text);
+    }
+
+    public function testAVariantNeedsNoUrlWhenTheProductOwnsTheRoute(): void
+    {
+        $checker = CompletenessCheckerFactory::create(null, ['en'], new PerProductProductSlugProvider($this->createStub(RouteRepositoryInterface::class), new VariantUrlBuilder('variant')));
+        $variant = $this->productWithLocales(['en']);
+        $variant->setType(ProductInterface::TYPE_VARIANT);
+
+        $this->assertSame([], $checker->check($variant, ['code' => 'V-1'], 'en'));
     }
 
     public function testAVariantGetsCodeUrlLocaleAndDetailsHintsButNoContentHints(): void

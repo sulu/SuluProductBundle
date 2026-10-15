@@ -30,6 +30,7 @@ use Sulu\Mcp\Domain\Security\PermissionRequirement;
 use Sulu\Mcp\Domain\Security\RequiresPermission;
 use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushStamp;
 use Sulu\Product\Application\Message\CreateProductMessage;
+use Sulu\Product\Application\Routing\ProductSlugProviderInterface;
 use Sulu\Product\Domain\Exception\InvalidProductAssociationException;
 use Sulu\Product\Domain\Exception\UnknownLocaleException;
 use Sulu\Product\Domain\Model\ProductInterface;
@@ -72,6 +73,7 @@ final class ProductCreateTool
         private readonly ProductCompletenessChecker $completenessChecker,
         private readonly ProductUrlHelper $urlHelper,
         private readonly ProjectLocales $projectLocales,
+        private readonly ProductSlugProviderInterface $slugProvider,
     ) {
         $this->messageBus = $messageBus;
     }
@@ -89,7 +91,7 @@ final class ProductCreateTool
     #[McpTool(
         name: 'sulu_product_create',
         title: 'Create Product',
-        description: 'Create a new product (draft). Workflow: 1) Call sulu_product_family_list to pick a family. "productFamily" is its UUID and is mandatory, because the family decides which attributes the product has. 2) Pass attribute values in "attributes" as a map keyed by the attribute UUID, e.g. attributes={"<attribute uuid>": "red"}. Get those UUIDs from sulu_attribute_list. Attributes the family marks required must be present or the save is rejected. Template fields go in "content" as a flat object. Call sulu_get_context for the product templates. Link related products with "associations" and set categories and tags through "excerpt". Set type="product_with_variants" when the product should hold variants; its variant-specific attributes then belong on the variants, not here. To create the variants themselves use sulu_product_variant_create. This tool cannot create them. The product is created as a draft. A product needs a "url" to be reachable on the website. Without it the product has no route and no page. Pass it inside "content" as "url". For the type "route" it is generated from the title when omitted. Its shape depends on the route type of the installation: a path string that follows the route_schema, such as "/products/hat-red", for the type "route", or {"page": {"uuid": "<uuid of the listing page>", "path": "<its path, e.g. /products>"}, "suffix": "/<slug>"} for "page_tree_route". With a page and no suffix, the suffix is generated from the title. Copy the shape from a sibling product with sulu_product_get (field "url"). The warning names the shape this installation takes. Fill "code" when the datasheet or the user gives one. The result carries a "warning" when the product has no url: fix it with sulu_product_update before publishing. The result lists "recommendations" for things that are still empty. Fill what the datasheet or the user gives you and ask the user for the rest. Never invent datasheet values such as titles, descriptions, SEO texts, media or attribute values. Codes, categories and tags may be derived, as the hints say. Call sulu_content_publish (resourceKey: products) to make it live. The result carries "resourceKey" ("products"). To link to a product in the admin, call sulu_admin_link_generate with `resourceKey` ("products"), `resourceId` (the product\'s uuid) and `locale`.',
+        description: 'Create a new product (draft). Workflow: 1) Call sulu_product_family_list to pick a family. "productFamily" is its UUID and is mandatory, because the family decides which attributes the product has. 2) Pass attribute values in "attributes" as a map keyed by the attribute UUID, e.g. attributes={"<attribute uuid>": "red"}. Get those UUIDs from sulu_attribute_list. Attributes the family marks required must be present or the save is rejected. Template fields go in "content" as a flat object. Call sulu_get_context for the product templates. Link related products with "associations" and set categories and tags through "excerpt". Set type="product_with_variants" when the product should hold variants; its variant-specific attributes then belong on the variants, not here. To create the variants themselves use sulu_product_variant_create. This tool cannot create them. The product is created as a draft. A product needs a "url" to be reachable on the website. Without it the product has no route and no page. A product_with_variants needs one only when the installation routes per product, the variants carry theirs otherwise. Pass it inside "content" as "url". For the type "route" it is generated from the title when omitted. Its shape depends on the route type of the installation: a path string that follows the route_schema, such as "/products/hat-red", for the type "route", or {"page": {"uuid": "<uuid of the listing page>", "path": "<its path, e.g. /products>"}, "suffix": "/<slug>"} for "page_tree_route". With a page and no suffix, the suffix is generated from the title. Copy the shape from a sibling product with sulu_product_get (field "url"). The warning names the shape this installation takes. Fill "code" when the datasheet or the user gives one. The result carries a "warning" when the product has no url: fix it with sulu_product_update before publishing. The result lists "recommendations" for things that are still empty. Fill what the datasheet or the user gives you and ask the user for the rest. Never invent datasheet values such as titles, descriptions, SEO texts, media or attribute values. Codes, categories and tags may be derived, as the hints say. Call sulu_content_publish (resourceKey: products) to make it live. The result carries "resourceKey" ("products"). To link to a product in the admin, call sulu_admin_link_generate with `resourceKey` ("products"), `resourceId` (the product\'s uuid) and `locale`.',
         annotations: new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false),
     )]
     #[DangerousTool('product_write')]
@@ -184,7 +186,7 @@ final class ProductCreateTool
                 $data['details'] = $details;
             }
 
-            if (ProductInterface::TYPE_PRODUCT_WITH_VARIANTS !== $type) {
+            if ($this->slugProvider->ownsRoute($type ?? ProductInterface::TYPE_PRODUCT)) {
                 $data = $this->urlHelper->completeUrl($data, $locale);
             }
             $data = $this->urlHelper->completeUrlSuffix($data, $locale);
@@ -227,7 +229,7 @@ final class ProductCreateTool
                 'data' => $this->contentManager->normalize($dimensionContent),
             ];
 
-            if (!$product->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS) && !ProductCompletenessChecker::hasUrl($result['data'])) {
+            if ($this->slugProvider->ownsRoute($product->getType()) && !ProductCompletenessChecker::hasUrl($result['data'])) {
                 $result['warning'] = $this->urlHelper->warning($result['data'], $locale, $product->getUuid());
             }
 

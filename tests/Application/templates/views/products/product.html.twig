@@ -8,4 +8,12 @@
     {% if product.currentVariant is defined %}
         <p class="current-variant">{{ product.currentVariant.title }} {{ product.currentVariant.code }}</p>
     {% endif %}
+
+    <ul class="variants">
+        {% for variant in product.variants|default([]) %}
+            {% if variant.url %}
+                <li><a href="{{ sulu_content_path(variant.url) }}">{{ variant.title }}</a></li>
+            {% endif %}
+        {% endfor %}
+    </ul>
 {% endblock %}
