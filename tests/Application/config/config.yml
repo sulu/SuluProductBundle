@@ -23,7 +23,8 @@ sulu_product:
         website:
             additional_product_filters: true
 
-# An empty `resources` list covers every resource, products included.
+# The default request workflow covers only the listed resources.
 sulu_content:
     request_workflows:
-        default: ~
+        default:
+            resources: ['products']
