@@ -15,13 +15,14 @@ namespace Sulu\Product\Tests\Functional\Content;
 
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Content\Application\ContentResolver\ContentResolverInterface;
 use Sulu\Product\Domain\Model\AttributeGroupTranslation;
 use Sulu\Product\Domain\Model\AttributeInterface;
+use Sulu\Product\Domain\Model\AttributeOption;
 use Sulu\Product\Domain\Model\AttributeTranslation;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
-use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
@@ -118,9 +119,165 @@ class ProductResolverAttributesTest extends SuluTestCase
         self::assertArrayHasKey('housing', $attributes);
 
         // the values pass through unformatted; the Twig filter renders them
-        $attribute = $attributes['housing'];
-        self::assertInstanceOf(ProductAttributeValueInterface::class, $attribute);
-        self::assertSame('Zink', $attribute->getText());
-        self::assertSame('Mechanische Daten', $attribute->getAttribute()->getGroup()->getTranslation('de')?->getName());
+        $housing = $attributes['housing'];
+        self::assertIsArray($housing);
+        self::assertSame('Zink', $housing['value']);
+        $attribute = $housing['attribute'];
+        self::assertInstanceOf(AttributeInterface::class, $attribute);
+        self::assertSame('Mechanische Daten', $attribute->getGroup()->getTranslation('de')?->getName());
+    }
+
+    public function testRangeAttributeResolvesToItsBounds(): void
+    {
+        $group = $this->attributeGroupRepository->createNew();
+        $group->addTranslation(new AttributeGroupTranslation($group, 'de', 'Technische Daten'));
+        $this->attributeGroupRepository->save($group);
+
+        $attribute = $this->attributeRepository->createNew($group);
+        $attribute->setKey('temperature');
+        $attribute->setType(AttributeInterface::TYPE_RANGE);
+        $attribute->setPosition(1);
+        $attribute->addTranslation(new AttributeTranslation($attribute, 'de', 'Temperatur'));
+        $this->attributeRepository->save($attribute);
+
+        $this->entityManager->flush();
+
+        $product = $this->productRepository->createNew();
+
+        $dimensionContent = $product->createDimensionContent();
+        $dimensionContent->setLocale('de');
+        $dimensionContent->setStage('draft');
+        $dimensionContent->setTemplateKey('product');
+        $product->addDimensionContent($dimensionContent);
+
+        foreach (['from' => -20.0, 'to' => 60.0] as $valueKey => $number) {
+            $value = new ProductAttributeValue($dimensionContent, $attribute, $attribute->getKey(), valueKey: $valueKey);
+            $value->setNumber($number);
+            $dimensionContent->addAttribute($value);
+        }
+
+        $this->productRepository->add($product);
+        $this->entityManager->persist($dimensionContent);
+        $this->entityManager->flush();
+
+        $result = $this->contentResolver->resolve($dimensionContent);
+
+        self::assertArrayHasKey('product', $result);
+        $productData = $result['product'];
+        self::assertIsArray($productData);
+        $attributes = $productData['attributes'];
+        self::assertIsArray($attributes);
+        self::assertArrayHasKey('temperature', $attributes);
+
+        $temperature = $attributes['temperature'];
+        self::assertIsArray($temperature);
+        self::assertSame(['from' => -20.0, 'to' => 60.0], $temperature['value']);
+        self::assertInstanceOf(AttributeInterface::class, $temperature['attribute']);
+    }
+
+    public function testMultiOptionsAttributeResolvesToTheListOfItsOptionKeysInTheOrderOfTheOptions(): void
+    {
+        $group = $this->attributeGroupRepository->createNew();
+        $group->addTranslation(new AttributeGroupTranslation($group, 'de', 'Optik'));
+        $this->attributeGroupRepository->save($group);
+
+        $attribute = $this->attributeRepository->createNew($group);
+        $attribute->setKey('colours');
+        $attribute->setType(AttributeInterface::TYPE_MULTI_OPTIONS);
+        $attribute->setPosition(1);
+        $attribute->addTranslation(new AttributeTranslation($attribute, 'de', 'Farben'));
+        foreach (['red', 'blue', 'green'] as $optionKey) {
+            $attribute->addOption(new AttributeOption($attribute, $optionKey));
+        }
+        $this->attributeRepository->save($attribute);
+
+        $this->entityManager->flush();
+
+        $product = $this->productRepository->createNew();
+
+        $dimensionContent = $product->createDimensionContent();
+        $dimensionContent->setLocale('de');
+        $dimensionContent->setStage('draft');
+        $dimensionContent->setTemplateKey('product');
+        $product->addDimensionContent($dimensionContent);
+
+        foreach (['blue', 'red'] as $optionKey) {
+            $option = $attribute->getOption($optionKey);
+            self::assertNotNull($option);
+            $dimensionContent->addAttribute(new ProductAttributeValue($dimensionContent, $attribute, $attribute->getKey(), $option, $option->getUuid()));
+        }
+
+        $this->productRepository->add($product);
+        $this->entityManager->persist($dimensionContent);
+        $this->entityManager->flush();
+
+        $result = $this->contentResolver->resolve($dimensionContent);
+
+        self::assertArrayHasKey('product', $result);
+        $productData = $result['product'];
+        self::assertIsArray($productData);
+        $attributes = $productData['attributes'];
+        self::assertIsArray($attributes);
+        self::assertArrayHasKey('colours', $attributes);
+
+        $colours = $attributes['colours'];
+        self::assertIsArray($colours);
+        self::assertSame(['red', 'blue'], $colours['value']);
+        self::assertInstanceOf(AttributeInterface::class, $colours['attribute']);
+    }
+
+    /**
+     * @return iterable<string, array{float, bool}>
+     */
+    public static function provideBooleanValues(): iterable
+    {
+        yield 'true' => [1.0, true];
+        yield 'false' => [0.0, false];
+    }
+
+    #[DataProvider('provideBooleanValues')]
+    public function testBooleanAttributeResolvesToAPhpBool(float $stored, bool $expected): void
+    {
+        $group = $this->attributeGroupRepository->createNew();
+        $group->addTranslation(new AttributeGroupTranslation($group, 'de', 'Eigenschaften'));
+        $this->attributeGroupRepository->save($group);
+
+        $attribute = $this->attributeRepository->createNew($group);
+        $attribute->setKey('waterproof');
+        $attribute->setType(AttributeInterface::TYPE_BOOLEAN);
+        $attribute->setPosition(1);
+        $attribute->addTranslation(new AttributeTranslation($attribute, 'de', 'Wasserdicht'));
+        $this->attributeRepository->save($attribute);
+
+        $this->entityManager->flush();
+
+        $product = $this->productRepository->createNew();
+
+        $dimensionContent = $product->createDimensionContent();
+        $dimensionContent->setLocale('de');
+        $dimensionContent->setStage('draft');
+        $dimensionContent->setTemplateKey('product');
+        $product->addDimensionContent($dimensionContent);
+
+        $value = new ProductAttributeValue($dimensionContent, $attribute, $attribute->getKey());
+        $value->setNumber($stored);
+        $dimensionContent->addAttribute($value);
+
+        $this->productRepository->add($product);
+        $this->entityManager->persist($dimensionContent);
+        $this->entityManager->flush();
+
+        $result = $this->contentResolver->resolve($dimensionContent);
+
+        self::assertArrayHasKey('product', $result);
+        $productData = $result['product'];
+        self::assertIsArray($productData);
+        $attributes = $productData['attributes'];
+        self::assertIsArray($attributes);
+        self::assertArrayHasKey('waterproof', $attributes);
+
+        $waterproof = $attributes['waterproof'];
+        self::assertIsArray($waterproof);
+        self::assertSame($expected, $waterproof['value']);
     }
 }

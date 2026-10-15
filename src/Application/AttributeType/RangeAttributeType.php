@@ -1,0 +1,38 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of Sulu.
+ *
+ * (c) Sulu GmbH
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
+namespace Sulu\Product\Application\AttributeType;
+
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
+use Sulu\Product\Domain\Model\AttributeInterface;
+
+/**
+ * The attribute's min, max and step apply to both the "from" and the "to" field.
+ */
+final class RangeAttributeType implements AttributeTypeInterface
+{
+    public function __construct(
+        private readonly NumberAttributeType $numberAttributeType,
+    ) {
+    }
+
+    public function getKey(): string
+    {
+        return AttributeInterface::TYPE_RANGE;
+    }
+
+    public function configureForm(FormMetadata $form, AttributeInterface $attribute, string $locale): void
+    {
+        $this->numberAttributeType->configureForm($form, $attribute, $locale);
+    }
+}

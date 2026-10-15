@@ -16,6 +16,7 @@ namespace Sulu\Product\Application\Mapper;
 use Sulu\Product\Application\Message\CreateAttributeMessage;
 use Sulu\Product\Application\Message\ModifyAttributeMessage;
 use Sulu\Product\Domain\Exception\AttributeOptionKeyNotUniqueException;
+use Sulu\Product\Domain\Exception\InvalidAttributeKeyException;
 use Sulu\Product\Domain\Exception\InvalidDateDisplayFormatException;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeOption;
@@ -30,6 +31,7 @@ final class AttributeMapper implements AttributeMapperInterface
         AttributeInterface::TYPE_NUMBER,
         AttributeInterface::TYPE_DATE,
         AttributeInterface::TYPE_OPTIONS,
+        AttributeInterface::TYPE_MULTI_OPTIONS,
         AttributeInterface::TYPE_BOOLEAN,
     ];
 
@@ -43,6 +45,8 @@ final class AttributeMapper implements AttributeMapperInterface
         if (AttributeInterface::TYPE_DATE === $type) {
             $this->assertDateDisplayFormatRendersADate($message->getConfig()['displayFormat'] ?? null);
         }
+
+        $this->assertKeyIsNotANumber($message->getKey());
 
         $attribute->setKey($message->getKey());
         $attribute->setConfig($message->getConfig());
@@ -69,6 +73,17 @@ final class AttributeMapper implements AttributeMapperInterface
             $this->mapCreatePosition($attribute, $message);
         } else {
             $this->syncPosition($attribute, $message->getPosition());
+        }
+    }
+
+    /**
+     * A digit-only key becomes an int array key, which the content resolver renumbers, so
+     * `product.attributes` on the website would find another attribute or none.
+     */
+    private function assertKeyIsNotANumber(string $key): void
+    {
+        if ($key === (string) (int) $key) {
+            throw new InvalidAttributeKeyException($key);
         }
     }
 

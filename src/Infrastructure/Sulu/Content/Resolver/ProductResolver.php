@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Infrastructure\Sulu\Content\Resolver;
 
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataLoaderInterface;
 use Sulu\Bundle\AdminBundle\Metadata\MetadataProviderInterface;
@@ -21,8 +22,10 @@ use Sulu\Content\Application\ContentResolver\Resolver\ResolverInterface;
 use Sulu\Content\Application\ContentResolver\Value\ContentView;
 use Sulu\Content\Application\MetadataResolver\MetadataResolver;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Product\Application\Attribute\AttributeValueConverter;
+use Sulu\Product\Application\Attribute\AttributeValueConverterInterface;
+use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\ProductAssociationInterface;
-use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
@@ -56,6 +59,7 @@ class ProductResolver implements ResolverInterface
         private readonly ProductRepositoryInterface $productRepository,
         private readonly CurrentVariantProvider $currentVariantProvider,
         private readonly ReferenceStoreInterface $referenceStore,
+        private readonly AttributeValueConverterInterface $attributeValueConverter,
         private readonly array $variantProperties = [],
     ) {
     }
@@ -112,7 +116,7 @@ class ProductResolver implements ResolverInterface
 
         if ($this->isRequested($requested, 'attributes')) {
             $content[$this->outputKey($requested, 'attributes')] = ContentView::create(
-                $this->getAttributesMapByKey($dimensionContent),
+                $this->getAttributesMapByKey($dimensionContent, $locale),
                 [],
             );
         }
@@ -379,17 +383,56 @@ class ProductResolver implements ResolverInterface
     /**
      * Formatting and grouping are the `sulu_product_attribute_groups` Twig filter's job.
      *
-     * @return array<string, ProductAttributeValueInterface>
+     * @return array<string, ContentView> each resolving to `{attribute, value}`
      */
-    private function getAttributesMapByKey(ProductDimensionContentInterface $dimensionContent): array
+    private function getAttributesMapByKey(ProductDimensionContentInterface $dimensionContent, string $locale): array
     {
         $attributes = [];
 
-        foreach ($dimensionContent->getAttributes() as $value) {
-            $attributes[$value->getAttribute()->getKey()] = $value;
+        foreach ($this->attributeValueConverter->normalizeAll($dimensionContent->getAttributes()) as $attributeValue) {
+            $attribute = $attributeValue['attribute'];
+            // Only an array of content views is resolved down to their content.
+            $attributes[$attribute->getKey()] = ContentView::create([
+                'attribute' => ContentView::create($attribute, []),
+                'value' => $this->resolveAttributeValue($attribute, $attributeValue['value'], $locale),
+            ], []);
         }
 
         return $attributes;
+    }
+
+    /**
+     * Resolves the fragment's fields like the properties of a template: the field itself for a single
+     * field, the fields by name for several.
+     */
+    private function resolveAttributeValue(AttributeInterface $attribute, mixed $value, string $locale): ContentView
+    {
+        // The admin API has a boolean as the string "true" or "false"; "false" would be truthy in a template.
+        if (AttributeInterface::TYPE_BOOLEAN === $attribute->getType() && \is_string($value)) {
+            $value = AttributeValueConverter::TRUE === $value;
+        }
+
+        $fragment = $this->formMetadataLoader->getMetadata('product_attribute_' . $attribute->getType(), $locale, []);
+        $items = [];
+        if ($fragment instanceof FormMetadata) {
+            foreach ($fragment->getItems() as $item) {
+                if ($item instanceof FieldMetadata) {
+                    $items[$item->getName()] = $item;
+                }
+            }
+        }
+
+        if ([] === $items || null === $value) {
+            return ContentView::create($value, []);
+        }
+
+        if (1 !== \count($items)) {
+            return ContentView::create($this->metadataResolver->resolveItems($items, \is_array($value) ? $value : [], $locale), []);
+        }
+
+        $name = \array_key_first($items);
+
+        return $this->metadataResolver->resolveItems($items, [$name => $value], $locale)[$name];
     }
 
     /**

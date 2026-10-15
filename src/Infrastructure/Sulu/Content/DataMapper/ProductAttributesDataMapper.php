@@ -15,8 +15,9 @@ namespace Sulu\Product\Infrastructure\Sulu\Content\DataMapper;
 
 use Sulu\Content\Application\ContentDataMapper\DataMapper\DataMapperInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
-use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
+use Sulu\Product\Application\Attribute\AttributeValueConverterInterface;
 use Sulu\Product\Domain\Exception\RequiredProductAttributeMissingException;
+use Sulu\Product\Domain\Model\AttributeOptionInterface;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
@@ -25,7 +26,7 @@ use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
 class ProductAttributesDataMapper implements DataMapperInterface
 {
     public function __construct(
-        private readonly AttributeTypeRegistry $attributeTypeRegistry,
+        private readonly AttributeValueConverterInterface $attributeValueConverter,
     ) {
     }
 
@@ -60,13 +61,12 @@ class ProductAttributesDataMapper implements DataMapperInterface
             $familyAttributes[$familyAttribute->getAttribute()->getUuid()] = $familyAttribute;
         }
 
-        /** @var array<string, ProductAttributeValueInterface> $allExisting */
+        /** @var array<string, array<string, ProductAttributeValueInterface>> $allExisting */
         $allExisting = [];
-        foreach ($unlocalizedDimensionContent->getAttributes() as $value) {
-            $allExisting[$value->getAttribute()->getUuid()] = $value;
-        }
-        foreach ($localizedDimensionContent->getAttributes() as $value) {
-            $allExisting[$value->getAttribute()->getUuid()] = $value;
+        foreach ([$unlocalizedDimensionContent, $localizedDimensionContent] as $dimensionContent) {
+            foreach ($dimensionContent->getAttributes() as $row) {
+                $allExisting[$row->getAttribute()->getUuid()][$row->getValueKey()] = $row;
+            }
         }
 
         foreach ($submitted as $attributeUuid => $raw) {
@@ -83,30 +83,16 @@ class ProductAttributesDataMapper implements DataMapperInterface
             $targetDimensionContent = $attribute->isLocalized()
                 ? $localizedDimensionContent
                 : $unlocalizedDimensionContent;
-            $type = $this->attributeTypeRegistry->get($attribute->getType());
-            $existing = $allExisting[$attributeUuid] ?? null;
 
-            if ($this->isEmpty($raw)) {
-                if (null !== $existing) {
-                    $targetDimensionContent->removeAttribute($existing);
-                    unset($allExisting[$attributeUuid]);
-                }
+            // Validates the whole value first, so a rejected one changes no row.
+            $rowData = $this->attributeValueConverter->denormalize($attribute, $raw);
 
-                continue;
-            }
-
-            $isNew = null === $existing;
-            if (null === $existing) {
-                $existing = new ProductAttributeValue($targetDimensionContent, $attribute, $attribute->getKey());
-                $existing->setProductFamilyAttribute($familyAttribute);
-            }
-
-            $type->writeValue($existing, $raw);
-
-            if ($isNew) {
-                $targetDimensionContent->addAttribute($existing);
-                $allExisting[$attributeUuid] = $existing;
-            }
+            $allExisting[$attributeUuid] = $this->writeRows(
+                $familyAttribute,
+                $allExisting[$attributeUuid] ?? [],
+                $rowData,
+                $targetDimensionContent,
+            );
         }
 
         $productType = $unlocalizedDimensionContent->getResource()->getType();
@@ -115,12 +101,49 @@ class ProductAttributesDataMapper implements DataMapperInterface
     }
 
     /**
+     * @param array<string, ProductAttributeValueInterface> $existingRows by value key
+     * @param array<string, array{number?: float, text?: string, option?: AttributeOptionInterface}> $data by value key
+     *
+     * @return array<string, ProductAttributeValueInterface>
+     */
+    private function writeRows(
+        ProductFamilyAttributeInterface $familyAttribute,
+        array $existingRows,
+        array $data,
+        ProductDimensionContentInterface $targetDimensionContent,
+    ): array {
+        $attribute = $familyAttribute->getAttribute();
+
+        $rows = [];
+        foreach ($data as $valueKey => $rowData) {
+            $row = $existingRows[$valueKey] ?? null;
+            if (null === $row) {
+                $row = new ProductAttributeValue($targetDimensionContent, $attribute, $attribute->getKey(), valueKey: $valueKey);
+                $row->setProductFamilyAttribute($familyAttribute);
+                $targetDimensionContent->addAttribute($row);
+            }
+
+            $row->setNumber($rowData['number'] ?? null);
+            $row->setText($rowData['text'] ?? null);
+            $row->setAttributeOption($rowData['option'] ?? null);
+
+            $rows[$valueKey] = $row;
+        }
+
+        foreach (\array_diff_key($existingRows, $rows) as $row) {
+            $targetDimensionContent->removeAttribute($row);
+        }
+
+        return $rows;
+    }
+
+    /**
      * @param array<string, ProductFamilyAttributeInterface> $familyAttributes
-     * @param array<string, ProductAttributeValueInterface> $values
+     * @param array<string, array<string, ProductAttributeValueInterface>> $rowsByAttribute
      *
      * @throws RequiredProductAttributeMissingException
      */
-    private function assertRequiredSatisfied(array $familyAttributes, array $values, string $productType): void
+    private function assertRequiredSatisfied(array $familyAttributes, array $rowsByAttribute, string $productType): void
     {
         foreach ($familyAttributes as $attributeUuid => $familyAttribute) {
             if (!$familyAttribute->isRequired()) {
@@ -131,15 +154,10 @@ class ProductAttributesDataMapper implements DataMapperInterface
                 continue;
             }
 
-            $value = $values[$attributeUuid] ?? null;
-            if (null === $value || $this->isEmpty($value->getValue())) {
-                throw new RequiredProductAttributeMissingException($familyAttribute->getAttribute()->getKey());
+            $attribute = $familyAttribute->getAttribute();
+            if (null === $this->attributeValueConverter->normalize($attribute, $rowsByAttribute[$attributeUuid] ?? [])) {
+                throw new RequiredProductAttributeMissingException($attribute->getKey());
             }
         }
-    }
-
-    private function isEmpty(mixed $raw): bool
-    {
-        return null === $raw || '' === $raw;
     }
 }

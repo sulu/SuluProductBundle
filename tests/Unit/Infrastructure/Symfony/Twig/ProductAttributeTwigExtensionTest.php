@@ -30,6 +30,7 @@ use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Infrastructure\Symfony\Twig\ProductAttributeTwigExtension;
+use Sulu\Product\Tests\Unit\Support\ProductAttributeFragmentLoader;
 use Twig\TwigFunction;
 
 #[CoversClass(ProductAttributeTwigExtension::class)]
@@ -46,12 +47,22 @@ class ProductAttributeTwigExtensionTest extends TestCase
     }
 
     /**
+     * The attributes as the resolver hands them to a template.
+     *
+     * @return array<string, array{attribute: AttributeInterface, value: mixed}>
+     */
+    private function read(ProductDimensionContent $content): array
+    {
+        return ProductAttributeFragmentLoader::converter()->normalizeAll($content->getAttributes());
+    }
+
+    /**
      * @return array<string, array{key: string, label: string, type: string, value: mixed, formattedValue: string|bool, position: int, group: array{key: string, label: string}}>
      */
     private function attributesOf(ProductDimensionContent $content, string $locale = 'de'): array
     {
         $flat = [];
-        foreach ($this->extension()->groupAttributes($content->getAttributes(), $locale) as $group) {
+        foreach ($this->extension()->groupAttributes($this->read($content), $locale) as $group) {
             foreach ($group['attributes'] as $key => $attribute) {
                 $flat[$key] = $attribute;
             }
@@ -100,12 +111,12 @@ class ProductAttributeTwigExtensionTest extends TestCase
         $product = $this->contentWithValues(['housing' => 'Zink', 'colour' => 'stale']);
         $variant = $this->contentWithValues(['colour' => 'black']);
 
-        $merged = $this->extension()->mergeAttributes($product->getAttributes(), $variant->getAttributes());
+        $merged = $this->extension()->mergeAttributes($this->read($product), $this->read($variant));
 
         $this->assertSame(['housing', 'colour'], \array_keys($merged));
-        $this->assertSame('black', $merged['colour']->getText());
-        $this->assertSame(['housing', 'colour'], \array_keys($this->extension()->mergeAttributes($product->getAttributes())));
-        $this->assertSame(['colour'], \array_keys($this->extension()->mergeAttributes([], $variant->getAttributes())));
+        $this->assertSame('black', $merged['colour']['value']);
+        $this->assertSame(['housing', 'colour'], \array_keys($this->extension()->mergeAttributes($this->read($product))));
+        $this->assertSame(['colour'], \array_keys($this->extension()->mergeAttributes([], $this->read($variant))));
         $this->assertSame([], $this->extension()->mergeAttributes([], []));
         $this->assertSame(['sulu_product_merge_attributes'], \array_map(
             static fn (TwigFunction $function): string => $function->getName(),
@@ -143,7 +154,7 @@ class ProductAttributeTwigExtensionTest extends TestCase
         $this->addTextValue($content, $this->createAttribute('impedance', 'Impedanz', $technical, 1), '50 Ohm');
         $this->addTextValue($content, $this->createAttribute('weight', 'Gewicht', $mechanical, 1), '48 g');
 
-        $groups = $this->extension()->groupAttributes($content->getAttributes(), 'de');
+        $groups = $this->extension()->groupAttributes($this->read($content), 'de');
 
         self::assertSame(['0198c3e2-0000-7000-8000-000000000001', '0198c3e2-0000-7000-8000-000000000002'], \array_column($groups, 'key'));
         self::assertSame('Technische Daten', $groups[0]['label']);
@@ -158,7 +169,7 @@ class ProductAttributeTwigExtensionTest extends TestCase
         $this->addTextValue($content, $this->createAttribute('a', 'A', $this->createGroup('0198c3e2-0000-7000-8000-00000000000a', 'Later', '2026-01-02'), 1), 'x');
         $this->addTextValue($content, $this->createAttribute('b', 'B', $this->createGroup('0198c3e2-0000-7000-8000-00000000000b', 'Earlier', '2026-01-01'), 1), 'y');
 
-        $groups = $this->extension()->groupAttributes($content->getAttributes(), 'de');
+        $groups = $this->extension()->groupAttributes($this->read($content), 'de');
 
         self::assertSame(['Earlier', 'Later'], \array_column($groups, 'label'));
     }
@@ -171,7 +182,7 @@ class ProductAttributeTwigExtensionTest extends TestCase
         $this->addTextValue($content, $this->createAttribute('housing', 'Gehäuse', $group, 2), 'Zink');
         $this->addTextValue($content, $this->createAttribute('weight', 'Gewicht', $group, 1), '48 g');
 
-        $groups = $this->extension()->groupAttributes($content->getAttributes(), 'de');
+        $groups = $this->extension()->groupAttributes($this->read($content), 'de');
 
         self::assertSame(['weight', 'housing'], \array_keys($groups[0]['attributes']));
     }
@@ -215,6 +226,7 @@ class ProductAttributeTwigExtensionTest extends TestCase
         $attribute->setType(AttributeInterface::TYPE_OPTIONS);
 
         $option = new AttributeOption($attribute, 'black');
+        $attribute->addOption($option);
         $option->addTranslation(new AttributeOptionTranslation($option, 'de', 'Schwarz'));
 
         $value = new ProductAttributeValue($content, $attribute, $attribute->getKey(), $option);
@@ -225,6 +237,38 @@ class ProductAttributeTwigExtensionTest extends TestCase
         self::assertSame('Schwarz', $colour['formattedValue']);
     }
 
+    public function testMultiOptionsValuesResolveToTheTranslatedOptionNames(): void
+    {
+        $content = $this->createContent();
+        $attribute = $this->createAttribute('colours', 'Farben', $this->createGroup('0198c3e2-0000-7000-8000-000000000001', 'Eins'), 1);
+        $attribute->setType(AttributeInterface::TYPE_MULTI_OPTIONS);
+
+        foreach (['red' => 'Rot', 'blue' => 'Blau'] as $optionKey => $name) {
+            $option = new AttributeOption($attribute, $optionKey);
+            $attribute->addOption($option);
+            $option->addTranslation(new AttributeOptionTranslation($option, 'de', $name));
+            $content->addAttribute(new ProductAttributeValue($content, $attribute, $attribute->getKey(), $option, $option->getUuid()));
+        }
+
+        $colours = $this->attributesOf($content)['colours'];
+        self::assertSame(['red', 'blue'], $colours['value']);
+        self::assertSame('Rot, Blau', $colours['formattedValue']);
+        self::assertSame(AttributeInterface::TYPE_MULTI_OPTIONS, $colours['type']);
+    }
+
+    public function testMultiOptionsWithoutASelectionIsDropped(): void
+    {
+        $content = $this->createContent();
+        $attribute = $this->createAttribute('colours', 'Farben', $this->createGroup('0198c3e2-0000-7000-8000-000000000001', 'Eins'), 1);
+        $attribute->setType(AttributeInterface::TYPE_MULTI_OPTIONS);
+        $attribute->addOption(new AttributeOption($attribute, 'red'));
+
+        // the row of a deleted option has no option
+        $content->addAttribute(new ProductAttributeValue($content, $attribute, $attribute->getKey(), null, 'red'));
+
+        self::assertSame([], $this->attributesOf($content));
+    }
+
     public function testDisplayFormatIgnoredForOptionsAttribute(): void
     {
         $content = $this->createContent();
@@ -233,6 +277,7 @@ class ProductAttributeTwigExtensionTest extends TestCase
         $attribute->setConfig(['displayFormat' => 'ca. %value%']);
 
         $option = new AttributeOption($attribute, 'black');
+        $attribute->addOption($option);
         $option->addTranslation(new AttributeOptionTranslation($option, 'de', 'Schwarz'));
 
         $value = new ProductAttributeValue($content, $attribute, $attribute->getKey(), $option);
@@ -317,7 +362,7 @@ class ProductAttributeTwigExtensionTest extends TestCase
         $attribute->setType(AttributeInterface::TYPE_DATE);
 
         $value = new ProductAttributeValue($content, $attribute, $attribute->getKey());
-        $value->setNumber((float) (new \DateTimeImmutable('2024-03-05'))->getTimestamp());
+        $value->setNumber((float) (new \DateTimeImmutable('2024-03-05', new \DateTimeZone('UTC')))->getTimestamp());
         $content->addAttribute($value);
 
         self::assertSame('05.03.2024', $this->attributesOf($content)['released']['formattedValue']);
@@ -331,7 +376,7 @@ class ProductAttributeTwigExtensionTest extends TestCase
         $attribute->setConfig(['displayFormat' => 'MMMM yyyy']);
 
         $value = new ProductAttributeValue($content, $attribute, $attribute->getKey());
-        $value->setNumber((float) (new \DateTimeImmutable('2024-03-05'))->getTimestamp());
+        $value->setNumber((float) (new \DateTimeImmutable('2024-03-05', new \DateTimeZone('UTC')))->getTimestamp());
         $content->addAttribute($value);
 
         self::assertSame('März 2024', $this->attributesOf($content)['released']['formattedValue']);
@@ -369,6 +414,20 @@ class ProductAttributeTwigExtensionTest extends TestCase
         $content->addAttribute($value);
 
         self::assertFalse($this->attributesOf($content)['waterproof']['formattedValue']);
+    }
+
+    public function testBooleanOfTheWebsiteIsFormattedAsBefore(): void
+    {
+        $attribute = $this->createAttribute('waterproof', 'Wasserdicht', $this->createGroup('0198c3e2-0000-7000-8000-000000000001', 'Eins'), 1);
+        $attribute->setType(AttributeInterface::TYPE_BOOLEAN);
+
+        foreach ([true, false] as $value) {
+            $groups = $this->extension()->groupAttributes([['attribute' => $attribute, 'value' => $value]], 'de');
+
+            $resolved = $groups[0]['attributes']['waterproof'];
+            self::assertSame($value, $resolved['value']);
+            self::assertSame($value, $resolved['formattedValue']);
+        }
     }
 
     public function testDateValueWithoutATimestampIsDropped(): void
@@ -421,6 +480,7 @@ class ProductAttributeTwigExtensionTest extends TestCase
         $attribute->setType(AttributeInterface::TYPE_OPTIONS);
 
         $option = new AttributeOption($attribute, 'black');
+        $attribute->addOption($option);
         $option->addTranslation(new AttributeOptionTranslation($option, 'de', 'Schwarz')); // 'de' only
 
         $value = new ProductAttributeValue($content, $attribute, $attribute->getKey(), $option);
@@ -435,7 +495,7 @@ class ProductAttributeTwigExtensionTest extends TestCase
         $group = $this->createGroup('0198c3e2-0000-7000-8000-000000000001', 'Mechanische Daten');
         $this->addTextValue($content, $this->createAttribute('weight', 'Gewicht', $group, 1), '48 g');
 
-        $groups = $this->extension('de')->groupAttributes($content->getAttributes());
+        $groups = $this->extension('de')->groupAttributes($this->read($content));
 
         self::assertSame('Gewicht', $groups[0]['attributes']['weight']['label']);
     }
@@ -446,7 +506,7 @@ class ProductAttributeTwigExtensionTest extends TestCase
         $group = $this->createGroup('0198c3e2-0000-7000-8000-000000000001', 'Mechanische Daten');
         $this->addTextValue($content, $this->createAttribute('weight', 'Gewicht', $group, 1), '48 g');
 
-        self::assertSame([], $this->extension()->groupAttributes($content->getAttributes()));
+        self::assertSame([], $this->extension()->groupAttributes($this->read($content)));
     }
 
     public function testFilterIsRegistered(): void
@@ -467,10 +527,9 @@ class ProductAttributeTwigExtensionTest extends TestCase
         $attribute->setConfig(['displayFormat' => '< %value% V']);
         $this->addTextValue($content, $attribute, '50');
 
-        $productAttributeValue = $content->getAttributes()->first();
-        self::assertInstanceOf(ProductAttributeValue::class, $productAttributeValue);
+        $attributeValue = \array_values($this->read($content))[0];
 
-        self::assertSame('< 50 V', $this->extension()->formatValue($productAttributeValue, 'de'));
+        self::assertSame('< 50 V', $this->extension()->formatValue($attributeValue, 'de'));
     }
 
     public function testFormatValueFallsBackToTheCurrentRequestsLocale(): void
@@ -478,10 +537,9 @@ class ProductAttributeTwigExtensionTest extends TestCase
         $content = $this->createContent();
         $this->addTextValue($content, $this->createAttribute('weight', 'Gewicht', $this->createGroup('0198c3e2-0000-7000-8000-000000000001', 'Mechanisch'), 1), '48 g');
 
-        $productAttributeValue = $content->getAttributes()->first();
-        self::assertInstanceOf(ProductAttributeValue::class, $productAttributeValue);
+        $attributeValue = \array_values($this->read($content))[0];
 
-        self::assertSame('48 g', $this->extension('de')->formatValue($productAttributeValue));
-        self::assertNull($this->extension()->formatValue($productAttributeValue), 'no locale to format with');
+        self::assertSame('48 g', $this->extension('de')->formatValue($attributeValue));
+        self::assertNull($this->extension()->formatValue($attributeValue), 'no locale to format with');
     }
 }
