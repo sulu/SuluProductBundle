@@ -43,7 +43,7 @@ final class AttributeMapper implements AttributeMapperInterface
     {
         $type = $message instanceof CreateAttributeMessage ? $message->getType() : $attribute->getType();
         if (AttributeInterface::TYPE_DATE === $type) {
-            $this->assertDateDisplayFormatRendersADate($message->getConfig()['displayFormat'] ?? null);
+            $this->assertDateDisplayFormatIsASkeleton($message->getConfig()['displayFormat'] ?? null);
         }
 
         $this->assertKeyIsNotANumber($message->getKey());
@@ -87,16 +87,14 @@ final class AttributeMapper implements AttributeMapperInterface
         }
     }
 
-    /** ICU renders unquoted words as an empty string, which hides the value on the website without an error. */
-    private function assertDateDisplayFormatRendersADate(mixed $displayFormat): void
+    /** A skeleton reads every letter as a field, so a word in it renders as a date made of other fields without an error. */
+    private function assertDateDisplayFormatIsASkeleton(mixed $displayFormat): void
     {
         if (!\is_string($displayFormat) || '' === $displayFormat) {
             return;
         }
 
-        $formatter = new \IntlDateFormatter('en', \IntlDateFormatter::MEDIUM, \IntlDateFormatter::NONE, 'UTC', null, $displayFormat);
-
-        if (!$formatter->format(0)) {
+        if (1 !== \preg_match('/^[GyYuUrQqMLwWdDFgEec]+$/', \preg_replace('/[^\p{L}]/u', '', $displayFormat) ?? '')) {
             throw new InvalidDateDisplayFormatException($displayFormat);
         }
     }

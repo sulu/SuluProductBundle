@@ -25,7 +25,7 @@ class InvalidDateDisplayFormatExceptionTest extends TestCase
         $exception = new InvalidDateDisplayFormatException('Released MMMM yyyy');
 
         $this->assertSame(
-            'The date display format "Released MMMM yyyy" renders no date. Put literal words in single quotes, e.g. \'Released\' MMMM yyyy.',
+            'The date display format "Released MMMM yyyy" is not an ICU skeleton of date fields, e.g. yMMMM or yMMMd.',
             $exception->getMessage(),
         );
     }

@@ -138,7 +138,7 @@
     "sulu_product.max": "Max",
     "sulu_product.step": "Step",
     "sulu_product.display_format": "Display format",
-    "sulu_product.display_format_info_text": "Text and number: placeholders %value%, %unit%. Range: also %from%, %to%. Date: ICU pattern, e.g. dd.MM.yyyy or MMMM yyyy, literal words in single quotes, e.g. 'Released' MMMM yyyy",
+    "sulu_product.display_format_info_text": "Text and number: placeholders %value%, %unit%. Range: also %from%, %to%. Date: ICU skeleton of date fields, e.g. yMMMM or yMMMd, arranged by the language of the website",
     "sulu_product.localized": "Localized",
     "sulu_product.filterable": "Filterable",
     "sulu_product.status": "Status",
