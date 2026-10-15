@@ -14,57 +14,56 @@ declare(strict_types=1);
 namespace Sulu\Product\Application\AttributeType;
 
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\OptionMetadata;
+use Sulu\Product\Application\Attribute\AttributeDisplayFormatter;
 use Sulu\Product\Domain\Model\AttributeInterface;
-use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Webmozart\Assert\Assert;
 
-final class NumberAttributeType extends AbstractAttributeType
+final class NumberAttributeType implements AttributeTypeInterface, FormattableAttributeTypeInterface
 {
+    public function __construct(
+        private readonly AttributeDisplayFormatter $displayFormatter,
+    ) {
+    }
+
     public function getKey(): string
     {
         return AttributeInterface::TYPE_NUMBER;
     }
 
-    public function getFormKey(): string
-    {
-        return 'product_attribute_number';
-    }
-
-    public function configureField(FieldMetadata $field, AttributeInterface $attribute, string $locale): void
+    public function configureForm(FormMetadata $form, AttributeInterface $attribute, string $locale): void
     {
         $config = $attribute->getConfig();
 
-        foreach (['min', 'max', 'step'] as $name) {
-            $value = $config[$name] ?? null;
-            if (null === $value) {
+        foreach ($form->getItems() as $field) {
+            if (!$field instanceof FieldMetadata) {
                 continue;
             }
 
-            Assert::numeric($value);
+            foreach (['min', 'max', 'step'] as $name) {
+                $value = $config[$name] ?? null;
+                if (null === $value) {
+                    continue;
+                }
 
-            $option = new OptionMetadata();
-            $option->setName($name);
-            $option->setValue((string) $value);
-            $field->addOption($option);
+                Assert::numeric($value);
+
+                $option = new OptionMetadata();
+                $option->setName($name);
+                $option->setValue((string) $value);
+                $field->addOption($option);
+            }
         }
     }
 
-    public function readValue(ProductAttributeValueInterface $value): mixed
+    public function formatValue(AttributeInterface $attribute, mixed $value, string $locale): ?string
     {
-        return $value->getNumber();
+        return $this->displayFormatter->format($attribute, $value);
     }
 
-    public function writeValue(ProductAttributeValueInterface $value, mixed $raw): void
+    public function hasDisplayFormat(): bool
     {
-        if (null === $raw || '' === $raw) {
-            $value->setNumber(null);
-
-            return;
-        }
-
-        Assert::numeric($raw);
-
-        $value->setNumber((float) $raw);
+        return true;
     }
 }

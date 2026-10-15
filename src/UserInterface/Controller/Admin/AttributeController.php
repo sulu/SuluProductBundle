@@ -27,6 +27,7 @@ use Sulu\Product\Application\Message\ModifyAttributeMessage;
 use Sulu\Product\Application\Message\RemoveAttributeMessage;
 use Sulu\Product\Domain\Exception\AttributeNotFoundException;
 use Sulu\Product\Domain\Exception\AttributeOptionKeyNotUniqueException;
+use Sulu\Product\Domain\Exception\InvalidAttributeKeyException;
 use Sulu\Product\Domain\Exception\InvalidDateDisplayFormatException;
 use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Model\AttributeInterface;
@@ -128,7 +129,7 @@ final class AttributeController implements SecuredControllerInterface
             return new JsonResponse(['detail' => \sprintf('Attribute with key "%s" already exists.', $data['key'])], 409);
         } catch (AttributeOptionKeyNotUniqueException $e) {
             return new JsonResponse(['detail' => $e->getMessage()], 409);
-        } catch (InvalidDateDisplayFormatException $e) {
+        } catch (InvalidDateDisplayFormatException|InvalidAttributeKeyException $e) {
             return new JsonResponse(['detail' => $e->getMessage()], 400);
         }
 
@@ -147,7 +148,7 @@ final class AttributeController implements SecuredControllerInterface
             return new JsonResponse(['detail' => \sprintf('Attribute with key "%s" already exists.', $data['key'])], 409);
         } catch (AttributeOptionKeyNotUniqueException $e) {
             return new JsonResponse(['detail' => $e->getMessage()], 409);
-        } catch (InvalidDateDisplayFormatException $e) {
+        } catch (InvalidDateDisplayFormatException|InvalidAttributeKeyException $e) {
             return new JsonResponse(['detail' => $e->getMessage()], 400);
         } catch (AttributeNotFoundException $e) {
             return new JsonResponse(['detail' => $e->getMessage()], 404);

@@ -17,63 +17,28 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\OptionMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\SectionMetadata;
 use Sulu\Product\Application\AttributeType\OptionsAttributeType;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeOption;
 use Sulu\Product\Domain\Model\AttributeOptionInterface;
+use Sulu\Product\Domain\Model\AttributeOptionTranslation;
 use Sulu\Product\Domain\Model\AttributeOptionTranslationInterface;
-use Sulu\Product\Domain\Model\Product;
-use Sulu\Product\Domain\Model\ProductAttributeValue;
-use Sulu\Product\Domain\Model\ProductDimensionContent;
+use Sulu\Product\Tests\Unit\Support\FormOf;
 
 #[CoversClass(OptionsAttributeType::class)]
 class OptionsAttributeTypeTest extends TestCase
 {
     use ProphecyTrait;
 
-    public function testKeyAndFormKey(): void
+    public function testKey(): void
     {
         $type = new OptionsAttributeType();
         self::assertSame(AttributeInterface::TYPE_OPTIONS, $type->getKey());
-        self::assertSame('product_attribute_options', $type->getFormKey());
-    }
-
-    public function testValueRoundTripResolvesTheAttributeOption(): void
-    {
-        $type = new OptionsAttributeType();
-        $attribute = $this->createAttributeWithOptions('red');
-        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), $attribute, 'k');
-
-        $type->writeValue($value, 'red');
-
-        self::assertSame($attribute->getOption('red'), $value->getAttributeOption());
-        self::assertSame('red', $type->readValue($value));
-    }
-
-    public function testWriteEmptyValueClearsOption(): void
-    {
-        $type = new OptionsAttributeType();
-        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), $this->createAttributeWithOptions('red', 'green'), 'k');
-        $type->writeValue($value, 'red');
-
-        $type->writeValue($value, null);
-        self::assertNull($value->getAttributeOption());
-
-        $type->writeValue($value, 'green');
-        $type->writeValue($value, '');
-        self::assertNull($value->getAttributeOption());
-    }
-
-    public function testWriteUnknownOptionKeyThrows(): void
-    {
-        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), $this->createAttributeWithOptions('red'), 'k');
-
-        $this->expectException(\InvalidArgumentException::class);
-
-        (new OptionsAttributeType())->writeValue($value, 'blue');
     }
 
     public function testConfigureFieldFallsBackToOptionKeyWithoutTranslation(): void
@@ -88,7 +53,7 @@ class OptionsAttributeTypeTest extends TestCase
         $field = new FieldMetadata('attribute_1');
         $field->setType('single_select');
 
-        (new OptionsAttributeType())->configureField($field, $attribute->reveal(), 'en');
+        (new OptionsAttributeType())->configureForm(FormOf::fields($field), $attribute->reveal(), 'en');
 
         $valueOptions = $field->getOptions()['values']->getValue();
         self::assertIsArray($valueOptions);
@@ -109,7 +74,7 @@ class OptionsAttributeTypeTest extends TestCase
         $field = new FieldMetadata('attribute_1');
         $field->setType('single_select');
 
-        (new OptionsAttributeType())->configureField($field, $attribute->reveal(), 'en');
+        (new OptionsAttributeType())->configureForm(FormOf::fields($field), $attribute->reveal(), 'en');
 
         $options = $field->getOptions();
         self::assertArrayHasKey('values', $options);
@@ -122,13 +87,41 @@ class OptionsAttributeTypeTest extends TestCase
         self::assertSame('Red', $valueOptions[0]->getTitle('en'));
     }
 
-    private function createAttributeWithOptions(string ...$keys): Attribute
+    public function testConfigureFormIgnoresItemsThatAreNotFields(): void
+    {
+        $form = new FormMetadata();
+        $form->addItem(new SectionMetadata('section'));
+
+        (new OptionsAttributeType())->configureForm($form, new Attribute(new AttributeGroup()), 'en');
+
+        $this->addToAssertionCount(1);
+    }
+
+    public function testFormatValueUsesTheTranslatedNameOrFallsBackToTheKey(): void
     {
         $attribute = new Attribute(new AttributeGroup());
-        foreach ($keys as $key) {
-            $attribute->addOption(new AttributeOption($attribute, $key));
-        }
+        $option = new AttributeOption($attribute, 'red');
+        $attribute->addOption($option);
 
-        return $attribute;
+        self::assertSame('red', (new OptionsAttributeType())->formatValue($attribute, 'red', 'en'));
+
+        $option->addTranslation(new AttributeOptionTranslation($option, 'en', 'Red'));
+
+        self::assertSame('Red', (new OptionsAttributeType())->formatValue($attribute, 'red', 'en'));
+        self::assertSame('red', (new OptionsAttributeType())->formatValue($attribute, 'red', 'de'));
+        self::assertSame('blue', (new OptionsAttributeType())->formatValue($attribute, 'blue', 'en'));
+    }
+
+    public function testFormatValueWithoutAnOptionKeyIsNull(): void
+    {
+        $attribute = new Attribute(new AttributeGroup());
+
+        self::assertNull((new OptionsAttributeType())->formatValue($attribute, null, 'en'));
+        self::assertNull((new OptionsAttributeType())->formatValue($attribute, ['red'], 'en'));
+    }
+
+    public function testHasNoDisplayFormat(): void
+    {
+        self::assertFalse((new OptionsAttributeType())->hasDisplayFormat());
     }
 }

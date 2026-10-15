@@ -15,43 +15,48 @@ namespace Sulu\Product\Tests\Unit\Application\AttributeType;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Product\Application\AttributeType\TextAttributeType;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
-use Sulu\Product\Domain\Model\Product;
-use Sulu\Product\Domain\Model\ProductAttributeValue;
-use Sulu\Product\Domain\Model\ProductDimensionContent;
+use Sulu\Product\Tests\Unit\Support\AttributeTypes;
+use Sulu\Product\Tests\Unit\Support\FormOf;
 
 #[CoversClass(TextAttributeType::class)]
 class TextAttributeTypeTest extends TestCase
 {
-    public function testKeyAndFormKey(): void
+    public function testKey(): void
     {
-        $type = new TextAttributeType();
+        $type = new TextAttributeType(AttributeTypes::displayFormatter());
         self::assertSame(AttributeInterface::TYPE_TEXT, $type->getKey());
-        self::assertSame('product_attribute_text', $type->getFormKey());
     }
 
-    public function testValueRoundTripUsesTextColumn(): void
+    public function testConfigureFieldLeavesTheFieldAlone(): void
     {
-        $type = new TextAttributeType();
-        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
+        $field = new FieldMetadata('value');
 
-        $type->writeValue($value, 'hello');
+        (new TextAttributeType(AttributeTypes::displayFormatter()))->configureForm(FormOf::fields($field), new Attribute(new AttributeGroup()), 'en');
 
-        self::assertSame('hello', $value->getText());
-        self::assertSame('hello', $type->readValue($value));
+        self::assertSame([], $field->getOptions());
     }
 
-    public function testWriteNullClearsText(): void
+    public function testFormatValuePlacesTheTextInTheDisplayFormat(): void
     {
-        $type = new TextAttributeType();
-        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
-        $type->writeValue($value, 'world');
+        $type = new TextAttributeType(AttributeTypes::displayFormatter());
+        $attribute = new Attribute(new AttributeGroup());
 
-        $type->writeValue($value, null);
+        self::assertSame('XL', $type->formatValue($attribute, 'XL', 'en'));
+        self::assertNull($type->formatValue($attribute, '', 'en'));
+        self::assertNull($type->formatValue($attribute, null, 'en'));
 
-        self::assertNull($value->getText());
+        $attribute->setConfig(['displayFormat' => 'Size: %value%']);
+
+        self::assertSame('Size: XL', $type->formatValue($attribute, 'XL', 'en'));
+    }
+
+    public function testHasADisplayFormat(): void
+    {
+        self::assertTrue((new TextAttributeType(AttributeTypes::displayFormatter()))->hasDisplayFormat());
     }
 }

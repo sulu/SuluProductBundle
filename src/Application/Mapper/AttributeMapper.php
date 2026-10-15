@@ -16,6 +16,7 @@ namespace Sulu\Product\Application\Mapper;
 use Sulu\Product\Application\Message\CreateAttributeMessage;
 use Sulu\Product\Application\Message\ModifyAttributeMessage;
 use Sulu\Product\Domain\Exception\AttributeOptionKeyNotUniqueException;
+use Sulu\Product\Domain\Exception\InvalidAttributeKeyException;
 use Sulu\Product\Domain\Exception\InvalidDateDisplayFormatException;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeOption;
@@ -30,6 +31,7 @@ final class AttributeMapper implements AttributeMapperInterface
         AttributeInterface::TYPE_NUMBER,
         AttributeInterface::TYPE_DATE,
         AttributeInterface::TYPE_OPTIONS,
+        AttributeInterface::TYPE_MULTI_OPTIONS,
         AttributeInterface::TYPE_BOOLEAN,
     ];
 
@@ -41,8 +43,10 @@ final class AttributeMapper implements AttributeMapperInterface
     {
         $type = $message instanceof CreateAttributeMessage ? $message->getType() : $attribute->getType();
         if (AttributeInterface::TYPE_DATE === $type) {
-            $this->assertDateDisplayFormatRendersADate($message->getConfig()['displayFormat'] ?? null);
+            $this->assertDateDisplayFormatIsASkeleton($message->getConfig()['displayFormat'] ?? null);
         }
+
+        $this->assertKeyIsNotANumber($message->getKey());
 
         $attribute->setKey($message->getKey());
         $attribute->setConfig($message->getConfig());
@@ -72,16 +76,25 @@ final class AttributeMapper implements AttributeMapperInterface
         }
     }
 
-    /** ICU renders unquoted words as an empty string, which hides the value on the website without an error. */
-    private function assertDateDisplayFormatRendersADate(mixed $displayFormat): void
+    /**
+     * A digit-only key becomes an int array key, which the content resolver renumbers, so
+     * `product.attributes` on the website would find another attribute or none.
+     */
+    private function assertKeyIsNotANumber(string $key): void
+    {
+        if ($key === (string) (int) $key) {
+            throw new InvalidAttributeKeyException($key);
+        }
+    }
+
+    /** A skeleton reads every letter as a field, so a word in it renders as a date made of other fields without an error. */
+    private function assertDateDisplayFormatIsASkeleton(mixed $displayFormat): void
     {
         if (!\is_string($displayFormat) || '' === $displayFormat) {
             return;
         }
 
-        $formatter = new \IntlDateFormatter('en', \IntlDateFormatter::MEDIUM, \IntlDateFormatter::NONE, 'UTC', null, $displayFormat);
-
-        if (!$formatter->format(0)) {
+        if (1 !== \preg_match('/^[GyYuUrQqMLwWdDFgEec]+$/', \preg_replace('/[^\p{L}]/u', '', $displayFormat) ?? '')) {
             throw new InvalidDateDisplayFormatException($displayFormat);
         }
     }

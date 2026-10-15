@@ -15,84 +15,73 @@ namespace Sulu\Product\Tests\Unit\Application\AttributeType;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Product\Application\AttributeType\DateAttributeType;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
-use Sulu\Product\Domain\Model\Product;
-use Sulu\Product\Domain\Model\ProductAttributeValue;
-use Sulu\Product\Domain\Model\ProductDimensionContent;
+use Sulu\Product\Tests\Unit\Support\FormOf;
 
 #[CoversClass(DateAttributeType::class)]
 class DateAttributeTypeTest extends TestCase
 {
-    public function testKeyAndFormKey(): void
+    public function testKey(): void
     {
         $type = new DateAttributeType();
         self::assertSame(AttributeInterface::TYPE_DATE, $type->getKey());
-        self::assertSame('product_attribute_date', $type->getFormKey());
     }
 
-    public function testValueRoundTripStoresUnixTimestamp(): void
+    public function testConfigureFieldLeavesTheFieldAlone(): void
     {
-        $type = new DateAttributeType();
-        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
+        $field = new FieldMetadata('value');
 
-        $type->writeValue($value, '2026-07-24');
+        (new DateAttributeType())->configureForm(FormOf::fields($field), new Attribute(new AttributeGroup()), 'en');
 
-        $expected = (float) (new \DateTimeImmutable('2026-07-24 00:00:00', new \DateTimeZone('UTC')))->getTimestamp();
-        self::assertSame($expected, $value->getNumber());
-        self::assertSame('2026-07-24', $type->readValue($value));
+        self::assertSame([], $field->getOptions());
     }
 
-    public function testWriteNullClearsNumber(): void
+    public function testFormatValueRendersTheDateForTheLocale(): void
     {
-        $type = new DateAttributeType();
-        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
-        $type->writeValue($value, '2026-07-24');
+        $attribute = new Attribute(new AttributeGroup());
 
-        $type->writeValue($value, null);
-
-        self::assertNull($value->getNumber());
-        self::assertNull($type->readValue($value));
+        self::assertSame('May 1, 2024', (new DateAttributeType())->formatValue($attribute, '2024-05-01', 'en'));
+        self::assertSame('01.05.2024', (new DateAttributeType())->formatValue($attribute, '2024-05-01', 'de'));
     }
 
-    public function testWriteEmptyStringClearsNumber(): void
+    public function testFormatValueArrangesTheDisplayFormatSkeletonForTheLocale(): void
     {
-        $type = new DateAttributeType();
-        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
-        $type->writeValue($value, '2026-07-24');
+        $attribute = new Attribute(new AttributeGroup());
+        $attribute->setConfig(['displayFormat' => 'yMMMd']);
 
-        $type->writeValue($value, '');
-
-        self::assertNull($value->getNumber());
+        self::assertSame('May 1, 2024', (new DateAttributeType())->formatValue($attribute, '2024-05-01', 'en'));
+        self::assertSame('1. Mai 2024', (new DateAttributeType())->formatValue($attribute, '2024-05-01', 'de'));
+        self::assertSame('1 mai 2024', (new DateAttributeType())->formatValue($attribute, '2024-05-01', 'fr'));
     }
 
-    public function testWriteInvalidFormatThrows(): void
+    public function testFormatValueArrangesAFieldOrderOfTheDisplayFormatForTheLocale(): void
     {
-        $type = new DateAttributeType();
-        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
+        $attribute = new Attribute(new AttributeGroup());
+        $attribute->setConfig(['displayFormat' => 'dd.MM.yyyy']);
 
-        $this->expectException(\InvalidArgumentException::class);
-
-        $type->writeValue($value, 'not-a-date');
+        self::assertSame('05/01/2024', (new DateAttributeType())->formatValue($attribute, '2024-05-01', 'en'));
+        self::assertSame('01.05.2024', (new DateAttributeType())->formatValue($attribute, '2024-05-01', 'de'));
     }
 
-    public function testWriteOverflowDateThrows(): void
+    public function testFormatValueWithAnEmptyDisplayFormatUsesTheMediumDate(): void
     {
-        $type = new DateAttributeType();
-        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
+        $attribute = new Attribute(new AttributeGroup());
+        $attribute->setConfig(['displayFormat' => '']);
 
-        $this->expectException(\InvalidArgumentException::class);
-
-        $type->writeValue($value, '2026-02-31');
+        self::assertSame('May 1, 2024', (new DateAttributeType())->formatValue($attribute, '2024-05-01', 'en'));
     }
 
-    public function testReadValueReturnsNullWhenNoNumber(): void
+    public function testFormatValueWithoutADateIsNull(): void
     {
-        $type = new DateAttributeType();
-        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
+        self::assertNull((new DateAttributeType())->formatValue(new Attribute(new AttributeGroup()), null, 'en'));
+    }
 
-        self::assertNull($type->readValue($value));
+    public function testHasADisplayFormat(): void
+    {
+        self::assertTrue((new DateAttributeType())->hasDisplayFormat());
     }
 }

@@ -17,11 +17,11 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
-use Sulu\Product\Application\Attribute\ProductAttributeValueFormatter;
-use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductAttributeValueRepositoryInterface;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\AttributeValueListTool;
+use Sulu\Product\Tests\Unit\Support\AttributeTypes;
+use Sulu\Product\Tests\Unit\Support\ProductAttributeFragmentLoader;
 use Sulu\Product\UserInterface\Agent\Tool\GetAttributeValues;
 
 #[CoversClass(AttributeValueListTool::class)]
@@ -39,7 +39,8 @@ class AttributeValueListToolTest extends TestCase
         $tool = new AttributeValueListTool(new GetAttributeValues(
             $attributeRepository->reveal(),
             $valueRepository->reveal(),
-            new ProductAttributeValueFormatter(new MeasurementRegistry()),
+            AttributeTypes::formatter(),
+            ProductAttributeFragmentLoader::converter(),
         ));
 
         $result = $tool->listValues('unknown', 'en');

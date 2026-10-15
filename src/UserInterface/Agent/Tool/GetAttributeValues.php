@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Sulu\Product\UserInterface\Agent\Tool;
 
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Product\Application\Attribute\AttributeValueConverterInterface;
 use Sulu\Product\Application\Attribute\ProductAttributeValueFormatter;
 use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
@@ -32,6 +33,7 @@ final class GetAttributeValues
         private readonly AttributeRepositoryInterface $attributeRepository,
         private readonly ProductAttributeValueRepositoryInterface $productAttributeValueRepository,
         private readonly ProductAttributeValueFormatter $valueFormatter,
+        private readonly AttributeValueConverterInterface $attributeValueConverter,
     ) {
     }
 
@@ -59,6 +61,14 @@ final class GetAttributeValues
             ];
         }
 
+        if (\count($this->attributeValueConverter->getFields($attribute)) > 1) {
+            return [
+                'values' => [],
+                'status' => 'ok',
+                'instruction' => 'This attribute has several values per product, e.g. a range, so there are no single values to list.',
+            ];
+        }
+
         $limit = \max(1, \min($limit, self::MAX_LIMIT));
 
         $groups = $this->productAttributeValueRepository->countValues([
@@ -72,7 +82,11 @@ final class GetAttributeValues
         /** @var array<string, string> $searchValues */
         $searchValues = [];
         foreach ($groups as $group) {
-            $value = $this->valueFormatter->format($group['value'], $locale);
+            $value = $this->valueFormatter->format(
+                $attribute,
+                $this->attributeValueConverter->normalize($attribute, [$group['value']]),
+                $locale,
+            );
             if (\is_bool($value)) {
                 $value = $value ? 'true' : 'false';
             }

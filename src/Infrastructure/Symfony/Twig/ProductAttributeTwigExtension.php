@@ -15,7 +15,7 @@ namespace Sulu\Product\Infrastructure\Symfony\Twig;
 
 use Sulu\Component\Webspace\Analyzer\RequestAnalyzerInterface;
 use Sulu\Product\Application\Attribute\ProductAttributeValueFormatter;
-use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
+use Sulu\Product\Domain\Model\AttributeInterface;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
@@ -24,6 +24,7 @@ use Twig\TwigFunction;
  * Combines a product's and a variant's attribute values, formats them and folds them into their
  * attribute groups for display.
  *
+ * @phpstan-type AttributeValue array{attribute: AttributeInterface, value: mixed, formattedValue?: string|bool|null}
  * @phpstan-type ResolvedAttribute array{key: string, label: string, type: string, value: mixed, formattedValue: string|bool, position: int, group: array{key: string, label: string}}
  */
 class ProductAttributeTwigExtension extends AbstractExtension
@@ -45,7 +46,6 @@ class ProductAttributeTwigExtension extends AbstractExtension
     {
         return [
             new TwigFilter('sulu_product_attribute_groups', [$this, 'groupAttributes']),
-            new TwigFilter('sulu_product_format_attribute_value', [$this, 'formatValue']),
         ];
     }
 
@@ -53,18 +53,18 @@ class ProductAttributeTwigExtension extends AbstractExtension
      * Combines a product's attribute values with those of one of its variants, keyed by attribute
      * key; a variant's value wins over the product's.
      *
-     * @param iterable<ProductAttributeValueInterface> $productAttributes
-     * @param iterable<ProductAttributeValueInterface> $variantAttributes
+     * @param iterable<AttributeValue> $productAttributes
+     * @param iterable<AttributeValue> $variantAttributes
      *
-     * @return array<string, ProductAttributeValueInterface>
+     * @return array<string, AttributeValue>
      */
     public function mergeAttributes(iterable $productAttributes, iterable $variantAttributes = []): array
     {
         $merged = [];
 
         foreach ([$productAttributes, $variantAttributes] as $attributes) {
-            foreach ($attributes as $value) {
-                $merged[$value->getAttribute()->getKey()] = $value;
+            foreach ($attributes as $attributeValue) {
+                $merged[$attributeValue['attribute']->getKey()] = $attributeValue;
             }
         }
 
@@ -72,11 +72,11 @@ class ProductAttributeTwigExtension extends AbstractExtension
     }
 
     /**
-     * @param iterable<ProductAttributeValueInterface> $productAttributeValues keys are ignored; re-keyed by attribute key
+     * @param iterable<AttributeValue> $attributeValues keys are ignored; re-keyed by attribute key
      *
      * @return list<array{key: string, label: string, attributes: array<string, ResolvedAttribute>}>
      */
-    public function groupAttributes(iterable $productAttributeValues, ?string $locale = null): array
+    public function groupAttributes(iterable $attributeValues, ?string $locale = null): array
     {
         $locale ??= $this->requestAnalyzer->getCurrentLocalization()?->getLocale();
 
@@ -89,9 +89,12 @@ class ProductAttributeTwigExtension extends AbstractExtension
         /** @var array<string, array{\DateTimeImmutable, string}> $groupOrder */
         $groupOrder = [];
 
-        foreach ($productAttributeValues as $productAttributeValue) {
-            $attribute = $productAttributeValue->getAttribute();
-            $formatted = $this->formatValue($productAttributeValue, $locale);
+        foreach ($attributeValues as $attributeValue) {
+            $attribute = $attributeValue['attribute'];
+            // The resolver has formatted its values already; formatting an option again costs a query.
+            $formatted = \array_key_exists('formattedValue', $attributeValue)
+                ? $attributeValue['formattedValue']
+                : $this->formatter->format($attribute, $attributeValue['value'], $locale);
 
             if (null === $formatted || '' === $formatted) {
                 continue;
@@ -109,9 +112,9 @@ class ProductAttributeTwigExtension extends AbstractExtension
 
             $groups[$groupKey]['attributes'][$attribute->getKey()] = [
                 'key' => $attribute->getKey(),
-                'label' => $attribute->getTranslation($locale)?->getName() ?? $productAttributeValue->getAttributeKey(),
+                'label' => $attribute->getTranslation($locale)?->getName() ?? $attribute->getKey(),
                 'type' => $attribute->getType(),
-                'value' => $productAttributeValue->getValue(),
+                'value' => $attributeValue['value'],
                 'formattedValue' => $formatted,
                 'position' => $attribute->getPosition(),
                 'group' => [
@@ -134,20 +137,5 @@ class ProductAttributeTwigExtension extends AbstractExtension
         }
 
         return $result;
-    }
-
-    /**
-     * The value as displayed, see ProductAttributeValueFormatter. Without a locale the request's;
-     * null for an empty value or without any locale.
-     */
-    public function formatValue(ProductAttributeValueInterface $productAttributeValue, ?string $locale = null): string|bool|null
-    {
-        $locale ??= $this->requestAnalyzer->getCurrentLocalization()?->getLocale();
-
-        if (null === $locale) {
-            return null;
-        }
-
-        return $this->formatter->format($productAttributeValue, $locale);
     }
 }

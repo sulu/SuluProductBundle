@@ -16,13 +16,13 @@ namespace Sulu\Product\Infrastructure\Sulu\Search\Visitor;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
-use Sulu\Product\Application\AttributeType\BooleanAttributeType;
-use Sulu\Product\Application\AttributeType\DateAttributeType;
+use Sulu\Product\Application\Attribute\AttributeValueConverter;
 use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeOption;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
+use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Symfony\Contracts\Service\ResetInterface;
 
 /**
@@ -56,8 +56,10 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
 
     private const UNLOCALIZED = '';
 
+    private const EMPTY_ROW = ['optionKey' => null, 'number' => null, 'text' => null, 'variantSpecific' => false];
+
     /**
-     * @var array<string, array<string, array<string, ValueRow>>> product id => locale => attribute uuid => row
+     * @var array<string, array<string, array<string, array<string, ValueRow>>>> product id => locale => attribute uuid => value key => row
      */
     private array $attributeValues = [];
 
@@ -120,7 +122,7 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
         $textValues = [];
         $numericValues = [];
 
-        foreach ($this->mergedAttributeValues($productId, $parentId, $locale) as $attributeUuid => $valueRow) {
+        foreach ($this->mergedAttributeValues($productId, $parentId, $locale) as $attributeUuid => $rows) {
             $attribute = $this->getAttributeDefinitions()[$attributeUuid] ?? null;
             if (null === $attribute) {
                 continue;
@@ -129,22 +131,25 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
             $key = $attribute['key'];
             $filterable = $attribute['filterable'];
             $display = null;
+            $valueRow = $rows[ProductAttributeValueInterface::DEFAULT_VALUE_KEY] ?? self::EMPTY_ROW;
             switch ($attribute['type']) {
                 case AttributeInterface::TYPE_NUMBER:
                     if (null !== $valueRow['number']) {
                         if ($filterable) {
                             $numericValues[self::numericField($key)] = [$valueRow['number']];
                         }
-                        $display = \rtrim(\rtrim(\number_format($valueRow['number'], 10, '.', ''), '0'), '.');
-                        $display .= null !== $attribute['unit'] ? ' ' . $attribute['unit'] : '';
+                        $display = $this->formatNumber($valueRow['number'], $attribute['unit']);
                     }
+                    break;
+                case AttributeInterface::TYPE_RANGE:
+                    $display = $this->formatRange($rows['from']['number'] ?? null, $rows['to']['number'] ?? null, $attribute['unit']);
                     break;
                 case AttributeInterface::TYPE_DATE:
                     if (null !== $valueRow['number']) {
                         if ($filterable) {
                             $numericValues[self::numericField($key)] = [$valueRow['number']];
                         }
-                        $display = (new \DateTimeImmutable('@' . (int) $valueRow['number']))->format(DateAttributeType::FORMAT);
+                        $display = (new \DateTimeImmutable('@' . (int) $valueRow['number']))->format(AttributeValueConverter::DATE_FORMAT);
                     }
                     break;
                 case AttributeInterface::TYPE_OPTIONS:
@@ -155,6 +160,20 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
                         $display = $this->translate($attribute['options'][$valueRow['optionKey']] ?? [], $locale, $attribute['defaultLocale']) ?? $valueRow['optionKey'];
                     }
                     break;
+                case AttributeInterface::TYPE_MULTI_OPTIONS:
+                    $names = [];
+                    foreach ($rows as $optionRow) {
+                        if (null === $optionRow['optionKey']) {
+                            continue;
+                        }
+
+                        if ($filterable) {
+                            $textValues[] = self::textValue($key, $optionRow['optionKey']);
+                        }
+                        $names[] = $this->translate($attribute['options'][$optionRow['optionKey']] ?? [], $locale, $attribute['defaultLocale']) ?? $optionRow['optionKey'];
+                    }
+                    $display = [] !== $names ? \implode(', ', $names) : null;
+                    break;
                 case AttributeInterface::TYPE_TEXT:
                     $display = $valueRow['text'];
                     break;
@@ -162,7 +181,7 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
                     if (null !== $valueRow['number']) {
                         $isTrue = 0.0 !== $valueRow['number'];
                         if ($filterable) {
-                            $textValues[] = self::textValue($key, $isTrue ? BooleanAttributeType::TRUE : BooleanAttributeType::FALSE);
+                            $textValues[] = self::textValue($key, $isTrue ? AttributeValueConverter::TRUE : AttributeValueConverter::FALSE);
                         }
                         // Only yes adds the label, so a search for it does not find the products answered with no.
                         if ($isTrue) {
@@ -191,15 +210,37 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
         return $document;
     }
 
+    private function formatNumber(float $number, ?string $unit): string
+    {
+        $display = \rtrim(\rtrim(\number_format($number, 10, '.', ''), '0'), '.');
+
+        return null !== $unit ? $display . ' ' . $unit : $display;
+    }
+
     /**
-     * @return array<string, ValueRow> attribute uuid => row
+     * "from – to", or "≥ from" / "≤ to" for a range open on one side, like the website renders it.
+     */
+    private function formatRange(?float $from, ?float $to, ?string $unit): ?string
+    {
+        $display = match (true) {
+            null !== $from && null !== $to => $this->formatNumber($from, null) . ' – ' . $this->formatNumber($to, null),
+            null !== $from => '≥ ' . $this->formatNumber($from, null),
+            null !== $to => '≤ ' . $this->formatNumber($to, null),
+            default => null,
+        };
+
+        return null !== $display && null !== $unit ? $display . ' ' . $unit : $display;
+    }
+
+    /**
+     * @return array<string, array<string, ValueRow>> attribute uuid => value key => row
      */
     private function mergedAttributeValues(string $productId, ?string $parentId, string $locale): array
     {
         $merged = $this->productAttributeValues($productId, $locale);
-        foreach (null !== $parentId ? $this->productAttributeValues($parentId, $locale) : [] as $attributeUuid => $valueRow) {
-            if (!$valueRow['variantSpecific'] && !isset($merged[$attributeUuid])) {
-                $merged[$attributeUuid] = $valueRow;
+        foreach (null !== $parentId ? $this->productAttributeValues($parentId, $locale) : [] as $attributeUuid => $rows) {
+            if (!\array_values($rows)[0]['variantSpecific'] && !isset($merged[$attributeUuid])) {
+                $merged[$attributeUuid] = $rows;
             }
         }
 
@@ -207,7 +248,7 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
     }
 
     /**
-     * @return array<string, ValueRow> attribute uuid => row
+     * @return array<string, array<string, ValueRow>> attribute uuid => value key => row
      */
     private function productAttributeValues(string $productId, string $locale): array
     {
@@ -246,11 +287,11 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
     /**
      * @param list<string> $productIds
      *
-     * @return array<string, array<string, array<string, ValueRow>>> product id => locale => attribute uuid => row
+     * @return array<string, array<string, array<string, array<string, ValueRow>>>> product id => locale => attribute uuid => value key => row
      */
     private function loadAttributeValues(array $productIds): array
     {
-        /** @var iterable<array{productId: string, locale: string|null, attributeUuid: string, optionKey: string|null, number: float|null, text: string|null, variantSpecific: bool|null}> $rows */
+        /** @var iterable<array{productId: string, locale: string|null, attributeUuid: string, valueKey: string, optionKey: string|null, number: float|null, text: string|null, variantSpecific: bool|null}> $rows */
         $rows = $this->entityManager->createQueryBuilder()
             ->from(ProductAttributeValue::class, 'value')
             ->innerJoin('value.productDimensionContent', 'dimensionContent')
@@ -259,6 +300,7 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
             ->select('IDENTITY(dimensionContent.product) AS productId')
             ->addSelect('dimensionContent.locale')
             ->addSelect('IDENTITY(value.attribute) AS attributeUuid')
+            ->addSelect('value.valueKey')
             ->addSelect('attributeOption.key AS optionKey')
             ->addSelect('value.number')
             ->addSelect('value.text')
@@ -275,7 +317,7 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
         $attributeValues = [];
         foreach ($rows as $row) {
             $text = \is_string($row['text']) ? \trim($row['text']) : '';
-            $attributeValues[$row['productId']][$row['locale'] ?? self::UNLOCALIZED][$row['attributeUuid']] = [
+            $attributeValues[$row['productId']][$row['locale'] ?? self::UNLOCALIZED][$row['attributeUuid']][$row['valueKey']] = [
                 'optionKey' => $row['optionKey'],
                 'number' => $row['number'],
                 'text' => '' !== $text ? $text : null,

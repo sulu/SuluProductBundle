@@ -14,58 +14,54 @@ declare(strict_types=1);
 namespace Sulu\Product\Application\AttributeType;
 
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\OptionMetadata;
 use Sulu\Product\Domain\Model\AttributeInterface;
-use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
-use Webmozart\Assert\Assert;
 
-final class OptionsAttributeType extends AbstractAttributeType
+final class OptionsAttributeType implements AttributeTypeInterface, FormattableAttributeTypeInterface
 {
     public function getKey(): string
     {
         return AttributeInterface::TYPE_OPTIONS;
     }
 
-    public function getFormKey(): string
+    public function configureForm(FormMetadata $form, AttributeInterface $attribute, string $locale): void
     {
-        return 'product_attribute_options';
+        foreach ($form->getItems() as $field) {
+            if (!$field instanceof FieldMetadata) {
+                continue;
+            }
+
+            $values = new OptionMetadata();
+            $values->setName('values');
+            $values->setType(OptionMetadata::TYPE_COLLECTION);
+
+            foreach ($attribute->getOptions() as $option) {
+                $valueOption = new OptionMetadata();
+                $valueOption->setName($option->getKey());
+                $valueOption->setValue($option->getKey());
+                $valueOption->setTitle($option->getTranslation($locale)?->getName() ?? $option->getKey(), $locale);
+                $values->addValueOption($valueOption);
+            }
+
+            $field->addOption($values);
+        }
     }
 
-    public function configureField(FieldMetadata $field, AttributeInterface $attribute, string $locale): void
+    /**
+     * The option's name in the locale, its key without one.
+     */
+    public function formatValue(AttributeInterface $attribute, mixed $value, string $locale): ?string
     {
-        $values = new OptionMetadata();
-        $values->setName('values');
-        $values->setType(OptionMetadata::TYPE_COLLECTION);
-
-        foreach ($attribute->getOptions() as $option) {
-            $valueOption = new OptionMetadata();
-            $valueOption->setName($option->getKey());
-            $valueOption->setValue($option->getKey());
-            $valueOption->setTitle($option->getTranslation($locale)?->getName() ?? $option->getKey(), $locale);
-            $values->addValueOption($valueOption);
+        if (!\is_string($value)) {
+            return null;
         }
 
-        $field->addOption($values);
+        return $attribute->getOption($value)?->getTranslation($locale)?->getName() ?? $value;
     }
 
-    public function readValue(ProductAttributeValueInterface $value): mixed
+    public function hasDisplayFormat(): bool
     {
-        return $value->getAttributeOptionKey();
-    }
-
-    public function writeValue(ProductAttributeValueInterface $value, mixed $raw): void
-    {
-        if (null === $raw || '' === $raw) {
-            $value->setAttributeOption(null);
-
-            return;
-        }
-
-        Assert::string($raw);
-
-        $option = $value->getAttribute()->getOption($raw);
-        Assert::notNull($option, \sprintf('Attribute "%s" has no option "%s".', $value->getAttributeKey(), $raw));
-
-        $value->setAttributeOption($option);
+        return false;
     }
 }

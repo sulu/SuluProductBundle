@@ -19,13 +19,14 @@ use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
 use Sulu\Product\Application\AttributeType\NumberAttributeType;
 use Sulu\Product\Application\AttributeType\TextAttributeType;
 use Sulu\Product\Domain\Model\AttributeInterface;
+use Sulu\Product\Tests\Unit\Support\AttributeTypes;
 
 #[CoversClass(AttributeTypeRegistry::class)]
 class AttributeTypeRegistryTest extends TestCase
 {
     private function registry(): AttributeTypeRegistry
     {
-        return new AttributeTypeRegistry([new NumberAttributeType(), new TextAttributeType()]);
+        return new AttributeTypeRegistry([AttributeTypes::number(), new TextAttributeType(AttributeTypes::displayFormatter())]);
     }
 
     public function testGetReturnsTypeByKey(): void

@@ -18,13 +18,17 @@ use Sulu\Bundle\PersistenceBundle\DependencyInjection\PersistenceExtensionTrait;
 use Sulu\Bundle\PersistenceBundle\PersistenceBundleTrait;
 use Sulu\Content\Infrastructure\Sulu\Preview\ContentObjectProvider;
 use Sulu\Mcp\Domain\Content\ContentTypeExtensionInterface;
+use Sulu\Product\Application\Attribute\AttributeDisplayFormatter;
+use Sulu\Product\Application\Attribute\AttributeValueConverter;
 use Sulu\Product\Application\Attribute\ProductAttributeValueFormatter;
 use Sulu\Product\Application\AttributeType\AttributeTypeInterface;
 use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
 use Sulu\Product\Application\AttributeType\BooleanAttributeType;
 use Sulu\Product\Application\AttributeType\DateAttributeType;
+use Sulu\Product\Application\AttributeType\MultiOptionsAttributeType;
 use Sulu\Product\Application\AttributeType\NumberAttributeType;
 use Sulu\Product\Application\AttributeType\OptionsAttributeType;
+use Sulu\Product\Application\AttributeType\RangeAttributeType;
 use Sulu\Product\Application\AttributeType\TextAttributeType;
 use Sulu\Product\Application\Mapper\AttributeMapper;
 use Sulu\Product\Application\Mapper\AttributeMapperInterface;
@@ -105,6 +109,7 @@ use Sulu\Product\Infrastructure\Doctrine\Repository\ProductFamilyRepository;
 use Sulu\Product\Infrastructure\Doctrine\Repository\ProductRepository;
 use Sulu\Product\Infrastructure\Sulu\Activity\ProductWorkflowTransitionRequestSubscriber;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeAdmin;
+use Sulu\Product\Infrastructure\Sulu\Admin\AttributeDisplayFormatFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeFieldFactory;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeGroupAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
@@ -506,10 +511,16 @@ final class SuluProductBundle extends AbstractBundle
         // Built-in attribute types
         $services->set('sulu_product.attribute_type_number')
             ->class(NumberAttributeType::class)
+            ->args([
+                new Reference('sulu_product.attribute_display_formatter'),
+            ])
             ->tag('sulu_product.attribute_type');
 
         $services->set('sulu_product.attribute_type_text')
             ->class(TextAttributeType::class)
+            ->args([
+                new Reference('sulu_product.attribute_display_formatter'),
+            ])
             ->tag('sulu_product.attribute_type');
 
         $services->set('sulu_product.attribute_type_date')
@@ -524,6 +535,21 @@ final class SuluProductBundle extends AbstractBundle
             ->class(BooleanAttributeType::class)
             ->args([
                 new Reference('translator'),
+            ])
+            ->tag('sulu_product.attribute_type');
+
+        $services->set('sulu_product.attribute_type_multi_options')
+            ->class(MultiOptionsAttributeType::class)
+            ->args([
+                new Reference('sulu_product.attribute_type_options'),
+            ])
+            ->tag('sulu_product.attribute_type');
+
+        $services->set('sulu_product.attribute_type_range')
+            ->class(RangeAttributeType::class)
+            ->args([
+                new Reference('sulu_product.attribute_type_number'),
+                new Reference('sulu_product.attribute_display_formatter'),
             ])
             ->tag('sulu_product.attribute_type');
 
@@ -645,7 +671,7 @@ final class SuluProductBundle extends AbstractBundle
         $services->set('sulu_product.product_attributes_data_mapper')
             ->class(ProductAttributesDataMapper::class)
             ->args([
-                new Reference('sulu_product.attribute_type_registry'),
+                new Reference('sulu_product.attribute_value_converter'),
             ])
             ->tag('sulu_content.data_mapper', ['priority' => -10]);
 
@@ -675,7 +701,7 @@ final class SuluProductBundle extends AbstractBundle
         $services->set('sulu_product.product_attributes_normalizer')
             ->class(ProductAttributesNormalizer::class)
             ->args([
-                new Reference('sulu_product.attribute_type_registry'),
+                new Reference('sulu_product.attribute_value_converter'),
             ])
             ->tag('sulu_content.normalizer');
 
@@ -747,6 +773,13 @@ final class SuluProductBundle extends AbstractBundle
                 '%sulu_product.measurements%',
             ]);
         $services->alias(MeasurementRegistry::class, 'sulu_product.measurement_registry');
+
+        $services->set('sulu_product.attribute_display_formatter')
+            ->class(AttributeDisplayFormatter::class)
+            ->args([
+                new Reference('sulu_product.measurement_registry'),
+            ]);
+        $services->alias(AttributeDisplayFormatter::class, 'sulu_product.attribute_display_formatter');
 
         $services->set('sulu_product.association_type_registry')
             ->class(ProductAssociationTypeRegistry::class)
@@ -952,6 +985,12 @@ final class SuluProductBundle extends AbstractBundle
             ->tag('sulu.context', ['context' => 'admin'])
             ->tag('sulu.admin');
 
+        $services->set('sulu_product.attribute_value_converter')
+            ->class(AttributeValueConverter::class)
+            ->args([
+                new Reference('sulu_admin.xml_form_metadata_loader'),
+            ]);
+
         $services->set('sulu_product.attribute_field_factory')
             ->class(AttributeFieldFactory::class)
             ->args([
@@ -1004,6 +1043,13 @@ final class SuluProductBundle extends AbstractBundle
 
         $services->set('sulu_product.product_code_form_metadata_visitor')
             ->class(ProductCodeFormMetadataVisitor::class)
+            ->tag('sulu_admin.form_metadata_visitor');
+
+        $services->set('sulu_product.attribute_display_format_form_metadata_visitor')
+            ->class(AttributeDisplayFormatFormMetadataVisitor::class)
+            ->args([
+                tagged_iterator('sulu_product.attribute_type'),
+            ])
             ->tag('sulu_admin.form_metadata_visitor');
 
         $services->set('sulu_product.product_with_variants_route_guard')
@@ -1126,6 +1172,8 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.product_repository'),
                 new Reference('sulu_product.current_variant_provider'),
                 new Reference('sulu_http_cache.reference_store'),
+                new Reference('sulu_product.attribute_value_converter'),
+                new Reference('sulu_product.product_attribute_value_formatter'),
                 '%sulu_product.variants.properties%',
             ])
             ->tag('sulu_content.content_resolver');
@@ -1217,7 +1265,7 @@ final class SuluProductBundle extends AbstractBundle
         $services->set('sulu_product.product_attribute_value_formatter')
             ->class(ProductAttributeValueFormatter::class)
             ->args([
-                new Reference('sulu_product.measurement_registry'),
+                new Reference('sulu_product.attribute_type_registry'),
             ]);
 
         $services->set('sulu_product.product_attribute_twig_extension')
@@ -1486,6 +1534,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.attribute_repository'),
                 new Reference(ProductAttributeValueRepositoryInterface::class),
                 new Reference('sulu_product.product_attribute_value_formatter'),
+                new Reference('sulu_product.attribute_value_converter'),
             ]],
             'sulu_product.ai_search_products_by_attributes' => [SearchProductsByAttributes::class, [
                 new Reference('sulu_product.product_repository'),
@@ -1495,6 +1544,7 @@ final class SuluProductBundle extends AbstractBundle
             'sulu_product.ai_get_product_details' => [GetProductDetails::class, [
                 new Reference('sulu_product.product_repository'),
                 new Reference('sulu_product.product_attribute_value_formatter'),
+                new Reference('sulu_product.attribute_value_converter'),
                 new Reference('sulu_product.product_url_generator'),
             ]],
             'sulu_product.ai_get_related_products' => [GetRelatedProducts::class, [

@@ -16,75 +16,32 @@ namespace Sulu\Product\Tests\Unit\Application\AttributeType;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\SectionMetadata;
 use Sulu\Product\Application\AttributeType\NumberAttributeType;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
-use Sulu\Product\Domain\Model\Product;
-use Sulu\Product\Domain\Model\ProductAttributeValue;
-use Sulu\Product\Domain\Model\ProductDimensionContent;
+use Sulu\Product\Tests\Unit\Support\AttributeTypes;
+use Sulu\Product\Tests\Unit\Support\FormOf;
 
 #[CoversClass(NumberAttributeType::class)]
 class NumberAttributeTypeTest extends TestCase
 {
-    public function testKeyAndFormKey(): void
+    public function testKey(): void
     {
-        $type = new NumberAttributeType();
+        $type = AttributeTypes::number();
         self::assertSame(AttributeInterface::TYPE_NUMBER, $type->getKey());
-        self::assertSame('product_attribute_number', $type->getFormKey());
-    }
-
-    public function testValueRoundTripUsesNumberColumn(): void
-    {
-        $type = new NumberAttributeType();
-        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
-
-        $type->writeValue($value, 42.5);
-
-        self::assertSame(42.5, $value->getNumber());
-        self::assertSame(42.5, $type->readValue($value));
-    }
-
-    public function testWriteNullClearsNumber(): void
-    {
-        $type = new NumberAttributeType();
-        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
-        $type->writeValue($value, 1.0);
-
-        $type->writeValue($value, null);
-
-        self::assertNull($value->getNumber());
-    }
-
-    public function testWriteCoercesNumericStringFromForm(): void
-    {
-        $type = new NumberAttributeType();
-        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
-
-        $type->writeValue($value, '42.5');
-
-        self::assertSame(42.5, $value->getNumber());
-    }
-
-    public function testWriteEmptyStringClearsNumber(): void
-    {
-        $type = new NumberAttributeType();
-        $value = new ProductAttributeValue(new ProductDimensionContent(new Product()), new Attribute(new AttributeGroup()), 'k');
-        $type->writeValue($value, 1.0);
-
-        $type->writeValue($value, '');
-
-        self::assertNull($value->getNumber());
     }
 
     public function testConfigureFieldAddsMinMaxStepFromConfig(): void
     {
-        $type = new NumberAttributeType();
+        $type = AttributeTypes::number();
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setConfig(['min' => 0, 'max' => 100, 'step' => 0.5]);
 
         $field = new FieldMetadata('attribute_1');
-        $type->configureField($field, $attribute, 'en');
+        $type->configureForm(FormOf::fields($field), $attribute, 'en');
 
         $options = $field->getOptions();
         self::assertArrayHasKey('min', $options);
@@ -97,16 +54,46 @@ class NumberAttributeTypeTest extends TestCase
 
     public function testConfigureFieldSkipsMissingConfigKeys(): void
     {
-        $type = new NumberAttributeType();
+        $type = AttributeTypes::number();
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setConfig(['min' => 0]);
 
         $field = new FieldMetadata('attribute_1');
-        $type->configureField($field, $attribute, 'en');
+        $type->configureForm(FormOf::fields($field), $attribute, 'en');
 
         $options = $field->getOptions();
         self::assertArrayHasKey('min', $options);
         self::assertArrayNotHasKey('max', $options);
         self::assertArrayNotHasKey('step', $options);
+    }
+
+    public function testConfigureFormIgnoresItemsThatAreNotFields(): void
+    {
+        $form = new FormMetadata();
+        $form->addItem(new SectionMetadata('section'));
+
+        $type = AttributeTypes::number();
+        $attribute = new Attribute(new AttributeGroup());
+        $attribute->setConfig(['min' => 0]);
+        $type->configureForm($form, $attribute, 'en');
+
+        $this->addToAssertionCount(1);
+    }
+
+    public function testFormatValuePlacesTheNumberInTheDisplayFormat(): void
+    {
+        $attribute = new Attribute(new AttributeGroup());
+
+        self::assertSame('16.5', AttributeTypes::number()->formatValue($attribute, 16.5, 'en'));
+        self::assertNull(AttributeTypes::number()->formatValue($attribute, null, 'en'));
+
+        $attribute->setConfig(['displayFormat' => '%value% %unit%', 'unit' => 'MILLIMETER']);
+
+        self::assertSame('16 mm', AttributeTypes::number()->formatValue($attribute, 16.0, 'en'));
+    }
+
+    public function testHasADisplayFormat(): void
+    {
+        self::assertTrue(AttributeTypes::number()->hasDisplayFormat());
     }
 }

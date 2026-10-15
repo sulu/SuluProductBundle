@@ -18,8 +18,6 @@ use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
-use Sulu\Product\Application\Attribute\ProductAttributeValueFormatter;
-use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
@@ -30,6 +28,8 @@ use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductAttributeValueRepositoryInterface;
+use Sulu\Product\Tests\Unit\Support\AttributeTypes;
+use Sulu\Product\Tests\Unit\Support\ProductAttributeFragmentLoader;
 use Sulu\Product\UserInterface\Agent\Tool\GetAttributeValues;
 
 #[CoversClass(GetAttributeValues::class)]
@@ -53,7 +53,8 @@ class GetAttributeValuesTest extends TestCase
         $this->getAttributeValues = new GetAttributeValues(
             $this->attributeRepository->reveal(),
             $this->productAttributeValueRepository->reveal(),
-            new ProductAttributeValueFormatter(new MeasurementRegistry()),
+            AttributeTypes::formatter(),
+            ProductAttributeFragmentLoader::converter(),
         );
     }
 
@@ -84,6 +85,31 @@ class GetAttributeValuesTest extends TestCase
         $result = ($this->getAttributeValues)('missing', 'en');
 
         $this->assertSame('unknown_attribute', $result['status']);
+    }
+
+    public function testInvokeOfARangeAttributeListsNoValues(): void
+    {
+        $attribute = new Attribute(new AttributeGroup());
+        $attribute->setKey('temperature');
+        $attribute->setType(AttributeInterface::TYPE_RANGE);
+        $this->attributeRepository->findOneBy(['key' => 'temperature'])->willReturn($attribute);
+        $this->productAttributeValueRepository->countValues(Argument::cetera())->shouldNotBeCalled();
+
+        $getAttributeValues = new GetAttributeValues(
+            $this->attributeRepository->reveal(),
+            $this->productAttributeValueRepository->reveal(),
+            AttributeTypes::formatter(),
+            ProductAttributeFragmentLoader::converter(['range' => ['from' => 'number', 'to' => 'number']]),
+        );
+
+        $result = $getAttributeValues('temperature', 'en');
+
+        $this->assertSame('ok', $result['status']);
+        $this->assertSame([], $result['values']);
+        $this->assertSame(
+            'This attribute has several values per product, e.g. a range, so there are no single values to list.',
+            $result['instruction'],
+        );
     }
 
     public function testInvokeCountsTextValuesMostCommonFirst(): void
@@ -236,6 +262,7 @@ class GetAttributeValuesTest extends TestCase
         $this->attributeRepository->findOneBy(['key' => 'color'])->willReturn($attribute);
 
         $option = new AttributeOption($attribute, 'red');
+        $attribute->addOption($option);
         $option->addTranslation(new AttributeOptionTranslation($option, 'en', 'Red'));
 
         $value = new ProductAttributeValue($this->dimensionContent(), $attribute, 'color');
@@ -261,6 +288,7 @@ class GetAttributeValuesTest extends TestCase
         $this->attributeRepository->findOneBy(['key' => 'color'])->willReturn($attribute);
 
         $option = new AttributeOption($attribute, 'blue');
+        $attribute->addOption($option);
 
         $value = new ProductAttributeValue($this->dimensionContent(), $attribute, 'color');
         $value->setAttributeOption($option);
@@ -349,6 +377,7 @@ class GetAttributeValuesTest extends TestCase
         $this->attributeRepository->findOneBy(['key' => 'finish'])->willReturn($attribute);
 
         $option = new AttributeOption($attribute, 'heavy_duty');
+        $attribute->addOption($option);
         $option->addTranslation(new AttributeOptionTranslation($option, 'en', 'Heavy duty'));
 
         $value = new ProductAttributeValue($this->dimensionContent(), $attribute, 'finish');

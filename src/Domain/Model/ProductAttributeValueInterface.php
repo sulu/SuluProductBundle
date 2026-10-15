@@ -15,9 +15,19 @@ namespace Sulu\Product\Domain\Model;
 
 interface ProductAttributeValueInterface
 {
+    /**
+     * The value key of an attribute that has a single value.
+     */
+    public const DEFAULT_VALUE_KEY = 'value';
+
     public function getId(): int;
 
     public function getAttributeKey(): string;
+
+    /**
+     * The name of this row among the attribute's rows: its form field, e.g. "from", or the selected option's uuid.
+     */
+    public function getValueKey(): string;
 
     public function getAttributeOptionKey(): ?string;
 
@@ -28,8 +38,6 @@ interface ProductAttributeValueInterface
     public function getText(): ?string;
 
     public function setText(?string $text): self;
-
-    public function getValue(): mixed;
 
     public function getProductDimensionContent(): ProductDimensionContentInterface;
 
