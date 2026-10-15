@@ -126,33 +126,29 @@ switcher, format it with `sulu_product_format_attribute_value`:
 
 ## Range attributes
 
-An attribute of type "range" holds two numbers, `from` and `to`, for example an operating
-temperature of -20 to 60 °C. Either bound may be empty, for a range open on one side. The
-attribute's unit, `min`, `max` and `step` apply to both bounds, and the admin API takes and gives
-`{"<attribute uuid>": {"from": -20, "to": 60}}`.
-
-In the website, `product.attributes.<key>.value` is `{from: …, to: …}`, an empty bound `null`. It
-renders as "from – to", or "≥ from" / "≤ to" when open on one side. A display format may place the
-bounds itself with `%from%` and `%to%`, a missing bound as empty, so a format naming one is the
-editor's responsibility; `%value%` and `%unit%` work as for numbers.
+An attribute of type "range" holds `from` and `to`, for example an operating temperature of -20 to
+60 °C. Either bound may be empty, and the unit, `min`, `max` and `step` apply to both. In the
+website, `product.attributes.<key>.value` is `{from: …, to: …}`, an empty bound `null`, rendered as
+"from – to", or "≥ from" / "≤ to" when open on one side. A display format may place the bounds with
+`%from%` and `%to%` (a missing bound is empty, so a format naming one is the editor's
+responsibility); `%value%` and `%unit%` work as for numbers.
 
 ## Attribute types
 
 An attribute type is its key and a form fragment `config/forms/AttributeType/product_attribute_<key>.xml`
 whose fields are the values of the attribute. One field named `value` gives a plain value
 (`{"<uuid>": 12.5}`), several fields give an object keyed by their names (a range has `from` and
-`to`). Every field is stored in a row of its own, named by the field (the value key), so a second
-row for the same attribute and name cannot exist. A `select` field (a multi select) must be the only field of
-its fragment and is stored in one row per selected option, named by the option's uuid.
+`to`). Every field is stored in a row of its own. A `select` field (a multi select) must be the only
+field of its fragment and is stored in one row per selected option.
 
 A field's type decides how it is stored: `number`, `date` (a timestamp, the admin API has `Y-m-d`),
-`text_line`, `single_select` (a boolean attribute stores 1 or 0) and `select`. Register a
-type class implementing `AttributeTypeInterface` (key, and the options each field of the fragment
-needs) as a service; it is tagged automatically. A field type of your own is read and written by a
-converter extending `AttributeValueConverter` (override `normalizeField` and `denormalizeField`, call the parent
-for the others), registered as the service `sulu_product.attribute_value_converter`; code depends on
-`AttributeValueConverterInterface`. The website shows such a type by its display
-format; the search index and the filters only know the built-in types.
+`text_line`, `single_select` (a boolean attribute stores 1 or 0) and `select`. A field type of your
+own is read and written by a converter extending `AttributeValueConverter` (override
+`normalizeField` and `denormalizeField`), registered as the service
+`sulu_product.attribute_value_converter`; code depends on `AttributeValueConverterInterface`.
+Register a type class implementing `AttributeTypeInterface` (key, and the options each field of the
+fragment needs) as a service; it is tagged automatically. The website shows such a type by its
+display format; the search index and the filters only know the built-in types.
 
 ## Product family selection
 
