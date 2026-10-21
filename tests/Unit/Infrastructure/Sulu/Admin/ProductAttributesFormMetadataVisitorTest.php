@@ -268,6 +268,22 @@ class ProductAttributesFormMetadataVisitorTest extends TestCase
         self::assertSame(['attribute_0198c3e2-0000-7000-8000-000000000007', 'attribute_0198c3e2-0000-7000-8000-000000000008'], \array_keys($section->getItems()));
     }
 
+    public function testConfigurableProductKeepsSharedAndAxisAttributes(): void
+    {
+        $group = $this->group();
+        $this->productFamilyRepository->findOneBy(['uuid' => 'family-1'], self::FAMILY_SELECT)->willReturn($this->family([
+            $this->familyAttribute('0198c3e2-0000-7000-8000-000000000007', 'Weight', $group),
+            $this->familyAttribute('0198c3e2-0000-7000-8000-000000000008', 'Colour', $group, true),
+        ]));
+        $form = $this->form();
+
+        $this->visitor()->visitFormMetadata($form, 'en', ['productFamily' => 'family-1', 'productType' => 'configurable_product']);
+
+        $section = $form->getItems()['attribute_group_group-uuid-1'];
+        self::assertInstanceOf(SectionMetadata::class, $section);
+        self::assertSame(['attribute_0198c3e2-0000-7000-8000-000000000007', 'attribute_0198c3e2-0000-7000-8000-000000000008'], \array_keys($section->getItems()));
+    }
+
     /**
      * @return iterable<string, array{0: mixed}>
      */

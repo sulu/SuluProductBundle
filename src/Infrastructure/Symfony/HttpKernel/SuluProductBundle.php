@@ -443,6 +443,10 @@ final class SuluProductBundle extends AbstractBundle
             ];
         }
 
+        $resolvedMap[ProductAssociationTypeRegistry::COMPONENT] ??= [
+            'label' => \sprintf('sulu_product.association_type_%s', ProductAssociationTypeRegistry::COMPONENT),
+        ];
+
         return $resolvedMap;
     }
 

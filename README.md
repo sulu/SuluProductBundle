@@ -59,6 +59,17 @@ variant, or a product without variants. A product with variants holds only the s
 a variant only the variant attributes. The details form, its schema and the required check follow
 the product type.
 
+## Configurable products
+
+A product of the type `configurable_product` is sold as one product, with its own code, route and
+attributes like a plain product. Instead of the "Variants" tab it has a "Components" tab, where
+other products are selected as its components.
+
+The components are stored as product associations of the reserved type `component`. The bundle
+registers that type itself, so a project needs no `sulu_product.association_types` entry. The
+type is edited on the "Components" tab only and never appears on the "Associations" tab. On the
+website the components resolve like any other association, as `product.associations.component`.
+
 ## Product in the website
 
 A variant has a route but no content of its own, so its URL renders its product: the route passes

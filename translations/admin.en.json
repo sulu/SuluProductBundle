@@ -1,6 +1,7 @@
 {
     "sulu_product.products": "Products",
     "sulu_product.variants": "Variants",
+    "sulu_product.components": "Components",
     "sulu_product.attributes": "Attributes",
     "sulu_product.attribute_group": "Attribute group",
     "sulu_product.attribute_groups": "Attribute groups",
@@ -31,6 +32,7 @@
     "sulu_product.product_type": "Type",
     "sulu_product.product_type_product": "Product",
     "sulu_product.product_type_product_with_variants": "Product with variants",
+    "sulu_product.product_type_configurable_product": "Configurable product",
     "sulu_product.product_type_variant": "Variant",
     "sulu_product.code": "Code",
     "sulu_product.url": "URL",
