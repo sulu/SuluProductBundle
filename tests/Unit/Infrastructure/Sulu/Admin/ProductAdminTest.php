@@ -253,7 +253,7 @@ class ProductAdminTest extends TestCase
         $viewCollection = new ViewCollection();
         $this->admin->configureViews($viewCollection);
 
-        $this->assertCount(6, $viewCollection->all());
+        $this->assertCount(7, $viewCollection->all());
         $this->assertTrue($viewCollection->has(ProductAdmin::LIST_VIEW));
         $this->assertTrue($viewCollection->has(ProductAdmin::ADD_TABS_VIEW));
         $this->assertTrue($viewCollection->has(ProductAdmin::EDIT_TABS_VIEW));
@@ -322,6 +322,24 @@ class ProductAdminTest extends TestCase
             $view->getOption('routerAttributesToFormMetadata'),
             "the variant form's JSON schema needs the parent to know the family",
         );
+        $this->assertSame(ProductAdmin::EDIT_TABS_VIEW, $view->getParent());
+    }
+
+    public function testConfigureViewsAddsComponentsTabView(): void
+    {
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(true);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::ADD)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::DELETE)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::LIVE)->willReturn(false);
+        $this->securityChecker->hasPermission(ActivityAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(false);
+
+        $viewCollection = new ViewCollection();
+        $this->admin->configureViews($viewCollection);
+
+        $view = $viewCollection->get(ProductAdmin::EDIT_TABS_VIEW . '.components')->getView();
+        $this->assertSame('product_components', $view->getOption('formKey'));
+        $this->assertSame("type == 'configurable_product'", $view->getOption('tabCondition'));
         $this->assertSame(ProductAdmin::EDIT_TABS_VIEW, $view->getParent());
     }
 

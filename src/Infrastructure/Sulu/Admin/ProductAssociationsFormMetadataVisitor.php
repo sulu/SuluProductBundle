@@ -53,7 +53,7 @@ class ProductAssociationsFormMetadataVisitor implements FormMetadataVisitorInter
         /** @var PropertyMetadata[] $schemaProperties */
         $schemaProperties = [];
 
-        foreach ($this->associationTypeRegistry->getTypes() as $type) {
+        foreach ($this->associationTypeRegistry->getCustomTypes() as $type) {
             $name = 'associations/' . $type->getKey();
             if (isset($declaredFields[$name])) {
                 continue; // the project declared this field - it owns label, params and placement

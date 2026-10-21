@@ -227,8 +227,22 @@ class ProductAdmin extends Admin
                 ->setParent(static::EDIT_TABS_VIEW),
         );
 
+        // Components tab: replaces the variants tab for a configurable product
+        $viewCollection->add(
+            $this->viewBuilderFactory->createFormViewBuilder(static::EDIT_TABS_VIEW . '.components', '/components')
+                ->setResourceKey(ProductInterface::RESOURCE_KEY)
+                ->setFormKey(ProductInterface::FORM_KEY_COMPONENTS)
+                ->setTabTitle('sulu_product.components')
+                ->setTitleVisible(true)
+                ->setTabOrder(20)
+                ->setTabCondition(\sprintf("type == '%s'", ProductInterface::TYPE_CONFIGURABLE_PRODUCT))
+                ->addRouterAttributesToFormMetadata(['id'])
+                ->addToolbarActions($editToolbarActions)
+                ->setParent(static::EDIT_TABS_VIEW),
+        );
+
         // Associations form — edit mode only
-        if ([] !== $this->associationTypeRegistry->getTypes()) {
+        if ([] !== $this->associationTypeRegistry->getCustomTypes()) {
             $viewCollection->add(
                 $this->viewBuilderFactory->createFormViewBuilder(static::EDIT_TABS_VIEW . '.associations', '/associations')
                     ->setResourceKey(ProductInterface::RESOURCE_KEY)
