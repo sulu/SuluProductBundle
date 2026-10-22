@@ -3,6 +3,7 @@
     "sulu_product.variants": "Variants",
     "sulu_product.components": "Components",
     "sulu_product.component": "Component",
+    "sulu_product.component_rules": "Rules",
     "sulu_product.attributes": "Attributes",
     "sulu_product.attribute_group": "Attribute group",
     "sulu_product.attribute_groups": "Attribute groups",

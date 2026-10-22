@@ -106,6 +106,12 @@ sulu_product.delete_product_component:
     controller: sulu_product.admin_product_component_controller::deleteAction
     format: json
 
+sulu_product.post_product_component_trigger:
+    path: /products/{parentId}/components/{id}.{_format}
+    methods: POST
+    controller: sulu_product.admin_product_component_controller::postTriggerAction
+    format: json
+
 sulu_product.get_measurement_families:
     path: /measurement-families.{_format}
     methods: GET

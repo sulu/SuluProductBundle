@@ -52,6 +52,14 @@ The action calls `POST /admin/api/products/{parentId}/variants/{id}?action=publi
 a variant that was never published or publishing one whose product is not published. The list
 shows the reason for each variant it could not change.
 
+The components of a configurable product are published the same way, from the components tab,
+with the same toolbar action and permission. A component is a product of its own, so the action
+publishes or unpublishes that component product, never the configurable product. It calls
+`POST /admin/api/products/{parentId}/components/{id}?action=publish` (or `unpublish`) with the
+component's uuid as `id`, and `PUT` with the same query parameter does the same. It answers `404`
+when the product is not a component of the parent and `409` when the transition is not available.
+The list shows the publish indicator of each component.
+
 ## Variant attributes
 
 A family attribute with the "variant" toggle is held by the product that carries the article: a
@@ -65,7 +73,10 @@ A product of the type `configurable_product` is sold as one product, with its ow
 attributes like a plain product. Instead of the "Variants" tab it has a "Components" tab. The tab
 is a list with an "Add" button, like the variants. "Add" and a click on a row open an overlay with
 one product selection. Variants cannot be selected, and a product is a component at most once.
-The list shows the components in the order they were added.
+The list shows the components sorted by product family name, then in the order they were added.
+The overlay has a placeholder field "Rules" of the type `component_rules`. It has no admin
+implementation yet, so the admin shows its "unknown field type" bar, and the controller ignores the
+posted value.
 
 The components are not associations. Each one is a row of its own in `pr_product_components`, with
 its own id, a position and the component product. The rows belong to the dimension content of the
@@ -79,7 +90,7 @@ replaces the ordered `components` list of the product, a list of product uuids. 
 be sent as `components` in the data of a modify or create message.
 
 On the website `product.components` is a requestable property like `associations`. It resolves
-the component products in their order, each with `title`, `url`, `code`, `status`, `image` and
+the component products in their order, each with `title`, `url`, `code`, `status`, `productFamily`, `image` and
 `shortDescription`.
 
 ## Product in the website

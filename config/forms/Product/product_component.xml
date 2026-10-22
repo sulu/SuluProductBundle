@@ -17,5 +17,11 @@
                 </param>
             </params>
         </property>
+
+        <property name="component_rules" type="component_rules" colspan="12">
+            <meta>
+                <title>sulu_product.component_rules</title>
+            </meta>
+        </property>
     </properties>
 </form>

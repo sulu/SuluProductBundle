@@ -235,6 +235,9 @@ class ProductAdmin extends Admin
         if ($this->securityChecker->hasPermission(static::SECURITY_CONTEXT, PermissionTypes::DELETE)) {
             $componentsToolbarActions[] = new ToolbarAction('sulu_admin.delete');
         }
+        if ($this->securityChecker->hasPermission(static::SECURITY_CONTEXT, PermissionTypes::LIVE)) {
+            $componentsToolbarActions[] = new ToolbarAction('sulu_admin.publishing');
+        }
         $viewCollection->add(
             $this->viewBuilderFactory
                 ->createFormOverlayListViewBuilder(static::EDIT_TABS_VIEW . '.components', '/components')

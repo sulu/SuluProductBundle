@@ -48,7 +48,7 @@ class ProductResolver implements ResolverInterface
 
     private const ASSOCIATIONS_FIELD_PREFIX = 'associations/';
 
-    private const COMPONENT_PROPERTIES = ['code', 'status', 'image', 'shortDescription'];
+    private const COMPONENT_PROPERTIES = ['code', 'status', 'productFamily', 'image', 'shortDescription'];
 
     private const PARENT_PREFIX = 'parent.';
 
