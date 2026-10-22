@@ -228,16 +228,27 @@ class ProductAdmin extends Admin
         );
 
         // Components tab: replaces the variants tab for a configurable product
+        $componentsToolbarActions = [];
+        if ($this->securityChecker->hasPermission(static::SECURITY_CONTEXT, PermissionTypes::ADD)) {
+            $componentsToolbarActions[] = new ToolbarAction('sulu_admin.add');
+        }
+        if ($this->securityChecker->hasPermission(static::SECURITY_CONTEXT, PermissionTypes::DELETE)) {
+            $componentsToolbarActions[] = new ToolbarAction('sulu_admin.delete');
+        }
         $viewCollection->add(
-            $this->viewBuilderFactory->createFormViewBuilder(static::EDIT_TABS_VIEW . '.components', '/components')
-                ->setResourceKey(ProductInterface::RESOURCE_KEY)
-                ->setFormKey(ProductInterface::FORM_KEY_COMPONENTS)
+            $this->viewBuilderFactory
+                ->createFormOverlayListViewBuilder(static::EDIT_TABS_VIEW . '.components', '/components')
+                ->setResourceKey(ProductInterface::LIST_KEY_COMPONENTS)
+                ->setListKey(ProductInterface::LIST_KEY_COMPONENTS)
+                ->setFormKey(ProductInterface::FORM_KEY_COMPONENT)
+                ->addListAdapters(['table'])
                 ->setTabTitle('sulu_product.components')
-                ->setTitleVisible(true)
                 ->setTabOrder(20)
                 ->setTabCondition(\sprintf("type == '%s'", ProductInterface::TYPE_CONFIGURABLE_PRODUCT))
-                ->addRouterAttributesToFormMetadata(['id'])
-                ->addToolbarActions($editToolbarActions)
+                ->addRouterAttributesToListRequest(['id' => 'parentId'])
+                ->addRouterAttributesToFormRequest(['id' => 'parentId'])
+                ->addRouterAttributesToFormMetadata(['id' => 'parentId'])
+                ->addToolbarActions($componentsToolbarActions)
                 ->setParent(static::EDIT_TABS_VIEW),
         );
 

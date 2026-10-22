@@ -205,6 +205,7 @@ use Sulu\Product\UserInterface\Controller\Admin\AttributeController;
 use Sulu\Product\UserInterface\Controller\Admin\AttributeGroupController;
 use Sulu\Product\UserInterface\Controller\Admin\MeasurementFamilyController;
 use Sulu\Product\UserInterface\Controller\Admin\MeasurementUnitController;
+use Sulu\Product\UserInterface\Controller\Admin\ProductComponentController;
 use Sulu\Product\UserInterface\Controller\Admin\ProductController;
 use Sulu\Product\UserInterface\Controller\Admin\ProductFamilyController;
 use Sulu\Product\UserInterface\Controller\Admin\ProductVariantController;
@@ -1105,6 +1106,19 @@ final class SuluProductBundle extends AbstractBundle
             ])
             ->tag('sulu.context', ['context' => 'admin']);
 
+        $services->set('sulu_product.admin_product_component_controller')
+            ->class(ProductComponentController::class)
+            ->public()
+            ->args([
+                new Reference('sulu_product.product_repository'),
+                new Reference('sulu_message_bus'),
+                new Reference('serializer'),
+                new Reference('sulu_core.list_builder.field_descriptor_factory'),
+                new Reference('sulu_core.doctrine_list_builder_factory'),
+                new Reference('sulu_core.doctrine_rest_helper'),
+            ])
+            ->tag('sulu.context', ['context' => 'admin']);
+
         $services->set('sulu_product.single_product_selection_property_resolver')
             ->class(SingleProductSelectionPropertyResolver::class)
             ->tag('sulu_content.property_resolver');
@@ -1655,6 +1669,12 @@ final class SuluProductBundle extends AbstractBundle
                             'routes' => [
                                 'list' => 'sulu_product.get_product_variants',
                                 'detail' => 'sulu_product.get_product_variant',
+                            ],
+                        ],
+                        ProductInterface::LIST_KEY_COMPONENTS => [
+                            'routes' => [
+                                'list' => 'sulu_product.get_product_components',
+                                'detail' => 'sulu_product.get_product_component',
                             ],
                         ],
                         'attributes' => [

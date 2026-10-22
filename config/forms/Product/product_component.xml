@@ -3,18 +3,17 @@
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/form-1.0.xsd">
 
-    <key>product_components</key>
+    <key>product_component</key>
 
     <properties>
-        <property name="associations/component" type="product_selection" colspan="12">
+        <property name="product" type="single_product_selection" mandatory="true" colspan="12">
             <meta>
-                <title>sulu_product.components</title>
+                <title>sulu_product.component</title>
             </meta>
 
             <params>
-                <param name="properties" type="collection">
-                    <param name="image" value="image"/>
-                    <param name="code" value="code"/>
+                <param name="request_parameters" type="collection">
+                    <param name="excludeVariants" value="true"/>
                 </param>
             </params>
         </property>
