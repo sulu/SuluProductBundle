@@ -73,6 +73,11 @@ class ProductDimensionContent implements ProductDimensionContentInterface
      */
     protected Collection $associations;
 
+    /**
+     * @var Collection<int, ProductComponentInterface>
+     */
+    protected Collection $components;
+
     protected string $status = self::DEFAULT_STATUS;
 
     /**
@@ -86,6 +91,7 @@ class ProductDimensionContent implements ProductDimensionContentInterface
         $this->additionalWebspaces = new ArrayCollection();
         $this->attributes = new ArrayCollection();
         $this->associations = new ArrayCollection();
+        $this->components = new ArrayCollection();
         $this->created = new \DateTimeImmutable();
         $this->changed = new \DateTimeImmutable();
     }
@@ -314,6 +320,30 @@ class ProductDimensionContent implements ProductDimensionContentInterface
         \usort($associations, static fn (ProductAssociationInterface $a, ProductAssociationInterface $b) => $a->getPosition() <=> $b->getPosition());
 
         return $associations;
+    }
+
+    /**
+     * @return ProductComponentInterface[]
+     */
+    public function getComponents(): array
+    {
+        $components = $this->components->toArray();
+
+        \usort($components, static fn (ProductComponentInterface $a, ProductComponentInterface $b) => $a->getPosition() <=> $b->getPosition());
+
+        return $components;
+    }
+
+    public function addComponent(ProductComponentInterface $component): void
+    {
+        if (!$this->components->contains($component)) {
+            $this->components->add($component);
+        }
+    }
+
+    public function removeComponent(ProductComponentInterface $component): void
+    {
+        $this->components->removeElement($component);
     }
 
     public function getStatus(): string

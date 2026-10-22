@@ -28,7 +28,7 @@ class ProductDetailsFieldMetadataValidator implements FieldMetadataValidatorInte
     private const NAME_PREFIX = 'details/';
 
     private const RESERVED_NAMES = [
-        'attributes', 'associations', 'variants', 'currentVariant',
+        'attributes', 'associations', 'components', 'variants', 'currentVariant',
         'title', 'url', 'code', 'externalIdentifier', 'productFamily', 'status', 'position',
     ];
 

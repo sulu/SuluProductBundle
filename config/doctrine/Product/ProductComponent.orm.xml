@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <entity name="Sulu\Product\Domain\Model\ProductComponent" table="pr_product_components">
+        <id name="id" type="integer" column="id">
+            <generator strategy="AUTO"/>
+        </id>
+
+        <field name="position" type="integer" nullable="false">
+            <options>
+                <option name="default">0</option>
+            </options>
+        </field>
+
+        <many-to-one field="productDimensionContent"
+                     target-entity="Sulu\Product\Domain\Model\ProductDimensionContentInterface"
+                     inversed-by="components">
+            <join-columns>
+                <join-column name="productDimensionContentId" referenced-column-name="id"
+                             nullable="false" on-delete="CASCADE"/>
+            </join-columns>
+        </many-to-one>
+
+        <many-to-one field="component"
+                     target-entity="Sulu\Product\Domain\Model\ProductInterface">
+            <join-columns>
+                <join-column name="componentProductUuid" referenced-column-name="uuid"
+                             nullable="false" on-delete="CASCADE"/>
+            </join-columns>
+        </many-to-one>
+
+        <indexes>
+            <index name="IDX_pr_product_components_component" columns="componentProductUuid"/>
+        </indexes>
+    </entity>
+</doctrine-mapping>

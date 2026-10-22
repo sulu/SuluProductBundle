@@ -29,19 +29,19 @@
         </join>
     </joins>
 
-    <joins name="componentAssociation">
+    <joins name="productComponent">
         <join>
-            <entity-name>componentAssociation</entity-name>
-            <field-name>Sulu\Product\Domain\Model\ProductAssociationInterface</field-name>
+            <entity-name>productComponent</entity-name>
+            <field-name>Sulu\Product\Domain\Model\ProductComponentInterface</field-name>
             <method>INNER</method>
-            <condition>componentAssociation.type = 'component' AND componentAssociation.target = Sulu\Product\Domain\Model\ProductInterface</condition>
+            <condition>productComponent.component = Sulu\Product\Domain\Model\ProductInterface</condition>
         </join>
     </joins>
 
-    <joins name="componentOwner" ref="componentAssociation">
+    <joins name="componentOwner" ref="productComponent">
         <join>
             <entity-name>componentOwner</entity-name>
-            <field-name>componentAssociation.productDimensionContent</field-name>
+            <field-name>productComponent.productDimensionContent</field-name>
             <method>INNER</method>
             <condition>componentOwner.locale IS NULL AND componentOwner.stage = 'draft' AND componentOwner.version = 0 AND IDENTITY(componentOwner.product) = :parentId</condition>
         </join>
@@ -100,7 +100,7 @@
 
         <property name="componentPosition" visibility="never">
             <field-name>position</field-name>
-            <entity-name>componentAssociation</entity-name>
+            <entity-name>productComponent</entity-name>
             <joins ref="componentOwner"/>
         </property>
 

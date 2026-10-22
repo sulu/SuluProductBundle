@@ -83,6 +83,8 @@ use Sulu\Product\Domain\Model\ProductAssociation;
 use Sulu\Product\Domain\Model\ProductAssociationInterface;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
+use Sulu\Product\Domain\Model\ProductComponent;
+use Sulu\Product\Domain\Model\ProductComponentInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductFamily;
@@ -123,13 +125,16 @@ use Sulu\Product\Infrastructure\Sulu\Admin\ProductStatusFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\AdditionalWebspacesDataMapper;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductAssociationsDataMapper;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductAttributesDataMapper;
+use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductComponentsDataMapper;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductDetailsDataMapper;
 use Sulu\Product\Infrastructure\Sulu\Content\Merger\AdditionalWebspacesMerger;
 use Sulu\Product\Infrastructure\Sulu\Content\Merger\ProductAssociationsMerger;
 use Sulu\Product\Infrastructure\Sulu\Content\Merger\ProductAttributesMerger;
+use Sulu\Product\Infrastructure\Sulu\Content\Merger\ProductComponentsMerger;
 use Sulu\Product\Infrastructure\Sulu\Content\Merger\ProductDetailsMerger;
 use Sulu\Product\Infrastructure\Sulu\Content\Normalizer\ProductAssociationsNormalizer;
 use Sulu\Product\Infrastructure\Sulu\Content\Normalizer\ProductAttributesNormalizer;
+use Sulu\Product\Infrastructure\Sulu\Content\Normalizer\ProductComponentsNormalizer;
 use Sulu\Product\Infrastructure\Sulu\Content\Normalizer\ProductDetailsNormalizer;
 use Sulu\Product\Infrastructure\Sulu\Content\PageTreeProductSmartContentProvider;
 use Sulu\Product\Infrastructure\Sulu\Content\ProductLinkProvider;
@@ -444,10 +449,6 @@ final class SuluProductBundle extends AbstractBundle
             ];
         }
 
-        $resolvedMap[ProductAssociationTypeRegistry::COMPONENT] ??= [
-            'label' => \sprintf('sulu_product.association_type_%s', ProductAssociationTypeRegistry::COMPONENT),
-        ];
-
         return $resolvedMap;
     }
 
@@ -661,6 +662,13 @@ final class SuluProductBundle extends AbstractBundle
             ])
             ->tag('sulu_content.data_mapper');
 
+        $services->set('sulu_product.product_components_data_mapper')
+            ->class(ProductComponentsDataMapper::class)
+            ->args([
+                new Reference('sulu_product.product_repository'),
+            ])
+            ->tag('sulu_content.data_mapper');
+
         $services->set('sulu_product.product_details_merger')
             ->class(ProductDetailsMerger::class)
             ->tag('sulu_content.merger');
@@ -671,6 +679,10 @@ final class SuluProductBundle extends AbstractBundle
 
         $services->set('sulu_product.product_associations_merger')
             ->class(ProductAssociationsMerger::class)
+            ->tag('sulu_content.merger');
+
+        $services->set('sulu_product.product_components_merger')
+            ->class(ProductComponentsMerger::class)
             ->tag('sulu_content.merger');
 
         $services->set('sulu_product.product_details_normalizer')
@@ -689,6 +701,10 @@ final class SuluProductBundle extends AbstractBundle
             ->args([
                 new Reference('sulu_product.association_type_registry'),
             ])
+            ->tag('sulu_content.normalizer');
+
+        $services->set('sulu_product.product_components_normalizer')
+            ->class(ProductComponentsNormalizer::class)
             ->tag('sulu_content.normalizer');
 
         $services->set('sulu_product.webspace_settings_configuration_resolver')
@@ -1926,6 +1942,7 @@ final class SuluProductBundle extends AbstractBundle
             ProductDimensionContentInterface::class => 'sulu.model.product_content.class',
             ProductAttributeValueInterface::class => ProductAttributeValue::class,
             ProductAssociationInterface::class => ProductAssociation::class,
+            ProductComponentInterface::class => ProductComponent::class,
             AttributeInterface::class => Attribute::class,
             AttributeTranslationInterface::class => AttributeTranslation::class,
             AttributeOptionInterface::class => AttributeOption::class,

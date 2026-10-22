@@ -15,11 +15,6 @@ namespace Sulu\Product\Domain\Association;
 
 final class ProductAssociationTypeRegistry
 {
-    /**
-     * Reserved key: holds the components of a configurable product and is edited on its own tab.
-     */
-    public const COMPONENT = 'component';
-
     /** @var array<string, ProductAssociationType> */
     private array $types = [];
 
@@ -39,19 +34,6 @@ final class ProductAssociationTypeRegistry
     public function getTypes(): array
     {
         return \array_values($this->types);
-    }
-
-    /**
-     * The types edited on the associations tab, that is all but the component type.
-     *
-     * @return ProductAssociationType[]
-     */
-    public function getCustomTypes(): array
-    {
-        return \array_values(\array_filter(
-            $this->types,
-            static fn (ProductAssociationType $type): bool => self::COMPONENT !== $type->getKey(),
-        ));
     }
 
     public function has(string $key): bool

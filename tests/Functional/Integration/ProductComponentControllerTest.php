@@ -142,7 +142,7 @@ class ProductComponentControllerTest extends SuluTestCase
         $this->request('POST', '/admin/api/products/' . $parentId . '/components.json?locale=en', ['product' => $productId], 201);
     }
 
-    public function testPostAppendsComponentsAndListShowsThemInAssociationOrder(): void
+    public function testPostAppendsComponentsAndListShowsThemInOrder(): void
     {
         self::purgeDatabase();
 
@@ -199,7 +199,7 @@ class ProductComponentControllerTest extends SuluTestCase
         $this->assertSame([$alpha, $zeta], \array_column($data['_embedded']['product_components'], 'id'));
     }
 
-    public function testPostKeepsTheOtherAssociationTypes(): void
+    public function testPostKeepsTheAssociations(): void
     {
         self::purgeDatabase();
 
@@ -217,9 +217,10 @@ class ProductComponentControllerTest extends SuluTestCase
 
         $product = $this->request('GET', '/admin/api/products/' . $parentId . '.json?locale=en', null, 200);
         $this->assertSame(
-            ['alternative' => [$alternative], 'suitable' => [], 'component' => [$component]],
+            ['alternative' => [$alternative], 'suitable' => []],
             $product['associations'],
         );
+        $this->assertSame([$component], $product['components']);
     }
 
     public function testComponentsAreSharedByAllLocales(): void

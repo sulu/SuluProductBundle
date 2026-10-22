@@ -23,8 +23,8 @@ use Sulu\Component\Security\SecuredControllerInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushStamp;
 use Sulu\Product\Application\Message\ModifyProductMessage;
-use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
+use Sulu\Product\Domain\Model\ProductComponentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
@@ -40,8 +40,8 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 /**
  * Admin CRUD for the components of a configurable product.
  *
- * A component is the target of a `component` association, so every write replaces the
- * `component` list of the parent through the modify message and leaves its other association types alone.
+ * The components are the ordered `components` of the parent's draft content, so every write replaces
+ * that list through the modify message.
  *
  * @internal
  *
@@ -71,7 +71,7 @@ final class ProductComponentController implements SecuredControllerInterface
         $listBuilder = $this->listBuilderFactory->create(ProductInterface::class);
         $listBuilder->setIdField($fieldDescriptors['id']);
         $this->restHelper->initializeListBuilder($listBuilder, $fieldDescriptors);
-        // selecting the position also joins the associations that restrict the list to the parent
+        // selecting the position also joins the components that restrict the list to the parent
         $listBuilder->addSelectField($fieldDescriptors['componentPosition']);
         $listBuilder->addSelectField($fieldDescriptors['ghostLocale']);
         $listBuilder->setParameter('locale', $this->getLocale($request));
@@ -198,7 +198,7 @@ final class ProductComponentController implements SecuredControllerInterface
     }
 
     /**
-     * The components in association order, read from the draft content that all locales share.
+     * The components in their order, read from the draft content that all locales share.
      *
      * @return array<int, string>
      */
@@ -222,8 +222,8 @@ final class ProductComponentController implements SecuredControllerInterface
         // the query above loads the unlocalized draft only
         foreach ($parent->getDimensionContents() as $dimensionContent) {
             $uuids = \array_values(\array_map(
-                static fn ($association): string => $association->getTarget()->getUuid(),
-                $dimensionContent->getAssociationsByType(ProductAssociationTypeRegistry::COMPONENT),
+                static fn (ProductComponentInterface $component): string => $component->getComponent()->getUuid(),
+                $dimensionContent->getComponents(),
             ));
         }
 
@@ -259,7 +259,7 @@ final class ProductComponentController implements SecuredControllerInterface
         /** @var array<string, mixed> $values */
         $values = [
             'locale' => $this->getLocale($request),
-            'associations' => [ProductAssociationTypeRegistry::COMPONENT => $components],
+            'components' => $components,
         ];
         /** @var ModifyProductMessageData $data */
         $data = $values;

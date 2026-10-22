@@ -102,7 +102,9 @@ abstract class ProductResolverTestCase extends TestCase
     protected function noResolvedItems(): MetadataResolver
     {
         $resolver = $this->createStub(MetadataResolver::class);
-        $resolver->method('resolveItems')->willReturn([]);
+        $resolver->method('resolveItems')->willReturnCallback(
+            static fn (array $items): array => isset($items['components']) ? ['components' => ContentView::create([], [])] : [],
+        );
 
         return $resolver;
     }
