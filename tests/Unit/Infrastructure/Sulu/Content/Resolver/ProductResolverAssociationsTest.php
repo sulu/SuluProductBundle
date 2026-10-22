@@ -80,27 +80,34 @@ final class ProductResolverAssociationsTest extends ProductResolverTestCase
             ->shouldBeCalledOnce();
 
         $target = new Product('uuid-b');
+        $componentTarget = new Product('uuid-c');
 
         $dimensionContent = new ProductDimensionContent(new Product());
         $dimensionContent->setLocale('en');
         $dimensionContent->addAssociation(new ProductAssociation($dimensionContent, $target, 'alternative'));
+        $dimensionContent->addAssociation(new ProductAssociation($dimensionContent, $componentTarget, 'component'));
 
         $alternativeView = ContentView::create(['resolved-alternative'], []);
         $suitableView = ContentView::create([], []);
+        $componentView = ContentView::create(['resolved-component'], []);
+
+        // the associations form has no field for the component type, the resolver adds it
+        $componentField = new FieldMetadata('associations/component');
+        $componentField->setType('product_selection');
 
         $this->metadataResolver->resolveItems(
-            ['alternative' => $alternativeField, 'suitable' => $suitableField],
-            ['alternative' => [$target->getUuid()], 'suitable' => []],
+            ['alternative' => $alternativeField, 'suitable' => $suitableField, 'component' => $componentField],
+            ['alternative' => [$target->getUuid()], 'suitable' => [], 'component' => [$componentTarget->getUuid()]],
             'en',
         )
-            ->willReturn(['alternative' => $alternativeView, 'suitable' => $suitableView])
+            ->willReturn(['alternative' => $alternativeView, 'suitable' => $suitableView, 'component' => $componentView])
             ->shouldBeCalledOnce();
 
         $associations = $this->resolveContent($dimensionContent, null, $this->resolver())['associations'];
 
         self::assertInstanceOf(ContentView::class, $associations);
         self::assertSame(
-            ['alternative' => $alternativeView, 'suitable' => $suitableView],
+            ['alternative' => $alternativeView, 'suitable' => $suitableView, 'component' => $componentView],
             $associations->getContent(),
         );
         self::assertSame([], $associations->getView());
@@ -117,7 +124,12 @@ final class ProductResolverAssociationsTest extends ProductResolverTestCase
             ->willReturn($formMetadata)
             ->shouldBeCalledOnce();
 
-        $this->metadataResolver->resolveItems([], [], 'en')->willReturn([])->shouldBeCalledOnce();
+        $componentField = new FieldMetadata('associations/component');
+        $componentField->setType('product_selection');
+
+        $this->metadataResolver->resolveItems(['component' => $componentField], ['component' => []], 'en')
+            ->willReturn([])
+            ->shouldBeCalledOnce();
 
         $dimensionContent = new ProductDimensionContent(new Product());
         $dimensionContent->setLocale('en');
