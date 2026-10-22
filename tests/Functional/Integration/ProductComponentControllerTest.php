@@ -205,22 +205,6 @@ class ProductComponentControllerTest extends SuluTestCase
         $this->assertSame($before, $this->snapshotWorkflow($parentId), 'DELETE changed the parent');
     }
 
-    public function testAddedComponentsStayDraftAndTheListReportsThemUnpublished(): void
-    {
-        [$parentId, $first, $second] = $this->createPublishedParentAndDraftComponents();
-
-        $this->addComponent($parentId, $first);
-        $this->addComponent($parentId, $second);
-
-        $rows = $this->indexById($this->listComponents($parentId));
-        foreach ([$first, $second] as $component) {
-            $this->assertFalse($rows[$component]['publishedState']);
-            $this->assertNull($rows[$component]['published']);
-            $this->assertSame('unpublished', $this->snapshotWorkflow($component)['draft/en/0']['place'] ?? null);
-            $this->assertArrayNotHasKey('live/en/0', $this->snapshotWorkflow($component));
-        }
-    }
-
     public function testListIsSortedByFamilyNameThenPosition(): void
     {
         self::purgeDatabase();
@@ -247,129 +231,197 @@ class ProductComponentControllerTest extends SuluTestCase
         $this->assertSame([$firstA, $firstZ, $secondA, $secondZ], \array_column($data['_embedded']['product_components'], 'id'));
     }
 
-    public function testListExposesPublishAndGhostIndicators(): void
+    /**
+     * @return array<int, string> the component uuids in the unlocalized live content of the parent
+     */
+    private function liveComponentUuids(string $parentId): array
     {
-        self::purgeDatabase();
+        /** @var EntityManagerInterface $entityManager */
+        $entityManager = self::getContainer()->get('doctrine.orm.entity_manager');
+        $entityManager->clear();
+        /** @var ProductRepositoryInterface $repository */
+        $repository = self::getContainer()->get(ProductRepositoryInterface::class);
 
-        $familyId = $this->createProductFamily();
-        $parentId = $this->createProduct($familyId, 'Bundle', ProductInterface::TYPE_CONFIGURABLE_PRODUCT);
-        $published = $this->createProduct($familyId, 'Published');
-        $draft = $this->createProduct($familyId, 'Draft');
-        $this->addComponent($parentId, $published);
-        $this->addComponent($parentId, $draft);
-        $this->client->request('POST', '/admin/api/products/' . $published . '.json?locale=en&action=publish');
+        $uuids = [];
+        foreach ($repository->getOneBy(['uuid' => $parentId])->getDimensionContents() as $dimensionContent) {
+            if (null === $dimensionContent->getLocale() && 'live' === $dimensionContent->getStage()) {
+                foreach ($dimensionContent->getComponents() as $row) {
+                    $uuids[] = $row->getComponent()->getUuid();
+                }
+            }
+        }
+
+        return $uuids;
+    }
+
+    private function rowUrl(string $parentId, string $componentId, string $action, string $locale = 'en'): string
+    {
+        return '/admin/api/products/' . $parentId . '/components/' . $componentId . '.json?locale=' . $locale . '&action=' . $action;
+    }
+
+    public function testAddedComponentIsDraftEvenIfItsProductIsPublished(): void
+    {
+        [$parentId, $first] = $this->createPublishedParentAndDraftComponents();
+        $this->client->request('POST', '/admin/api/products/' . $first . '.json?locale=en&action=publish');
         $this->assertHttpStatusCode(200, $this->client->getResponse());
 
+        $this->addComponent($parentId, $first);
+
+        $row = $this->indexById($this->listComponents($parentId))[$first];
+        $this->assertFalse($row['publishedState']);
+        $this->assertNull($row['published']);
+        $this->assertSame([], $this->liveComponentUuids($parentId));
+    }
+
+    public function testPublishAndUnpublishARowLeaveEveryWorkflowUntouched(): void
+    {
+        [$parentId, $first, $second] = $this->createPublishedParentAndDraftComponents();
+        $this->addComponent($parentId, $first);
+        $this->addComponent($parentId, $second);
+        $parentBefore = $this->snapshotWorkflow($parentId);
+        $componentBefore = $this->snapshotWorkflow($first);
+        \sleep(1);
+
+        $data = $this->request('POST', $this->rowUrl($parentId, $first, 'publish'), null, 200);
+        $this->assertSame(['id' => $first, 'product' => $first], $data);
+
         $rows = $this->indexById($this->listComponents($parentId));
-        $this->assertTrue($rows[$published]['publishedState']);
-        $this->assertNotNull($rows[$published]['published']);
-        $this->assertNull($rows[$published]['ghostLocale']);
-        $this->assertFalse($rows[$draft]['publishedState']);
-        $this->assertNull($rows[$draft]['published']);
+        $this->assertTrue($rows[$first]['publishedState']);
+        $this->assertNotNull($rows[$first]['published']);
+        $this->assertNull($rows[$first]['ghostLocale']);
+        $this->assertFalse($rows[$second]['publishedState']);
+        $this->assertNull($rows[$second]['published']);
+        $this->assertSame([$first], $this->liveComponentUuids($parentId));
+        $this->assertSame($parentBefore, $this->snapshotWorkflow($parentId));
+        $this->assertSame($componentBefore, $this->snapshotWorkflow($first));
 
         $rows = $this->indexById($this->listComponents($parentId, 'de'));
-        $this->assertSame('en', $rows[$published]['ghostLocale']);
-        $this->assertFalse($rows[$published]['publishedState']);
+        $this->assertFalse($rows[$first]['publishedState']);
+        $this->assertSame('en', $rows[$first]['ghostLocale']);
+
+        $this->request('PUT', $this->rowUrl($parentId, $first, 'unpublish'), ['product' => $first], 200);
+        $this->assertFalse($this->indexById($this->listComponents($parentId))[$first]['publishedState']);
+        $this->assertSame([], $this->liveComponentUuids($parentId));
+        $this->assertSame($parentBefore, $this->snapshotWorkflow($parentId));
     }
 
-    public function testPostTriggerPublishesAndUnpublishesTheComponentOnly(): void
+    public function testPutWithActionPublishesTheRow(): void
     {
-        self::purgeDatabase();
+        [$parentId, $first] = $this->createPublishedParentAndDraftComponents();
+        $this->addComponent($parentId, $first);
 
-        $familyId = $this->createProductFamily();
-        $parentId = $this->createProduct($familyId, 'Bundle', ProductInterface::TYPE_CONFIGURABLE_PRODUCT);
-        $component = $this->createProduct($familyId, 'Component');
-        $sibling = $this->createProduct($familyId, 'Sibling');
-        $this->addComponent($parentId, $component);
-        $this->addComponent($parentId, $sibling);
+        $this->request('PUT', $this->rowUrl($parentId, $first, 'publish'), ['product' => $first, 'component_rules' => ['x']], 200);
 
-        $data = $this->request('POST', '/admin/api/products/' . $parentId . '/components/' . $component . '.json?locale=en&action=publish', null, 200);
-        $this->assertSame(['id' => $component, 'product' => $component], $data);
-
-        $rows = $this->indexById($this->listComponents($parentId));
-        $this->assertTrue($rows[$component]['publishedState']);
-        $this->assertFalse($rows[$sibling]['publishedState']);
-
-        $this->request('POST', '/admin/api/products/' . $parentId . '/components/' . $component . '.json?locale=en&action=unpublish', null, 200);
-        $rows = $this->indexById($this->listComponents($parentId));
-        $this->assertFalse($rows[$component]['publishedState']);
-
-        $this->client->request('GET', '/admin/api/products/' . $parentId . '.json?locale=en');
-        $parent = \json_decode((string) $this->client->getResponse()->getContent(), true);
-        $this->assertIsArray($parent);
-        $this->assertFalse($parent['publishedState'] ?? false);
+        $this->assertSame([$first], $this->liveComponentUuids($parentId));
     }
 
-    public function testPutWithActionPublishesTheComponent(): void
+    public function testTheRowStateDoesNotFollowThePublishWorkflowOfTheParent(): void
     {
-        self::purgeDatabase();
+        [$parentId, $first, $second] = $this->createPublishedParentAndDraftComponents();
+        $this->addComponent($parentId, $first);
+        $this->addComponent($parentId, $second);
+        $this->request('POST', $this->rowUrl($parentId, $first, 'publish'), null, 200);
 
-        $familyId = $this->createProductFamily();
-        $parentId = $this->createProduct($familyId, 'Bundle', ProductInterface::TYPE_CONFIGURABLE_PRODUCT);
-        $component = $this->createProduct($familyId, 'Component');
-        $this->addComponent($parentId, $component);
+        $assertRows = function() use ($parentId, $first, $second): void {
+            $rows = $this->indexById($this->listComponents($parentId));
+            $this->assertSame([$first], $this->liveComponentUuids($parentId));
+            $this->assertSame([$first, $second], $this->listComponentIds($parentId));
+            $this->assertArrayHasKey($first, $rows);
+            $this->assertFalse($rows[$second]['publishedState']);
+        };
 
-        $this->request('PUT', '/admin/api/products/' . $parentId . '/components/' . $component . '.json?locale=en&action=publish', ['product' => $component, 'component_rules' => ['x']], 200);
+        // the version of a publish is named by the second, so the transitions need a second between them
+        \sleep(1);
+        $this->client->request('POST', '/admin/api/products/' . $parentId . '.json?locale=en&action=publish');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+        $assertRows();
+        $this->assertTrue($this->indexById($this->listComponents($parentId))[$first]['publishedState']);
 
-        $this->assertTrue($this->indexById($this->listComponents($parentId))[$component]['publishedState']);
+        \sleep(1);
+        $this->client->request('POST', '/admin/api/products/' . $parentId . '.json?locale=en&action=unpublish');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+        // the unlocalized live content that holds the rows stays when a locale is unpublished
+        $this->assertSame([$first], $this->liveComponentUuids($parentId));
+        $this->assertFalse($this->indexById($this->listComponents($parentId))[$first]['publishedState']);
+
+        \sleep(1);
+        $this->client->request('POST', '/admin/api/products/' . $parentId . '.json?locale=en&action=publish');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+        $assertRows();
+        $this->assertTrue($this->indexById($this->listComponents($parentId))[$first]['publishedState']);
     }
 
-    public function testPostTriggerWithUnavailableTransitionReturns409(): void
+    public function testRemovingTheDraftRowKeepsTheLiveRowUntilItIsUnpublished(): void
     {
-        self::purgeDatabase();
+        [$parentId, $first] = $this->createPublishedParentAndDraftComponents();
+        $this->addComponent($parentId, $first);
+        $this->request('POST', $this->rowUrl($parentId, $first, 'publish'), null, 200);
 
-        $familyId = $this->createProductFamily();
-        $parentId = $this->createProduct($familyId, 'Bundle', ProductInterface::TYPE_CONFIGURABLE_PRODUCT);
-        $component = $this->createProduct($familyId, 'Component');
-        $this->addComponent($parentId, $component);
+        $this->client->request('DELETE', '/admin/api/products/' . $parentId . '/components/' . $first . '.json?locale=en');
+        $this->assertHttpStatusCode(204, $this->client->getResponse());
 
-        $data = $this->request('POST', '/admin/api/products/' . $parentId . '/components/' . $component . '.json?locale=en&action=unpublish', null, 409);
+        $this->assertSame([$first], $this->liveComponentUuids($parentId));
+        $this->assertSame([], $this->listComponentIds($parentId));
+    }
+
+    public function testPublishARowTwiceReturns409(): void
+    {
+        [$parentId, $first] = $this->createPublishedParentAndDraftComponents();
+        $this->addComponent($parentId, $first);
+        $this->request('POST', $this->rowUrl($parentId, $first, 'publish'), null, 200);
+
+        $data = $this->request('POST', $this->rowUrl($parentId, $first, 'publish'), null, 409);
 
         $this->assertIsString($data['detail']);
     }
 
-    public function testPostTriggerWithoutContentInTheLocaleReturns409(): void
+    public function testUnpublishADraftRowReturns409(): void
+    {
+        [$parentId, $first] = $this->createPublishedParentAndDraftComponents();
+        $this->addComponent($parentId, $first);
+
+        $this->request('POST', $this->rowUrl($parentId, $first, 'unpublish'), null, 409);
+    }
+
+    public function testPublishARowOfAParentThatWasNeverPublishedReturns409(): void
     {
         self::purgeDatabase();
-
         $familyId = $this->createProductFamily();
         $parentId = $this->createProduct($familyId, 'Bundle', ProductInterface::TYPE_CONFIGURABLE_PRODUCT);
         $component = $this->createProduct($familyId, 'Component');
         $this->addComponent($parentId, $component);
 
-        $this->request('POST', '/admin/api/products/' . $parentId . '/components/' . $component . '.json?locale=fr&action=publish', null, 409);
+        $this->request('POST', $this->rowUrl($parentId, $component, 'publish'), null, 409);
+        $this->assertFalse($this->listComponents($parentId)[0]['publishedState']);
+    }
+
+    public function testPublishARowInALocaleTheParentIsNotPublishedInReturns409(): void
+    {
+        [$parentId, $first] = $this->createPublishedParentAndDraftComponents();
+        $this->addComponent($parentId, $first);
+
+        $this->request('POST', $this->rowUrl($parentId, $first, 'publish', 'fr'), null, 409);
+        $this->assertSame([], $this->liveComponentUuids($parentId));
     }
 
     public function testPostTriggerWithUnsupportedActionReturns400(): void
     {
-        self::purgeDatabase();
+        [$parentId, $first] = $this->createPublishedParentAndDraftComponents();
+        $this->addComponent($parentId, $first);
 
-        $familyId = $this->createProductFamily();
-        $parentId = $this->createProduct($familyId, 'Bundle', ProductInterface::TYPE_CONFIGURABLE_PRODUCT);
-        $component = $this->createProduct($familyId, 'Component');
-        $this->addComponent($parentId, $component);
-
-        $data = $this->request('POST', '/admin/api/products/' . $parentId . '/components/' . $component . '.json?locale=en&action=remove', null, 400);
+        $data = $this->request('POST', $this->rowUrl($parentId, $first, 'remove'), null, 400);
 
         $this->assertIsString($data['detail']);
         $this->assertStringContainsString('Unsupported action "remove"', $data['detail']);
     }
 
-    public function testPostTriggerOfAProductThatIsNoComponentIs404AndDoesNotPublish(): void
+    public function testPostTriggerOfAProductThatIsNoComponentIs404(): void
     {
-        self::purgeDatabase();
+        [$parentId, $other] = $this->createPublishedParentAndDraftComponents();
 
-        $familyId = $this->createProductFamily();
-        $parentId = $this->createProduct($familyId, 'Bundle', ProductInterface::TYPE_CONFIGURABLE_PRODUCT);
-        $other = $this->createProduct($familyId, 'Other');
-
-        $this->request('POST', '/admin/api/products/' . $parentId . '/components/' . $other . '.json?locale=en&action=publish', null, 404);
-        $this->request('PUT', '/admin/api/products/' . $parentId . '/components/' . $other . '.json?locale=en&action=publish', null, 404);
-
-        $this->client->request('GET', '/admin/api/products/' . $other . '.json?locale=en');
-        $data = \json_decode((string) $this->client->getResponse()->getContent(), true);
-        $this->assertIsArray($data);
-        $this->assertNotSame('published', $data['workflowPlace'] ?? null);
+        $this->request('POST', $this->rowUrl($parentId, $other, 'publish'), null, 404);
+        $this->request('PUT', $this->rowUrl($parentId, $other, 'publish'), null, 404);
+        $this->assertSame([], $this->liveComponentUuids($parentId));
     }
 
     public function testPostAndPutIgnoreTheComponentRulesPlaceholder(): void

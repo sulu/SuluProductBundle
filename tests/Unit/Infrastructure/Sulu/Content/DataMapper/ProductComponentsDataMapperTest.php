@@ -54,6 +54,19 @@ final class ProductComponentsDataMapperTest extends TestCase
         $this->addToAssertionCount(1);
     }
 
+    public function testLeavesTheLiveRowsAlone(): void
+    {
+        $source = new Product('uuid-source');
+        $live = new ProductDimensionContent($source);
+        $live->setStage(DimensionContentInterface::STAGE_LIVE);
+        $live->addComponent(new ProductComponent($live, new Product('uuid-b')));
+
+        $this->mapper->map($live, $live, ['components' => []]);
+
+        $this->productRepository->findBy(Argument::cetera())->shouldNotHaveBeenCalled();
+        self::assertCount(1, $live->getComponents());
+    }
+
     public function testIgnoresWhenNoComponentsKey(): void
     {
         $source = new Product('uuid-source');

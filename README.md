@@ -52,13 +52,16 @@ The action calls `POST /admin/api/products/{parentId}/variants/{id}?action=publi
 a variant that was never published or publishing one whose product is not published. The list
 shows the reason for each variant it could not change.
 
-The components of a configurable product are published the same way, from the components tab,
-with the same toolbar action and permission. A component is a product of its own, so the action
-publishes or unpublishes that component product, never the configurable product. It calls
+A component of a configurable product is a row of the parent, and the row has its own draft and live
+state. A new row is a draft. "Publish" copies that one row to the live content of the parent, "Unpublish"
+removes it from there. Neither action applies a workflow transition to the parent or to the
+component product, and the other rows stay as they are. It calls
 `POST /admin/api/products/{parentId}/components/{id}?action=publish` (or `unpublish`) with the
 component's uuid as `id`, and `PUT` with the same query parameter does the same. It answers `404`
-when the product is not a component of the parent and `409` when the transition is not available.
-The list shows the publish indicator of each component.
+when the product is not a component of the parent. It answers `409` when the parent is not
+published in the locale, the row is already published (or not published, for `unpublish`). The
+list shows a row as published when it is in the live content of the parent and the parent is live in
+the list locale. The `published` date of a row is the date of that live content.
 
 ## Variant attributes
 
@@ -80,8 +83,11 @@ posted value.
 
 The components are not associations. Each one is a row of its own in `pr_product_components`, with
 its own id, a position and the component product. The rows belong to the dimension content of the
-product, so they are draft and live content like the associations: they are copied on publish and
-between locales. A project adds the table with its own migration. A product can be a component
+product and are shared by all locales. Unlike the associations they do not follow the publish workflow
+of the product. Publishing, unpublishing, restoring or copying the product never copies the draft rows
+to live and never removes live rows. Only the publish and unpublish action of a row changes its live
+state, and the live rows stay when a locale of the product is unpublished. Removing a draft row
+leaves its live row until it is unpublished. A project adds the table with its own migration. A product can be a component
 only once for now, but the table has no unique constraint, because rules will later attach to the
 single rows.
 

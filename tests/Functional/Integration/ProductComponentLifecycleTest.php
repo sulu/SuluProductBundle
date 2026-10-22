@@ -212,7 +212,7 @@ class ProductComponentLifecycleTest extends SuluTestCase
         $this->assertEquals($idsBefore, $idsAfter);
     }
 
-    public function testPublishCopiesComponentsWithDistinctRows(): void
+    public function testPublishingTheProductLeavesTheLiveComponentsEmpty(): void
     {
         self::purgeDatabase();
         $familyId = $this->createProductFamily();
@@ -223,20 +223,8 @@ class ProductComponentLifecycleTest extends SuluTestCase
         $this->assertHttpStatusCode(200, $this->client->getResponse());
 
         $product = $this->getProductWithDimensionContents($sourceId);
-        $draft = $this->findCurrentDimensionContent($product, null, DimensionContentInterface::STAGE_DRAFT);
-        $live = $this->findCurrentDimensionContent($product, null, DimensionContentInterface::STAGE_LIVE);
-
-        $this->assertCount(1, $draft->getComponents());
-        $this->assertCount(1, $live->getComponents());
-
-        $draftComponent = $draft->getComponents()[0];
-        $liveComponent = $live->getComponents()[0];
-
-        $this->assertSame($componentId, $draftComponent->getComponent()->getUuid());
-        $this->assertSame($componentId, $liveComponent->getComponent()->getUuid());
-        $this->assertNotSame($draftComponent->getId(), $liveComponent->getId());
-        $this->assertSame($draft, $draftComponent->getProductDimensionContent());
-        $this->assertSame($live, $liveComponent->getProductDimensionContent());
+        $this->assertCount(1, $this->findCurrentDimensionContent($product, null, DimensionContentInterface::STAGE_DRAFT)->getComponents());
+        $this->assertSame([], $this->findCurrentDimensionContent($product, null, DimensionContentInterface::STAGE_LIVE)->getComponents());
     }
 
     public function testRestoreVersionCarriesComponents(): void

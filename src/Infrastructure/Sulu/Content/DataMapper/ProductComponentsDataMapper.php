@@ -37,6 +37,12 @@ class ProductComponentsDataMapper implements DataMapperInterface
             return;
         }
 
+        // The live rows are only changed by publishing or unpublishing a row. Publishing the product copies
+        // its draft to the live content through this mapper and must not touch them.
+        if (DimensionContentInterface::STAGE_DRAFT !== $unlocalizedDimensionContent->getStage()) {
+            return;
+        }
+
         if (!\array_key_exists('components', $data)) {
             return;
         }

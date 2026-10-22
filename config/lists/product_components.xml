@@ -73,6 +73,33 @@
         </join>
     </joins>
 
+    <joins name="liveOwner">
+        <join>
+            <entity-name>liveOwner</entity-name>
+            <field-name>Sulu\Product\Domain\Model\ProductDimensionContentInterface</field-name>
+            <method>LEFT</method>
+            <condition>liveOwner.locale IS NULL AND liveOwner.stage = 'live' AND liveOwner.version = 0 AND IDENTITY(liveOwner.product) = :parentId</condition>
+        </join>
+    </joins>
+
+    <joins name="liveLocalizedOwner">
+        <join>
+            <entity-name>liveLocalizedOwner</entity-name>
+            <field-name>Sulu\Product\Domain\Model\ProductDimensionContentInterface</field-name>
+            <method>LEFT</method>
+            <condition>liveLocalizedOwner.locale = :locale AND liveLocalizedOwner.stage = 'live' AND liveLocalizedOwner.version = 0 AND IDENTITY(liveLocalizedOwner.product) = :parentId</condition>
+        </join>
+    </joins>
+
+    <joins name="liveComponent" ref="liveOwner">
+        <join>
+            <entity-name>liveComponent</entity-name>
+            <field-name>Sulu\Product\Domain\Model\ProductComponentInterface</field-name>
+            <method>LEFT</method>
+            <condition>liveComponent.component = Sulu\Product\Domain\Model\ProductInterface AND liveComponent.productDimensionContent = liveOwner</condition>
+        </join>
+    </joins>
+
     <properties>
         <property name="id" translation="sulu_admin.id" visibility="no">
             <field-name>uuid</field-name>
@@ -139,18 +166,18 @@
 
         <property name="published" translation="sulu_admin.published" type="date" visibility="never">
             <field-name>workflowPublished</field-name>
-            <entity-name>dimensionContent</entity-name>
+            <entity-name>liveLocalizedOwner</entity-name>
 
-            <joins ref="dimensionContent"/>
+            <joins ref="liveLocalizedOwner"/>
 
             <transformer type="datetime"/>
         </property>
 
         <property name="publishedState" translation="sulu_content.published_state" visibility="never">
-            <field-name>workflowPlace</field-name>
-            <entity-name>dimensionContent</entity-name>
+            <field-name>id</field-name>
+            <entity-name>liveComponent</entity-name>
 
-            <joins ref="dimensionContent"/>
+            <joins ref="liveComponent"/>
         </property>
 
         <property name="componentPosition" visibility="never">
