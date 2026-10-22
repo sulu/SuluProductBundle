@@ -219,11 +219,8 @@ final class ProductComponentController implements SecuredControllerInterface
         }
 
         $uuids = [];
+        // the query above loads the unlocalized draft only
         foreach ($parent->getDimensionContents() as $dimensionContent) {
-            if (null !== $dimensionContent->getLocale() || DimensionContentInterface::STAGE_DRAFT !== $dimensionContent->getStage()) {
-                continue;
-            }
-
             $uuids = \array_values(\array_map(
                 static fn ($association): string => $association->getTarget()->getUuid(),
                 $dimensionContent->getAssociationsByType(ProductAssociationTypeRegistry::COMPONENT),
