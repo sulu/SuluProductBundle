@@ -34,17 +34,6 @@ final class ProductAssociationTypeRegistryTest extends TestCase
         self::assertSame('sulu_product.association_type_alternative', $types[0]->getLabel());
     }
 
-    public function testGetCustomTypesExcludesComponent(): void
-    {
-        $registry = new ProductAssociationTypeRegistry([
-            'alternative' => ['label' => 'sulu_product.association_type_alternative'],
-            ProductAssociationTypeRegistry::COMPONENT => ['label' => 'sulu_product.association_type_component'],
-        ]);
-
-        self::assertCount(2, $registry->getTypes());
-        self::assertSame(['alternative'], \array_map(static fn ($type) => $type->getKey(), $registry->getCustomTypes()));
-    }
-
     public function testHasReturnsTrueForKnownKey(): void
     {
         $registry = new ProductAssociationTypeRegistry([

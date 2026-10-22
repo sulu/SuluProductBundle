@@ -109,7 +109,6 @@ final class SuluProductBundleAssociationConfigTest extends TestCase
         self::assertSame([
             'alternative' => ['label' => 'sulu_product.association_type_alternative'],
             'suitable' => ['label' => 'custom.label'],
-            'component' => ['label' => 'sulu_product.association_type_component'],
         ], $resolvedMap);
     }
 
@@ -121,15 +120,11 @@ final class SuluProductBundleAssociationConfigTest extends TestCase
 
         self::assertSame([
             'alternative' => ['label' => 'sulu_product.association_type_alternative'],
-            'component' => ['label' => 'sulu_product.association_type_component'],
         ], $resolvedMap);
     }
 
-    public function testEmptyAssociationTypesResolvesToTheComponentTypeOnly(): void
+    public function testEmptyAssociationTypesResolvesToEmptyArray(): void
     {
-        self::assertSame(
-            ['component' => ['label' => 'sulu_product.association_type_component']],
-            $this->resolveAssociationTypesMap([]),
-        );
+        self::assertSame([], $this->resolveAssociationTypesMap([]));
     }
 }

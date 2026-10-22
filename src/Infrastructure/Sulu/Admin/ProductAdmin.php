@@ -253,7 +253,7 @@ class ProductAdmin extends Admin
         );
 
         // Associations form — edit mode only
-        if ([] !== $this->associationTypeRegistry->getCustomTypes()) {
+        if ([] !== $this->associationTypeRegistry->getTypes()) {
             $viewCollection->add(
                 $this->viewBuilderFactory->createFormViewBuilder(static::EDIT_TABS_VIEW . '.associations', '/associations')
                     ->setResourceKey(ProductInterface::RESOURCE_KEY)

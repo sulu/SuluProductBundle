@@ -25,9 +25,9 @@ use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Application\Attribute\AttributeValueConverter;
 use Sulu\Product\Application\Attribute\AttributeValueConverterInterface;
 use Sulu\Product\Application\Attribute\ProductAttributeValueFormatter;
-use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\ProductAssociationInterface;
+use Sulu\Product\Domain\Model\ProductComponentInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
@@ -130,6 +130,10 @@ class ProductResolver implements ResolverInterface
                 $this->resolveAssociations($dimensionContent, $locale),
                 [],
             );
+        }
+
+        if ($this->isRequested($requested, 'components')) {
+            $content[$this->outputKey($requested, 'components')] = $this->resolveComponents($dimensionContent, $locale);
         }
 
         $product = $dimensionContent->getResource();
@@ -385,6 +389,23 @@ class ProductResolver implements ResolverInterface
     }
 
     /**
+     * The component products in position order, resolved like the target of an association without
+     * project params.
+     */
+    private function resolveComponents(ProductDimensionContentInterface $dimensionContent, string $locale): ContentView
+    {
+        $field = new FieldMetadata('components');
+        $field->setType(ProductSelectionPropertyResolver::getType());
+
+        $uuids = \array_map(
+            static fn (ProductComponentInterface $component): string => $component->getComponent()->getUuid(),
+            $dimensionContent->getComponents(),
+        );
+
+        return $this->metadataResolver->resolveItems(['components' => $field], ['components' => $uuids], $locale)['components'];
+    }
+
+    /**
      * Grouping is the `sulu_product_attribute_groups` Twig filter's job.
      *
      * @return array<string, ContentView> each resolving to `{attribute, value, formattedValue}`
@@ -464,19 +485,6 @@ class ProductResolver implements ResolverInterface
             $data[$type] = \array_map(
                 static fn (ProductAssociationInterface $association): string => $association->getTarget()->getUuid(),
                 $dimensionContent->getAssociationsByType($type),
-            );
-        }
-
-        // the component type is edited on its own tab, so the associations form has no field for it
-        $componentType = ProductAssociationTypeRegistry::COMPONENT;
-        if (!isset($items[$componentType])) {
-            $componentField = new FieldMetadata(self::ASSOCIATIONS_FIELD_PREFIX . $componentType);
-            $componentField->setType(ProductSelectionPropertyResolver::getType());
-
-            $items[$componentType] = $componentField;
-            $data[$componentType] = \array_map(
-                static fn (ProductAssociationInterface $association): string => $association->getTarget()->getUuid(),
-                $dimensionContent->getAssociationsByType($componentType),
             );
         }
 

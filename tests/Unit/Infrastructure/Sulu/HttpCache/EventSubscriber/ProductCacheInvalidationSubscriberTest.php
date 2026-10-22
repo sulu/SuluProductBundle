@@ -156,6 +156,11 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
             'locale' => 'en',
             'stage' => DimensionContentInterface::STAGE_LIVE,
         ])->willReturn([]);
+        $this->productRepository->findBy([
+            'componentTargetUuid' => 'product-uuid-123',
+            'locale' => 'en',
+            'stage' => DimensionContentInterface::STAGE_LIVE,
+        ])->willReturn([]);
 
         $this->cacheManager->supportsTags()->willReturn(false);
         $localization = $this->prophesize(Localization::class);
@@ -213,6 +218,7 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
     {
         $product = new Product('product-uuid-123');
         $referrer = new Product('referrer-uuid-456');
+        $componentReferrer = new Product('configurable-uuid-789');
 
         $event = new ProductWorkflowTransitionAppliedEvent(
             $product,
@@ -240,6 +246,11 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
             'locale' => 'en',
             'stage' => DimensionContentInterface::STAGE_LIVE,
         ])->willReturn([$referrer]);
+        $this->productRepository->findBy([
+            'componentTargetUuid' => 'product-uuid-123',
+            'locale' => 'en',
+            'stage' => DimensionContentInterface::STAGE_LIVE,
+        ])->willReturn([$componentReferrer]);
 
         $localization = $this->prophesize(Localization::class);
         $webspace = $this->prophesize(Webspace::class);
@@ -257,12 +268,23 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
             'stage' => 'live',
         ])->willThrow(ContentNotFoundException::class);
 
+        $componentReferrerRoute = new Route(ProductInterface::RESOURCE_KEY, 'configurable-uuid-789', 'en', '/en/shop/configurable-product');
+        $this->routeRepository->findBy([
+            'resourceKey' => ProductInterface::RESOURCE_KEY,
+            'resourceId' => 'configurable-uuid-789',
+            'locale' => 'en',
+        ])->willReturn([$componentReferrerRoute]);
+
         $this->routeGenerator->generate('/en/shop/referrer-product', 'en', 'sulu_io', UrlGeneratorInterface::ABSOLUTE_URL)
             ->willReturn('https://sulu.io/en/shop/referrer-product');
+        $this->routeGenerator->generate('/en/shop/configurable-product', 'en', 'sulu_io', UrlGeneratorInterface::ABSOLUTE_URL)
+            ->willReturn('https://sulu.io/en/shop/configurable-product');
 
         $this->cacheManager->invalidateTag('product-uuid-123')
             ->shouldBeCalled();
         $this->cacheManager->invalidatePath('https://sulu.io/en/shop/referrer-product')
+            ->shouldBeCalled();
+        $this->cacheManager->invalidatePath('https://sulu.io/en/shop/configurable-product')
             ->shouldBeCalled();
 
         $this->subscriber->onWorkflowTransition($event);

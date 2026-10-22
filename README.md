@@ -67,13 +67,19 @@ is a list with an "Add" button, like the variants. "Add" and a click on a row op
 one product selection. Variants cannot be selected, and a product is a component at most once.
 The list shows the components in the order they were added.
 
-The components are stored as product associations of the reserved type `component`. The bundle
-registers that type itself, so a project needs no `sulu_product.association_types` entry. The
-type is edited on the "Components" tab only and never appears on the "Associations" tab. On the
-website the components resolve like any other association, as `product.associations.component`.
+The components are not associations. Each one is a row of its own in `pr_product_components`, with
+its own id, a position and the component product. The rows belong to the dimension content of the
+product, so they are draft and live content like the associations: they are copied on publish and
+between locales. A project adds the table with its own migration. A product can be a component
+only once for now, but the table has no unique constraint, because rules will later attach to the
+single rows.
 
 The tab reads and writes through the admin API `/admin/api/products/{id}/components`. Each write
-replaces only the `component` list of the product. Its other association types stay as they are.
+replaces the ordered `components` list of the product, a list of product uuids. The same list can
+be sent as `components` in the data of a modify or create message.
+
+On the website `product.components` is a requestable property like `associations`. It resolves
+the component products in their order, with the same properties as the target of an association.
 
 ## Product in the website
 
