@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Infrastructure\Sulu\Content\Resolver;
 
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataLoaderInterface;
 use Sulu\Bundle\AdminBundle\Metadata\MetadataProviderInterface;
@@ -21,12 +22,14 @@ use Sulu\Content\Application\ContentResolver\Resolver\ResolverInterface;
 use Sulu\Content\Application\ContentResolver\Value\ContentView;
 use Sulu\Content\Application\MetadataResolver\MetadataResolver;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
 use Sulu\Product\Domain\Model\ProductAssociationInterface;
 use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\ProductFamilyContentViewFactory;
+use Sulu\Product\Infrastructure\Sulu\Content\PropertyResolver\ProductSelectionPropertyResolver;
 use Sulu\Product\Infrastructure\Sulu\Content\ResourceLoader\ProductResourceLoader;
 use Sulu\Product\Infrastructure\Sulu\Route\CurrentVariantProvider;
 
@@ -416,6 +419,19 @@ class ProductResolver implements ResolverInterface
             $data[$type] = \array_map(
                 static fn (ProductAssociationInterface $association): string => $association->getTarget()->getUuid(),
                 $dimensionContent->getAssociationsByType($type),
+            );
+        }
+
+        // the component type is edited on its own tab, so the associations form has no field for it
+        $componentType = ProductAssociationTypeRegistry::COMPONENT;
+        if (!isset($items[$componentType])) {
+            $componentField = new FieldMetadata(self::ASSOCIATIONS_FIELD_PREFIX . $componentType);
+            $componentField->setType(ProductSelectionPropertyResolver::getType());
+
+            $items[$componentType] = $componentField;
+            $data[$componentType] = \array_map(
+                static fn (ProductAssociationInterface $association): string => $association->getTarget()->getUuid(),
+                $dimensionContent->getAssociationsByType($componentType),
             );
         }
 
