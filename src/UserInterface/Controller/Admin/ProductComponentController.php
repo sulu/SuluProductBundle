@@ -20,8 +20,12 @@ use Sulu\Component\Rest\ListBuilder\Metadata\FieldDescriptorFactoryInterface;
 use Sulu\Component\Rest\ListBuilder\PaginatedRepresentation;
 use Sulu\Component\Rest\RestHelperInterface;
 use Sulu\Component\Security\SecuredControllerInterface;
+use Sulu\Content\Domain\Exception\ContentNotFoundException;
+use Sulu\Content\Domain\Exception\UnavailableContentTransitionException;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Content\Domain\Model\WorkflowInterface;
 use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushStamp;
+use Sulu\Product\Application\Message\ApplyWorkflowTransitionProductMessage;
 use Sulu\Product\Application\Message\ModifyProductMessage;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
 use Sulu\Product\Domain\Model\ProductComponentInterface;
@@ -41,7 +45,8 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
  * Admin CRUD for the components of a configurable product.
  *
  * The components are the ordered `components` of the parent's draft content, so every write replaces
- * that list through the modify message.
+ * that list through the modify message. Publishing acts on the component product itself, never on
+ * the parent.
  *
  * @internal
  *
@@ -73,11 +78,15 @@ final class ProductComponentController implements SecuredControllerInterface
         $this->restHelper->initializeListBuilder($listBuilder, $fieldDescriptors);
         // selecting the position also joins the components that restrict the list to the parent
         $listBuilder->addSelectField($fieldDescriptors['componentPosition']);
+        // the publish and ghost indicators are rendered from these, whether or not the list requests them
+        $listBuilder->addSelectField($fieldDescriptors['published']);
+        $listBuilder->addSelectField($fieldDescriptors['publishedState']);
         $listBuilder->addSelectField($fieldDescriptors['ghostLocale']);
         $listBuilder->setParameter('locale', $this->getLocale($request));
         $listBuilder->setParameter('parentId', $parentId);
 
         if (null === $request->query->get('sortBy')) {
+            $listBuilder->sort($fieldDescriptors['productFamily']);
             $listBuilder->sort($fieldDescriptors['componentPosition']);
         }
 
@@ -89,7 +98,14 @@ final class ProductComponentController implements SecuredControllerInterface
             $listBuilder->count(),
         );
 
-        return new JsonResponse($this->normalizer->normalize($listRepresentation->toArray(), 'json'));
+        /** @var array{_embedded: array{product_components: array<int, array<string, mixed>>}} $list */
+        $list = $listRepresentation->toArray();
+        foreach ($list['_embedded'][ProductInterface::LIST_KEY_COMPONENTS] as &$item) {
+            // the admin expects a boolean, the list builder returns the raw workflow place
+            $item['publishedState'] = WorkflowInterface::WORKFLOW_PLACE_PUBLISHED === ($item['publishedState'] ?? null);
+        }
+
+        return new JsonResponse($this->normalizer->normalize($list, 'json'));
     }
 
     public function getAction(string $parentId, string $id): Response
@@ -116,6 +132,10 @@ final class ProductComponentController implements SecuredControllerInterface
 
     public function putAction(Request $request, string $parentId, string $id): Response
     {
+        if ($request->query->has('action')) {
+            return $this->postTriggerAction($request, $parentId, $id);
+        }
+
         $components = $this->loadComponentUuids($parentId);
         $this->assertComponentOfParent($components, $parentId, $id);
 
@@ -147,6 +167,33 @@ final class ProductComponentController implements SecuredControllerInterface
         );
 
         return new Response('', 204);
+    }
+
+    /**
+     * Publishes or unpublishes the component product itself; the parent is never touched.
+     */
+    public function postTriggerAction(Request $request, string $parentId, string $id): Response
+    {
+        $this->assertComponentOfParent($this->loadComponentUuids($parentId), $parentId, $id);
+
+        $action = $request->query->getString('action');
+        $transitions = [WorkflowInterface::WORKFLOW_TRANSITION_PUBLISH, WorkflowInterface::WORKFLOW_TRANSITION_UNPUBLISH];
+
+        if (!\in_array($action, $transitions, true)) {
+            return new JsonResponse([
+                'detail' => \sprintf('Unsupported action "%s", expected one of "%s".', $action, \implode('", "', $transitions)),
+            ], 400);
+        }
+
+        $message = new ApplyWorkflowTransitionProductMessage(['uuid' => $id], $this->getLocale($request), $action);
+
+        try {
+            $this->handle(new Envelope($message, [new EnableFlushStamp()]));
+        } catch (UnavailableContentTransitionException|ContentNotFoundException $e) {
+            return new JsonResponse(['detail' => $e->getMessage()], 409);
+        }
+
+        return new JsonResponse(['id' => $id, 'product' => $id]);
     }
 
     public function getSecurityContext(): string

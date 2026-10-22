@@ -95,7 +95,7 @@ final class ProductResolverComponentsTest extends ProductResolverTestCase
         $properties->setName('properties');
         $properties->setType(OptionMetadata::TYPE_COLLECTION);
         $options = [];
-        foreach (['code', 'status', 'image', 'shortDescription'] as $property) {
+        foreach (['code', 'status', 'productFamily', 'image', 'shortDescription'] as $property) {
             $option = new OptionMetadata();
             $option->setName($property);
             $option->setValue($property);

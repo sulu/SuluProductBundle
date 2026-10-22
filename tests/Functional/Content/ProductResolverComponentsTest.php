@@ -95,7 +95,7 @@ class ProductResolverComponentsTest extends SuluTestCase
 
         self::assertCount(2, $components);
         self::assertIsArray($components[0]);
-        self::assertEqualsCanonicalizing(['title', 'url', 'code', 'status', 'image', 'shortDescription'], \array_keys($components[0]));
+        self::assertEqualsCanonicalizing(['title', 'url', 'code', 'status', 'productFamily', 'image', 'shortDescription'], \array_keys($components[0]));
         self::assertSame('First Component', $components[0]['title']);
         self::assertIsArray($components[1]);
         self::assertSame('Second Component', $components[1]['title']);
