@@ -79,7 +79,8 @@ replaces the ordered `components` list of the product, a list of product uuids. 
 be sent as `components` in the data of a modify or create message.
 
 On the website `product.components` is a requestable property like `associations`. It resolves
-the component products in their order, with the same properties as the target of an association.
+the component products in their order, each with `title`, `url`, `code`, `status`, `image` and
+`shortDescription`.
 
 ## Product in the website
 

@@ -16,6 +16,7 @@ namespace Sulu\Product\Infrastructure\Sulu\Content\Resolver;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataLoaderInterface;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\OptionMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\MetadataProviderInterface;
 use Sulu\Bundle\HttpCacheBundle\ReferenceStore\ReferenceStoreInterface;
 use Sulu\Content\Application\ContentResolver\Resolver\ResolverInterface;
@@ -46,6 +47,8 @@ class ProductResolver implements ResolverInterface
     private const ASSOCIATIONS_FORM_KEY = 'product_associations';
 
     private const ASSOCIATIONS_FIELD_PREFIX = 'associations/';
+
+    private const COMPONENT_PROPERTIES = ['code', 'status', 'image', 'shortDescription'];
 
     private const PARENT_PREFIX = 'parent.';
 
@@ -391,6 +394,20 @@ class ProductResolver implements ResolverInterface
     {
         $field = new FieldMetadata('components');
         $field->setType(ProductSelectionPropertyResolver::getType());
+
+        // what a component card needs, `image` and `shortDescription` being template fields of the product
+        $properties = new OptionMetadata();
+        $properties->setName('properties');
+        $properties->setType(OptionMetadata::TYPE_COLLECTION);
+        $propertyOptions = [];
+        foreach (self::COMPONENT_PROPERTIES as $property) {
+            $option = new OptionMetadata();
+            $option->setName($property);
+            $option->setValue($property);
+            $propertyOptions[] = $option;
+        }
+        $properties->setValue($propertyOptions);
+        $field->addOption($properties);
 
         $uuids = \array_map(
             static fn (ProductComponentInterface $component): string => $component->getComponent()->getUuid(),

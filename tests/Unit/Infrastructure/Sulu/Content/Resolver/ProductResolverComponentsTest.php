@@ -17,6 +17,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\OptionMetadata;
 use Sulu\Content\Application\ContentResolver\Value\ContentView;
 use Sulu\Content\Application\MetadataResolver\MetadataResolver;
 use Sulu\Product\Domain\Model\Product;
@@ -46,8 +47,7 @@ final class ProductResolverComponentsTest extends ProductResolverTestCase
 
         $componentsView = ContentView::create(['resolved-components'], []);
 
-        $field = new FieldMetadata('components');
-        $field->setType('product_selection');
+        $field = $this->componentsField();
 
         $this->metadataResolver->resolveItems(['components' => $field], ['components' => ['uuid-b', 'uuid-c']], 'en')
             ->willReturn(['components' => $componentsView])
@@ -65,8 +65,7 @@ final class ProductResolverComponentsTest extends ProductResolverTestCase
 
         $componentsView = ContentView::create([], []);
 
-        $field = new FieldMetadata('components');
-        $field->setType('product_selection');
+        $field = $this->componentsField();
 
         $this->metadataResolver->resolveItems(['components' => $field], ['components' => []], 'en')
             ->willReturn(['components' => $componentsView]);
@@ -87,6 +86,28 @@ final class ProductResolverComponentsTest extends ProductResolverTestCase
         $content = $this->resolveContent($dimensionContent, ['title' => 'title'], $this->resolver());
 
         self::assertArrayNotHasKey('components', $content);
+    }
+
+    /** A card needs more than the title and url that a selection resolves without params. */
+    private function componentsField(): FieldMetadata
+    {
+        $properties = new OptionMetadata();
+        $properties->setName('properties');
+        $properties->setType(OptionMetadata::TYPE_COLLECTION);
+        $options = [];
+        foreach (['code', 'status', 'image', 'shortDescription'] as $property) {
+            $option = new OptionMetadata();
+            $option->setName($property);
+            $option->setValue($property);
+            $options[] = $option;
+        }
+        $properties->setValue($options);
+
+        $field = new FieldMetadata('components');
+        $field->setType('product_selection');
+        $field->addOption($properties);
+
+        return $field;
     }
 
     private function resolver(): ProductResolver
