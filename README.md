@@ -62,13 +62,18 @@ the product type.
 ## Configurable products
 
 A product of the type `configurable_product` is sold as one product, with its own code, route and
-attributes like a plain product. Instead of the "Variants" tab it has a "Components" tab, where
-other products are selected as its components.
+attributes like a plain product. Instead of the "Variants" tab it has a "Components" tab. The tab
+is a list with an "Add" button, like the variants. "Add" and a click on a row open an overlay with
+one product selection. Variants cannot be selected, and a product is a component at most once.
+The list shows the components in the order they were added.
 
 The components are stored as product associations of the reserved type `component`. The bundle
 registers that type itself, so a project needs no `sulu_product.association_types` entry. The
 type is edited on the "Components" tab only and never appears on the "Associations" tab. On the
 website the components resolve like any other association, as `product.associations.component`.
+
+The tab reads and writes through the admin API `/admin/api/products/{id}/components`. Each write
+replaces only the `component` list of the product. Its other association types stay as they are.
 
 ## Product in the website
 

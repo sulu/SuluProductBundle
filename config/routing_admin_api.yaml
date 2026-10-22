@@ -76,6 +76,36 @@ sulu_product.post_product_variant_trigger:
     controller: sulu_product.admin_product_variant_controller::postTriggerAction
     format: json
 
+sulu_product.get_product_components:
+    path: /products/{parentId}/components.{_format}
+    methods: GET
+    controller: sulu_product.admin_product_component_controller::cgetAction
+    format: json
+
+sulu_product.get_product_component:
+    path: /products/{parentId}/components/{id}.{_format}
+    methods: GET
+    controller: sulu_product.admin_product_component_controller::getAction
+    format: json
+
+sulu_product.post_product_component:
+    path: /products/{parentId}/components.{_format}
+    methods: POST
+    controller: sulu_product.admin_product_component_controller::postAction
+    format: json
+
+sulu_product.put_product_component:
+    path: /products/{parentId}/components/{id}.{_format}
+    methods: PUT
+    controller: sulu_product.admin_product_component_controller::putAction
+    format: json
+
+sulu_product.delete_product_component:
+    path: /products/{parentId}/components/{id}.{_format}
+    methods: DELETE
+    controller: sulu_product.admin_product_component_controller::deleteAction
+    format: json
+
 sulu_product.get_measurement_families:
     path: /measurement-families.{_format}
     methods: GET

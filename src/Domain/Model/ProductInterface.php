@@ -29,7 +29,8 @@ interface ProductInterface extends AuditableInterface, ContentRichEntityInterfac
 
     public const LIST_KEY_VARIANTS = 'product_variants';
     public const FORM_KEY_VARIANT = 'product_variant';
-    public const FORM_KEY_COMPONENTS = 'product_components';
+    public const LIST_KEY_COMPONENTS = 'product_components';
+    public const FORM_KEY_COMPONENT = 'product_component';
 
     public const LIST_KEY_VERSIONS = 'products_versions';
 
