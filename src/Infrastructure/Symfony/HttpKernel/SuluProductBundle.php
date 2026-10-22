@@ -41,6 +41,7 @@ use Sulu\Product\Application\MessageHandler\CreateProductFamilyMessageHandler;
 use Sulu\Product\Application\MessageHandler\CreateProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\ModifyAttributeGroupMessageHandler;
 use Sulu\Product\Application\MessageHandler\ModifyAttributeMessageHandler;
+use Sulu\Product\Application\MessageHandler\ModifyProductComponentsMessageHandler;
 use Sulu\Product\Application\MessageHandler\ModifyProductFamilyMessageHandler;
 use Sulu\Product\Application\MessageHandler\ModifyProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\RemoveAttributeGroupMessageHandler;
@@ -566,6 +567,15 @@ final class SuluProductBundle extends AbstractBundle
             ->args([
                 new Reference('sulu_product.product_repository'),
                 tagged_iterator('sulu_product.product_mapper'),
+                new Reference('sulu_activity.domain_event_collector'),
+            ])
+            ->tag('messenger.message_handler');
+
+        $services->set('sulu_product.modify_product_components_handler')
+            ->class(ModifyProductComponentsMessageHandler::class)
+            ->args([
+                new Reference('sulu_product.product_repository'),
+                new Reference('sulu_product.product_components_data_mapper'),
                 new Reference('sulu_activity.domain_event_collector'),
             ])
             ->tag('messenger.message_handler');

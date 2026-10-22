@@ -13,9 +13,11 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Tests\Functional\Integration;
 
+use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Product\Domain\Model\ProductInterface;
+use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\UserInterface\Controller\Admin\ProductComponentController;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 
@@ -140,6 +142,83 @@ class ProductComponentControllerTest extends SuluTestCase
     private function addComponent(string $parentId, string $productId): void
     {
         $this->request('POST', '/admin/api/products/' . $parentId . '/components.json?locale=en', ['product' => $productId], 201);
+    }
+
+    /**
+     * Workflow and timestamps of every dimension content of the product, to compare before and after a write.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    private function snapshotWorkflow(string $uuid): array
+    {
+        /** @var EntityManagerInterface $entityManager */
+        $entityManager = self::getContainer()->get('doctrine.orm.entity_manager');
+        $entityManager->clear();
+        /** @var ProductRepositoryInterface $repository */
+        $repository = self::getContainer()->get(ProductRepositoryInterface::class);
+        $product = $repository->getOneBy(['uuid' => $uuid]);
+
+        $snapshot = [];
+        foreach ($product->getDimensionContents() as $dimensionContent) {
+            $snapshot[\sprintf('%s/%s/%s', $dimensionContent->getStage(), $dimensionContent->getLocale() ?? '-', $dimensionContent->getVersion())] = [
+                'place' => $dimensionContent->getWorkflowPlace(),
+                'published' => $dimensionContent->getWorkflowPublished()?->format('c'),
+                'changed' => $dimensionContent->getChanged()->format('Y-m-d\TH:i:s.u'),
+            ];
+        }
+        \ksort($snapshot);
+
+        return $snapshot;
+    }
+
+    /**
+     * @return array{0: string, 1: string, 2: string}
+     */
+    private function createPublishedParentAndDraftComponents(): array
+    {
+        self::purgeDatabase();
+
+        $familyId = $this->createProductFamily();
+        $parentId = $this->createProduct($familyId, 'Bundle', ProductInterface::TYPE_CONFIGURABLE_PRODUCT);
+        $this->client->request('POST', '/admin/api/products/' . $parentId . '.json?locale=en&action=publish');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        return [$parentId, $this->createProduct($familyId, 'Draft one'), $this->createProduct($familyId, 'Draft two')];
+    }
+
+    public function testWritesKeepTheParentWorkflowAndTheComponentsAsDraft(): void
+    {
+        [$parentId, $first, $second] = $this->createPublishedParentAndDraftComponents();
+        $before = $this->snapshotWorkflow($parentId);
+        // the timestamps have a resolution of one second
+        \sleep(1);
+        $this->assertSame('published', $before['draft/en/0']['place'] ?? null, \json_encode($before) ?: '');
+
+        $this->addComponent($parentId, $first);
+        $this->assertSame($before, $this->snapshotWorkflow($parentId), 'POST changed the parent');
+
+        $this->request('PUT', '/admin/api/products/' . $parentId . '/components/' . $first . '.json?locale=en', ['product' => $second], 200);
+        $this->assertSame($before, $this->snapshotWorkflow($parentId), 'PUT changed the parent');
+
+        $this->client->request('DELETE', '/admin/api/products/' . $parentId . '/components/' . $second . '.json?locale=en');
+        $this->assertHttpStatusCode(204, $this->client->getResponse());
+        $this->assertSame($before, $this->snapshotWorkflow($parentId), 'DELETE changed the parent');
+    }
+
+    public function testAddedComponentsStayDraftAndTheListReportsThemUnpublished(): void
+    {
+        [$parentId, $first, $second] = $this->createPublishedParentAndDraftComponents();
+
+        $this->addComponent($parentId, $first);
+        $this->addComponent($parentId, $second);
+
+        $rows = $this->indexById($this->listComponents($parentId));
+        foreach ([$first, $second] as $component) {
+            $this->assertFalse($rows[$component]['publishedState']);
+            $this->assertNull($rows[$component]['published']);
+            $this->assertSame('unpublished', $this->snapshotWorkflow($component)['draft/en/0']['place'] ?? null);
+            $this->assertArrayNotHasKey('live/en/0', $this->snapshotWorkflow($component));
+        }
     }
 
     public function testListIsSortedByFamilyNameThenPosition(): void

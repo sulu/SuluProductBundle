@@ -26,7 +26,7 @@ use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Content\Domain\Model\WorkflowInterface;
 use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushStamp;
 use Sulu\Product\Application\Message\ApplyWorkflowTransitionProductMessage;
-use Sulu\Product\Application\Message\ModifyProductMessage;
+use Sulu\Product\Application\Message\ModifyProductComponentsMessage;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
 use Sulu\Product\Domain\Model\ProductComponentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
@@ -45,12 +45,10 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
  * Admin CRUD for the components of a configurable product.
  *
  * The components are the ordered `components` of the parent's draft content, so every write replaces
- * that list through the modify message. Publishing acts on the component product itself, never on
- * the parent.
+ * that list through its own message. That keeps the workflow of the parent as it is.
+ * Publishing acts on the component product itself, never on the parent.
  *
  * @internal
- *
- * @phpstan-import-type ModifyProductMessageData from ModifyProductMessage
  */
 final class ProductComponentController implements SecuredControllerInterface
 {
@@ -303,14 +301,9 @@ final class ProductComponentController implements SecuredControllerInterface
      */
     private function writeComponents(Request $request, string $parentId, array $components): void
     {
-        /** @var array<string, mixed> $values */
-        $values = [
-            'locale' => $this->getLocale($request),
-            'components' => $components,
-        ];
-        /** @var ModifyProductMessageData $data */
-        $data = $values;
-
-        $this->handle(new Envelope(new ModifyProductMessage(['uuid' => $parentId], $data), [new EnableFlushStamp()]));
+        $this->handle(new Envelope(
+            new ModifyProductComponentsMessage(['uuid' => $parentId], $this->getLocale($request), $components),
+            [new EnableFlushStamp()],
+        ));
     }
 }
