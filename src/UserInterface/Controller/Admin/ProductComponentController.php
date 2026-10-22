@@ -20,13 +20,12 @@ use Sulu\Component\Rest\ListBuilder\Metadata\FieldDescriptorFactoryInterface;
 use Sulu\Component\Rest\ListBuilder\PaginatedRepresentation;
 use Sulu\Component\Rest\RestHelperInterface;
 use Sulu\Component\Security\SecuredControllerInterface;
-use Sulu\Content\Domain\Exception\ContentNotFoundException;
-use Sulu\Content\Domain\Exception\UnavailableContentTransitionException;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Content\Domain\Model\WorkflowInterface;
 use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushStamp;
-use Sulu\Product\Application\Message\ApplyWorkflowTransitionProductMessage;
+use Sulu\Product\Application\Message\ApplyProductComponentTransitionMessage;
 use Sulu\Product\Application\Message\ModifyProductComponentsMessage;
+use Sulu\Product\Domain\Exception\ProductComponentTransitionUnavailableException;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
 use Sulu\Product\Domain\Model\ProductComponentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
@@ -46,7 +45,8 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
  *
  * The components are the ordered `components` of the parent's draft content, so every write replaces
  * that list through its own message. That keeps the workflow of the parent as it is.
- * Publishing acts on the component product itself, never on the parent.
+ * A row is published by copying it to the live content of the parent,
+ * which changes no workflow place, neither of the parent nor of the component product.
  *
  * @internal
  */
@@ -99,8 +99,12 @@ final class ProductComponentController implements SecuredControllerInterface
         /** @var array{_embedded: array{product_components: array<int, array<string, mixed>>}} $list */
         $list = $listRepresentation->toArray();
         foreach ($list['_embedded'][ProductInterface::LIST_KEY_COMPONENTS] as &$item) {
-            // the admin expects a boolean, the list builder returns the raw workflow place
-            $item['publishedState'] = WorkflowInterface::WORKFLOW_PLACE_PUBLISHED === ($item['publishedState'] ?? null);
+            // The list returns the id of the live row. A row is published when the parent has it in its live
+            // content and is live in this locale, which the publish date of that live content tells.
+            $item['publishedState'] = null !== ($item['publishedState'] ?? null) && null !== ($item['published'] ?? null);
+            if (!$item['publishedState']) {
+                $item['published'] = null;
+            }
         }
 
         return new JsonResponse($this->normalizer->normalize($list, 'json'));
@@ -168,7 +172,7 @@ final class ProductComponentController implements SecuredControllerInterface
     }
 
     /**
-     * Publishes or unpublishes the component product itself; the parent is never touched.
+     * Publishes or unpublishes one component row. No workflow transition is applied to any product.
      */
     public function postTriggerAction(Request $request, string $parentId, string $id): Response
     {
@@ -183,11 +187,11 @@ final class ProductComponentController implements SecuredControllerInterface
             ], 400);
         }
 
-        $message = new ApplyWorkflowTransitionProductMessage(['uuid' => $id], $this->getLocale($request), $action);
+        $message = new ApplyProductComponentTransitionMessage(['uuid' => $parentId], $this->getLocale($request), $id, $action);
 
         try {
             $this->handle(new Envelope($message, [new EnableFlushStamp()]));
-        } catch (UnavailableContentTransitionException|ContentNotFoundException $e) {
+        } catch (ProductComponentTransitionUnavailableException $e) {
             return new JsonResponse(['detail' => $e->getMessage()], 409);
         }
 

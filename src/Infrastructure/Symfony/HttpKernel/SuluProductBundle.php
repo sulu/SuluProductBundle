@@ -33,6 +33,7 @@ use Sulu\Product\Application\Mapper\ProductFamilyMapper;
 use Sulu\Product\Application\Mapper\ProductFamilyMapperInterface;
 use Sulu\Product\Application\Mapper\ProductMapperInterface;
 use Sulu\Product\Application\Mapper\ProductParentMapper;
+use Sulu\Product\Application\MessageHandler\ApplyProductComponentTransitionMessageHandler;
 use Sulu\Product\Application\MessageHandler\ApplyWorkflowTransitionProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\CopyLocaleProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\CreateAttributeGroupMessageHandler;
@@ -576,6 +577,14 @@ final class SuluProductBundle extends AbstractBundle
             ->args([
                 new Reference('sulu_product.product_repository'),
                 new Reference('sulu_product.product_components_data_mapper'),
+                new Reference('sulu_activity.domain_event_collector'),
+            ])
+            ->tag('messenger.message_handler');
+
+        $services->set('sulu_product.apply_product_component_transition_handler')
+            ->class(ApplyProductComponentTransitionMessageHandler::class)
+            ->args([
+                new Reference('sulu_product.product_repository'),
                 new Reference('sulu_activity.domain_event_collector'),
             ])
             ->tag('messenger.message_handler');
