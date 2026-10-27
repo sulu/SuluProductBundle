@@ -31,6 +31,7 @@ use Sulu\Product\Domain\Model\ProductFamilyAttribute;
 use Sulu\Product\Domain\Model\ProductFamilyTranslation;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
+use Sulu\Product\Domain\Value\ProductFamilyAttributeModeEnum;
 
 class ModifyProductFamilyMessageHandlerTest extends TestCase
 {
@@ -62,7 +63,7 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
     }
 
     /**
-     * @param list<array{id: string, required: bool, mode: 'shared'|'variantSpecific'|'overridable'}> $attributes
+     * @param list<array{id: string, required: bool, mode: value-of<ProductFamilyAttributeModeEnum>}> $attributes
      */
     private function message(string $uuid, string $name, ?string $description = null, array $attributes = []): ModifyProductFamilyMessage
     {
@@ -223,12 +224,12 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
         $this->attributeRepository->findOneBy(['uuid' => 'uuid-7'])->willReturn($attribute);
 
         ($this->createHandler())($this->message('f', 'Name', null, [
-            ['id' => 'uuid-7', 'required' => false, 'mode' => 'variantSpecific'],
+            ['id' => 'uuid-7', 'required' => false, 'mode' => 'variant_specific'],
         ]));
 
         $familyAttributes = $family->getFamilyAttributes();
         $this->assertCount(1, $familyAttributes);
-        $this->assertSame('variantSpecific', $familyAttributes[0]->getMode());
+        $this->assertSame(ProductFamilyAttributeModeEnum::VARIANT_SPECIFIC, $familyAttributes[0]->getMode());
     }
 
     public function testUpdatesVariantOnExistingFamilyAttribute(): void
@@ -236,7 +237,7 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
         $family = new ProductFamily();
         $attribute = $this->attributeWithUuid('uuid-7');
         $existing = new ProductFamilyAttribute($family, $attribute);
-        $existing->setMode('shared');
+        $existing->setMode(ProductFamilyAttributeModeEnum::SHARED);
         $family->addFamilyAttribute($existing);
 
         $this->familyRepository->getOneBy(['uuid' => 'f'])->willReturn($family);
@@ -244,9 +245,9 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
         $this->attributeRepository->findOneBy(['uuid' => 'uuid-7'])->shouldNotBeCalled();
 
         ($this->createHandler())($this->message('f', 'Name', null, [
-            ['id' => 'uuid-7', 'required' => false, 'mode' => 'variantSpecific'],
+            ['id' => 'uuid-7', 'required' => false, 'mode' => 'variant_specific'],
         ]));
 
-        $this->assertSame('variantSpecific', $existing->getMode());
+        $this->assertSame(ProductFamilyAttributeModeEnum::VARIANT_SPECIFIC, $existing->getMode());
     }
 }

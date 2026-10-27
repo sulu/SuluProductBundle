@@ -52,7 +52,7 @@ class WebsiteProductAttributesReindexProviderEnhancerTest extends SuluTestCase
 
         $familyId = $this->createProductFamily([
             $weightId => [],
-            $colourId => ['mode' => 'variantSpecific'],
+            $colourId => ['mode' => 'variant_specific'],
             $noteId => [],
         ]);
         $parentId = $this->createProduct($familyId, 'Cable', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);

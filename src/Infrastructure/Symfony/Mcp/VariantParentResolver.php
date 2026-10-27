@@ -15,11 +15,11 @@ namespace Sulu\Product\Infrastructure\Symfony\Mcp;
 
 use Sulu\Product\Domain\Exception\InvalidVariantParentException;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
-use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Domain\Value\ProductFamilyAttributeModeEnum;
 
 /**
  * ProductParentMapper never checks the parent's type, so the variant rules of
@@ -114,7 +114,7 @@ final readonly class VariantParentResolver
     public function stripInheritedAttributes(ProductFamilyInterface $family, array $attributes): array
     {
         foreach ($family->getFamilyAttributes() as $familyAttribute) {
-            if (ProductFamilyAttributeInterface::MODE_SHARED === $familyAttribute->getMode()) {
+            if (ProductFamilyAttributeModeEnum::SHARED === $familyAttribute->getMode()) {
                 unset($attributes[$familyAttribute->getAttribute()->getUuid()]);
             }
         }

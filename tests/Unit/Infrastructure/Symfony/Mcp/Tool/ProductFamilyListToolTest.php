@@ -29,6 +29,7 @@ use Sulu\Product\Domain\Model\AttributeTranslation;
 use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductFamilyAttribute;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
+use Sulu\Product\Domain\Value\ProductFamilyAttributeModeEnum;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductFamilyListTool;
 
 #[CoversClass(ProductFamilyListTool::class)]
@@ -101,7 +102,7 @@ final class ProductFamilyListToolTest extends TestCase
         $this->assertTrue($byUuid['material-uuid']['required']);
         $this->assertSame('shared', $byUuid['material-uuid']['mode']);
         $this->assertIsArray($byUuid['colour-uuid']);
-        $this->assertSame('variantSpecific', $byUuid['colour-uuid']['mode']);
+        $this->assertSame('variant_specific', $byUuid['colour-uuid']['mode']);
         $this->assertSame('Colour', $byUuid['colour-uuid']['name']);
     }
 
@@ -161,14 +162,14 @@ final class ProductFamilyListToolTest extends TestCase
 
         $group = new AttributeGroup();
 
-        foreach (['material-uuid' => ['material', 'Material', true, false], 'colour-uuid' => ['colour', 'Colour', false, true]] as $uuid => [$key, $name, $required, $variantSpecific]) {
+        foreach (['material-uuid' => ['material', 'Material', true, ProductFamilyAttributeModeEnum::SHARED], 'colour-uuid' => ['colour', 'Colour', false, ProductFamilyAttributeModeEnum::VARIANT_SPECIFIC]] as $uuid => [$key, $name, $required, $mode]) {
             $attribute = new Attribute($group, $uuid);
             $attribute->setKey($key);
             $attribute->addTranslation(new AttributeTranslation($attribute, 'en', $name));
 
             $familyAttribute = new ProductFamilyAttribute($family, $attribute);
             $familyAttribute->setRequired($required);
-            $familyAttribute->setMode($variantSpecific ? 'variantSpecific' : 'shared');
+            $familyAttribute->setMode($mode);
             $family->addFamilyAttribute($familyAttribute);
         }
 

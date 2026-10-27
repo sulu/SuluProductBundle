@@ -32,6 +32,7 @@ use Sulu\Product\Domain\Model\ProductFamilyAttribute;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Domain\Value\ProductFamilyAttributeModeEnum;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductVariantUpdateTool;
 use Sulu\Product\Infrastructure\Symfony\Mcp\VariantParentResolver;
 use Sulu\Product\Tests\Unit\Fixture\ProjectLocalesFactory;
@@ -207,11 +208,11 @@ final class ProductVariantUpdateToolTest extends TestCase
         $family = new ProductFamily('family-uuid');
 
         $group = new AttributeGroup();
-        foreach (['shared-uuid' => false, 'axis-uuid' => true] as $attributeUuid => $variantSpecific) {
+        foreach (['shared-uuid' => ProductFamilyAttributeModeEnum::SHARED, 'axis-uuid' => ProductFamilyAttributeModeEnum::VARIANT_SPECIFIC] as $attributeUuid => $mode) {
             $attribute = new Attribute($group, $attributeUuid);
 
             $familyAttribute = new ProductFamilyAttribute($family, $attribute);
-            $familyAttribute->setMode($variantSpecific ? 'variantSpecific' : 'shared');
+            $familyAttribute->setMode($mode);
             $family->addFamilyAttribute($familyAttribute);
         }
 

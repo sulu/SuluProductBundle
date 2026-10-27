@@ -29,6 +29,7 @@ use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Domain\Value\ProductFamilyAttributeModeEnum;
 use Sulu\Product\Infrastructure\Symfony\Mcp\VariantParentResolver;
 
 #[CoversClass(VariantParentResolver::class)]
@@ -150,9 +151,9 @@ final class VariantParentResolverTest extends TestCase
     public function testStripInheritedAttributesKeepsAxesAndOverrides(): void
     {
         $family = $this->familyWithAttributes([
-            'shared-uuid' => 'shared', // stripped
-            'axis-uuid' => 'variantSpecific', // kept
-            'override-uuid' => 'overridable', // kept
+            'shared-uuid' => ProductFamilyAttributeModeEnum::SHARED, // stripped
+            'axis-uuid' => ProductFamilyAttributeModeEnum::VARIANT_SPECIFIC, // kept
+            'override-uuid' => ProductFamilyAttributeModeEnum::OVERRIDABLE, // kept
         ]);
 
         $stripped = $this->resolver->stripInheritedAttributes($family, [
@@ -166,7 +167,7 @@ final class VariantParentResolverTest extends TestCase
     }
 
     /**
-     * @param array<string, string> $modeByAttributeUuid
+     * @param array<string, ProductFamilyAttributeModeEnum> $modeByAttributeUuid
      */
     private function familyWithAttributes(array $modeByAttributeUuid): ProductFamilyInterface
     {

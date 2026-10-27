@@ -199,6 +199,16 @@ class AttributeFieldFactoryTest extends TestCase
         self::assertSame($uuid, $this->factory()->buildSchemaProperty($familyAttribute, 'en', 'product')?->getName());
     }
 
+    public function testOverrideKeyIsHyphenFree(): void
+    {
+        self::assertSame('override_0198c3e2000070008000000000000001', AttributeFieldFactory::overrideKey('0198c3e2-0000-7000-8000-000000000001'));
+    }
+
+    public function testOverrideFieldNameCarriesTheAttributePrefix(): void
+    {
+        self::assertSame('attribute_override_0198c3e2000070008000000000000001', AttributeFieldFactory::overrideFieldName('0198c3e2-0000-7000-8000-000000000001'));
+    }
+
     public function testSchemaPropertyIsNullWithoutField(): void
     {
         $attribute = $this->attribute('0198c3e2-0000-7000-8000-000000000007', 'weight', 'unknown', [], 'Weight');

@@ -32,6 +32,21 @@ class AttributeFieldFactory
     // The admin's ProductAttributes container strips this prefix to recover the attribute uuid.
     private const NAME_PREFIX = 'attribute_';
 
+    /**
+     * Key of the "override the product's value" flag of an overridable attribute in the variant's
+     * `attributes`; the form field is named with the prefix. Hyphen-free, so a disabledCondition can
+     * reference the field.
+     */
+    public static function overrideKey(string $attributeUuid): string
+    {
+        return 'override_' . \str_replace('-', '', $attributeUuid);
+    }
+
+    public static function overrideFieldName(string $attributeUuid): string
+    {
+        return self::NAME_PREFIX . self::overrideKey($attributeUuid);
+    }
+
     public function __construct(
         private readonly AttributeTypeRegistry $attributeTypeRegistry,
         private readonly FormMetadataLoaderInterface $formMetadataLoader,

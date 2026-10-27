@@ -28,6 +28,7 @@ use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
+use Sulu\Product\Domain\Value\ProductFamilyAttributeModeEnum;
 
 class CreateProductFamilyMessageHandlerTest extends TestCase
 {
@@ -138,12 +139,12 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
             'name' => 'My Family',
             'key' => 'family',
             'attributes' => [
-                ['id' => 'uuid-7', 'required' => false, 'mode' => 'variantSpecific'],
+                ['id' => 'uuid-7', 'required' => false, 'mode' => 'variant_specific'],
             ],
         ]));
 
         $familyAttributes = $family->getFamilyAttributes();
         $this->assertCount(1, $familyAttributes);
-        $this->assertSame('variantSpecific', $familyAttributes[0]->getMode());
+        $this->assertSame(ProductFamilyAttributeModeEnum::VARIANT_SPECIFIC, $familyAttributes[0]->getMode());
     }
 }

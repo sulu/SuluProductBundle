@@ -13,13 +13,15 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Domain\Model;
 
+use Sulu\Product\Domain\Value\ProductFamilyAttributeModeEnum;
+
 class ProductFamilyAttribute implements ProductFamilyAttributeInterface
 {
     protected int $id;
 
     protected bool $required = false;
 
-    protected string $mode = self::MODE_SHARED;
+    protected ProductFamilyAttributeModeEnum $mode = ProductFamilyAttributeModeEnum::SHARED;
 
     protected ProductFamilyInterface $family;
 
@@ -48,21 +50,13 @@ class ProductFamilyAttribute implements ProductFamilyAttributeInterface
         return $this;
     }
 
-    public function getMode(): string
+    public function getMode(): ProductFamilyAttributeModeEnum
     {
         return $this->mode;
     }
 
-    public function setMode(string $mode): self
+    public function setMode(ProductFamilyAttributeModeEnum $mode): self
     {
-        if (!\in_array($mode, self::MODES, true)) {
-            throw new \InvalidArgumentException(\sprintf(
-                'Unknown family attribute mode "%s", expected one of: %s.',
-                $mode,
-                \implode(', ', self::MODES),
-            ));
-        }
-
         $this->mode = $mode;
 
         return $this;
@@ -71,8 +65,8 @@ class ProductFamilyAttribute implements ProductFamilyAttributeInterface
     public function isAvailable(string $productType): bool
     {
         return match ($productType) {
-            ProductInterface::TYPE_VARIANT => self::MODE_SHARED !== $this->mode,
-            ProductInterface::TYPE_PRODUCT_WITH_VARIANTS => self::MODE_VARIANT_SPECIFIC !== $this->mode,
+            ProductInterface::TYPE_VARIANT => ProductFamilyAttributeModeEnum::SHARED !== $this->mode,
+            ProductInterface::TYPE_PRODUCT_WITH_VARIANTS => ProductFamilyAttributeModeEnum::VARIANT_SPECIFIC !== $this->mode,
             default => true,
         };
     }
@@ -83,7 +77,7 @@ class ProductFamilyAttribute implements ProductFamilyAttributeInterface
             return false;
         }
 
-        return self::MODE_OVERRIDABLE !== $this->mode || ProductInterface::TYPE_VARIANT !== $productType;
+        return ProductFamilyAttributeModeEnum::OVERRIDABLE !== $this->mode || ProductInterface::TYPE_VARIANT !== $productType;
     }
 
     public function getFamily(): ProductFamilyInterface

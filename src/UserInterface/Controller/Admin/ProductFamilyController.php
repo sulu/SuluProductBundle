@@ -27,9 +27,9 @@ use Sulu\Product\Application\Message\ModifyProductFamilyMessage;
 use Sulu\Product\Application\Message\RemoveProductFamilyMessage;
 use Sulu\Product\Domain\Exception\ProductFamilyHasProductsException;
 use Sulu\Product\Domain\Exception\ProductFamilyNotFoundException;
-use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
+use Sulu\Product\Domain\Value\ProductFamilyAttributeModeEnum;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -175,7 +175,7 @@ final class ProductFamilyController implements SecuredControllerInterface
      *   name: string,
      *   description: string|null,
      *   image: array{id: int}|null,
-     *   attributes: list<array{id: string, required: bool, mode: 'shared'|'variantSpecific'|'overridable'}>,
+     *   attributes: list<array{id: string, required: bool, mode: value-of<ProductFamilyAttributeModeEnum>}>,
      * }
      */
     private function getData(Request $request): array
@@ -198,7 +198,7 @@ final class ProductFamilyController implements SecuredControllerInterface
     }
 
     /**
-     * @return list<array{id: string, required: bool, mode: 'shared'|'variantSpecific'|'overridable'}>
+     * @return list<array{id: string, required: bool, mode: value-of<ProductFamilyAttributeModeEnum>}>
      */
     private function extractAttributes(Request $request): array
     {
@@ -220,21 +220,22 @@ final class ProductFamilyController implements SecuredControllerInterface
     }
 
     /**
-     * @return 'shared'|'variantSpecific'|'overridable'
+     * @return value-of<ProductFamilyAttributeModeEnum>
      */
     private function extractMode(mixed $mode): string
     {
         if (null === $mode) {
-            return ProductFamilyAttributeInterface::MODE_SHARED;
+            return ProductFamilyAttributeModeEnum::SHARED->value;
         }
 
-        if (!\is_string($mode) || !\in_array($mode, ProductFamilyAttributeInterface::MODES, true)) {
+        $enum = \is_string($mode) ? ProductFamilyAttributeModeEnum::tryFrom($mode) : null;
+        if (null === $enum) {
             throw new BadRequestHttpException(\sprintf(
                 'Invalid attribute mode, expected one of: %s.',
-                \implode(', ', ProductFamilyAttributeInterface::MODES),
+                \implode(', ', \array_column(ProductFamilyAttributeModeEnum::cases(), 'value')),
             ));
         }
 
-        return $mode;
+        return $enum->value;
     }
 }

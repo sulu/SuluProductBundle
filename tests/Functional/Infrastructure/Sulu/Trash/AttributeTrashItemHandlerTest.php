@@ -78,7 +78,7 @@ class AttributeTrashItemHandlerTest extends SuluTestCase
         $familyId = $this->postForId('/admin/api/product-families.json?locale=en', [
             'key' => 'apparel',
             'name' => 'Apparel',
-            'attributes' => [['id' => $attributeId, 'required' => true, 'mode' => 'variantSpecific']],
+            'attributes' => [['id' => $attributeId, 'required' => true, 'mode' => 'variant_specific']],
         ]);
 
         self::getEntityManager()->createQueryBuilder()
@@ -138,7 +138,7 @@ class AttributeTrashItemHandlerTest extends SuluTestCase
         );
 
         $family = $this->requestJson('GET', '/admin/api/product-families/' . $familyId . '.json?locale=en');
-        $this->assertSame([['id' => $attributeId, 'required' => true, 'mode' => 'variantSpecific']], $family['attributes']);
+        $this->assertSame([['id' => $attributeId, 'required' => true, 'mode' => 'variant_specific']], $family['attributes']);
 
         $this->assertSame(
             ['created', 'modified', 'removed', 'restored'],
@@ -240,7 +240,7 @@ class AttributeTrashItemHandlerTest extends SuluTestCase
         $familyId = $this->postForId('/admin/api/product-families.json?locale=en', [
             'key' => 'apparel',
             'name' => 'Apparel',
-            'attributes' => [['id' => $attributeId, 'required' => true, 'mode' => 'variantSpecific']],
+            'attributes' => [['id' => $attributeId, 'required' => true, 'mode' => 'variant_specific']],
         ]);
 
         $attributeUri = '/admin/api/attributes/' . $attributeId . '.json';
@@ -257,7 +257,7 @@ class AttributeTrashItemHandlerTest extends SuluTestCase
         }
 
         $family = $this->requestJson('GET', $familyUri . '?locale=en');
-        $this->assertSame([['id' => $attributeId, 'required' => true, 'mode' => 'variantSpecific']], $family['attributes']);
+        $this->assertSame([['id' => $attributeId, 'required' => true, 'mode' => 'variant_specific']], $family['attributes']);
     }
 
     public function testRestoreIntoSelectedGroup(): void

@@ -34,6 +34,7 @@ use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
+use Sulu\Product\Domain\Value\ProductFamilyAttributeModeEnum;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeAdmin;
 use Webmozart\Assert\Assert;
 
@@ -55,7 +56,7 @@ use Webmozart\Assert\Assert;
  *     creatorId: int|null,
  *     translations: list<array{locale: string, name: string, description: string|null}>,
  *     options: list<array{uuid: string, key: string, position: int, translations: list<array{locale: string, name: string}>}>,
- *     familyAttributes: list<array{familyUuid: string, required: bool, mode?: string, variantSpecific?: bool}>,
+ *     familyAttributes: list<array{familyUuid: string, required: bool, mode: value-of<ProductFamilyAttributeModeEnum>}>,
  * }
  *
  * @internal
@@ -116,8 +117,8 @@ final class AttributeTrashItemHandler implements
 
         // The database removes these links with the attribute. Scalar results keep them out of the
         // unit of work, where they would still point at the removed attribute.
-        /** @var list<array{familyUuid: string, required: bool, mode: string}> $familyAttributes */
-        $familyAttributes = $this->entityManager->createQueryBuilder()
+        /** @var list<array{familyUuid: string, required: bool, mode: ProductFamilyAttributeModeEnum}> $familyAttributeRows */
+        $familyAttributeRows = $this->entityManager->createQueryBuilder()
             ->select('family.uuid AS familyUuid', 'familyAttribute.required AS required', 'familyAttribute.mode AS mode')
             ->from(ProductFamilyAttribute::class, 'familyAttribute')
             ->innerJoin('familyAttribute.family', 'family')
@@ -126,17 +127,26 @@ final class AttributeTrashItemHandler implements
             ->getQuery()
             ->getArrayResult();
 
+        $familyAttributes = [];
+        foreach ($familyAttributeRows as $familyAttributeRow) {
+            $familyAttributes[] = [
+                'familyUuid' => $familyAttributeRow['familyUuid'],
+                'required' => $familyAttributeRow['required'],
+                'mode' => $familyAttributeRow['mode']->value,
+            ];
+        }
+
         // A family in the trash keeps its link here too, so either one can be restored first.
         /** @var TrashItemInterface $familyTrashItem */
         foreach ($this->entityManager->getRepository(TrashItemInterface::class)->findBy(['resourceKey' => ProductFamilyInterface::RESOURCE_KEY]) as $familyTrashItem) {
-            /** @var list<array{attributeUuid: string, required: bool, mode?: string, variantSpecific?: bool}> $familyTrashLinks */
+            /** @var list<array{attributeUuid: string, required: bool, mode: value-of<ProductFamilyAttributeModeEnum>}> $familyTrashLinks */
             $familyTrashLinks = $familyTrashItem->getRestoreData()['familyAttributes'] ?? [];
             foreach ($familyTrashLinks as $familyTrashLink) {
                 if ($familyTrashLink['attributeUuid'] === $attribute->getUuid()) {
                     $familyAttributes[] = [
                         'familyUuid' => $familyTrashItem->getResourceId(),
                         'required' => $familyTrashLink['required'],
-                        'mode' => FamilyAttributeModeRestoreData::mode($familyTrashLink),
+                        'mode' => $familyTrashLink['mode'],
                     ];
                 }
             }
@@ -238,7 +248,7 @@ final class AttributeTrashItemHandler implements
 
             $familyAttribute = new ProductFamilyAttribute($family, $attribute);
             $familyAttribute->setRequired($familyAttributeData['required']);
-            $familyAttribute->setMode(FamilyAttributeModeRestoreData::mode($familyAttributeData));
+            $familyAttribute->setMode(ProductFamilyAttributeModeEnum::from($familyAttributeData['mode']));
             $family->addFamilyAttribute($familyAttribute);
         }
 

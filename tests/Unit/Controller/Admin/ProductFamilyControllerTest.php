@@ -188,7 +188,7 @@ class ProductFamilyControllerTest extends TestCase
                 $message = $envelope->getMessage();
 
                 return $message instanceof CreateProductFamilyMessage
-                    && [['id' => 'uuid-9', 'required' => false, 'mode' => 'variantSpecific']] === $message->getAttributes();
+                    && [['id' => 'uuid-9', 'required' => false, 'mode' => 'variant_specific']] === $message->getAttributes();
             }),
             Argument::any(),
         )
@@ -206,7 +206,7 @@ class ProductFamilyControllerTest extends TestCase
                 'key' => 'new-family',
                 'description' => null,
                 'attributes' => [
-                    ['id' => 'uuid-9', 'required' => false, 'mode' => 'variantSpecific'],
+                    ['id' => 'uuid-9', 'required' => false, 'mode' => 'variant_specific'],
                 ],
             ],
         );

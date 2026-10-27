@@ -13,7 +13,7 @@
             </options>
         </field>
 
-        <field name="mode" type="string" length="32" nullable="false">
+        <field name="mode" type="string" length="32" nullable="false" enum-type="Sulu\Product\Domain\Value\ProductFamilyAttributeModeEnum">
             <options>
                 <option name="default">shared</option>
             </options>

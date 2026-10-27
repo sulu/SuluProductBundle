@@ -23,6 +23,7 @@ use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Model\ProductFamilyTranslation;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
+use Sulu\Product\Domain\Value\ProductFamilyAttributeModeEnum;
 
 final class ProductFamilyMapper implements ProductFamilyMapperInterface
 {
@@ -128,7 +129,7 @@ final class ProductFamilyMapper implements ProductFamilyMapperInterface
             }
 
             $familyAttribute->setRequired($entry['required']);
-            $familyAttribute->setMode($entry['mode']);
+            $familyAttribute->setMode(ProductFamilyAttributeModeEnum::from($entry['mode']));
         }
     }
 }

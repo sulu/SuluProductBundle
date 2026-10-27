@@ -59,7 +59,7 @@ class ProductAttributesMetadataTest extends SuluTestCase
             'description' => null,
             'attributes' => [
                 ['id' => $weight->getUuid(), 'required' => true, 'mode' => 'shared'],
-                ['id' => $colour->getUuid(), 'required' => false, 'mode' => 'variantSpecific'],
+                ['id' => $colour->getUuid(), 'required' => false, 'mode' => 'variant_specific'],
             ],
         ]) ?: null);
         $this->assertHttpStatusCode(201, $this->client->getResponse());

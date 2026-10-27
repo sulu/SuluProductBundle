@@ -31,6 +31,7 @@ use Sulu\Product\Domain\Model\ProductFamilyAttribute;
 use Sulu\Product\Domain\Model\ProductFamilyTranslation;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
+use Sulu\Product\Domain\Value\ProductFamilyAttributeModeEnum;
 
 class ProductFamilyMapperTest extends TestCase
 {
@@ -254,7 +255,7 @@ class ProductFamilyMapperTest extends TestCase
                 'locale' => 'en',
                 'name' => 'Family',
                 'attributes' => [
-                    ['id' => 'uuid-1', 'required' => false, 'mode' => 'variantSpecific'],
+                    ['id' => 'uuid-1', 'required' => false, 'mode' => 'variant_specific'],
                 ],
             ],
         );
@@ -263,7 +264,7 @@ class ProductFamilyMapperTest extends TestCase
 
         $familyAttributes = $family->getFamilyAttributes();
         self::assertCount(1, $familyAttributes);
-        self::assertSame('variantSpecific', $familyAttributes[0]->getMode());
+        self::assertSame(ProductFamilyAttributeModeEnum::VARIANT_SPECIFIC, $familyAttributes[0]->getMode());
     }
 
     public function testMapAttributesAddsUpdatesAndRemovesByUuid(): void
@@ -294,7 +295,7 @@ class ProductFamilyMapperTest extends TestCase
                 'name' => 'Family',
                 'attributes' => [
                     ['id' => 'uuid-kept', 'required' => true, 'mode' => 'shared'],
-                    ['id' => 'uuid-added', 'required' => false, 'mode' => 'variantSpecific'],
+                    ['id' => 'uuid-added', 'required' => false, 'mode' => 'variant_specific'],
                 ],
             ]
         );
@@ -309,9 +310,9 @@ class ProductFamilyMapperTest extends TestCase
         // "kept" means the same row was updated in place, not removed and re-created from the repository.
         self::assertSame($existing, $familyAttributes[0]);
         self::assertTrue($familyAttributes[0]->isRequired());
-        self::assertSame('shared', $familyAttributes[0]->getMode());
+        self::assertSame(ProductFamilyAttributeModeEnum::SHARED, $familyAttributes[0]->getMode());
         self::assertFalse($familyAttributes[1]->isRequired());
-        self::assertSame('variantSpecific', $familyAttributes[1]->getMode());
+        self::assertSame(ProductFamilyAttributeModeEnum::VARIANT_SPECIFIC, $familyAttributes[1]->getMode());
     }
 
     public function testMapKeySetsKeyWhenUnused(): void

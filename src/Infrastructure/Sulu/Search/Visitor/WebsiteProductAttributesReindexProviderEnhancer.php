@@ -23,7 +23,7 @@ use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeOption;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
-use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
+use Sulu\Product\Domain\Value\ProductFamilyAttributeModeEnum;
 use Symfony\Contracts\Service\ResetInterface;
 
 /**
@@ -33,7 +33,7 @@ use Symfony\Contracts\Service\ResetInterface;
  *     optionKey: string|null,
  *     number: float|null,
  *     text: string|null,
- *     mode: string|null,
+ *     mode: ProductFamilyAttributeModeEnum|null,
  * }
  * @phpstan-type AttributeDefinition array{
  *     key: string,
@@ -199,7 +199,7 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
     {
         $merged = $this->productAttributeValues($productId, $locale);
         foreach (null !== $parentId ? $this->productAttributeValues($parentId, $locale) : [] as $attributeUuid => $valueRow) {
-            if (ProductFamilyAttributeInterface::MODE_VARIANT_SPECIFIC !== $valueRow['mode'] && !isset($merged[$attributeUuid])) {
+            if (ProductFamilyAttributeModeEnum::VARIANT_SPECIFIC !== $valueRow['mode'] && !isset($merged[$attributeUuid])) {
                 $merged[$attributeUuid] = $valueRow;
             }
         }
@@ -251,7 +251,7 @@ final class WebsiteProductAttributesReindexProviderEnhancer implements WebsitePr
      */
     private function loadAttributeValues(array $productIds): array
     {
-        /** @var iterable<array{productId: string, locale: string|null, attributeUuid: string, optionKey: string|null, number: float|null, text: string|null, mode: string|null}> $rows */
+        /** @var iterable<array{productId: string, locale: string|null, attributeUuid: string, optionKey: string|null, number: float|null, text: string|null, mode: ProductFamilyAttributeModeEnum|null}> $rows */
         $rows = $this->entityManager->createQueryBuilder()
             ->from(ProductAttributeValue::class, 'value')
             ->innerJoin('value.productDimensionContent', 'dimensionContent')

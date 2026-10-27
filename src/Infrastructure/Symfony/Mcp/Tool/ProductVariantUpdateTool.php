@@ -68,7 +68,7 @@ final class ProductVariantUpdateTool
     #[McpTool(
         name: 'sulu_product_variant_update',
         title: 'Update Product Variant',
-        description: 'Update a variant of a product. Both the parent UUID and the variant UUID are required, and the variant must actually belong to that parent. The family stays inherited from the parent and cannot be changed here. If the variant has no content in "locale" yet, this call creates that locale. Then pass the localized fields (title, details), because there is nothing to merge into. In "attributes" pass attributes with mode variantSpecific or overridable, keyed by their attribute UUID; they are merged into the existing values and shared attributes are dropped. An empty value on an overridable attribute removes the override, so the variant inherits the parent\'s value again. The variant stays a draft: publish it individually with sulu_content_publish (resourceKey: products, the variant\'s uuid), which only works while its parent is published in that locale. The result carries "resourceKey" ("products").',
+        description: 'Update a variant of a product. Both the parent UUID and the variant UUID are required, and the variant must actually belong to that parent. The family stays inherited from the parent and cannot be changed here. If the variant has no content in "locale" yet, this call creates that locale. Then pass the localized fields (title, details), because there is nothing to merge into. In "attributes" pass attributes with mode variant_specific or overridable, keyed by their attribute UUID; they are merged into the existing values and shared attributes are dropped. An empty value on an overridable attribute removes the override, so the variant inherits the parent\'s value again. The variant stays a draft: publish it individually with sulu_content_publish (resourceKey: products, the variant\'s uuid), which only works while its parent is published in that locale. The result carries "resourceKey" ("products").',
         annotations: new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false),
     )]
     #[DangerousTool('product_write')]
@@ -85,7 +85,7 @@ final class ProductVariantUpdateTool
         #[Schema(description: 'Variant code (SKU). Must stay unique across all products.')]
         ?string $code = null,
         ?string $status = null,
-        #[Schema(type: 'object', description: 'Variant axis values keyed by the attribute UUID, merged into the existing values. Only attributes with mode variantSpecific or overridable are kept.', additionalProperties: true)]
+        #[Schema(type: 'object', description: 'Variant axis values keyed by the attribute UUID, merged into the existing values. Only attributes with mode variant_specific or overridable are kept.', additionalProperties: true)]
         ?array $attributes = null,
         #[Schema(type: 'object', description: 'Detail fields, merged into the existing values.', additionalProperties: true)]
         ?array $details = null,
@@ -169,7 +169,7 @@ final class ProductVariantUpdateTool
         } catch (\Throwable $e) {
             return [
                 'error' => \sprintf('Failed to update variant %s: %s', $uuid, $e->getMessage()),
-                'hint' => 'Verify "code" stays unique and that every required attribute with mode variantSpecific is still set, keyed by its UUID.',
+                'hint' => 'Verify "code" stays unique and that every required attribute with mode variant_specific is still set, keyed by its UUID.',
             ];
         }
     }

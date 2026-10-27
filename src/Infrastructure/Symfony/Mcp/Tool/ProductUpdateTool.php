@@ -125,7 +125,7 @@ final class ProductUpdateTool
             if ($product->isType(ProductInterface::TYPE_VARIANT)) {
                 return [
                     'error' => \sprintf('Product %s is a variant.', $uuid),
-                    'hint' => 'Use sulu_product_variant_update, which keeps the family inherited from the parent and accepts only variantSpecific and overridable attributes.',
+                    'hint' => 'Use sulu_product_variant_update, which keeps the family inherited from the parent and accepts only variant_specific and overridable attributes.',
                 ];
             }
 

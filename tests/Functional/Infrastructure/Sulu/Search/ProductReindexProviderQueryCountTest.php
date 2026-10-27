@@ -125,7 +125,7 @@ class ProductReindexProviderQueryCountTest extends SuluTestCase
             $attributes[] = [
                 'id' => $attributeId,
                 'required' => false,
-                'mode' => 'colour' === $key ? 'variantSpecific' : 'shared',
+                'mode' => 'colour' === $key ? 'variant_specific' : 'shared',
             ];
         }
 

@@ -13,14 +13,17 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Infrastructure\Sulu\Admin;
 
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataVisitorInterface;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\OptionMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\SectionMetadata;
 use Sulu\Product\Domain\Model\AttributeGroupInterface;
 use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
+use Sulu\Product\Domain\Value\ProductFamilyAttributeModeEnum;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
@@ -80,6 +83,14 @@ class ProductAttributesFormMetadataVisitor implements FormMetadataVisitorInterfa
             $group = $familyAttribute->getAttribute()->getGroup();
             $groupUuid = $group->getUuid();
             $sections[$groupUuid] ??= $this->createGroupSection($group, $locale);
+
+            if (ProductInterface::TYPE_VARIANT === $productType
+                && ProductFamilyAttributeModeEnum::OVERRIDABLE === $familyAttribute->getMode()
+            ) {
+                $sections[$groupUuid]->addItem($this->createOverrideToggle($familyAttribute, $locale));
+                $field->setDisabledCondition('!' . AttributeFieldFactory::overrideFieldName($familyAttribute->getAttribute()->getUuid()));
+            }
+
             $sections[$groupUuid]->addItem($field);
         }
 
@@ -123,6 +134,24 @@ class ProductAttributesFormMetadataVisitor implements FormMetadataVisitorInterfa
         }
 
         return null;
+    }
+
+    private function createOverrideToggle(ProductFamilyAttributeInterface $familyAttribute, string $locale): FieldMetadata
+    {
+        $toggle = new FieldMetadata(AttributeFieldFactory::overrideFieldName($familyAttribute->getAttribute()->getUuid()));
+        $toggle->setType('checkbox');
+        $toggle->setColSpan(12);
+        $type = new OptionMetadata();
+        $type->setName('type');
+        $type->setValue('toggler');
+        $toggle->addOption($type);
+
+        $label = new OptionMetadata();
+        $label->setName('label');
+        $label->setTitle($this->translator->trans('sulu_product.override', [], 'admin', $locale), $locale);
+        $toggle->addOption($label);
+
+        return $toggle;
     }
 
     private function createGroupSection(AttributeGroupInterface $group, string $locale): SectionMetadata
