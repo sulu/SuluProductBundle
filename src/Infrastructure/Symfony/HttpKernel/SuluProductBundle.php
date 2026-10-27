@@ -1098,6 +1098,8 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_core.list_builder.field_descriptor_factory'),
                 new Reference('sulu_core.doctrine_list_builder_factory'),
                 new Reference('sulu_core.doctrine_rest_helper'),
+                new Reference('sulu_product.product_attribute_value_repository'),
+                new Reference('sulu_product.attribute_type_registry'),
             ])
             ->tag('sulu.context', ['context' => 'admin']);
 

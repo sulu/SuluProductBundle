@@ -35,6 +35,7 @@ use Sulu\Product\Domain\Model\ProductFamilyAttribute;
 use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
+use Sulu\Product\Domain\Value\ProductFamilyAttributeModeEnum;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeFieldFactory;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAttributesFormMetadataVisitor;
 use Symfony\Component\DependencyInjection\Container;
@@ -130,7 +131,7 @@ class ProductAttributesFormMetadataVisitorTest extends TestCase
         string $uuid,
         string $name,
         AttributeGroupInterface $group,
-        bool $variantSpecific = false,
+        ProductFamilyAttributeModeEnum $mode = ProductFamilyAttributeModeEnum::SHARED,
         bool $required = false,
         array $config = [],
     ): ProductFamilyAttributeInterface {
@@ -152,7 +153,7 @@ class ProductAttributesFormMetadataVisitorTest extends TestCase
             $this->prophesize(ProductFamilyInterface::class)->reveal(),
             $attribute->reveal(),
         );
-        $familyAttribute->setVariantSpecific($variantSpecific);
+        $familyAttribute->setMode($mode);
         $familyAttribute->setRequired($required);
 
         return $familyAttribute;
@@ -206,9 +207,9 @@ class ProductAttributesFormMetadataVisitorTest extends TestCase
         $dimensions = $this->group('group-uuid-1', 'Dimensions');
         $electrical = $this->group('group-uuid-2', 'Electrical');
         $this->productFamilyRepository->findOneBy(['uuid' => 'family-1'], self::FAMILY_SELECT)->willReturn($this->family([
-            $this->familyAttribute('0198c3e2-0000-7000-8000-000000000007', 'Weight', $dimensions, false, true),
-            $this->familyAttribute('0198c3e2-0000-7000-8000-000000000008', 'Colour', $dimensions, true),
-            $this->familyAttribute('0198c3e2-0000-7000-8000-000000000009', 'Voltage', $electrical, false, false, ['unit' => 'VOLT']),
+            $this->familyAttribute('0198c3e2-0000-7000-8000-000000000007', 'Weight', $dimensions, ProductFamilyAttributeModeEnum::SHARED, true),
+            $this->familyAttribute('0198c3e2-0000-7000-8000-000000000008', 'Colour', $dimensions, ProductFamilyAttributeModeEnum::VARIANT_SPECIFIC),
+            $this->familyAttribute('0198c3e2-0000-7000-8000-000000000009', 'Voltage', $electrical, ProductFamilyAttributeModeEnum::SHARED, false, ['unit' => 'VOLT']),
         ]));
         $form = $this->form();
 
@@ -241,7 +242,7 @@ class ProductAttributesFormMetadataVisitorTest extends TestCase
         $group = $this->group();
         $this->productFamilyRepository->findOneBy(['uuid' => 'family-1'], self::FAMILY_SELECT)->willReturn($this->family([
             $this->familyAttribute('0198c3e2-0000-7000-8000-000000000007', 'Weight', $group),
-            $this->familyAttribute('0198c3e2-0000-7000-8000-000000000008', 'Colour', $group, true),
+            $this->familyAttribute('0198c3e2-0000-7000-8000-000000000008', 'Colour', $group, ProductFamilyAttributeModeEnum::VARIANT_SPECIFIC),
         ]));
         $form = $this->form();
 
@@ -252,12 +253,56 @@ class ProductAttributesFormMetadataVisitorTest extends TestCase
         self::assertSame(['attribute_0198c3e2-0000-7000-8000-000000000008'], \array_keys($section->getItems()));
     }
 
+    public function testVariantGetsAnOverrideToggleInFrontOfAnOverridableAttribute(): void
+    {
+        $group = $this->group();
+        $uuid = '0198c3e2-0000-7000-8000-000000000007';
+        $this->productFamilyRepository->findOneBy(['uuid' => 'family-1'], self::FAMILY_SELECT)->willReturn($this->family([
+            $this->familyAttribute($uuid, 'Colour', $group, ProductFamilyAttributeModeEnum::OVERRIDABLE),
+        ]));
+        $form = $this->form();
+
+        $this->visitor()->visitFormMetadata($form, 'en', ['productFamily' => 'family-1', 'productType' => 'variant']);
+
+        $section = $form->getItems()['attribute_group_group-uuid-1'];
+        self::assertInstanceOf(SectionMetadata::class, $section);
+        $toggleName = AttributeFieldFactory::overrideFieldName($uuid);
+        self::assertSame([$toggleName, 'attribute_' . $uuid], \array_keys($section->getItems()));
+
+        $toggle = $section->getItems()[$toggleName];
+        self::assertInstanceOf(FieldMetadata::class, $toggle);
+        self::assertSame('checkbox', $toggle->getType());
+        self::assertSame(12, $toggle->getColSpan());
+        self::assertSame('toggler', $toggle->findOption('type')?->getValue());
+        self::assertSame('Attributes', $toggle->findOption('label')?->getTitle('en'));
+
+        $field = $section->getItems()['attribute_' . $uuid];
+        self::assertInstanceOf(FieldMetadata::class, $field);
+        self::assertSame('!' . $toggleName, $field->getDisabledCondition());
+    }
+
+    public function testProductGetsNoOverrideToggleForAnOverridableAttribute(): void
+    {
+        $group = $this->group();
+        $uuid = '0198c3e2-0000-7000-8000-000000000007';
+        $this->productFamilyRepository->findOneBy(['uuid' => 'family-1'], self::FAMILY_SELECT)->willReturn($this->family([
+            $this->familyAttribute($uuid, 'Colour', $group, ProductFamilyAttributeModeEnum::OVERRIDABLE),
+        ]));
+        $form = $this->form();
+
+        $this->visitor()->visitFormMetadata($form, 'en', ['productFamily' => 'family-1', 'productType' => 'product']);
+
+        $section = $form->getItems()['attribute_group_group-uuid-1'];
+        self::assertInstanceOf(SectionMetadata::class, $section);
+        self::assertSame(['attribute_' . $uuid], \array_keys($section->getItems()));
+    }
+
     public function testProductWithoutVariantsKeepsSharedAndAxisAttributes(): void
     {
         $group = $this->group();
         $this->productFamilyRepository->findOneBy(['uuid' => 'family-1'], self::FAMILY_SELECT)->willReturn($this->family([
             $this->familyAttribute('0198c3e2-0000-7000-8000-000000000007', 'Weight', $group),
-            $this->familyAttribute('0198c3e2-0000-7000-8000-000000000008', 'Colour', $group, true),
+            $this->familyAttribute('0198c3e2-0000-7000-8000-000000000008', 'Colour', $group, ProductFamilyAttributeModeEnum::VARIANT_SPECIFIC),
         ]));
         $form = $this->form();
 
@@ -284,7 +329,7 @@ class ProductAttributesFormMetadataVisitorTest extends TestCase
         $group = $this->group();
         $this->productFamilyRepository->findOneBy(['uuid' => 'family-1'], self::FAMILY_SELECT)->willReturn($this->family([
             $this->familyAttribute('0198c3e2-0000-7000-8000-000000000007', 'Weight', $group),
-            $this->familyAttribute('0198c3e2-0000-7000-8000-000000000008', 'Colour', $group, true),
+            $this->familyAttribute('0198c3e2-0000-7000-8000-000000000008', 'Colour', $group, ProductFamilyAttributeModeEnum::VARIANT_SPECIFIC),
         ]));
         $form = $this->form();
 

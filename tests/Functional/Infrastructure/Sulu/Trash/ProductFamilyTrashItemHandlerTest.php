@@ -61,12 +61,12 @@ class ProductFamilyTrashItemHandlerTest extends SuluTestCase
             'name' => 'Apparel',
             'description' => 'Clothing',
             'image' => ['id' => $mediaId],
-            'attributes' => [['id' => $attributeId, 'required' => true, 'variantSpecific' => false]],
+            'attributes' => [['id' => $attributeId, 'required' => true, 'mode' => 'shared']],
         ]);
         $this->requestJson('PUT', '/admin/api/product-families/' . $familyId . '.json?locale=de', [
             'name' => 'Bekleidung',
             'image' => ['id' => $mediaId],
-            'attributes' => [['id' => $attributeId, 'required' => true, 'variantSpecific' => false]],
+            'attributes' => [['id' => $attributeId, 'required' => true, 'mode' => 'shared']],
         ]);
 
         self::getEntityManager()->createQueryBuilder()
@@ -96,7 +96,7 @@ class ProductFamilyTrashItemHandlerTest extends SuluTestCase
         $this->assertNotNull($restoredEntity);
         $this->assertSame('2020-01-02 03:04:05', $restoredEntity->getCreated()->format('Y-m-d H:i:s'));
         $this->assertSame(['id' => $mediaId], $data['image']);
-        $this->assertSame([['id' => $attributeId, 'required' => true, 'variantSpecific' => false]], $data['attributes']);
+        $this->assertSame([['id' => $attributeId, 'required' => true, 'mode' => 'shared']], $data['attributes']);
         $this->assertSame('Bekleidung', $this->requestJson('GET', '/admin/api/product-families/' . $familyId . '.json?locale=de')['name']);
 
         $this->assertSame(
@@ -124,7 +124,7 @@ class ProductFamilyTrashItemHandlerTest extends SuluTestCase
         $familyId = $this->postForId('/admin/api/product-families.json?locale=en', [
             'key' => 'apparel',
             'name' => 'Apparel',
-            'attributes' => [['id' => $attributeId, 'required' => true, 'variantSpecific' => false]],
+            'attributes' => [['id' => $attributeId, 'required' => true, 'mode' => 'shared']],
         ]);
 
         $this->client->request('DELETE', '/admin/api/product-families/' . $familyId . '.json');

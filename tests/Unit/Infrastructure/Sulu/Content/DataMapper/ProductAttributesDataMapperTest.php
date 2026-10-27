@@ -33,6 +33,7 @@ use Sulu\Product\Domain\Model\ProductFamilyAttribute;
 use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
+use Sulu\Product\Domain\Value\ProductFamilyAttributeModeEnum;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductAttributesDataMapper;
 
 #[CoversClass(ProductAttributesDataMapper::class)]
@@ -149,7 +150,7 @@ class ProductAttributesDataMapperTest extends TestCase
         /** @var ObjectProphecy<ProductFamilyAttributeInterface> $familyAttribute */
         $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
         $familyAttribute->getAttribute()->willReturn($attribute->reveal());
-        $familyAttribute->isRequired()->willReturn(false);
+        $familyAttribute->isRequiredFor(Argument::any())->willReturn(false);
 
         /** @var ObjectProphecy<ProductFamilyInterface> $family */
         $family = $this->prophesize(ProductFamilyInterface::class);
@@ -186,7 +187,7 @@ class ProductAttributesDataMapperTest extends TestCase
         /** @var ObjectProphecy<ProductFamilyAttributeInterface> $familyAttribute */
         $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
         $familyAttribute->getAttribute()->willReturn($attribute->reveal());
-        $familyAttribute->isRequired()->willReturn(false);
+        $familyAttribute->isRequiredFor(Argument::any())->willReturn(false);
 
         /** @var ObjectProphecy<ProductFamilyInterface> $family */
         $family = $this->prophesize(ProductFamilyInterface::class);
@@ -245,7 +246,7 @@ class ProductAttributesDataMapperTest extends TestCase
         /** @var ObjectProphecy<ProductFamilyAttributeInterface> $familyAttribute */
         $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
         $familyAttribute->getAttribute()->willReturn($attribute->reveal());
-        $familyAttribute->isRequired()->willReturn(false);
+        $familyAttribute->isRequiredFor(Argument::any())->willReturn(false);
 
         /** @var ObjectProphecy<ProductFamilyInterface> $family */
         $family = $this->prophesize(ProductFamilyInterface::class);
@@ -296,7 +297,7 @@ class ProductAttributesDataMapperTest extends TestCase
         /** @var ObjectProphecy<ProductFamilyAttributeInterface> $familyAttribute */
         $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
         $familyAttribute->getAttribute()->willReturn($attribute->reveal());
-        $familyAttribute->isRequired()->willReturn(false);
+        $familyAttribute->isRequiredFor(Argument::any())->willReturn(false);
 
         /** @var ObjectProphecy<ProductFamilyInterface> $family */
         $family = $this->prophesize(ProductFamilyInterface::class);
@@ -373,6 +374,27 @@ class ProductAttributesDataMapperTest extends TestCase
         $this->addToAssertionCount(1);
     }
 
+    public function testVariantDoesNotRequireAnOverridableAttribute(): void
+    {
+        $fixture = $this->makeProductFixture(self::UUID, required: true, productType: ProductInterface::TYPE_VARIANT, mode: ProductFamilyAttributeModeEnum::OVERRIDABLE);
+        $fixture['unloc_prophecy']->addAttribute(Argument::cetera())->shouldNotBeCalled();
+
+        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [self::UUID => null]]);
+
+        $this->addToAssertionCount(1);
+    }
+
+    public function testProductWithVariantsRequiresAnOverridableAttribute(): void
+    {
+        $fixture = $this->makeProductFixture(self::UUID, required: true, productType: ProductInterface::TYPE_PRODUCT_WITH_VARIANTS, mode: ProductFamilyAttributeModeEnum::OVERRIDABLE);
+        $fixture['unloc_prophecy']->addAttribute(Argument::cetera())->shouldNotBeCalled();
+
+        $this->expectException(RequiredProductAttributeMissingException::class);
+        $this->expectExceptionMessage('attr-1');
+
+        $this->mapper->map($fixture['unloc'], $fixture['loc'], ['attributes' => [self::UUID => null]]);
+    }
+
     private function prophesizeNonVariantResource(): ProductInterface
     {
         /** @var ObjectProphecy<ProductInterface> $resource */
@@ -398,6 +420,7 @@ class ProductAttributesDataMapperTest extends TestCase
         bool $localized = false,
         bool $isVariantAttribute = false,
         string $productType = ProductInterface::TYPE_PRODUCT,
+        ?ProductFamilyAttributeModeEnum $mode = null,
     ): array {
         /** @var ObjectProphecy<AttributeInterface> $attribute */
         $attribute = $this->prophesize(AttributeInterface::class);
@@ -411,7 +434,7 @@ class ProductAttributesDataMapperTest extends TestCase
             $this->prophesize(ProductFamilyInterface::class)->reveal(),
             $attribute->reveal(),
         );
-        $familyAttribute->setVariantSpecific($isVariantAttribute);
+        $familyAttribute->setMode($mode ?? ($isVariantAttribute ? ProductFamilyAttributeModeEnum::VARIANT_SPECIFIC : ProductFamilyAttributeModeEnum::SHARED));
         $familyAttribute->setRequired($required);
 
         /** @var ObjectProphecy<ProductFamilyInterface> $family */

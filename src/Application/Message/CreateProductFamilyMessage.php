@@ -13,11 +13,13 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Application\Message;
 
+use Sulu\Product\Domain\Value\ProductFamilyAttributeModeEnum;
+
 /**
  * @phpstan-type ProductFamilyAttributeMessageData array{
  *     id: string,
  *     required: bool,
- *     variantSpecific: bool,
+ *     mode: value-of<ProductFamilyAttributeModeEnum>,
  * }
  * @phpstan-type CreateProductFamilyMessageData array{
  *     locale: string,

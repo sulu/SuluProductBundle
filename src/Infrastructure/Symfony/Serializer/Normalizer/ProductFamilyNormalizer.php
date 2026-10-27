@@ -43,7 +43,7 @@ final class ProductFamilyNormalizer implements NormalizerInterface
             $attributes[] = [
                 'id' => $familyAttribute->getAttribute()->getUuid(),
                 'required' => $familyAttribute->isRequired(),
-                'variantSpecific' => $familyAttribute->isVariantSpecific(),
+                'mode' => $familyAttribute->getMode()->value,
             ];
         }
 

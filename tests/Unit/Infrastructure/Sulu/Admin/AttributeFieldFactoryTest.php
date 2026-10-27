@@ -136,7 +136,7 @@ class AttributeFieldFactoryTest extends TestCase
     {
         $familyAttribute = $this->prophesize(ProductFamilyAttributeInterface::class);
         $familyAttribute->getAttribute()->willReturn($attribute);
-        $familyAttribute->isRequired()->willReturn($required);
+        $familyAttribute->isRequiredFor('product')->willReturn($required);
 
         return $familyAttribute;
     }
@@ -146,7 +146,7 @@ class AttributeFieldFactoryTest extends TestCase
         $attribute = $this->attribute('0198c3e2-0000-7000-8000-000000000001', 'color', AttributeInterface::TYPE_TEXT, [], 'Color');
         $familyAttribute = $this->familyAttribute($attribute->reveal());
 
-        self::assertNull($this->factory()->build($familyAttribute->reveal(), 'en'));
+        self::assertNull($this->factory()->build($familyAttribute->reveal(), 'en', 'product'));
     }
 
     public function testReturnsNullWhenTemplateIsNotFormMetadata(): void
@@ -156,7 +156,7 @@ class AttributeFieldFactoryTest extends TestCase
 
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])->willReturn(null);
 
-        self::assertNull($this->factory()->build($familyAttribute->reveal(), 'en'));
+        self::assertNull($this->factory()->build($familyAttribute->reveal(), 'en', 'product'));
     }
 
     public function testReturnsNullWhenTemplateHasNoValueField(): void
@@ -169,7 +169,7 @@ class AttributeFieldFactoryTest extends TestCase
 
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])->willReturn($fragment);
 
-        self::assertNull($this->factory()->build($familyAttribute->reveal(), 'en'));
+        self::assertNull($this->factory()->build($familyAttribute->reveal(), 'en', 'product'));
     }
 
     public function testBuildsSchemaPropertyKeyedByAttributeUuid(): void
@@ -179,7 +179,7 @@ class AttributeFieldFactoryTest extends TestCase
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
             ->willReturn($this->fragmentWithValueField());
 
-        $property = $this->factory()->buildSchemaProperty($familyAttribute->reveal(), 'en');
+        $property = $this->factory()->buildSchemaProperty($familyAttribute->reveal(), 'en', 'product');
 
         self::assertNotNull($property);
         self::assertSame('0198c3e2-0000-7000-8000-000000000007', $property->getName());
@@ -195,8 +195,18 @@ class AttributeFieldFactoryTest extends TestCase
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
             ->willReturn($this->fragmentWithValueField());
 
-        self::assertSame('attribute_' . $uuid, $this->factory()->build($familyAttribute, 'en')?->getName());
-        self::assertSame($uuid, $this->factory()->buildSchemaProperty($familyAttribute, 'en')?->getName());
+        self::assertSame('attribute_' . $uuid, $this->factory()->build($familyAttribute, 'en', 'product')?->getName());
+        self::assertSame($uuid, $this->factory()->buildSchemaProperty($familyAttribute, 'en', 'product')?->getName());
+    }
+
+    public function testOverrideKeyIsHyphenFree(): void
+    {
+        self::assertSame('override_0198c3e2000070008000000000000001', AttributeFieldFactory::overrideKey('0198c3e2-0000-7000-8000-000000000001'));
+    }
+
+    public function testOverrideFieldNameCarriesTheAttributePrefix(): void
+    {
+        self::assertSame('attribute_override_0198c3e2000070008000000000000001', AttributeFieldFactory::overrideFieldName('0198c3e2-0000-7000-8000-000000000001'));
     }
 
     public function testSchemaPropertyIsNullWithoutField(): void
@@ -204,7 +214,7 @@ class AttributeFieldFactoryTest extends TestCase
         $attribute = $this->attribute('0198c3e2-0000-7000-8000-000000000007', 'weight', 'unknown', [], 'Weight');
         $familyAttribute = $this->familyAttribute($attribute->reveal());
 
-        self::assertNull($this->factory()->buildSchemaProperty($familyAttribute->reveal(), 'en'));
+        self::assertNull($this->factory()->buildSchemaProperty($familyAttribute->reveal(), 'en', 'product'));
     }
 
     public function testBuildsFieldWithTranslationForRequestedLocaleAndNoUnit(): void
@@ -215,7 +225,7 @@ class AttributeFieldFactoryTest extends TestCase
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
             ->willReturn($this->fragmentWithValueField());
 
-        $field = $this->factory()->build($familyAttribute->reveal(), 'en');
+        $field = $this->factory()->build($familyAttribute->reveal(), 'en', 'product');
 
         self::assertNotNull($field);
         self::assertSame('attribute_0198c3e2-0000-7000-8000-000000000007', $field->getName());
@@ -247,7 +257,7 @@ class AttributeFieldFactoryTest extends TestCase
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
             ->willReturn($this->fragmentWithValueField());
 
-        $field = $this->factory()->build($familyAttribute->reveal(), 'en');
+        $field = $this->factory()->build($familyAttribute->reveal(), 'en', 'product');
 
         self::assertNotNull($field);
 
@@ -263,7 +273,7 @@ class AttributeFieldFactoryTest extends TestCase
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
             ->willReturn($this->fragmentWithValueField());
 
-        $field = $this->factory()->build($familyAttribute->reveal(), 'en');
+        $field = $this->factory()->build($familyAttribute->reveal(), 'en', 'product');
 
         self::assertNotNull($field);
 
@@ -278,7 +288,7 @@ class AttributeFieldFactoryTest extends TestCase
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
             ->willReturn($this->fragmentWithValueField());
 
-        $field = $this->factory()->build($familyAttribute->reveal(), 'en');
+        $field = $this->factory()->build($familyAttribute->reveal(), 'en', 'product');
 
         self::assertNotNull($field);
         self::assertSame('attribute_0198c3e2-0000-7000-8000-000000000004', $field->getName());
@@ -294,7 +304,7 @@ class AttributeFieldFactoryTest extends TestCase
         $this->formMetadataLoader->getMetadata('product_attribute_number', 'en', [])
             ->willReturn($this->fragmentWithValueField());
 
-        $field = $this->factory()->build($familyAttribute->reveal(), 'en');
+        $field = $this->factory()->build($familyAttribute->reveal(), 'en', 'product');
 
         self::assertNotNull($field);
         self::assertSame('Length', $field->getLabel('en'));

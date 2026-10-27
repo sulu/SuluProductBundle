@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Domain\Model;
 
+use Sulu\Product\Domain\Value\ProductFamilyAttributeModeEnum;
+
 interface ProductFamilyAttributeInterface
 {
     public function getId(): int;
@@ -21,12 +23,15 @@ interface ProductFamilyAttributeInterface
 
     public function setRequired(bool $required): self;
 
-    public function isVariantSpecific(): bool;
+    public function getMode(): ProductFamilyAttributeModeEnum;
 
-    public function setVariantSpecific(bool $variantSpecific): self;
+    public function setMode(ProductFamilyAttributeModeEnum $mode): self;
 
     /** Whether a product of that type holds this attribute. */
     public function isAvailable(string $productType): bool;
+
+    /** Whether a product of that type has to carry a value; an overridable one is required on the product only. */
+    public function isRequiredFor(string $productType): bool;
 
     public function getFamily(): ProductFamilyInterface;
 

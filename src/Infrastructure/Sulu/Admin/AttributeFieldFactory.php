@@ -32,6 +32,21 @@ class AttributeFieldFactory
     // The admin's ProductAttributes container strips this prefix to recover the attribute uuid.
     private const NAME_PREFIX = 'attribute_';
 
+    /**
+     * Key of the "override the product's value" flag of an overridable attribute in the variant's
+     * `attributes`; the form field is named with the prefix. Hyphen-free, so a disabledCondition can
+     * reference the field.
+     */
+    public static function overrideKey(string $attributeUuid): string
+    {
+        return 'override_' . \str_replace('-', '', $attributeUuid);
+    }
+
+    public static function overrideFieldName(string $attributeUuid): string
+    {
+        return self::NAME_PREFIX . self::overrideKey($attributeUuid);
+    }
+
     public function __construct(
         private readonly AttributeTypeRegistry $attributeTypeRegistry,
         private readonly FormMetadataLoaderInterface $formMetadataLoader,
@@ -45,9 +60,9 @@ class AttributeFieldFactory
      *
      * @return PropertyMetadata|null null when the attribute has no field
      */
-    public function buildSchemaProperty(ProductFamilyAttributeInterface $familyAttribute, string $locale): ?PropertyMetadata
+    public function buildSchemaProperty(ProductFamilyAttributeInterface $familyAttribute, string $locale, string $productType): ?PropertyMetadata
     {
-        $field = $this->buildField($familyAttribute, $locale, $familyAttribute->getAttribute()->getUuid());
+        $field = $this->buildField($familyAttribute, $locale, $productType, $familyAttribute->getAttribute()->getUuid());
         if (null === $field) {
             return null;
         }
@@ -60,11 +75,12 @@ class AttributeFieldFactory
     /**
      * @return FieldMetadata|null null when the attribute's type is unknown or has no form fragment
      */
-    public function build(ProductFamilyAttributeInterface $familyAttribute, string $locale): ?FieldMetadata
+    public function build(ProductFamilyAttributeInterface $familyAttribute, string $locale, string $productType): ?FieldMetadata
     {
         return $this->buildField(
             $familyAttribute,
             $locale,
+            $productType,
             self::NAME_PREFIX . $familyAttribute->getAttribute()->getUuid(),
         );
     }
@@ -75,6 +91,7 @@ class AttributeFieldFactory
     private function buildField(
         ProductFamilyAttributeInterface $familyAttribute,
         string $locale,
+        string $productType,
         string $name,
     ): ?FieldMetadata {
         $attribute = $familyAttribute->getAttribute();
@@ -96,7 +113,7 @@ class AttributeFieldFactory
 
         $field = $this->cloneFieldWithName($template, $name);
         $field->setLabel($this->buildLabel($translation?->getName() ?? $attribute->getKey(), $attribute->getConfig()), $locale);
-        $field->setRequired($familyAttribute->isRequired());
+        $field->setRequired($familyAttribute->isRequiredFor($productType));
 
         $description = $translation?->getDescription();
         if (null !== $description) {

@@ -34,6 +34,7 @@ use Sulu\Product\Domain\Model\ProductFamilyAttribute;
 use Sulu\Product\Domain\Model\ProductFamilyAttributeInterface;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
+use Sulu\Product\Domain\Value\ProductFamilyAttributeModeEnum;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeFieldFactory;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAttributesSchemaFormMetadataVisitor;
 use Symfony\Component\DependencyInjection\Container;
@@ -93,7 +94,7 @@ class ProductAttributesSchemaFormMetadataVisitorTest extends TestCase
      */
     private function familyAttribute(
         string $uuid,
-        bool $variantSpecific = false,
+        ProductFamilyAttributeModeEnum $mode = ProductFamilyAttributeModeEnum::SHARED,
         bool $required = false,
         array $config = [],
         string $type = AttributeInterface::TYPE_NUMBER,
@@ -115,7 +116,7 @@ class ProductAttributesSchemaFormMetadataVisitorTest extends TestCase
             $this->prophesize(ProductFamilyInterface::class)->reveal(),
             $attribute->reveal(),
         );
-        $familyAttribute->setVariantSpecific($variantSpecific);
+        $familyAttribute->setMode($mode);
         $familyAttribute->setRequired($required);
 
         return $familyAttribute;
@@ -147,8 +148,8 @@ class ProductAttributesSchemaFormMetadataVisitorTest extends TestCase
     {
         $this->productFamilyRepository->findBy([], self::FAMILY_SELECT)->willReturn([
             $this->family('family-1', [
-                $this->familyAttribute('0198c3e2-0000-7000-8000-000000000007', false, true, ['min' => 0, 'max' => 10]),
-                $this->familyAttribute('0198c3e2-0000-7000-8000-000000000008', true),
+                $this->familyAttribute('0198c3e2-0000-7000-8000-000000000007', ProductFamilyAttributeModeEnum::SHARED, true, ['min' => 0, 'max' => 10]),
+                $this->familyAttribute('0198c3e2-0000-7000-8000-000000000008', ProductFamilyAttributeModeEnum::VARIANT_SPECIFIC),
                 $this->familyAttribute('0198c3e2-0000-7000-8000-000000000009'),
             ]),
             $this->family('family-2', [$this->familyAttribute('0198c3e2-0000-7000-8000-000000000010')]),
@@ -187,7 +188,7 @@ class ProductAttributesSchemaFormMetadataVisitorTest extends TestCase
     public function testDetailsFormRequiresAVariantAttributeOnlyOnAProductWithoutVariants(): void
     {
         $this->productFamilyRepository->findBy([], self::FAMILY_SELECT)->willReturn([
-            $this->family('family-1', [$this->familyAttribute('0198c3e2-0000-7000-8000-000000000008', true, true)]),
+            $this->family('family-1', [$this->familyAttribute('0198c3e2-0000-7000-8000-000000000008', ProductFamilyAttributeModeEnum::VARIANT_SPECIFIC, true)]),
         ]);
         $form = $this->form('product_details');
 
@@ -260,8 +261,8 @@ class ProductAttributesSchemaFormMetadataVisitorTest extends TestCase
     {
         $this->productFamilyRepository->findOneBy(['productUuid' => 'product-1'], self::FAMILY_SELECT)->willReturn(
             $this->family('family-1', [
-                $this->familyAttribute('0198c3e2-0000-7000-8000-000000000007', false, true),
-                $this->familyAttribute('0198c3e2-0000-7000-8000-000000000008', true, true),
+                $this->familyAttribute('0198c3e2-0000-7000-8000-000000000007', ProductFamilyAttributeModeEnum::SHARED, true),
+                $this->familyAttribute('0198c3e2-0000-7000-8000-000000000008', ProductFamilyAttributeModeEnum::VARIANT_SPECIFIC, true),
             ]),
         );
         $form = $this->form('product_variant');
@@ -290,7 +291,7 @@ class ProductAttributesSchemaFormMetadataVisitorTest extends TestCase
     public function testVariantFormKeepsTheAttributesSectionForAxisAttributes(): void
     {
         $this->productFamilyRepository->findOneBy(['productUuid' => 'product-1'], self::FAMILY_SELECT)->willReturn(
-            $this->family('family-1', [$this->familyAttribute('0198c3e2-0000-7000-8000-000000000008', true)]),
+            $this->family('family-1', [$this->familyAttribute('0198c3e2-0000-7000-8000-000000000008', ProductFamilyAttributeModeEnum::VARIANT_SPECIFIC)]),
         );
         $form = $this->variantFormWithAttributesSection();
 
@@ -349,7 +350,7 @@ class ProductAttributesSchemaFormMetadataVisitorTest extends TestCase
     public function testDetailsFormSkipsTheProductWithVariantsBranchOfAFamilyWithoutSharedAttributes(): void
     {
         $this->productFamilyRepository->findBy([], self::FAMILY_SELECT)->willReturn([
-            $this->family('family-axis-only', [$this->familyAttribute('0198c3e2-0000-7000-8000-000000000007', true)]),
+            $this->family('family-axis-only', [$this->familyAttribute('0198c3e2-0000-7000-8000-000000000007', ProductFamilyAttributeModeEnum::VARIANT_SPECIFIC)]),
             $this->family('family-2', [$this->familyAttribute('0198c3e2-0000-7000-8000-000000000010')]),
         ]);
         $form = $this->form('product_details');
@@ -376,7 +377,7 @@ class ProductAttributesSchemaFormMetadataVisitorTest extends TestCase
     {
         $this->productFamilyRepository->findBy([], self::FAMILY_SELECT)->willReturn([
             $this->family('family-1', [
-                $this->familyAttribute('0198c3e2-0000-7000-8000-000000000007', false, false, [], AttributeInterface::TYPE_TEXT),
+                $this->familyAttribute('0198c3e2-0000-7000-8000-000000000007', ProductFamilyAttributeModeEnum::SHARED, false, [], AttributeInterface::TYPE_TEXT),
                 $this->familyAttribute('0198c3e2-0000-7000-8000-000000000010'),
             ]),
         ]);

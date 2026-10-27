@@ -13,13 +13,15 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Domain\Model;
 
+use Sulu\Product\Domain\Value\ProductFamilyAttributeModeEnum;
+
 class ProductFamilyAttribute implements ProductFamilyAttributeInterface
 {
     protected int $id;
 
     protected bool $required = false;
 
-    protected bool $variantSpecific = false;
+    protected ProductFamilyAttributeModeEnum $mode = ProductFamilyAttributeModeEnum::SHARED;
 
     protected ProductFamilyInterface $family;
 
@@ -48,14 +50,14 @@ class ProductFamilyAttribute implements ProductFamilyAttributeInterface
         return $this;
     }
 
-    public function isVariantSpecific(): bool
+    public function getMode(): ProductFamilyAttributeModeEnum
     {
-        return $this->variantSpecific;
+        return $this->mode;
     }
 
-    public function setVariantSpecific(bool $variantSpecific): self
+    public function setMode(ProductFamilyAttributeModeEnum $mode): self
     {
-        $this->variantSpecific = $variantSpecific;
+        $this->mode = $mode;
 
         return $this;
     }
@@ -63,10 +65,19 @@ class ProductFamilyAttribute implements ProductFamilyAttributeInterface
     public function isAvailable(string $productType): bool
     {
         return match ($productType) {
-            ProductInterface::TYPE_VARIANT => $this->variantSpecific,
-            ProductInterface::TYPE_PRODUCT_WITH_VARIANTS => !$this->variantSpecific,
+            ProductInterface::TYPE_VARIANT => ProductFamilyAttributeModeEnum::SHARED !== $this->mode,
+            ProductInterface::TYPE_PRODUCT_WITH_VARIANTS => ProductFamilyAttributeModeEnum::VARIANT_SPECIFIC !== $this->mode,
             default => true,
         };
+    }
+
+    public function isRequiredFor(string $productType): bool
+    {
+        if (!$this->required || !$this->isAvailable($productType)) {
+            return false;
+        }
+
+        return ProductFamilyAttributeModeEnum::OVERRIDABLE !== $this->mode || ProductInterface::TYPE_VARIANT !== $productType;
     }
 
     public function getFamily(): ProductFamilyInterface

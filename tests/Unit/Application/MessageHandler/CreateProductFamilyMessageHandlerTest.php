@@ -28,6 +28,7 @@ use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
+use Sulu\Product\Domain\Value\ProductFamilyAttributeModeEnum;
 
 class CreateProductFamilyMessageHandlerTest extends TestCase
 {
@@ -85,7 +86,7 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
             'key' => 'family',
             'description' => 'desc',
             'attributes' => [
-                ['id' => 'uuid-7', 'required' => true, 'variantSpecific' => false],
+                ['id' => 'uuid-7', 'required' => true, 'mode' => 'shared'],
             ],
         ]));
 
@@ -115,7 +116,7 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
             'name' => 'My Family',
             'key' => 'family',
             'attributes' => [
-                ['id' => 'uuid-99', 'required' => false, 'variantSpecific' => false],
+                ['id' => 'uuid-99', 'required' => false, 'mode' => 'shared'],
             ],
         ]));
 
@@ -138,12 +139,12 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
             'name' => 'My Family',
             'key' => 'family',
             'attributes' => [
-                ['id' => 'uuid-7', 'required' => false, 'variantSpecific' => true],
+                ['id' => 'uuid-7', 'required' => false, 'mode' => 'variant_specific'],
             ],
         ]));
 
         $familyAttributes = $family->getFamilyAttributes();
         $this->assertCount(1, $familyAttributes);
-        $this->assertTrue($familyAttributes[0]->isVariantSpecific());
+        $this->assertSame(ProductFamilyAttributeModeEnum::VARIANT_SPECIFIC, $familyAttributes[0]->getMode());
     }
 }

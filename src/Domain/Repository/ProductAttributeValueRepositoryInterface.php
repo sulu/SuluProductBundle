@@ -19,6 +19,8 @@ use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 /**
  * @phpstan-type ProductAttributeValueRepositoryFilters array{
  *     attribute?: AttributeInterface,
+ *     attributeUuids?: list<string>,
+ *     product?: string,
  *     locale?: string,
  *     stage?: string,
  * }

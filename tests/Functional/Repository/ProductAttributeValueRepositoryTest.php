@@ -133,6 +133,43 @@ class ProductAttributeValueRepositoryTest extends SuluTestCase
         $this->assertSame('Brass', $results[0]->getText());
     }
 
+    public function testFindByAttributeUuidsReturnsOnlyValuesOfTheGivenAttributes(): void
+    {
+        $material = $this->createAttribute('material');
+        $finish = $this->createAttribute('finish');
+        $colour = $this->createAttribute('colour');
+
+        [, $dimensionContent] = $this->createProductWithDimensionContent(null, 'live', 0);
+        $this->createValue($material, $dimensionContent, 'Brass');
+        $this->createValue($finish, $dimensionContent, 'Matt');
+        $this->createValue($colour, $dimensionContent, 'Red');
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        $results = $this->repository->findBy(['attributeUuids' => [$material->getUuid(), $colour->getUuid()]]);
+
+        $texts = \array_map(static fn (ProductAttributeValueInterface $value): ?string => $value->getText(), $results);
+        \sort($texts);
+        $this->assertSame(['Brass', 'Red'], $texts);
+    }
+
+    public function testFindByProductReturnsOnlyValuesOfThatProduct(): void
+    {
+        $attribute = $this->createAttribute('material');
+
+        [$product, $dimensionContent] = $this->createProductWithDimensionContent(null, 'live', 0);
+        [, $otherDimensionContent] = $this->createProductWithDimensionContent(null, 'live', 0);
+        $this->createValue($attribute, $dimensionContent, 'Brass');
+        $this->createValue($attribute, $otherDimensionContent, 'Steel');
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        $results = $this->repository->findBy(['product' => $product->getUuid()]);
+
+        $this->assertCount(1, $results);
+        $this->assertSame('Brass', $results[0]->getText());
+    }
+
     public function testFindByStageFiltersOutDraftValues(): void
     {
         $attribute = $this->createAttribute();

@@ -22,6 +22,7 @@ use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductFamilyAttribute;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Model\ProductFamilyTranslation;
+use Sulu\Product\Domain\Value\ProductFamilyAttributeModeEnum;
 use Sulu\Product\Infrastructure\Symfony\Serializer\Normalizer\ProductFamilyNormalizer;
 
 #[CoversClass(ProductFamilyNormalizer::class)]
@@ -114,14 +115,14 @@ class ProductFamilyNormalizerTest extends TestCase
         $family->addFamilyAttribute($familyAttributeColor);
 
         $familyAttributeSize = new ProductFamilyAttribute($family, $attributeSize);
-        $familyAttributeSize->setVariantSpecific(true);
+        $familyAttributeSize->setMode(ProductFamilyAttributeModeEnum::VARIANT_SPECIFIC);
         $family->addFamilyAttribute($familyAttributeSize);
 
         $result = $this->normalizer()->normalize($family, null, ['locale' => 'en']);
 
         $this->assertSame([
-            ['id' => 'uuid-1', 'required' => true, 'variantSpecific' => false],
-            ['id' => 'uuid-2', 'required' => false, 'variantSpecific' => true],
+            ['id' => 'uuid-1', 'required' => true, 'mode' => 'shared'],
+            ['id' => 'uuid-2', 'required' => false, 'mode' => 'variant_specific'],
         ], $result['attributes']);
     }
 

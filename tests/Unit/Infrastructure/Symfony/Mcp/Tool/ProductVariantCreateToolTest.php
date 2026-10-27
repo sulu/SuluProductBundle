@@ -32,6 +32,7 @@ use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Domain\Value\ProductFamilyAttributeModeEnum;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductVariantCreateTool;
 use Sulu\Product\Infrastructure\Symfony\Mcp\VariantParentResolver;
 use Sulu\Product\Tests\Unit\Fixture\ProductUrlHelperFactory;
@@ -77,7 +78,7 @@ final class ProductVariantCreateToolTest extends TestCase
 
     public function testCreateVariantDefaultsTheUrlFromTheTitle(): void
     {
-        $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => ['shared-uuid' => false, 'axis-uuid' => true]]));
+        $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => ['shared-uuid' => ProductFamilyAttributeModeEnum::SHARED, 'axis-uuid' => ProductFamilyAttributeModeEnum::VARIANT_SPECIFIC]]));
         $captured = $this->captureDispatchedMessage(new Product('variant-uuid'));
 
         $this->tool->createProductVariant('en', 'parent-uuid', 'Red XL');
@@ -87,7 +88,7 @@ final class ProductVariantCreateToolTest extends TestCase
 
     public function testCreateVariantKeepsAnExplicitUrl(): void
     {
-        $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => ['shared-uuid' => false, 'axis-uuid' => true]]));
+        $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => ['shared-uuid' => ProductFamilyAttributeModeEnum::SHARED, 'axis-uuid' => ProductFamilyAttributeModeEnum::VARIANT_SPECIFIC]]));
         $captured = $this->captureDispatchedMessage(new Product('variant-uuid'));
 
         $this->tool->createProductVariant('en', 'parent-uuid', 'Red XL', url: '/shop/red-xl');
@@ -110,7 +111,7 @@ final class ProductVariantCreateToolTest extends TestCase
 
     public function testCreateVariantForcesTypeParentAndInheritedFamily(): void
     {
-        $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => ['shared-uuid' => false, 'axis-uuid' => true]]));
+        $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => ['shared-uuid' => ProductFamilyAttributeModeEnum::SHARED, 'axis-uuid' => ProductFamilyAttributeModeEnum::VARIANT_SPECIFIC]]));
         $captured = $this->captureDispatchedMessage(new Product('variant-uuid'));
 
         $result = $this->tool->createProductVariant('en', 'parent-uuid', 'Red / XL');
@@ -130,7 +131,7 @@ final class ProductVariantCreateToolTest extends TestCase
 
     public function testCreateVariantKeepsOnlyVariantSpecificAttributes(): void
     {
-        $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => ['shared-uuid' => false, 'axis-uuid' => true]]));
+        $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => ['shared-uuid' => ProductFamilyAttributeModeEnum::SHARED, 'axis-uuid' => ProductFamilyAttributeModeEnum::VARIANT_SPECIFIC]]));
         $captured = $this->captureDispatchedMessage(new Product('variant-uuid'));
 
         $this->tool->createProductVariant('en', 'parent-uuid', 'Red / XL', attributes: [
@@ -249,7 +250,7 @@ final class ProductVariantCreateToolTest extends TestCase
     }
 
     /**
-     * @param array<string, array<string, bool>> $attributesByFamilyUuid
+     * @param array<string, array<string, ProductFamilyAttributeModeEnum>> $attributesByFamilyUuid
      */
     private function familyWithAttributes(array $attributesByFamilyUuid): ProductFamilyInterface
     {
@@ -257,11 +258,11 @@ final class ProductVariantCreateToolTest extends TestCase
         $family = new ProductFamily($uuid);
 
         $group = new AttributeGroup();
-        foreach ($attributesByFamilyUuid[$uuid] as $attributeUuid => $variantSpecific) {
+        foreach ($attributesByFamilyUuid[$uuid] as $attributeUuid => $mode) {
             $attribute = new Attribute($group, $attributeUuid);
 
             $familyAttribute = new ProductFamilyAttribute($family, $attribute);
-            $familyAttribute->setVariantSpecific($variantSpecific);
+            $familyAttribute->setMode($mode);
             $family->addFamilyAttribute($familyAttribute);
         }
 
@@ -270,7 +271,7 @@ final class ProductVariantCreateToolTest extends TestCase
 
     public function testCreateVariantSendsCodeStatusAndDetails(): void
     {
-        $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => ['shared-uuid' => false]]));
+        $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => ['shared-uuid' => ProductFamilyAttributeModeEnum::SHARED]]));
         $captured = $this->captureDispatchedMessage(new Product('variant-uuid'));
 
         $this->tool->createProductVariant('en', 'parent-uuid', 'Red', code: 'RED-1', status: 'available', details: ['shortDescription' => 'Red']);
@@ -297,7 +298,7 @@ final class ProductVariantCreateToolTest extends TestCase
             ProductUrlHelperFactory::create('route'),
         );
 
-        $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => ['shared-uuid' => false]]));
+        $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => ['shared-uuid' => ProductFamilyAttributeModeEnum::SHARED]]));
         $this->captureDispatchedMessage(new Product('variant-uuid'));
 
         $result = $tool->createProductVariant('en', 'parent-uuid', 'Red');
