@@ -264,6 +264,7 @@ final class ProductRepository implements ProductRepositoryInterface
      *     loadGhost?: bool,
      *     associationTargetUuid?: string,
      *     associationType?: string,
+     *     componentTargetUuid?: string,
      *     parent?: string,
      *     types?: string[],
      *     excludeTypes?: string[],
@@ -500,6 +501,35 @@ final class ProductRepository implements ProductRepositoryInterface
                 ->setParameter('associationStage', $effectiveAttributes['stage'])
                 ->setParameter('associationVersion', $effectiveAttributes['version'])
                 ->setParameter('associationTargetUuid', $associationTargetUuid);
+        }
+
+        $componentTargetUuid = $filters['componentTargetUuid'] ?? null;
+        if (null !== $componentTargetUuid) {
+            Assert::string($componentTargetUuid); // @phpstan-ignore staticMethod.alreadyNarrowedType
+            // Components hang on the unlocalized dimension content, locale and stage restrict the referrers.
+            if (!\array_key_exists('locale', $filters) || !\array_key_exists('stage', $filters)) {
+                throw new \InvalidArgumentException('Filtering by "componentTargetUuid" requires both "locale" and "stage" filters.');
+            }
+
+            $dimensionContentClassName = $this->productDimensionContentClassName;
+            $effectiveAttributes = $dimensionContentClassName::getEffectiveDimensionAttributes($filters);
+
+            // An EXISTS semi-join for the same reason as above: a product can be a component of one referrer several times.
+            $componentQueryBuilder = $this->entityManager->createQueryBuilder()
+                ->select('componentDimensionContent.id')
+                ->from($dimensionContentClassName, 'componentDimensionContent')
+                ->innerJoin('componentDimensionContent.components', 'productComponent')
+                ->where('componentDimensionContent.product = product')
+                ->andWhere('componentDimensionContent.locale IS NULL')
+                ->andWhere('componentDimensionContent.stage = :componentStage')
+                ->andWhere('componentDimensionContent.version = :componentVersion')
+                ->andWhere('IDENTITY(productComponent.component) = :componentTargetUuid');
+
+            $queryBuilder
+                ->andWhere($queryBuilder->expr()->exists($componentQueryBuilder->getDQL()))
+                ->setParameter('componentStage', $effectiveAttributes['stage'])
+                ->setParameter('componentVersion', $effectiveAttributes['version'])
+                ->setParameter('componentTargetUuid', $componentTargetUuid);
         }
 
         // One pass over the caller's keys, so their order is the ORDER BY order.

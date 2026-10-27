@@ -59,6 +59,7 @@ final class ProductCreateTool
     private const CREATABLE_TYPES = [
         ProductInterface::TYPE_PRODUCT,
         ProductInterface::TYPE_PRODUCT_WITH_VARIANTS,
+        ProductInterface::TYPE_CONFIGURABLE_PRODUCT,
     ];
 
     public function __construct(

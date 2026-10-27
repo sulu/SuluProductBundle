@@ -160,11 +160,18 @@ class ProductCacheInvalidationSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $referrers = $this->productRepository->findBy([
-            'associationTargetUuid' => $product->getUuid(),
-            'locale' => $locale,
-            'stage' => DimensionContentInterface::STAGE_LIVE,
-        ]);
+        $referrers = [
+            ...$this->productRepository->findBy([
+                'associationTargetUuid' => $product->getUuid(),
+                'locale' => $locale,
+                'stage' => DimensionContentInterface::STAGE_LIVE,
+            ]),
+            ...$this->productRepository->findBy([
+                'componentTargetUuid' => $product->getUuid(),
+                'locale' => $locale,
+                'stage' => DimensionContentInterface::STAGE_LIVE,
+            ]),
+        ];
 
         foreach ($referrers as $referrer) {
             $this->invalidateProductPaths($referrer->getUuid(), $locale);

@@ -13,8 +13,10 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Infrastructure\Sulu\Content\Resolver;
 
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataLoaderInterface;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\OptionMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\MetadataProviderInterface;
 use Sulu\Bundle\HttpCacheBundle\ReferenceStore\ReferenceStoreInterface;
 use Sulu\Content\Application\ContentResolver\Resolver\ResolverInterface;
@@ -23,10 +25,12 @@ use Sulu\Content\Application\MetadataResolver\MetadataResolver;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductAssociationInterface;
 use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
+use Sulu\Product\Domain\Model\ProductComponentInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\ProductFamilyContentViewFactory;
+use Sulu\Product\Infrastructure\Sulu\Content\PropertyResolver\ProductSelectionPropertyResolver;
 use Sulu\Product\Infrastructure\Sulu\Content\ResourceLoader\ProductResourceLoader;
 use Sulu\Product\Infrastructure\Sulu\Route\CurrentVariantProvider;
 
@@ -43,6 +47,8 @@ class ProductResolver implements ResolverInterface
     private const ASSOCIATIONS_FORM_KEY = 'product_associations';
 
     private const ASSOCIATIONS_FIELD_PREFIX = 'associations/';
+
+    private const COMPONENT_PROPERTIES = ['code', 'status', 'productFamily', 'image', 'shortDescription'];
 
     private const PARENT_PREFIX = 'parent.';
 
@@ -122,6 +128,10 @@ class ProductResolver implements ResolverInterface
                 $this->resolveAssociations($dimensionContent, $locale),
                 [],
             );
+        }
+
+        if ($this->isRequested($requested, 'components')) {
+            $content[$this->outputKey($requested, 'components')] = $this->resolveComponents($dimensionContent, $locale);
         }
 
         $product = $dimensionContent->getResource();
@@ -374,6 +384,37 @@ class ProductResolver implements ResolverInterface
         }
 
         return $this->metadataResolver->resolveItems($items, $data, $locale);
+    }
+
+    /**
+     * The component products in position order, resolved like the target of an association without
+     * project params.
+     */
+    private function resolveComponents(ProductDimensionContentInterface $dimensionContent, string $locale): ContentView
+    {
+        $field = new FieldMetadata('components');
+        $field->setType(ProductSelectionPropertyResolver::getType());
+
+        // what a component card needs, `image` and `shortDescription` being template fields of the product
+        $properties = new OptionMetadata();
+        $properties->setName('properties');
+        $properties->setType(OptionMetadata::TYPE_COLLECTION);
+        $propertyOptions = [];
+        foreach (self::COMPONENT_PROPERTIES as $property) {
+            $option = new OptionMetadata();
+            $option->setName($property);
+            $option->setValue($property);
+            $propertyOptions[] = $option;
+        }
+        $properties->setValue($propertyOptions);
+        $field->addOption($properties);
+
+        $uuids = \array_map(
+            static fn (ProductComponentInterface $component): string => $component->getComponent()->getUuid(),
+            $dimensionContent->getComponents(),
+        );
+
+        return $this->metadataResolver->resolveItems(['components' => $field], ['components' => $uuids], $locale)['components'];
     }
 
     /**

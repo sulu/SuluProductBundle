@@ -25,6 +25,11 @@
                             <title>sulu_product.product_type_product_with_variants</title>
                         </meta>
                     </param>
+                    <param name="configurable_product">
+                        <meta>
+                            <title>sulu_product.product_type_configurable_product</title>
+                        </meta>
+                    </param>
                 </param>
             </params>
         </property>

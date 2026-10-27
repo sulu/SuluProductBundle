@@ -110,7 +110,8 @@ class ProductAttributesFormMetadataVisitor implements FormMetadataVisitorInterfa
     private function resolveProductType(array $metadataOptions): string
     {
         return match ($metadataOptions['productType'] ?? null) {
-            ProductInterface::TYPE_PRODUCT => ProductInterface::TYPE_PRODUCT,
+            ProductInterface::TYPE_PRODUCT,
+            ProductInterface::TYPE_CONFIGURABLE_PRODUCT => ProductInterface::TYPE_PRODUCT,
             ProductInterface::TYPE_VARIANT => ProductInterface::TYPE_VARIANT,
             default => ProductInterface::TYPE_PRODUCT_WITH_VARIANTS,
         };

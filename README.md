@@ -52,12 +52,52 @@ The action calls `POST /admin/api/products/{parentId}/variants/{id}?action=publi
 a variant that was never published or publishing one whose product is not published. The list
 shows the reason for each variant it could not change.
 
+A component of a configurable product is a row of the parent, and the row has its own draft and live
+state. A new row is a draft. "Publish" copies that one row to the live content of the parent, "Unpublish"
+removes it from there. Neither action applies a workflow transition to the parent or to the
+component product, and the other rows stay as they are. It calls
+`POST /admin/api/products/{parentId}/components/{id}?action=publish` (or `unpublish`) with the
+component's uuid as `id`, and `PUT` with the same query parameter does the same. It answers `404`
+when the product is not a component of the parent. It answers `409` when the parent is not
+published in the locale, the row is already published (or not published, for `unpublish`). The
+list shows a row as published when it is in the live content of the parent and the parent is live in
+the list locale. The `published` date of a row is the date of that live content.
+
 ## Variant attributes
 
 A family attribute with the "variant" toggle is held by the product that carries the article: a
 variant, or a product without variants. A product with variants holds only the shared attributes,
 a variant only the variant attributes. The details form, its schema and the required check follow
 the product type.
+
+## Configurable products
+
+A product of the type `configurable_product` is sold as one product, with its own code, route and
+attributes like a plain product. Instead of the "Variants" tab it has a "Components" tab. The tab
+is a list with an "Add" button, like the variants. "Add" and a click on a row open an overlay with
+one product selection. Variants cannot be selected, and a product is a component at most once.
+The list shows the components sorted by product family name, then in the order they were added.
+The overlay has a placeholder field "Rules" of the type `component_rules`. It has no admin
+implementation yet, so the admin shows its "unknown field type" bar, and the controller ignores the
+posted value.
+
+The components are not associations. Each one is a row of its own in `pr_product_components`, with
+its own id, a position and the component product. The rows belong to the dimension content of the
+product and are shared by all locales. Unlike the associations they do not follow the publish workflow
+of the product. Publishing, unpublishing, restoring or copying the product never copies the draft rows
+to live and never removes live rows. Only the publish and unpublish action of a row changes its live
+state, and the live rows stay when a locale of the product is unpublished. Removing a draft row
+leaves its live row until it is unpublished. A project adds the table with its own migration. A product can be a component
+only once for now, but the table has no unique constraint, because rules will later attach to the
+single rows.
+
+The tab reads and writes through the admin API `/admin/api/products/{id}/components`. Each write
+replaces the ordered `components` list of the product, a list of product uuids. The same list can
+be sent as `components` in the data of a modify or create message.
+
+On the website `product.components` is a requestable property like `associations`. It resolves
+the component products in their order, each with `title`, `url`, `code`, `status`, `productFamily`, `image` and
+`shortDescription`.
 
 ## Product in the website
 
