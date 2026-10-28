@@ -189,7 +189,7 @@ class ProductFamilyRepositoryTest extends SuluTestCase
     public function testFindByLimitAndPageReturnsTheRequestedSlice(): void
     {
         for ($i = 0; $i < 5; ++$i) {
-            $this->repository->save($this->repository->create());
+            $this->repository->save($this->repository->createNew());
         }
         $this->entityManager->flush();
         $this->entityManager->clear();
@@ -222,8 +222,8 @@ class ProductFamilyRepositoryTest extends SuluTestCase
 
     public function testCountByCountsAllFamilies(): void
     {
-        $this->repository->save($this->repository->create());
-        $this->repository->save($this->repository->create());
+        $this->repository->save($this->repository->createNew());
+        $this->repository->save($this->repository->createNew());
         $this->entityManager->flush();
         $this->entityManager->clear();
 
@@ -232,10 +232,10 @@ class ProductFamilyRepositoryTest extends SuluTestCase
 
     public function testCountByAppliesTheFilters(): void
     {
-        $family = $this->repository->create();
+        $family = $this->repository->createNew();
         $family->setExternalIdentifier('shoes');
         $this->repository->save($family);
-        $this->repository->save($this->repository->create());
+        $this->repository->save($this->repository->createNew());
         $this->entityManager->flush();
         $this->entityManager->clear();
 
@@ -246,7 +246,7 @@ class ProductFamilyRepositoryTest extends SuluTestCase
     public function testCountByIgnoresPageAndLimit(): void
     {
         for ($i = 0; $i < 3; ++$i) {
-            $this->repository->save($this->repository->create());
+            $this->repository->save($this->repository->createNew());
         }
         $this->entityManager->flush();
         $this->entityManager->clear();
