@@ -464,7 +464,7 @@ class ProductDetailPageDataTest extends SuluTestCase
             \ksort($options);
 
             $graph[$attribute->getKey()] = [
-                'value' => $value->getValue(),
+                'value' => $value->getValueKey(),
                 'text' => $value->getText(),
                 'number' => $value->getNumber(),
                 'optionKey' => $value->getAttributeOptionKey(),
@@ -650,7 +650,7 @@ class ProductDetailPageDataTest extends SuluTestCase
             $attributeRepository->save($attribute);
 
             $this->attributeIds[$key] = $attribute->getUuid();
-            $familyAttributes[] = ['id' => $attribute->getUuid(), 'required' => false, 'variantSpecific' => 'colour' === $key];
+            $familyAttributes[] = ['id' => $attribute->getUuid(), 'required' => false, 'mode' => 'colour' === $key ? 'variant_specific' : 'shared'];
         }
 
         $this->entityManager()->flush();
