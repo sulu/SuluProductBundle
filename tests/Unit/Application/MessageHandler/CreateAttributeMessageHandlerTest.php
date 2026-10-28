@@ -72,7 +72,7 @@ class CreateAttributeMessageHandlerTest extends TestCase
         $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid-1'])->willReturn($group);
         $this->attributeRepository->createNew($group)->shouldBeCalledOnce()->willReturn($attribute);
         $this->attributeRepository->findNextPositionInGroup($group)->willReturn(0);
-        $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
+        $this->attributeRepository->add($attribute)->shouldBeCalledOnce();
 
         $result = ($this->createHandler())(new CreateAttributeMessage([
             'locale' => 'en',
@@ -101,7 +101,7 @@ class CreateAttributeMessageHandlerTest extends TestCase
         $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid-1'])->willReturn($group);
         $this->attributeRepository->createNew($group)->willReturn($attribute);
         $this->attributeRepository->findNextPositionInGroup($group)->willReturn(0);
-        $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
+        $this->attributeRepository->add($attribute)->shouldBeCalledOnce();
 
         $result = ($this->createHandler())(new CreateAttributeMessage([
             'locale' => 'en',
@@ -134,7 +134,7 @@ class CreateAttributeMessageHandlerTest extends TestCase
         $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid-1'])->willReturn($group);
         $this->attributeRepository->createNew($group)->willReturn($attribute);
         $this->attributeRepository->findNextPositionInGroup($group)->willReturn(0);
-        $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
+        $this->attributeRepository->add($attribute)->shouldBeCalledOnce();
 
         $result = ($this->createHandler())(new CreateAttributeMessage([
             'locale' => 'en',
@@ -165,7 +165,7 @@ class CreateAttributeMessageHandlerTest extends TestCase
         $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid-1'])->willReturn($group);
         $this->attributeRepository->createNew($group)->willReturn($attribute);
         $this->attributeRepository->findNextPositionInGroup($group)->willReturn(0);
-        $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
+        $this->attributeRepository->add($attribute)->shouldBeCalledOnce();
 
         $result = ($this->createHandler())(new CreateAttributeMessage([
             'locale' => 'en',
@@ -187,7 +187,7 @@ class CreateAttributeMessageHandlerTest extends TestCase
         $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid-1'])->willReturn($group);
         $this->attributeRepository->createNew($group)->willReturn($attribute);
         $this->attributeRepository->findByGroupWithPositionAtLeast($group, 5)->willReturn([]);
-        $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
+        $this->attributeRepository->add($attribute)->shouldBeCalledOnce();
 
         ($this->createHandler())(new CreateAttributeMessage([
             'locale' => 'en',
@@ -207,7 +207,7 @@ class CreateAttributeMessageHandlerTest extends TestCase
         $attribute = new Attribute($group);
 
         $this->attributeRepository->createNew($group)->willReturn($attribute);
-        $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
+        $this->attributeRepository->add($attribute)->shouldBeCalledOnce();
         $this->attributeRepository->findNextPositionInGroup($group)->willReturn(0);
         $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid-1'])->willReturn($group);
 
@@ -229,7 +229,7 @@ class CreateAttributeMessageHandlerTest extends TestCase
         $attribute = new Attribute($group);
 
         $this->attributeRepository->createNew($group)->willReturn($attribute);
-        $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
+        $this->attributeRepository->add($attribute)->shouldBeCalledOnce();
         $this->attributeRepository->findNextPositionInGroup($group)->willReturn(5);
         $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid-1'])->willReturn($group);
 
@@ -253,7 +253,7 @@ class CreateAttributeMessageHandlerTest extends TestCase
         $displaced->setPosition(2);
 
         $this->attributeRepository->createNew($group)->willReturn($attribute);
-        $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
+        $this->attributeRepository->add($attribute)->shouldBeCalledOnce();
         $this->attributeRepository->findByGroupWithPositionAtLeast($group, 2)->willReturn([$displaced]);
         $this->attributeGroupRepository->findOneBy(['uuid' => 'group-uuid-1'])->willReturn($group);
 

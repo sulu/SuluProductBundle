@@ -42,7 +42,7 @@ final class CreateProductFamilyMessageHandler
             $productFamilyMapper->mapProductFamilyData($family, $message);
         }
 
-        $this->productFamilyRepository->save($family);
+        $this->productFamilyRepository->add($family);
 
         $this->domainEventCollector->collect(
             new ProductFamilyCreatedEvent($family, $message->getLocale(), $message->getData()),

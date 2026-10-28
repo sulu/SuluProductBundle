@@ -80,7 +80,7 @@ class ModifyAttributeGroupMessageHandlerTest extends TestCase
 
         $this->attributeGroupRepository->getOneBy(['uuid' => 'group-uuid'])
             ->willReturn($group);
-        $this->attributeGroupRepository->save($group)->shouldBeCalledOnce();
+        $this->attributeGroupRepository->add($group)->shouldBeCalledOnce();
 
         $handler = $this->createHandler();
 
@@ -103,7 +103,7 @@ class ModifyAttributeGroupMessageHandlerTest extends TestCase
 
         $this->attributeGroupRepository->getOneBy(['uuid' => 'group-uuid'])
             ->willReturn($group);
-        $this->attributeGroupRepository->save($group)->shouldBeCalledOnce();
+        $this->attributeGroupRepository->add($group)->shouldBeCalledOnce();
 
         $handler = $this->createHandler();
 

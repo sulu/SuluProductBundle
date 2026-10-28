@@ -94,7 +94,7 @@ class ProductFamilyRepositoryTest extends SuluTestCase
         $translation = new ProductFamilyTranslation($family, 'en', 'My Family');
         $translation->setDescription('A description');
         $family->addTranslation($translation);
-        $this->repository->save($family);
+        $this->repository->add($family);
         $this->entityManager->flush();
 
         $uuid = $family->getUuid();
@@ -110,7 +110,7 @@ class ProductFamilyRepositoryTest extends SuluTestCase
         $family = $this->repository->createNew();
         $family->setKey(\uniqid('family-'));
         $family->setExternalIdentifier('ext-family-1');
-        $this->repository->save($family);
+        $this->repository->add($family);
         $this->entityManager->flush();
         $this->entityManager->clear();
 
@@ -123,7 +123,7 @@ class ProductFamilyRepositoryTest extends SuluTestCase
     {
         $family = $this->repository->createNew();
         $family->setKey(\uniqid('family-'));
-        $this->repository->save($family);
+        $this->repository->add($family);
 
         $product = $this->productRepository->createNew();
         $pdc = $product->createDimensionContent();
@@ -146,13 +146,13 @@ class ProductFamilyRepositoryTest extends SuluTestCase
     {
         $family1 = $this->repository->createNew();
         $family1->setKey(\uniqid('family-'));
-        $this->repository->save($family1);
+        $this->repository->add($family1);
         $family2 = $this->repository->createNew();
         $family2->setKey(\uniqid('family-'));
-        $this->repository->save($family2);
+        $this->repository->add($family2);
         $family3 = $this->repository->createNew();
         $family3->setKey(\uniqid('family-'));
-        $this->repository->save($family3);
+        $this->repository->add($family3);
         $this->entityManager->flush();
 
         $uuid1 = $family1->getUuid();
@@ -174,7 +174,7 @@ class ProductFamilyRepositoryTest extends SuluTestCase
     {
         $family = $this->repository->createNew();
         $family->setKey('shoes');
-        $this->repository->save($family);
+        $this->repository->add($family);
         $this->entityManager->flush();
         $this->entityManager->clear();
 
@@ -279,7 +279,7 @@ class ProductFamilyRepositoryTest extends SuluTestCase
     {
         $family = $this->repository->createNew();
         $family->setKey(\uniqid('family-'));
-        $this->repository->save($family);
+        $this->repository->add($family);
         $this->entityManager->flush();
         $uuid = $family->getUuid();
         $this->entityManager->clear();
@@ -291,7 +291,7 @@ class ProductFamilyRepositoryTest extends SuluTestCase
     {
         $family = $this->repository->createNew();
         $family->setKey(\uniqid('family-'));
-        $this->repository->save($family);
+        $this->repository->add($family);
         $this->entityManager->flush();
         $uuid = $family->getUuid();
 
@@ -432,7 +432,7 @@ class ProductFamilyRepositoryTest extends SuluTestCase
         $keyed = $this->repository->createNew();
         $keyed->setKey('shoes');
         $keyed->addTranslation(new ProductFamilyTranslation($keyed, 'en', 'Shoes'));
-        $this->repository->save($keyed);
+        $this->repository->add($keyed);
         $this->entityManager->flush();
         $this->entityManager->clear();
 
@@ -445,7 +445,7 @@ class ProductFamilyRepositoryTest extends SuluTestCase
         $group = $this->attributeGroupRepository->createNew();
         $group->setDefaultLocale('de');
         $group->addTranslation(new AttributeGroupTranslation($group, 'de', 'Farbe & Form'));
-        $this->attributeGroupRepository->save($group);
+        $this->attributeGroupRepository->add($group);
 
         $attribute = $this->attributeRepository->createNew($group);
         $attribute->setKey($key);
@@ -456,12 +456,12 @@ class ProductFamilyRepositoryTest extends SuluTestCase
         $option = new AttributeOption($attribute, 'red');
         $option->addTranslation(new AttributeOptionTranslation($option, 'de', 'Rot'));
         $attribute->addOption($option);
-        $this->attributeRepository->save($attribute);
+        $this->attributeRepository->add($attribute);
 
         $family = $this->repository->createNew();
         $family->setKey(\uniqid('family-'));
         $family->addFamilyAttribute(new ProductFamilyAttribute($family, $attribute));
-        $this->repository->save($family);
+        $this->repository->add($family);
         $this->entityManager->flush();
 
         $uuid = $family->getUuid();

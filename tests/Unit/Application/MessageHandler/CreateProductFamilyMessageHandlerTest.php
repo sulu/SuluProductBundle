@@ -74,7 +74,7 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
         $family = new ProductFamily();
         $this->familyRepository->createNew()->willReturn($family);
         $this->familyRepository->findOneBy(['key' => 'family'])->willReturn(null);
-        $this->familyRepository->save($family)->shouldBeCalledOnce();
+        $this->familyRepository->add($family)->shouldBeCalledOnce();
 
         $attribute = $this->attributeWithUuid('uuid-7');
         $this->attributeRepository->findOneBy(['uuid' => 'uuid-7'])->willReturn($attribute);
@@ -107,7 +107,7 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
         $family = new ProductFamily();
         $this->familyRepository->createNew()->willReturn($family);
         $this->familyRepository->findOneBy(['key' => 'family'])->willReturn(null);
-        $this->familyRepository->save($family)->shouldBeCalledOnce();
+        $this->familyRepository->add($family)->shouldBeCalledOnce();
         $this->attributeRepository->findOneBy(['uuid' => 'uuid-99'])->willReturn(null);
 
         $handler = $this->createHandler();
@@ -128,7 +128,7 @@ class CreateProductFamilyMessageHandlerTest extends TestCase
         $family = new ProductFamily();
         $this->familyRepository->createNew()->willReturn($family);
         $this->familyRepository->findOneBy(['key' => 'family'])->willReturn(null);
-        $this->familyRepository->save($family)->shouldBeCalledOnce();
+        $this->familyRepository->add($family)->shouldBeCalledOnce();
 
         $attribute = $this->attributeWithUuid('uuid-7');
         $this->attributeRepository->findOneBy(['uuid' => 'uuid-7'])->willReturn($attribute);

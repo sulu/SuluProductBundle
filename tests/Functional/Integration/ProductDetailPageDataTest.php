@@ -617,12 +617,12 @@ class ProductDetailPageDataTest extends SuluTestCase
         $appearance = $groupRepository->createNew();
         $appearance->addTranslation(new AttributeGroupTranslation($appearance, 'en', 'Appearance'));
         $appearance->addTranslation(new AttributeGroupTranslation($appearance, 'de', 'Aussehen'));
-        $groupRepository->save($appearance);
+        $groupRepository->add($appearance);
 
         $technical = $groupRepository->createNew();
         $technical->addTranslation(new AttributeGroupTranslation($technical, 'en', 'Technical data'));
         $technical->addTranslation(new AttributeGroupTranslation($technical, 'de', 'Technische Daten'));
-        $groupRepository->save($technical);
+        $groupRepository->add($technical);
 
         $definitions = [
             ['colour', $appearance, AttributeInterface::TYPE_OPTIONS, false, ['Colour', 'Farbe'], ['red' => ['Red', 'Rot'], 'blue' => ['Blue', 'Blau'], 'green' => ['Green', 'Grün']]],
@@ -647,7 +647,7 @@ class ProductDetailPageDataTest extends SuluTestCase
                 $option->addTranslation(new AttributeOptionTranslation($option, 'de', $optionDe));
                 $attribute->addOption($option);
             }
-            $attributeRepository->save($attribute);
+            $attributeRepository->add($attribute);
 
             $this->attributeIds[$key] = $attribute->getUuid();
             $familyAttributes[] = ['id' => $attribute->getUuid(), 'required' => false, 'mode' => 'colour' === $key ? 'variant_specific' : 'shared'];

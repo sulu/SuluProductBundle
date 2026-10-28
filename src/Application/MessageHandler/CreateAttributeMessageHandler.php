@@ -44,7 +44,7 @@ final class CreateAttributeMessageHandler
             $attributeMapper->mapAttributeData($attribute, $message);
         }
 
-        $this->attributeRepository->save($attribute);
+        $this->attributeRepository->add($attribute);
 
         $this->domainEventCollector->collect(
             new AttributeCreatedEvent($attribute, $message->getLocale(), $message->getData()),

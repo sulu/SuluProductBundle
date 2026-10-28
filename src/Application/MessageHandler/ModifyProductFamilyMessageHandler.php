@@ -42,7 +42,7 @@ final class ModifyProductFamilyMessageHandler
             $productFamilyMapper->mapProductFamilyData($family, $message);
         }
 
-        $this->productFamilyRepository->save($family);
+        $this->productFamilyRepository->add($family);
 
         $this->domainEventCollector->collect(
             new ProductFamilyModifiedEvent($family, $message->getLocale(), $message->getData()),

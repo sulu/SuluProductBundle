@@ -73,7 +73,7 @@ class ProductAttributeValueRepositoryTest extends SuluTestCase
     private function createAttribute(string $key = 'material'): AttributeInterface
     {
         $group = $this->attributeGroupRepository->createNew();
-        $this->attributeGroupRepository->save($group);
+        $this->attributeGroupRepository->add($group);
 
         $attribute = new Attribute($group);
         $attribute->setKey($key);

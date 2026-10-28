@@ -74,8 +74,8 @@ class AttributeGroupRepositoryTest extends SuluTestCase
         $first->addTranslation(new AttributeGroupTranslation($first, 'en', 'First'));
         $second = $this->repository->createNew();
         $second->addTranslation(new AttributeGroupTranslation($second, 'en', 'Second'));
-        $this->repository->save($second);
-        $this->repository->save($first);
+        $this->repository->add($second);
+        $this->repository->add($first);
         $this->entityManager->flush();
         $this->entityManager->clear();
 
@@ -100,8 +100,8 @@ class AttributeGroupRepositoryTest extends SuluTestCase
 
         $a = $this->repository->createNew();
         $b = $this->repository->createNew();
-        $this->repository->save($a);
-        $this->repository->save($b);
+        $this->repository->add($a);
+        $this->repository->add($b);
         $this->entityManager->flush();
 
         $this->assertCount(2, [...$this->repository->findBy()]);
@@ -113,8 +113,8 @@ class AttributeGroupRepositoryTest extends SuluTestCase
         $a->setExternalIdentifier('group-a');
         $b = $this->repository->createNew();
         $b->setExternalIdentifier('group-b');
-        $this->repository->save($a);
-        $this->repository->save($b);
+        $this->repository->add($a);
+        $this->repository->add($b);
         $this->entityManager->flush();
 
         $filtered = [...$this->repository->findBy(['externalIdentifier' => 'group-b'])];
@@ -135,7 +135,7 @@ class AttributeGroupRepositoryTest extends SuluTestCase
     public function testFindByIgnoresUnknownSortFields(): void
     {
         $group = $this->repository->createNew();
-        $this->repository->save($group);
+        $this->repository->add($group);
         $this->entityManager->flush();
 
         $this->assertCount(1, [...$this->repository->findBy([], ['name; DROP' => 'desc'])]);
@@ -144,7 +144,7 @@ class AttributeGroupRepositoryTest extends SuluTestCase
     public function testSavePersistsAndCanBeFoundByUuid(): void
     {
         $group = $this->repository->createNew();
-        $this->repository->save($group);
+        $this->repository->add($group);
         $this->entityManager->flush();
 
         $uuid = $group->getUuid();
@@ -159,7 +159,7 @@ class AttributeGroupRepositoryTest extends SuluTestCase
     {
         $group = $this->repository->createNew();
         $group->setExternalIdentifier('ext-group-1');
-        $this->repository->save($group);
+        $this->repository->add($group);
         $this->entityManager->flush();
         $this->entityManager->clear();
 
@@ -179,7 +179,7 @@ class AttributeGroupRepositoryTest extends SuluTestCase
         $translation = new AttributeGroupTranslation($group, 'en', 'My Group');
         $translation->setDescription('A description');
         $group->addTranslation($translation);
-        $this->repository->save($group);
+        $this->repository->add($group);
         $this->entityManager->flush();
 
         $uuid = $group->getUuid();
@@ -196,7 +196,7 @@ class AttributeGroupRepositoryTest extends SuluTestCase
     public function testRemoveDeletesFromDatabase(): void
     {
         $group = $this->repository->createNew();
-        $this->repository->save($group);
+        $this->repository->add($group);
         $this->entityManager->flush();
 
         $uuid = $group->getUuid();
@@ -214,7 +214,7 @@ class AttributeGroupRepositoryTest extends SuluTestCase
     public function testGetOneByReturnsGroupWhenFound(): void
     {
         $group = $this->repository->createNew();
-        $this->repository->save($group);
+        $this->repository->add($group);
         $this->entityManager->flush();
 
         $uuid = $group->getUuid();
@@ -234,7 +234,7 @@ class AttributeGroupRepositoryTest extends SuluTestCase
     public function testCountByReturnsZeroForEmptyGroup(): void
     {
         $group = $this->repository->createNew();
-        $this->repository->save($group);
+        $this->repository->add($group);
         $this->entityManager->flush();
 
         $this->assertSame(0, $this->attributeRepository->countBy(['group' => $group]));
@@ -243,13 +243,13 @@ class AttributeGroupRepositoryTest extends SuluTestCase
     public function testCountByCountsLinkedAttributes(): void
     {
         $group = $this->repository->createNew();
-        $this->repository->save($group);
+        $this->repository->add($group);
 
         foreach (['count-attr-a', 'count-attr-b'] as $key) {
             $attribute = $this->attributeRepository->createNew($group);
             $attribute->setKey($key);
             $attribute->setType(AttributeInterface::TYPE_TEXT);
-            $this->attributeRepository->save($attribute);
+            $this->attributeRepository->add($attribute);
         }
 
         $this->entityManager->flush();

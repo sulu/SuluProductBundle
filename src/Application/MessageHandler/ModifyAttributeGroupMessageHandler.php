@@ -41,7 +41,7 @@ final class ModifyAttributeGroupMessageHandler
         }
         $translation->setDescription($message->getDescription());
 
-        $this->attributeGroupRepository->save($group);
+        $this->attributeGroupRepository->add($group);
 
         $this->domainEventCollector->collect(
             new AttributeGroupModifiedEvent($group, $message->getLocale(), $message->getData()),

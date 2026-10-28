@@ -41,7 +41,7 @@ final class CreateAttributeGroupMessageHandler
 
         $group->addTranslation($translation);
 
-        $this->attributeGroupRepository->save($group);
+        $this->attributeGroupRepository->add($group);
 
         $this->domainEventCollector->collect(
             new AttributeGroupCreatedEvent($group, $message->getLocale(), $message->getData()),

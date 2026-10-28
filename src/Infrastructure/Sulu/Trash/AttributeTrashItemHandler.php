@@ -252,7 +252,7 @@ final class AttributeTrashItemHandler implements
             $family->addFamilyAttribute($familyAttribute);
         }
 
-        $this->attributeRepository->save($attribute);
+        $this->attributeRepository->add($attribute);
 
         $this->domainEventCollector->collect(new AttributeRestoredEvent($attribute, $data));
 

@@ -351,13 +351,13 @@ class ProductFamilyControllerTest extends SuluTestCase
         $entityManager = $container->get('doctrine.orm.entity_manager');
 
         $group = $groupRepository->createNew();
-        $groupRepository->save($group);
+        $groupRepository->add($group);
 
         $attribute = $attributeRepository->createNew($group);
         $attribute->setKey($key);
         $attribute->setType(AttributeInterface::TYPE_TEXT);
         $attribute->addTranslation(new AttributeTranslation($attribute, 'en', $name));
-        $attributeRepository->save($attribute);
+        $attributeRepository->add($attribute);
 
         $entityManager->flush();
 

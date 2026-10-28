@@ -42,7 +42,7 @@ interface AttributeGroupRepositoryInterface
      */
     public function getOneBy(array $filters): AttributeGroupInterface;
 
-    public function save(AttributeGroupInterface $group): void;
+    public function add(AttributeGroupInterface $group): void;
 
     public function remove(AttributeGroupInterface $group): void;
 

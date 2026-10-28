@@ -63,7 +63,7 @@ class ProductFamilySelectionTest extends SuluTestCase
         $family->setKey('speakon');
         $family->setExternalIdentifier('SPK');
         $family->addTranslation(new ProductFamilyTranslation($family, 'en', 'speakON'));
-        $repository->save($family);
+        $repository->add($family);
 
         /** @var EntityManagerInterface $entityManager */
         $entityManager = self::getContainer()->get('doctrine.orm.entity_manager');
@@ -104,7 +104,7 @@ class ProductFamilySelectionTest extends SuluTestCase
         $family->setExternalIdentifier('SPK');
         $family->setImage($media);
         $family->addTranslation(new ProductFamilyTranslation($family, 'en', 'speakON'));
-        $familyRepository->save($family);
+        $familyRepository->add($family);
 
         /** @var ProductRepositoryInterface $productRepository */
         $productRepository = $container->get('sulu_product.product_repository');

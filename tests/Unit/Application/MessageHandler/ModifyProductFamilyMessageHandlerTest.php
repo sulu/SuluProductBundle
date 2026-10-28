@@ -101,7 +101,7 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
 
         $family = new ProductFamily();
         $this->familyRepository->getOneBy(['uuid' => 'f'])->willReturn($family);
-        $this->familyRepository->save($family)->shouldBeCalledOnce();
+        $this->familyRepository->add($family)->shouldBeCalledOnce();
 
         ($this->createHandler())($this->message('f', 'Name', 'Desc'));
 
@@ -119,7 +119,7 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
         $family->addTranslation($translation);
 
         $this->familyRepository->getOneBy(['uuid' => 'f'])->willReturn($family);
-        $this->familyRepository->save($family)->shouldBeCalledOnce();
+        $this->familyRepository->add($family)->shouldBeCalledOnce();
 
         ($this->createHandler())($this->message('f', 'New', 'New desc'));
 
@@ -133,7 +133,7 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
         $attribute = $this->attributeWithUuid('uuid-7');
 
         $this->familyRepository->getOneBy(['uuid' => 'f'])->willReturn($family);
-        $this->familyRepository->save($family)->shouldBeCalledOnce();
+        $this->familyRepository->add($family)->shouldBeCalledOnce();
         $this->attributeRepository->findOneBy(['uuid' => 'uuid-7'])->willReturn($attribute);
 
         ($this->createHandler())($this->message('f', 'Name', null, [
@@ -155,7 +155,7 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
         $family->addFamilyAttribute($existing);
 
         $this->familyRepository->getOneBy(['uuid' => 'f'])->willReturn($family);
-        $this->familyRepository->save($family)->shouldBeCalledOnce();
+        $this->familyRepository->add($family)->shouldBeCalledOnce();
         $this->attributeRepository->findOneBy(['uuid' => 'uuid-7'])->shouldNotBeCalled();
 
         ($this->createHandler())($this->message('f', 'Name', null, [
@@ -174,7 +174,7 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
         $family->addFamilyAttribute($keep)->addFamilyAttribute($remove);
 
         $this->familyRepository->getOneBy(['uuid' => 'f'])->willReturn($family);
-        $this->familyRepository->save($family)->shouldBeCalledOnce();
+        $this->familyRepository->add($family)->shouldBeCalledOnce();
 
         ($this->createHandler())($this->message('f', 'Name', null, [
             ['id' => 'uuid-1', 'required' => false, 'mode' => 'shared'],
@@ -192,7 +192,7 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
         $family->addFamilyAttribute($existing);
 
         $this->familyRepository->getOneBy(['uuid' => 'f'])->willReturn($family);
-        $this->familyRepository->save($family)->shouldBeCalledOnce();
+        $this->familyRepository->add($family)->shouldBeCalledOnce();
         $this->attributeRepository->findOneBy(['uuid' => 'uuid-3'])->shouldNotBeCalled();
 
         ($this->createHandler())($this->message('f', 'Name', null, []));
@@ -204,7 +204,7 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
     {
         $family = new ProductFamily();
         $this->familyRepository->getOneBy(['uuid' => 'f'])->willReturn($family);
-        $this->familyRepository->save($family)->shouldBeCalledOnce();
+        $this->familyRepository->add($family)->shouldBeCalledOnce();
         $this->attributeRepository->findOneBy(['uuid' => 'uuid-99'])->willReturn(null);
 
         ($this->createHandler())($this->message('f', 'Name', null, [
@@ -220,7 +220,7 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
         $attribute = $this->attributeWithUuid('uuid-7');
 
         $this->familyRepository->getOneBy(['uuid' => 'f'])->willReturn($family);
-        $this->familyRepository->save($family)->shouldBeCalledOnce();
+        $this->familyRepository->add($family)->shouldBeCalledOnce();
         $this->attributeRepository->findOneBy(['uuid' => 'uuid-7'])->willReturn($attribute);
 
         ($this->createHandler())($this->message('f', 'Name', null, [
@@ -241,7 +241,7 @@ class ModifyProductFamilyMessageHandlerTest extends TestCase
         $family->addFamilyAttribute($existing);
 
         $this->familyRepository->getOneBy(['uuid' => 'f'])->willReturn($family);
-        $this->familyRepository->save($family)->shouldBeCalledOnce();
+        $this->familyRepository->add($family)->shouldBeCalledOnce();
         $this->attributeRepository->findOneBy(['uuid' => 'uuid-7'])->shouldNotBeCalled();
 
         ($this->createHandler())($this->message('f', 'Name', null, [
