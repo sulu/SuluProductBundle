@@ -338,7 +338,7 @@ class AttributeFieldFactoryTest extends TestCase
         $familyAttribute = $this->familyAttribute($attribute->reveal(), true);
         $this->formMetadataLoader->getMetadata('product_attribute_range', 'en', [])->willReturn($this->rangeFragment());
 
-        $section = $this->factory()->build($familyAttribute->reveal(), 'en');
+        $section = $this->factory()->build($familyAttribute->reveal(), 'en', 'product');
 
         self::assertInstanceOf(SectionMetadata::class, $section);
         self::assertSame('attribute_' . $uuid, $section->getName());
@@ -363,7 +363,7 @@ class AttributeFieldFactoryTest extends TestCase
         $familyAttribute = $this->familyAttribute($attribute->reveal());
         $this->formMetadataLoader->getMetadata('product_attribute_range', 'en', [])->willReturn($this->rangeFragment());
 
-        $section = $this->factory()->build($familyAttribute->reveal(), 'en');
+        $section = $this->factory()->build($familyAttribute->reveal(), 'en', 'product');
 
         self::assertInstanceOf(SectionMetadata::class, $section);
         self::assertSame('temperature (mm)', $section->getLabel('en'));
@@ -380,7 +380,7 @@ class AttributeFieldFactoryTest extends TestCase
         $familyAttribute = $this->familyAttribute($attribute->reveal());
         $this->formMetadataLoader->getMetadata('product_attribute_range', 'en', [])->willReturn($this->rangeFragment());
 
-        $section = $this->factory()->build($familyAttribute->reveal(), 'en');
+        $section = $this->factory()->build($familyAttribute->reveal(), 'en', 'product');
 
         self::assertInstanceOf(SectionMetadata::class, $section);
         self::assertCount(2, $section->getItems());
@@ -399,7 +399,7 @@ class AttributeFieldFactoryTest extends TestCase
         $fragment = $this->rangeFragment();
         $this->formMetadataLoader->getMetadata('product_attribute_range', 'en', [])->willReturn($fragment);
 
-        $this->factory()->build($familyAttribute->reveal(), 'en');
+        $this->factory()->build($familyAttribute->reveal(), 'en', 'product');
 
         foreach ($fragment->getItems() as $template) {
             self::assertInstanceOf(FieldMetadata::class, $template);
@@ -415,7 +415,7 @@ class AttributeFieldFactoryTest extends TestCase
         $familyAttribute = $this->familyAttribute($attribute->reveal(), true);
         $this->formMetadataLoader->getMetadata('product_attribute_range', 'en', [])->willReturn($this->rangeFragment());
 
-        $property = $this->factory()->buildSchemaProperty($familyAttribute->reveal(), 'en');
+        $property = $this->factory()->buildSchemaProperty($familyAttribute->reveal(), 'en', 'product');
 
         self::assertNotNull($property);
         self::assertSame($uuid, $property->getName());
@@ -430,7 +430,7 @@ class AttributeFieldFactoryTest extends TestCase
         $familyAttribute = $this->familyAttribute($attribute->reveal());
         $this->formMetadataLoader->getMetadata('product_attribute_range', 'en', [])->willReturn($this->rangeFragment());
 
-        $property = $this->factory()->buildSchemaProperty($familyAttribute->reveal(), 'en');
+        $property = $this->factory()->buildSchemaProperty($familyAttribute->reveal(), 'en', 'product');
 
         self::assertNotNull($property);
         self::assertSame($uuid, $property->getName());
@@ -444,7 +444,7 @@ class AttributeFieldFactoryTest extends TestCase
         $familyAttribute = $this->familyAttribute($attribute->reveal(), true);
         $this->formMetadataLoader->getMetadata('product_attribute_range', 'en', [])->willReturn($this->rangeFragment());
 
-        $property = $this->factory()->buildSchemaProperty($familyAttribute->reveal(), 'en');
+        $property = $this->factory()->buildSchemaProperty($familyAttribute->reveal(), 'en', 'product');
 
         self::assertNotNull($property);
         $bound = ['anyOf' => [['type' => 'null'], ['type' => 'number']]];

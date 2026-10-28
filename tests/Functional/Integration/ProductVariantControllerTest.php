@@ -1768,7 +1768,7 @@ class ProductVariantControllerTest extends SuluTestCase
         self::purgeDatabase();
 
         $rangeUuid = $this->createAttribute('temperature', 'Temperature', AttributeInterface::TYPE_RANGE);
-        $familyId = $this->createProductFamily([$rangeUuid => ['variantSpecific' => true]]);
+        $familyId = $this->createProductFamily([$rangeUuid => ['mode' => 'variant_specific']]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
         $childId = $this->createVariant($parentId);
 
@@ -1789,7 +1789,7 @@ class ProductVariantControllerTest extends SuluTestCase
         self::purgeDatabase();
 
         $rangeUuid = $this->createAttribute('temperature', 'Temperature', AttributeInterface::TYPE_RANGE);
-        $familyId = $this->createProductFamily([$rangeUuid => ['variantSpecific' => true]]);
+        $familyId = $this->createProductFamily([$rangeUuid => ['mode' => 'variant_specific']]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         $this->client->request(
@@ -1828,7 +1828,7 @@ class ProductVariantControllerTest extends SuluTestCase
         self::purgeDatabase();
 
         $rangeUuid = $this->createAttribute('temperature', 'Temperature', AttributeInterface::TYPE_RANGE);
-        $familyId = $this->createProductFamily([$rangeUuid => ['variantSpecific' => true]]);
+        $familyId = $this->createProductFamily([$rangeUuid => ['mode' => 'variant_specific']]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
         $childId = $this->createVariant($parentId);
 
@@ -1854,7 +1854,7 @@ class ProductVariantControllerTest extends SuluTestCase
         self::purgeDatabase();
 
         $rangeUuid = $this->createAttribute('temperature', 'Temperature', AttributeInterface::TYPE_RANGE);
-        $familyId = $this->createProductFamily([$rangeUuid => ['variantSpecific' => true]]);
+        $familyId = $this->createProductFamily([$rangeUuid => ['mode' => 'variant_specific']]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
         $childId = $this->createVariant($parentId);
         $this->putVariantAttribute($parentId, $childId, $rangeUuid, ['from' => 1, 'to' => 2]);
@@ -1882,7 +1882,7 @@ class ProductVariantControllerTest extends SuluTestCase
         self::purgeDatabase();
 
         $rangeUuid = $this->createAttribute('temperature', 'Temperature', AttributeInterface::TYPE_RANGE);
-        $familyId = $this->createProductFamily([$rangeUuid => ['required' => true, 'variantSpecific' => true]]);
+        $familyId = $this->createProductFamily([$rangeUuid => ['required' => true, 'mode' => 'variant_specific']]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         $this->client->request(
@@ -1939,7 +1939,7 @@ class ProductVariantControllerTest extends SuluTestCase
         self::purgeDatabase();
 
         $attributeId = $this->createMultiOptionsAttribute();
-        $familyId = $this->createProductFamily([$attributeId => ['variantSpecific' => true]]);
+        $familyId = $this->createProductFamily([$attributeId => ['mode' => 'variant_specific']]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
         $childId = $this->createVariant($parentId);
 
@@ -1959,7 +1959,7 @@ class ProductVariantControllerTest extends SuluTestCase
         self::purgeDatabase();
 
         $attributeId = $this->createMultiOptionsAttribute();
-        $familyId = $this->createProductFamily([$attributeId => ['variantSpecific' => true]]);
+        $familyId = $this->createProductFamily([$attributeId => ['mode' => 'variant_specific']]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         $this->client->request(
@@ -1997,7 +1997,7 @@ class ProductVariantControllerTest extends SuluTestCase
         self::purgeDatabase();
 
         $attributeId = $this->createMultiOptionsAttribute();
-        $familyId = $this->createProductFamily([$attributeId => ['variantSpecific' => true]]);
+        $familyId = $this->createProductFamily([$attributeId => ['mode' => 'variant_specific']]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
         $childId = $this->createVariant($parentId);
 
@@ -2013,7 +2013,7 @@ class ProductVariantControllerTest extends SuluTestCase
         self::purgeDatabase();
 
         $attributeId = $this->createMultiOptionsAttribute();
-        $familyId = $this->createProductFamily([$attributeId => ['variantSpecific' => true]]);
+        $familyId = $this->createProductFamily([$attributeId => ['mode' => 'variant_specific']]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
         $childId = $this->createVariant($parentId);
 
@@ -2040,7 +2040,7 @@ class ProductVariantControllerTest extends SuluTestCase
         self::purgeDatabase();
 
         $attributeId = $this->createMultiOptionsAttribute();
-        $familyId = $this->createProductFamily([$attributeId => ['variantSpecific' => true]]);
+        $familyId = $this->createProductFamily([$attributeId => ['mode' => 'variant_specific']]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
         $childId = $this->createVariant($parentId);
         $this->putVariantAttribute($parentId, $childId, $attributeId, ['red', 'blue']);
@@ -2069,7 +2069,7 @@ class ProductVariantControllerTest extends SuluTestCase
         self::purgeDatabase();
 
         $attributeId = $this->createMultiOptionsAttribute();
-        $familyId = $this->createProductFamily([$attributeId => ['required' => true, 'variantSpecific' => true]]);
+        $familyId = $this->createProductFamily([$attributeId => ['required' => true, 'mode' => 'variant_specific']]);
         $parentId = $this->createProduct($familyId, 'Parent Product', ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         foreach ([[$attributeId => []], [$attributeId => null]] as $attributes) {

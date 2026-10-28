@@ -212,7 +212,7 @@ class WebsiteProductAttributesReindexProviderEnhancerTest extends TestCase
     }
 
     /**
-     * @return array{productId: string, locale: string|null, attributeUuid: string, valueKey: string, optionKey: string|null, number: float|null, text: string|null, variantSpecific: bool}
+     * @return array{productId: string, locale: string|null, attributeUuid: string, valueKey: string, optionKey: string|null, number: float|null, text: string|null, mode: ProductFamilyAttributeModeEnum|null}
      */
     private function valueRow(string $attributeUuid, string $valueKey, ?float $number): array
     {
@@ -223,7 +223,7 @@ class WebsiteProductAttributesReindexProviderEnhancerTest extends TestCase
      * A stored multi_options row: one per selected option, its value key is the option key. A row
      * without an option is what a deleted option leaves behind.
      *
-     * @return array{productId: string, locale: string|null, attributeUuid: string, valueKey: string, optionKey: string|null, number: float|null, text: string|null, variantSpecific: bool}
+     * @return array{productId: string, locale: string|null, attributeUuid: string, valueKey: string, optionKey: string|null, number: float|null, text: string|null, mode: ProductFamilyAttributeModeEnum|null}
      */
     private function optionRow(string $attributeUuid, ?string $optionKey): array
     {

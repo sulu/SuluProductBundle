@@ -198,7 +198,7 @@ class ProductAttributesMetadataTest extends SuluTestCase
     public function testRangeAttributeIsASectionOfItsTwoBounds(bool $required): void
     {
         $range = $this->createAttribute('temperature', 'Temperature', 'Features', ['unit' => 'CELSIUS', 'min' => -50, 'max' => 150, 'step' => 0.5], AttributeInterface::TYPE_RANGE);
-        $familyId = $this->createFamily([['id' => $range->getUuid(), 'required' => $required, 'variantSpecific' => false]]);
+        $familyId = $this->createFamily([['id' => $range->getUuid(), 'required' => $required, 'mode' => 'shared']]);
 
         $this->client->request('GET', '/admin/metadata/form/product_attributes?productFamily=' . $familyId . '&locale=en');
         $this->assertHttpStatusCode(200, $this->client->getResponse());
@@ -230,7 +230,7 @@ class ProductAttributesMetadataTest extends SuluTestCase
     public function testMultiOptionsAttributeIsAMultiSelectOfItsOptions(bool $required): void
     {
         $colours = $this->createAttribute('colours', 'Colours', 'Appearance', [], AttributeInterface::TYPE_MULTI_OPTIONS, ['red' => 'Red', 'blue' => 'Blue']);
-        $familyId = $this->createFamily([['id' => $colours->getUuid(), 'required' => $required, 'variantSpecific' => false]]);
+        $familyId = $this->createFamily([['id' => $colours->getUuid(), 'required' => $required, 'mode' => 'shared']]);
 
         $this->client->request('GET', '/admin/metadata/form/product_attributes?productFamily=' . $familyId . '&locale=en');
         $this->assertHttpStatusCode(200, $this->client->getResponse());
@@ -259,8 +259,8 @@ class ProductAttributesMetadataTest extends SuluTestCase
         $required = $this->createAttribute('colours', 'Colours', 'Appearance', [], AttributeInterface::TYPE_MULTI_OPTIONS, ['red' => 'Red']);
         $optional = $this->createAttribute('finishes', 'Finishes', 'Appearance', [], AttributeInterface::TYPE_MULTI_OPTIONS, ['matte' => 'Matte']);
         $this->createFamily([
-            ['id' => $required->getUuid(), 'required' => true, 'variantSpecific' => false],
-            ['id' => $optional->getUuid(), 'required' => false, 'variantSpecific' => false],
+            ['id' => $required->getUuid(), 'required' => true, 'mode' => 'shared'],
+            ['id' => $optional->getUuid(), 'required' => false, 'mode' => 'shared'],
         ]);
 
         $this->client->request('GET', '/admin/metadata/form/product_details');
@@ -280,7 +280,7 @@ class ProductAttributesMetadataTest extends SuluTestCase
     public function testNumberAttributeStaysAPlainField(): void
     {
         $weight = $this->createAttribute('weight', 'Weight', 'Dimensions', ['unit' => 'KILOGRAM'], AttributeInterface::TYPE_NUMBER);
-        $familyId = $this->createFamily([['id' => $weight->getUuid(), 'required' => false, 'variantSpecific' => false]]);
+        $familyId = $this->createFamily([['id' => $weight->getUuid(), 'required' => false, 'mode' => 'shared']]);
 
         $this->client->request('GET', '/admin/metadata/form/product_attributes?productFamily=' . $familyId . '&locale=en');
         $this->assertHttpStatusCode(200, $this->client->getResponse());
@@ -299,8 +299,8 @@ class ProductAttributesMetadataTest extends SuluTestCase
         $required = $this->createAttribute('temperature', 'Temperature', 'Features', ['min' => -50, 'max' => 150], AttributeInterface::TYPE_RANGE);
         $optional = $this->createAttribute('humidity', 'Humidity', 'Features', [], AttributeInterface::TYPE_RANGE);
         $this->createFamily([
-            ['id' => $required->getUuid(), 'required' => true, 'variantSpecific' => false],
-            ['id' => $optional->getUuid(), 'required' => false, 'variantSpecific' => false],
+            ['id' => $required->getUuid(), 'required' => true, 'mode' => 'shared'],
+            ['id' => $optional->getUuid(), 'required' => false, 'mode' => 'shared'],
         ]);
 
         $this->client->request('GET', '/admin/metadata/form/product_details');
@@ -327,7 +327,7 @@ class ProductAttributesMetadataTest extends SuluTestCase
     }
 
     /**
-     * @param list<array{id: string, required: bool, variantSpecific: bool}> $attributes
+     * @param list<array{id: string, required: bool, mode: string}> $attributes
      */
     private function createFamily(array $attributes): string
     {
