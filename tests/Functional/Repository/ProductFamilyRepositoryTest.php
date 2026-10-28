@@ -189,7 +189,9 @@ class ProductFamilyRepositoryTest extends SuluTestCase
     public function testFindByLimitAndPageReturnsTheRequestedSlice(): void
     {
         for ($i = 0; $i < 5; ++$i) {
-            $this->repository->save($this->repository->createNew());
+            $family = $this->repository->createNew();
+            $family->setKey('family-' . $i);
+            $this->repository->save($family);
         }
         $this->entityManager->flush();
         $this->entityManager->clear();
@@ -222,8 +224,11 @@ class ProductFamilyRepositoryTest extends SuluTestCase
 
     public function testCountByCountsAllFamilies(): void
     {
-        $this->repository->save($this->repository->createNew());
-        $this->repository->save($this->repository->createNew());
+        foreach (['first', 'second'] as $key) {
+            $family = $this->repository->createNew();
+            $family->setKey($key);
+            $this->repository->save($family);
+        }
         $this->entityManager->flush();
         $this->entityManager->clear();
 
@@ -233,9 +238,12 @@ class ProductFamilyRepositoryTest extends SuluTestCase
     public function testCountByAppliesTheFilters(): void
     {
         $family = $this->repository->createNew();
+        $family->setKey('shoes');
         $family->setExternalIdentifier('shoes');
         $this->repository->save($family);
-        $this->repository->save($this->repository->createNew());
+        $other = $this->repository->createNew();
+        $other->setKey('hats-family');
+        $this->repository->save($other);
         $this->entityManager->flush();
         $this->entityManager->clear();
 
@@ -246,7 +254,9 @@ class ProductFamilyRepositoryTest extends SuluTestCase
     public function testCountByIgnoresPageAndLimit(): void
     {
         for ($i = 0; $i < 3; ++$i) {
-            $this->repository->save($this->repository->createNew());
+            $family = $this->repository->createNew();
+            $family->setKey('family-' . $i);
+            $this->repository->save($family);
         }
         $this->entityManager->flush();
         $this->entityManager->clear();
