@@ -38,7 +38,7 @@ final class ModifyAttributeMessageHandler
             $attributeMapper->mapAttributeData($attribute, $message);
         }
 
-        $this->attributeRepository->save($attribute);
+        $this->attributeRepository->add($attribute);
 
         $this->domainEventCollector->collect(
             new AttributeModifiedEvent($attribute, $message->getLocale(), $message->getData()),

@@ -77,7 +77,7 @@ class ModifyAttributeMessageHandlerTest extends TestCase
         $attribute->setPosition(0);
 
         $this->attributeRepository->getOneBy(['uuid' => 'attr-uuid'])->willReturn($attribute);
-        $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
+        $this->attributeRepository->add($attribute)->shouldBeCalledOnce();
 
         $handler = $this->createHandler();
 
@@ -99,7 +99,7 @@ class ModifyAttributeMessageHandlerTest extends TestCase
         $attribute->setPosition(0);
 
         $this->attributeRepository->getOneBy(['uuid' => 'attr-uuid'])->willReturn($attribute);
-        $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
+        $this->attributeRepository->add($attribute)->shouldBeCalledOnce();
 
         $handler = $this->createHandler();
 
@@ -127,7 +127,7 @@ class ModifyAttributeMessageHandlerTest extends TestCase
         $attribute->addTranslation($translation);
 
         $this->attributeRepository->getOneBy(['uuid' => 'attr-uuid'])->willReturn($attribute);
-        $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
+        $this->attributeRepository->add($attribute)->shouldBeCalledOnce();
 
         $handler = $this->createHandler();
 
@@ -150,7 +150,7 @@ class ModifyAttributeMessageHandlerTest extends TestCase
         $attribute->setPosition(0);
 
         $this->attributeRepository->getOneBy(['uuid' => 'attr-uuid'])->willReturn($attribute);
-        $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
+        $this->attributeRepository->add($attribute)->shouldBeCalledOnce();
 
         $handler = $this->createHandler();
 
@@ -182,7 +182,7 @@ class ModifyAttributeMessageHandlerTest extends TestCase
         $attribute->addOption($option);
 
         $this->attributeRepository->getOneBy(['uuid' => 'attr-uuid'])->willReturn($attribute);
-        $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
+        $this->attributeRepository->add($attribute)->shouldBeCalledOnce();
 
         $handler = $this->createHandler();
 
@@ -210,7 +210,7 @@ class ModifyAttributeMessageHandlerTest extends TestCase
         $attribute->addOption($optionToRemove);
 
         $this->attributeRepository->getOneBy(['uuid' => 'attr-uuid'])->willReturn($attribute);
-        $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
+        $this->attributeRepository->add($attribute)->shouldBeCalledOnce();
 
         $handler = $this->createHandler();
 
@@ -234,7 +234,7 @@ class ModifyAttributeMessageHandlerTest extends TestCase
         $attribute->setPosition(0);
 
         $this->attributeRepository->getOneBy(['uuid' => 'attr-uuid'])->willReturn($attribute);
-        $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
+        $this->attributeRepository->add($attribute)->shouldBeCalledOnce();
 
         $handler = $this->createHandler();
 
@@ -265,7 +265,7 @@ class ModifyAttributeMessageHandlerTest extends TestCase
         $attribute->setConfig(['measurementFamily' => 'weight', 'unit' => 'KILOGRAM']);
 
         $this->attributeRepository->getOneBy(['uuid' => 'attr-uuid'])->willReturn($attribute);
-        $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
+        $this->attributeRepository->add($attribute)->shouldBeCalledOnce();
 
         $handler = $this->createHandler();
 
@@ -288,7 +288,7 @@ class ModifyAttributeMessageHandlerTest extends TestCase
         $attribute->setPosition(0);
 
         $this->attributeRepository->getOneBy(['uuid' => 'attr-uuid'])->willReturn($attribute);
-        $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
+        $this->attributeRepository->add($attribute)->shouldBeCalledOnce();
         $this->attributeRepository->findByGroupWithPositionBetween($group, 1, 3, $attribute)->willReturn([]);
 
         $handler = $this->createHandler();
@@ -314,7 +314,7 @@ class ModifyAttributeMessageHandlerTest extends TestCase
         $displaced->setPosition(2);
 
         $this->attributeRepository->getOneBy(['uuid' => 'attr-uuid'])->willReturn($attribute);
-        $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
+        $this->attributeRepository->add($attribute)->shouldBeCalledOnce();
         $this->attributeRepository->findByGroupWithPositionAtLeast($group, 2, $attribute)->willReturn([$displaced]);
 
         $handler = $this->createHandler();
@@ -343,7 +343,7 @@ class ModifyAttributeMessageHandlerTest extends TestCase
         $other2->setPosition(3);
 
         $this->attributeRepository->getOneBy(['uuid' => 'attr-uuid'])->willReturn($attribute);
-        $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
+        $this->attributeRepository->add($attribute)->shouldBeCalledOnce();
         $this->attributeRepository->findNextPositionInGroup($group)->willReturn(4);
         $this->attributeRepository->findByGroupWithPositionBetween($group, 2, 3, $attribute)->willReturn([$other1, $other2]);
 
@@ -372,7 +372,7 @@ class ModifyAttributeMessageHandlerTest extends TestCase
         $between->setPosition(2);
 
         $this->attributeRepository->getOneBy(['uuid' => 'attr-uuid'])->willReturn($attribute);
-        $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
+        $this->attributeRepository->add($attribute)->shouldBeCalledOnce();
         $this->attributeRepository->findByGroupWithPositionBetween($group, 2, 3, $attribute)->willReturn([$between]);
 
         $handler = $this->createHandler();
@@ -396,7 +396,7 @@ class ModifyAttributeMessageHandlerTest extends TestCase
         $attribute->setPosition(3);
 
         $this->attributeRepository->getOneBy(['uuid' => 'attr-uuid'])->willReturn($attribute);
-        $this->attributeRepository->save($attribute)->shouldBeCalledOnce();
+        $this->attributeRepository->add($attribute)->shouldBeCalledOnce();
         $this->attributeRepository->findByGroupWithPositionAtLeast($group, 3, $attribute)->shouldNotBeCalled();
 
         $handler = $this->createHandler();

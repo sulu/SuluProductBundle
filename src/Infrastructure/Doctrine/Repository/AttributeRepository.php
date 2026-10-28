@@ -246,7 +246,7 @@ final class AttributeRepository implements AttributeRepositoryInterface
         return $result;
     }
 
-    public function save(AttributeInterface $attribute): void
+    public function add(AttributeInterface $attribute): void
     {
         $this->entityManager->persist($attribute);
     }

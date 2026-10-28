@@ -91,18 +91,18 @@ class ProductFamilyCascadeTest extends SuluTestCase
     private function createFixture(): array
     {
         $group = $this->groupRepository->createNew();
-        $this->groupRepository->save($group);
+        $this->groupRepository->add($group);
 
         $attribute = $this->attributeRepository->createNew($group);
         $attribute->setKey('color');
         $attribute->setType(AttributeInterface::TYPE_TEXT);
-        $this->attributeRepository->save($attribute);
+        $this->attributeRepository->add($attribute);
 
         $family = $this->familyRepository->createNew();
         $family->setKey(\uniqid('family-'));
         $familyAttribute = new ProductFamilyAttribute($family, $attribute);
         $family->addFamilyAttribute($familyAttribute);
-        $this->familyRepository->save($family);
+        $this->familyRepository->add($family);
 
         $product = $this->productRepository->createNew();
         $pdc = $product->createDimensionContent();
@@ -128,7 +128,7 @@ class ProductFamilyCascadeTest extends SuluTestCase
 
         $family = $fixture['family'];
         $family->removeFamilyAttribute($fixture['familyAttribute']);
-        $this->familyRepository->save($family);
+        $this->familyRepository->add($family);
         $this->entityManager->flush();
         $this->entityManager->clear();
 

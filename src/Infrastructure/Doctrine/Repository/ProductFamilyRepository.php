@@ -288,7 +288,7 @@ final class ProductFamilyRepository implements ProductFamilyRepositoryInterface
         return $selects;
     }
 
-    public function save(ProductFamilyInterface $family): void
+    public function add(ProductFamilyInterface $family): void
     {
         $this->entityManager->persist($family);
     }

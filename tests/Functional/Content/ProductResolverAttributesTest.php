@@ -79,14 +79,14 @@ class ProductResolverAttributesTest extends SuluTestCase
     {
         $group = $this->attributeGroupRepository->createNew();
         $group->addTranslation(new AttributeGroupTranslation($group, 'de', 'Mechanische Daten'));
-        $this->attributeGroupRepository->save($group);
+        $this->attributeGroupRepository->add($group);
 
         $attribute = $this->attributeRepository->createNew($group);
         $attribute->setKey('housing');
         $attribute->setType(AttributeInterface::TYPE_TEXT);
         $attribute->setPosition(1);
         $attribute->addTranslation(new AttributeTranslation($attribute, 'de', 'Gehäuse'));
-        $this->attributeRepository->save($attribute);
+        $this->attributeRepository->add($attribute);
 
         $this->entityManager->flush();
 
@@ -131,14 +131,14 @@ class ProductResolverAttributesTest extends SuluTestCase
     {
         $group = $this->attributeGroupRepository->createNew();
         $group->addTranslation(new AttributeGroupTranslation($group, 'de', 'Technische Daten'));
-        $this->attributeGroupRepository->save($group);
+        $this->attributeGroupRepository->add($group);
 
         $attribute = $this->attributeRepository->createNew($group);
         $attribute->setKey('temperature');
         $attribute->setType(AttributeInterface::TYPE_RANGE);
         $attribute->setPosition(1);
         $attribute->addTranslation(new AttributeTranslation($attribute, 'de', 'Temperatur'));
-        $this->attributeRepository->save($attribute);
+        $this->attributeRepository->add($attribute);
 
         $this->entityManager->flush();
 
@@ -180,7 +180,7 @@ class ProductResolverAttributesTest extends SuluTestCase
     {
         $group = $this->attributeGroupRepository->createNew();
         $group->addTranslation(new AttributeGroupTranslation($group, 'de', 'Optik'));
-        $this->attributeGroupRepository->save($group);
+        $this->attributeGroupRepository->add($group);
 
         $attribute = $this->attributeRepository->createNew($group);
         $attribute->setKey('colours');
@@ -190,7 +190,7 @@ class ProductResolverAttributesTest extends SuluTestCase
         foreach (['red', 'blue', 'green'] as $optionKey) {
             $attribute->addOption(new AttributeOption($attribute, $optionKey));
         }
-        $this->attributeRepository->save($attribute);
+        $this->attributeRepository->add($attribute);
 
         $this->entityManager->flush();
 
@@ -242,14 +242,14 @@ class ProductResolverAttributesTest extends SuluTestCase
     {
         $group = $this->attributeGroupRepository->createNew();
         $group->addTranslation(new AttributeGroupTranslation($group, 'de', 'Eigenschaften'));
-        $this->attributeGroupRepository->save($group);
+        $this->attributeGroupRepository->add($group);
 
         $attribute = $this->attributeRepository->createNew($group);
         $attribute->setKey('waterproof');
         $attribute->setType(AttributeInterface::TYPE_BOOLEAN);
         $attribute->setPosition(1);
         $attribute->addTranslation(new AttributeTranslation($attribute, 'de', 'Wasserdicht'));
-        $this->attributeRepository->save($attribute);
+        $this->attributeRepository->add($attribute);
 
         $this->entityManager->flush();
 

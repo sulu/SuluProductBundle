@@ -79,7 +79,7 @@ class ProductRepositoryTest extends SuluTestCase
     {
         $family = $this->productFamilyRepository->createNew();
         $family->setKey(\uniqid('family-'));
-        $this->productFamilyRepository->save($family);
+        $this->productFamilyRepository->add($family);
         $this->entityManager->flush();
 
         return $family;
@@ -749,7 +749,7 @@ class ProductRepositoryTest extends SuluTestCase
         $attributeGroupRepository = $container->get(AttributeGroupRepositoryInterface::class);
 
         $group = $attributeGroupRepository->createNew();
-        $attributeGroupRepository->save($group);
+        $attributeGroupRepository->add($group);
 
         $attribute = new Attribute($group);
         $attribute->setKey($key);
@@ -1466,17 +1466,17 @@ class ProductRepositoryTest extends SuluTestCase
         $attributeRepository = $container->get(AttributeRepositoryInterface::class);
 
         $group = $groupRepository->createNew();
-        $groupRepository->save($group);
+        $groupRepository->add($group);
 
         $attribute = $attributeRepository->createNew($group);
         $attribute->setKey('color');
         $attribute->setType(AttributeInterface::TYPE_TEXT);
-        $attributeRepository->save($attribute);
+        $attributeRepository->add($attribute);
 
         $family = $this->productFamilyRepository->createNew();
         $family->setKey(\uniqid('family-'));
         $family->addFamilyAttribute(new ProductFamilyAttribute($family, $attribute));
-        $this->productFamilyRepository->save($family);
+        $this->productFamilyRepository->add($family);
 
         $product = $this->repository->createNew();
         $pdc = $product->createDimensionContent();
@@ -1644,7 +1644,7 @@ class ProductRepositoryTest extends SuluTestCase
         $attributeRepository = $container->get(AttributeRepositoryInterface::class);
 
         $group = $groupRepository->createNew();
-        $groupRepository->save($group);
+        $groupRepository->add($group);
 
         $uuids = [];
         foreach (['finish' => 'Matt', 'size' => 'Gross'] as $key => $optionName) {
@@ -1654,7 +1654,7 @@ class ProductRepositoryTest extends SuluTestCase
             $option = new AttributeOption($attribute, 'option');
             $option->addTranslation(new AttributeOptionTranslation($option, 'de', $optionName));
             $attribute->addOption($option);
-            $attributeRepository->save($attribute);
+            $attributeRepository->add($attribute);
 
             $product = $this->repository->createNew();
             $this->repository->add($product);
@@ -1737,7 +1737,7 @@ class ProductRepositoryTest extends SuluTestCase
 
         $group = $groupRepository->createNew();
         $group->addTranslation(new AttributeGroupTranslation($group, 'de', 'Optik'));
-        $groupRepository->save($group);
+        $groupRepository->add($group);
 
         $values = [];
         foreach (['finish' => ['Oberflaeche', 'matte', 'Matt'], 'size' => ['Groesse', 'large', 'Gross']] as $key => [$label, $optionKey, $optionName]) {
@@ -1750,7 +1750,7 @@ class ProductRepositoryTest extends SuluTestCase
                 $option->addTranslation(new AttributeOptionTranslation($option, 'de', $name));
                 $attribute->addOption($option);
             }
-            $attributeRepository->save($attribute);
+            $attributeRepository->add($attribute);
             $values[] = [$attribute, $attribute->getOption($optionKey)];
         }
 

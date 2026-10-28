@@ -68,7 +68,7 @@ class AttributeRepositoryTest extends SuluTestCase
     private function createGroup(): AttributeGroupInterface
     {
         $group = $this->groupRepository->createNew();
-        $this->groupRepository->save($group);
+        $this->groupRepository->add($group);
         $this->entityManager->flush();
 
         return $group;
@@ -80,7 +80,7 @@ class AttributeRepositoryTest extends SuluTestCase
         $uuid = Uuid::v7()->toRfc4122();
         $attribute = $this->repository->createNew($group, $uuid);
         $attribute->setKey('weight');
-        $this->repository->save($attribute);
+        $this->repository->add($attribute);
         $this->entityManager->flush();
         $this->entityManager->clear();
 
@@ -109,7 +109,7 @@ class AttributeRepositoryTest extends SuluTestCase
         $attribute->setKey('color');
         $attribute->setType(AttributeInterface::TYPE_TEXT);
 
-        $this->repository->save($attribute);
+        $this->repository->add($attribute);
         $this->entityManager->flush();
 
         $uuid = $attribute->getUuid();
@@ -130,7 +130,7 @@ class AttributeRepositoryTest extends SuluTestCase
         $attribute->setKey('size');
         $attribute->setType(AttributeInterface::TYPE_NUMBER);
 
-        $this->repository->save($attribute);
+        $this->repository->add($attribute);
         $this->entityManager->flush();
         $this->entityManager->clear();
 
@@ -147,7 +147,7 @@ class AttributeRepositoryTest extends SuluTestCase
         $attribute->setType(AttributeInterface::TYPE_NUMBER);
         $attribute->setExternalIdentifier('ext-attribute-1');
 
-        $this->repository->save($attribute);
+        $this->repository->add($attribute);
         $this->entityManager->flush();
         $this->entityManager->clear();
 
@@ -164,7 +164,7 @@ class AttributeRepositoryTest extends SuluTestCase
         $attribute->setKey('length');
         $attribute->setType(AttributeInterface::TYPE_NUMBER);
 
-        $this->repository->save($attribute);
+        $this->repository->add($attribute);
         $this->entityManager->flush();
         $this->entityManager->clear();
 
@@ -184,7 +184,7 @@ class AttributeRepositoryTest extends SuluTestCase
         $attribute->setKey('material');
         $attribute->setType(AttributeInterface::TYPE_TEXT);
 
-        $this->repository->save($attribute);
+        $this->repository->add($attribute);
         $this->entityManager->flush();
         $this->entityManager->clear();
 
@@ -224,7 +224,7 @@ class AttributeRepositoryTest extends SuluTestCase
         $translation->setDescription('What it is made of');
         $attribute->addTranslation($translation);
 
-        $this->repository->save($attribute);
+        $this->repository->add($attribute);
         $this->entityManager->flush();
 
         $uuid = $attribute->getUuid();
@@ -251,7 +251,7 @@ class AttributeRepositoryTest extends SuluTestCase
         $attribute->addTranslation(new AttributeTranslation($attribute, 'en', 'Weight'));
         $attribute->addTranslation(new AttributeTranslation($attribute, 'de', 'Gewicht'));
 
-        $this->repository->save($attribute);
+        $this->repository->add($attribute);
         $this->entityManager->flush();
 
         $uuid = $attribute->getUuid();
@@ -278,7 +278,7 @@ class AttributeRepositoryTest extends SuluTestCase
         $attribute->setKey('to-remove');
         $attribute->setType(AttributeInterface::TYPE_TEXT);
 
-        $this->repository->save($attribute);
+        $this->repository->add($attribute);
         $this->entityManager->flush();
 
         $uuid = $attribute->getUuid();
@@ -308,7 +308,7 @@ class AttributeRepositoryTest extends SuluTestCase
             $a = $this->repository->createNew($group);
             $a->setKey('pos-attr-' . $i);
             $a->setPosition($pos);
-            $this->repository->save($a);
+            $this->repository->add($a);
         }
         $this->entityManager->flush();
 
@@ -323,7 +323,7 @@ class AttributeRepositoryTest extends SuluTestCase
         foreach (['uuids-a', 'uuids-b', 'uuids-c'] as $key) {
             $attribute = $this->repository->createNew($group);
             $attribute->setKey($key);
-            $this->repository->save($attribute);
+            $this->repository->add($attribute);
             $uuids[$key] = $attribute->getUuid();
         }
         $this->entityManager->flush();
@@ -345,7 +345,7 @@ class AttributeRepositoryTest extends SuluTestCase
             $a = $this->repository->createNew($group);
             $a->setKey('atleast-' . $i);
             $a->setPosition($pos);
-            $this->repository->save($a);
+            $this->repository->add($a);
         }
         $this->entityManager->flush();
 
@@ -366,7 +366,7 @@ class AttributeRepositoryTest extends SuluTestCase
             $a = $this->repository->createNew($group);
             $a->setKey('atleast-excl-' . $i);
             $a->setPosition($pos);
-            $this->repository->save($a);
+            $this->repository->add($a);
             $attrs[] = $a;
         }
         $this->entityManager->flush();
@@ -386,7 +386,7 @@ class AttributeRepositoryTest extends SuluTestCase
             $a = $this->repository->createNew($group);
             $a->setKey('between-' . $i);
             $a->setPosition($pos);
-            $this->repository->save($a);
+            $this->repository->add($a);
         }
         $this->entityManager->flush();
 
@@ -407,7 +407,7 @@ class AttributeRepositoryTest extends SuluTestCase
             $a = $this->repository->createNew($group);
             $a->setKey('between-excl-' . $i);
             $a->setPosition($pos);
-            $this->repository->save($a);
+            $this->repository->add($a);
             $attrs[] = $a;
         }
         $this->entityManager->flush();
@@ -426,12 +426,12 @@ class AttributeRepositoryTest extends SuluTestCase
         $a = $this->repository->createNew($group);
         $a->setKey('findby-a');
         $a->setType(AttributeInterface::TYPE_TEXT);
-        $this->repository->save($a);
+        $this->repository->add($a);
 
         $b = $this->repository->createNew($group);
         $b->setKey('findby-b');
         $b->setType(AttributeInterface::TYPE_TEXT);
-        $this->repository->save($b);
+        $this->repository->add($b);
 
         $this->entityManager->flush();
         $this->entityManager->clear();
@@ -450,12 +450,12 @@ class AttributeRepositoryTest extends SuluTestCase
         $a = $this->repository->createNew($group);
         $a->setKey('findby-key-match');
         $a->setType(AttributeInterface::TYPE_TEXT);
-        $this->repository->save($a);
+        $this->repository->add($a);
 
         $b = $this->repository->createNew($group);
         $b->setKey('findby-key-other');
         $b->setType(AttributeInterface::TYPE_TEXT);
-        $this->repository->save($b);
+        $this->repository->add($b);
 
         $this->entityManager->flush();
         $this->entityManager->clear();
@@ -486,12 +486,12 @@ class AttributeRepositoryTest extends SuluTestCase
         foreach (['count-a', 'count-b'] as $key) {
             $a = $this->repository->createNew($group);
             $a->setKey($key);
-            $this->repository->save($a);
+            $this->repository->add($a);
         }
 
         $outsider = $this->repository->createNew($other);
         $outsider->setKey('count-other');
-        $this->repository->save($outsider);
+        $this->repository->add($outsider);
 
         $this->entityManager->flush();
 
@@ -504,7 +504,7 @@ class AttributeRepositoryTest extends SuluTestCase
         foreach (['first', 'second'] as $groupName) {
             $group = $this->groupRepository->createNew();
             $group->addTranslation(new AttributeGroupTranslation($group, 'en', $groupName));
-            $this->groupRepository->save($group);
+            $this->groupRepository->add($group);
 
             foreach (['colour', 'size'] as $key) {
                 $attribute = $this->repository->createNew($group);
@@ -514,7 +514,7 @@ class AttributeRepositoryTest extends SuluTestCase
                 $option = new AttributeOption($attribute, 'a');
                 $option->addTranslation(new AttributeOptionTranslation($option, 'en', 'A'));
                 $attribute->addOption($option);
-                $this->repository->save($attribute);
+                $this->repository->add($attribute);
             }
         }
 

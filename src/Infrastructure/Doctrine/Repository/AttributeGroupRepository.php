@@ -117,7 +117,7 @@ final class AttributeGroupRepository implements AttributeGroupRepositoryInterfac
         return $groups;
     }
 
-    public function save(AttributeGroupInterface $group): void
+    public function add(AttributeGroupInterface $group): void
     {
         $this->entityManager->persist($group);
     }

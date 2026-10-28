@@ -114,7 +114,7 @@ final class AttributeGroupTrashItemHandler implements
             $group->addTranslation($translation);
         }
 
-        $this->attributeGroupRepository->save($group);
+        $this->attributeGroupRepository->add($group);
 
         $this->domainEventCollector->collect(new AttributeGroupRestoredEvent($group, $data));
 

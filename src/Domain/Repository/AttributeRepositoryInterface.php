@@ -78,7 +78,7 @@ interface AttributeRepositoryInterface
      */
     public function findByGroupWithPositionBetween(AttributeGroupInterface $group, int $min, int $max, ?AttributeInterface $exclude = null): array;
 
-    public function save(AttributeInterface $attribute): void;
+    public function add(AttributeInterface $attribute): void;
 
     public function remove(AttributeInterface $attribute): void;
 }

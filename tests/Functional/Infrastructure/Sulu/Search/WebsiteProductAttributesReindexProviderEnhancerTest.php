@@ -367,7 +367,7 @@ class WebsiteProductAttributesReindexProviderEnhancerTest extends SuluTestCase
         $entityManager = $container->get('doctrine.orm.entity_manager');
 
         $group = $groupRepository->createNew();
-        $groupRepository->save($group);
+        $groupRepository->add($group);
 
         $attribute = $attributeRepository->createNew($group);
         $attribute->setKey($key);
@@ -381,7 +381,7 @@ class WebsiteProductAttributesReindexProviderEnhancerTest extends SuluTestCase
             $option->addTranslation(new AttributeOptionTranslation($option, 'en', $optionName));
             $attribute->addOption($option);
         }
-        $attributeRepository->save($attribute);
+        $attributeRepository->add($attribute);
         $entityManager->flush();
 
         return $attribute->getUuid();

@@ -79,7 +79,7 @@ interface ProductFamilyRepositoryInterface
      */
     public function getOneBy(array $filters, array $selects = []): ProductFamilyInterface;
 
-    public function save(ProductFamilyInterface $family): void;
+    public function add(ProductFamilyInterface $family): void;
 
     public function remove(ProductFamilyInterface $family): void;
 }

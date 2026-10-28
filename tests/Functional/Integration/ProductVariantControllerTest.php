@@ -179,14 +179,14 @@ class ProductVariantControllerTest extends SuluTestCase
         $em = $container->get('doctrine.orm.entity_manager');
 
         $group = $groupRepository->createNew();
-        $groupRepository->save($group);
+        $groupRepository->add($group);
 
         $attribute = $attributeRepository->createNew($group);
         $attribute->setKey($key);
         $attribute->setType($type);
         $attribute->setLocalized($localized);
         $attribute->addTranslation(new AttributeTranslation($attribute, 'en', $name));
-        $attributeRepository->save($attribute);
+        $attributeRepository->add($attribute);
 
         $em->flush();
 
@@ -205,7 +205,7 @@ class ProductVariantControllerTest extends SuluTestCase
         $em = $container->get('doctrine.orm.entity_manager');
 
         $group = $groupRepository->createNew();
-        $groupRepository->save($group);
+        $groupRepository->add($group);
 
         $attribute = $attributeRepository->createNew($group);
         $attribute->setKey('colours');
@@ -216,7 +216,7 @@ class ProductVariantControllerTest extends SuluTestCase
             $option->addTranslation(new AttributeOptionTranslation($option, 'en', $name));
             $attribute->addOption($option);
         }
-        $attributeRepository->save($attribute);
+        $attributeRepository->add($attribute);
 
         $em->flush();
 

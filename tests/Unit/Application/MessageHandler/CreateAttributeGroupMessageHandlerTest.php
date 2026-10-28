@@ -58,7 +58,7 @@ class CreateAttributeGroupMessageHandlerTest extends TestCase
             ->shouldBeCalledOnce()
             ->willReturn($group);
 
-        $this->attributeGroupRepository->save($group)
+        $this->attributeGroupRepository->add($group)
             ->shouldBeCalledOnce();
 
         $handler = $this->createHandler();
@@ -84,7 +84,7 @@ class CreateAttributeGroupMessageHandlerTest extends TestCase
         $group = new AttributeGroup();
 
         $this->attributeGroupRepository->createNew()->shouldBeCalledOnce()->willReturn($group);
-        $this->attributeGroupRepository->save($group)->shouldBeCalledOnce();
+        $this->attributeGroupRepository->add($group)->shouldBeCalledOnce();
 
         $handler = $this->createHandler();
 

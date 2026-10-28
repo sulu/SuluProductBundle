@@ -372,7 +372,7 @@ class ProductAttributesMetadataTest extends SuluTestCase
         $group = $groupRepository->createNew();
         $group->setDefaultLocale('en');
         $group->addTranslation(new AttributeGroupTranslation($group, 'en', $groupName));
-        $groupRepository->save($group);
+        $groupRepository->add($group);
 
         $attribute = $attributeRepository->createNew($group);
         $attribute->setKey($key);
@@ -385,7 +385,7 @@ class ProductAttributesMetadataTest extends SuluTestCase
             $option->addTranslation(new AttributeOptionTranslation($option, 'en', $optionName));
             $attribute->addOption($option);
         }
-        $attributeRepository->save($attribute);
+        $attributeRepository->add($attribute);
 
         $entityManager->flush();
 

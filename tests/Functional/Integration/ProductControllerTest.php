@@ -131,13 +131,13 @@ class ProductControllerTest extends SuluTestCase
         $em = $container->get('doctrine.orm.entity_manager');
 
         $group = $groupRepository->createNew();
-        $groupRepository->save($group);
+        $groupRepository->add($group);
 
         $attribute = $attributeRepository->createNew($group);
         $attribute->setKey('weight');
         $attribute->setType(AttributeInterface::TYPE_NUMBER);
         $attribute->addTranslation(new AttributeTranslation($attribute, 'en', 'Weight'));
-        $attributeRepository->save($attribute);
+        $attributeRepository->add($attribute);
 
         $em->flush();
 
@@ -156,13 +156,13 @@ class ProductControllerTest extends SuluTestCase
         $em = $container->get('doctrine.orm.entity_manager');
 
         $group = $groupRepository->createNew();
-        $groupRepository->save($group);
+        $groupRepository->add($group);
 
         $attribute = $attributeRepository->createNew($group);
         $attribute->setKey('waterproof');
         $attribute->setType(AttributeInterface::TYPE_BOOLEAN);
         $attribute->addTranslation(new AttributeTranslation($attribute, 'en', 'Waterproof'));
-        $attributeRepository->save($attribute);
+        $attributeRepository->add($attribute);
 
         $em->flush();
 
@@ -181,14 +181,14 @@ class ProductControllerTest extends SuluTestCase
         $em = $container->get('doctrine.orm.entity_manager');
 
         $group = $groupRepository->createNew();
-        $groupRepository->save($group);
+        $groupRepository->add($group);
 
         $attribute = $attributeRepository->createNew($group);
         $attribute->setKey('localized_weight');
         $attribute->setType(AttributeInterface::TYPE_NUMBER);
         $attribute->setLocalized(true);
         $attribute->addTranslation(new AttributeTranslation($attribute, 'en', 'Localized Weight'));
-        $attributeRepository->save($attribute);
+        $attributeRepository->add($attribute);
 
         $em->flush();
 
@@ -207,13 +207,13 @@ class ProductControllerTest extends SuluTestCase
         $em = $container->get('doctrine.orm.entity_manager');
 
         $group = $groupRepository->createNew();
-        $groupRepository->save($group);
+        $groupRepository->add($group);
 
         $attribute = $attributeRepository->createNew($group);
         $attribute->setKey('description');
         $attribute->setType(AttributeInterface::TYPE_TEXT);
         $attribute->addTranslation(new AttributeTranslation($attribute, 'en', 'Description'));
-        $attributeRepository->save($attribute);
+        $attributeRepository->add($attribute);
 
         $em->flush();
 
@@ -232,14 +232,14 @@ class ProductControllerTest extends SuluTestCase
         $em = $container->get('doctrine.orm.entity_manager');
 
         $group = $groupRepository->createNew();
-        $groupRepository->save($group);
+        $groupRepository->add($group);
 
         $attribute = $attributeRepository->createNew($group);
         $attribute->setKey('temperature');
         $attribute->setType(AttributeInterface::TYPE_RANGE);
         $attribute->setConfig(['unit' => 'CELSIUS', 'min' => -50, 'max' => 150]);
         $attribute->addTranslation(new AttributeTranslation($attribute, 'en', 'Temperature'));
-        $attributeRepository->save($attribute);
+        $attributeRepository->add($attribute);
 
         $em->flush();
 
@@ -258,7 +258,7 @@ class ProductControllerTest extends SuluTestCase
         $em = $container->get('doctrine.orm.entity_manager');
 
         $group = $groupRepository->createNew();
-        $groupRepository->save($group);
+        $groupRepository->add($group);
 
         $attribute = $attributeRepository->createNew($group);
         $attribute->setKey('color');
@@ -269,7 +269,7 @@ class ProductControllerTest extends SuluTestCase
             $option->addTranslation(new AttributeOptionTranslation($option, 'en', $name));
             $attribute->addOption($option);
         }
-        $attributeRepository->save($attribute);
+        $attributeRepository->add($attribute);
 
         $em->flush();
 
@@ -291,7 +291,7 @@ class ProductControllerTest extends SuluTestCase
         $em = $container->get('doctrine.orm.entity_manager');
 
         $group = $groupRepository->createNew();
-        $groupRepository->save($group);
+        $groupRepository->add($group);
 
         $attribute = $attributeRepository->createNew($group);
         $attribute->setKey($key);
@@ -302,7 +302,7 @@ class ProductControllerTest extends SuluTestCase
             $option->addTranslation(new AttributeOptionTranslation($option, 'en', $name));
             $attribute->addOption($option);
         }
-        $attributeRepository->save($attribute);
+        $attributeRepository->add($attribute);
 
         $em->flush();
 

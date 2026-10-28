@@ -64,7 +64,7 @@ class ProductSchemaTest extends SuluTestCase
         $entityManager = $container->get('doctrine.orm.entity_manager');
 
         $group = $groupRepository->createNew();
-        $groupRepository->save($group);
+        $groupRepository->add($group);
         foreach ([
             ['weight', AttributeInterface::TYPE_NUMBER, true],
             ['delivered', AttributeInterface::TYPE_DATE, true],
@@ -76,7 +76,7 @@ class ProductSchemaTest extends SuluTestCase
             $attribute->setKey($key);
             $attribute->setType($type);
             $attribute->setFilterable($filterable);
-            $attributeRepository->save($attribute);
+            $attributeRepository->add($attribute);
         }
         $entityManager->flush();
 
@@ -113,19 +113,19 @@ class ProductSchemaTest extends SuluTestCase
         $this->assertArrayNotHasKey('weight', $fields);
 
         $group = $groupRepository->createNew();
-        $groupRepository->save($group);
+        $groupRepository->add($group);
         $attribute = $attributeRepository->createNew($group);
         $attribute->setKey('weight');
         $attribute->setType(AttributeInterface::TYPE_NUMBER);
         $attribute->setFilterable(true);
-        $attributeRepository->save($attribute);
+        $attributeRepository->add($attribute);
         $entityManager->flush();
 
         $fields = $this->numericFields($loader->load()->indexes['website']->fields);
         $this->assertInstanceOf(Field\FloatField::class, $fields['weight']);
 
         $attribute->setFilterable(false);
-        $attributeRepository->save($attribute);
+        $attributeRepository->add($attribute);
         $entityManager->flush();
 
         $this->assertArrayNotHasKey('weight', $this->numericFields($loader->load()->indexes['website']->fields));
@@ -133,7 +133,7 @@ class ProductSchemaTest extends SuluTestCase
         $attribute->setFilterable(true);
 
         $attribute->setKey('mass');
-        $attributeRepository->save($attribute);
+        $attributeRepository->add($attribute);
         $entityManager->flush();
 
         $fields = $this->numericFields($loader->load()->indexes['website']->fields);
@@ -207,12 +207,12 @@ class ProductSchemaTest extends SuluTestCase
         $entityManager = $container->get('doctrine.orm.entity_manager');
 
         $group = $groupRepository->createNew();
-        $groupRepository->save($group);
+        $groupRepository->add($group);
         $attribute = $attributeRepository->createNew($group);
         $attribute->setKey($key);
         $attribute->setType(AttributeInterface::TYPE_NUMBER);
         $attribute->setFilterable(true);
-        $attributeRepository->save($attribute);
+        $attributeRepository->add($attribute);
         $entityManager->flush();
     }
 

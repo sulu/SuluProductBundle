@@ -172,7 +172,7 @@ final class ProductFamilyTrashItemHandler implements
             $family->addFamilyAttribute($familyAttribute);
         }
 
-        $this->productFamilyRepository->save($family);
+        $this->productFamilyRepository->add($family);
 
         $this->domainEventCollector->collect(new ProductFamilyRestoredEvent($family, $data));
 
