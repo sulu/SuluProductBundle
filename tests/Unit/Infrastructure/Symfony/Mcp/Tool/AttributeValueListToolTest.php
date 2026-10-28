@@ -22,6 +22,7 @@ use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductAttributeValueRepositoryInterface;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\AttributeValueListTool;
+use Sulu\Product\Tests\Unit\Support\ProductAttributeFragmentLoader;
 use Sulu\Product\UserInterface\Agent\Tool\GetAttributeValues;
 
 #[CoversClass(AttributeValueListTool::class)]
@@ -40,6 +41,7 @@ class AttributeValueListToolTest extends TestCase
             $attributeRepository->reveal(),
             $valueRepository->reveal(),
             new ProductAttributeValueFormatter(new MeasurementRegistry()),
+            ProductAttributeFragmentLoader::converter(),
         ));
 
         $result = $tool->listValues('unknown', 'en');

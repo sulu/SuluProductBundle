@@ -15,7 +15,6 @@ namespace Sulu\Product\Application\Attribute;
 
 use Sulu\Product\Domain\Measurement\MeasurementRegistry;
 use Sulu\Product\Domain\Model\AttributeInterface;
-use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 
 /**
  * A value as displayed: option name, text or number with its display format and unit, date in its
@@ -28,25 +27,93 @@ class ProductAttributeValueFormatter
     ) {
     }
 
-    public function format(ProductAttributeValueInterface $productAttributeValue, string $locale): string|bool|null
+    /**
+     * @param mixed $value as {@see AttributeValueConverter::normalize()} returns it
+     */
+    public function format(AttributeInterface $attribute, mixed $value, string $locale): string|bool|null
     {
-        $attribute = $productAttributeValue->getAttribute();
-
         return match ($attribute->getType()) {
-            AttributeInterface::TYPE_OPTIONS => $productAttributeValue->getAttributeOption()?->getTranslation($locale)?->getName()
-                ?? $productAttributeValue->getAttributeOptionKey(),
-            AttributeInterface::TYPE_TEXT => $this->applyDisplayFormat($attribute, $productAttributeValue->getText()),
-            AttributeInterface::TYPE_NUMBER => $this->applyDisplayFormat($attribute, $productAttributeValue->getNumber()),
-            AttributeInterface::TYPE_DATE => $this->formatDate($attribute, $productAttributeValue->getNumber(), $locale),
-            AttributeInterface::TYPE_BOOLEAN => $this->formatBoolean($productAttributeValue->getNumber()),
-            default => null,
+            AttributeInterface::TYPE_OPTIONS => $this->formatOption($attribute, $value, $locale),
+            AttributeInterface::TYPE_MULTI_OPTIONS => $this->formatOptions($attribute, $value, $locale),
+            AttributeInterface::TYPE_DATE => $this->formatDate($attribute, $value, $locale),
+            AttributeInterface::TYPE_BOOLEAN => $this->formatBoolean($value),
+            AttributeInterface::TYPE_RANGE => $this->formatRange($attribute, $value),
+            // The types of a project end up here. Formatting through a method of AttributeTypeInterface,
+            // so that each type owns its website text, would replace this match: worth doing next.
+            default => \is_array($value) ? $this->formatFields($attribute, $value) : $this->applyDisplayFormat($attribute, $value),
         };
     }
 
-    /** An editor can set a unit and a display format per attribute; without them the value renders bare. */
-    private function applyDisplayFormat(AttributeInterface $attribute, string|float|null $value): ?string
+    /**
+     * The non-empty values joined by commas. The display format may place each one by its field name,
+     * e.g. `%width% × %height%`, like a range's `%from%` and `%to%`.
+     *
+     * @param array<array-key, mixed> $fields
+     */
+    private function formatFields(AttributeInterface $attribute, array $fields): ?string
     {
-        if (null === $value || '' === $value) {
+        $values = [];
+        $placeholders = [];
+        foreach ($fields as $name => $field) {
+            $text = \is_string($field) || \is_int($field) || \is_float($field) ? (string) $field : '';
+            $placeholders['%' . $name . '%'] = $text;
+
+            if ('' !== $text) {
+                $values[] = $text;
+            }
+        }
+
+        return $this->applyDisplayFormat($attribute, [] === $values ? null : \implode(', ', $values), $placeholders);
+    }
+
+    private function formatOptions(AttributeInterface $attribute, mixed $optionKeys, string $locale): ?string
+    {
+        if (!\is_array($optionKeys)) {
+            return null;
+        }
+
+        $names = \array_filter(
+            \array_map(fn (mixed $optionKey): ?string => $this->formatOption($attribute, $optionKey, $locale), $optionKeys),
+            static fn (?string $name): bool => null !== $name,
+        );
+
+        return [] === $names ? null : \implode(', ', $names);
+    }
+
+    private function formatOption(AttributeInterface $attribute, mixed $optionKey, string $locale): ?string
+    {
+        if (!\is_string($optionKey)) {
+            return null;
+        }
+
+        return $attribute->getOption($optionKey)?->getTranslation($locale)?->getName() ?? $optionKey;
+    }
+
+    /**
+     * Open on one side renders as "≥ from" or "≤ to". The display format may place the bounds with
+     * %from% and %to%.
+     */
+    private function formatRange(AttributeInterface $attribute, mixed $range): ?string
+    {
+        $from = \is_array($range) && \is_float($range['from'] ?? null) ? (string) $range['from'] : '';
+        $to = \is_array($range) && \is_float($range['to'] ?? null) ? (string) $range['to'] : '';
+
+        $value = match (true) {
+            '' !== $from && '' !== $to => $from . ' – ' . $to,
+            '' !== $from => '≥ ' . $from,
+            '' !== $to => '≤ ' . $to,
+            default => null,
+        };
+
+        return $this->applyDisplayFormat($attribute, $value, ['%from%' => $from, '%to%' => $to]);
+    }
+
+    /**
+     * @param array<string, string> $placeholders further placeholders of the type, e.g. a range's bounds
+     */
+    private function applyDisplayFormat(AttributeInterface $attribute, mixed $value, array $placeholders = []): ?string
+    {
+        if (!\is_string($value) && !\is_int($value) && !\is_float($value) || '' === $value) {
             return null;
         }
 
@@ -60,7 +127,9 @@ class ProductAttributeValueFormatter
         $unitKey = $config['unit'] ?? null;
         $unit = \is_string($unitKey) ? $this->measurementRegistry->findUnit($unitKey) : null;
 
-        return \trim(\str_replace(['%value%', '%unit%'], [(string) $value, $unit?->getSymbol() ?? ''], $format));
+        $placeholders = ['%value%' => (string) $value, '%unit%' => $unit?->getSymbol() ?? ''] + $placeholders;
+
+        return \trim(\str_replace(\array_keys($placeholders), \array_values($placeholders), $format));
     }
 
     /**
@@ -68,9 +137,9 @@ class ProductAttributeValueFormatter
      * without one the locale's medium date, because a bare `05.03.2024` names a different month elsewhere.
      * Rendered in UTC, because a date is stored as midnight UTC.
      */
-    private function formatDate(AttributeInterface $attribute, ?float $timestamp, string $locale): ?string
+    private function formatDate(AttributeInterface $attribute, mixed $date, string $locale): ?string
     {
-        if (null === $timestamp) {
+        if (!\is_string($date)) {
             return null;
         }
 
@@ -85,11 +154,15 @@ class ProductAttributeValueFormatter
             \is_string($format) && '' !== $format ? $format : null,
         );
 
-        return $formatter->format(new \DateTimeImmutable('@' . (int) $timestamp)) ?: null;
+        return $formatter->format(new \DateTimeImmutable($date, new \DateTimeZone('UTC'))) ?: null;
     }
 
-    private function formatBoolean(?float $number): ?bool
+    private function formatBoolean(mixed $value): ?bool
     {
-        return null === $number ? null : 0.0 !== $number;
+        if (\is_bool($value)) {
+            return $value;
+        }
+
+        return \is_string($value) ? AttributeValueConverter::TRUE === $value : null;
     }
 }

@@ -14,13 +14,13 @@ declare(strict_types=1);
 namespace Sulu\Product\Infrastructure\Sulu\Content\Normalizer;
 
 use Sulu\Content\Application\ContentNormalizer\Normalizer\NormalizerInterface;
-use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
+use Sulu\Product\Application\Attribute\AttributeValueConverterInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 
 class ProductAttributesNormalizer implements NormalizerInterface
 {
     public function __construct(
-        private readonly AttributeTypeRegistry $attributeTypeRegistry,
+        private readonly AttributeValueConverterInterface $attributeValueConverter,
     ) {
     }
 
@@ -56,10 +56,8 @@ class ProductAttributesNormalizer implements NormalizerInterface
             }
         }
 
-        foreach ($object->getAttributes() as $attrValue) {
-            $attribute = $attrValue->getAttribute();
-            $type = $this->attributeTypeRegistry->get($attribute->getType());
-            $attributesMap[$attribute->getUuid()] = $type->readValue($attrValue);
+        foreach ($this->attributeValueConverter->normalizeAll($object->getAttributes()) as $uuid => ['value' => $value]) {
+            $attributesMap[$uuid] = $value;
         }
 
         $normalizedData['attributes'] = $attributesMap;

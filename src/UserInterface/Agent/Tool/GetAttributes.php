@@ -76,7 +76,7 @@ final class GetAttributes
             $unit = \is_string($unitKey) ? $this->measurementRegistry->findUnit($unitKey) : null;
 
             $options = [];
-            if (AttributeInterface::TYPE_OPTIONS === $attribute->getType()) {
+            if (\in_array($attribute->getType(), [AttributeInterface::TYPE_OPTIONS, AttributeInterface::TYPE_MULTI_OPTIONS], true)) {
                 foreach ($attribute->getOptions() as $option) {
                     $options[] = [
                         'key' => $option->getKey(),

@@ -42,7 +42,7 @@ final class AttributeListTool
     #[McpTool(
         name: 'sulu_attribute_list',
         title: 'List Product Attributes',
-        description: 'List product attributes, paginated. Each entry names its attribute group. The "id" of each attribute is its UUID and the key to use in the "attributes" map of sulu_product_create, sulu_product_update and the variant tools, e.g. {"<id>": "red"}. "type" tells you what a value looks like: "text" a string, "number" a number, "date" an ISO-8601 date, "options" one of the listed option keys, "boolean" true or false. Which attributes actually apply to a given product, and which are required or variant axes, depends on its family. See sulu_product_family_list.',
+        description: 'List product attributes, paginated. Each entry names its attribute group. The "id" of each attribute is its UUID and the key to use in the "attributes" map of sulu_product_create, sulu_product_update and the variant tools, e.g. {"<id>": "red"}. "type" tells you what a value looks like: "text" a string, "number" a number, "date" an ISO-8601 date, "options" one of the listed option keys, "multi_options" a list of the listed option keys, "boolean" true or false, "range" an object {"from": 1, "to": 5} where either bound may be omitted. Which attributes actually apply to a given product, and which are required or variant axes, depends on its family. See sulu_product_family_list.',
         annotations: new ToolAnnotations(readOnlyHint: true, openWorldHint: false),
     )]
     #[RequiresPermission(requirements: [
@@ -117,7 +117,7 @@ final class AttributeListTool
             'position' => $attribute->getPosition(),
         ];
 
-        if (AttributeInterface::TYPE_OPTIONS === $attribute->getType()) {
+        if (\in_array($attribute->getType(), [AttributeInterface::TYPE_OPTIONS, AttributeInterface::TYPE_MULTI_OPTIONS], true)) {
             $options = [];
             foreach ($attribute->getOptions() as $option) {
                 $options[] = [

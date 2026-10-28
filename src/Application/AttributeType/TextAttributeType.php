@@ -13,37 +13,17 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Application\AttributeType;
 
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Product\Domain\Model\AttributeInterface;
-use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
-use Webmozart\Assert\Assert;
 
-final class TextAttributeType extends AbstractAttributeType
+final class TextAttributeType implements AttributeTypeInterface
 {
     public function getKey(): string
     {
         return AttributeInterface::TYPE_TEXT;
     }
 
-    public function getFormKey(): string
+    public function configureForm(FormMetadata $form, AttributeInterface $attribute, string $locale): void
     {
-        return 'product_attribute_text';
-    }
-
-    public function readValue(ProductAttributeValueInterface $value): mixed
-    {
-        return $value->getText();
-    }
-
-    public function writeValue(ProductAttributeValueInterface $value, mixed $raw): void
-    {
-        if (null === $raw) {
-            $value->setText(null);
-
-            return;
-        }
-
-        Assert::string($raw);
-
-        $value->setText($raw);
     }
 }

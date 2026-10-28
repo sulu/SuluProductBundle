@@ -13,19 +13,16 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Application\AttributeType;
 
-use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
+use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Product\Domain\Model\AttributeInterface;
-use Sulu\Product\Domain\Model\ProductAttributeValueInterface;
 
 interface AttributeTypeInterface
 {
     public function getKey(): string;
 
-    public function getFormKey(): string;
-
-    public function configureField(FieldMetadata $field, AttributeInterface $attribute, string $locale): void;
-
-    public function readValue(ProductAttributeValueInterface $value): mixed;
-
-    public function writeValue(ProductAttributeValueInterface $value, mixed $raw): void;
+    /**
+     * Adds what the fields of the form fragment `product_attribute_<key>` need for this attribute,
+     * e.g. a number's bounds or a select's choices.
+     */
+    public function configureForm(FormMetadata $form, AttributeInterface $attribute, string $locale): void;
 }

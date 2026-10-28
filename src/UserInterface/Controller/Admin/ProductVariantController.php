@@ -28,7 +28,7 @@ use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Content\Domain\Model\WorkflowInterface;
 use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
 use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushStamp;
-use Sulu\Product\Application\AttributeType\AttributeTypeRegistry;
+use Sulu\Product\Application\Attribute\AttributeValueConverterInterface;
 use Sulu\Product\Application\Message\ApplyWorkflowTransitionProductMessage;
 use Sulu\Product\Application\Message\CreateProductMessage;
 use Sulu\Product\Application\Message\ModifyProductMessage;
@@ -75,7 +75,7 @@ final class ProductVariantController implements SecuredControllerInterface
         private DoctrineListBuilderFactoryInterface $listBuilderFactory,
         private RestHelperInterface $restHelper,
         private ProductAttributeValueRepositoryInterface $productAttributeValueRepository,
-        private AttributeTypeRegistry $attributeTypeRegistry,
+        private AttributeValueConverterInterface $attributeValueConverter,
     ) {
         $this->messageBus = $messageBus;
     }
@@ -413,24 +413,25 @@ final class ProductVariantController implements SecuredControllerInterface
         $unlocalized = [];
         $localized = [];
         foreach ($values as $value) {
-            $attribute = $value->getAttribute();
-            if (!$this->attributeTypeRegistry->has($attribute->getType())) {
-                continue;
-            }
-
-            $wireValue = $this->attributeTypeRegistry->get($attribute->getType())->readValue($value);
-            if (null === $wireValue) {
-                continue;
-            }
-
+            $uuid = $value->getAttribute()->getUuid();
             if (null === $value->getProductDimensionContent()->getLocale()) {
-                $unlocalized[$attribute->getUuid()] = $wireValue;
+                $unlocalized[$uuid][] = $value;
             } else {
-                $localized[$attribute->getUuid()] = $wireValue;
+                $localized[$uuid][] = $value;
             }
         }
 
-        return \array_replace($unlocalized, $localized);
+        $wireValues = [];
+        foreach ([$unlocalized, $localized] as $rowsByAttribute) {
+            foreach ($rowsByAttribute as $uuid => $rows) {
+                $wireValue = $this->attributeValueConverter->normalize($rows[0]->getAttribute(), $rows);
+                if (null !== $wireValue) {
+                    $wireValues[$uuid] = $wireValue;
+                }
+            }
+        }
+
+        return $wireValues;
     }
 
     private function resolveFamily(ProductInterface $parent): ProductFamilyInterface

@@ -138,6 +138,32 @@ class GetAttributesTest extends TestCase
         ], $result[0]['options']);
     }
 
+    public function testInvokeReturnsOptionsOfMultiOptionsAttribute(): void
+    {
+        $group = new AttributeGroup('group-1');
+        $group->setCreated(new \DateTimeImmutable('2026-01-01'));
+
+        $attribute = new Attribute($group);
+        $attribute->setKey('colours');
+        $attribute->setType(AttributeInterface::TYPE_MULTI_OPTIONS);
+        $attribute->setPosition(0);
+
+        $translatedOption = new AttributeOption($attribute, 'red');
+        $translatedOption->addTranslation(new AttributeOptionTranslation($translatedOption, 'en', 'Red'));
+        $attribute->addOption($translatedOption);
+        $attribute->addOption(new AttributeOption($attribute, 'blue'));
+
+        $this->attributeRepository->findBy(Argument::cetera())->willReturn([$attribute]);
+
+        $result = ($this->getAttributes)('en');
+
+        $this->assertSame(AttributeInterface::TYPE_MULTI_OPTIONS, $result[0]['type']);
+        $this->assertSame([
+            ['key' => 'red', 'label' => 'Red'],
+            ['key' => 'blue', 'label' => 'blue'],
+        ], $result[0]['options']);
+    }
+
     public function testInvokeOrdersByGroupThenPosition(): void
     {
         $groupA = new AttributeGroup('group-1');
