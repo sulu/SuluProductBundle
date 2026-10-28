@@ -191,7 +191,7 @@ class ProductFamilyRepositoryTest extends SuluTestCase
         for ($i = 0; $i < 5; ++$i) {
             $family = $this->repository->createNew();
             $family->setKey('family-' . $i);
-            $this->repository->save($family);
+            $this->repository->add($family);
         }
         $this->entityManager->flush();
         $this->entityManager->clear();
@@ -227,7 +227,7 @@ class ProductFamilyRepositoryTest extends SuluTestCase
         foreach (['first', 'second'] as $key) {
             $family = $this->repository->createNew();
             $family->setKey($key);
-            $this->repository->save($family);
+            $this->repository->add($family);
         }
         $this->entityManager->flush();
         $this->entityManager->clear();
@@ -240,10 +240,10 @@ class ProductFamilyRepositoryTest extends SuluTestCase
         $family = $this->repository->createNew();
         $family->setKey('shoes');
         $family->setExternalIdentifier('shoes');
-        $this->repository->save($family);
+        $this->repository->add($family);
         $other = $this->repository->createNew();
         $other->setKey('hats-family');
-        $this->repository->save($other);
+        $this->repository->add($other);
         $this->entityManager->flush();
         $this->entityManager->clear();
 
@@ -256,7 +256,7 @@ class ProductFamilyRepositoryTest extends SuluTestCase
         for ($i = 0; $i < 3; ++$i) {
             $family = $this->repository->createNew();
             $family->setKey('family-' . $i);
-            $this->repository->save($family);
+            $this->repository->add($family);
         }
         $this->entityManager->flush();
         $this->entityManager->clear();
