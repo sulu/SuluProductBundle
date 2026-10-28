@@ -3,9 +3,35 @@
 {% block content %}
     <h1>{{ content.title }}</h1>
 
-    {{ content.description|raw }}
+    <div class="description">{{ content.description|raw }}</div>
 
     {% if product.currentVariant is defined %}
         <p class="current-variant">{{ product.currentVariant.title }} {{ product.currentVariant.code }}</p>
     {% endif %}
+
+    {% set excerpt = extension.excerpt|default({}) %}
+    <section class="excerpt">
+        <h2 class="excerpt-title">{{ excerpt.title|default }}</h2>
+        <p class="excerpt-description">{{ excerpt.description|default }}</p>
+        <ul class="excerpt-tags">{% for tag in excerpt.tags|default([]) %}<li>{{ tag }}</li>{% endfor %}</ul>
+        <ul class="excerpt-categories">{% for category in excerpt.categories|default([]) %}<li>{{ category.name }}</li>{% endfor %}</ul>
+    </section>
+
+    {% set attributes = product.attributes|default([]) %}
+    {% if product.currentVariant is defined %}
+        {% set attributes = sulu_product_merge_attributes(attributes, product.currentVariant.attributes|default([])) %}
+    {% endif %}
+
+    <section class="attributes">
+        {% for group in attributes|sulu_product_attribute_groups %}
+            <div class="attribute-group">
+                <h2>{{ group.label }}</h2>
+                <ul>
+                    {% for attribute in group.attributes %}
+                        <li>{{ attribute.label }}: {% if attribute.formattedValue is same as(true) %}Yes{% elseif attribute.formattedValue is same as(false) %}No{% else %}{{ attribute.formattedValue }}{% endif %}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endfor %}
+    </section>
 {% endblock %}

@@ -20,6 +20,7 @@ use Sulu\Product\Domain\Model\AttributeInterface;
 /**
  * @phpstan-type AttributeRepositoryFilters array{
  *     uuid?: string,
+ *     uuids?: list<string>,
  *     key?: string,
  *     externalIdentifier?: string,
  * }
