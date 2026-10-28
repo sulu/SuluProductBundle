@@ -464,7 +464,7 @@ class ProductDetailPageDataTest extends SuluTestCase
             \ksort($options);
 
             $graph[$attribute->getKey()] = [
-                'value' => $value->getValueKey(),
+                'valueKey' => $value->getValueKey(),
                 'text' => $value->getText(),
                 'number' => $value->getNumber(),
                 'optionKey' => $value->getAttributeOptionKey(),
