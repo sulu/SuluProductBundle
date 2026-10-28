@@ -114,7 +114,7 @@ final class ProductFamilyRepository implements ProductFamilyRepositoryInterface
 
         $queryBuilder = $this->createQueryBuilder($filters);
 
-        $queryBuilder->select('COUNT(DISTINCT productFamily.id)');
+        $queryBuilder->select('COUNT(DISTINCT productFamily.uuid)');
 
         return (int) $queryBuilder->getQuery()->getSingleScalarResult();
     }
