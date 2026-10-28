@@ -42,6 +42,13 @@ final class ApplyWorkflowTransitionProductMessageHandler
         $locale = $message->getLocale();
         $transitionName = $message->getTransitionName();
 
+        $versions = [DimensionContentInterface::CURRENT_VERSION];
+        if (WorkflowInterface::WORKFLOW_TRANSITION_PUBLISH === $transitionName) {
+            // Sulu names the snapshot after the current second. Loading a snapshot of that second lets Sulu
+            // update it instead of inserting a duplicate that violates uniq_pr_product_code.
+            $versions[] = \time();
+        }
+
         $product = $this->productRepository->getOneBy(
             $message->getIdentifier(),
             [
@@ -50,6 +57,7 @@ final class ApplyWorkflowTransitionProductMessageHandler
                     'dimensionAttributes' => [
                         'locale' => $locale,
                         'stage' => [DimensionContentInterface::STAGE_DRAFT, DimensionContentInterface::STAGE_LIVE],
+                        'version' => $versions,
                     ],
                 ],
             ]
