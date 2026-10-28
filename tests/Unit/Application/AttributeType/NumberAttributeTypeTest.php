@@ -22,6 +22,7 @@ use Sulu\Product\Application\AttributeType\NumberAttributeType;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\AttributeInterface;
+use Sulu\Product\Tests\Unit\Support\AttributeTypes;
 use Sulu\Product\Tests\Unit\Support\FormOf;
 
 #[CoversClass(NumberAttributeType::class)]
@@ -29,13 +30,13 @@ class NumberAttributeTypeTest extends TestCase
 {
     public function testKey(): void
     {
-        $type = new NumberAttributeType();
+        $type = AttributeTypes::number();
         self::assertSame(AttributeInterface::TYPE_NUMBER, $type->getKey());
     }
 
     public function testConfigureFieldAddsMinMaxStepFromConfig(): void
     {
-        $type = new NumberAttributeType();
+        $type = AttributeTypes::number();
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setConfig(['min' => 0, 'max' => 100, 'step' => 0.5]);
 
@@ -53,7 +54,7 @@ class NumberAttributeTypeTest extends TestCase
 
     public function testConfigureFieldSkipsMissingConfigKeys(): void
     {
-        $type = new NumberAttributeType();
+        $type = AttributeTypes::number();
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setConfig(['min' => 0]);
 
@@ -71,11 +72,28 @@ class NumberAttributeTypeTest extends TestCase
         $form = new FormMetadata();
         $form->addItem(new SectionMetadata('section'));
 
-        $type = new NumberAttributeType();
+        $type = AttributeTypes::number();
         $attribute = new Attribute(new AttributeGroup());
         $attribute->setConfig(['min' => 0]);
         $type->configureForm($form, $attribute, 'en');
 
         $this->addToAssertionCount(1);
+    }
+
+    public function testFormatValuePlacesTheNumberInTheDisplayFormat(): void
+    {
+        $attribute = new Attribute(new AttributeGroup());
+
+        self::assertSame('16.5', AttributeTypes::number()->formatValue($attribute, 16.5, 'en'));
+        self::assertNull(AttributeTypes::number()->formatValue($attribute, null, 'en'));
+
+        $attribute->setConfig(['displayFormat' => '%value% %unit%', 'unit' => 'MILLIMETER']);
+
+        self::assertSame('16 mm', AttributeTypes::number()->formatValue($attribute, 16.0, 'en'));
+    }
+
+    public function testHasADisplayFormat(): void
+    {
+        self::assertTrue(AttributeTypes::number()->hasDisplayFormat());
     }
 }

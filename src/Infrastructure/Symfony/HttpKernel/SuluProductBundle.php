@@ -18,6 +18,7 @@ use Sulu\Bundle\PersistenceBundle\DependencyInjection\PersistenceExtensionTrait;
 use Sulu\Bundle\PersistenceBundle\PersistenceBundleTrait;
 use Sulu\Content\Infrastructure\Sulu\Preview\ContentObjectProvider;
 use Sulu\Mcp\Domain\Content\ContentTypeExtensionInterface;
+use Sulu\Product\Application\Attribute\AttributeDisplayFormatter;
 use Sulu\Product\Application\Attribute\AttributeValueConverter;
 use Sulu\Product\Application\Attribute\ProductAttributeValueFormatter;
 use Sulu\Product\Application\AttributeType\AttributeTypeInterface;
@@ -108,6 +109,7 @@ use Sulu\Product\Infrastructure\Doctrine\Repository\ProductFamilyRepository;
 use Sulu\Product\Infrastructure\Doctrine\Repository\ProductRepository;
 use Sulu\Product\Infrastructure\Sulu\Activity\ProductWorkflowTransitionRequestSubscriber;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeAdmin;
+use Sulu\Product\Infrastructure\Sulu\Admin\AttributeDisplayFormatFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeFieldFactory;
 use Sulu\Product\Infrastructure\Sulu\Admin\AttributeGroupAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
@@ -509,10 +511,16 @@ final class SuluProductBundle extends AbstractBundle
         // Built-in attribute types
         $services->set('sulu_product.attribute_type_number')
             ->class(NumberAttributeType::class)
+            ->args([
+                new Reference('sulu_product.attribute_display_formatter'),
+            ])
             ->tag('sulu_product.attribute_type');
 
         $services->set('sulu_product.attribute_type_text')
             ->class(TextAttributeType::class)
+            ->args([
+                new Reference('sulu_product.attribute_display_formatter'),
+            ])
             ->tag('sulu_product.attribute_type');
 
         $services->set('sulu_product.attribute_type_date')
@@ -541,6 +549,7 @@ final class SuluProductBundle extends AbstractBundle
             ->class(RangeAttributeType::class)
             ->args([
                 new Reference('sulu_product.attribute_type_number'),
+                new Reference('sulu_product.attribute_display_formatter'),
             ])
             ->tag('sulu_product.attribute_type');
 
@@ -764,6 +773,13 @@ final class SuluProductBundle extends AbstractBundle
                 '%sulu_product.measurements%',
             ]);
         $services->alias(MeasurementRegistry::class, 'sulu_product.measurement_registry');
+
+        $services->set('sulu_product.attribute_display_formatter')
+            ->class(AttributeDisplayFormatter::class)
+            ->args([
+                new Reference('sulu_product.measurement_registry'),
+            ]);
+        $services->alias(AttributeDisplayFormatter::class, 'sulu_product.attribute_display_formatter');
 
         $services->set('sulu_product.association_type_registry')
             ->class(ProductAssociationTypeRegistry::class)
@@ -1029,6 +1045,13 @@ final class SuluProductBundle extends AbstractBundle
             ->class(ProductCodeFormMetadataVisitor::class)
             ->tag('sulu_admin.form_metadata_visitor');
 
+        $services->set('sulu_product.attribute_display_format_form_metadata_visitor')
+            ->class(AttributeDisplayFormatFormMetadataVisitor::class)
+            ->args([
+                tagged_iterator('sulu_product.attribute_type'),
+            ])
+            ->tag('sulu_admin.form_metadata_visitor');
+
         $services->set('sulu_product.product_with_variants_route_guard')
             ->class(ProductWithVariantsRouteGuard::class)
             ->tag('doctrine.event_listener', ['event' => 'onFlush']);
@@ -1153,6 +1176,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.current_variant_provider'),
                 new Reference('sulu_http_cache.reference_store'),
                 new Reference('sulu_product.attribute_value_converter'),
+                new Reference('sulu_product.product_attribute_value_formatter'),
                 '%sulu_product.variants.properties%',
             ])
             ->tag('sulu_content.content_resolver');
@@ -1244,7 +1268,7 @@ final class SuluProductBundle extends AbstractBundle
         $services->set('sulu_product.product_attribute_value_formatter')
             ->class(ProductAttributeValueFormatter::class)
             ->args([
-                new Reference('sulu_product.measurement_registry'),
+                new Reference('sulu_product.attribute_type_registry'),
             ]);
 
         $services->set('sulu_product.product_attribute_twig_extension')

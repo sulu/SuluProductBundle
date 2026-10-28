@@ -18,7 +18,7 @@ class InvalidDateDisplayFormatException extends \Exception
     public function __construct(private string $displayFormat)
     {
         parent::__construct(\sprintf(
-            'The date display format "%s" renders no date. Put literal words in single quotes, e.g. \'Released\' MMMM yyyy.',
+            'The date display format "%s" is not an ICU skeleton of date fields, e.g. yMMMM or yMMMd.',
             $displayFormat,
         ));
     }

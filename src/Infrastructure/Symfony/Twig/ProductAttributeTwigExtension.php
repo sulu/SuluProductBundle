@@ -24,7 +24,7 @@ use Twig\TwigFunction;
  * Combines a product's and a variant's attribute values, formats them and folds them into their
  * attribute groups for display.
  *
- * @phpstan-type AttributeValue array{attribute: AttributeInterface, value: mixed}
+ * @phpstan-type AttributeValue array{attribute: AttributeInterface, value: mixed, formattedValue?: string|bool|null}
  * @phpstan-type ResolvedAttribute array{key: string, label: string, type: string, value: mixed, formattedValue: string|bool, position: int, group: array{key: string, label: string}}
  */
 class ProductAttributeTwigExtension extends AbstractExtension
@@ -46,7 +46,6 @@ class ProductAttributeTwigExtension extends AbstractExtension
     {
         return [
             new TwigFilter('sulu_product_attribute_groups', [$this, 'groupAttributes']),
-            new TwigFilter('sulu_product_format_attribute_value', [$this, 'formatValue']),
         ];
     }
 
@@ -92,7 +91,10 @@ class ProductAttributeTwigExtension extends AbstractExtension
 
         foreach ($attributeValues as $attributeValue) {
             $attribute = $attributeValue['attribute'];
-            $formatted = $this->formatValue($attributeValue, $locale);
+            // The resolver has formatted its values already; formatting an option again costs a query.
+            $formatted = \array_key_exists('formattedValue', $attributeValue)
+                ? $attributeValue['formattedValue']
+                : $this->formatter->format($attribute, $attributeValue['value'], $locale);
 
             if (null === $formatted || '' === $formatted) {
                 continue;
@@ -135,22 +137,5 @@ class ProductAttributeTwigExtension extends AbstractExtension
         }
 
         return $result;
-    }
-
-    /**
-     * The value as displayed, see ProductAttributeValueFormatter. Without a locale the request's;
-     * null for an empty value or without any locale.
-     *
-     * @param AttributeValue $attributeValue
-     */
-    public function formatValue(array $attributeValue, ?string $locale = null): string|bool|null
-    {
-        $locale ??= $this->requestAnalyzer->getCurrentLocalization()?->getLocale();
-
-        if (null === $locale) {
-            return null;
-        }
-
-        return $this->formatter->format($attributeValue['attribute'], $attributeValue['value'], $locale);
     }
 }

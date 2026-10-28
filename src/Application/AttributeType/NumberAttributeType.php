@@ -16,11 +16,17 @@ namespace Sulu\Product\Application\AttributeType;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\OptionMetadata;
+use Sulu\Product\Application\Attribute\AttributeDisplayFormatter;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Webmozart\Assert\Assert;
 
-final class NumberAttributeType implements AttributeTypeInterface
+final class NumberAttributeType implements AttributeTypeInterface, FormattableAttributeTypeInterface
 {
+    public function __construct(
+        private readonly AttributeDisplayFormatter $displayFormatter,
+    ) {
+    }
+
     public function getKey(): string
     {
         return AttributeInterface::TYPE_NUMBER;
@@ -49,5 +55,15 @@ final class NumberAttributeType implements AttributeTypeInterface
                 $field->addOption($option);
             }
         }
+    }
+
+    public function formatValue(AttributeInterface $attribute, mixed $value, string $locale): ?string
+    {
+        return $this->displayFormatter->format($attribute, $value);
+    }
+
+    public function hasDisplayFormat(): bool
+    {
+        return true;
     }
 }

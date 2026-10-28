@@ -118,10 +118,10 @@ class ProductResolverAttributesTest extends SuluTestCase
         self::assertIsArray($attributes);
         self::assertArrayHasKey('housing', $attributes);
 
-        // the values pass through unformatted; the Twig filter renders them
         $housing = $attributes['housing'];
         self::assertIsArray($housing);
         self::assertSame('Zink', $housing['value']);
+        self::assertSame('Zink', $housing['formattedValue']);
         $attribute = $housing['attribute'];
         self::assertInstanceOf(AttributeInterface::class, $attribute);
         self::assertSame('Mechanische Daten', $attribute->getGroup()->getTranslation('de')?->getName());
@@ -172,6 +172,7 @@ class ProductResolverAttributesTest extends SuluTestCase
         $temperature = $attributes['temperature'];
         self::assertIsArray($temperature);
         self::assertSame(['from' => -20.0, 'to' => 60.0], $temperature['value']);
+        self::assertSame('-20 – 60', $temperature['formattedValue']);
         self::assertInstanceOf(AttributeInterface::class, $temperature['attribute']);
     }
 
@@ -223,6 +224,7 @@ class ProductResolverAttributesTest extends SuluTestCase
         $colours = $attributes['colours'];
         self::assertIsArray($colours);
         self::assertSame(['red', 'blue'], $colours['value']);
+        self::assertSame('red, blue', $colours['formattedValue']);
         self::assertInstanceOf(AttributeInterface::class, $colours['attribute']);
     }
 
@@ -279,5 +281,6 @@ class ProductResolverAttributesTest extends SuluTestCase
         $waterproof = $attributes['waterproof'];
         self::assertIsArray($waterproof);
         self::assertSame($expected, $waterproof['value']);
+        self::assertSame($expected, $waterproof['formattedValue']);
     }
 }

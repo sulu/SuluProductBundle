@@ -14,10 +14,16 @@ declare(strict_types=1);
 namespace Sulu\Product\Application\AttributeType;
 
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
+use Sulu\Product\Application\Attribute\AttributeDisplayFormatter;
 use Sulu\Product\Domain\Model\AttributeInterface;
 
-final class TextAttributeType implements AttributeTypeInterface
+final class TextAttributeType implements AttributeTypeInterface, FormattableAttributeTypeInterface
 {
+    public function __construct(
+        private readonly AttributeDisplayFormatter $displayFormatter,
+    ) {
+    }
+
     public function getKey(): string
     {
         return AttributeInterface::TYPE_TEXT;
@@ -25,5 +31,15 @@ final class TextAttributeType implements AttributeTypeInterface
 
     public function configureForm(FormMetadata $form, AttributeInterface $attribute, string $locale): void
     {
+    }
+
+    public function formatValue(AttributeInterface $attribute, mixed $value, string $locale): ?string
+    {
+        return $this->displayFormatter->format($attribute, $value);
+    }
+
+    public function hasDisplayFormat(): bool
+    {
+        return true;
     }
 }

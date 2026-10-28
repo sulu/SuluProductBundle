@@ -115,8 +115,7 @@
             </meta>
         </property>
 
-        <property name="config/displayFormat" type="text_line"
-                  visibleCondition='type == "text" || type == "number" || type == "date" || type == "range"'>
+        <property name="config/displayFormat" type="text_line">
             <meta>
                 <title>sulu_product.display_format</title>
                 <info_text>sulu_product.display_format_info_text</info_text>
