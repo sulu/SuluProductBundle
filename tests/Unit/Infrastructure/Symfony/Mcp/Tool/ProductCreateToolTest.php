@@ -24,9 +24,12 @@ use Sulu\Content\Application\ContentManager\ContentManagerInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Mcp\Application\AdminLink\AdminLinkGeneratorInterface;
 use Sulu\Mcp\Application\Content\BlockDataValidator;
-use Sulu\Mcp\Application\Content\ContentMetadataMapper;
 use Sulu\Mcp\Application\Metadata\MetadataLocaleResolver;
 use Sulu\Product\Application\Message\CreateProductMessage;
+use Sulu\Product\Application\Routing\PerProductSlugProvider;
+use Sulu\Product\Application\Routing\PerVariantSlugProvider;
+use Sulu\Product\Application\Routing\ProductSlugProviderInterface;
+use Sulu\Product\Application\Routing\VariantUrlBuilder;
 use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
@@ -36,10 +39,12 @@ use Sulu\Product\Infrastructure\Symfony\Mcp\ProductAssociationResolver;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductCreateTool;
 use Sulu\Product\Tests\Unit\Fixture\ArrayMetadataProvider;
 use Sulu\Product\Tests\Unit\Fixture\CompletenessCheckerFactory;
+use Sulu\Product\Tests\Unit\Fixture\ContentMetadataMapperFactory;
 use Sulu\Product\Tests\Unit\Fixture\FixedBlockIdGenerator;
 use Sulu\Product\Tests\Unit\Fixture\ProductContentMetadata;
 use Sulu\Product\Tests\Unit\Fixture\ProductUrlHelperFactory;
 use Sulu\Product\Tests\Unit\Fixture\ProjectLocalesFactory;
+use Sulu\Route\Domain\Repository\RouteRepositoryInterface;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
@@ -64,7 +69,7 @@ final class ProductCreateToolTest extends TestCase
         $this->tool = new ProductCreateTool(
             $this->messageBus->reveal(),
             $this->contentManager->reveal(),
-            new ContentMetadataMapper(new ArrayMetadataProvider()),
+            ContentMetadataMapperFactory::create(new ArrayMetadataProvider()),
             new BlockDataValidator($this->formMetadataProvider(), new MetadataLocaleResolver(new TokenStorage(), 'en')),
             FixedBlockIdGenerator::returning('b1', 'b2', 'b3'),
             $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
@@ -72,6 +77,7 @@ final class ProductCreateToolTest extends TestCase
             CompletenessCheckerFactory::create(),
             ProductUrlHelperFactory::create(),
             ProjectLocalesFactory::create(),
+            new PerVariantSlugProvider(),
         );
     }
 
@@ -256,6 +262,15 @@ final class ProductCreateToolTest extends TestCase
         $this->assertArrayNotHasKey('url', $this->capturedData($captured));
     }
 
+    public function testCreateProductWithVariantsGetsAUrlWhenTheProductOwnsTheRoute(): void
+    {
+        $captured = $this->captureMessage(new Product('new-uuid'));
+
+        $this->toolWithRouteType(new PerProductSlugProvider($this->createStub(RouteRepositoryInterface::class), new VariantUrlBuilder('variant')))->createProduct('en', 'family-uuid', 'Shirt', type: ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+
+        $this->assertSame('/products/shirt', $this->capturedData($captured)['url']);
+    }
+
     public function testCreateProductWithAPageTreeRouteGetsNoUrlFromTheTitle(): void
     {
         $captured = $this->captureMessage(new Product('new-uuid'));
@@ -278,12 +293,12 @@ final class ProductCreateToolTest extends TestCase
         return $message->getData();
     }
 
-    private function toolWithRouteType(): ProductCreateTool
+    private function toolWithRouteType(?ProductSlugProviderInterface $slugProvider = null): ProductCreateTool
     {
         return new ProductCreateTool(
             $this->messageBus->reveal(),
             $this->contentManager->reveal(),
-            new ContentMetadataMapper(new ArrayMetadataProvider()),
+            ContentMetadataMapperFactory::create(new ArrayMetadataProvider()),
             new BlockDataValidator($this->formMetadataProvider(), new MetadataLocaleResolver(new TokenStorage(), 'en')),
             FixedBlockIdGenerator::returning('b1', 'b2', 'b3'),
             $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
@@ -291,6 +306,7 @@ final class ProductCreateToolTest extends TestCase
             CompletenessCheckerFactory::create(),
             ProductUrlHelperFactory::create('route'),
             ProjectLocalesFactory::create(),
+            $slugProvider ?? new PerVariantSlugProvider(),
         );
     }
 
@@ -371,6 +387,18 @@ final class ProductCreateToolTest extends TestCase
 
         $this->assertTrue($result['success']);
         $this->assertArrayNotHasKey('warning', $result);
+    }
+
+    public function testCreateProductWarnsForAProductWithVariantsWhenTheProductOwnsTheRoute(): void
+    {
+        $product = new Product('new-uuid');
+        $product->setType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $this->captureMessage($product);
+
+        $result = $this->toolWithRouteType(new PerProductSlugProvider($this->createStub(RouteRepositoryInterface::class), new VariantUrlBuilder('variant')))->createProduct('en', 'family-uuid', 'Shirt', type: ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+
+        $this->assertTrue($result['success']);
+        $this->assertStringContainsString('sulu_product_update', \is_string($result['warning'] ?? null) ? $result['warning'] : '');
     }
 
     public function testCreateProductDoesNotWarnWhenTheProductHasAUrl(): void
@@ -583,7 +611,7 @@ final class ProductCreateToolTest extends TestCase
         return new ProductCreateTool(
             $this->messageBus->reveal(),
             $this->contentManager->reveal(),
-            new ContentMetadataMapper(ProductContentMetadata::provider()),
+            ContentMetadataMapperFactory::create(ProductContentMetadata::provider()),
             new BlockDataValidator(ProductContentMetadata::provider(), new MetadataLocaleResolver(new TokenStorage(), 'en')),
             FixedBlockIdGenerator::returning('b1', 'b2', 'b3'),
             $adminLinkGenerator ?? $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
@@ -591,6 +619,7 @@ final class ProductCreateToolTest extends TestCase
             CompletenessCheckerFactory::create(),
             ProductUrlHelperFactory::create(),
             ProjectLocalesFactory::create(),
+            new PerVariantSlugProvider(),
         );
     }
 

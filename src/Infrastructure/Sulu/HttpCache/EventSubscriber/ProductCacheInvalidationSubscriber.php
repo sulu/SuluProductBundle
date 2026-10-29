@@ -21,6 +21,7 @@ use Sulu\Content\Application\ContentAggregator\ContentAggregatorInterface;
 use Sulu\Content\Domain\Exception\ContentNotFoundException;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Content\Domain\Model\WorkflowInterface;
+use Sulu\Product\Application\Routing\ProductSlugProviderInterface;
 use Sulu\Product\Domain\Event\ProductRemovedEvent;
 use Sulu\Product\Domain\Event\ProductWorkflowTransitionAppliedEvent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
@@ -44,7 +45,8 @@ class ProductCacheInvalidationSubscriber implements EventSubscriberInterface
         private RouteGeneratorInterface $routeGenerator,
         private WebspaceManagerInterface $webspaceManager,
         private ProductRepositoryInterface $productRepository,
-        private ReferenceRepositoryInterface $referenceRepository
+        private ReferenceRepositoryInterface $referenceRepository,
+        private ProductSlugProviderInterface $slugProvider,
     ) {
     }
 
@@ -74,8 +76,18 @@ class ProductCacheInvalidationSubscriber implements EventSubscriberInterface
 
         $this->cacheManager->invalidateTag($product->getUuid());
 
+        // The page of the parent can list a variant that was not live when it was cached.
+        $parent = $this->slugProvider->ownsRoute(ProductInterface::TYPE_VARIANT) ? null : $product->getParent();
+        if (null !== $parent) {
+            $this->cacheManager->invalidateTag($parent->getUuid());
+        }
+
         if (!$this->cacheManager->supportsTags()) {
             $this->invalidateProductPaths($product->getUuid(), $event->getResourceLocale());
+            if (null !== $parent) {
+                $this->invalidateProductPaths($parent->getUuid(), $event->getResourceLocale());
+            }
+
             $this->invalidateReferringProductPaths($product, $event->getResourceLocale());
         }
 

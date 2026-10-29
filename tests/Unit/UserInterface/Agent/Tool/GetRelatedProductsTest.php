@@ -19,6 +19,7 @@ use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Product\Application\Routing\PerVariantSlugProvider;
 use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
 use Sulu\Product\Domain\Model\Product;
@@ -53,7 +54,7 @@ class GetRelatedProductsTest extends TestCase
         $this->getRelatedProducts = new GetRelatedProducts(
             $this->productRepository->reveal(),
             $this->associationTypeRegistry,
-            new ProductUrlGenerator(new FakeRouteGenerator()),
+            new ProductUrlGenerator(new FakeRouteGenerator(), new PerVariantSlugProvider()),
         );
     }
 
