@@ -19,6 +19,7 @@ use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
+use Sulu\Product\Application\Routing\PerVariantSlugProvider;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Tests\Unit\UserInterface\Agent\Tool\Fixtures\FakeRouteGenerator;
@@ -95,7 +96,7 @@ class McpToolReferencesTest extends TestCase
         $productRepository->findBy(Argument::cetera())->willReturn([]);
         $attributeRepository = $this->prophesize(AttributeRepositoryInterface::class);
         $attributeRepository->findOneBy(Argument::cetera())->willReturn(null);
-        $urlGenerator = new ProductUrlGenerator(new FakeRouteGenerator());
+        $urlGenerator = new ProductUrlGenerator(new FakeRouteGenerator(), new PerVariantSlugProvider());
 
         $getProducts = new GetProducts($productRepository->reveal(), $urlGenerator);
         $search = new SearchProductsByAttributes($productRepository->reveal(), $attributeRepository->reveal(), $urlGenerator);
