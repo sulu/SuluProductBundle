@@ -71,6 +71,24 @@ jobs:
                           SYMFONY_DEPRECATIONS_HELPER: weak
                           DATABASE_URL: mysql://root:ChangeMe@127.0.0.1:3306/sulu_test?serverVersion=8.4&charset=utf8mb4
 
+                    - php-version: '8.3'
+                      database: mariadb-11
+                      dependency-versions: 'highest'
+                      php-extensions: 'ctype, iconv, mysql, gd'
+                      tools: 'composer:v2'
+                      env:
+                          SYMFONY_DEPRECATIONS_HELPER: weak
+                          DATABASE_URL: mysql://root:ChangeMe@127.0.0.1:3306/sulu_test?serverVersion=mariadb-11.4.0&charset=utf8mb4
+
+                    - php-version: '8.4'
+                      database: postgres-16
+                      dependency-versions: 'highest'
+                      php-extensions: 'ctype, iconv, pgsql, pdo_pgsql, gd'
+                      tools: 'composer:v2'
+                      env:
+                          SYMFONY_DEPRECATIONS_HELPER: weak
+                          DATABASE_URL: postgresql://postgres:ChangeMe@127.0.0.1:5432/sulu_test?serverVersion=16&charset=utf8
+
         steps:
             - name: Checkout project
               uses: actions/checkout@v4
