@@ -339,6 +339,37 @@ class ProductsSitemapProviderTest extends TestCase
         $this->assertArrayNotHasKey('de', $alternateLinks);
     }
 
+    public function testBuildSkipsProductsAndAlternatesWithoutRoute(): void
+    {
+        [$portalInformation] = $this->createPortalInformation('en', 'sulu-io');
+
+        $this->webspaceManager->findPortalInformationsByHostIncludingSubdomains(
+            'example.org',
+            'prod',
+        )->willReturn([$portalInformation->reveal()]);
+
+        $changed = new \DateTimeImmutable('2024-01-01');
+        $this->mockQueryBuilders(
+            [
+                ['lastModified' => null, 'changed' => $changed, 'locale' => 'en', 'availableLocales' => ['en', 'de'], 'slug' => null, 'uuid' => 'variant-uuid'],
+                ['lastModified' => null, 'changed' => $changed, 'locale' => 'en', 'availableLocales' => ['en', 'de'], 'slug' => '/t-shirt', 'uuid' => 'product-uuid'],
+            ],
+            [
+                ['locale' => 'de', 'slug' => null, 'uuid' => 'product-uuid'],
+            ],
+        );
+
+        $this->webspaceManager->findUrlByResourceLocator(null, Argument::cetera())->shouldNotBeCalled();
+        $this->webspaceManager->findUrlByResourceLocator('/t-shirt', 'prod', 'en', 'sulu-io', 'example.org', 'https')
+            ->willReturn('https://example.org/t-shirt');
+
+        $result = $this->provider->build(1, 'https', 'example.org');
+
+        $this->assertCount(1, $result);
+        $this->assertSame('https://example.org/t-shirt', $result[0]->getLoc());
+        $this->assertArrayNotHasKey('de', $result[0]->getAlternateLinks());
+    }
+
     /**
      * @return array{ObjectProphecy<PortalInformation>, ObjectProphecy<Webspace>}
      */
