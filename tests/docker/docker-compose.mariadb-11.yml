@@ -1,0 +1,21 @@
+version: '3'
+services:
+  database:
+    image: mariadb:11.4
+    command: [ "--max_connections=1000", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_general_ci" ]
+    ports:
+      - "3306:3306"
+    environment:
+      MARIADB_DATABASE: 'sulu_test'
+      MARIADB_ROOT_PASSWORD: 'ChangeMe'
+      MARIADB_ROOT_HOST: '%'
+    healthcheck:
+      test: [ "CMD", "healthcheck.sh", "--connect", "--innodb_initialized" ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - sulu-mariadb11-data:/var/lib/mysql
+
+volumes:
+  sulu-mariadb11-data:
