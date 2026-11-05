@@ -33,22 +33,13 @@ $config->ignoreErrorsOnPackageAndPaths(
     [ErrorType::DEV_DEPENDENCY_IN_PROD],
 );
 
-// The tool test runs symfony/ai-agent's own argument resolver, which needs its ToolCall value object
-// from the platform package ai-agent already pulls in.
-$config->ignoreErrorsOnPackageAndPaths(
-    'symfony/ai-platform',
-    [__DIR__ . '/tests/Unit/UserInterface/Agent/Tool/SearchProductsByAttributesTest.php'],
-    [ErrorType::SHADOW_DEPENDENCY],
-);
-
-// Optional sulu/mcp-bundle brings mcp/sdk, used only by the MCP classes.
+// Optional require-dev mcp/sdk, used only by the MCP classes.
 $config->ignoreErrorsOnPackageAndPaths(
     'mcp/sdk',
     [
         __DIR__ . '/src/Infrastructure/Symfony/Mcp',
-        __DIR__ . '/tests/Unit/Infrastructure/Symfony/Mcp',
     ],
-    [ErrorType::SHADOW_DEPENDENCY],
+    [ErrorType::DEV_DEPENDENCY_IN_PROD],
 );
 
 // MCP integration is registered only when the optional dev package is present.
