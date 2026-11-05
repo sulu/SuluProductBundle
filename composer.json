@@ -31,13 +31,17 @@
     },
     "conflict": {
         "doctrine/orm": "3.7.x-dev",
-        "sulu/mcp-bundle": "<1.0.0 || >=2.0"
+        "mcp/sdk": "<0.8.1 || >=0.9",
+        "sulu/mcp-bundle": "<1.0.0 || >=2.0",
+        "symfony/ai-agent": "<0.14 || >=0.15",
+        "symfony/mcp-bundle": "<0.13 || >=0.14"
     },
     "require-dev": {
         "cmsig/seal-memory-adapter": "^0.12.10",
         "handcraftedinthealps/code-coverage-checker": "^0.2.1",
         "jangregor/phpstan-prophecy": "^2.0",
         "league/oauth2-server-bundle": "^1.2",
+        "mcp/sdk": "^0.8.1",
         "php-cs-fixer/shim": "^3.14",
         "phpspec/prophecy": "^1.0",
         "phpspec/prophecy-phpunit": "^2.0",
