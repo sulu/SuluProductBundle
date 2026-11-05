@@ -33,14 +33,6 @@ $config->ignoreErrorsOnPackageAndPaths(
     [ErrorType::DEV_DEPENDENCY_IN_PROD],
 );
 
-// The tool test runs symfony/ai-agent's own argument resolver, which needs its ToolCall value object
-// from the platform package ai-agent already pulls in.
-$config->ignoreErrorsOnPackageAndPaths(
-    'symfony/ai-platform',
-    [__DIR__ . '/tests/Unit/UserInterface/Agent/Tool/SearchProductsByAttributesTest.php'],
-    [ErrorType::SHADOW_DEPENDENCY],
-);
-
 // Optional require-dev mcp/sdk, used only by the MCP classes.
 $config->ignoreErrorsOnPackageAndPaths(
     'mcp/sdk',
