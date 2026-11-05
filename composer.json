@@ -33,9 +33,7 @@
         "doctrine/orm": "3.7.x-dev",
         "mcp/sdk": "<0.8.1 || >=0.9",
         "sulu/mcp-bundle": "<1.0.0 || >=2.0",
-        "symfony/ai-agent": "<0.14.1 || >=0.15",
-        "symfony/ai-platform": "<0.14.1 || >=0.15",
-        "symfony/mcp-bundle": "<0.13 || >=0.14"
+        "symfony/ai-agent": "<0.14.1 || >=0.15"
     },
     "require-dev": {
         "cmsig/seal-memory-adapter": "^0.12.10",
