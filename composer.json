@@ -33,8 +33,8 @@
         "doctrine/orm": "3.7.x-dev",
         "mcp/sdk": "<0.8.1 || >=0.9",
         "sulu/mcp-bundle": "<1.0.0 || >=2.0",
-        "symfony/ai-agent": "<0.14 || >=0.15",
-        "symfony/ai-platform": "<0.14 || >=0.15",
+        "symfony/ai-agent": "<0.14.1 || >=0.15",
+        "symfony/ai-platform": "<0.14.1 || >=0.15",
         "symfony/mcp-bundle": "<0.13 || >=0.14"
     },
     "require-dev": {
@@ -55,9 +55,9 @@
         "rector/rector": "^2.0",
         "shipmonk/composer-dependency-analyser": "^1.8",
         "spaze/phpstan-disallowed-calls": "^4.7",
-        "sulu/mcp-bundle": "^1.0 || 1.0.x-dev",
-        "symfony/ai-agent": "^0.14",
-        "symfony/ai-platform": "^0.14",
+        "sulu/mcp-bundle": "^1.0.0",
+        "symfony/ai-agent": "^0.14.1",
+        "symfony/ai-platform": "^0.14.1",
         "symfony/browser-kit": "^6.4 || ^7.1 || ^8.0",
         "symfony/console": "^6.4 || ^7.1 || ^8.0",
         "symfony/dom-crawler": "^6.4 || ^7.1 || ^8.0",
