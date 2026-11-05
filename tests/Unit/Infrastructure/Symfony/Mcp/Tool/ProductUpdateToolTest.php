@@ -26,6 +26,7 @@ use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Mcp\Application\AdminLink\AdminLinkGeneratorInterface;
 use Sulu\Mcp\Application\Content\BlockDataValidator;
 use Sulu\Mcp\Application\Content\ContentMetadataMapper;
+use Sulu\Mcp\Application\Metadata\ExtensionFormKeys;
 use Sulu\Mcp\Application\Metadata\MetadataLocaleResolver;
 use Sulu\Product\Application\Message\ModifyProductMessage;
 use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
@@ -70,7 +71,7 @@ final class ProductUpdateToolTest extends TestCase
             $this->messageBus->reveal(),
             $this->contentManager->reveal(),
             $this->productRepository->reveal(),
-            new ContentMetadataMapper(new ArrayMetadataProvider()),
+            new ContentMetadataMapper(new ArrayMetadataProvider(), self::extensionFormKeys()),
             new BlockDataValidator($this->formMetadataProvider(), new MetadataLocaleResolver(new TokenStorage(), 'en')),
             FixedBlockIdGenerator::returning('b1', 'b2', 'b3'),
             $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
@@ -420,7 +421,7 @@ final class ProductUpdateToolTest extends TestCase
             $this->messageBus->reveal(),
             $this->contentManager->reveal(),
             $this->productRepository->reveal(),
-            new ContentMetadataMapper(new ArrayMetadataProvider()),
+            new ContentMetadataMapper(new ArrayMetadataProvider(), self::extensionFormKeys()),
             new BlockDataValidator($this->formMetadataProvider(), new MetadataLocaleResolver(new TokenStorage(), 'en')),
             FixedBlockIdGenerator::returning('b1', 'b2', 'b3'),
             $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
@@ -472,7 +473,7 @@ final class ProductUpdateToolTest extends TestCase
             $this->messageBus->reveal(),
             $this->contentManager->reveal(),
             $this->productRepository->reveal(),
-            new ContentMetadataMapper(ProductContentMetadata::provider()),
+            new ContentMetadataMapper(ProductContentMetadata::provider(), self::extensionFormKeys()),
             new BlockDataValidator(ProductContentMetadata::provider(), new MetadataLocaleResolver(new TokenStorage(), 'en')),
             FixedBlockIdGenerator::returning('b1', 'b2', 'b3'),
             $adminLinkGenerator ?? $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
@@ -625,5 +626,13 @@ final class ProductUpdateToolTest extends TestCase
         $this->assertIsString($result['hint'] ?? null);
         $this->assertStringContainsString('"xx"', $result['error']);
         $this->assertStringContainsString('"en", "de"', $result['hint']);
+    }
+
+    private static function extensionFormKeys(): ExtensionFormKeys
+    {
+        return new ExtensionFormKeys(
+            ['content_excerpt_metadata' => ['instanceOf' => \stdClass::class, 'priority' => 0], 'content_excerpt_taxonomies' => ['instanceOf' => \stdClass::class, 'priority' => 0]],
+            ['content_seo_metadata' => ['instanceOf' => \stdClass::class, 'priority' => 0]],
+        );
     }
 }

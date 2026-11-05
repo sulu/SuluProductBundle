@@ -142,6 +142,7 @@
                     <param name="options" type="collection">
                         <param name="product" value="sulu_product.product_type_product"/>
                         <param name="product_with_variants" value="sulu_product.product_type_product_with_variants"/>
+                        <param name="configurable_product" value="sulu_product.product_type_configurable_product"/>
                         <param name="variant" value="sulu_product.product_type_variant"/>
                     </param>
                 </params>

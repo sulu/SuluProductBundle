@@ -46,6 +46,10 @@ class ProductCodeFormMetadataVisitor implements FormMetadataVisitorInterface
                 new PropertyMetadata('type', false, new ConstMetadata(ProductInterface::TYPE_PRODUCT)),
                 new PropertyMetadata('code', true, new StringMetadata(1)),
             ]),
+            new SchemaMetadata([
+                new PropertyMetadata('type', false, new ConstMetadata(ProductInterface::TYPE_CONFIGURABLE_PRODUCT)),
+                new PropertyMetadata('code', true, new StringMetadata(1)),
+            ]),
         ])));
     }
 }

@@ -88,6 +88,8 @@ final class ProductResolverAssociationsTest extends ProductResolverTestCase
         $alternativeView = ContentView::create(['resolved-alternative'], []);
         $suitableView = ContentView::create([], []);
 
+        $this->metadataResolver->resolveItems(Argument::that(static fn (array $items): bool => isset($items['components'])), Argument::cetera())
+            ->willReturn(['components' => ContentView::create([], [])]);
         $this->metadataResolver->resolveItems(
             ['alternative' => $alternativeField, 'suitable' => $suitableField],
             ['alternative' => [$target->getUuid()], 'suitable' => []],
@@ -118,6 +120,8 @@ final class ProductResolverAssociationsTest extends ProductResolverTestCase
             ->shouldBeCalledOnce();
 
         $this->metadataResolver->resolveItems([], [], 'en')->willReturn([])->shouldBeCalledOnce();
+        $this->metadataResolver->resolveItems(Argument::that(static fn (array $items): bool => isset($items['components'])), Argument::cetera())
+            ->willReturn(['components' => ContentView::create([], [])]);
 
         $dimensionContent = new ProductDimensionContent(new Product());
         $dimensionContent->setLocale('en');

@@ -48,6 +48,7 @@ class ProductsListFiltersTest extends SuluTestCase
             [
                 'options' => [
                     'product' => 'sulu_product.product_type_product',
+                    'configurable_product' => 'sulu_product.product_type_configurable_product',
                     'variant' => 'sulu_product.product_type_variant',
                 ],
             ],
@@ -64,6 +65,7 @@ class ProductsListFiltersTest extends SuluTestCase
                 'options' => [
                     'product' => 'sulu_product.product_type_product',
                     'product_with_variants' => 'sulu_product.product_type_product_with_variants',
+                    'configurable_product' => 'sulu_product.product_type_configurable_product',
                 ],
             ],
             $field->getFilterTypeParameters(),

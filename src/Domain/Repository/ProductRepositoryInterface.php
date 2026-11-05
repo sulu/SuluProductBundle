@@ -58,6 +58,7 @@ interface ProductRepositoryInterface
      *     load_ghost_content?: bool,
      *     associationTargetUuid?: string,
      *     associationType?: string,
+     *     componentTargetUuid?: string,
      * } $filters
      * @param array{
      *     product_admin?: bool,
@@ -80,6 +81,7 @@ interface ProductRepositoryInterface
      *     code?: string,
      *     associationTargetUuid?: string,
      *     associationType?: string,
+     *     componentTargetUuid?: string,
      * } $filters
      * @param array{
      *     product_admin?: bool,
@@ -121,6 +123,7 @@ interface ProductRepositoryInterface
      *     templateKeys?: string[],
      *     associationTargetUuid?: string,
      *     associationType?: string,
+     *     componentTargetUuid?: string,
      *     parent?: string,
      *     types?: string[],
      *     excludeTypes?: string[],
@@ -160,6 +163,7 @@ interface ProductRepositoryInterface
      *     templateKeys?: string[],
      *     associationTargetUuid?: string,
      *     associationType?: string,
+     *     componentTargetUuid?: string,
      *     parent?: string,
      *     types?: string[],
      *     excludeTypes?: string[],
@@ -192,6 +196,7 @@ interface ProductRepositoryInterface
      *     templateKeys?: string[],
      *     associationTargetUuid?: string,
      *     associationType?: string,
+     *     componentTargetUuid?: string,
      *     parent?: string,
      *     types?: string[],
      *     excludeTypes?: string[],

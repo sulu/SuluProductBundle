@@ -1,0 +1,27 @@
+<?xml version="1.0" ?>
+<form xmlns="http://schemas.sulu.io/template/template"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/form-1.0.xsd">
+
+    <key>product_component</key>
+
+    <properties>
+        <property name="product" type="single_product_selection" mandatory="true" colspan="12">
+            <meta>
+                <title>sulu_product.component</title>
+            </meta>
+
+            <params>
+                <param name="request_parameters" type="collection">
+                    <param name="excludeVariants" value="true"/>
+                </param>
+            </params>
+        </property>
+
+        <property name="component_rules" type="component_rules" colspan="12">
+            <meta>
+                <title>sulu_product.component_rules</title>
+            </meta>
+        </property>
+    </properties>
+</form>

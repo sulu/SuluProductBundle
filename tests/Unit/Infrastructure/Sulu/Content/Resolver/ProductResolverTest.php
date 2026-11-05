@@ -49,7 +49,7 @@ class ProductResolverTest extends ProductResolverTestCase
         );
 
         self::assertSame(
-            ['title', 'code', 'externalIdentifier', 'productFamily', 'status', 'position', 'attributes', 'associations', 'variants'],
+            ['title', 'code', 'externalIdentifier', 'productFamily', 'status', 'position', 'attributes', 'associations', 'components', 'variants'],
             \array_keys($content),
         );
     }
@@ -129,7 +129,7 @@ class ProductResolverTest extends ProductResolverTestCase
         $content = $this->resolveContent($this->createContent(ProductInterface::TYPE_PRODUCT));
 
         self::assertSame(
-            ['title', 'url', 'code', 'externalIdentifier', 'productFamily', 'status', 'position', 'attributes', 'associations'],
+            ['title', 'url', 'code', 'externalIdentifier', 'productFamily', 'status', 'position', 'attributes', 'associations', 'components'],
             \array_keys($content),
         );
     }

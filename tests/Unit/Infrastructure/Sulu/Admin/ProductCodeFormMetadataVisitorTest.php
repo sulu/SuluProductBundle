@@ -64,6 +64,14 @@ class ProductCodeFormMetadataVisitorTest extends TestCase
                                 ],
                                 'required' => ['code'],
                             ],
+                            [
+                                'type' => 'object',
+                                'properties' => [
+                                    'type' => ['const' => 'configurable_product'],
+                                    'code' => ['type' => 'string', 'minLength' => 1],
+                                ],
+                                'required' => ['code'],
+                            ],
                         ],
                     ],
                 ],

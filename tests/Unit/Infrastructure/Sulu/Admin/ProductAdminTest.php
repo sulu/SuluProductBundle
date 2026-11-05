@@ -253,7 +253,7 @@ class ProductAdminTest extends TestCase
         $viewCollection = new ViewCollection();
         $this->admin->configureViews($viewCollection);
 
-        $this->assertCount(6, $viewCollection->all());
+        $this->assertCount(7, $viewCollection->all());
         $this->assertTrue($viewCollection->has(ProductAdmin::LIST_VIEW));
         $this->assertTrue($viewCollection->has(ProductAdmin::ADD_TABS_VIEW));
         $this->assertTrue($viewCollection->has(ProductAdmin::EDIT_TABS_VIEW));
@@ -325,6 +325,63 @@ class ProductAdminTest extends TestCase
         $this->assertSame(ProductAdmin::EDIT_TABS_VIEW, $view->getParent());
     }
 
+    public function testConfigureViewsAddsComponentsTabView(): void
+    {
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(true);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::ADD)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::DELETE)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::LIVE)->willReturn(false);
+        $this->securityChecker->hasPermission(ActivityAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(false);
+
+        $viewCollection = new ViewCollection();
+        $this->admin->configureViews($viewCollection);
+
+        $view = $viewCollection->get(ProductAdmin::EDIT_TABS_VIEW . '.components')->getView();
+        $this->assertSame('product_components', $view->getOption('resourceKey'));
+        $this->assertSame('product_components', $view->getOption('listKey'));
+        $this->assertSame('product_component', $view->getOption('formKey'));
+        $this->assertSame("type == 'configurable_product'", $view->getOption('tabCondition'));
+        $this->assertSame(['id' => 'parentId'], $view->getOption('routerAttributesToListRequest'));
+        $this->assertSame(['id' => 'parentId'], $view->getOption('routerAttributesToFormRequest'));
+        $this->assertSame(['id' => 'parentId'], $view->getOption('routerAttributesToFormMetadata'));
+        $this->assertSame([], $this->getComponentsToolbarActionTypes($viewCollection));
+        $this->assertSame(ProductAdmin::EDIT_TABS_VIEW, $view->getParent());
+    }
+
+    public function testConfigureViewsShowsComponentAddDeleteAndPublishing(): void
+    {
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(true);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::ADD)->willReturn(true);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::DELETE)->willReturn(true);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::LIVE)->willReturn(true);
+        $this->securityChecker->hasPermission(ActivityAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(false);
+
+        $viewCollection = new ViewCollection();
+        $this->admin->configureViews($viewCollection);
+
+        $this->assertSame(
+            ['sulu_admin.add', 'sulu_admin.delete', 'sulu_admin.publishing'],
+            $this->getComponentsToolbarActionTypes($viewCollection),
+        );
+    }
+
+    public function testConfigureViewsHidesComponentPublishingWithoutLivePermission(): void
+    {
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(true);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::ADD)->willReturn(true);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::DELETE)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(false);
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::LIVE)->willReturn(false);
+        $this->securityChecker->hasPermission(ActivityAdmin::SECURITY_CONTEXT, PermissionTypes::VIEW)->willReturn(false);
+
+        $viewCollection = new ViewCollection();
+        $this->admin->configureViews($viewCollection);
+
+        $this->assertSame(['sulu_admin.add'], $this->getComponentsToolbarActionTypes($viewCollection));
+    }
+
     public function testConfigureViewsWithLivePermission(): void
     {
         $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)->willReturn(true);
@@ -381,6 +438,17 @@ class ProductAdminTest extends TestCase
     {
         /** @var ToolbarAction[] $toolbarActions */
         $toolbarActions = $viewCollection->get(ProductAdmin::EDIT_TABS_VIEW . '.variants')->getView()->getOption('toolbarActions');
+
+        return \array_map(static fn (ToolbarAction $toolbarAction): string => $toolbarAction->getType(), $toolbarActions);
+    }
+
+    /**
+     * @return string[]
+     */
+    private function getComponentsToolbarActionTypes(ViewCollection $viewCollection): array
+    {
+        /** @var ToolbarAction[] $toolbarActions */
+        $toolbarActions = $viewCollection->get(ProductAdmin::EDIT_TABS_VIEW . '.components')->getView()->getOption('toolbarActions');
 
         return \array_map(static fn (ToolbarAction $toolbarAction): string => $toolbarAction->getType(), $toolbarActions);
     }

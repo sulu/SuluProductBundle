@@ -21,6 +21,7 @@ use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductAssociationInterface;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
+use Sulu\Product\Domain\Model\ProductComponentInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductInterface;
@@ -338,6 +339,52 @@ class ProductDimensionContentTest extends TestCase
         $dc->removeAssociation($association);
 
         $this->assertSame([], $dc->getAssociations());
+    }
+
+    public function testGetComponentsReturnsEmptyArrayInitially(): void
+    {
+        $dc = new ProductDimensionContent(new Product());
+        $this->assertSame([], $dc->getComponents());
+    }
+
+    public function testAddComponentStoresAndDeduplicates(): void
+    {
+        $dc = new ProductDimensionContent(new Product());
+        /** @var ObjectProphecy<ProductComponentInterface> $componentProphecy */
+        $componentProphecy = $this->prophesize(ProductComponentInterface::class);
+        $component = $componentProphecy->reveal();
+
+        $dc->addComponent($component);
+        $dc->addComponent($component);
+
+        $this->assertSame([$component], $dc->getComponents());
+    }
+
+    public function testRemoveComponentRemoves(): void
+    {
+        $dc = new ProductDimensionContent(new Product());
+        /** @var ObjectProphecy<ProductComponentInterface> $componentProphecy */
+        $componentProphecy = $this->prophesize(ProductComponentInterface::class);
+        $component = $componentProphecy->reveal();
+
+        $dc->addComponent($component);
+        $dc->removeComponent($component);
+
+        $this->assertSame([], $dc->getComponents());
+    }
+
+    public function testGetComponentsSortsByPosition(): void
+    {
+        $dc = new ProductDimensionContent(new Product());
+        $second = $this->prophesize(ProductComponentInterface::class);
+        $second->getPosition()->willReturn(1);
+        $first = $this->prophesize(ProductComponentInterface::class);
+        $first->getPosition()->willReturn(0);
+
+        $dc->addComponent($second->reveal());
+        $dc->addComponent($first->reveal());
+
+        $this->assertSame([$first->reveal(), $second->reveal()], $dc->getComponents());
     }
 
     public function testGetAssociationsByTypeFiltersAndSortsByPosition(): void
