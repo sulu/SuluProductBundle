@@ -36,6 +36,7 @@ use Sulu\Product\Infrastructure\Symfony\Mcp\ProductAssociationResolver;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductCreateTool;
 use Sulu\Product\Tests\Unit\Fixture\ArrayMetadataProvider;
 use Sulu\Product\Tests\Unit\Fixture\CompletenessCheckerFactory;
+use Sulu\Product\Tests\Unit\Fixture\CoreExtensionFormKeys;
 use Sulu\Product\Tests\Unit\Fixture\FixedBlockIdGenerator;
 use Sulu\Product\Tests\Unit\Fixture\ProductContentMetadata;
 use Sulu\Product\Tests\Unit\Fixture\ProductUrlHelperFactory;
@@ -64,7 +65,7 @@ final class ProductCreateToolTest extends TestCase
         $this->tool = new ProductCreateTool(
             $this->messageBus->reveal(),
             $this->contentManager->reveal(),
-            new ContentMetadataMapper(new ArrayMetadataProvider()),
+            new ContentMetadataMapper(new ArrayMetadataProvider(), CoreExtensionFormKeys::create()),
             new BlockDataValidator($this->formMetadataProvider(), new MetadataLocaleResolver(new TokenStorage(), 'en')),
             FixedBlockIdGenerator::returning('b1', 'b2', 'b3'),
             $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
@@ -283,7 +284,7 @@ final class ProductCreateToolTest extends TestCase
         return new ProductCreateTool(
             $this->messageBus->reveal(),
             $this->contentManager->reveal(),
-            new ContentMetadataMapper(new ArrayMetadataProvider()),
+            new ContentMetadataMapper(new ArrayMetadataProvider(), CoreExtensionFormKeys::create()),
             new BlockDataValidator($this->formMetadataProvider(), new MetadataLocaleResolver(new TokenStorage(), 'en')),
             FixedBlockIdGenerator::returning('b1', 'b2', 'b3'),
             $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
@@ -583,7 +584,7 @@ final class ProductCreateToolTest extends TestCase
         return new ProductCreateTool(
             $this->messageBus->reveal(),
             $this->contentManager->reveal(),
-            new ContentMetadataMapper(ProductContentMetadata::provider()),
+            new ContentMetadataMapper(ProductContentMetadata::provider(), CoreExtensionFormKeys::create()),
             new BlockDataValidator(ProductContentMetadata::provider(), new MetadataLocaleResolver(new TokenStorage(), 'en')),
             FixedBlockIdGenerator::returning('b1', 'b2', 'b3'),
             $adminLinkGenerator ?? $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
