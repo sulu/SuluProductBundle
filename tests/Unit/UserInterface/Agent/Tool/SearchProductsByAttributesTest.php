@@ -19,6 +19,7 @@ use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Product\Application\Routing\PerVariantSlugProvider;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\Product;
@@ -56,7 +57,7 @@ class SearchProductsByAttributesTest extends TestCase
         $this->searchProductsByAttributes = new SearchProductsByAttributes(
             $this->productRepository->reveal(),
             $this->attributeRepository->reveal(),
-            new ProductUrlGenerator(new FakeRouteGenerator()),
+            new ProductUrlGenerator(new FakeRouteGenerator(), new PerVariantSlugProvider()),
         );
     }
 

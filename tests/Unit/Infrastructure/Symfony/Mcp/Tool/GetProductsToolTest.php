@@ -17,6 +17,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
+use Sulu\Product\Application\Routing\PerVariantSlugProvider;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\GetProductsTool;
 use Sulu\Product\Tests\Unit\UserInterface\Agent\Tool\Fixtures\FakeRouteGenerator;
@@ -33,7 +34,7 @@ class GetProductsToolTest extends TestCase
         $productRepository = $this->prophesize(ProductRepositoryInterface::class);
         $productRepository->findBy(Argument::cetera())->shouldNotBeCalled();
 
-        $tool = new GetProductsTool(new GetProducts($productRepository->reveal(), new ProductUrlGenerator(new FakeRouteGenerator())));
+        $tool = new GetProductsTool(new GetProducts($productRepository->reveal(), new ProductUrlGenerator(new FakeRouteGenerator(), new PerVariantSlugProvider())));
 
         $result = $tool->search('en');
 

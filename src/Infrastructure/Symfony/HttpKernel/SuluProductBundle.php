@@ -53,6 +53,11 @@ use Sulu\Product\Application\MessageHandler\RemoveProductFamilyMessageHandler;
 use Sulu\Product\Application\MessageHandler\RemoveProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\RemoveProductTranslationMessageHandler;
 use Sulu\Product\Application\MessageHandler\RestoreProductVersionMessageHandler;
+use Sulu\Product\Application\Routing\PerProductSlugProvider;
+use Sulu\Product\Application\Routing\PerVariantSlugProvider;
+use Sulu\Product\Application\Routing\ProductSlugProviderInterface;
+use Sulu\Product\Application\Routing\VariantRouting;
+use Sulu\Product\Application\Routing\VariantUrlBuilder;
 use Sulu\Product\Application\Webspace\WebspaceSettingsConfigurationResolver;
 use Sulu\Product\Application\Workflow\ProductVariantUnpublisher;
 use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
@@ -101,7 +106,7 @@ use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductAttributeValueRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
-use Sulu\Product\Infrastructure\Doctrine\EventListener\ProductWithVariantsRouteGuard;
+use Sulu\Product\Infrastructure\Doctrine\EventListener\ProductRouteOwnerGuard;
 use Sulu\Product\Infrastructure\Doctrine\Repository\AttributeGroupRepository;
 use Sulu\Product\Infrastructure\Doctrine\Repository\AttributeRepository;
 use Sulu\Product\Infrastructure\Doctrine\Repository\ProductAttributeValueRepository;
@@ -155,6 +160,7 @@ use Sulu\Product\Infrastructure\Sulu\Reference\ProductFamilyReferenceDoctrineEve
 use Sulu\Product\Infrastructure\Sulu\Reference\ProductFamilyReferenceRefresher;
 use Sulu\Product\Infrastructure\Sulu\Reference\ProductReferenceRefresher;
 use Sulu\Product\Infrastructure\Sulu\Route\CurrentVariantProvider;
+use Sulu\Product\Infrastructure\Sulu\Route\PerProductLocalizationsResolver;
 use Sulu\Product\Infrastructure\Sulu\Route\ProductLocalizationsResolver;
 use Sulu\Product\Infrastructure\Sulu\Route\ProductRouteDefaultsProvider;
 use Sulu\Product\Infrastructure\Sulu\Search\AdminProductIndexListener;
@@ -167,6 +173,7 @@ use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductReindexContent
 use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductReindexExcerptEnhancer;
 use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductReindexProviderEnhancerInterface;
 use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductReindexTaxonomyEnhancer;
+use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductReindexVariantUrlEnhancer;
 use Sulu\Product\Infrastructure\Sulu\Search\WebsiteProductIndexListener;
 use Sulu\Product\Infrastructure\Sulu\Search\WebsiteProductReindexProvider;
 use Sulu\Product\Infrastructure\Sulu\Sitemap\ProductsSitemapProvider;
@@ -305,6 +312,20 @@ final class SuluProductBundle extends AbstractBundle
                 ->arrayNode('variants')
                     ->addDefaultsIfNotSet()
                     ->children()
+                        ->enumNode('routing')
+                            ->info('Who owns the route of a product with variants: "per_variant" gives each variant its own URL, "per_product" gives the product the URL and reaches a variant via "?<query_parameter>=<code>". Switching it later needs a route migration in the project.')
+                            ->values(\array_map(static fn (VariantRouting $routing): string => $routing->value, VariantRouting::cases()))
+                            ->defaultValue(VariantRouting::PerVariant->value)
+                        ->end()
+                        ->scalarNode('query_parameter')
+                            ->info('Name of the query parameter that names the variant of a product URL, used with "per_product" routing.')
+                            ->defaultValue('variant')
+                            ->cannotBeEmpty()
+                            ->validate()
+                                ->ifTrue(static fn (mixed $name): bool => !\is_string($name) || 1 !== \preg_match('/^[A-Za-z][A-Za-z0-9_-]*$/', $name))
+                                ->thenInvalid('The query parameter name must start with a letter and contain only letters, digits, "_" and "-".')
+                            ->end()
+                        ->end()
                         ->arrayNode('properties')
                             ->info('Properties each entry of "product.variants" carries, as output key => property, e.g. {documents: product.documents}. Merged into the defaults of a product selection.')
                             ->normalizeKeys(false)
@@ -481,9 +502,12 @@ final class SuluProductBundle extends AbstractBundle
         $productStatuses = $config['product_statuses'] ?? [];
         $builder->setParameter('sulu_product.product_statuses', $productStatuses);
 
-        /** @var array{properties: array<string, string>} $variants */
+        /** @var array{routing: string, query_parameter: string, properties: array<string, string>} $variants */
         $variants = $config['variants'];
+        $builder->setParameter('sulu_product.variants.routing', $variants['routing']);
+        $builder->setParameter('sulu_product.variants.query_parameter', $variants['query_parameter']);
         $builder->setParameter('sulu_product.variants.properties', $variants['properties']);
+        $perProduct = VariantRouting::PerProduct === VariantRouting::from($variants['routing']);
 
         /** @var array{type: string, params: array<string, scalar|null>} $route */
         $route = $config['route'];
@@ -1052,8 +1076,9 @@ final class SuluProductBundle extends AbstractBundle
             ])
             ->tag('sulu_admin.form_metadata_visitor');
 
-        $services->set('sulu_product.product_with_variants_route_guard')
-            ->class(ProductWithVariantsRouteGuard::class)
+        $services->set('sulu_product.product_route_owner_guard')
+            ->class(ProductRouteOwnerGuard::class)
+            ->args([new Reference('sulu_product.product_slug_provider')])
             ->tag('doctrine.event_listener', ['event' => 'onFlush']);
 
         $services->set('sulu_product.product_route_form_metadata_visitor')
@@ -1061,6 +1086,7 @@ final class SuluProductBundle extends AbstractBundle
             ->args([
                 '%sulu_product.route.type%',
                 '%sulu_product.route.params%',
+                new Reference('sulu_product.product_slug_provider'),
             ])
             ->tag('sulu_admin.form_metadata_visitor')
             ->tag('sulu_admin.typed_form_metadata_visitor');
@@ -1069,6 +1095,7 @@ final class SuluProductBundle extends AbstractBundle
             ->class(ProductsListMetadataVisitor::class)
             ->args([
                 '%sulu_product.product_statuses%',
+                new Reference('sulu_product.product_slug_provider'),
             ])
             ->tag('sulu_admin.list_metadata_visitor');
 
@@ -1177,6 +1204,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_http_cache.reference_store'),
                 new Reference('sulu_product.attribute_value_converter'),
                 new Reference('sulu_product.product_attribute_value_formatter'),
+                new Reference('sulu_product.product_slug_provider'),
                 '%sulu_product.variants.properties%',
             ])
             ->tag('sulu_content.content_resolver');
@@ -1215,6 +1243,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_content.content_aggregator'),
                 new Reference('translator'),
                 new Reference('sulu_admin.teaser_tag_property_extractor'),
+                new Reference('sulu_product.product_slug_provider'),
             ])
             ->tag('sulu.teaser.provider', ['alias' => ProductInterface::RESOURCE_KEY]);
 
@@ -1337,6 +1366,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_core.webspace.webspace_manager'),
                 new Reference('sulu_product.product_repository'),
                 new Reference('sulu_reference.reference_repository'),
+                new Reference('sulu_product.product_slug_provider'),
             ])
             ->tag('kernel.event_subscriber');
 
@@ -1417,6 +1447,9 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_content.content_aggregator'),
                 new Reference('sulu_admin.metadata_provider_registry'),
                 new Reference('sulu_http_cache.cache_lifetime.resolver'),
+                new Reference('sulu_route.route_generator'),
+                new Reference('request_stack'),
+                $perProduct ? '%sulu_product.variants.query_parameter%' : null,
             ])
             ->tag('sulu_route.route_defaults_provider', ['resource_key' => ProductInterface::RESOURCE_KEY]);
 
@@ -1426,13 +1459,41 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('request_stack'),
             ]);
 
-        $services->set('sulu_product.product_localizations_resolver')
-            ->class(ProductLocalizationsResolver::class)
-            ->args([
-                new Reference('sulu_content.route_localizations_resolver'),
-                new Reference('sulu_product.current_variant_provider'),
-            ])
-            ->tag('sulu_content.content_localizations_resolver', ['resource_key' => ProductInterface::RESOURCE_KEY]);
+        if ($perProduct) {
+            $services->set('sulu_product.variant_url_builder')
+                ->class(VariantUrlBuilder::class)
+                ->args(['%sulu_product.variants.query_parameter%']);
+
+            $services->set('sulu_product.product_slug_provider')
+                ->class(PerProductSlugProvider::class)
+                ->args([
+                    new Reference('sulu_route.route_repository'),
+                    new Reference('sulu_product.variant_url_builder'),
+                ])
+                ->tag('kernel.reset', ['method' => 'reset']);
+
+            $services->set('sulu_product.product_localizations_resolver')
+                ->class(PerProductLocalizationsResolver::class)
+                ->args([
+                    new Reference('sulu_content.route_localizations_resolver'),
+                    new Reference('sulu_product.current_variant_provider'),
+                    new Reference('sulu_product.variant_url_builder'),
+                ])
+                ->tag('sulu_content.content_localizations_resolver', ['resource_key' => ProductInterface::RESOURCE_KEY]);
+        } else {
+            $services->set('sulu_product.product_slug_provider')
+                ->class(PerVariantSlugProvider::class);
+
+            $services->set('sulu_product.product_localizations_resolver')
+                ->class(ProductLocalizationsResolver::class)
+                ->args([
+                    new Reference('sulu_content.route_localizations_resolver'),
+                    new Reference('sulu_product.current_variant_provider'),
+                ])
+                ->tag('sulu_content.content_localizations_resolver', ['resource_key' => ProductInterface::RESOURCE_KEY]);
+        }
+
+        $services->alias(ProductSlugProviderInterface::class, 'sulu_product.product_slug_provider');
 
         $services->set('sulu_product.admin_product_index_listener')
             ->class(AdminProductIndexListener::class)
@@ -1486,6 +1547,13 @@ final class SuluProductBundle extends AbstractBundle
             ->class(WebsiteProductReindexTaxonomyEnhancer::class)
             ->tag('sulu_product.website_product_reindex_provider_enhancer');
 
+        if ($perProduct) {
+            $services->set('sulu_product.website_product_reindex_variant_url_enhancer')
+                ->class(WebsiteProductReindexVariantUrlEnhancer::class)
+                ->args([new Reference('sulu_product.variant_url_builder')])
+                ->tag('sulu_product.website_product_reindex_provider_enhancer');
+        }
+
         // Registered after the content and excerpt enhancers, so its image is only the fallback.
         $services->set('sulu_product.website_product_details_reindex_provider_enhancer')
             ->class(WebsiteProductDetailsReindexProviderEnhancer::class)
@@ -1522,7 +1590,10 @@ final class SuluProductBundle extends AbstractBundle
         // are always registered and a consumer such as an MCP tool can reuse them. Only the tag is optional.
         $services->set('sulu_product.product_url_generator')
             ->class(ProductUrlGenerator::class)
-            ->args([new Reference('sulu_route.route_generator')]);
+            ->args([
+                new Reference('sulu_route.route_generator'),
+                new Reference('sulu_product.product_slug_provider'),
+            ]);
 
         $aiTools = [
             'sulu_product.ai_get_products' => [GetProducts::class, [
@@ -1603,7 +1674,8 @@ final class SuluProductBundle extends AbstractBundle
         $services->set(ProductCompletenessChecker::class)
             ->arg('$formMetadataProvider', new Reference('sulu_admin.form_metadata_provider'))
             ->arg('$webspaceManager', new Reference('sulu_core.webspace.webspace_manager'))
-            ->arg('$urlHelper', new Reference(ProductUrlHelper::class));
+            ->arg('$urlHelper', new Reference(ProductUrlHelper::class))
+            ->arg('$slugProvider', new Reference('sulu_product.product_slug_provider'));
 
         // The tag is explicit because SuluMcpBundle's instanceof rule does not reach this file.
         // sulu_admin.view_registry only exists in the admin container.

@@ -34,4 +34,11 @@
             </div>
         {% endfor %}
     </section>
+    <ul class="variants">
+        {% for variant in product.variants|default([]) %}
+            {% if variant.url %}
+                <li><a href="{{ sulu_content_path(variant.url) }}">{{ variant.title }}</a></li>
+            {% endif %}
+        {% endfor %}
+    </ul>
 {% endblock %}
