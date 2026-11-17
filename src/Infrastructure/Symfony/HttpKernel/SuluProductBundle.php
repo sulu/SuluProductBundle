@@ -144,6 +144,7 @@ use Sulu\Product\Infrastructure\Sulu\Content\PropertyResolver\ProductFamilySelec
 use Sulu\Product\Infrastructure\Sulu\Content\PropertyResolver\ProductSelectionPropertyResolver;
 use Sulu\Product\Infrastructure\Sulu\Content\PropertyResolver\SingleProductFamilySelectionPropertyResolver;
 use Sulu\Product\Infrastructure\Sulu\Content\PropertyResolver\SingleProductSelectionPropertyResolver;
+use Sulu\Product\Infrastructure\Sulu\Content\RequestWorkflow\VariantExcludedRequestWorkflowResolver;
 use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductResolver;
 use Sulu\Product\Infrastructure\Sulu\Content\ResourceLoader\ProductFamilyResourceLoader;
 use Sulu\Product\Infrastructure\Sulu\Content\ResourceLoader\ProductResourceLoader;
@@ -741,6 +742,12 @@ final class SuluProductBundle extends AbstractBundle
             ])
             ->tag('sulu.context', ['context' => 'admin'])
             ->tag('sulu.admin');
+
+        $services->set('sulu_product.variant_excluded_request_workflow_resolver')
+            ->class(VariantExcludedRequestWorkflowResolver::class)
+            ->decorate('sulu_content.request_workflow_resolver')
+            ->args([new Reference('.inner')])
+            ->tag('sulu.context', ['context' => 'admin']);
 
         $services->set('sulu_product.attribute_admin')
             ->class(AttributeAdmin::class)
