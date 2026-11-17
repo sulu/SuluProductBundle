@@ -17,14 +17,14 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\RunClassInSeparateProcess;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Product\Domain\Model\ProductInterface;
-use Sulu\Product\Infrastructure\Sulu\Content\RequestWorkflow\VariantExcludedRequestWorkflowResolver;
+use Sulu\Product\Infrastructure\Sulu\Content\RequestWorkflow\VariantRequestWorkflowResolver;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 
 /**
  * The variant overlay has no SEO or excerpt tab, so a variant can never fill what the pre-validators of the
  * product's request workflow require.
  */
-#[CoversClass(VariantExcludedRequestWorkflowResolver::class)]
+#[CoversClass(VariantRequestWorkflowResolver::class)]
 #[RunClassInSeparateProcess]
 class ProductVariantRequestWorkflowTest extends SuluTestCase
 {
