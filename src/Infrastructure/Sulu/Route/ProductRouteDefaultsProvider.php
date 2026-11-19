@@ -26,9 +26,13 @@ use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Route\Application\Routing\Generator\RouteGeneratorInterface;
 use Sulu\Route\Application\Routing\Matcher\RouteDefaultsProviderInterface;
+use Sulu\Route\Domain\Exception\MissingRequestContextParameterException;
 use Sulu\Route\Domain\Model\Route;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 /**
  * @internal this class is internal and should not be extended or relied on in custom code
@@ -38,11 +42,18 @@ class ProductRouteDefaultsProvider implements RouteDefaultsProviderInterface
     /** The route default holding the variant whose URL renders its product. */
     public const VARIANT_ATTRIBUTE = 'variant';
 
+    /**
+     * @param string|null $variantQueryParameter the query parameter naming the variant a product URL
+     *                                           renders, null when each variant has a route of its own
+     */
     public function __construct(
         private ProductRepositoryInterface $productRepository,
         private ContentAggregatorInterface $contentAggregator,
         private MetadataProviderRegistry $metadataProviderRegistry,
         private CacheLifetimeResolverInterface $cacheLifetimeResolver,
+        private RouteGeneratorInterface $routeGenerator,
+        private RequestStack $requestStack,
+        private ?string $variantQueryParameter = null,
     ) {
     }
 
@@ -61,6 +72,11 @@ class ProductRouteDefaultsProvider implements RouteDefaultsProviderInterface
             $variantDefaults[self::VARIANT_ATTRIBUTE] = $dimensionContent;
             $dimensionContent = $this->loadContent($parent->getUuid(), $locale)
                 ?? throw new NotFoundHttpException(\sprintf('No published parent product found for variant id "%s" and locale "%s"', $id, $locale));
+        } elseif (null !== $this->variantQueryParameter) {
+            $variant = $this->findQueriedVariant($id, $locale);
+            if (null !== $variant) {
+                $variantDefaults[self::VARIANT_ATTRIBUTE] = $variant;
+            }
         }
 
         $contentLocale = $dimensionContent->getLocale();
@@ -82,12 +98,81 @@ class ProductRouteDefaultsProvider implements RouteDefaultsProviderInterface
             ...$variantDefaults,
         ];
 
+        $canonicalUrl = $this->resolveCanonicalUrl($route, $dimensionContent);
+        if (null !== $canonicalUrl) {
+            $defaults['_seo'] = ['canonicalUrl' => $canonicalUrl];
+        }
+
         $cacheLifetime = $this->getCacheLifetime($templateMetadata);
         if (null !== $cacheLifetime) {
             $defaults[CacheLifetimeRequestStore::ATTRIBUTE_KEY] = $cacheLifetime;
         }
 
         return $defaults;
+    }
+
+    /**
+     * The published variant named by `?<parameter>=<code>`, or null if the request has none or the
+     * product has no published variant with that code.
+     */
+    private function findQueriedVariant(string $productUuid, string $locale): ?ProductDimensionContentInterface
+    {
+        // all() and not get(), which throws a 400 on `variant[]=x`
+        $code = $this->requestStack->getCurrentRequest()?->query->all()[$this->variantQueryParameter] ?? null;
+
+        if (!\is_string($code) || '' === $code) {
+            return null;
+        }
+
+        $dimensionAttributes = [
+            'locale' => $locale,
+            'stage' => DimensionContentInterface::STAGE_LIVE,
+            'version' => DimensionContentInterface::CURRENT_VERSION,
+        ];
+
+        $variants = $this->productRepository->findBy(
+            [
+                'parent' => $productUuid,
+                'code' => $code,
+                'locale' => $locale,
+                'stage' => DimensionContentInterface::STAGE_LIVE,
+            ],
+            [],
+            [ProductRepositoryInterface::SELECT_PRODUCT_CONTENT => ['dimensionAttributes' => $dimensionAttributes]],
+        );
+
+        foreach ($variants as $variant) {
+            try {
+                /** @var ProductDimensionContentInterface */
+                return $this->contentAggregator->aggregate($variant, $dimensionAttributes);
+            } catch (ContentNotFoundException) {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * With a query parameter every `?<parameter>=<value>` is a page of its own, so the product URL
+     * is the canonical one unless the editor set another.
+     */
+    private function resolveCanonicalUrl(Route $route, ProductDimensionContentInterface $dimensionContent): ?string
+    {
+        if (null === $this->variantQueryParameter || !\in_array($dimensionContent->getSeoCanonicalUrl(), [null, ''], true)) {
+            return null;
+        }
+
+        try {
+            return $this->routeGenerator->generate(
+                $route->getSlug(),
+                $route->getLocale(),
+                $route->getWebspace(),
+                UrlGeneratorInterface::ABSOLUTE_URL,
+            );
+        } catch (MissingRequestContextParameterException) {
+            return null;
+        }
     }
 
     private function loadContent(string $id, string $locale): ?ProductDimensionContentInterface
