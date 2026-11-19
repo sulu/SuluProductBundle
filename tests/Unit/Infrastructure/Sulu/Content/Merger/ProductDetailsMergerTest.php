@@ -17,6 +17,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
+use Sulu\Bundle\CategoryBundle\Entity\CategoryInterface;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
@@ -210,6 +211,7 @@ class ProductDetailsMergerTest extends TestCase
         $source->getCode()->willReturn(null);
         $source->getExternalIdentifier()->willReturn(null);
         $source->getProductFamily()->willReturn($family->reveal());
+        $source->getMainCategory()->willReturn(null);
         $source->getLocale()->willReturn(null);
         $source->getStatus()->willReturn('available');
         $source->getDetailsData()->willReturn([]);
@@ -229,6 +231,7 @@ class ProductDetailsMergerTest extends TestCase
         $source->getCode()->willReturn(null);
         $source->getExternalIdentifier()->willReturn(null);
         $source->getProductFamily()->willReturn(null);
+        $source->getMainCategory()->willReturn(null);
         $source->getLocale()->willReturn(null);
         $source->getStatus()->willReturn('available');
         $source->getDetailsData()->willReturn([]);
@@ -241,5 +244,21 @@ class ProductDetailsMergerTest extends TestCase
         $this->merger->merge($target, $source->reveal());
 
         $this->assertSame($keepFamily->reveal(), $target->getProductFamily());
+    }
+
+    public function testMergesMainCategoryAndKeepsItWhenSourceNull(): void
+    {
+        $category = $this->prophesize(CategoryInterface::class);
+        $source = $this->makeDimensionContent();
+        $source->setMainCategory($category->reveal());
+        $target = $this->makeDimensionContent();
+
+        $this->merger->merge($target, $source);
+
+        $this->assertSame($category->reveal(), $target->getMainCategory());
+
+        $this->merger->merge($target, $this->makeDimensionContent());
+
+        $this->assertSame($category->reveal(), $target->getMainCategory());
     }
 }
