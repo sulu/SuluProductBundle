@@ -65,6 +65,7 @@ class ProductContentAdmin extends Admin
             }
 
             $this->applyTabOrder($viewBuilder);
+            $this->addIdToExcerptMetadata($viewBuilder);
 
             $viewCollection->add($viewBuilder);
         }
@@ -84,6 +85,22 @@ class ProductContentAdmin extends Admin
 
         if ($viewBuilder instanceof PreviewFormViewBuilderInterface || $viewBuilder instanceof FormViewBuilderInterface) {
             $viewBuilder->setTabOrder($tabOrder);
+        }
+    }
+
+    /**
+     * The excerpt metadata is built per request, so with the id and the content locale the main category
+     * can be locked in the excerpt categories (see ProductExcerptFormMetadataVisitor). The locale the
+     * metadata gets itself is the one of the user interface.
+     */
+    private function addIdToExcerptMetadata(ViewBuilderInterface $viewBuilder): void
+    {
+        if (ProductAdmin::EDIT_TABS_VIEW . '.excerpt' !== $viewBuilder->getName()) {
+            return;
+        }
+
+        if ($viewBuilder instanceof PreviewFormViewBuilderInterface || $viewBuilder instanceof FormViewBuilderInterface) {
+            $viewBuilder->addRouterAttributesToFormMetadata(['id' => 'id', 'locale' => 'locale']);
         }
     }
 

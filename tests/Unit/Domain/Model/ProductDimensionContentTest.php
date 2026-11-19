@@ -17,6 +17,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
+use Sulu\Bundle\CategoryBundle\Entity\CategoryInterface;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductAssociationInterface;
@@ -366,5 +367,75 @@ class ProductDimensionContentTest extends TestCase
         );
         $this->assertSame([$suitable->reveal()], $dc->getAssociationsByType('suitable'));
         $this->assertSame([], $dc->getAssociationsByType('unknown'));
+    }
+
+    public function testMainCategoryIsNullByDefault(): void
+    {
+        $this->assertNull((new ProductDimensionContent(new Product()))->getMainCategory());
+    }
+
+    public function testSetMainCategoryAddsItToExcerptCategories(): void
+    {
+        $existing = $this->prophesize(CategoryInterface::class)->reveal();
+        $main = $this->prophesize(CategoryInterface::class)->reveal();
+        $dimensionContent = new ProductDimensionContent(new Product());
+        $dimensionContent->setExcerptCategories([$existing]);
+
+        $dimensionContent->setMainCategory($main);
+
+        $this->assertSame($main, $dimensionContent->getMainCategory());
+        $this->assertSame([$existing, $main], $dimensionContent->getExcerptCategories());
+    }
+
+    public function testSetMainCategoryDoesNotDuplicateExcerptCategory(): void
+    {
+        $main = $this->prophesize(CategoryInterface::class)->reveal();
+        $dimensionContent = new ProductDimensionContent(new Product());
+        $dimensionContent->setExcerptCategories([$main]);
+
+        $dimensionContent->setMainCategory($main);
+
+        $this->assertSame([$main], $dimensionContent->getExcerptCategories());
+    }
+
+    public function testRemovingMainCategoryRemovesItFromExcerptCategories(): void
+    {
+        $existing = $this->prophesize(CategoryInterface::class)->reveal();
+        $main = $this->prophesize(CategoryInterface::class)->reveal();
+        $dimensionContent = new ProductDimensionContent(new Product());
+        $dimensionContent->setExcerptCategories([$existing]);
+        $dimensionContent->setMainCategory($main);
+
+        $dimensionContent->setMainCategory(null);
+
+        $this->assertNull($dimensionContent->getMainCategory());
+        $this->assertSame([$existing], $dimensionContent->getExcerptCategories());
+    }
+
+    public function testChangingMainCategoryReplacesItInExcerptCategories(): void
+    {
+        $old = $this->prophesize(CategoryInterface::class)->reveal();
+        $new = $this->prophesize(CategoryInterface::class)->reveal();
+        $dimensionContent = new ProductDimensionContent(new Product());
+        $dimensionContent->setMainCategory($old);
+
+        $dimensionContent->setMainCategory($new);
+
+        $this->assertSame([$new], \array_values($dimensionContent->getExcerptCategories()));
+    }
+
+    public function testMainCategoryCannotBeDeselectedFromExcerptCategories(): void
+    {
+        $other = $this->prophesize(CategoryInterface::class)->reveal();
+        $main = $this->prophesize(CategoryInterface::class)->reveal();
+        $dimensionContent = new ProductDimensionContent(new Product());
+        $dimensionContent->setMainCategory($main);
+
+        $dimensionContent->setExcerptCategories([$other]);
+
+        $excerptCategories = $dimensionContent->getExcerptCategories();
+        $this->assertCount(2, $excerptCategories);
+        $this->assertContains($other, $excerptCategories);
+        $this->assertContains($main, $excerptCategories);
     }
 }

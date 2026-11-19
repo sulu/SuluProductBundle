@@ -27,7 +27,7 @@ class ProductDetailsNormalizer implements NormalizerInterface
             return [];
         }
 
-        return ['productFamily'];
+        return ['productFamily', 'mainCategory'];
     }
 
     /**
@@ -45,6 +45,7 @@ class ProductDetailsNormalizer implements NormalizerInterface
         $normalizedData['code'] = $object->getCode();
         $normalizedData['externalIdentifier'] = $object->getExternalIdentifier();
         $normalizedData['productFamily'] = $object->getProductFamily()?->getUuid();
+        $normalizedData['mainCategory'] = $object->getMainCategory()?->getId();
         $normalizedData['status'] = $object->getStatus();
         $normalizedData['details'] = $object->getDetailsData();
         $normalizedData['type'] = $object->getResource()->getType();

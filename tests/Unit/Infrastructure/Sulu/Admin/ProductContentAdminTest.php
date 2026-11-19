@@ -121,6 +121,7 @@ class ProductContentAdminTest extends TestCase
             $viewBuilder = $this->prophesize(FormViewBuilderInterface::class);
             $viewBuilder->getName()->willReturn($name);
             $viewBuilder->setTabOrder($tabOrder)->shouldBeCalled();
+            $viewBuilder->addRouterAttributesToFormMetadata(Argument::any())->willReturn($viewBuilder->reveal());
             $viewBuilders[] = $viewBuilder->reveal();
         }
 
@@ -137,6 +138,41 @@ class ProductContentAdminTest extends TestCase
             ProductAdmin::SECURITY_CONTEXT,
             Argument::any(),
         )->willReturn($viewBuilders);
+
+        $this->admin->configureViews(new ViewCollection());
+    }
+
+    public function testTheExcerptViewSendsTheProductIdToTheMetadata(): void
+    {
+        $this->securityChecker->hasPermission(ProductAdmin::SECURITY_CONTEXT, PermissionTypes::EDIT)
+            ->willReturn(true);
+
+        $this->contentViewBuilderFactory->getDefaultToolbarActions(ProductInterface::class)
+            ->willReturn([]);
+
+        $excerpt = $this->prophesize(FormViewBuilderInterface::class);
+        $excerpt->getName()->willReturn(ProductAdmin::EDIT_TABS_VIEW . '.excerpt');
+        $excerpt->setTabOrder(60)->shouldBeCalled();
+        $excerpt->addRouterAttributesToFormMetadata(['id' => 'id', 'locale' => 'locale'])->shouldBeCalled()->willReturn($excerpt->reveal());
+
+        $previewExcerpt = $this->prophesize(PreviewFormViewBuilderInterface::class);
+        $previewExcerpt->getName()->willReturn(ProductAdmin::EDIT_TABS_VIEW . '.excerpt');
+        $previewExcerpt->setPreviewCondition('workflowPlace != null')->shouldBeCalled();
+        $previewExcerpt->setTabOrder(60)->shouldBeCalled();
+        $previewExcerpt->addRouterAttributesToFormMetadata(['id' => 'id', 'locale' => 'locale'])->shouldBeCalled()->willReturn($previewExcerpt->reveal());
+
+        $other = $this->prophesize(FormViewBuilderInterface::class);
+        $other->getName()->willReturn(ProductAdmin::EDIT_TABS_VIEW . '.seo');
+        $other->setTabOrder(50)->shouldBeCalled();
+        $other->addRouterAttributesToFormMetadata(Argument::any())->shouldNotBeCalled();
+
+        $this->contentViewBuilderFactory->createViews(
+            ProductInterface::class,
+            ProductAdmin::EDIT_TABS_VIEW,
+            null,
+            ProductAdmin::SECURITY_CONTEXT,
+            Argument::any(),
+        )->willReturn([$excerpt->reveal(), $previewExcerpt->reveal(), $other->reveal()]);
 
         $this->admin->configureViews(new ViewCollection());
     }

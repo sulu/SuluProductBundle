@@ -12,6 +12,7 @@
 namespace Sulu\Product\Domain\Model;
 
 use Doctrine\Common\Collections\Collection;
+use Sulu\Bundle\CategoryBundle\Entity\CategoryInterface;
 use Sulu\Content\Domain\Model\AuditableInterface;
 use Sulu\Content\Domain\Model\AuthorInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
@@ -69,6 +70,14 @@ interface ProductDimensionContentInterface extends DimensionContentInterface, Ex
     public function getProductFamily(): ?ProductFamilyInterface;
 
     public function setProductFamily(ProductFamilyInterface $productFamily): static;
+
+    public function getMainCategory(): ?CategoryInterface;
+
+    /**
+     * Keeps the excerpt categories in sync: the new main category is added to them,
+     * the previous one is removed.
+     */
+    public function setMainCategory(?CategoryInterface $mainCategory): static;
 
     /**
      * @return Collection<int, ProductAttributeValueInterface>
