@@ -150,6 +150,7 @@
     "sulu_product.product_status.announced": "Announced",
     "sulu_product.product_status.available": "Available",
     "sulu_product.product_status.discontinued": "Discontinued",
+    "sulu_product.invalid_main_category": "The category {id} is not below the category \"{rootKey}\" and cannot be the main category.",
     "sulu_product.invalid_status": "The status \"{status}\" is not a valid product status.",
     "sulu_product.associations": "Associations",
     "sulu_product.attribute_key_already_used": "The key \"{key}\" is already used by another attribute.",

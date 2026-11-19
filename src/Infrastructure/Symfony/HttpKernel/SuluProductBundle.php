@@ -122,6 +122,7 @@ use Sulu\Product\Infrastructure\Sulu\Admin\ProductContentAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductContentFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductDetailsFieldMetadataValidator;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductFamilyAdmin;
+use Sulu\Product\Infrastructure\Sulu\Admin\ProductMainCategoryFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductRouteFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductsListMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductStatusFormMetadataVisitor;
@@ -335,6 +336,15 @@ final class SuluProductBundle extends AbstractBundle
                         ->end()
                     ->end()
                 ->end()
+                ->arrayNode('main_category')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->scalarNode('root_key')
+                            ->info('Key of the category whose descendants can be chosen as the main category of a product. Without it every category can be chosen.')
+                            ->defaultNull()
+                        ->end()
+                    ->end()
+                ->end()
                 ->arrayNode('search')
                     ->addDefaultsIfNotSet()
                     ->children()
@@ -490,6 +500,10 @@ final class SuluProductBundle extends AbstractBundle
         $route = $config['route'];
         $builder->setParameter('sulu_product.route.type', $route['type']);
         $builder->setParameter('sulu_product.route.params', $route['params']);
+
+        /** @var array{root_key: string|null} $mainCategory */
+        $mainCategory = $config['main_category'];
+        $builder->setParameter('sulu_product.main_category.root_key', $mainCategory['root_key']);
 
         /** @var array{website: array{additional_product_filters: bool}} $search */
         $search = $config['search'];
@@ -680,6 +694,8 @@ final class SuluProductBundle extends AbstractBundle
             ->class(ProductMainCategoryDataMapper::class)
             ->args([
                 new Reference('sulu_content.category_factory'),
+                new Reference('sulu.repository.category'),
+                '%sulu_product.main_category.root_key%',
             ])
             ->tag('sulu_content.data_mapper', ['priority' => -10]);
 
@@ -1072,6 +1088,13 @@ final class SuluProductBundle extends AbstractBundle
             ])
             ->tag('sulu_admin.form_metadata_visitor')
             ->tag('sulu_admin.typed_form_metadata_visitor');
+
+        $services->set('sulu_product.product_main_category_form_metadata_visitor')
+            ->class(ProductMainCategoryFormMetadataVisitor::class)
+            ->args([
+                '%sulu_product.main_category.root_key%',
+            ])
+            ->tag('sulu_admin.form_metadata_visitor');
 
         $services->set('sulu_product.products_list_metadata_visitor')
             ->class(ProductsListMetadataVisitor::class)

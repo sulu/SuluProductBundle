@@ -13,9 +13,12 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Infrastructure\Sulu\Content\DataMapper;
 
+use Sulu\Bundle\CategoryBundle\Entity\CategoryInterface;
+use Sulu\Bundle\CategoryBundle\Entity\CategoryRepositoryInterface;
 use Sulu\Content\Application\ContentDataMapper\DataMapper\DataMapperInterface;
 use Sulu\Content\Domain\Factory\CategoryFactoryInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Product\Domain\Exception\InvalidMainCategoryException;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Webmozart\Assert\Assert;
 
@@ -27,6 +30,8 @@ class ProductMainCategoryDataMapper implements DataMapperInterface
 {
     public function __construct(
         private readonly CategoryFactoryInterface $categoryFactory,
+        private readonly CategoryRepositoryInterface $categoryRepository,
+        private readonly ?string $rootKey,
     ) {
     }
 
@@ -48,6 +53,28 @@ class ProductMainCategoryDataMapper implements DataMapperInterface
             ? null
             : ($this->categoryFactory->create([$mainCategoryId])[0] ?? null);
 
+        // A stored main category stays valid when the root key changes later, so publishing keeps working.
+        if (null !== $mainCategory && $mainCategory !== $localizedDimensionContent->getMainCategory()) {
+            $this->assertBelowRoot($mainCategory);
+        }
+
         $localizedDimensionContent->setMainCategory($mainCategory);
+    }
+
+    private function assertBelowRoot(CategoryInterface $mainCategory): void
+    {
+        if (null === $this->rootKey) {
+            return;
+        }
+
+        /** @var CategoryInterface|null $root */
+        $root = $this->categoryRepository->findCategoryByKey($this->rootKey);
+
+        if (null === $root
+            || $mainCategory->getLft() <= $root->getLft()
+            || $mainCategory->getRgt() >= $root->getRgt()
+        ) {
+            throw new InvalidMainCategoryException($mainCategory->getId(), $this->rootKey);
+        }
     }
 }

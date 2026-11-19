@@ -27,6 +27,26 @@ The same field is added invisibly to every product template, because `RoutableDa
 content package reads the route property off the template metadata. A template declaring its own
 `url` property keeps it and only receives the configured type and params.
 
+## Main category
+
+A product has an optional main category in the details form. Setting it adds the category to the
+excerpt categories of the product, removing or changing it takes the previous one out again.
+The excerpt categories always keep the main category, so a smart content query by category finds the
+product. The main category is stored per locale, like the excerpt categories.
+
+`root_key` limits the selection to the descendants of one category. The key is the one of the
+category, not its id, so it is the same in every environment. The root category itself cannot be
+chosen. Without `root_key` every category can be chosen.
+
+```yaml
+sulu_product:
+    main_category:
+        root_key: shop
+```
+
+The admin only lists the descendants, and saving a main category outside of them fails. A main
+category that was stored before the root key changed stays valid as long as it is not changed.
+
 ## Variant URLs
 
 A variant owns its route: the URL field is mandatory on the variant overlay, so every variant
