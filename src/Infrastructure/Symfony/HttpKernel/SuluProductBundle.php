@@ -121,6 +121,7 @@ use Sulu\Product\Infrastructure\Sulu\Admin\ProductCodeFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductContentAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductContentFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductDetailsFieldMetadataValidator;
+use Sulu\Product\Infrastructure\Sulu\Admin\ProductExcerptFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductFamilyAdmin;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductMainCategoryFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductRouteFormMetadataVisitor;
@@ -1093,6 +1094,13 @@ final class SuluProductBundle extends AbstractBundle
             ->class(ProductMainCategoryFormMetadataVisitor::class)
             ->args([
                 '%sulu_product.main_category.root_key%',
+            ])
+            ->tag('sulu_admin.form_metadata_visitor');
+
+        $services->set('sulu_product.product_excerpt_form_metadata_visitor')
+            ->class(ProductExcerptFormMetadataVisitor::class)
+            ->args([
+                new Reference('doctrine.orm.entity_manager'),
             ])
             ->tag('sulu_admin.form_metadata_visitor');
 

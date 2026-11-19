@@ -19,10 +19,12 @@ use Sulu\Bundle\CategoryBundle\Entity\Category;
 use Sulu\Bundle\CategoryBundle\Entity\CategoryTranslation;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
+use Sulu\Product\Infrastructure\Sulu\Admin\ProductExcerptFormMetadataVisitor;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductMainCategoryDataMapper;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 
 #[CoversClass(ProductMainCategoryDataMapper::class)]
+#[CoversClass(ProductExcerptFormMetadataVisitor::class)]
 class ProductMainCategoryTest extends SuluTestCase
 {
     private KernelBrowser $client;
@@ -98,6 +100,85 @@ class ProductMainCategoryTest extends SuluTestCase
         $this->assertInstanceOf(ProductDimensionContent::class, $live);
         $this->assertSame($main, $live->getMainCategory()?->getId());
         $this->assertSame([$main], $live->getExcerptCategoryIds());
+    }
+
+    public function testTheExcerptCategoriesLockTheMainCategory(): void
+    {
+        $main = $this->createCategory('main');
+        $id = $this->createProduct([]);
+        $this->put($id, ['mainCategory' => $main]);
+
+        $options = $this->excerptCategoriesOptions($id);
+
+        $this->assertSame('id == ' . $main, $options['item_disabled_condition']['value']);
+        $this->assertFalse($options['allow_deselect_for_disabled_items']['value']);
+    }
+
+    public function testTheExcerptMetadataOfAProductIsNotCached(): void
+    {
+        $this->excerptCategoriesOptions($this->createProduct([]));
+        $this->assertStringContainsString('no-store', (string) $this->client->getResponse()->headers->get('Cache-Control'));
+
+        $this->excerptCategoriesOptions(null);
+        $this->assertStringNotContainsString('no-store', (string) $this->client->getResponse()->headers->get('Cache-Control'));
+    }
+
+    public function testTheExcerptCategoriesStayOpenWithoutAMainCategory(): void
+    {
+        $options = $this->excerptCategoriesOptions($this->createProduct([]));
+
+        $this->assertArrayNotHasKey('item_disabled_condition', $options);
+        $this->assertArrayNotHasKey('allow_deselect_for_disabled_items', $options);
+    }
+
+    public function testTheExcerptCategoriesFollowTheContentLocaleNotTheInterfaceLocale(): void
+    {
+        $main = $this->createCategory('main');
+        $id = $this->createProduct([]);
+        $this->put($id, ['mainCategory' => $main]);
+
+        // the user of the test client has the interface locale en, the product is edited in de
+        $options = $this->excerptCategoriesOptions($id, 'de');
+
+        $this->assertArrayNotHasKey('item_disabled_condition', $options);
+    }
+
+    public function testTheExcerptCategoriesStayOpenWithoutAProductId(): void
+    {
+        $options = $this->excerptCategoriesOptions(null);
+
+        $this->assertArrayNotHasKey('item_disabled_condition', $options);
+    }
+
+    public function testAnExcerptWithoutCategoriesIsLeftAlone(): void
+    {
+        $main = $this->createCategory('main');
+        $id = $this->createProduct([]);
+        $this->put($id, ['mainCategory' => $main]);
+
+        $this->client->request('GET', '/admin/metadata/form/content_excerpt?locale=en&id=' . $id . '&forms[]=content_excerpt_metadata');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        /** @var array{form: array<string, mixed>} $metadata */
+        $metadata = $this->decode();
+
+        $this->assertArrayNotHasKey('excerptCategories', $metadata['form']);
+    }
+
+    /**
+     * @return array<string, array{value: mixed}>
+     */
+    private function excerptCategoriesOptions(?string $productId, string $locale = 'en'): array
+    {
+        $this->client->request('GET', '/admin/metadata/form/content_excerpt?locale=' . $locale
+            . (null === $productId ? '' : '&id=' . $productId)
+            . '&forms[]=content_excerpt_metadata&forms[]=content_excerpt_taxonomies');
+        $this->assertHttpStatusCode(200, $this->client->getResponse());
+
+        /** @var array{form: array<string, array{options: array<string, array{value: mixed}>}>} $metadata */
+        $metadata = $this->decode();
+
+        return $metadata['form']['excerptCategories']['options'];
     }
 
     /**
