@@ -79,15 +79,15 @@
             </meta>
         </property>
 
-        <property name="details/shortDescription" type="text_editor" colspan="12">
-            <meta>
-                <title>sulu_product.short_description</title>
-            </meta>
-        </property>
-
         <property name="mainCategory" type="single_category_selection" colspan="12">
             <meta>
                 <title>sulu_product.main_category</title>
+            </meta>
+        </property>
+
+        <property name="details/shortDescription" type="text_editor" colspan="12">
+            <meta>
+                <title>sulu_product.short_description</title>
             </meta>
         </property>
 
