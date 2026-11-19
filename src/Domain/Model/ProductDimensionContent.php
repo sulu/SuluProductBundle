@@ -269,15 +269,21 @@ class ProductDimensionContent implements ProductDimensionContentInterface
 
     public function setMainCategory(?CategoryInterface $mainCategory): static
     {
-        $previous = $this->mainCategory;
+        if ($this->mainCategory === $mainCategory) {
+            return $this;
+        }
+
+        $this->initializeCategories();
+
+        if (null !== $this->mainCategory) {
+            $this->excerptCategories->removeElement($this->mainCategory);
+        }
+
+        if (null !== $mainCategory && !$this->excerptCategories->contains($mainCategory)) {
+            $this->excerptCategories->add($mainCategory);
+        }
+
         $this->mainCategory = $mainCategory;
-
-        $excerptCategories = \array_values(\array_filter(
-            $this->getExcerptCategories(),
-            static fn (CategoryInterface $category): bool => $category !== $previous,
-        ));
-
-        $this->setExcerptCategories($excerptCategories);
 
         return $this;
     }
@@ -287,7 +293,7 @@ class ProductDimensionContent implements ProductDimensionContentInterface
      */
     public function setExcerptCategories(array $excerptCategories): void
     {
-        // The main category cannot be deselected: smart content relies on it being an excerpt category.
+        // The main category can only be deselected via it's own setter.
         if (null !== $this->mainCategory && !\in_array($this->mainCategory, $excerptCategories, true)) {
             $excerptCategories[] = $this->mainCategory;
         }

@@ -15,6 +15,9 @@ namespace Sulu\Product\Tests\Functional\Content;
 
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
+use Sulu\Bundle\CategoryBundle\Api\Category as ApiCategory;
+use Sulu\Bundle\CategoryBundle\Entity\Category;
+use Sulu\Bundle\CategoryBundle\Entity\CategoryTranslation;
 use Sulu\Bundle\MediaBundle\Api\Media;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Content\Application\ContentResolver\ContentResolverInterface;
@@ -120,6 +123,59 @@ class ProductResolverDetailsTest extends SuluTestCase
         $family = $productData['productFamily'];
         self::assertIsArray($family);
         self::assertSame('XLR', $family['name']);
+    }
+
+    public function testMainCategoryResolvesAsACategory(): void
+    {
+        $category = new Category();
+        $category->setKey('main');
+        $category->setDefaultLocale('en');
+        $translation = new CategoryTranslation();
+        $translation->setLocale('en');
+        $translation->setTranslation('Main');
+        $translation->setCategory($category);
+        $category->addTranslation($translation);
+        $this->entityManager->persist($category);
+        $this->entityManager->persist($translation);
+
+        $product = $this->productRepository->createNew();
+
+        $dimensionContent = $product->createDimensionContent();
+        $dimensionContent->setLocale('en');
+        $dimensionContent->setStage('draft');
+        $dimensionContent->setTemplateKey('product');
+        $dimensionContent->setMainCategory($category);
+        $product->addDimensionContent($dimensionContent);
+
+        $this->productRepository->add($product);
+        $this->entityManager->persist($dimensionContent);
+        $this->entityManager->flush();
+
+        $productData = $this->contentResolver->resolve($dimensionContent)['product'] ?? null;
+        self::assertIsArray($productData);
+        $mainCategory = $productData['mainCategory'];
+        self::assertInstanceOf(ApiCategory::class, $mainCategory);
+        self::assertSame($category->getId(), $mainCategory->getId());
+        self::assertSame('Main', $mainCategory->getName());
+    }
+
+    public function testMissingMainCategoryResolvesToNull(): void
+    {
+        $product = $this->productRepository->createNew();
+
+        $dimensionContent = $product->createDimensionContent();
+        $dimensionContent->setLocale('en');
+        $dimensionContent->setStage('draft');
+        $dimensionContent->setTemplateKey('product');
+        $product->addDimensionContent($dimensionContent);
+
+        $this->productRepository->add($product);
+        $this->entityManager->persist($dimensionContent);
+        $this->entityManager->flush();
+
+        $productData = $this->contentResolver->resolve($dimensionContent)['product'] ?? null;
+        self::assertIsArray($productData);
+        self::assertNull($productData['mainCategory']);
     }
 
     public function testProductFamilyImageResolvesAsMedia(): void
