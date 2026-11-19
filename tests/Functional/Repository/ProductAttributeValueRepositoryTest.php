@@ -29,10 +29,13 @@ use Sulu\Product\Domain\Repository\AttributeGroupRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductAttributeValueRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Doctrine\Repository\ProductAttributeValueRepository;
+use Sulu\Product\Tests\Functional\CountsSelectQueriesTrait;
 
 #[CoversClass(ProductAttributeValueRepository::class)]
 class ProductAttributeValueRepositoryTest extends SuluTestCase
 {
+    use CountsSelectQueriesTrait;
+
     private ProductAttributeValueRepositoryInterface $repository;
 
     private ProductRepositoryInterface $productRepository;
@@ -461,19 +464,9 @@ class ProductAttributeValueRepositoryTest extends SuluTestCase
         $attribute = $this->entityManager->getRepository(Attribute::class)->find($attribute->getUuid());
         $this->assertNotNull($attribute);
 
-        $before = $this->selectCount();
+        $before = $this->countSelectQueries();
         $this->repository->countValues(['attribute' => $attribute, 'stage' => 'live']);
 
-        $this->assertLessThanOrEqual(2, $this->selectCount() - $before, 'grouping and one representative load, not one query per value');
-    }
-
-    private function selectCount(): int
-    {
-        /** @var array<array{Value: string}> $rows */
-        $rows = $this->entityManager->getConnection()
-            ->executeQuery("SHOW SESSION STATUS LIKE 'Com_select'")
-            ->fetchAllAssociative();
-
-        return (int) $rows[0]['Value'];
+        $this->assertLessThanOrEqual(2, $this->countSelectQueries() - $before, 'grouping and one representative load, not one query per value');
     }
 }

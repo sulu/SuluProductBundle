@@ -30,11 +30,14 @@ use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Doctrine\Repository\ProductFamilyRepository;
+use Sulu\Product\Tests\Functional\CountsSelectQueriesTrait;
 use Symfony\Component\Uid\Uuid;
 
 #[CoversClass(ProductFamilyRepository::class)]
 class ProductFamilyRepositoryTest extends SuluTestCase
 {
+    use CountsSelectQueriesTrait;
+
     private ProductFamilyRepositoryInterface $repository;
 
     private ProductRepositoryInterface $productRepository;
@@ -312,11 +315,11 @@ class ProductFamilyRepositoryTest extends SuluTestCase
         $family = $this->repository->findOneBy(['uuid' => $uuid]);
         $this->assertInstanceOf(ProductFamilyInterface::class, $family);
 
-        $queriesBefore = $this->countQueries();
+        $queriesBefore = $this->countSelectQueries();
         $this->walkAttributeGraph($family, 'de');
 
         // Without the select group the walk goes back to the database.
-        $this->assertGreaterThan($queriesBefore, $this->countQueries());
+        $this->assertGreaterThan($queriesBefore, $this->countSelectQueries());
     }
 
     public function testFindOneByWithAttributesSelectLeavesTheOptionsUnloaded(): void
@@ -334,13 +337,13 @@ class ProductFamilyRepositoryTest extends SuluTestCase
         $this->assertCount(1, $familyAttributes);
         $attribute = $familyAttributes[0]->getAttribute();
 
-        $queriesBefore = $this->countQueries();
+        $queriesBefore = $this->countSelectQueries();
         $this->assertSame('Farbe', $attribute->getTranslation('de')?->getName());
-        $this->assertSame($queriesBefore, $this->countQueries(), 'the attribute translations come with the family');
+        $this->assertSame($queriesBefore, $this->countSelectQueries(), 'the attribute translations come with the family');
 
         // The options are not part of this select.
         $this->assertCount(1, $attribute->getOptions());
-        $this->assertGreaterThan($queriesBefore, $this->countQueries());
+        $this->assertGreaterThan($queriesBefore, $this->countSelectQueries());
     }
 
     public function testFindByReturnsNothingWhenNoFamilyMatches(): void
@@ -362,10 +365,10 @@ class ProductFamilyRepositoryTest extends SuluTestCase
         );
         $this->assertInstanceOf(ProductFamilyInterface::class, $family);
 
-        $queriesBefore = $this->countQueries();
+        $queriesBefore = $this->countSelectQueries();
         $names = $this->walkAttributeGraph($family, 'de');
 
-        $this->assertSame($queriesBefore, $this->countQueries(), 'walking the attribute graph must not query');
+        $this->assertSame($queriesBefore, $this->countSelectQueries(), 'walking the attribute graph must not query');
         $this->assertSame(['Farbe & Form', 'Farbe', 'Rot'], $names);
     }
 
@@ -380,11 +383,11 @@ class ProductFamilyRepositoryTest extends SuluTestCase
         );
         $this->assertInstanceOf(ProductFamilyInterface::class, $family);
 
-        $queriesBefore = $this->countQueries();
+        $queriesBefore = $this->countSelectQueries();
         // 'en' misses every translation, so the walk runs the default locale fallback.
         $names = $this->walkAttributeGraph($family, 'en');
 
-        $this->assertSame($queriesBefore, $this->countQueries(), 'the locale fallback must not query');
+        $this->assertSame($queriesBefore, $this->countSelectQueries(), 'the locale fallback must not query');
         $this->assertSame(['Farbe & Form', 'Farbe', 'red'], $names);
     }
 
@@ -398,10 +401,10 @@ class ProductFamilyRepositoryTest extends SuluTestCase
             [ProductFamilyRepositoryInterface::GROUP_SELECT_PRODUCT_FAMILY_FORM => true],
         );
 
-        $queriesBefore = $this->countQueries();
+        $queriesBefore = $this->countSelectQueries();
         $names = $this->walkAttributeGraph($family, 'de');
 
-        $this->assertSame($queriesBefore, $this->countQueries(), 'walking the attribute graph must not query');
+        $this->assertSame($queriesBefore, $this->countSelectQueries(), 'walking the attribute graph must not query');
         $this->assertSame(['Farbe & Form', 'Farbe', 'Rot'], $names);
     }
 
@@ -417,13 +420,13 @@ class ProductFamilyRepositoryTest extends SuluTestCase
         )];
         $this->assertCount(2, $families);
 
-        $queriesBefore = $this->countQueries();
+        $queriesBefore = $this->countSelectQueries();
         $names = [];
         foreach ($families as $family) {
             $names = [...$names, ...$this->walkAttributeGraph($family, 'de')];
         }
 
-        $this->assertSame($queriesBefore, $this->countQueries(), 'walking the attribute graph must not query');
+        $this->assertSame($queriesBefore, $this->countSelectQueries(), 'walking the attribute graph must not query');
         $this->assertCount(6, $names);
     }
 
@@ -496,15 +499,5 @@ class ProductFamilyRepositoryTest extends SuluTestCase
         }
 
         return $names;
-    }
-
-    private function countQueries(): int
-    {
-        /** @var array<array{Value: string}> $rows */
-        $rows = $this->entityManager->getConnection()
-            ->executeQuery("SHOW SESSION STATUS LIKE 'Com_select'")
-            ->fetchAllAssociative();
-
-        return (int) $rows[0]['Value'];
     }
 }

@@ -39,10 +39,13 @@ use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Doctrine\Repository\ProductRepository;
+use Sulu\Product\Tests\Functional\CountsSelectQueriesTrait;
 
 #[CoversClass(ProductRepository::class)]
 class ProductRepositoryTest extends SuluTestCase
 {
+    use CountsSelectQueriesTrait;
+
     private ProductRepositoryInterface $repository;
 
     private ProductRepository $doctrineRepository;
@@ -1499,7 +1502,7 @@ class ProductRepositoryTest extends SuluTestCase
 
         $loaded = $this->repository->getOneBy(['uuid' => $uuid], $selects);
 
-        $queriesBefore = $this->countQueries();
+        $queriesBefore = $this->countSelectQueries();
 
         $familyAttributes = [];
         foreach ($loaded->getDimensionContents() as $dimensionContent) {
@@ -1514,7 +1517,7 @@ class ProductRepositoryTest extends SuluTestCase
         }
 
         $this->assertSame([$attributeUuid], $familyAttributes);
-        $this->assertSame($queriesBefore, $this->countQueries(), 'walking the family graph must not query');
+        $this->assertSame($queriesBefore, $this->countSelectQueries(), 'walking the family graph must not query');
     }
 
     /**
@@ -1526,7 +1529,7 @@ class ProductRepositoryTest extends SuluTestCase
     {
         $uuid = $this->createProductWithTwoOptionAttributes();
 
-        $queriesBefore = $this->countQueries();
+        $queriesBefore = $this->countSelectQueries();
 
         $loaded = $this->loadWithAttributes($method, $uuid);
 
@@ -1548,7 +1551,7 @@ class ProductRepositoryTest extends SuluTestCase
         $this->assertSame(['finish' => ['Oberflaeche', 'Optik', 'Matt'], 'size' => ['Groesse', 'Optik', 'Gross']], $labels);
         $this->assertSame(
             $queriesBefore + 5,
-            $this->countQueries(),
+            $this->countSelectQueries(),
             'the product, the values with their attributes, the options, the attribute labels and the groups',
         );
     }
@@ -1574,11 +1577,11 @@ class ProductRepositoryTest extends SuluTestCase
     {
         $uuid = $this->createProductWithTwoOptionAttributes();
 
-        $queriesBefore = $this->countQueries();
+        $queriesBefore = $this->countSelectQueries();
 
         $product = $this->repository->getOneBy(['uuid' => $uuid], $this->attributeSelects($select));
 
-        $this->assertSame($queriesBefore + $queries, $this->countQueries());
+        $this->assertSame($queriesBefore + $queries, $this->countSelectQueries());
 
         $found = [];
         $values = 0;
@@ -1667,7 +1670,7 @@ class ProductRepositoryTest extends SuluTestCase
         $this->entityManager->flush();
         $this->entityManager->clear();
 
-        $queriesBefore = $this->countQueries();
+        $queriesBefore = $this->countSelectQueries();
 
         $names = [];
         foreach ($this->repository->findBy(['uuids' => $uuids], [], $this->attributeSelects()) as $product) {
@@ -1680,7 +1683,7 @@ class ProductRepositoryTest extends SuluTestCase
 
         \sort($names);
         $this->assertSame(['Gross', 'Matt'], $names);
-        $this->assertSame($queriesBefore + 5, $this->countQueries(), 'the same queries as for one product');
+        $this->assertSame($queriesBefore + 5, $this->countSelectQueries(), 'the same queries as for one product');
     }
 
     public function testSelectProductAttributesWithoutValuesLoadsNothingMore(): void
@@ -1693,7 +1696,7 @@ class ProductRepositoryTest extends SuluTestCase
         $uuid = $product->getUuid();
         $this->entityManager->clear();
 
-        $queriesBefore = $this->countQueries();
+        $queriesBefore = $this->countSelectQueries();
 
         $loaded = $this->loadWithAttributes('getOneBy', $uuid);
 
@@ -1701,7 +1704,7 @@ class ProductRepositoryTest extends SuluTestCase
             $this->assertCount(0, $dimensionContent->getAttributes());
         }
 
-        $this->assertSame($queriesBefore + 2, $this->countQueries(), 'the product and the values');
+        $this->assertSame($queriesBefore + 2, $this->countSelectQueries(), 'the product and the values');
     }
 
     public function testSelectProductAttributesNeedsTheProductContent(): void
@@ -1715,12 +1718,12 @@ class ProductRepositoryTest extends SuluTestCase
 
     public function testSelectProductAttributesWithoutProductsLoadsNothing(): void
     {
-        $queriesBefore = $this->countQueries();
+        $queriesBefore = $this->countSelectQueries();
 
         $products = \iterator_to_array($this->repository->findBy(['uuids' => ['00000000-0000-0000-0000-000000000000']], [], $this->attributeSelects()));
 
         $this->assertSame([], $products);
-        $this->assertSame($queriesBefore + 1, $this->countQueries());
+        $this->assertSame($queriesBefore + 1, $this->countSelectQueries());
     }
 
     /**
@@ -1918,15 +1921,5 @@ class ProductRepositoryTest extends SuluTestCase
         $this->assertSame([], $byDraftValue, 'a draft value must not match a live search');
         $this->assertCount(1, $byLiveValue);
         $this->assertSame($product->getUuid(), $byLiveValue[0]->getUuid());
-    }
-
-    private function countQueries(): int
-    {
-        /** @var array<array{Value: string}> $rows */
-        $rows = $this->entityManager->getConnection()
-            ->executeQuery("SHOW SESSION STATUS LIKE 'Com_select'")
-            ->fetchAllAssociative();
-
-        return (int) $rows[0]['Value'];
     }
 }
