@@ -15,7 +15,6 @@ namespace Sulu\Product\Domain\Model;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\Common\Collections\Criteria;
 use Sulu\Bundle\MediaBundle\Entity\MediaInterface;
 use Sulu\Component\Persistence\Model\AuditableTrait;
 use Symfony\Component\Uid\Uuid;
@@ -100,15 +99,18 @@ class ProductFamily implements ProductFamilyInterface
         return $this;
     }
 
+    /**
+     * Not `matching()`: on an unloaded collection it queries on every call.
+     */
     public function getTranslation(string $locale): ?ProductFamilyTranslationInterface
     {
-        $criteria = Criteria::create()
-            ->where(Criteria::expr()->eq('locale', $locale));
+        foreach ($this->translations as $translation) {
+            if ($translation->getLocale() === $locale) {
+                return $translation;
+            }
+        }
 
-        /** @var ProductFamilyTranslationInterface|false $translation */
-        $translation = $this->translations->matching($criteria)->first();
-
-        return $translation ?: null;
+        return null;
     }
 
     public function getTranslations(): iterable
