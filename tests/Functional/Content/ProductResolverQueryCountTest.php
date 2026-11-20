@@ -172,7 +172,7 @@ class ProductResolverQueryCountTest extends SuluTestCase
         $queriesWithoutAttributes = $this->countQueriesLoading($uuid, ['title' => 'product.title']);
         $queriesWithAttributes = $this->countQueriesLoading($uuid, ['title' => 'product.title', 'attributes' => 'product.attributes']);
 
-        self::assertSame($queriesWithoutAttributes + 3, $queriesWithAttributes, 'the attribute labels, groups and options');
+        self::assertSame($queriesWithoutAttributes + 2, $queriesWithAttributes, 'the attribute labels, groups and options, which also load the attributes');
 
         $queriesBefore = $this->countSelectQueries();
         $product = $this->entityManager->find(ProductInterface::class, $uuid);

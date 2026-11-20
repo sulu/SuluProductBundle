@@ -1621,7 +1621,7 @@ class ProductRepositoryTest extends SuluTestCase
         yield 'group' => [['group' => true], ['group'], 4];
         yield 'options' => [['options' => true], ['options'], 4];
         yield 'translations and options' => [['translations' => true, 'options' => true], ['translations', 'options'], 4];
-        yield 'nothing picked loads the values and their attributes' => [['translations' => false], [], 2];
+        yield 'nothing picked loads the values and their attributes' => [['translations' => false], [], 3];
         yield 'an empty array loads nothing' => [[], [], 1];
     }
 
@@ -1848,7 +1848,7 @@ class ProductRepositoryTest extends SuluTestCase
 
         \sort($names);
         $this->assertSame(['Chair', 'Sofa'], $names);
-        $this->assertSame($queriesBefore + 2, $this->countSelectQueries(), 'the products and the families with their translations');
+        $this->assertSame($queriesBefore + 3, $this->countSelectQueries(), 'the products, the families and their translations');
     }
 
     public function testSelectProductFamilyTranslationsWithoutFamiliesLoadsNothingMore(): void
