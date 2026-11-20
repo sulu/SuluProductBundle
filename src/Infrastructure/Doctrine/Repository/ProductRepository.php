@@ -14,6 +14,7 @@ namespace Sulu\Product\Infrastructure\Doctrine\Repository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\NoResultException;
+use Doctrine\ORM\PersistentCollection;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\Query\Expr\OrderBy;
 use Doctrine\ORM\QueryBuilder;
@@ -23,6 +24,7 @@ use Sulu\Product\Domain\Exception\ProductNotFoundException;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
+use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
@@ -46,6 +48,14 @@ final class ProductRepository implements ProductRepositoryInterface
                 DimensionContentQueryEnhancer::GROUP_SELECT_CONTENT_WEBSITE => true,
             ],
         ],
+    ];
+
+    /**
+     * The collection of the dimension contents each select loads.
+     */
+    private const PRELOADED_COLLECTIONS = [
+        self::SELECT_PRODUCT_ASSOCIATIONS => 'associations',
+        self::SELECT_PRODUCT_ADDITIONAL_WEBSPACES => 'additionalWebspaces',
     ];
 
     /**
@@ -131,7 +141,7 @@ final class ProductRepository implements ProductRepositoryInterface
             throw new ProductNotFoundException($filters, 0, $e);
         }
 
-        $this->preloadAttributes([$product], $selects);
+        $this->preload([$product], $selects);
 
         return $product;
     }
@@ -147,7 +157,7 @@ final class ProductRepository implements ProductRepositoryInterface
             return null;
         }
 
-        $this->preloadAttributes([$product], $selects);
+        $this->preload([$product], $selects);
 
         return $product;
     }
@@ -216,7 +226,7 @@ final class ProductRepository implements ProductRepositoryInterface
         /** @var iterable<ProductInterface> $products */
         $products = $queryBuilder->getQuery()->getResult();
 
-        $this->preloadAttributes($products, $selects);
+        $this->preload($products, $selects);
 
         foreach ($products as $product) {
             yield $product;
@@ -562,8 +572,10 @@ final class ProductRepository implements ProductRepositoryInterface
                 ->leftJoin('familyAttribute.attribute', 'familyAttributeAttribute');
         }
 
-        if ($selects[self::SELECT_PRODUCT_ATTRIBUTES] ?? false) {
-            Assert::notFalse($selects[self::SELECT_PRODUCT_CONTENT] ?? false);
+        foreach ([self::SELECT_PRODUCT_ATTRIBUTES, self::SELECT_PRODUCT_FAMILY_TRANSLATIONS, ...\array_keys(self::PRELOADED_COLLECTIONS)] as $preloadSelect) {
+            if ($selects[$preloadSelect] ?? false) {
+                Assert::notFalse($selects[self::SELECT_PRODUCT_CONTENT] ?? false);
+            }
         }
 
         return $queryBuilder;
@@ -596,14 +608,18 @@ final class ProductRepository implements ProductRepositoryInterface
      * @param iterable<ProductInterface> $products
      * @param array<string, mixed> $selects
      */
-    private function preloadAttributes(iterable $products, array $selects): void
+    private function preload(iterable $products, array $selects): void
     {
-        $attributeSelect = $this->resolveSelectGroups($selects)[self::SELECT_PRODUCT_ATTRIBUTES] ?? false;
-        if (!$attributeSelect) {
+        $selects = $this->resolveSelectGroups($selects);
+        $collections = \array_filter(
+            self::PRELOADED_COLLECTIONS,
+            static fn (string $select): bool => (bool) ($selects[$select] ?? false),
+            \ARRAY_FILTER_USE_KEY,
+        );
+        $familyTranslations = (bool) ($selects[self::SELECT_PRODUCT_FAMILY_TRANSLATIONS] ?? false);
+        if ([] === $collections && !$familyTranslations && !($selects[self::SELECT_PRODUCT_ATTRIBUTES] ?? false)) {
             return;
         }
-
-        $attributeSelects = $this->resolveAttributeSelects($attributeSelect);
 
         $dimensionContents = [];
         foreach ($products as $product) {
@@ -618,17 +634,95 @@ final class ProductRepository implements ProductRepositoryInterface
             return;
         }
 
+        foreach ($collections as $collection) {
+            $this->preloadCollection($dimensionContents, $collection);
+        }
+
+        if ($familyTranslations) {
+            $this->preloadFamilyTranslations($dimensionContents);
+        }
+
+        $this->preloadAttributes($dimensionContents, $selects);
+    }
+
+    /**
+     * The family stays a reference until read, so reading it through the metadata does not load it.
+     *
+     * @param list<ProductDimensionContentInterface> $dimensionContents
+     */
+    private function preloadFamilyTranslations(array $dimensionContents): void
+    {
+        $metadata = $this->entityManager->getClassMetadata($this->productDimensionContentClassName);
+
+        $families = [];
+        foreach ($dimensionContents as $dimensionContent) {
+            $family = $metadata->getFieldValue($dimensionContent, 'productFamily');
+            if ($family instanceof ProductFamilyInterface) {
+                $families[\spl_object_id($family)] = $family;
+            }
+        }
+
+        if ([] === $families) {
+            return;
+        }
+
         $this->entityManager->createQueryBuilder()
-            ->select('dimensionContent')
-            ->addSelect('attributeValue')
-            ->addSelect('attribute')
+            ->select('productFamily', 'translation')
+            ->from($this->entityManager->getClassMetadata(ProductFamilyInterface::class)->getName(), 'productFamily')
+            ->leftJoin('productFamily.translations', 'translation')
+            ->where('productFamily IN (:productFamilies)')
+            ->setParameter('productFamilies', \array_values($families))
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @param list<ProductDimensionContentInterface> $dimensionContents
+     */
+    private function preloadCollection(array $dimensionContents, string $collection): void
+    {
+        $dimensionContents = $this->filterUnloaded($dimensionContents, $collection);
+        if ([] === $dimensionContents) {
+            return;
+        }
+
+        $this->entityManager->createQueryBuilder()
+            ->select('dimensionContent', 'item')
             ->from($this->productDimensionContentClassName, 'dimensionContent')
-            ->leftJoin('dimensionContent.attributes', 'attributeValue')
-            ->leftJoin('attributeValue.attribute', 'attribute')
+            ->leftJoin('dimensionContent.' . $collection, 'item')
             ->where('dimensionContent IN (:dimensionContents)')
             ->setParameter('dimensionContents', $dimensionContents)
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * @param list<ProductDimensionContentInterface> $dimensionContents
+     * @param array<mixed> $selects
+     */
+    private function preloadAttributes(array $dimensionContents, array $selects): void
+    {
+        $attributeSelect = $selects[self::SELECT_PRODUCT_ATTRIBUTES] ?? false;
+        if (!$attributeSelect) {
+            return;
+        }
+
+        $attributeSelects = $this->resolveAttributeSelects($attributeSelect);
+
+        $unloaded = $this->filterUnloaded($dimensionContents, 'attributes');
+        if ([] !== $unloaded) {
+            $this->entityManager->createQueryBuilder()
+                ->select('dimensionContent')
+                ->addSelect('attributeValue')
+                ->addSelect('attribute')
+                ->from($this->productDimensionContentClassName, 'dimensionContent')
+                ->leftJoin('dimensionContent.attributes', 'attributeValue')
+                ->leftJoin('attributeValue.attribute', 'attribute')
+                ->where('dimensionContent IN (:dimensionContents)')
+                ->setParameter('dimensionContents', $unloaded)
+                ->getQuery()
+                ->getResult();
+        }
 
         $attributeUuids = [];
         foreach ($dimensionContents as $dimensionContent) {
@@ -645,6 +739,28 @@ final class ProductRepository implements ProductRepositoryInterface
         if (\in_array(true, $attributeSelects, true)) {
             $this->attributeRepository->findBy(['uuids' => \array_values($attributeUuids)], $attributeSelects);
         }
+    }
+
+    /**
+     * Read through the metadata, a getter would load the collection. A product loaded earlier in the
+     * request keeps what it has.
+     *
+     * @param list<ProductDimensionContentInterface> $dimensionContents
+     *
+     * @return list<ProductDimensionContentInterface>
+     */
+    private function filterUnloaded(array $dimensionContents, string $collection): array
+    {
+        $metadata = $this->entityManager->getClassMetadata($this->productDimensionContentClassName);
+
+        return \array_values(\array_filter(
+            $dimensionContents,
+            static function(ProductDimensionContentInterface $dimensionContent) use ($metadata, $collection): bool {
+                $items = $metadata->getFieldValue($dimensionContent, $collection);
+
+                return $items instanceof PersistentCollection && !$items->isInitialized();
+            },
+        ));
     }
 
     /**
