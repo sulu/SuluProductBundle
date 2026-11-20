@@ -219,6 +219,9 @@ use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+
+use function Symfony\Component\DependencyInjection\Loader\Configurator\expr;
+
 use Symfony\Component\DependencyInjection\Loader\Configurator\ServicesConfigurator;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
@@ -1185,6 +1188,7 @@ final class SuluProductBundle extends AbstractBundle
             ->class(ProductResourceLoader::class)
             ->args([
                 new Reference('sulu_product.product_repository'),
+                expr("container.hasParameter('sulu_audience_targeting.enabled')"),
             ])
             ->tag('sulu_content.resource_loader', ['type' => ProductResourceLoader::RESOURCE_LOADER_KEY]);
 

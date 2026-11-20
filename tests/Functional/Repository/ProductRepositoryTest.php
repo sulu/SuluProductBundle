@@ -28,6 +28,7 @@ use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeOption;
 use Sulu\Product\Domain\Model\AttributeOptionTranslation;
 use Sulu\Product\Domain\Model\AttributeTranslation;
+use Sulu\Product\Domain\Model\ProductAssociation;
 use Sulu\Product\Domain\Model\ProductAttributeValue;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductFamilyAttribute;
@@ -40,6 +41,7 @@ use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Doctrine\Repository\ProductRepository;
 use Sulu\Product\Tests\Functional\CountsSelectQueriesTrait;
+use Symfony\Bridge\Doctrine\Middleware\Debug\DebugDataHolder;
 
 #[CoversClass(ProductRepository::class)]
 class ProductRepositoryTest extends SuluTestCase
@@ -1619,7 +1621,7 @@ class ProductRepositoryTest extends SuluTestCase
         yield 'group' => [['group' => true], ['group'], 4];
         yield 'options' => [['options' => true], ['options'], 4];
         yield 'translations and options' => [['translations' => true, 'options' => true], ['translations', 'options'], 4];
-        yield 'nothing picked loads the values and their attributes' => [['translations' => false], [], 2];
+        yield 'nothing picked loads the values and their attributes' => [['translations' => false], [], 3];
         yield 'an empty array loads nothing' => [[], [], 1];
     }
 
@@ -1724,6 +1726,162 @@ class ProductRepositoryTest extends SuluTestCase
 
         $this->assertSame([], $products);
         $this->assertSame($queriesBefore + 1, $this->countSelectQueries());
+    }
+
+    /**
+     * The associations and the additional webspaces of several products load in one query each, so
+     * the mergers read them without a query per dimension content.
+     */
+    public function testSelectProductAssociationsAndAdditionalWebspacesLoadSeveralProductsInOneQueryEach(): void
+    {
+        $target = $this->createAndPersistProduct('TARGET');
+
+        $uuids = [];
+        foreach (['A', 'B'] as $code) {
+            $product = $this->repository->createNew();
+            $dimensionContent = $product->createDimensionContent();
+            $dimensionContent->setLocale('de');
+            $dimensionContent->setCode($code);
+            $dimensionContent->setAdditionalWebspaces(['sulu-io']);
+            $dimensionContent->addAssociation(new ProductAssociation($dimensionContent, $target, 'suitable'));
+            $product->addDimensionContent($dimensionContent);
+            $this->repository->add($product);
+            $this->entityManager->persist($dimensionContent);
+            $uuids[] = $product->getUuid();
+        }
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        $queriesBefore = $this->countSelectQueries();
+
+        $loaded = [];
+        foreach ($this->repository->findBy(['uuids' => $uuids], [], [
+            ...$this->attributeSelects([]),
+            ProductRepositoryInterface::SELECT_PRODUCT_ASSOCIATIONS => true,
+            ProductRepositoryInterface::SELECT_PRODUCT_ADDITIONAL_WEBSPACES => true,
+        ]) as $product) {
+            foreach ($product->getDimensionContents() as $dimensionContent) {
+                $loaded[$dimensionContent->getCode()] = [
+                    \array_map(static fn ($association) => $association->getTarget()->getUuid(), $dimensionContent->getAssociations()),
+                    $dimensionContent->getAdditionalWebspaces(),
+                ];
+            }
+        }
+
+        \ksort($loaded);
+        $this->assertSame([
+            'A' => [[$target->getUuid()], ['sulu-io']],
+            'B' => [[$target->getUuid()], ['sulu-io']],
+        ], $loaded);
+        $this->assertSame($queriesBefore + 3, $this->countSelectQueries(), 'the products, the associations and the webspaces');
+    }
+
+    /** A product loaded earlier in the request keeps its collections, loading it again does not query them. */
+    public function testSelectProductAssociationsSkipsCollectionsAlreadyLoaded(): void
+    {
+        $target = $this->createAndPersistProduct('TARGET');
+        $product = $this->repository->createNew();
+        $dimensionContent = $product->createDimensionContent();
+        $dimensionContent->addAssociation(new ProductAssociation($dimensionContent, $target, 'suitable'));
+        $product->addDimensionContent($dimensionContent);
+        $this->repository->add($product);
+        $this->entityManager->persist($dimensionContent);
+        $this->entityManager->flush();
+        $uuid = $product->getUuid();
+        $this->entityManager->clear();
+
+        $selects = [
+            ...$this->attributeSelects([]),
+            ProductRepositoryInterface::SELECT_PRODUCT_ASSOCIATIONS => true,
+        ];
+        $this->repository->getOneBy(['uuid' => $uuid], $selects);
+
+        /** @var DebugDataHolder $debugDataHolder */
+        $debugDataHolder = self::getContainer()->get('doctrine.debug_data_holder');
+        /** @var list<array{sql: string}> $queriesBefore */
+        $queriesBefore = $debugDataHolder->getData()['default'] ?? [];
+
+        $loaded = $this->repository->getOneBy(['uuid' => $uuid], $selects);
+
+        /** @var list<array{sql: string}> $queries */
+        $queries = $debugDataHolder->getData()['default'] ?? [];
+        $associationQueries = \array_filter(
+            \array_slice($queries, \count($queriesBefore)),
+            static fn (array $query): bool => \str_contains($query['sql'], 'pr_product_associations'),
+        );
+        $this->assertSame([], $associationQueries);
+        foreach ($loaded->getDimensionContents() as $loadedDimensionContent) {
+            $this->assertCount(1, $loadedDimensionContent->getAssociations());
+        }
+    }
+
+    /** The families of several products load with their translations in one query, so each product reads its family's name without one. */
+    public function testSelectProductFamilyTranslationsLoadsTheFamiliesOfSeveralProductsInOneQuery(): void
+    {
+        $uuids = [];
+        foreach (['Sofa', 'Chair'] as $name) {
+            $family = $this->createFamily();
+            $family->addTranslation(new ProductFamilyTranslation($family, 'de', $name));
+
+            $product = $this->repository->createNew();
+            $dimensionContent = $product->createDimensionContent();
+            $dimensionContent->setProductFamily($family);
+            $product->addDimensionContent($dimensionContent);
+            $this->repository->add($product);
+            $this->entityManager->persist($dimensionContent);
+            $uuids[] = $product->getUuid();
+        }
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        $queriesBefore = $this->countSelectQueries();
+
+        $names = [];
+        foreach ($this->repository->findBy(['uuids' => $uuids], [], [
+            ...$this->attributeSelects([]),
+            ProductRepositoryInterface::SELECT_PRODUCT_FAMILY_TRANSLATIONS => true,
+        ]) as $product) {
+            foreach ($product->getDimensionContents() as $dimensionContent) {
+                $names[] = $dimensionContent->getProductFamily()?->getTranslation('de')?->getName();
+            }
+        }
+
+        \sort($names);
+        $this->assertSame(['Chair', 'Sofa'], $names);
+        $this->assertSame($queriesBefore + 3, $this->countSelectQueries(), 'the products, the families and their translations');
+    }
+
+    public function testSelectProductFamilyTranslationsWithoutFamiliesLoadsNothingMore(): void
+    {
+        $uuid = $this->createAndPersistProduct('NO-FAMILY')->getUuid();
+        $this->entityManager->clear();
+
+        $queriesBefore = $this->countSelectQueries();
+
+        $this->repository->getOneBy(['uuid' => $uuid], [
+            ...$this->attributeSelects([]),
+            ProductRepositoryInterface::SELECT_PRODUCT_FAMILY_TRANSLATIONS => true,
+        ]);
+
+        $this->assertSame($queriesBefore + 1, $this->countSelectQueries());
+    }
+
+    #[DataProvider('provideCollectionSelects')]
+    public function testACollectionSelectNeedsTheProductContent(string $select): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        $this->repository->findOneBy(['uuid' => '00000000-0000-0000-0000-000000000000'], [$select => true]);
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function provideCollectionSelects(): iterable
+    {
+        yield 'associations' => [ProductRepositoryInterface::SELECT_PRODUCT_ASSOCIATIONS];
+        yield 'additional webspaces' => [ProductRepositoryInterface::SELECT_PRODUCT_ADDITIONAL_WEBSPACES];
+        yield 'family translations' => [ProductRepositoryInterface::SELECT_PRODUCT_FAMILY_TRANSLATIONS];
     }
 
     /**
