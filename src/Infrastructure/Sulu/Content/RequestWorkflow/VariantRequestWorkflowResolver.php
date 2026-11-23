@@ -17,6 +17,7 @@ use Sulu\Content\Application\RequestWorkflow\RequestWorkflow;
 use Sulu\Content\Application\RequestWorkflow\RequestWorkflowResolverInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
+use Sulu\Product\Domain\Model\ProductInterface;
 
 /**
  * A variant has no SEO or excerpt tab and does not show the product template's own fields, so the workflow's SEO,
@@ -40,7 +41,7 @@ final class VariantRequestWorkflowResolver implements RequestWorkflowResolverInt
 
         if (null === $workflow
             || !$dimensionContent instanceof ProductDimensionContentInterface
-            || null === $dimensionContent->getResource()->getParent()
+            || !$dimensionContent->getResource()->isType(ProductInterface::TYPE_VARIANT)
         ) {
             return $workflow;
         }

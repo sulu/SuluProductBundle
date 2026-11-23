@@ -22,6 +22,7 @@ use Sulu\Content\Application\RequestWorkflow\Validator\RequestWorkflowValidatorI
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
+use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\RequestWorkflow\VariantRequestWorkflowResolver;
 
 #[CoversClass(VariantRequestWorkflowResolver::class)]
@@ -37,7 +38,7 @@ class VariantRequestWorkflowResolverTest extends TestCase
             'publish_required' => ['pre_validator' => $this->createMock(RequestWorkflowPreValidatorInterface::class), 'config' => []],
             'custom_rule' => $custom,
         ]);
-        $variantContent = new ProductDimensionContent((new Product('variant-uuid'))->setParent(new Product('parent-uuid')));
+        $variantContent = new ProductDimensionContent((new Product('variant-uuid'))->setType(ProductInterface::TYPE_VARIANT)->setParent(new Product('parent-uuid')));
 
         $inner = $this->createMock(RequestWorkflowResolverInterface::class);
         $inner->expects($this->once())->method('resolveForContent')->with($variantContent)->willReturn($workflow);
@@ -54,7 +55,7 @@ class VariantRequestWorkflowResolverTest extends TestCase
 
     public function testAVariantWithoutAWorkflowStaysWithout(): void
     {
-        $variantContent = new ProductDimensionContent((new Product('variant-uuid'))->setParent(new Product('parent-uuid')));
+        $variantContent = new ProductDimensionContent((new Product('variant-uuid'))->setType(ProductInterface::TYPE_VARIANT)->setParent(new Product('parent-uuid')));
 
         $inner = $this->createMock(RequestWorkflowResolverInterface::class);
         $inner->method('resolveForContent')->willReturn(null);
