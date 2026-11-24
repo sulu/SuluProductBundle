@@ -110,6 +110,14 @@ class ProductResolverTest extends ProductResolverTestCase
         self::assertSame('/t-shirt', $resolved['url']->getContent());
     }
 
+    public function testAVariantHasNoUrlInPerProductRouting(): void
+    {
+        $resolver = $this->createResolver(variantRouting: VariantRoutingEnum::PER_PRODUCT);
+
+        self::assertArrayNotHasKey('url', $this->resolveContent($this->createContent(ProductInterface::TYPE_VARIANT), resolver: $resolver));
+        self::assertArrayHasKey('url', $this->resolveContent($this->createContent(ProductInterface::TYPE_PRODUCT), resolver: $resolver));
+    }
+
     public function testAReferenceResolvesVariantsWhenItAsksForThem(): void
     {
         $productRepository = $this->createMock(ProductRepositoryInterface::class);

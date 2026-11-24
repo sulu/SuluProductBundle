@@ -298,10 +298,8 @@ class ProductResolver implements ResolverInterface
             'position' => ContentView::create($dimensionContent->getResource()->getPosition(), []),
         ];
 
-        // A product with variants that owns no route is reached through its variants.
-        if ($dimensionContent->getResource()->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS)
-            && !$this->variantRouting->ownsRoute(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS)
-        ) {
+        // A type that owns no route is reached through another type.
+        if (!$this->variantRouting->ownsRoute($dimensionContent->getResource()->getType())) {
             unset($masterData['url']);
         }
 
