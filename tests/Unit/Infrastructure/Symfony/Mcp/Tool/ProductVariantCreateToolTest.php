@@ -24,7 +24,6 @@ use Sulu\Mcp\Application\AdminLink\AdminLinkGeneratorInterface;
 use Sulu\Product\Application\Message\CreateProductMessage;
 use Sulu\Product\Application\Routing\PerProductSlugProvider;
 use Sulu\Product\Application\Routing\PerVariantSlugProvider;
-use Sulu\Product\Application\Routing\VariantUrlBuilder;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\Product;
@@ -40,7 +39,6 @@ use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductVariantCreateTool;
 use Sulu\Product\Infrastructure\Symfony\Mcp\VariantParentResolver;
 use Sulu\Product\Tests\Unit\Fixture\ProductUrlHelperFactory;
 use Sulu\Product\Tests\Unit\Fixture\ProjectLocalesFactory;
-use Sulu\Route\Domain\Repository\RouteRepositoryInterface;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
@@ -122,7 +120,7 @@ final class ProductVariantCreateToolTest extends TestCase
             $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
             ProjectLocalesFactory::create(),
             ProductUrlHelperFactory::create('route'),
-            new PerProductSlugProvider($this->createStub(RouteRepositoryInterface::class), new VariantUrlBuilder('variant')),
+            new PerProductSlugProvider(),
         );
     }
 

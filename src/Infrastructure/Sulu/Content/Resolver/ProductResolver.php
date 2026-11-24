@@ -290,7 +290,7 @@ class ProductResolver implements ResolverInterface
     ): array {
         $masterData = [
             'title' => ContentView::create($dimensionContent->getTitle(), []),
-            'url' => ContentView::create($this->slugProvider->getSlug($dimensionContent), []),
+            'url' => ContentView::create($dimensionContent->getRoute()?->getSlug(), []),
             'code' => ContentView::create($dimensionContent->getCode(), []),
             'externalIdentifier' => ContentView::create($dimensionContent->getExternalIdentifier(), []),
             'productFamily' => $this->resolveProductFamily($dimensionContent, $locale),

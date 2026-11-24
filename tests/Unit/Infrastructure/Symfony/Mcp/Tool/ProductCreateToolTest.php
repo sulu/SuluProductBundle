@@ -30,7 +30,6 @@ use Sulu\Product\Application\Message\CreateProductMessage;
 use Sulu\Product\Application\Routing\PerProductSlugProvider;
 use Sulu\Product\Application\Routing\PerVariantSlugProvider;
 use Sulu\Product\Application\Routing\ProductSlugProviderInterface;
-use Sulu\Product\Application\Routing\VariantUrlBuilder;
 use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
@@ -45,7 +44,6 @@ use Sulu\Product\Tests\Unit\Fixture\FixedBlockIdGenerator;
 use Sulu\Product\Tests\Unit\Fixture\ProductContentMetadata;
 use Sulu\Product\Tests\Unit\Fixture\ProductUrlHelperFactory;
 use Sulu\Product\Tests\Unit\Fixture\ProjectLocalesFactory;
-use Sulu\Route\Domain\Repository\RouteRepositoryInterface;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
@@ -267,7 +265,7 @@ final class ProductCreateToolTest extends TestCase
     {
         $captured = $this->captureMessage(new Product('new-uuid'));
 
-        $this->toolWithRouteType(new PerProductSlugProvider($this->createStub(RouteRepositoryInterface::class), new VariantUrlBuilder('variant')))->createProduct('en', 'family-uuid', 'Shirt', type: ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $this->toolWithRouteType(new PerProductSlugProvider())->createProduct('en', 'family-uuid', 'Shirt', type: ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         $this->assertSame('/products/shirt', $this->capturedData($captured)['url']);
     }
@@ -396,7 +394,7 @@ final class ProductCreateToolTest extends TestCase
         $product->setType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
         $this->captureMessage($product);
 
-        $result = $this->toolWithRouteType(new PerProductSlugProvider($this->createStub(RouteRepositoryInterface::class), new VariantUrlBuilder('variant')))->createProduct('en', 'family-uuid', 'Shirt', type: ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $result = $this->toolWithRouteType(new PerProductSlugProvider())->createProduct('en', 'family-uuid', 'Shirt', type: ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         $this->assertTrue($result['success']);
         $this->assertStringContainsString('sulu_product_update', \is_string($result['warning'] ?? null) ? $result['warning'] : '');

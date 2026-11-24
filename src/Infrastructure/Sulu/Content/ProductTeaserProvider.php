@@ -21,7 +21,6 @@ use Sulu\Content\Application\ContentAggregator\ContentAggregatorInterface;
 use Sulu\Content\Domain\Exception\ContentNotFoundException;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
-use Sulu\Product\Application\Routing\ProductSlugProviderInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
@@ -34,7 +33,6 @@ class ProductTeaserProvider implements TeaserProviderInterface
         protected ContentAggregatorInterface $contentAggregator,
         protected TranslatorInterface $translator,
         protected TeaserTagPropertyExtractor $teaserTagPropertyExtractor,
-        protected ProductSlugProviderInterface $slugProvider,
     ) {
     }
 
@@ -146,7 +144,9 @@ class ProductTeaserProvider implements TeaserProviderInterface
 
     protected function resolveUrl(ProductDimensionContentInterface $dimensionContent): ?string
     {
-        return $this->slugProvider->getSlug($dimensionContent);
+        $route = $dimensionContent->getRoute();
+
+        return $route?->getSlug();
     }
 
     protected function resolveTitle(ProductDimensionContentInterface $dimensionContent): ?string

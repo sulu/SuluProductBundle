@@ -160,7 +160,7 @@ final class ProductVariantCreateTool
             ];
 
             if (null !== $url && !$ownsRoute) {
-                $result['warning'] = 'The variant has no URL of its own with per_product routing, so "url" was ignored. It is reached as <product URL>?variant=<code>.';
+                $result['warning'] = 'The variant has no URL of its own with per_product routing, so "url" was ignored.';
             }
 
             $adminUrl = $this->adminLinkGenerator->generate('product_variant', [

@@ -64,10 +64,7 @@ class ProductVariantPerProductRoutingTest extends SuluTestCase
 
         self::assertSame('T-Shirt', $crawler->filter('h1')->text());
         self::assertCount(0, $crawler->filter('.current-variant'));
-        self::assertSame(
-            ['Red de' => '/de/t-shirt?variant=RED', 'Blue de' => '/de/t-shirt?variant=BLUE'],
-            $this->getVariantUrls($crawler),
-        );
+        self::assertSame([], $this->getVariantUrls($crawler), 'a variant has no URL of its own');
         self::assertSame(['de' => '/de/t-shirt', 'en' => '/en/t-shirt-en'], $this->getLanguageSwitcherUrls($crawler));
     }
 
@@ -82,21 +79,11 @@ class ProductVariantPerProductRoutingTest extends SuluTestCase
 
         self::assertSame('T-Shirt', $crawler->filter('h1')->text());
         self::assertSame('Red de RED', $crawler->filter('.current-variant')->text());
-        self::assertSame('http://sulu.io/de/t-shirt', $crawler->filter('link[rel="canonical"]')->attr('href'), 'the canonical URL is the product URL');
-        self::assertSame(
-            ['de' => '/de/t-shirt?variant=RED', 'en' => '/en/t-shirt-en?variant=RED'],
-            $this->getLanguageSwitcherUrls($crawler),
-            'the language switcher follows the variant',
-        );
+        self::assertSame(['de' => '/de/t-shirt', 'en' => '/en/t-shirt-en'], $this->getLanguageSwitcherUrls($crawler));
 
         $crawler = $this->requestWebsite('http://sulu.io/de/t-shirt?variant=BLUE');
 
         self::assertSame('Blue de BLUE', $crawler->filter('.current-variant')->text());
-        self::assertSame(
-            ['de' => '/de/t-shirt?variant=BLUE', 'en' => '/en/t-shirt-en'],
-            $this->getLanguageSwitcherUrls($crawler),
-            'a locale without the variant links the product',
-        );
     }
 
     public function testAnUnknownOrInvalidVariantRendersTheProduct(): void
