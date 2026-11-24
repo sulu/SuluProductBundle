@@ -26,7 +26,6 @@ use Sulu\Mcp\Domain\Security\PermissionRequirement;
 use Sulu\Mcp\Domain\Security\RequiresPermission;
 use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushStamp;
 use Sulu\Product\Application\Message\CreateProductMessage;
-use Sulu\Product\Application\Routing\ProductSlugProviderInterface;
 use Sulu\Product\Domain\Exception\InvalidVariantParentException;
 use Sulu\Product\Domain\Exception\UnknownLocaleException;
 use Sulu\Product\Domain\Model\ProductInterface;
@@ -53,7 +52,6 @@ final class ProductVariantCreateTool
         private readonly AdminLinkGeneratorInterface $adminLinkGenerator,
         private readonly ProjectLocales $projectLocales,
         private readonly ProductUrlHelper $urlHelper,
-        private readonly ProductSlugProviderInterface $slugProvider,
     ) {
         $this->messageBus = $messageBus;
     }
@@ -67,7 +65,7 @@ final class ProductVariantCreateTool
     #[McpTool(
         name: 'sulu_product_variant_create',
         title: 'Create Product Variant',
-        description: 'Create a variant of an existing product (draft). The parent must be a product of type "product_with_variants". A plain product or another variant is rejected, because variants cannot be nested. The variant inherits its parent\'s product family, so there is no productFamily parameter. With per_variant routing the variant URL is generated from the title with the product route schema unless "url" is given; with per_product routing the variant has no URL of its own and "url" is ignored. In "attributes" pass the attributes with mode variant_specific or overridable (see sulu_product_family_list), keyed by their attribute UUID. Attributes with mode shared belong on the parent and are dropped here; a required variant_specific attribute must be present, an overridable one is optional and inherits the parent\'s value when left out. Variants are published individually with sulu_content_publish (resourceKey: products, the variant\'s uuid), and only after the parent is published in that locale; publishing the parent leaves its variants unpublished, and unpublishing the parent unpublishes its variants. The result carries "resourceKey" ("products").',
+        description: 'Create a variant of an existing product (draft). The parent must be a product of type "product_with_variants". A plain product or another variant is rejected, because variants cannot be nested. The variant inherits its parent\'s product family, so there is no productFamily parameter. For the route type "route" the variant URL is generated from the title with the product route schema unless "url" is given. In "attributes" pass the attributes with mode variant_specific or overridable (see sulu_product_family_list), keyed by their attribute UUID. Attributes with mode shared belong on the parent and are dropped here; a required variant_specific attribute must be present, an overridable one is optional and inherits the parent\'s value when left out. Variants are published individually with sulu_content_publish (resourceKey: products, the variant\'s uuid), and only after the parent is published in that locale; publishing the parent leaves its variants unpublished, and unpublishing the parent unpublishes its variants. The result carries "resourceKey" ("products").',
         annotations: new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false),
     )]
     #[DangerousTool('product_write')]
@@ -87,7 +85,7 @@ final class ProductVariantCreateTool
         ?array $attributes = null,
         #[Schema(type: 'object', description: 'Detail fields, e.g. {"shortDescription": "<p>…</p>"}. Media fields take {"id": <mediaId>}.', additionalProperties: true)]
         ?array $details = null,
-        #[Schema(description: 'URL path of the variant, e.g. "/products/red-xl", with per_variant routing. Generated from the title with the product route schema when omitted. Ignored with per_product routing; a page_tree_route installation takes no URL here.')]
+        #[Schema(description: 'URL path of the variant, e.g. "/products/red-xl", for the route type "route". Generated from the title with the product route schema when omitted. A page_tree_route installation takes no URL here.')]
         ?string $url = null,
     ): array {
         try {
@@ -109,8 +107,6 @@ final class ProductVariantCreateTool
             ];
         }
 
-        $ownsRoute = $this->slugProvider->ownsRoute(ProductInterface::TYPE_VARIANT);
-
         try {
             $data = [
                 'locale' => $locale,
@@ -129,16 +125,14 @@ final class ProductVariantCreateTool
             if (null !== $details) {
                 $data['details'] = $details;
             }
-            if (null !== $url && $ownsRoute) {
+            if (null !== $url) {
                 $data['url'] = $url;
             }
             if (null !== $attributes) {
                 $data['attributes'] = $this->variantParentResolver->stripInheritedAttributes($family, $attributes);
             }
 
-            if ($ownsRoute) {
-                $data = $this->urlHelper->completeUrl($data, $locale, ProductInterface::FORM_KEY_VARIANT);
-            }
+            $data = $this->urlHelper->completeUrl($data, $locale, ProductInterface::FORM_KEY_VARIANT);
 
             /** @var array{locale: string, productFamily: string} $data */
             $data = $this->stringifyKeys($data);
@@ -158,10 +152,6 @@ final class ProductVariantCreateTool
                 'parent' => $parentUuid,
                 'data' => $this->contentManager->normalize($dimensionContent),
             ];
-
-            if (null !== $url && !$ownsRoute) {
-                $result['warning'] = 'The variant has no URL of its own with per_product routing, so "url" was ignored. It is reached as <product URL>?variant=<code>.';
-            }
 
             $adminUrl = $this->adminLinkGenerator->generate('product_variant', [
                 'locale' => $locale,

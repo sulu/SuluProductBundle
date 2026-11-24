@@ -19,9 +19,6 @@ use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
-use Sulu\Product\Application\Routing\PerProductSlugProvider;
-use Sulu\Product\Application\Routing\PerVariantSlugProvider;
-use Sulu\Product\Application\Routing\VariantUrlBuilder;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductFamilyTranslation;
@@ -31,7 +28,6 @@ use Sulu\Product\Tests\Unit\UserInterface\Agent\Tool\Fixtures\FakeRouteGenerator
 use Sulu\Product\UserInterface\Agent\Tool\GetProducts;
 use Sulu\Product\UserInterface\Agent\Tool\ProductUrlGenerator;
 use Sulu\Route\Domain\Model\Route;
-use Sulu\Route\Domain\Repository\RouteRepositoryInterface;
 
 #[CoversClass(GetProducts::class)]
 class GetProductsTest extends TestCase
@@ -46,7 +42,7 @@ class GetProductsTest extends TestCase
     protected function setUp(): void
     {
         $this->productRepository = $this->prophesize(ProductRepositoryInterface::class);
-        $this->getProducts = new GetProducts($this->productRepository->reveal(), new ProductUrlGenerator(new FakeRouteGenerator(), new PerVariantSlugProvider()));
+        $this->getProducts = new GetProducts($this->productRepository->reveal(), new ProductUrlGenerator(new FakeRouteGenerator()));
     }
 
     public function testInvokeWithoutQueryOrFamilyReturnsNoMatchWithoutQuerying(): void
@@ -136,26 +132,6 @@ class GetProductsTest extends TestCase
             'productFamily' => 'Fasteners',
             'url' => 'https://example.org/en/widget',
         ], $result['results'][0]);
-    }
-
-    /** The code sits on the unlocalized content, so the localized content of a variant does not carry it. */
-    public function testInvokeLinksAVariantByItsProductUrlWhenTheProductOwnsTheRoute(): void
-    {
-        $routeRepository = $this->createStub(RouteRepositoryInterface::class);
-        $routeRepository->method('findFirstBy')->willReturn(new Route(ProductInterface::RESOURCE_KEY, 'parent-uuid', 'en', 'widget'));
-        $getProducts = new GetProducts(
-            $this->productRepository->reveal(),
-            new ProductUrlGenerator(new FakeRouteGenerator(), new PerProductSlugProvider($routeRepository, new VariantUrlBuilder('variant'))),
-        );
-
-        $variant = $this->buildMatchedProduct('en');
-        $variant->setType(ProductInterface::TYPE_VARIANT);
-        $variant->setParent(new Product('parent-uuid'));
-        $this->productRepository->findBy(Argument::cetera())->willReturn([$variant]);
-
-        $result = $getProducts('en', 'ABC', null, true);
-
-        $this->assertSame('https://example.org/en/widget?variant=ABC-1', $result['results'][0]['url']);
     }
 
     public function testInvokeSkipsProductMissingLiveLocalizedContent(): void

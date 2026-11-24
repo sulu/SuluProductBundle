@@ -24,10 +24,6 @@ use Sulu\Content\Application\MetadataResolver\MetadataResolver;
 use Sulu\Content\Application\PropertyResolver\PropertyResolverProviderInterface;
 use Sulu\Content\Application\PropertyResolver\Resolver\DefaultPropertyResolver;
 use Sulu\Product\Application\Attribute\AttributeValueConverter;
-use Sulu\Product\Application\Routing\PerProductSlugProvider;
-use Sulu\Product\Application\Routing\PerVariantSlugProvider;
-use Sulu\Product\Application\Routing\ProductSlugProviderInterface;
-use Sulu\Product\Application\Routing\VariantUrlBuilder;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductResolver;
@@ -35,8 +31,6 @@ use Sulu\Product\Infrastructure\Sulu\Route\CurrentVariantProvider;
 use Sulu\Product\Infrastructure\Sulu\Route\ProductRouteDefaultsProvider;
 use Sulu\Product\Tests\Unit\Support\AttributeTypes;
 use Sulu\Product\Tests\Unit\Support\ProductAttributeFragmentLoader;
-use Sulu\Route\Domain\Model\Route;
-use Sulu\Route\Domain\Repository\RouteRepositoryInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -59,7 +53,6 @@ abstract class ProductResolverTestCase extends TestCase
         array $variantProperties = ['title' => 'product.title', 'url' => 'product.url', 'code' => 'product.code', 'status' => 'product.status', 'position' => 'product.position'],
         ?ProductDimensionContentInterface $currentVariant = null,
         ?AttributeValueConverter $attributeValueConverter = null,
-        ?ProductSlugProviderInterface $slugProvider = null,
     ): ProductResolver {
         $requestStack = new RequestStack();
         $requestStack->push(new Request(attributes: [ProductRouteDefaultsProvider::VARIANT_ATTRIBUTE => $currentVariant]));
@@ -73,19 +66,8 @@ abstract class ProductResolverTestCase extends TestCase
             $referenceStore ?? new ReferenceStore(),
             $attributeValueConverter ?? ProductAttributeFragmentLoader::converter(),
             AttributeTypes::formatter(),
-            $slugProvider ?? new PerVariantSlugProvider(),
             $variantProperties,
         );
-    }
-
-    protected function createPerProductSlugProvider(?string $productSlug = null): ProductSlugProviderInterface
-    {
-        $routeRepository = $this->createStub(RouteRepositoryInterface::class);
-        $routeRepository->method('findFirstBy')->willReturn(
-            null === $productSlug ? null : new Route('products', 'parent-uuid', 'en', $productSlug),
-        );
-
-        return new PerProductSlugProvider($routeRepository, new VariantUrlBuilder('variant'));
     }
 
     /**

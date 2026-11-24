@@ -15,14 +15,13 @@ namespace Sulu\Product\Infrastructure\Sulu\Admin;
 
 use Sulu\Bundle\AdminBundle\Metadata\ListMetadata\ListMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\ListMetadata\ListMetadataVisitorInterface;
-use Sulu\Product\Application\Routing\ProductSlugProviderInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 
 /**
  * Fills the status filter options from the configured statuses, which cannot be hardcoded in the
  * list XML because projects can configure their own. The type filter offers only the types the
- * list shows: the admin list, which sends `excludeVariants`, shows no variant, a selection only
- * the types that own a route.
+ * list shows: the admin list, which sends `excludeVariants`, shows no variant, a selection no
+ * product with variants.
  *
  * @internal
  */
@@ -35,7 +34,6 @@ class ProductsListMetadataVisitor implements ListMetadataVisitorInterface
      */
     public function __construct(
         private readonly array $productStatuses,
-        private readonly ProductSlugProviderInterface $slugProvider,
     ) {
     }
 
@@ -59,11 +57,7 @@ class ProductsListMetadataVisitor implements ListMetadataVisitorInterface
         $typeOptions = $typeParameters['options'] ?? null;
         if (\is_array($typeOptions)) {
             $excludeVariants = \filter_var($metadataOptions['excludeVariants'] ?? false, \FILTER_VALIDATE_BOOLEAN);
-            foreach (\array_keys($typeOptions) as $type) {
-                if ($excludeVariants ? ProductInterface::TYPE_VARIANT === $type : !$this->slugProvider->ownsRoute((string) $type)) {
-                    unset($typeOptions[$type]);
-                }
-            }
+            unset($typeOptions[$excludeVariants ? ProductInterface::TYPE_VARIANT : ProductInterface::TYPE_PRODUCT_WITH_VARIANTS]);
             $typeField->setFilterTypeParameters([...$typeParameters, 'options' => $typeOptions]);
         }
     }

@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Sulu\Product\UserInterface\Agent\Tool;
 
-use Sulu\Product\Application\Routing\ProductSlugProviderInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Route\Application\Routing\Generator\RouteGeneratorInterface;
 use Sulu\Route\Domain\Exception\MissingRequestContextParameterException;
@@ -27,16 +26,12 @@ final class ProductUrlGenerator
 {
     public function __construct(
         private readonly RouteGeneratorInterface $routeGenerator,
-        private readonly ProductSlugProviderInterface $slugProvider,
     ) {
     }
 
-    /**
-     * @param string|null $code the product code, which the localized dimension content does not carry
-     */
-    public function generate(ProductDimensionContentInterface $localized, string $locale, ?string $code = null): ?string
+    public function generate(ProductDimensionContentInterface $localized, string $locale): ?string
     {
-        $slug = $this->slugProvider->getSlug($localized, $code);
+        $slug = $localized->getRoute()?->getSlug();
 
         if (null === $slug) {
             return null;

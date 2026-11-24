@@ -17,7 +17,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
-use Sulu\Product\Application\Routing\PerVariantSlugProvider;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
@@ -41,7 +40,7 @@ class SearchProductsByAttributesToolTest extends TestCase
         $tool = new SearchProductsByAttributesTool(new SearchProductsByAttributes(
             $productRepository->reveal(),
             $attributeRepository->reveal(),
-            new ProductUrlGenerator(new FakeRouteGenerator(), new PerVariantSlugProvider()),
+            new ProductUrlGenerator(new FakeRouteGenerator()),
         ));
 
         $result = $tool->search('en', []);
@@ -65,7 +64,7 @@ class SearchProductsByAttributesToolTest extends TestCase
         $tool = new SearchProductsByAttributesTool(new SearchProductsByAttributes(
             $productRepository->reveal(),
             $attributeRepository->reveal(),
-            new ProductUrlGenerator(new FakeRouteGenerator(), new PerVariantSlugProvider()),
+            new ProductUrlGenerator(new FakeRouteGenerator()),
         ));
 
         $result = $tool->search('en', [['key' => 'current', 'value' => '16']]);
