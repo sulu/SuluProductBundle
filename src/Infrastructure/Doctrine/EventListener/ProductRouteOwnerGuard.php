@@ -14,8 +14,8 @@ declare(strict_types=1);
 namespace Sulu\Product\Infrastructure\Doctrine\EventListener;
 
 use Doctrine\ORM\Event\OnFlushEventArgs;
-use Sulu\Product\Application\Routing\ProductSlugProviderInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
+use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Route\Domain\Model\Route;
 
 /**
@@ -27,7 +27,7 @@ use Sulu\Route\Domain\Model\Route;
 class ProductRouteOwnerGuard
 {
     public function __construct(
-        private readonly ProductSlugProviderInterface $slugProvider,
+        private readonly bool $variantOwnsRoute,
     ) {
     }
 
@@ -51,7 +51,7 @@ class ProductRouteOwnerGuard
                 continue;
             }
 
-            if ($this->slugProvider->ownsRoute($entity->getResource()->getType())) {
+            if ($entity->getResource()->getType() !== ($this->variantOwnsRoute ? ProductInterface::TYPE_PRODUCT_WITH_VARIANTS : ProductInterface::TYPE_VARIANT)) {
                 continue;
             }
 

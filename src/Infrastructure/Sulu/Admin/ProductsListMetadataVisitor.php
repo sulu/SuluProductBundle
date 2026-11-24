@@ -15,7 +15,6 @@ namespace Sulu\Product\Infrastructure\Sulu\Admin;
 
 use Sulu\Bundle\AdminBundle\Metadata\ListMetadata\ListMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\ListMetadata\ListMetadataVisitorInterface;
-use Sulu\Product\Application\Routing\ProductSlugProviderInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 
 /**
@@ -35,7 +34,7 @@ class ProductsListMetadataVisitor implements ListMetadataVisitorInterface
      */
     public function __construct(
         private readonly array $productStatuses,
-        private readonly ProductSlugProviderInterface $slugProvider,
+        private readonly bool $variantOwnsRoute,
     ) {
     }
 
@@ -60,7 +59,7 @@ class ProductsListMetadataVisitor implements ListMetadataVisitorInterface
         if (\is_array($typeOptions)) {
             $excludeVariants = \filter_var($metadataOptions['excludeVariants'] ?? false, \FILTER_VALIDATE_BOOLEAN);
             foreach (\array_keys($typeOptions) as $type) {
-                if ($excludeVariants ? ProductInterface::TYPE_VARIANT === $type : !$this->slugProvider->ownsRoute((string) $type)) {
+                if ($excludeVariants ? ProductInterface::TYPE_VARIANT === $type : (string) $type === ($this->variantOwnsRoute ? ProductInterface::TYPE_PRODUCT_WITH_VARIANTS : ProductInterface::TYPE_VARIANT)) {
                     unset($typeOptions[$type]);
                 }
             }

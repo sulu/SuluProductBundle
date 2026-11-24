@@ -27,9 +27,6 @@ use Sulu\Mcp\Application\Content\BlockDataValidator;
 use Sulu\Mcp\Application\Content\ContentMetadataMapper;
 use Sulu\Mcp\Application\Metadata\MetadataLocaleResolver;
 use Sulu\Product\Application\Message\CreateProductMessage;
-use Sulu\Product\Application\Routing\PerProductSlugProvider;
-use Sulu\Product\Application\Routing\PerVariantSlugProvider;
-use Sulu\Product\Application\Routing\ProductSlugProviderInterface;
 use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
@@ -76,7 +73,7 @@ final class ProductCreateToolTest extends TestCase
             CompletenessCheckerFactory::create(),
             ProductUrlHelperFactory::create(),
             ProjectLocalesFactory::create(),
-            new PerVariantSlugProvider(),
+            true,
         );
     }
 
@@ -265,7 +262,7 @@ final class ProductCreateToolTest extends TestCase
     {
         $captured = $this->captureMessage(new Product('new-uuid'));
 
-        $this->toolWithRouteType(new PerProductSlugProvider())->createProduct('en', 'family-uuid', 'Shirt', type: ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $this->toolWithRouteType(false)->createProduct('en', 'family-uuid', 'Shirt', type: ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         $this->assertSame('/products/shirt', $this->capturedData($captured)['url']);
     }
@@ -292,7 +289,7 @@ final class ProductCreateToolTest extends TestCase
         return $message->getData();
     }
 
-    private function toolWithRouteType(?ProductSlugProviderInterface $slugProvider = null): ProductCreateTool
+    private function toolWithRouteType(bool $variantOwnsRoute = true): ProductCreateTool
     {
         return new ProductCreateTool(
             $this->messageBus->reveal(),
@@ -305,7 +302,7 @@ final class ProductCreateToolTest extends TestCase
             CompletenessCheckerFactory::create(),
             ProductUrlHelperFactory::create('route'),
             ProjectLocalesFactory::create(),
-            $slugProvider ?? new PerVariantSlugProvider(),
+            $variantOwnsRoute,
         );
     }
 
@@ -394,7 +391,7 @@ final class ProductCreateToolTest extends TestCase
         $product->setType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
         $this->captureMessage($product);
 
-        $result = $this->toolWithRouteType(new PerProductSlugProvider())->createProduct('en', 'family-uuid', 'Shirt', type: ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $result = $this->toolWithRouteType(false)->createProduct('en', 'family-uuid', 'Shirt', type: ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         $this->assertTrue($result['success']);
         $this->assertStringContainsString('sulu_product_update', \is_string($result['warning'] ?? null) ? $result['warning'] : '');
@@ -618,7 +615,7 @@ final class ProductCreateToolTest extends TestCase
             CompletenessCheckerFactory::create(),
             ProductUrlHelperFactory::create(),
             ProjectLocalesFactory::create(),
-            new PerVariantSlugProvider(),
+            true,
         );
     }
 

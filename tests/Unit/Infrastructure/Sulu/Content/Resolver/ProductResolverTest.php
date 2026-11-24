@@ -101,7 +101,7 @@ class ProductResolverTest extends ProductResolverTestCase
 
         $resolved = $this->resolveContent(
             $content,
-            resolver: $this->createResolver(slugProvider: $this->createPerProductSlugProvider()),
+            resolver: $this->createResolver(variantOwnsRoute: false),
         );
 
         self::assertArrayHasKey('url', $resolved);

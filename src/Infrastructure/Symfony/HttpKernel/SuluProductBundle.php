@@ -53,9 +53,6 @@ use Sulu\Product\Application\MessageHandler\RemoveProductFamilyMessageHandler;
 use Sulu\Product\Application\MessageHandler\RemoveProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\RemoveProductTranslationMessageHandler;
 use Sulu\Product\Application\MessageHandler\RestoreProductVersionMessageHandler;
-use Sulu\Product\Application\Routing\PerProductSlugProvider;
-use Sulu\Product\Application\Routing\PerVariantSlugProvider;
-use Sulu\Product\Application\Routing\ProductSlugProviderInterface;
 use Sulu\Product\Application\Routing\VariantRouting;
 use Sulu\Product\Application\Webspace\WebspaceSettingsConfigurationResolver;
 use Sulu\Product\Application\Workflow\ProductVariantUnpublisher;
@@ -505,6 +502,7 @@ final class SuluProductBundle extends AbstractBundle
         $builder->setParameter('sulu_product.variants.query_parameter', $variants['query_parameter']);
         $builder->setParameter('sulu_product.variants.properties', $variants['properties']);
         $perProduct = VariantRouting::PerProduct === VariantRouting::from($variants['routing']);
+        $variantOwnsRoute = !$perProduct;
 
         /** @var array{type: string, params: array<string, scalar|null>} $route */
         $route = $config['route'];
@@ -1075,7 +1073,7 @@ final class SuluProductBundle extends AbstractBundle
 
         $services->set('sulu_product.product_route_owner_guard')
             ->class(ProductRouteOwnerGuard::class)
-            ->args([new Reference('sulu_product.product_slug_provider')])
+            ->args([$variantOwnsRoute])
             ->tag('doctrine.event_listener', ['event' => 'onFlush']);
 
         $services->set('sulu_product.product_route_form_metadata_visitor')
@@ -1083,7 +1081,7 @@ final class SuluProductBundle extends AbstractBundle
             ->args([
                 '%sulu_product.route.type%',
                 '%sulu_product.route.params%',
-                new Reference('sulu_product.product_slug_provider'),
+                $variantOwnsRoute,
             ])
             ->tag('sulu_admin.form_metadata_visitor')
             ->tag('sulu_admin.typed_form_metadata_visitor');
@@ -1092,7 +1090,7 @@ final class SuluProductBundle extends AbstractBundle
             ->class(ProductsListMetadataVisitor::class)
             ->args([
                 '%sulu_product.product_statuses%',
-                new Reference('sulu_product.product_slug_provider'),
+                $variantOwnsRoute,
             ])
             ->tag('sulu_admin.list_metadata_visitor');
 
@@ -1201,7 +1199,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_http_cache.reference_store'),
                 new Reference('sulu_product.attribute_value_converter'),
                 new Reference('sulu_product.product_attribute_value_formatter'),
-                new Reference('sulu_product.product_slug_provider'),
+                $variantOwnsRoute,
                 '%sulu_product.variants.properties%',
             ])
             ->tag('sulu_content.content_resolver');
@@ -1362,7 +1360,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_core.webspace.webspace_manager'),
                 new Reference('sulu_product.product_repository'),
                 new Reference('sulu_reference.reference_repository'),
-                new Reference('sulu_product.product_slug_provider'),
+                $variantOwnsRoute,
             ])
             ->tag('kernel.event_subscriber');
 
@@ -1461,11 +1459,6 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.current_variant_provider'),
             ])
             ->tag('sulu_content.content_localizations_resolver', ['resource_key' => ProductInterface::RESOURCE_KEY]);
-
-        $services->set('sulu_product.product_slug_provider')
-            ->class($perProduct ? PerProductSlugProvider::class : PerVariantSlugProvider::class);
-
-        $services->alias(ProductSlugProviderInterface::class, 'sulu_product.product_slug_provider');
 
         $services->set('sulu_product.admin_product_index_listener')
             ->class(AdminProductIndexListener::class)
@@ -1608,11 +1601,11 @@ final class SuluProductBundle extends AbstractBundle
         // Only checks that sulu/mcp-bundle is installed. Up to 1.0.0-RC3 it ships its own
         // sulu_product_* tools, which would clash by name, so composer.json conflicts with those.
         if (ContainerBuilder::willBeAvailable('sulu/mcp-bundle', ContentTypeExtensionInterface::class, ['sulu/product-bundle'])) {
-            $this->registerMcpIntegration($services);
+            $this->registerMcpIntegration($services, $variantOwnsRoute);
         }
     }
 
-    private function registerMcpIntegration(ServicesConfigurator $services): void
+    private function registerMcpIntegration(ServicesConfigurator $services, bool $variantOwnsRoute): void
     {
         $services->set(ProductContentTypeExtension::class)
             ->autowire()
@@ -1637,7 +1630,7 @@ final class SuluProductBundle extends AbstractBundle
             ->arg('$formMetadataProvider', new Reference('sulu_admin.form_metadata_provider'))
             ->arg('$webspaceManager', new Reference('sulu_core.webspace.webspace_manager'))
             ->arg('$urlHelper', new Reference(ProductUrlHelper::class))
-            ->arg('$slugProvider', new Reference('sulu_product.product_slug_provider'));
+            ->arg('$variantOwnsRoute', $variantOwnsRoute);
 
         // The tag is explicit because SuluMcpBundle's instanceof rule does not reach this file.
         // sulu_admin.view_registry only exists in the admin container.
@@ -1650,13 +1643,21 @@ final class SuluProductBundle extends AbstractBundle
         }
 
         foreach ([
+            ProductCreateTool::class,
+            ProductUpdateTool::class,
+            ProductVariantCreateTool::class,
+        ] as $mcpTool) {
+            $services->set($mcpTool)
+                ->autowire()
+                ->autoconfigure()
+                ->arg('$variantOwnsRoute', $variantOwnsRoute);
+        }
+
+        foreach ([
             ProductGetTool::class,
             ProductAssociationTypeListTool::class,
             ProductListTool::class,
-            ProductCreateTool::class,
-            ProductUpdateTool::class,
             ProductVariantListTool::class,
-            ProductVariantCreateTool::class,
             ProductVariantUpdateTool::class,
             ProductFamilyListTool::class,
             AttributeListTool::class,

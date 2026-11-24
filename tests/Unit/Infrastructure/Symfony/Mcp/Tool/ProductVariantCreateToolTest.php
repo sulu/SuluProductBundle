@@ -22,8 +22,6 @@ use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Content\Application\ContentManager\ContentManagerInterface;
 use Sulu\Mcp\Application\AdminLink\AdminLinkGeneratorInterface;
 use Sulu\Product\Application\Message\CreateProductMessage;
-use Sulu\Product\Application\Routing\PerProductSlugProvider;
-use Sulu\Product\Application\Routing\PerVariantSlugProvider;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\Product;
@@ -75,7 +73,7 @@ final class ProductVariantCreateToolTest extends TestCase
             $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
             ProjectLocalesFactory::create(),
             ProductUrlHelperFactory::create('route'),
-            new PerVariantSlugProvider(),
+            true,
         );
     }
 
@@ -120,7 +118,7 @@ final class ProductVariantCreateToolTest extends TestCase
             $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
             ProjectLocalesFactory::create(),
             ProductUrlHelperFactory::create('route'),
-            new PerProductSlugProvider(),
+            false,
         );
     }
 
@@ -334,7 +332,7 @@ final class ProductVariantCreateToolTest extends TestCase
             $adminLinkGenerator->reveal(),
             ProjectLocalesFactory::create(),
             ProductUrlHelperFactory::create('route'),
-            new PerVariantSlugProvider(),
+            true,
         );
 
         $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => ['shared-uuid' => ProductFamilyAttributeModeEnum::SHARED]]));

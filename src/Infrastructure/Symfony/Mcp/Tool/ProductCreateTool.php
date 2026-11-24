@@ -30,7 +30,6 @@ use Sulu\Mcp\Domain\Security\PermissionRequirement;
 use Sulu\Mcp\Domain\Security\RequiresPermission;
 use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushStamp;
 use Sulu\Product\Application\Message\CreateProductMessage;
-use Sulu\Product\Application\Routing\ProductSlugProviderInterface;
 use Sulu\Product\Domain\Exception\InvalidProductAssociationException;
 use Sulu\Product\Domain\Exception\UnknownLocaleException;
 use Sulu\Product\Domain\Model\ProductInterface;
@@ -73,7 +72,7 @@ final class ProductCreateTool
         private readonly ProductCompletenessChecker $completenessChecker,
         private readonly ProductUrlHelper $urlHelper,
         private readonly ProjectLocales $projectLocales,
-        private readonly ProductSlugProviderInterface $slugProvider,
+        private readonly bool $variantOwnsRoute,
     ) {
         $this->messageBus = $messageBus;
     }
@@ -186,7 +185,7 @@ final class ProductCreateTool
                 $data['details'] = $details;
             }
 
-            if ($this->slugProvider->ownsRoute($type ?? ProductInterface::TYPE_PRODUCT)) {
+            if (($type ?? ProductInterface::TYPE_PRODUCT) !== ($this->variantOwnsRoute ? ProductInterface::TYPE_PRODUCT_WITH_VARIANTS : ProductInterface::TYPE_VARIANT)) {
                 $data = $this->urlHelper->completeUrl($data, $locale);
             }
             $data = $this->urlHelper->completeUrlSuffix($data, $locale);
@@ -229,7 +228,7 @@ final class ProductCreateTool
                 'data' => $this->contentManager->normalize($dimensionContent),
             ];
 
-            if ($this->slugProvider->ownsRoute($product->getType()) && !ProductCompletenessChecker::hasUrl($result['data'])) {
+            if ($product->getType() !== ($this->variantOwnsRoute ? ProductInterface::TYPE_PRODUCT_WITH_VARIANTS : ProductInterface::TYPE_VARIANT) && !ProductCompletenessChecker::hasUrl($result['data'])) {
                 $result['warning'] = $this->urlHelper->warning($result['data'], $locale, $product->getUuid());
             }
 

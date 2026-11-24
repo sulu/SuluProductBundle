@@ -25,7 +25,6 @@ use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Application\Attribute\AttributeValueConverter;
 use Sulu\Product\Application\Attribute\AttributeValueConverterInterface;
 use Sulu\Product\Application\Attribute\ProductAttributeValueFormatter;
-use Sulu\Product\Application\Routing\ProductSlugProviderInterface;
 use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\ProductAssociationInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
@@ -63,7 +62,7 @@ class ProductResolver implements ResolverInterface
         private readonly ReferenceStoreInterface $referenceStore,
         private readonly AttributeValueConverterInterface $attributeValueConverter,
         private readonly ProductAttributeValueFormatter $attributeValueFormatter,
-        private readonly ProductSlugProviderInterface $slugProvider,
+        private readonly bool $variantOwnsRoute,
         private readonly array $variantProperties = [],
     ) {
     }
@@ -300,7 +299,7 @@ class ProductResolver implements ResolverInterface
 
         // A product with variants that owns no route is reached through its variants.
         if ($dimensionContent->getResource()->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS)
-            && !$this->slugProvider->ownsRoute(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS)
+            && $this->variantOwnsRoute
         ) {
             unset($masterData['url']);
         }

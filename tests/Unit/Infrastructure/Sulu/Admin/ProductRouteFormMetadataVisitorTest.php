@@ -20,8 +20,6 @@ use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\OptionMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\TagMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\TypedFormMetadata;
 use Sulu\Content\Application\ContentDataMapper\DataMapper\TemplateDataMapper;
-use Sulu\Product\Application\Routing\PerProductSlugProvider;
-use Sulu\Product\Application\Routing\PerVariantSlugProvider;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductRouteFormMetadataVisitor;
 
@@ -39,7 +37,7 @@ class ProductRouteFormMetadataVisitorTest extends TestCase
         $visitor = new ProductRouteFormMetadataVisitor('page_tree_route', [
             'route_schema' => '/products/{implode(\'-\', object)}',
             'available_locales' => true,
-        ], new PerVariantSlugProvider());
+        ], true);
         $visitor->visitFormMetadata($form, 'en', []);
 
         self::assertSame('page_tree_route', $routeField->getType());
@@ -65,7 +63,7 @@ class ProductRouteFormMetadataVisitorTest extends TestCase
         $form->setKey('product_details');
         $form->addItem($routeField);
 
-        $visitor = new ProductRouteFormMetadataVisitor('route', ['route_schema' => '/products/{object[\'code\']}'], new PerVariantSlugProvider());
+        $visitor = new ProductRouteFormMetadataVisitor('route', ['route_schema' => '/products/{object[\'code\']}'], true);
         $visitor->visitFormMetadata($form, 'en', []);
 
         self::assertSame('/products/{object[\'code\']}', $routeField->getOptions()['route_schema']->getValue());
@@ -85,7 +83,7 @@ class ProductRouteFormMetadataVisitorTest extends TestCase
         $form->setKey('product_details');
         $form->addItem($routeField);
 
-        $visitor = new ProductRouteFormMetadataVisitor('route', ['route_schema' => '/products/{object[\'code\']}'], new PerVariantSlugProvider());
+        $visitor = new ProductRouteFormMetadataVisitor('route', ['route_schema' => '/products/{object[\'code\']}'], true);
         $visitor->visitFormMetadata($form, 'en', []);
 
         self::assertSame('leaf', $routeField->getOptions()['mode']->getValue());
@@ -102,7 +100,7 @@ class ProductRouteFormMetadataVisitorTest extends TestCase
 
         $visitor = new ProductRouteFormMetadataVisitor('page_tree_route', [
             'route_schema' => '/products/{implode(\'-\', object)}',
-        ], new PerVariantSlugProvider());
+        ], true);
         $visitor->visitFormMetadata($form, 'en', []);
 
         self::assertSame('page_tree_route', $routeField->getType());
@@ -118,7 +116,7 @@ class ProductRouteFormMetadataVisitorTest extends TestCase
         $form->setKey('product_variant');
         $form->addItem($routeField);
 
-        $visitor = new ProductRouteFormMetadataVisitor('route', [], new PerVariantSlugProvider());
+        $visitor = new ProductRouteFormMetadataVisitor('route', [], true);
         $visitor->visitFormMetadata($form, 'en', []);
 
         self::assertTrue($routeField->isRequired());
@@ -133,7 +131,7 @@ class ProductRouteFormMetadataVisitorTest extends TestCase
         $form->setKey('product_details');
         $form->addItem($routeField);
 
-        $visitor = new ProductRouteFormMetadataVisitor('route', [], new PerVariantSlugProvider());
+        $visitor = new ProductRouteFormMetadataVisitor('route', [], true);
         $visitor->visitFormMetadata($form, 'en', []);
 
         self::assertFalse($routeField->isRequired());
@@ -149,7 +147,7 @@ class ProductRouteFormMetadataVisitorTest extends TestCase
         $form->setKey('product_details');
         $form->addItem($routeField);
 
-        $visitor = new ProductRouteFormMetadataVisitor('route', [], new PerVariantSlugProvider());
+        $visitor = new ProductRouteFormMetadataVisitor('route', [], true);
         $visitor->visitFormMetadata($form, 'en', []);
 
         self::assertSame('type != \'product_with_variants\'', $routeField->getVisibleCondition());
@@ -165,7 +163,7 @@ class ProductRouteFormMetadataVisitorTest extends TestCase
         $form->setKey('product_details');
         $form->addItem($routeField);
 
-        $visitor = new ProductRouteFormMetadataVisitor('page_tree_route', [], new PerProductSlugProvider());
+        $visitor = new ProductRouteFormMetadataVisitor('page_tree_route', [], false);
         $visitor->visitFormMetadata($form, 'en', []);
 
         self::assertNull($routeField->getVisibleCondition());
@@ -184,7 +182,7 @@ class ProductRouteFormMetadataVisitorTest extends TestCase
         $form->addItem($titleField);
         $form->addItem($routeField);
 
-        $visitor = new ProductRouteFormMetadataVisitor('route', [], new PerProductSlugProvider());
+        $visitor = new ProductRouteFormMetadataVisitor('route', [], false);
         $visitor->visitFormMetadata($form, 'en', []);
 
         self::assertSame(['title' => $titleField], $form->getItems());
@@ -199,7 +197,7 @@ class ProductRouteFormMetadataVisitorTest extends TestCase
         $form->setKey('some_other_form');
         $form->addItem($routeField);
 
-        $visitor = new ProductRouteFormMetadataVisitor('page_tree_route', ['route_schema' => '/products'], new PerVariantSlugProvider());
+        $visitor = new ProductRouteFormMetadataVisitor('page_tree_route', ['route_schema' => '/products'], true);
         $visitor->visitFormMetadata($form, 'en', []);
 
         self::assertSame('route', $routeField->getType());
@@ -212,7 +210,7 @@ class ProductRouteFormMetadataVisitorTest extends TestCase
         $form = new FormMetadata();
         $form->setKey('product_details');
 
-        $visitor = new ProductRouteFormMetadataVisitor('route', ['route_schema' => '/products'], new PerVariantSlugProvider());
+        $visitor = new ProductRouteFormMetadataVisitor('route', ['route_schema' => '/products'], true);
         $visitor->visitFormMetadata($form, 'en', []);
 
         self::assertSame([], $form->getItems());
@@ -228,7 +226,7 @@ class ProductRouteFormMetadataVisitorTest extends TestCase
 
         $visitor = new ProductRouteFormMetadataVisitor('route', [
             'route_schema' => '/products/{implode(\'-\', object)}',
-        ], new PerVariantSlugProvider());
+        ], true);
         $visitor->visitTypedFormMetadata($typedFormMetadata, ProductDimensionContent::getTemplateType(), 'en');
 
         $routeField = $form->getItems()['url'] ?? null;
@@ -267,7 +265,7 @@ class ProductRouteFormMetadataVisitorTest extends TestCase
         $form->addItem($routeField);
         $typedFormMetadata->addForm('product', $form);
 
-        $visitor = new ProductRouteFormMetadataVisitor('route', ['route_schema' => '/products'], new PerVariantSlugProvider());
+        $visitor = new ProductRouteFormMetadataVisitor('route', ['route_schema' => '/products'], true);
         $visitor->visitTypedFormMetadata($typedFormMetadata, ProductDimensionContent::getTemplateType(), 'en');
         $visitor->visitTypedFormMetadata($typedFormMetadata, ProductDimensionContent::getTemplateType(), 'en');
 
@@ -287,7 +285,7 @@ class ProductRouteFormMetadataVisitorTest extends TestCase
         $form->addItem($routeField);
         $typedFormMetadata->addForm('product', $form);
 
-        $visitor = new ProductRouteFormMetadataVisitor('page_tree_route', ['route_schema' => '/products'], new PerVariantSlugProvider());
+        $visitor = new ProductRouteFormMetadataVisitor('page_tree_route', ['route_schema' => '/products'], true);
         $visitor->visitTypedFormMetadata($typedFormMetadata, ProductDimensionContent::getTemplateType(), 'en');
 
         self::assertSame($routeField, $form->getItems()['url']);
@@ -303,7 +301,7 @@ class ProductRouteFormMetadataVisitorTest extends TestCase
         $form->setKey('default');
         $typedFormMetadata->addForm('default', $form);
 
-        $visitor = new ProductRouteFormMetadataVisitor('route', ['route_schema' => '/products'], new PerVariantSlugProvider());
+        $visitor = new ProductRouteFormMetadataVisitor('route', ['route_schema' => '/products'], true);
         $visitor->visitTypedFormMetadata($typedFormMetadata, 'page', 'en');
 
         self::assertSame([], $form->getItems());

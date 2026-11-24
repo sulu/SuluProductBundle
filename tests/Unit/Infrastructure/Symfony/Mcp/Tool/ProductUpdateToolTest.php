@@ -28,9 +28,6 @@ use Sulu\Mcp\Application\Content\BlockDataValidator;
 use Sulu\Mcp\Application\Content\ContentMetadataMapper;
 use Sulu\Mcp\Application\Metadata\MetadataLocaleResolver;
 use Sulu\Product\Application\Message\ModifyProductMessage;
-use Sulu\Product\Application\Routing\PerProductSlugProvider;
-use Sulu\Product\Application\Routing\PerVariantSlugProvider;
-use Sulu\Product\Application\Routing\ProductSlugProviderInterface;
 use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
 use Sulu\Product\Domain\Model\Product;
@@ -82,7 +79,7 @@ final class ProductUpdateToolTest extends TestCase
             CompletenessCheckerFactory::create(),
             ProductUrlHelperFactory::create(),
             ProjectLocalesFactory::create(),
-            new PerVariantSlugProvider(),
+            true,
         );
     }
 
@@ -382,7 +379,7 @@ final class ProductUpdateToolTest extends TestCase
                 return $envelope->with(new HandledStamp($product, 'handler'));
             });
 
-        $result = $this->toolWithSlugProvider(new PerProductSlugProvider())->updateProduct('uuid-1', 'en', title: 'Shirt');
+        $result = $this->toolWithVariantOwnsRoute(false)->updateProduct('uuid-1', 'en', title: 'Shirt');
 
         $this->assertTrue($result['success']);
         $this->assertStringContainsString('sulu_product_update', \is_string($result['warning'] ?? null) ? $result['warning'] : '');
@@ -454,7 +451,7 @@ final class ProductUpdateToolTest extends TestCase
             CompletenessCheckerFactory::create(),
             ProductUrlHelperFactory::create(takenSlugs: ['/shirt'], ownProductUuid: 'uuid-1'),
             ProjectLocalesFactory::create(),
-            new PerVariantSlugProvider(),
+            true,
         );
         $captured = $this->givenProduct(['title' => 'Shirt']);
 
@@ -493,7 +490,7 @@ final class ProductUpdateToolTest extends TestCase
         $this->assertNotEmpty($result['hint']);
     }
 
-    private function toolWithSlugProvider(ProductSlugProviderInterface $slugProvider): ProductUpdateTool
+    private function toolWithVariantOwnsRoute(bool $variantOwnsRoute): ProductUpdateTool
     {
         return new ProductUpdateTool(
             $this->messageBus->reveal(),
@@ -507,7 +504,7 @@ final class ProductUpdateToolTest extends TestCase
             CompletenessCheckerFactory::create(),
             ProductUrlHelperFactory::create(),
             ProjectLocalesFactory::create(),
-            $slugProvider,
+            $variantOwnsRoute,
         );
     }
 
@@ -525,7 +522,7 @@ final class ProductUpdateToolTest extends TestCase
             CompletenessCheckerFactory::create(),
             ProductUrlHelperFactory::create(),
             ProjectLocalesFactory::create(),
-            new PerVariantSlugProvider(),
+            true,
         );
     }
 
