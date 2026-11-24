@@ -25,6 +25,7 @@ use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductInterface;
+use Sulu\Product\Domain\Value\VariantRoutingEnum;
 use Sulu\Product\Infrastructure\Doctrine\EventListener\ProductRouteOwnerGuard;
 use Sulu\Route\Domain\Model\Route;
 
@@ -161,8 +162,8 @@ class ProductRouteOwnerGuardTest extends TestCase
     private function guard(bool $perProduct = false): ProductRouteOwnerGuard
     {
         $variantRouting = $perProduct
-            ? 'per_product'
-            : 'per_variant';
+            ? VariantRoutingEnum::PER_PRODUCT
+            : VariantRoutingEnum::PER_VARIANT;
 
         return new ProductRouteOwnerGuard($variantRouting);
     }

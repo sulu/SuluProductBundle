@@ -35,6 +35,7 @@ use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Domain\Value\VariantRoutingEnum;
 use Sulu\Product\Infrastructure\Sulu\HttpCache\EventSubscriber\ProductCacheInvalidationSubscriber;
 use Sulu\Product\Infrastructure\Sulu\Reference\ProductAssociationReferenceCleanupSubscriber;
 use Sulu\Route\Application\Routing\Generator\RouteGeneratorInterface;
@@ -102,7 +103,7 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
             $this->webspaceManager->reveal(),
             $this->productRepository->reveal(),
             $this->referenceRepository->reveal(),
-            'per_product',
+            VariantRoutingEnum::PER_PRODUCT,
         );
     }
 
@@ -166,7 +167,7 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
             $this->webspaceManager->reveal(),
             $this->productRepository->reveal(),
             $this->referenceRepository->reveal(),
-            'per_variant',
+            VariantRoutingEnum::PER_VARIANT,
         );
         $product = new Product('variant-uuid');
         $product->setParent(new Product('parent-uuid'));
@@ -607,7 +608,7 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
             $this->webspaceManager->reveal(),
             $this->productRepository->reveal(),
             $this->referenceRepository->reveal(),
-            'per_variant',
+            VariantRoutingEnum::PER_VARIANT,
         );
 
         $product = new Product('product-uuid-123');
@@ -634,7 +635,7 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
             $this->webspaceManager->reveal(),
             $this->productRepository->reveal(),
             $this->referenceRepository->reveal(),
-            'per_variant',
+            VariantRoutingEnum::PER_VARIANT,
         );
 
         $event = new ProductRemovedEvent(

@@ -17,8 +17,8 @@ use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\MetadataProviderInterface;
 use Sulu\Component\Webspace\Manager\WebspaceManagerInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
-use Sulu\Product\Application\Routing\VariantRouting;
 use Sulu\Product\Domain\Model\ProductInterface;
+use Sulu\Product\Domain\Value\VariantRoutingEnum;
 
 /**
  * Lists what a saved product still lacks and which tool parameter fills it. An agent that gets
@@ -36,7 +36,7 @@ final readonly class ProductCompletenessChecker
         private MetadataProviderInterface $formMetadataProvider,
         private WebspaceManagerInterface $webspaceManager,
         private ProductUrlHelper $urlHelper,
-        private string $variantRouting,
+        private VariantRoutingEnum $variantRouting,
     ) {
     }
 
@@ -55,7 +55,7 @@ final readonly class ProductCompletenessChecker
                 $recommendations[] = 'No code. Pass code to sulu_product_variant_update with the SKU from the datasheet. If there is none, derive one that follows the pattern of the codes of the other variants and is not taken yet.';
             }
 
-            if (VariantRouting::PerVariant->value === $this->variantRouting && !self::hasUrl($normalized)) {
+            if (VariantRoutingEnum::PER_VARIANT === $this->variantRouting && !self::hasUrl($normalized)) {
                 $recommendations[] = 'No url. The url of a variant is set in the admin, because the variant tools have no url parameter.';
             }
 
@@ -84,7 +84,7 @@ final readonly class ProductCompletenessChecker
             $recommendations[] = 'No code. Pass code with the SKU from the datasheet. If there is none, derive one that follows the pattern of the codes of existing products (sulu_product_list) and is not taken yet.';
         }
 
-        if ($product->getType() !== (VariantRouting::PerVariant->value === $this->variantRouting ? ProductInterface::TYPE_PRODUCT_WITH_VARIANTS : ProductInterface::TYPE_VARIANT) && !self::hasUrl($normalized)) {
+        if ($product->getType() !== (VariantRoutingEnum::PER_VARIANT === $this->variantRouting ? ProductInterface::TYPE_PRODUCT_WITH_VARIANTS : ProductInterface::TYPE_VARIANT) && !self::hasUrl($normalized)) {
             $recommendations[] = 'No url. ' . $this->urlHelper->instruction($normalized, $locale, $product->getUuid());
         }
 

@@ -31,12 +31,12 @@ use Sulu\Mcp\Domain\Security\PermissionRequirement;
 use Sulu\Mcp\Domain\Security\RequiresPermission;
 use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushStamp;
 use Sulu\Product\Application\Message\ModifyProductMessage;
-use Sulu\Product\Application\Routing\VariantRouting;
 use Sulu\Product\Domain\Exception\InvalidProductAssociationException;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
 use Sulu\Product\Domain\Exception\UnknownLocaleException;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Domain\Value\VariantRoutingEnum;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 use Sulu\Product\Infrastructure\Symfony\Mcp\ProductAssociationResolver;
 use Sulu\Product\Infrastructure\Symfony\Mcp\ProductCompletenessChecker;
@@ -69,7 +69,7 @@ final class ProductUpdateTool
         private readonly ProductCompletenessChecker $completenessChecker,
         private readonly ProductUrlHelper $urlHelper,
         private readonly ProjectLocales $projectLocales,
-        private readonly string $variantRouting,
+        private readonly VariantRoutingEnum $variantRouting,
     ) {
         $this->messageBus = $messageBus;
     }
@@ -218,7 +218,7 @@ final class ProductUpdateTool
                 'data' => $this->compactContent($normalized, $this->detectBlockProperties($normalized)),
             ];
 
-            if ($updated->getType() !== (VariantRouting::PerVariant->value === $this->variantRouting ? ProductInterface::TYPE_PRODUCT_WITH_VARIANTS : ProductInterface::TYPE_VARIANT) && !ProductCompletenessChecker::hasUrl($normalized)) {
+            if ($updated->getType() !== (VariantRoutingEnum::PER_VARIANT === $this->variantRouting ? ProductInterface::TYPE_PRODUCT_WITH_VARIANTS : ProductInterface::TYPE_VARIANT) && !ProductCompletenessChecker::hasUrl($normalized)) {
                 $result['warning'] = $this->urlHelper->warning($normalized, $locale, $updated->getUuid());
             }
 

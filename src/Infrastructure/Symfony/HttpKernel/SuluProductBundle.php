@@ -56,7 +56,6 @@ use Sulu\Product\Application\MessageHandler\RemoveProductFamilyMessageHandler;
 use Sulu\Product\Application\MessageHandler\RemoveProductMessageHandler;
 use Sulu\Product\Application\MessageHandler\RemoveProductTranslationMessageHandler;
 use Sulu\Product\Application\MessageHandler\RestoreProductVersionMessageHandler;
-use Sulu\Product\Application\Routing\VariantRouting;
 use Sulu\Product\Application\Webspace\WebspaceSettingsConfigurationResolver;
 use Sulu\Product\Application\Workflow\ProductVariantUnpublisher;
 use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
@@ -105,6 +104,7 @@ use Sulu\Product\Domain\Repository\AttributeRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductAttributeValueRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Domain\Value\VariantRoutingEnum;
 use Sulu\Product\Infrastructure\Doctrine\EventListener\ProductRouteOwnerGuard;
 use Sulu\Product\Infrastructure\Doctrine\Repository\AttributeGroupRepository;
 use Sulu\Product\Infrastructure\Doctrine\Repository\AttributeRepository;
@@ -313,8 +313,8 @@ final class SuluProductBundle extends AbstractBundle
                     ->children()
                         ->enumNode('routing')
                             ->info('Who owns the route of a product with variants: "per_variant" gives each variant its own URL, "per_product" gives the product the URL and reaches a variant via "?<query_parameter>=<code>". Switching it later needs a route migration in the project.')
-                            ->values(\array_map(static fn (VariantRouting $routing): string => $routing->value, VariantRouting::cases()))
-                            ->defaultValue(VariantRouting::PerVariant->value)
+                            ->values(\array_map(static fn (VariantRoutingEnum $routing): string => $routing->value, VariantRoutingEnum::cases()))
+                            ->defaultValue(VariantRoutingEnum::PER_VARIANT->value)
                         ->end()
                         ->scalarNode('query_parameter')
                             ->info('Name of the query parameter that names the variant of a product URL, used with "per_product" routing.')
@@ -515,7 +515,7 @@ final class SuluProductBundle extends AbstractBundle
         $builder->setParameter('sulu_product.variants.routing', $variants['routing']);
         $builder->setParameter('sulu_product.variants.query_parameter', $variants['query_parameter']);
         $builder->setParameter('sulu_product.variants.properties', $variants['properties']);
-        $perProduct = VariantRouting::PerProduct === VariantRouting::from($variants['routing']);
+        $variantRouting = VariantRoutingEnum::from($variants['routing']);
 
         /** @var array{type: string, params: array<string, scalar|null>} $route */
         $route = $config['route'];
@@ -1099,7 +1099,7 @@ final class SuluProductBundle extends AbstractBundle
 
         $services->set('sulu_product.product_route_owner_guard')
             ->class(ProductRouteOwnerGuard::class)
-            ->args(['%sulu_product.variants.routing%'])
+            ->args([$variantRouting])
             ->tag('doctrine.event_listener', ['event' => 'onFlush']);
 
         $services->set('sulu_product.product_route_form_metadata_visitor')
@@ -1107,7 +1107,7 @@ final class SuluProductBundle extends AbstractBundle
             ->args([
                 '%sulu_product.route.type%',
                 '%sulu_product.route.params%',
-                '%sulu_product.variants.routing%',
+                $variantRouting,
             ])
             ->tag('sulu_admin.form_metadata_visitor')
             ->tag('sulu_admin.typed_form_metadata_visitor');
@@ -1123,7 +1123,7 @@ final class SuluProductBundle extends AbstractBundle
             ->class(ProductsListMetadataVisitor::class)
             ->args([
                 '%sulu_product.product_statuses%',
-                '%sulu_product.variants.routing%',
+                $variantRouting,
             ])
             ->tag('sulu_admin.list_metadata_visitor');
 
@@ -1232,7 +1232,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_http_cache.reference_store'),
                 new Reference('sulu_product.attribute_value_converter'),
                 new Reference('sulu_product.product_attribute_value_formatter'),
-                '%sulu_product.variants.routing%',
+                $variantRouting,
                 '%sulu_product.variants.properties%',
             ])
             ->tag('sulu_content.content_resolver');
@@ -1393,7 +1393,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_core.webspace.webspace_manager'),
                 new Reference('sulu_product.product_repository'),
                 new Reference('sulu_reference.reference_repository'),
-                '%sulu_product.variants.routing%',
+                $variantRouting,
             ])
             ->tag('kernel.event_subscriber');
 
@@ -1475,7 +1475,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_admin.metadata_provider_registry'),
                 new Reference('sulu_http_cache.cache_lifetime.resolver'),
                 new Reference('request_stack'),
-                $perProduct ? '%sulu_product.variants.query_parameter%' : null,
+                VariantRoutingEnum::PER_PRODUCT === $variantRouting ? '%sulu_product.variants.query_parameter%' : null,
             ])
             ->tag('sulu_route.route_defaults_provider', ['resource_key' => ProductInterface::RESOURCE_KEY]);
 
@@ -1634,11 +1634,11 @@ final class SuluProductBundle extends AbstractBundle
         // Only checks that sulu/mcp-bundle is installed. Up to 1.0.0-RC3 it ships its own
         // sulu_product_* tools, which would clash by name, so composer.json conflicts with those.
         if (ContainerBuilder::willBeAvailable('sulu/mcp-bundle', ContentTypeExtensionInterface::class, ['sulu/product-bundle'])) {
-            $this->registerMcpIntegration($services);
+            $this->registerMcpIntegration($services, $variantRouting);
         }
     }
 
-    private function registerMcpIntegration(ServicesConfigurator $services): void
+    private function registerMcpIntegration(ServicesConfigurator $services, VariantRoutingEnum $variantRouting): void
     {
         $services->set('sulu_product.mcp_content_type_extension')
             ->class(ProductContentTypeExtension::class)
@@ -1675,7 +1675,7 @@ final class SuluProductBundle extends AbstractBundle
             ->arg('$formMetadataProvider', new Reference('sulu_admin.form_metadata_provider'))
             ->arg('$webspaceManager', new Reference('sulu_core.webspace.webspace_manager'))
             ->arg('$urlHelper', new Reference('sulu_product.mcp_url_helper'))
-            ->arg('$variantRouting', '%sulu_product.variants.routing%');
+            ->arg('$variantRouting', $variantRouting);
 
         // The tag is explicit because SuluMcpBundle's instanceof rule does not reach this file.
         // sulu_admin.view_registry only exists in the admin container.
@@ -1731,7 +1731,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.mcp_completeness_checker'),
                 new Reference('sulu_product.mcp_url_helper'),
                 new Reference('sulu_product.mcp_project_locales'),
-                '%sulu_product.variants.routing%',
+                $variantRouting,
             ]);
 
         $services->set('sulu_product.mcp_tool_product_update')
@@ -1749,7 +1749,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.mcp_completeness_checker'),
                 new Reference('sulu_product.mcp_url_helper'),
                 new Reference('sulu_product.mcp_project_locales'),
-                '%sulu_product.variants.routing%',
+                $variantRouting,
             ]);
 
         $services->set('sulu_product.mcp_tool_product_variant_list')
@@ -1770,7 +1770,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference(AdminLinkGeneratorInterface::class),
                 new Reference('sulu_product.mcp_project_locales'),
                 new Reference('sulu_product.mcp_url_helper'),
-                '%sulu_product.variants.routing%',
+                $variantRouting,
             ]);
 
         $services->set('sulu_product.mcp_tool_product_variant_update')

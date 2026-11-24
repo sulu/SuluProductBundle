@@ -11,17 +11,16 @@ declare(strict_types=1);
  * with this source code in the file LICENSE.
  */
 
-namespace Sulu\Product\Application\Routing;
+namespace Sulu\Product\Domain\Value;
 
 /**
- * Who owns the route of a product with variants, set by `sulu_product.variants.routing`. Only the
- * bundle extension reads it, to register the matching implementations.
+ * Who owns the route of a product with variants, set by `sulu_product.variants.routing`.
  */
-enum VariantRouting: string
+enum VariantRoutingEnum: string
 {
     /** Each variant owns a route, the product with variants owns none. */
-    case PerVariant = 'per_variant';
+    case PER_VARIANT = 'per_variant';
 
     /** The product with variants owns the route, a variant is reached via `?<parameter>=<code>`. */
-    case PerProduct = 'per_product';
+    case PER_PRODUCT = 'per_product';
 }
