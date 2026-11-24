@@ -73,7 +73,7 @@ final class ProductCreateToolTest extends TestCase
             CompletenessCheckerFactory::create(),
             ProductUrlHelperFactory::create(),
             ProjectLocalesFactory::create(),
-            true,
+            'per_variant',
         );
     }
 
@@ -262,7 +262,7 @@ final class ProductCreateToolTest extends TestCase
     {
         $captured = $this->captureMessage(new Product('new-uuid'));
 
-        $this->toolWithRouteType(false)->createProduct('en', 'family-uuid', 'Shirt', type: ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $this->toolWithRouteType('per_product')->createProduct('en', 'family-uuid', 'Shirt', type: ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         $this->assertSame('/products/shirt', $this->capturedData($captured)['url']);
     }
@@ -289,7 +289,7 @@ final class ProductCreateToolTest extends TestCase
         return $message->getData();
     }
 
-    private function toolWithRouteType(bool $variantOwnsRoute = true): ProductCreateTool
+    private function toolWithRouteType(string $variantRouting = 'per_variant'): ProductCreateTool
     {
         return new ProductCreateTool(
             $this->messageBus->reveal(),
@@ -302,7 +302,7 @@ final class ProductCreateToolTest extends TestCase
             CompletenessCheckerFactory::create(),
             ProductUrlHelperFactory::create('route'),
             ProjectLocalesFactory::create(),
-            $variantOwnsRoute,
+            $variantRouting,
         );
     }
 
@@ -391,7 +391,7 @@ final class ProductCreateToolTest extends TestCase
         $product->setType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
         $this->captureMessage($product);
 
-        $result = $this->toolWithRouteType(false)->createProduct('en', 'family-uuid', 'Shirt', type: ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $result = $this->toolWithRouteType('per_product')->createProduct('en', 'family-uuid', 'Shirt', type: ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
         $this->assertTrue($result['success']);
         $this->assertStringContainsString('sulu_product_update', \is_string($result['warning'] ?? null) ? $result['warning'] : '');
@@ -615,7 +615,7 @@ final class ProductCreateToolTest extends TestCase
             CompletenessCheckerFactory::create(),
             ProductUrlHelperFactory::create(),
             ProjectLocalesFactory::create(),
-            true,
+            'per_variant',
         );
     }
 

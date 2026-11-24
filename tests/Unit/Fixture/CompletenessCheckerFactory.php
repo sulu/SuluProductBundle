@@ -29,7 +29,7 @@ final class CompletenessCheckerFactory
     /**
      * @param list<string> $projectLocales
      */
-    public static function create(?MetadataProviderInterface $metadataProvider = null, array $projectLocales = ['en'], bool $variantOwnsRoute = true): ProductCompletenessChecker
+    public static function create(?MetadataProviderInterface $metadataProvider = null, array $projectLocales = ['en'], string $variantRouting = 'per_variant'): ProductCompletenessChecker
     {
         $webspace = new Webspace();
         $webspace->setKey('website');
@@ -41,6 +41,6 @@ final class CompletenessCheckerFactory
         $webspaceManager = (new Prophet())->prophesize(WebspaceManagerInterface::class);
         $webspaceManager->getWebspaceCollection()->willReturn(new WebspaceCollection(['website' => $webspace]));
 
-        return new ProductCompletenessChecker($metadataProvider ?? new ArrayMetadataProvider(), $webspaceManager->reveal(), ProductUrlHelperFactory::create(), $variantOwnsRoute);
+        return new ProductCompletenessChecker($metadataProvider ?? new ArrayMetadataProvider(), $webspaceManager->reveal(), ProductUrlHelperFactory::create(), $variantRouting);
     }
 }

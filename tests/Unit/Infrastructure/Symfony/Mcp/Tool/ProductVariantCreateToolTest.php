@@ -73,7 +73,7 @@ final class ProductVariantCreateToolTest extends TestCase
             $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
             ProjectLocalesFactory::create(),
             ProductUrlHelperFactory::create('route'),
-            true,
+            'per_variant',
         );
     }
 
@@ -118,7 +118,7 @@ final class ProductVariantCreateToolTest extends TestCase
             $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
             ProjectLocalesFactory::create(),
             ProductUrlHelperFactory::create('route'),
-            false,
+            'per_product',
         );
     }
 
@@ -332,7 +332,7 @@ final class ProductVariantCreateToolTest extends TestCase
             $adminLinkGenerator->reveal(),
             ProjectLocalesFactory::create(),
             ProductUrlHelperFactory::create('route'),
-            true,
+            'per_variant',
         );
 
         $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => ['shared-uuid' => ProductFamilyAttributeModeEnum::SHARED]]));

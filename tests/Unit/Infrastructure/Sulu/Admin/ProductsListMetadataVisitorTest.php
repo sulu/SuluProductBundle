@@ -31,7 +31,7 @@ class ProductsListMetadataVisitorTest extends TestCase
         $listMetadata->addField($statusField);
         $listMetadata->addField($this->createTypeField());
 
-        $visitor = new ProductsListMetadataVisitor(['announced', 'available'], true);
+        $visitor = new ProductsListMetadataVisitor(['announced', 'available'], 'per_variant');
         $visitor->visitListMetadata($listMetadata, ProductInterface::LIST_KEY, 'en');
 
         $this->assertSame(
@@ -50,7 +50,7 @@ class ProductsListMetadataVisitorTest extends TestCase
         $listMetadata->addField(new FieldMetadata('status'));
         $listMetadata->addField($typeField);
 
-        $visitor = new ProductsListMetadataVisitor([], true);
+        $visitor = new ProductsListMetadataVisitor([], 'per_variant');
         $visitor->visitListMetadata($listMetadata, ProductInterface::LIST_KEY, 'en');
 
         $this->assertSame(
@@ -66,7 +66,7 @@ class ProductsListMetadataVisitorTest extends TestCase
         $listMetadata->addField(new FieldMetadata('status'));
         $listMetadata->addField($typeField);
 
-        $visitor = new ProductsListMetadataVisitor([], false);
+        $visitor = new ProductsListMetadataVisitor([], 'per_product');
         $visitor->visitListMetadata($listMetadata, ProductInterface::LIST_KEY, 'en');
 
         $this->assertSame(
@@ -82,7 +82,7 @@ class ProductsListMetadataVisitorTest extends TestCase
         $listMetadata->addField(new FieldMetadata('status'));
         $listMetadata->addField($typeField);
 
-        $visitor = new ProductsListMetadataVisitor([], true);
+        $visitor = new ProductsListMetadataVisitor([], 'per_variant');
         $visitor->visitListMetadata($listMetadata, ProductInterface::LIST_KEY, 'en', ['excludeVariants' => 'true']);
 
         $this->assertSame(
@@ -98,7 +98,7 @@ class ProductsListMetadataVisitorTest extends TestCase
         $listMetadata = new ListMetadata();
         $listMetadata->addField($statusField);
 
-        $visitor = new ProductsListMetadataVisitor(['announced', 'available'], true);
+        $visitor = new ProductsListMetadataVisitor(['announced', 'available'], 'per_variant');
         $visitor->visitListMetadata($listMetadata, ProductInterface::LIST_KEY_VARIANTS, 'en');
 
         $this->assertNull($statusField->getFilterTypeParameters());

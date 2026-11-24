@@ -516,7 +516,6 @@ final class SuluProductBundle extends AbstractBundle
         $builder->setParameter('sulu_product.variants.query_parameter', $variants['query_parameter']);
         $builder->setParameter('sulu_product.variants.properties', $variants['properties']);
         $perProduct = VariantRouting::PerProduct === VariantRouting::from($variants['routing']);
-        $variantOwnsRoute = !$perProduct;
 
         /** @var array{type: string, params: array<string, scalar|null>} $route */
         $route = $config['route'];
@@ -1100,7 +1099,7 @@ final class SuluProductBundle extends AbstractBundle
 
         $services->set('sulu_product.product_route_owner_guard')
             ->class(ProductRouteOwnerGuard::class)
-            ->args([$variantOwnsRoute])
+            ->args(['%sulu_product.variants.routing%'])
             ->tag('doctrine.event_listener', ['event' => 'onFlush']);
 
         $services->set('sulu_product.product_route_form_metadata_visitor')
@@ -1108,7 +1107,7 @@ final class SuluProductBundle extends AbstractBundle
             ->args([
                 '%sulu_product.route.type%',
                 '%sulu_product.route.params%',
-                $variantOwnsRoute,
+                '%sulu_product.variants.routing%',
             ])
             ->tag('sulu_admin.form_metadata_visitor')
             ->tag('sulu_admin.typed_form_metadata_visitor');
@@ -1124,7 +1123,7 @@ final class SuluProductBundle extends AbstractBundle
             ->class(ProductsListMetadataVisitor::class)
             ->args([
                 '%sulu_product.product_statuses%',
-                $variantOwnsRoute,
+                '%sulu_product.variants.routing%',
             ])
             ->tag('sulu_admin.list_metadata_visitor');
 
@@ -1233,7 +1232,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_http_cache.reference_store'),
                 new Reference('sulu_product.attribute_value_converter'),
                 new Reference('sulu_product.product_attribute_value_formatter'),
-                $variantOwnsRoute,
+                '%sulu_product.variants.routing%',
                 '%sulu_product.variants.properties%',
             ])
             ->tag('sulu_content.content_resolver');
@@ -1394,7 +1393,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_core.webspace.webspace_manager'),
                 new Reference('sulu_product.product_repository'),
                 new Reference('sulu_reference.reference_repository'),
-                $variantOwnsRoute,
+                '%sulu_product.variants.routing%',
             ])
             ->tag('kernel.event_subscriber');
 
@@ -1635,11 +1634,11 @@ final class SuluProductBundle extends AbstractBundle
         // Only checks that sulu/mcp-bundle is installed. Up to 1.0.0-RC3 it ships its own
         // sulu_product_* tools, which would clash by name, so composer.json conflicts with those.
         if (ContainerBuilder::willBeAvailable('sulu/mcp-bundle', ContentTypeExtensionInterface::class, ['sulu/product-bundle'])) {
-            $this->registerMcpIntegration($services, $variantOwnsRoute);
+            $this->registerMcpIntegration($services);
         }
     }
 
-    private function registerMcpIntegration(ServicesConfigurator $services, bool $variantOwnsRoute): void
+    private function registerMcpIntegration(ServicesConfigurator $services): void
     {
         $services->set('sulu_product.mcp_content_type_extension')
             ->class(ProductContentTypeExtension::class)
@@ -1676,7 +1675,7 @@ final class SuluProductBundle extends AbstractBundle
             ->arg('$formMetadataProvider', new Reference('sulu_admin.form_metadata_provider'))
             ->arg('$webspaceManager', new Reference('sulu_core.webspace.webspace_manager'))
             ->arg('$urlHelper', new Reference('sulu_product.mcp_url_helper'))
-            ->arg('$variantOwnsRoute', $variantOwnsRoute);
+            ->arg('$variantRouting', '%sulu_product.variants.routing%');
 
         // The tag is explicit because SuluMcpBundle's instanceof rule does not reach this file.
         // sulu_admin.view_registry only exists in the admin container.
@@ -1732,7 +1731,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.mcp_completeness_checker'),
                 new Reference('sulu_product.mcp_url_helper'),
                 new Reference('sulu_product.mcp_project_locales'),
-                $variantOwnsRoute,
+                '%sulu_product.variants.routing%',
             ]);
 
         $services->set('sulu_product.mcp_tool_product_update')
@@ -1750,7 +1749,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.mcp_completeness_checker'),
                 new Reference('sulu_product.mcp_url_helper'),
                 new Reference('sulu_product.mcp_project_locales'),
-                $variantOwnsRoute,
+                '%sulu_product.variants.routing%',
             ]);
 
         $services->set('sulu_product.mcp_tool_product_variant_list')
@@ -1771,7 +1770,7 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference(AdminLinkGeneratorInterface::class),
                 new Reference('sulu_product.mcp_project_locales'),
                 new Reference('sulu_product.mcp_url_helper'),
-                $variantOwnsRoute,
+                '%sulu_product.variants.routing%',
             ]);
 
         $services->set('sulu_product.mcp_tool_product_variant_update')

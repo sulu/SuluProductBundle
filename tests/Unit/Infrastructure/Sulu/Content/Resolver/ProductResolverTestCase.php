@@ -53,7 +53,7 @@ abstract class ProductResolverTestCase extends TestCase
         array $variantProperties = ['title' => 'product.title', 'url' => 'product.url', 'code' => 'product.code', 'status' => 'product.status', 'position' => 'product.position'],
         ?ProductDimensionContentInterface $currentVariant = null,
         ?AttributeValueConverter $attributeValueConverter = null,
-        bool $variantOwnsRoute = true,
+        string $variantRouting = 'per_variant',
     ): ProductResolver {
         $requestStack = new RequestStack();
         $requestStack->push(new Request(attributes: [ProductRouteDefaultsProvider::VARIANT_ATTRIBUTE => $currentVariant]));
@@ -67,7 +67,7 @@ abstract class ProductResolverTestCase extends TestCase
             $referenceStore ?? new ReferenceStore(),
             $attributeValueConverter ?? ProductAttributeFragmentLoader::converter(),
             AttributeTypes::formatter(),
-            $variantOwnsRoute,
+            $variantRouting,
             $variantProperties,
         );
     }

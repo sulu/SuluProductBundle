@@ -79,7 +79,7 @@ final class ProductUpdateToolTest extends TestCase
             CompletenessCheckerFactory::create(),
             ProductUrlHelperFactory::create(),
             ProjectLocalesFactory::create(),
-            true,
+            'per_variant',
         );
     }
 
@@ -379,7 +379,7 @@ final class ProductUpdateToolTest extends TestCase
                 return $envelope->with(new HandledStamp($product, 'handler'));
             });
 
-        $result = $this->toolWithVariantOwnsRoute(false)->updateProduct('uuid-1', 'en', title: 'Shirt');
+        $result = $this->toolWithVariantOwnsRoute('per_product')->updateProduct('uuid-1', 'en', title: 'Shirt');
 
         $this->assertTrue($result['success']);
         $this->assertStringContainsString('sulu_product_update', \is_string($result['warning'] ?? null) ? $result['warning'] : '');
@@ -451,7 +451,7 @@ final class ProductUpdateToolTest extends TestCase
             CompletenessCheckerFactory::create(),
             ProductUrlHelperFactory::create(takenSlugs: ['/shirt'], ownProductUuid: 'uuid-1'),
             ProjectLocalesFactory::create(),
-            true,
+            'per_variant',
         );
         $captured = $this->givenProduct(['title' => 'Shirt']);
 
@@ -490,7 +490,7 @@ final class ProductUpdateToolTest extends TestCase
         $this->assertNotEmpty($result['hint']);
     }
 
-    private function toolWithVariantOwnsRoute(bool $variantOwnsRoute): ProductUpdateTool
+    private function toolWithVariantOwnsRoute(string $variantRouting): ProductUpdateTool
     {
         return new ProductUpdateTool(
             $this->messageBus->reveal(),
@@ -504,7 +504,7 @@ final class ProductUpdateToolTest extends TestCase
             CompletenessCheckerFactory::create(),
             ProductUrlHelperFactory::create(),
             ProjectLocalesFactory::create(),
-            $variantOwnsRoute,
+            $variantRouting,
         );
     }
 
@@ -522,7 +522,7 @@ final class ProductUpdateToolTest extends TestCase
             CompletenessCheckerFactory::create(),
             ProductUrlHelperFactory::create(),
             ProjectLocalesFactory::create(),
-            true,
+            'per_variant',
         );
     }
 
