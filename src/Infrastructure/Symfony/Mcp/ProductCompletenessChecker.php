@@ -55,7 +55,7 @@ final readonly class ProductCompletenessChecker
                 $recommendations[] = 'No code. Pass code to sulu_product_variant_update with the SKU from the datasheet. If there is none, derive one that follows the pattern of the codes of the other variants and is not taken yet.';
             }
 
-            if (VariantRoutingEnum::PER_VARIANT === $this->variantRouting && !self::hasUrl($normalized)) {
+            if ($this->variantRouting->ownsRoute(ProductInterface::TYPE_VARIANT) && !self::hasUrl($normalized)) {
                 $recommendations[] = 'No url. The url of a variant is set in the admin, because the variant tools have no url parameter.';
             }
 

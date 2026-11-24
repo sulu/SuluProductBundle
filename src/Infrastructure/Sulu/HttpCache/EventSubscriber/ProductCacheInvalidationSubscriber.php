@@ -77,7 +77,7 @@ class ProductCacheInvalidationSubscriber implements EventSubscriberInterface
         $this->cacheManager->invalidateTag($product->getUuid());
 
         // The page of the parent can list a variant that was not live when it was cached.
-        $parent = VariantRoutingEnum::PER_VARIANT === $this->variantRouting ? null : $product->getParent();
+        $parent = $this->variantRouting->ownsRoute(ProductInterface::TYPE_VARIANT) ? null : $product->getParent();
         if (null !== $parent) {
             $this->cacheManager->invalidateTag($parent->getUuid());
         }
