@@ -22,6 +22,9 @@ use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Content\Application\ContentManager\ContentManagerInterface;
 use Sulu\Mcp\Application\AdminLink\AdminLinkGeneratorInterface;
 use Sulu\Product\Application\Message\CreateProductMessage;
+use Sulu\Product\Application\Routing\PerProductSlugProvider;
+use Sulu\Product\Application\Routing\PerVariantSlugProvider;
+use Sulu\Product\Application\Routing\VariantUrlBuilder;
 use Sulu\Product\Domain\Model\Attribute;
 use Sulu\Product\Domain\Model\AttributeGroup;
 use Sulu\Product\Domain\Model\Product;
@@ -37,6 +40,7 @@ use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductVariantCreateTool;
 use Sulu\Product\Infrastructure\Symfony\Mcp\VariantParentResolver;
 use Sulu\Product\Tests\Unit\Fixture\ProductUrlHelperFactory;
 use Sulu\Product\Tests\Unit\Fixture\ProjectLocalesFactory;
+use Sulu\Route\Domain\Repository\RouteRepositoryInterface;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
@@ -73,6 +77,7 @@ final class ProductVariantCreateToolTest extends TestCase
             $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
             ProjectLocalesFactory::create(),
             ProductUrlHelperFactory::create('route'),
+            new PerVariantSlugProvider(),
         );
     }
 
@@ -84,6 +89,41 @@ final class ProductVariantCreateToolTest extends TestCase
         $this->tool->createProductVariant('en', 'parent-uuid', 'Red XL');
 
         $this->assertSame('/products/red-xl', $this->capturedData($captured)['url'] ?? null);
+    }
+
+    public function testCreateVariantIgnoresTheUrlInPerProductRouting(): void
+    {
+        $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => ['axis-uuid' => ProductFamilyAttributeModeEnum::VARIANT_SPECIFIC]]));
+        $captured = $this->captureDispatchedMessage(new Product('variant-uuid'));
+
+        $result = $this->perProductTool()->createProductVariant('en', 'parent-uuid', 'Red XL', url: '/shop/red-xl');
+
+        $this->assertArrayNotHasKey('url', $this->capturedData($captured));
+        $this->assertArrayHasKey('warning', $result);
+    }
+
+    public function testCreateVariantGeneratesNoUrlInPerProductRouting(): void
+    {
+        $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => ['axis-uuid' => ProductFamilyAttributeModeEnum::VARIANT_SPECIFIC]]));
+        $captured = $this->captureDispatchedMessage(new Product('variant-uuid'));
+
+        $result = $this->perProductTool()->createProductVariant('en', 'parent-uuid', 'Red XL');
+
+        $this->assertArrayNotHasKey('url', $this->capturedData($captured));
+        $this->assertArrayNotHasKey('warning', $result);
+    }
+
+    private function perProductTool(): ProductVariantCreateTool
+    {
+        return new ProductVariantCreateTool(
+            $this->messageBus->reveal(),
+            $this->contentManager->reveal(),
+            new VariantParentResolver($this->productRepository->reveal(), $this->productFamilyRepository->reveal()),
+            $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
+            ProjectLocalesFactory::create(),
+            ProductUrlHelperFactory::create('route'),
+            new PerProductSlugProvider($this->createStub(RouteRepositoryInterface::class), new VariantUrlBuilder('variant')),
+        );
     }
 
     public function testCreateVariantKeepsAnExplicitUrl(): void
@@ -296,6 +336,7 @@ final class ProductVariantCreateToolTest extends TestCase
             $adminLinkGenerator->reveal(),
             ProjectLocalesFactory::create(),
             ProductUrlHelperFactory::create('route'),
+            new PerVariantSlugProvider(),
         );
 
         $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => ['shared-uuid' => ProductFamilyAttributeModeEnum::SHARED]]));

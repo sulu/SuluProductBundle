@@ -21,12 +21,14 @@ use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\TagMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\TypedFormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\TypedFormMetadataVisitorInterface;
 use Sulu\Content\Application\ContentDataMapper\DataMapper\TemplateDataMapper;
+use Sulu\Product\Application\Routing\ProductSlugProviderInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductInterface;
 
 /**
  * Applies the `sulu_product.route` configuration to the route field of the product forms, and adds
- * the same field invisibly to the product templates, where RoutableDataMapper reads it.
+ * the same field invisibly to the product templates, where RoutableDataMapper reads it. The field
+ * sits on the form of the route owner, per `sulu_product.variants.routing`.
  *
  * @internal
  */
@@ -46,6 +48,7 @@ class ProductRouteFormMetadataVisitor implements FormMetadataVisitorInterface, T
     public function __construct(
         private readonly string $type,
         private readonly array $params,
+        private readonly ProductSlugProviderInterface $slugProvider,
     ) {
     }
 
@@ -62,11 +65,23 @@ class ProductRouteFormMetadataVisitor implements FormMetadataVisitorInterface, T
 
         $this->applyRouteConfig($routeField);
 
-        if (ProductInterface::FORM_KEY_VARIANT !== $formMetadata->getKey()) {
+        if (ProductInterface::FORM_KEY_VARIANT === $formMetadata->getKey()) {
+            if ($this->slugProvider->ownsRoute(ProductInterface::TYPE_VARIANT)) {
+                $routeField->setRequired(true);
+
+                return;
+            }
+
+            $items = $formMetadata->getItems();
+            unset($items[self::FIELD_NAME]);
+            $formMetadata->setItems($items);
+
             return;
         }
 
-        $routeField->setRequired(true);
+        if ($this->slugProvider->ownsRoute(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS)) {
+            $routeField->setVisibleCondition(null);
+        }
     }
 
     public function visitTypedFormMetadata(TypedFormMetadata $formMetadata, string $key, string $locale, array $metadataOptions = []): void

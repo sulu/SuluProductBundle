@@ -28,6 +28,10 @@ use Sulu\Mcp\Application\Content\BlockDataValidator;
 use Sulu\Mcp\Application\Content\ContentMetadataMapper;
 use Sulu\Mcp\Application\Metadata\MetadataLocaleResolver;
 use Sulu\Product\Application\Message\ModifyProductMessage;
+use Sulu\Product\Application\Routing\PerProductSlugProvider;
+use Sulu\Product\Application\Routing\PerVariantSlugProvider;
+use Sulu\Product\Application\Routing\ProductSlugProviderInterface;
+use Sulu\Product\Application\Routing\VariantUrlBuilder;
 use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
 use Sulu\Product\Domain\Model\Product;
@@ -43,6 +47,7 @@ use Sulu\Product\Tests\Unit\Fixture\FixedBlockIdGenerator;
 use Sulu\Product\Tests\Unit\Fixture\ProductContentMetadata;
 use Sulu\Product\Tests\Unit\Fixture\ProductUrlHelperFactory;
 use Sulu\Product\Tests\Unit\Fixture\ProjectLocalesFactory;
+use Sulu\Route\Domain\Repository\RouteRepositoryInterface;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
@@ -79,6 +84,7 @@ final class ProductUpdateToolTest extends TestCase
             CompletenessCheckerFactory::create(),
             ProductUrlHelperFactory::create(),
             ProjectLocalesFactory::create(),
+            new PerVariantSlugProvider(),
         );
     }
 
@@ -363,6 +369,27 @@ final class ProductUpdateToolTest extends TestCase
         $this->assertArrayNotHasKey('warning', $result);
     }
 
+    public function testUpdateProductWarnsForAProductWithVariantsWhenTheProductOwnsTheRoute(): void
+    {
+        $product = new Product('uuid-1');
+        $product->setType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $this->productRepository->getOneBy(Argument::cetera())->willReturn($product);
+        $this->contentManager->resolve(Argument::cetera())->willReturn(new ProductDimensionContent(new Product()));
+        $this->contentManager->normalize(Argument::cetera())->willReturn(['title' => 'Shirt']);
+        $this->messageBus->dispatch(Argument::type(Envelope::class), Argument::cetera())
+            ->will(function(array $args) use ($product): Envelope {
+                /** @var Envelope $envelope */
+                $envelope = $args[0];
+
+                return $envelope->with(new HandledStamp($product, 'handler'));
+            });
+
+        $result = $this->toolWithSlugProvider(new PerProductSlugProvider($this->createStub(RouteRepositoryInterface::class), new VariantUrlBuilder('variant')))->updateProduct('uuid-1', 'en', title: 'Shirt');
+
+        $this->assertTrue($result['success']);
+        $this->assertStringContainsString('sulu_product_update', \is_string($result['warning'] ?? null) ? $result['warning'] : '');
+    }
+
     public function testUpdateProductListsRecommendationsForAnIncompleteProduct(): void
     {
         $this->givenProduct(['title' => 'Shirt']);
@@ -429,6 +456,7 @@ final class ProductUpdateToolTest extends TestCase
             CompletenessCheckerFactory::create(),
             ProductUrlHelperFactory::create(takenSlugs: ['/shirt'], ownProductUuid: 'uuid-1'),
             ProjectLocalesFactory::create(),
+            new PerVariantSlugProvider(),
         );
         $captured = $this->givenProduct(['title' => 'Shirt']);
 
@@ -467,6 +495,24 @@ final class ProductUpdateToolTest extends TestCase
         $this->assertNotEmpty($result['hint']);
     }
 
+    private function toolWithSlugProvider(ProductSlugProviderInterface $slugProvider): ProductUpdateTool
+    {
+        return new ProductUpdateTool(
+            $this->messageBus->reveal(),
+            $this->contentManager->reveal(),
+            $this->productRepository->reveal(),
+            new ContentMetadataMapper(new ArrayMetadataProvider(), CoreExtensionFormKeys::create()),
+            new BlockDataValidator($this->formMetadataProvider(), new MetadataLocaleResolver(new TokenStorage(), 'en')),
+            FixedBlockIdGenerator::returning('b1', 'b2', 'b3'),
+            $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
+            $this->associationResolver(),
+            CompletenessCheckerFactory::create(),
+            ProductUrlHelperFactory::create(),
+            ProjectLocalesFactory::create(),
+            $slugProvider,
+        );
+    }
+
     private function toolWithContentMetadata(?AdminLinkGeneratorInterface $adminLinkGenerator = null): ProductUpdateTool
     {
         return new ProductUpdateTool(
@@ -481,6 +527,7 @@ final class ProductUpdateToolTest extends TestCase
             CompletenessCheckerFactory::create(),
             ProductUrlHelperFactory::create(),
             ProjectLocalesFactory::create(),
+            new PerVariantSlugProvider(),
         );
     }
 
