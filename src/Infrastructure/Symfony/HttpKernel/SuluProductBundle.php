@@ -13,10 +13,14 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Infrastructure\Symfony\HttpKernel;
 
+use Sulu\Bundle\AdminBundle\Application\BlockIdGenerator\BlockIdGeneratorInterface;
 use Sulu\Bundle\HttpCacheBundle\ReferenceStore\ReferenceStore;
 use Sulu\Bundle\PersistenceBundle\DependencyInjection\PersistenceExtensionTrait;
 use Sulu\Bundle\PersistenceBundle\PersistenceBundleTrait;
 use Sulu\Content\Infrastructure\Sulu\Preview\ContentObjectProvider;
+use Sulu\Mcp\Application\AdminLink\AdminLinkGeneratorInterface;
+use Sulu\Mcp\Application\Content\BlockDataValidator;
+use Sulu\Mcp\Application\Content\ContentMetadataMapper;
 use Sulu\Mcp\Domain\Content\ContentTypeExtensionInterface;
 use Sulu\Product\Application\Attribute\AttributeDisplayFormatter;
 use Sulu\Product\Application\Attribute\AttributeValueConverter;
@@ -1641,16 +1645,51 @@ final class SuluProductBundle extends AbstractBundle
                 ->tag('sulu.context', ['context' => 'admin']);
         }
 
-        foreach ([
-            ProductCreateTool::class,
-            ProductUpdateTool::class,
-            ProductVariantCreateTool::class,
-        ] as $mcpTool) {
-            $services->set($mcpTool)
-                ->autowire()
-                ->autoconfigure()
-                ->arg('$variantRouting', $variantRouting);
-        }
+        // autoconfigure() is what picks up #[McpTool]; this bundle does not enable it by default.
+        $services->set(ProductCreateTool::class)
+            ->autoconfigure()
+            ->args([
+                new Reference('sulu_message_bus'),
+                new Reference('sulu_content.content_manager'),
+                new Reference(ContentMetadataMapper::class),
+                new Reference(BlockDataValidator::class),
+                new Reference(BlockIdGeneratorInterface::class),
+                new Reference(AdminLinkGeneratorInterface::class),
+                new Reference(ProductAssociationResolver::class),
+                new Reference(ProductCompletenessChecker::class),
+                new Reference(ProductUrlHelper::class),
+                new Reference(ProjectLocales::class),
+                $variantRouting,
+            ]);
+
+        $services->set(ProductUpdateTool::class)
+            ->autoconfigure()
+            ->args([
+                new Reference('sulu_message_bus'),
+                new Reference('sulu_content.content_manager'),
+                new Reference('sulu_product.product_repository'),
+                new Reference(ContentMetadataMapper::class),
+                new Reference(BlockDataValidator::class),
+                new Reference(BlockIdGeneratorInterface::class),
+                new Reference(AdminLinkGeneratorInterface::class),
+                new Reference(ProductAssociationResolver::class),
+                new Reference(ProductCompletenessChecker::class),
+                new Reference(ProductUrlHelper::class),
+                new Reference(ProjectLocales::class),
+                $variantRouting,
+            ]);
+
+        $services->set(ProductVariantCreateTool::class)
+            ->autoconfigure()
+            ->args([
+                new Reference('sulu_message_bus'),
+                new Reference('sulu_content.content_manager'),
+                new Reference(VariantParentResolver::class),
+                new Reference(AdminLinkGeneratorInterface::class),
+                new Reference(ProjectLocales::class),
+                new Reference(ProductUrlHelper::class),
+                $variantRouting,
+            ]);
 
         foreach ([
             ProductGetTool::class,
