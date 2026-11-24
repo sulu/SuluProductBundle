@@ -34,12 +34,12 @@ use Sulu\Product\Domain\Model\ProductInterface;
  *     changed: \DateTimeImmutable,
  *     locale: string,
  *     availableLocales: string[]|null,
- *     slug: string|null,
+ *     slug: string,
  *     uuid: string
  * }
  * @phpstan-type AlternateRoute array{
  *     locale: string,
- *     slug: string|null,
+ *     slug: string,
  *     uuid: string
  * }
  */
@@ -94,10 +94,6 @@ class ProductsSitemapProvider extends AbstractSitemapProvider
                 $alternateLocale = $alternateRoute['locale'];
                 $alternateSlug = $alternateRoute['slug'];
                 $productUuid = $alternateRoute['uuid'];
-
-                if (null === $alternateSlug) {
-                    continue;
-                }
 
                 if (!\array_key_exists($productUuid, $alternateRoutes)) {
                     $alternateRoutes[$productUuid] = [];
@@ -170,7 +166,7 @@ class ProductsSitemapProvider extends AbstractSitemapProvider
             AND unLocalizedDimensionContent.version = :version
             AND unLocalizedDimensionContent.seoHideInSitemap = :hide
         ')
-            ->leftJoin('dimensionContent.route', 'route')
+            ->innerJoin('dimensionContent.route', 'route')
             ->andWhere('dimensionContent.mainWebspace = :webspaceKey OR additionalWebspace.additionalWebspace = :webspaceKey')
             ->setParameter('locale', $locale)
             ->setParameter('stage', DimensionContentInterface::STAGE_LIVE)
@@ -211,7 +207,7 @@ class ProductsSitemapProvider extends AbstractSitemapProvider
             AND dimensionContent.seoHideInSitemap = :hide
         ')
             ->leftJoin('dimensionContent.additionalWebspaces', 'additionalWebspace')
-            ->leftJoin('dimensionContent.route', 'route')
+            ->innerJoin('dimensionContent.route', 'route')
             ->andWhere('dimensionContent.mainWebspace = :webspaceKey OR additionalWebspace.additionalWebspace = :webspaceKey')
             ->setParameter('locale', $locale)
             ->setParameter('stage', DimensionContentInterface::STAGE_LIVE)
@@ -242,11 +238,6 @@ class ProductsSitemapProvider extends AbstractSitemapProvider
         string $host,
         string $scheme,
     ): ?SitemapUrl {
-        // a product that owns no route, the webspace manager would map it to the start page
-        if (null === $product['slug']) {
-            return null;
-        }
-
         $changed = $product['changed'];
         /** @var string|null $webspaceKey */
         $webspaceKey = $portalInformation->getWebspaceKey();
