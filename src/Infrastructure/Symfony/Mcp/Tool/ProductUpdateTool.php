@@ -218,7 +218,7 @@ final class ProductUpdateTool
                 'data' => $this->compactContent($normalized, $this->detectBlockProperties($normalized)),
             ];
 
-            if ($updated->getType() !== (VariantRoutingEnum::PER_VARIANT === $this->variantRouting ? ProductInterface::TYPE_PRODUCT_WITH_VARIANTS : ProductInterface::TYPE_VARIANT) && !ProductCompletenessChecker::hasUrl($normalized)) {
+            if ($this->variantRouting->ownsRoute($updated->getType()) && !ProductCompletenessChecker::hasUrl($normalized)) {
                 $result['warning'] = $this->urlHelper->warning($normalized, $locale, $updated->getUuid());
             }
 

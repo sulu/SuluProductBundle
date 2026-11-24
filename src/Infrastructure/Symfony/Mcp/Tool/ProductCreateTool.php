@@ -186,7 +186,7 @@ final class ProductCreateTool
                 $data['details'] = $details;
             }
 
-            if (($type ?? ProductInterface::TYPE_PRODUCT) !== (VariantRoutingEnum::PER_VARIANT === $this->variantRouting ? ProductInterface::TYPE_PRODUCT_WITH_VARIANTS : ProductInterface::TYPE_VARIANT)) {
+            if ($this->variantRouting->ownsRoute($type ?? ProductInterface::TYPE_PRODUCT)) {
                 $data = $this->urlHelper->completeUrl($data, $locale);
             }
             $data = $this->urlHelper->completeUrlSuffix($data, $locale);
@@ -229,7 +229,7 @@ final class ProductCreateTool
                 'data' => $this->contentManager->normalize($dimensionContent),
             ];
 
-            if ($product->getType() !== (VariantRoutingEnum::PER_VARIANT === $this->variantRouting ? ProductInterface::TYPE_PRODUCT_WITH_VARIANTS : ProductInterface::TYPE_VARIANT) && !ProductCompletenessChecker::hasUrl($result['data'])) {
+            if ($this->variantRouting->ownsRoute($product->getType()) && !ProductCompletenessChecker::hasUrl($result['data'])) {
                 $result['warning'] = $this->urlHelper->warning($result['data'], $locale, $product->getUuid());
             }
 

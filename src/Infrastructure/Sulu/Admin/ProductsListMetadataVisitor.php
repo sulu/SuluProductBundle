@@ -60,7 +60,7 @@ class ProductsListMetadataVisitor implements ListMetadataVisitorInterface
         if (\is_array($typeOptions)) {
             $excludeVariants = \filter_var($metadataOptions['excludeVariants'] ?? false, \FILTER_VALIDATE_BOOLEAN);
             foreach (\array_keys($typeOptions) as $type) {
-                if ($excludeVariants ? ProductInterface::TYPE_VARIANT === $type : (string) $type === (VariantRoutingEnum::PER_VARIANT === $this->variantRouting ? ProductInterface::TYPE_PRODUCT_WITH_VARIANTS : ProductInterface::TYPE_VARIANT)) {
+                if ($excludeVariants ? ProductInterface::TYPE_VARIANT === $type : !$this->variantRouting->ownsRoute((string) $type)) {
                     unset($typeOptions[$type]);
                 }
             }
