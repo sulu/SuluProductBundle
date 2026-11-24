@@ -1,0 +1,8 @@
+sulu_content:
+    request_workflows:
+        default:
+            pre_validators:
+                seo_required:
+                    fields: ['title']
+                excerpt_required:
+                    fields: ['title']
