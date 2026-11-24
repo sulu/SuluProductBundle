@@ -15,6 +15,7 @@ namespace Sulu\Product\Domain\Model;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Sulu\Bundle\CategoryBundle\Entity\CategoryInterface;
 use Sulu\Content\Domain\Model\AuditableTrait;
 use Sulu\Content\Domain\Model\AuthorTrait;
 use Sulu\Content\Domain\Model\ContentRichEntityInterface;
@@ -34,7 +35,9 @@ class ProductDimensionContent implements ProductDimensionContentInterface
     use AuthorTrait;
     use DimensionContentTrait;
     use ExcerptTrait;
-    use TaxonomyTrait;
+    use TaxonomyTrait {
+        TaxonomyTrait::setExcerptCategories as parentSetExcerptCategories;
+    }
     use RoutableTrait;
     use SeoTrait;
     use ShadowTrait;
@@ -62,6 +65,8 @@ class ProductDimensionContent implements ProductDimensionContentInterface
     protected ?string $externalIdentifier = null;
 
     protected ?ProductFamilyInterface $productFamily = null;
+
+    protected ?CategoryInterface $mainCategory = null;
 
     /**
      * @var Collection<int, ProductAttributeValueInterface>
@@ -255,6 +260,45 @@ class ProductDimensionContent implements ProductDimensionContentInterface
         $this->productFamily = $productFamily;
 
         return $this;
+    }
+
+    public function getMainCategory(): ?CategoryInterface
+    {
+        return $this->mainCategory;
+    }
+
+    public function setMainCategory(?CategoryInterface $mainCategory): static
+    {
+        if ($this->mainCategory === $mainCategory) {
+            return $this;
+        }
+
+        $this->initializeCategories();
+
+        if (null !== $this->mainCategory) {
+            $this->excerptCategories->removeElement($this->mainCategory);
+        }
+
+        if (null !== $mainCategory && !$this->excerptCategories->contains($mainCategory)) {
+            $this->excerptCategories->add($mainCategory);
+        }
+
+        $this->mainCategory = $mainCategory;
+
+        return $this;
+    }
+
+    /**
+     * @param CategoryInterface[] $excerptCategories
+     */
+    public function setExcerptCategories(array $excerptCategories): void
+    {
+        // The main category can only be deselected via it's own setter.
+        if (null !== $this->mainCategory && !\in_array($this->mainCategory, $excerptCategories, true)) {
+            $excerptCategories[] = $this->mainCategory;
+        }
+
+        $this->parentSetExcerptCategories($excerptCategories);
     }
 
     /**

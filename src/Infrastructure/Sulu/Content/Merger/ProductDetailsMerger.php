@@ -44,6 +44,10 @@ class ProductDetailsMerger implements MergerInterface
             $targetObject->setProductFamily($sourceObject->getProductFamily());
         }
 
+        if (null !== $sourceObject->getMainCategory()) {
+            $targetObject->setMainCategory($sourceObject->getMainCategory());
+        }
+
         // Status lives only on the unlocalized dimension and is never null, so a
         // null-guard cannot detect "not set here"; take it from the unlocalized
         // dimension (locale === null) so a localized default cannot overwrite it.

@@ -21,7 +21,12 @@ use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FieldMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataLoaderInterface;
+use Sulu\Bundle\CategoryBundle\Entity\Category;
+use Sulu\Bundle\CategoryBundle\Entity\CategoryInterface;
+use Sulu\Bundle\CategoryBundle\Entity\CategoryRepositoryInterface;
+use Sulu\Content\Domain\Factory\CategoryFactoryInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Product\Domain\Exception\InvalidMainCategoryException;
 use Sulu\Product\Domain\Exception\InvalidProductStatusException;
 use Sulu\Product\Domain\Exception\ProductCodeNotUniqueException;
 use Sulu\Product\Domain\Model\Product;
@@ -47,6 +52,12 @@ class ProductDetailsDataMapperTest extends TestCase
     /** @var ObjectProphecy<ProductRepositoryInterface> */
     private ObjectProphecy $productRepository;
 
+    /** @var ObjectProphecy<CategoryFactoryInterface> */
+    private ObjectProphecy $categoryFactory;
+
+    /** @var ObjectProphecy<CategoryRepositoryInterface> */
+    private ObjectProphecy $categoryRepository;
+
     private ProductDetailsDataMapper $mapper;
 
     /** @var array<int, string> */
@@ -59,12 +70,32 @@ class ProductDetailsDataMapperTest extends TestCase
         $this->productFamilyRepository = $this->prophesize(ProductFamilyRepositoryInterface::class);
         $this->productRepository = $this->prophesize(ProductRepositoryInterface::class);
         $this->productRepository->existBy(Argument::any())->willReturn(false);
-        $this->mapper = new ProductDetailsDataMapper(
+        $this->categoryFactory = $this->prophesize(CategoryFactoryInterface::class);
+        $this->categoryRepository = $this->prophesize(CategoryRepositoryInterface::class);
+        $this->mapper = $this->createMapperWithRootKey(null);
+    }
+
+    private function createMapperWithRootKey(?string $rootKey): ProductDetailsDataMapper
+    {
+        return new ProductDetailsDataMapper(
             $this->formMetadataLoader->reveal(),
             $this->productFamilyRepository->reveal(),
             $this->productRepository->reveal(),
             $this->allowedStatuses,
+            $this->categoryFactory->reveal(),
+            $this->categoryRepository->reveal(),
+            $rootKey,
         );
+    }
+
+    private function createCategory(int $id, int $lft, int $rgt): Category
+    {
+        $category = new Category();
+        $category->setId($id);
+        $category->setLft($lft);
+        $category->setRgt($rgt);
+
+        return $category;
     }
 
     private function makeDimensionContent(?string $uuid = null): ProductDimensionContent
@@ -412,5 +443,138 @@ class ProductDetailsDataMapperTest extends TestCase
         $this->mapper->map($unloc, $loc, ['title' => 'X']);
 
         $this->assertSame(['shortDescription' => '<p>keep</p>'], $loc->getDetailsData());
+    }
+
+    public function testMainCategoryIgnoresOtherDimensionContent(): void
+    {
+        $this->categoryFactory->create(Argument::cetera())->shouldNotBeCalled();
+
+        $this->mapper->map(
+            new ProductDimensionContent(new Product()),
+            $this->prophesize(DimensionContentInterface::class)->reveal(),
+            ['mainCategory' => 1],
+        );
+
+        $this->addToAssertionCount(1);
+    }
+
+    public function testMainCategoryIgnoresMissingKey(): void
+    {
+        $this->categoryFactory->create(Argument::cetera())->shouldNotBeCalled();
+        $localized = new ProductDimensionContent(new Product());
+
+        $this->mapper->map(new ProductDimensionContent(new Product()), $localized, []);
+
+        $this->assertNull($localized->getMainCategory());
+    }
+
+    public function testMainCategorySetsMainCategoryAndExcerptCategory(): void
+    {
+        $category = $this->prophesize(CategoryInterface::class)->reveal();
+        $this->categoryFactory->create([5])->willReturn([$category]);
+        $localized = new ProductDimensionContent(new Product());
+
+        $this->mapper->map(new ProductDimensionContent(new Product()), $localized, ['mainCategory' => 5]);
+
+        $this->assertSame($category, $localized->getMainCategory());
+        $this->assertSame([$category], $localized->getExcerptCategories());
+    }
+
+    public function testMainCategoryNullRemovesMainCategoryAndExcerptCategory(): void
+    {
+        $category = $this->prophesize(CategoryInterface::class)->reveal();
+        $localized = new ProductDimensionContent(new Product());
+        $localized->setMainCategory($category);
+
+        $this->mapper->map(new ProductDimensionContent(new Product()), $localized, ['mainCategory' => null]);
+
+        $this->assertNull($localized->getMainCategory());
+        $this->assertSame([], $localized->getExcerptCategories());
+    }
+
+    public function testMainCategoryUnknownCategoryIdClearsMainCategory(): void
+    {
+        $this->categoryFactory->create([9])->willReturn([]);
+        $localized = new ProductDimensionContent(new Product());
+
+        $this->mapper->map(new ProductDimensionContent(new Product()), $localized, ['mainCategory' => 9]);
+
+        $this->assertNull($localized->getMainCategory());
+    }
+
+    public function testMainCategoryAcceptsACategoryBelowTheRoot(): void
+    {
+        $this->categoryRepository->findCategoryByKey('shop')->willReturn($this->createCategory(1, 1, 10));
+        $category = $this->createCategory(2, 2, 3);
+        $this->categoryFactory->create([2])->willReturn([$category]);
+        $localized = new ProductDimensionContent(new Product());
+
+        $this->createMapperWithRootKey('shop')->map(new ProductDimensionContent(new Product()), $localized, ['mainCategory' => 2]);
+
+        $this->assertSame($category, $localized->getMainCategory());
+    }
+
+    public function testMainCategoryRejectsACategoryOutsideTheRoot(): void
+    {
+        $this->categoryRepository->findCategoryByKey('shop')->willReturn($this->createCategory(1, 1, 10));
+        $this->categoryFactory->create([3])->willReturn([$this->createCategory(3, 11, 12)]);
+        $localized = new ProductDimensionContent(new Product());
+
+        $this->expectException(InvalidMainCategoryException::class);
+
+        $this->createMapperWithRootKey('shop')->map(new ProductDimensionContent(new Product()), $localized, ['mainCategory' => 3]);
+    }
+
+    public function testMainCategoryRejectsTheRootItself(): void
+    {
+        $root = $this->createCategory(1, 1, 10);
+        $this->categoryRepository->findCategoryByKey('shop')->willReturn($root);
+        $this->categoryFactory->create([1])->willReturn([$root]);
+
+        $this->expectException(InvalidMainCategoryException::class);
+
+        $this->createMapperWithRootKey('shop')->map(
+            new ProductDimensionContent(new Product()),
+            new ProductDimensionContent(new Product()),
+            ['mainCategory' => 1],
+        );
+    }
+
+    public function testMainCategoryRejectsEveryCategoryWhenTheRootDoesNotExist(): void
+    {
+        $this->categoryRepository->findCategoryByKey('missing')->willReturn(null);
+        $this->categoryFactory->create([2])->willReturn([$this->createCategory(2, 2, 3)]);
+
+        $this->expectException(InvalidMainCategoryException::class);
+
+        $this->createMapperWithRootKey('missing')->map(
+            new ProductDimensionContent(new Product()),
+            new ProductDimensionContent(new Product()),
+            ['mainCategory' => 2],
+        );
+    }
+
+    public function testMainCategoryKeepsAStoredCategoryOutsideTheRoot(): void
+    {
+        $stored = $this->createCategory(3, 11, 12);
+        $this->categoryRepository->findCategoryByKey(Argument::cetera())->shouldNotBeCalled();
+        $this->categoryFactory->create([3])->willReturn([$stored]);
+        $localized = new ProductDimensionContent(new Product());
+        $localized->setMainCategory($stored);
+
+        $this->createMapperWithRootKey('shop')->map(new ProductDimensionContent(new Product()), $localized, ['mainCategory' => 3]);
+
+        $this->assertSame($stored, $localized->getMainCategory());
+    }
+
+    public function testMainCategoryClearingNeedsNoRootCheck(): void
+    {
+        $this->categoryRepository->findCategoryByKey(Argument::cetera())->shouldNotBeCalled();
+        $localized = new ProductDimensionContent(new Product());
+        $localized->setMainCategory($this->createCategory(3, 11, 12));
+
+        $this->createMapperWithRootKey('shop')->map(new ProductDimensionContent(new Product()), $localized, ['mainCategory' => null]);
+
+        $this->assertNull($localized->getMainCategory());
     }
 }

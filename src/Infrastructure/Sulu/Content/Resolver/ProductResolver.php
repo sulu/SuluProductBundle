@@ -296,6 +296,11 @@ class ProductResolver implements ResolverInterface
             'position' => ContentView::create($dimensionContent->getResource()->getPosition(), []),
         ];
 
+        // Opt-in: resolving the category costs a query, so a reference without it does not pay.
+        if (null === $requested || \in_array('mainCategory', $requested, true)) {
+            $masterData['mainCategory'] = $this->resolveMainCategory($dimensionContent, $locale);
+        }
+
         // A product with variants owns no route, it is reached through its variants.
         if ($dimensionContent->getResource()->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS)) {
             unset($masterData['url']);
@@ -312,6 +317,24 @@ class ProductResolver implements ResolverInterface
         }
 
         return \array_merge($masterData, $this->resolveDetailsData($dimensionContent, $locale, $requested));
+    }
+
+    /** Resolved through the property resolver of the form field, so it looks like a `single_category_selection` of a template. */
+    private function resolveMainCategory(
+        ProductDimensionContentInterface $dimensionContent,
+        string $locale,
+    ): ContentView {
+        $mainCategoryId = $dimensionContent->getMainCategory()?->getId();
+        $formMetadata = $this->formMetadataLoader->getMetadata(ProductInterface::FORM_KEY, $locale, []);
+
+        $field = $formMetadata instanceof FormMetadata ? ($formMetadata->getFlatFieldMetadata()['mainCategory'] ?? null) : null;
+
+        if (null === $mainCategoryId || null === $field) {
+            return ContentView::create(null, []);
+        }
+
+        return $this->metadataResolver->resolveItems(['mainCategory' => $field], ['mainCategory' => $mainCategoryId], $locale)['mainCategory']
+            ?? ContentView::create(null, []);
     }
 
     /** The family is already on the dimension content, so it is read here rather than re-loaded. */

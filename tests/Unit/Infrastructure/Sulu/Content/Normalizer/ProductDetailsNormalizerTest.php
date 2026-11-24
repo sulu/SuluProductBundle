@@ -17,6 +17,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
+use Sulu\Bundle\CategoryBundle\Entity\CategoryInterface;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
@@ -54,7 +55,7 @@ class ProductDetailsNormalizerTest extends TestCase
 
         $result = $this->normalizer->getIgnoredAttributes($dc);
 
-        $this->assertSame(['productFamily'], $result);
+        $this->assertSame(['productFamily', 'mainCategory'], $result);
     }
 
     public function testEnhanceForNonProductDimensionContent(): void
@@ -103,6 +104,7 @@ class ProductDetailsNormalizerTest extends TestCase
         $object->getCode()->willReturn('C');
         $object->getExternalIdentifier()->willReturn(null);
         $object->getProductFamily()->willReturn(null);
+        $object->getMainCategory()->willReturn(null);
         $object->getStatus()->willReturn('available');
         $object->getDetailsData()->willReturn([]);
 
@@ -156,5 +158,24 @@ class ProductDetailsNormalizerTest extends TestCase
         $result = $this->normalizer->enhance($dc, []);
 
         $this->assertSame(['datasheet' => ['id' => 9]], $result['details']);
+    }
+
+    public function testEnhanceAddsMainCategoryId(): void
+    {
+        $category = $this->prophesize(CategoryInterface::class);
+        $category->getId()->willReturn(7);
+        $dc = $this->makeDimensionContent();
+        $dc->setMainCategory($category->reveal());
+
+        $result = $this->normalizer->enhance($dc, []);
+
+        $this->assertSame(7, $result['mainCategory']);
+    }
+
+    public function testEnhanceAddsNullWithoutMainCategory(): void
+    {
+        $result = $this->normalizer->enhance($this->makeDimensionContent(), []);
+
+        $this->assertNull($result['mainCategory']);
     }
 }
