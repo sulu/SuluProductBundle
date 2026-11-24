@@ -7,14 +7,14 @@ sulu_mcp:
 
 services:
     test.sulu_product.mcp_product_update_tool:
-        alias: Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductUpdateTool
+        alias: sulu_product.mcp_tool_product_update
         public: true
     test.sulu_product.mcp_product_get_tool:
-        alias: Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductGetTool
+        alias: sulu_product.mcp_tool_product_get
         public: true
     test.sulu_product.product_create_tool:
-        alias: Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductCreateTool
+        alias: sulu_product.mcp_tool_product_create
         public: true
     test.sulu_product.product_variant_create_tool:
-        alias: Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductVariantCreateTool
+        alias: sulu_product.mcp_tool_product_variant_create
         public: true
