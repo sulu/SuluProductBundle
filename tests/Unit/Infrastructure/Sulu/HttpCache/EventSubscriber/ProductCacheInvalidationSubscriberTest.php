@@ -102,7 +102,7 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
             $this->webspaceManager->reveal(),
             $this->productRepository->reveal(),
             $this->referenceRepository->reveal(),
-            false,
+            'per_product',
         );
     }
 
@@ -166,7 +166,7 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
             $this->webspaceManager->reveal(),
             $this->productRepository->reveal(),
             $this->referenceRepository->reveal(),
-            true,
+            'per_variant',
         );
         $product = new Product('variant-uuid');
         $product->setParent(new Product('parent-uuid'));
@@ -607,7 +607,7 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
             $this->webspaceManager->reveal(),
             $this->productRepository->reveal(),
             $this->referenceRepository->reveal(),
-            true,
+            'per_variant',
         );
 
         $product = new Product('product-uuid-123');
@@ -634,7 +634,7 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
             $this->webspaceManager->reveal(),
             $this->productRepository->reveal(),
             $this->referenceRepository->reveal(),
-            true,
+            'per_variant',
         );
 
         $event = new ProductRemovedEvent(

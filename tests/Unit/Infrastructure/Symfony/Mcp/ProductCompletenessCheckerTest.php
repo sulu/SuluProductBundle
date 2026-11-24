@@ -87,7 +87,7 @@ final class ProductCompletenessCheckerTest extends TestCase
 
     public function testAProductWithVariantsNeedsAUrlButNoCodeWhenTheProductOwnsTheRoute(): void
     {
-        $checker = CompletenessCheckerFactory::create(null, ['en'], false);
+        $checker = CompletenessCheckerFactory::create(null, ['en'], 'per_product');
         $product = $this->productWithLocales(['en']);
         $product->setType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
@@ -99,7 +99,7 @@ final class ProductCompletenessCheckerTest extends TestCase
 
     public function testAVariantNeedsNoUrlWhenTheProductOwnsTheRoute(): void
     {
-        $checker = CompletenessCheckerFactory::create(null, ['en'], false);
+        $checker = CompletenessCheckerFactory::create(null, ['en'], 'per_product');
         $variant = $this->productWithLocales(['en']);
         $variant->setType(ProductInterface::TYPE_VARIANT);
 

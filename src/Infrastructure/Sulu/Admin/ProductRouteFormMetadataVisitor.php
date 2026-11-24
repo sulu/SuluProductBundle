@@ -21,6 +21,7 @@ use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\TagMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\TypedFormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\TypedFormMetadataVisitorInterface;
 use Sulu\Content\Application\ContentDataMapper\DataMapper\TemplateDataMapper;
+use Sulu\Product\Application\Routing\VariantRouting;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductInterface;
 
@@ -47,7 +48,7 @@ class ProductRouteFormMetadataVisitor implements FormMetadataVisitorInterface, T
     public function __construct(
         private readonly string $type,
         private readonly array $params,
-        private readonly bool $variantOwnsRoute,
+        private readonly string $variantRouting,
     ) {
     }
 
@@ -65,7 +66,7 @@ class ProductRouteFormMetadataVisitor implements FormMetadataVisitorInterface, T
         $this->applyRouteConfig($routeField);
 
         if (ProductInterface::FORM_KEY_VARIANT === $formMetadata->getKey()) {
-            if ($this->variantOwnsRoute) {
+            if (VariantRouting::PerVariant->value === $this->variantRouting) {
                 $routeField->setRequired(true);
 
                 return;
@@ -78,7 +79,7 @@ class ProductRouteFormMetadataVisitor implements FormMetadataVisitorInterface, T
             return;
         }
 
-        if (!$this->variantOwnsRoute) {
+        if (VariantRouting::PerProduct->value === $this->variantRouting) {
             $routeField->setVisibleCondition(null);
         }
     }

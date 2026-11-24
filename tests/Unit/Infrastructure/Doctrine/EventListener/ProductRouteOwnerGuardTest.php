@@ -160,11 +160,11 @@ class ProductRouteOwnerGuardTest extends TestCase
 
     private function guard(bool $perProduct = false): ProductRouteOwnerGuard
     {
-        $variantOwnsRoute = $perProduct
-            ? false
-            : true;
+        $variantRouting = $perProduct
+            ? 'per_product'
+            : 'per_variant';
 
-        return new ProductRouteOwnerGuard($variantOwnsRoute);
+        return new ProductRouteOwnerGuard($variantRouting);
     }
 
     private function createDimensionContent(string $type, ?Product $parent = null): ProductDimensionContent
