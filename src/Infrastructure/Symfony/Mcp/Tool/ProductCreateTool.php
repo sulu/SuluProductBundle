@@ -30,10 +30,10 @@ use Sulu\Mcp\Domain\Security\PermissionRequirement;
 use Sulu\Mcp\Domain\Security\RequiresPermission;
 use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushStamp;
 use Sulu\Product\Application\Message\CreateProductMessage;
-use Sulu\Product\Application\Routing\VariantRouting;
 use Sulu\Product\Domain\Exception\InvalidProductAssociationException;
 use Sulu\Product\Domain\Exception\UnknownLocaleException;
 use Sulu\Product\Domain\Model\ProductInterface;
+use Sulu\Product\Domain\Value\VariantRoutingEnum;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 use Sulu\Product\Infrastructure\Symfony\Mcp\ProductAssociationResolver;
 use Sulu\Product\Infrastructure\Symfony\Mcp\ProductCompletenessChecker;
@@ -73,7 +73,7 @@ final class ProductCreateTool
         private readonly ProductCompletenessChecker $completenessChecker,
         private readonly ProductUrlHelper $urlHelper,
         private readonly ProjectLocales $projectLocales,
-        private readonly string $variantRouting,
+        private readonly VariantRoutingEnum $variantRouting,
     ) {
         $this->messageBus = $messageBus;
     }
@@ -186,7 +186,7 @@ final class ProductCreateTool
                 $data['details'] = $details;
             }
 
-            if (($type ?? ProductInterface::TYPE_PRODUCT) !== (VariantRouting::PerVariant->value === $this->variantRouting ? ProductInterface::TYPE_PRODUCT_WITH_VARIANTS : ProductInterface::TYPE_VARIANT)) {
+            if (($type ?? ProductInterface::TYPE_PRODUCT) !== (VariantRoutingEnum::PER_VARIANT === $this->variantRouting ? ProductInterface::TYPE_PRODUCT_WITH_VARIANTS : ProductInterface::TYPE_VARIANT)) {
                 $data = $this->urlHelper->completeUrl($data, $locale);
             }
             $data = $this->urlHelper->completeUrlSuffix($data, $locale);
@@ -229,7 +229,7 @@ final class ProductCreateTool
                 'data' => $this->contentManager->normalize($dimensionContent),
             ];
 
-            if ($product->getType() !== (VariantRouting::PerVariant->value === $this->variantRouting ? ProductInterface::TYPE_PRODUCT_WITH_VARIANTS : ProductInterface::TYPE_VARIANT) && !ProductCompletenessChecker::hasUrl($result['data'])) {
+            if ($product->getType() !== (VariantRoutingEnum::PER_VARIANT === $this->variantRouting ? ProductInterface::TYPE_PRODUCT_WITH_VARIANTS : ProductInterface::TYPE_VARIANT) && !ProductCompletenessChecker::hasUrl($result['data'])) {
                 $result['warning'] = $this->urlHelper->warning($result['data'], $locale, $product->getUuid());
             }
 

@@ -21,6 +21,7 @@ use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\TagMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\TypedFormMetadata;
 use Sulu\Content\Application\ContentDataMapper\DataMapper\TemplateDataMapper;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
+use Sulu\Product\Domain\Value\VariantRoutingEnum;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductRouteFormMetadataVisitor;
 
 class ProductRouteFormMetadataVisitorTest extends TestCase
@@ -37,7 +38,7 @@ class ProductRouteFormMetadataVisitorTest extends TestCase
         $visitor = new ProductRouteFormMetadataVisitor('page_tree_route', [
             'route_schema' => '/products/{implode(\'-\', object)}',
             'available_locales' => true,
-        ], 'per_variant');
+        ], VariantRoutingEnum::PER_VARIANT);
         $visitor->visitFormMetadata($form, 'en', []);
 
         self::assertSame('page_tree_route', $routeField->getType());
@@ -63,7 +64,7 @@ class ProductRouteFormMetadataVisitorTest extends TestCase
         $form->setKey('product_details');
         $form->addItem($routeField);
 
-        $visitor = new ProductRouteFormMetadataVisitor('route', ['route_schema' => '/products/{object[\'code\']}'], 'per_variant');
+        $visitor = new ProductRouteFormMetadataVisitor('route', ['route_schema' => '/products/{object[\'code\']}'], VariantRoutingEnum::PER_VARIANT);
         $visitor->visitFormMetadata($form, 'en', []);
 
         self::assertSame('/products/{object[\'code\']}', $routeField->getOptions()['route_schema']->getValue());
@@ -83,7 +84,7 @@ class ProductRouteFormMetadataVisitorTest extends TestCase
         $form->setKey('product_details');
         $form->addItem($routeField);
 
-        $visitor = new ProductRouteFormMetadataVisitor('route', ['route_schema' => '/products/{object[\'code\']}'], 'per_variant');
+        $visitor = new ProductRouteFormMetadataVisitor('route', ['route_schema' => '/products/{object[\'code\']}'], VariantRoutingEnum::PER_VARIANT);
         $visitor->visitFormMetadata($form, 'en', []);
 
         self::assertSame('leaf', $routeField->getOptions()['mode']->getValue());
@@ -100,7 +101,7 @@ class ProductRouteFormMetadataVisitorTest extends TestCase
 
         $visitor = new ProductRouteFormMetadataVisitor('page_tree_route', [
             'route_schema' => '/products/{implode(\'-\', object)}',
-        ], 'per_variant');
+        ], VariantRoutingEnum::PER_VARIANT);
         $visitor->visitFormMetadata($form, 'en', []);
 
         self::assertSame('page_tree_route', $routeField->getType());
@@ -116,7 +117,7 @@ class ProductRouteFormMetadataVisitorTest extends TestCase
         $form->setKey('product_variant');
         $form->addItem($routeField);
 
-        $visitor = new ProductRouteFormMetadataVisitor('route', [], 'per_variant');
+        $visitor = new ProductRouteFormMetadataVisitor('route', [], VariantRoutingEnum::PER_VARIANT);
         $visitor->visitFormMetadata($form, 'en', []);
 
         self::assertTrue($routeField->isRequired());
@@ -131,7 +132,7 @@ class ProductRouteFormMetadataVisitorTest extends TestCase
         $form->setKey('product_details');
         $form->addItem($routeField);
 
-        $visitor = new ProductRouteFormMetadataVisitor('route', [], 'per_variant');
+        $visitor = new ProductRouteFormMetadataVisitor('route', [], VariantRoutingEnum::PER_VARIANT);
         $visitor->visitFormMetadata($form, 'en', []);
 
         self::assertFalse($routeField->isRequired());
@@ -147,7 +148,7 @@ class ProductRouteFormMetadataVisitorTest extends TestCase
         $form->setKey('product_details');
         $form->addItem($routeField);
 
-        $visitor = new ProductRouteFormMetadataVisitor('route', [], 'per_variant');
+        $visitor = new ProductRouteFormMetadataVisitor('route', [], VariantRoutingEnum::PER_VARIANT);
         $visitor->visitFormMetadata($form, 'en', []);
 
         self::assertSame('type != \'product_with_variants\'', $routeField->getVisibleCondition());
@@ -163,7 +164,7 @@ class ProductRouteFormMetadataVisitorTest extends TestCase
         $form->setKey('product_details');
         $form->addItem($routeField);
 
-        $visitor = new ProductRouteFormMetadataVisitor('page_tree_route', [], 'per_product');
+        $visitor = new ProductRouteFormMetadataVisitor('page_tree_route', [], VariantRoutingEnum::PER_PRODUCT);
         $visitor->visitFormMetadata($form, 'en', []);
 
         self::assertNull($routeField->getVisibleCondition());
@@ -182,7 +183,7 @@ class ProductRouteFormMetadataVisitorTest extends TestCase
         $form->addItem($titleField);
         $form->addItem($routeField);
 
-        $visitor = new ProductRouteFormMetadataVisitor('route', [], 'per_product');
+        $visitor = new ProductRouteFormMetadataVisitor('route', [], VariantRoutingEnum::PER_PRODUCT);
         $visitor->visitFormMetadata($form, 'en', []);
 
         self::assertSame(['title' => $titleField], $form->getItems());
@@ -197,7 +198,7 @@ class ProductRouteFormMetadataVisitorTest extends TestCase
         $form->setKey('some_other_form');
         $form->addItem($routeField);
 
-        $visitor = new ProductRouteFormMetadataVisitor('page_tree_route', ['route_schema' => '/products'], 'per_variant');
+        $visitor = new ProductRouteFormMetadataVisitor('page_tree_route', ['route_schema' => '/products'], VariantRoutingEnum::PER_VARIANT);
         $visitor->visitFormMetadata($form, 'en', []);
 
         self::assertSame('route', $routeField->getType());
@@ -210,7 +211,7 @@ class ProductRouteFormMetadataVisitorTest extends TestCase
         $form = new FormMetadata();
         $form->setKey('product_details');
 
-        $visitor = new ProductRouteFormMetadataVisitor('route', ['route_schema' => '/products'], 'per_variant');
+        $visitor = new ProductRouteFormMetadataVisitor('route', ['route_schema' => '/products'], VariantRoutingEnum::PER_VARIANT);
         $visitor->visitFormMetadata($form, 'en', []);
 
         self::assertSame([], $form->getItems());
@@ -226,7 +227,7 @@ class ProductRouteFormMetadataVisitorTest extends TestCase
 
         $visitor = new ProductRouteFormMetadataVisitor('route', [
             'route_schema' => '/products/{implode(\'-\', object)}',
-        ], 'per_variant');
+        ], VariantRoutingEnum::PER_VARIANT);
         $visitor->visitTypedFormMetadata($typedFormMetadata, ProductDimensionContent::getTemplateType(), 'en');
 
         $routeField = $form->getItems()['url'] ?? null;
@@ -265,7 +266,7 @@ class ProductRouteFormMetadataVisitorTest extends TestCase
         $form->addItem($routeField);
         $typedFormMetadata->addForm('product', $form);
 
-        $visitor = new ProductRouteFormMetadataVisitor('route', ['route_schema' => '/products'], 'per_variant');
+        $visitor = new ProductRouteFormMetadataVisitor('route', ['route_schema' => '/products'], VariantRoutingEnum::PER_VARIANT);
         $visitor->visitTypedFormMetadata($typedFormMetadata, ProductDimensionContent::getTemplateType(), 'en');
         $visitor->visitTypedFormMetadata($typedFormMetadata, ProductDimensionContent::getTemplateType(), 'en');
 
@@ -285,7 +286,7 @@ class ProductRouteFormMetadataVisitorTest extends TestCase
         $form->addItem($routeField);
         $typedFormMetadata->addForm('product', $form);
 
-        $visitor = new ProductRouteFormMetadataVisitor('page_tree_route', ['route_schema' => '/products'], 'per_variant');
+        $visitor = new ProductRouteFormMetadataVisitor('page_tree_route', ['route_schema' => '/products'], VariantRoutingEnum::PER_VARIANT);
         $visitor->visitTypedFormMetadata($typedFormMetadata, ProductDimensionContent::getTemplateType(), 'en');
 
         self::assertSame($routeField, $form->getItems()['url']);
@@ -301,7 +302,7 @@ class ProductRouteFormMetadataVisitorTest extends TestCase
         $form->setKey('default');
         $typedFormMetadata->addForm('default', $form);
 
-        $visitor = new ProductRouteFormMetadataVisitor('route', ['route_schema' => '/products'], 'per_variant');
+        $visitor = new ProductRouteFormMetadataVisitor('route', ['route_schema' => '/products'], VariantRoutingEnum::PER_VARIANT);
         $visitor->visitTypedFormMetadata($typedFormMetadata, 'page', 'en');
 
         self::assertSame([], $form->getItems());

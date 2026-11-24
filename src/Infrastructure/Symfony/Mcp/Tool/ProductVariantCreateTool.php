@@ -26,10 +26,10 @@ use Sulu\Mcp\Domain\Security\PermissionRequirement;
 use Sulu\Mcp\Domain\Security\RequiresPermission;
 use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushStamp;
 use Sulu\Product\Application\Message\CreateProductMessage;
-use Sulu\Product\Application\Routing\VariantRouting;
 use Sulu\Product\Domain\Exception\InvalidVariantParentException;
 use Sulu\Product\Domain\Exception\UnknownLocaleException;
 use Sulu\Product\Domain\Model\ProductInterface;
+use Sulu\Product\Domain\Value\VariantRoutingEnum;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductAdmin;
 use Sulu\Product\Infrastructure\Symfony\Mcp\ProductUrlHelper;
 use Sulu\Product\Infrastructure\Symfony\Mcp\ProjectLocales;
@@ -53,7 +53,7 @@ final class ProductVariantCreateTool
         private readonly AdminLinkGeneratorInterface $adminLinkGenerator,
         private readonly ProjectLocales $projectLocales,
         private readonly ProductUrlHelper $urlHelper,
-        private readonly string $variantRouting,
+        private readonly VariantRoutingEnum $variantRouting,
     ) {
         $this->messageBus = $messageBus;
     }
@@ -127,14 +127,14 @@ final class ProductVariantCreateTool
             if (null !== $details) {
                 $data['details'] = $details;
             }
-            if (null !== $url && VariantRouting::PerVariant->value === $this->variantRouting) {
+            if (null !== $url && VariantRoutingEnum::PER_VARIANT === $this->variantRouting) {
                 $data['url'] = $url;
             }
             if (null !== $attributes) {
                 $data['attributes'] = $this->variantParentResolver->stripInheritedAttributes($family, $attributes);
             }
 
-            if (VariantRouting::PerVariant->value === $this->variantRouting) {
+            if (VariantRoutingEnum::PER_VARIANT === $this->variantRouting) {
                 $data = $this->urlHelper->completeUrl($data, $locale, ProductInterface::FORM_KEY_VARIANT);
             }
 
@@ -157,7 +157,7 @@ final class ProductVariantCreateTool
                 'data' => $this->contentManager->normalize($dimensionContent),
             ];
 
-            if (null !== $url && VariantRouting::PerProduct->value === $this->variantRouting) {
+            if (null !== $url && VariantRoutingEnum::PER_PRODUCT === $this->variantRouting) {
                 $result['warning'] = 'The variant has no URL of its own with per_product routing, so "url" was ignored.';
             }
 

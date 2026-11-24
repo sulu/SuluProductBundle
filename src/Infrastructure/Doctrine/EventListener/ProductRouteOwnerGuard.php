@@ -14,9 +14,9 @@ declare(strict_types=1);
 namespace Sulu\Product\Infrastructure\Doctrine\EventListener;
 
 use Doctrine\ORM\Event\OnFlushEventArgs;
-use Sulu\Product\Application\Routing\VariantRouting;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
+use Sulu\Product\Domain\Value\VariantRoutingEnum;
 use Sulu\Route\Domain\Model\Route;
 
 /**
@@ -28,7 +28,7 @@ use Sulu\Route\Domain\Model\Route;
 class ProductRouteOwnerGuard
 {
     public function __construct(
-        private readonly string $variantRouting,
+        private readonly VariantRoutingEnum $variantRouting,
     ) {
     }
 
@@ -52,7 +52,7 @@ class ProductRouteOwnerGuard
                 continue;
             }
 
-            if ($entity->getResource()->getType() !== (VariantRouting::PerVariant->value === $this->variantRouting ? ProductInterface::TYPE_PRODUCT_WITH_VARIANTS : ProductInterface::TYPE_VARIANT)) {
+            if ($entity->getResource()->getType() !== (VariantRoutingEnum::PER_VARIANT === $this->variantRouting ? ProductInterface::TYPE_PRODUCT_WITH_VARIANTS : ProductInterface::TYPE_VARIANT)) {
                 continue;
             }
 

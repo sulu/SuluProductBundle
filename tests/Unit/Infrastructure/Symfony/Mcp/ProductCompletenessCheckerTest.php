@@ -22,6 +22,7 @@ use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductInterface;
+use Sulu\Product\Domain\Value\VariantRoutingEnum;
 use Sulu\Product\Infrastructure\Symfony\Mcp\ProductCompletenessChecker;
 use Sulu\Product\Tests\Unit\Fixture\ArrayMetadataProvider;
 use Sulu\Product\Tests\Unit\Fixture\CompletenessCheckerFactory;
@@ -87,7 +88,7 @@ final class ProductCompletenessCheckerTest extends TestCase
 
     public function testAProductWithVariantsNeedsAUrlButNoCodeWhenTheProductOwnsTheRoute(): void
     {
-        $checker = CompletenessCheckerFactory::create(null, ['en'], 'per_product');
+        $checker = CompletenessCheckerFactory::create(null, ['en'], VariantRoutingEnum::PER_PRODUCT);
         $product = $this->productWithLocales(['en']);
         $product->setType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
@@ -99,7 +100,7 @@ final class ProductCompletenessCheckerTest extends TestCase
 
     public function testAVariantNeedsNoUrlWhenTheProductOwnsTheRoute(): void
     {
-        $checker = CompletenessCheckerFactory::create(null, ['en'], 'per_product');
+        $checker = CompletenessCheckerFactory::create(null, ['en'], VariantRoutingEnum::PER_PRODUCT);
         $variant = $this->productWithLocales(['en']);
         $variant->setType(ProductInterface::TYPE_VARIANT);
 

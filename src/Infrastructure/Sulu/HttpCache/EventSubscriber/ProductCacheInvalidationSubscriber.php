@@ -21,12 +21,12 @@ use Sulu\Content\Application\ContentAggregator\ContentAggregatorInterface;
 use Sulu\Content\Domain\Exception\ContentNotFoundException;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Content\Domain\Model\WorkflowInterface;
-use Sulu\Product\Application\Routing\VariantRouting;
 use Sulu\Product\Domain\Event\ProductRemovedEvent;
 use Sulu\Product\Domain\Event\ProductWorkflowTransitionAppliedEvent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Domain\Value\VariantRoutingEnum;
 use Sulu\Route\Application\Routing\Generator\RouteGeneratorInterface;
 use Sulu\Route\Domain\Repository\RouteRepositoryInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -46,7 +46,7 @@ class ProductCacheInvalidationSubscriber implements EventSubscriberInterface
         private WebspaceManagerInterface $webspaceManager,
         private ProductRepositoryInterface $productRepository,
         private ReferenceRepositoryInterface $referenceRepository,
-        private string $variantRouting,
+        private VariantRoutingEnum $variantRouting,
     ) {
     }
 
@@ -77,7 +77,7 @@ class ProductCacheInvalidationSubscriber implements EventSubscriberInterface
         $this->cacheManager->invalidateTag($product->getUuid());
 
         // The page of the parent can list a variant that was not live when it was cached.
-        $parent = VariantRouting::PerVariant->value === $this->variantRouting ? null : $product->getParent();
+        $parent = VariantRoutingEnum::PER_VARIANT === $this->variantRouting ? null : $product->getParent();
         if (null !== $parent) {
             $this->cacheManager->invalidateTag($parent->getUuid());
         }

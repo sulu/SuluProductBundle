@@ -15,8 +15,8 @@ namespace Sulu\Product\Infrastructure\Sulu\Admin;
 
 use Sulu\Bundle\AdminBundle\Metadata\ListMetadata\ListMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\ListMetadata\ListMetadataVisitorInterface;
-use Sulu\Product\Application\Routing\VariantRouting;
 use Sulu\Product\Domain\Model\ProductInterface;
+use Sulu\Product\Domain\Value\VariantRoutingEnum;
 
 /**
  * Fills the status filter options from the configured statuses, which cannot be hardcoded in the
@@ -35,7 +35,7 @@ class ProductsListMetadataVisitor implements ListMetadataVisitorInterface
      */
     public function __construct(
         private readonly array $productStatuses,
-        private readonly string $variantRouting,
+        private readonly VariantRoutingEnum $variantRouting,
     ) {
     }
 
@@ -60,7 +60,7 @@ class ProductsListMetadataVisitor implements ListMetadataVisitorInterface
         if (\is_array($typeOptions)) {
             $excludeVariants = \filter_var($metadataOptions['excludeVariants'] ?? false, \FILTER_VALIDATE_BOOLEAN);
             foreach (\array_keys($typeOptions) as $type) {
-                if ($excludeVariants ? ProductInterface::TYPE_VARIANT === $type : (string) $type === (VariantRouting::PerVariant->value === $this->variantRouting ? ProductInterface::TYPE_PRODUCT_WITH_VARIANTS : ProductInterface::TYPE_VARIANT)) {
+                if ($excludeVariants ? ProductInterface::TYPE_VARIANT === $type : (string) $type === (VariantRoutingEnum::PER_VARIANT === $this->variantRouting ? ProductInterface::TYPE_PRODUCT_WITH_VARIANTS : ProductInterface::TYPE_VARIANT)) {
                     unset($typeOptions[$type]);
                 }
             }

@@ -34,6 +34,7 @@ use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Domain\Value\VariantRoutingEnum;
 use Sulu\Product\Infrastructure\Symfony\Mcp\ProductAssociationResolver;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductUpdateTool;
 use Sulu\Product\Tests\Unit\Fixture\ArrayMetadataProvider;
@@ -79,7 +80,7 @@ final class ProductUpdateToolTest extends TestCase
             CompletenessCheckerFactory::create(),
             ProductUrlHelperFactory::create(),
             ProjectLocalesFactory::create(),
-            'per_variant',
+            VariantRoutingEnum::PER_VARIANT,
         );
     }
 
@@ -379,7 +380,7 @@ final class ProductUpdateToolTest extends TestCase
                 return $envelope->with(new HandledStamp($product, 'handler'));
             });
 
-        $result = $this->toolWithVariantOwnsRoute('per_product')->updateProduct('uuid-1', 'en', title: 'Shirt');
+        $result = $this->toolWithVariantOwnsRoute(VariantRoutingEnum::PER_PRODUCT)->updateProduct('uuid-1', 'en', title: 'Shirt');
 
         $this->assertTrue($result['success']);
         $this->assertStringContainsString('sulu_product_update', \is_string($result['warning'] ?? null) ? $result['warning'] : '');
@@ -451,7 +452,7 @@ final class ProductUpdateToolTest extends TestCase
             CompletenessCheckerFactory::create(),
             ProductUrlHelperFactory::create(takenSlugs: ['/shirt'], ownProductUuid: 'uuid-1'),
             ProjectLocalesFactory::create(),
-            'per_variant',
+            VariantRoutingEnum::PER_VARIANT,
         );
         $captured = $this->givenProduct(['title' => 'Shirt']);
 
@@ -490,7 +491,7 @@ final class ProductUpdateToolTest extends TestCase
         $this->assertNotEmpty($result['hint']);
     }
 
-    private function toolWithVariantOwnsRoute(string $variantRouting): ProductUpdateTool
+    private function toolWithVariantOwnsRoute(VariantRoutingEnum $variantRouting): ProductUpdateTool
     {
         return new ProductUpdateTool(
             $this->messageBus->reveal(),
@@ -522,7 +523,7 @@ final class ProductUpdateToolTest extends TestCase
             CompletenessCheckerFactory::create(),
             ProductUrlHelperFactory::create(),
             ProjectLocalesFactory::create(),
-            'per_variant',
+            VariantRoutingEnum::PER_VARIANT,
         );
     }
 

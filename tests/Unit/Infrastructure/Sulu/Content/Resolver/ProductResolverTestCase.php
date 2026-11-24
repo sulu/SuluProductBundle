@@ -26,6 +26,7 @@ use Sulu\Content\Application\PropertyResolver\Resolver\DefaultPropertyResolver;
 use Sulu\Product\Application\Attribute\AttributeValueConverter;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Domain\Value\VariantRoutingEnum;
 use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductResolver;
 use Sulu\Product\Infrastructure\Sulu\Route\CurrentVariantProvider;
 use Sulu\Product\Infrastructure\Sulu\Route\ProductRouteDefaultsProvider;
@@ -53,7 +54,7 @@ abstract class ProductResolverTestCase extends TestCase
         array $variantProperties = ['title' => 'product.title', 'url' => 'product.url', 'code' => 'product.code', 'status' => 'product.status', 'position' => 'product.position'],
         ?ProductDimensionContentInterface $currentVariant = null,
         ?AttributeValueConverter $attributeValueConverter = null,
-        string $variantRouting = 'per_variant',
+        VariantRoutingEnum $variantRouting = VariantRoutingEnum::PER_VARIANT,
     ): ProductResolver {
         $requestStack = new RequestStack();
         $requestStack->push(new Request(attributes: [ProductRouteDefaultsProvider::VARIANT_ATTRIBUTE => $currentVariant]));

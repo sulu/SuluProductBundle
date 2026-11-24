@@ -20,6 +20,7 @@ use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Domain\Value\VariantRoutingEnum;
 use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductResolver;
 use Sulu\Route\Domain\Model\Route;
 
@@ -101,7 +102,7 @@ class ProductResolverTest extends ProductResolverTestCase
 
         $resolved = $this->resolveContent(
             $content,
-            resolver: $this->createResolver(variantRouting: 'per_product'),
+            resolver: $this->createResolver(variantRouting: VariantRoutingEnum::PER_PRODUCT),
         );
 
         self::assertArrayHasKey('url', $resolved);

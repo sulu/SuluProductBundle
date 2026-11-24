@@ -21,9 +21,9 @@ use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\TagMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\TypedFormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\TypedFormMetadataVisitorInterface;
 use Sulu\Content\Application\ContentDataMapper\DataMapper\TemplateDataMapper;
-use Sulu\Product\Application\Routing\VariantRouting;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductInterface;
+use Sulu\Product\Domain\Value\VariantRoutingEnum;
 
 /**
  * Applies the `sulu_product.route` configuration to the route field of the product forms, and adds
@@ -48,7 +48,7 @@ class ProductRouteFormMetadataVisitor implements FormMetadataVisitorInterface, T
     public function __construct(
         private readonly string $type,
         private readonly array $params,
-        private readonly string $variantRouting,
+        private readonly VariantRoutingEnum $variantRouting,
     ) {
     }
 
@@ -66,7 +66,7 @@ class ProductRouteFormMetadataVisitor implements FormMetadataVisitorInterface, T
         $this->applyRouteConfig($routeField);
 
         if (ProductInterface::FORM_KEY_VARIANT === $formMetadata->getKey()) {
-            if (VariantRouting::PerVariant->value === $this->variantRouting) {
+            if (VariantRoutingEnum::PER_VARIANT === $this->variantRouting) {
                 $routeField->setRequired(true);
 
                 return;
@@ -79,7 +79,7 @@ class ProductRouteFormMetadataVisitor implements FormMetadataVisitorInterface, T
             return;
         }
 
-        if (VariantRouting::PerProduct->value === $this->variantRouting) {
+        if (VariantRoutingEnum::PER_PRODUCT === $this->variantRouting) {
             $routeField->setVisibleCondition(null);
         }
     }
