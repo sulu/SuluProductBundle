@@ -127,14 +127,14 @@ final class ProductVariantCreateTool
             if (null !== $details) {
                 $data['details'] = $details;
             }
-            if (null !== $url && VariantRoutingEnum::PER_VARIANT === $this->variantRouting) {
+            if (null !== $url && $this->variantRouting->ownsRoute(ProductInterface::TYPE_VARIANT)) {
                 $data['url'] = $url;
             }
             if (null !== $attributes) {
                 $data['attributes'] = $this->variantParentResolver->stripInheritedAttributes($family, $attributes);
             }
 
-            if (VariantRoutingEnum::PER_VARIANT === $this->variantRouting) {
+            if ($this->variantRouting->ownsRoute(ProductInterface::TYPE_VARIANT)) {
                 $data = $this->urlHelper->completeUrl($data, $locale, ProductInterface::FORM_KEY_VARIANT);
             }
 
@@ -157,7 +157,7 @@ final class ProductVariantCreateTool
                 'data' => $this->contentManager->normalize($dimensionContent),
             ];
 
-            if (null !== $url && VariantRoutingEnum::PER_PRODUCT === $this->variantRouting) {
+            if (null !== $url && !$this->variantRouting->ownsRoute(ProductInterface::TYPE_VARIANT)) {
                 $result['warning'] = 'The variant has no URL of its own with per_product routing, so "url" was ignored.';
             }
 

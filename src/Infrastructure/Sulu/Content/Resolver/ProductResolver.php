@@ -305,7 +305,7 @@ class ProductResolver implements ResolverInterface
 
         // A product with variants that owns no route is reached through its variants.
         if ($dimensionContent->getResource()->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS)
-            && VariantRoutingEnum::PER_VARIANT === $this->variantRouting
+            && !$this->variantRouting->ownsRoute(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS)
         ) {
             unset($masterData['url']);
         }

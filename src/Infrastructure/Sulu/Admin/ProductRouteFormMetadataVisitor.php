@@ -66,7 +66,7 @@ class ProductRouteFormMetadataVisitor implements FormMetadataVisitorInterface, T
         $this->applyRouteConfig($routeField);
 
         if (ProductInterface::FORM_KEY_VARIANT === $formMetadata->getKey()) {
-            if (VariantRoutingEnum::PER_VARIANT === $this->variantRouting) {
+            if ($this->variantRouting->ownsRoute(ProductInterface::TYPE_VARIANT)) {
                 $routeField->setRequired(true);
 
                 return;
@@ -79,7 +79,7 @@ class ProductRouteFormMetadataVisitor implements FormMetadataVisitorInterface, T
             return;
         }
 
-        if (VariantRoutingEnum::PER_PRODUCT === $this->variantRouting) {
+        if ($this->variantRouting->ownsRoute(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS)) {
             $routeField->setVisibleCondition(null);
         }
     }
