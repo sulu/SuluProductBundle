@@ -19,10 +19,8 @@ use Sulu\Bundle\AdminBundle\Metadata\ListMetadata\FieldMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\ListMetadata\ListMetadata;
 use Sulu\Product\Application\Routing\PerProductSlugProvider;
 use Sulu\Product\Application\Routing\PerVariantSlugProvider;
-use Sulu\Product\Application\Routing\VariantUrlBuilder;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductsListMetadataVisitor;
-use Sulu\Route\Domain\Repository\RouteRepositoryInterface;
 
 #[CoversClass(ProductsListMetadataVisitor::class)]
 class ProductsListMetadataVisitorTest extends TestCase
@@ -70,7 +68,7 @@ class ProductsListMetadataVisitorTest extends TestCase
         $listMetadata->addField(new FieldMetadata('status'));
         $listMetadata->addField($typeField);
 
-        $visitor = new ProductsListMetadataVisitor([], new PerProductSlugProvider($this->createStub(RouteRepositoryInterface::class), new VariantUrlBuilder('variant')));
+        $visitor = new ProductsListMetadataVisitor([], new PerProductSlugProvider());
         $visitor->visitListMetadata($listMetadata, ProductInterface::LIST_KEY, 'en');
 
         $this->assertSame(

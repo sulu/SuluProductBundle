@@ -26,13 +26,10 @@ use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
-use Sulu\Route\Application\Routing\Generator\RouteGeneratorInterface;
 use Sulu\Route\Application\Routing\Matcher\RouteDefaultsProviderInterface;
-use Sulu\Route\Domain\Exception\MissingRequestContextParameterException;
 use Sulu\Route\Domain\Model\Route;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 /**
  * @internal this class is internal and should not be extended or relied on in custom code
@@ -51,7 +48,6 @@ class ProductRouteDefaultsProvider implements RouteDefaultsProviderInterface
         private ContentAggregatorInterface $contentAggregator,
         private MetadataProviderRegistry $metadataProviderRegistry,
         private CacheLifetimeResolverInterface $cacheLifetimeResolver,
-        private RouteGeneratorInterface $routeGenerator,
         private RequestStack $requestStack,
         private ?string $variantQueryParameter = null,
     ) {
@@ -97,11 +93,6 @@ class ProductRouteDefaultsProvider implements RouteDefaultsProviderInterface
             '_controller' => $templateMetadata->getController(),
             ...$variantDefaults,
         ];
-
-        $canonicalUrl = $this->resolveCanonicalUrl($route, $dimensionContent);
-        if (null !== $canonicalUrl) {
-            $defaults['_seo'] = ['canonicalUrl' => $canonicalUrl];
-        }
 
         $cacheLifetime = $this->getCacheLifetime($templateMetadata);
         if (null !== $cacheLifetime) {
@@ -151,28 +142,6 @@ class ProductRouteDefaultsProvider implements RouteDefaultsProviderInterface
         }
 
         return null;
-    }
-
-    /**
-     * With a query parameter every `?<parameter>=<value>` is a page of its own, so the product URL
-     * is the canonical one unless the editor set another.
-     */
-    private function resolveCanonicalUrl(Route $route, ProductDimensionContentInterface $dimensionContent): ?string
-    {
-        if (null === $this->variantQueryParameter || !\in_array($dimensionContent->getSeoCanonicalUrl(), [null, ''], true)) {
-            return null;
-        }
-
-        try {
-            return $this->routeGenerator->generate(
-                $route->getSlug(),
-                $route->getLocale(),
-                $route->getWebspace(),
-                UrlGeneratorInterface::ABSOLUTE_URL,
-            );
-        } catch (MissingRequestContextParameterException) {
-            return null;
-        }
     }
 
     private function loadContent(string $id, string $locale): ?ProductDimensionContentInterface

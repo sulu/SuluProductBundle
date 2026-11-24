@@ -31,7 +31,6 @@ use Sulu\Product\Application\Message\ModifyProductMessage;
 use Sulu\Product\Application\Routing\PerProductSlugProvider;
 use Sulu\Product\Application\Routing\PerVariantSlugProvider;
 use Sulu\Product\Application\Routing\ProductSlugProviderInterface;
-use Sulu\Product\Application\Routing\VariantUrlBuilder;
 use Sulu\Product\Domain\Association\ProductAssociationTypeRegistry;
 use Sulu\Product\Domain\Exception\ProductNotFoundException;
 use Sulu\Product\Domain\Model\Product;
@@ -47,7 +46,6 @@ use Sulu\Product\Tests\Unit\Fixture\FixedBlockIdGenerator;
 use Sulu\Product\Tests\Unit\Fixture\ProductContentMetadata;
 use Sulu\Product\Tests\Unit\Fixture\ProductUrlHelperFactory;
 use Sulu\Product\Tests\Unit\Fixture\ProjectLocalesFactory;
-use Sulu\Route\Domain\Repository\RouteRepositoryInterface;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
@@ -384,7 +382,7 @@ final class ProductUpdateToolTest extends TestCase
                 return $envelope->with(new HandledStamp($product, 'handler'));
             });
 
-        $result = $this->toolWithSlugProvider(new PerProductSlugProvider($this->createStub(RouteRepositoryInterface::class), new VariantUrlBuilder('variant')))->updateProduct('uuid-1', 'en', title: 'Shirt');
+        $result = $this->toolWithSlugProvider(new PerProductSlugProvider())->updateProduct('uuid-1', 'en', title: 'Shirt');
 
         $this->assertTrue($result['success']);
         $this->assertStringContainsString('sulu_product_update', \is_string($result['warning'] ?? null) ? $result['warning'] : '');

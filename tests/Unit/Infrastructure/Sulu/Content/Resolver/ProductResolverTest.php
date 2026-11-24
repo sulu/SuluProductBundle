@@ -109,27 +109,6 @@ class ProductResolverTest extends ProductResolverTestCase
         self::assertSame('/t-shirt', $resolved['url']->getContent());
     }
 
-    public function testAVariantIsLinkedByItsProductUrlInPerProductRouting(): void
-    {
-        $parent = new Product('parent-uuid');
-        $parent->setType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
-        $variant = new Product('variant-uuid');
-        $variant->setParent($parent);
-
-        $content = new ProductDimensionContent($variant);
-        $content->setLocale('de');
-        $content->setStage('live');
-        $content->setCode('T-SHIRT RED');
-
-        $resolved = $this->resolveContent(
-            $content,
-            resolver: $this->createResolver(slugProvider: $this->createPerProductSlugProvider('/t-shirt')),
-        );
-
-        self::assertInstanceOf(ContentView::class, $resolved['url']);
-        self::assertSame('/t-shirt?variant=T-SHIRT%20RED', $resolved['url']->getContent());
-    }
-
     public function testAReferenceResolvesVariantsWhenItAsksForThem(): void
     {
         $productRepository = $this->createMock(ProductRepositoryInterface::class);

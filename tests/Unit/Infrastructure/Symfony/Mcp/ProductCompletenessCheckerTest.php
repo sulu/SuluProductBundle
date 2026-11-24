@@ -20,14 +20,12 @@ use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\MetadataInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Product\Application\Routing\PerProductSlugProvider;
-use Sulu\Product\Application\Routing\VariantUrlBuilder;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Symfony\Mcp\ProductCompletenessChecker;
 use Sulu\Product\Tests\Unit\Fixture\ArrayMetadataProvider;
 use Sulu\Product\Tests\Unit\Fixture\CompletenessCheckerFactory;
-use Sulu\Route\Domain\Repository\RouteRepositoryInterface;
 
 #[CoversClass(ProductCompletenessChecker::class)]
 final class ProductCompletenessCheckerTest extends TestCase
@@ -90,7 +88,7 @@ final class ProductCompletenessCheckerTest extends TestCase
 
     public function testAProductWithVariantsNeedsAUrlButNoCodeWhenTheProductOwnsTheRoute(): void
     {
-        $checker = CompletenessCheckerFactory::create(null, ['en'], new PerProductSlugProvider($this->createStub(RouteRepositoryInterface::class), new VariantUrlBuilder('variant')));
+        $checker = CompletenessCheckerFactory::create(null, ['en'], new PerProductSlugProvider());
         $product = $this->productWithLocales(['en']);
         $product->setType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
 
@@ -102,7 +100,7 @@ final class ProductCompletenessCheckerTest extends TestCase
 
     public function testAVariantNeedsNoUrlWhenTheProductOwnsTheRoute(): void
     {
-        $checker = CompletenessCheckerFactory::create(null, ['en'], new PerProductSlugProvider($this->createStub(RouteRepositoryInterface::class), new VariantUrlBuilder('variant')));
+        $checker = CompletenessCheckerFactory::create(null, ['en'], new PerProductSlugProvider());
         $variant = $this->productWithLocales(['en']);
         $variant->setType(ProductInterface::TYPE_VARIANT);
 

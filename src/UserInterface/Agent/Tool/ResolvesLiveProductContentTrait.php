@@ -66,7 +66,7 @@ trait ResolvesLiveProductContentTrait
             'code' => $code,
             'title' => $title,
             'productFamily' => $unlocalized->getProductFamily()?->getTranslation($locale)?->getName(),
-            'url' => $urlGenerator->generate($localized, $locale, $code),
+            'url' => $urlGenerator->generate($localized, $locale),
         ];
     }
 }

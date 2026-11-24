@@ -16,25 +16,11 @@ namespace Sulu\Product\Tests\Unit\Application\Routing;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Product\Application\Routing\PerVariantSlugProvider;
-use Sulu\Product\Domain\Model\Product;
-use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductInterface;
-use Sulu\Route\Domain\Model\Route;
 
 #[CoversClass(PerVariantSlugProvider::class)]
 class PerVariantSlugProviderTest extends TestCase
 {
-    public function testUsesTheOwnRoute(): void
-    {
-        $provider = new PerVariantSlugProvider();
-
-        $content = new ProductDimensionContent(new Product('variant-uuid'));
-        self::assertNull($provider->getSlug($content));
-
-        $content->setRoute(new Route(ProductInterface::RESOURCE_KEY, 'variant-uuid', 'en', '/t-shirt-red'));
-        self::assertSame('/t-shirt-red', $provider->getSlug($content, 'IGNORED'));
-    }
-
     public function testEveryTypeButTheProductWithVariantsOwnsARoute(): void
     {
         $provider = new PerVariantSlugProvider();

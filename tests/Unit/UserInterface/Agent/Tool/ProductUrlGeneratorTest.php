@@ -16,9 +16,6 @@ namespace Sulu\Product\Tests\Unit\UserInterface\Agent\Tool;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
-use Sulu\Product\Application\Routing\PerProductSlugProvider;
-use Sulu\Product\Application\Routing\PerVariantSlugProvider;
-use Sulu\Product\Application\Routing\VariantUrlBuilder;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
@@ -27,54 +24,36 @@ use Sulu\Product\UserInterface\Agent\Tool\ProductUrlGenerator;
 use Sulu\Route\Application\Routing\Generator\RouteGeneratorInterface;
 use Sulu\Route\Domain\Exception\MissingRequestContextParameterException;
 use Sulu\Route\Domain\Model\Route;
-use Sulu\Route\Domain\Repository\RouteRepositoryInterface;
 
 #[CoversClass(ProductUrlGenerator::class)]
 class ProductUrlGeneratorTest extends TestCase
 {
     public function testGeneratesTheAbsoluteUrlWithTheLocalePrefix(): void
     {
-        $generator = new ProductUrlGenerator(new FakeRouteGenerator(), new PerVariantSlugProvider());
+        $generator = new ProductUrlGenerator(new FakeRouteGenerator());
 
         $this->assertSame('https://example.org/en/my-product', $generator->generate($this->localized('/my-product'), 'en'));
     }
 
     public function testWithoutARouteThereIsNoUrl(): void
     {
-        $generator = new ProductUrlGenerator(new FakeRouteGenerator(), new PerVariantSlugProvider());
+        $generator = new ProductUrlGenerator(new FakeRouteGenerator());
 
         $this->assertNull($generator->generate($this->localized(null), 'en'));
     }
 
     public function testAMissingRequestContextParameterYieldsNoUrl(): void
     {
-        $generator = new ProductUrlGenerator($this->throwing(new MissingRequestContextParameterException('host')), new PerVariantSlugProvider());
+        $generator = new ProductUrlGenerator($this->throwing(new MissingRequestContextParameterException('host')));
 
         $this->assertNull($generator->generate($this->localized('/my-product'), 'en'));
     }
 
     public function testARuntimeFailureOfTheRouteGeneratorYieldsNoUrl(): void
     {
-        $generator = new ProductUrlGenerator($this->throwing(new \RuntimeException('no webspace')), new PerVariantSlugProvider());
+        $generator = new ProductUrlGenerator($this->throwing(new \RuntimeException('no webspace')));
 
         $this->assertNull($generator->generate($this->localized('/my-product'), 'en'));
-    }
-
-    public function testLinksAVariantByItsProductUrlInPerProductRouting(): void
-    {
-        $parent = new Product('parent-uuid');
-        $variant = new Product('variant-uuid');
-        $variant->setParent($parent);
-        $localized = $variant->createDimensionContent();
-        $localized->setLocale('en');
-        $localized->setStage(DimensionContentInterface::STAGE_LIVE);
-
-        $routeRepository = $this->createStub(RouteRepositoryInterface::class);
-        $routeRepository->method('findFirstBy')->willReturn(new Route(ProductInterface::RESOURCE_KEY, 'parent-uuid', 'en', '/t-shirt'));
-
-        $generator = new ProductUrlGenerator(new FakeRouteGenerator(), new PerProductSlugProvider($routeRepository, new VariantUrlBuilder('variant')));
-
-        $this->assertSame('https://example.org/en/t-shirt?variant=RED', $generator->generate($localized, 'en', 'RED'));
     }
 
     private function throwing(\Throwable $exception): RouteGeneratorInterface

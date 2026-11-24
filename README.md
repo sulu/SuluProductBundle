@@ -48,13 +48,8 @@ variant has none: the field is removed from the variant overlay and the route gu
 variant's route. A variant is reached as `<product URL>?variant=<code>`, which renders the product
 with the variant as `product.currentVariant`. `query_parameter` renames the parameter. Without the
 parameter, or with a code that names no published variant of the product, the page renders the
-product with `currentVariant` null. Every URL the bundle emits for a variant takes that form:
-`product.url`, the entries of `product.variants`, teasers, the website search and the AI tools.
-The language switcher keeps the parameter in the locales the variant is published in. The sitemap
-lists the product only.
-
-The canonical URL of a product page is the product URL without the parameter, set through the
-`_seo` route default; a canonical URL the editor sets in the SEO tab wins.
+product with `currentVariant` null. The bundle generates no `?variant=` URL: building the link to a
+variant is up to the project.
 
 The MCP tools follow the mode: the create and update tools complete the URL of a product with
 variants and warn when it has none, the variant create tool ignores `url` and says so, and the
@@ -62,12 +57,7 @@ completeness hints ask a variant for no URL. A product selection offers only the
 route.
 
 The mode is chosen when a project is set up. Switching it later leaves the existing routes as they
-are, so the project migrates them itself. With `per_product` a cache without tag support purges the
-URL of the product and of the parent of a published variant, but not their `?variant=` entries; a
-tag-capable cache, which Sulu configures by default, purges them with the product and its variants.
-
-Every distinct `?variant=` value is its own cache entry, also a code that names no variant. A
-project that fronts the site with a shared cache limits the accepted query parameters there.
+are, so the project migrates them itself.
 
 ## Variant publishing
 

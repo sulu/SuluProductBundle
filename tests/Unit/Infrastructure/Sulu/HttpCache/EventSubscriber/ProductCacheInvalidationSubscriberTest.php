@@ -31,7 +31,6 @@ use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Content\Domain\Model\WorkflowInterface;
 use Sulu\Product\Application\Routing\PerProductSlugProvider;
 use Sulu\Product\Application\Routing\PerVariantSlugProvider;
-use Sulu\Product\Application\Routing\VariantUrlBuilder;
 use Sulu\Product\Domain\Event\ProductRemovedEvent;
 use Sulu\Product\Domain\Event\ProductWorkflowTransitionAppliedEvent;
 use Sulu\Product\Domain\Model\Product;
@@ -105,7 +104,7 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
             $this->webspaceManager->reveal(),
             $this->productRepository->reveal(),
             $this->referenceRepository->reveal(),
-            new PerProductSlugProvider($this->createStub(RouteRepositoryInterface::class), new VariantUrlBuilder('variant')),
+            new PerProductSlugProvider(),
         );
     }
 

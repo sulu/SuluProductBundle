@@ -22,10 +22,8 @@ use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\TypedFormMetadata;
 use Sulu\Content\Application\ContentDataMapper\DataMapper\TemplateDataMapper;
 use Sulu\Product\Application\Routing\PerProductSlugProvider;
 use Sulu\Product\Application\Routing\PerVariantSlugProvider;
-use Sulu\Product\Application\Routing\VariantUrlBuilder;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductRouteFormMetadataVisitor;
-use Sulu\Route\Domain\Repository\RouteRepositoryInterface;
 
 class ProductRouteFormMetadataVisitorTest extends TestCase
 {
@@ -167,7 +165,7 @@ class ProductRouteFormMetadataVisitorTest extends TestCase
         $form->setKey('product_details');
         $form->addItem($routeField);
 
-        $visitor = new ProductRouteFormMetadataVisitor('page_tree_route', [], new PerProductSlugProvider($this->createStub(RouteRepositoryInterface::class), new VariantUrlBuilder('variant')));
+        $visitor = new ProductRouteFormMetadataVisitor('page_tree_route', [], new PerProductSlugProvider());
         $visitor->visitFormMetadata($form, 'en', []);
 
         self::assertNull($routeField->getVisibleCondition());
@@ -186,7 +184,7 @@ class ProductRouteFormMetadataVisitorTest extends TestCase
         $form->addItem($titleField);
         $form->addItem($routeField);
 
-        $visitor = new ProductRouteFormMetadataVisitor('route', [], new PerProductSlugProvider($this->createStub(RouteRepositoryInterface::class), new VariantUrlBuilder('variant')));
+        $visitor = new ProductRouteFormMetadataVisitor('route', [], new PerProductSlugProvider());
         $visitor->visitFormMetadata($form, 'en', []);
 
         self::assertSame(['title' => $titleField], $form->getItems());

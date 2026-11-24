@@ -24,13 +24,11 @@ use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Product\Application\Routing\PerProductSlugProvider;
 use Sulu\Product\Application\Routing\PerVariantSlugProvider;
-use Sulu\Product\Application\Routing\VariantUrlBuilder;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Doctrine\EventListener\ProductRouteOwnerGuard;
 use Sulu\Route\Domain\Model\Route;
-use Sulu\Route\Domain\Repository\RouteRepositoryInterface;
 
 #[CoversClass(ProductRouteOwnerGuard::class)]
 class ProductRouteOwnerGuardTest extends TestCase
@@ -165,7 +163,7 @@ class ProductRouteOwnerGuardTest extends TestCase
     private function guard(bool $perProduct = false): ProductRouteOwnerGuard
     {
         $slugProvider = $perProduct
-            ? new PerProductSlugProvider($this->createStub(RouteRepositoryInterface::class), new VariantUrlBuilder('variant'))
+            ? new PerProductSlugProvider()
             : new PerVariantSlugProvider();
 
         return new ProductRouteOwnerGuard($slugProvider);

@@ -36,10 +36,7 @@ use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Route\ProductRouteDefaultsProvider;
-use Sulu\Product\Tests\Unit\UserInterface\Agent\Tool\Fixtures\FakeRouteGenerator;
-use Sulu\Route\Application\Routing\Generator\RouteGeneratorInterface;
 use Sulu\Route\Application\Routing\Matcher\RouteDefaultsProviderInterface;
-use Sulu\Route\Domain\Exception\MissingRequestContextParameterException;
 use Sulu\Route\Domain\Model\Route;
 use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\HttpFoundation\Request;
@@ -70,7 +67,7 @@ class ProductRouteDefaultsProviderTest extends TestCase
         $this->metadataProviderRegistry = new MetadataProviderRegistry($container);
     }
 
-    protected function getProductRouteDefaultsProviderInstance(?Request $request = null, ?string $variantQueryParameter = null, ?RouteGeneratorInterface $routeGenerator = null): RouteDefaultsProviderInterface
+    protected function getProductRouteDefaultsProviderInstance(?Request $request = null, ?string $variantQueryParameter = null): RouteDefaultsProviderInterface
     {
         $requestStack = new RequestStack();
         if (null !== $request) {
@@ -82,7 +79,6 @@ class ProductRouteDefaultsProviderTest extends TestCase
             $this->contentAggregator->reveal(),
             $this->metadataProviderRegistry,
             $this->cacheLifetimeResolver,
-            $routeGenerator ?? new FakeRouteGenerator(),
             $requestStack,
             $variantQueryParameter,
         );
@@ -383,42 +379,6 @@ class ProductRouteDefaultsProviderTest extends TestCase
         $result = $provider->getDefaults(new Route(ProductInterface::RESOURCE_KEY, '123-123-123', 'en', '/test-product'));
 
         $this->assertArrayNotHasKey(ProductRouteDefaultsProvider::VARIANT_ATTRIBUTE, $result);
-        $this->assertArrayNotHasKey('_seo', $result);
-    }
-
-    public function testGetDefaultsSetsTheProductUrlAsCanonicalWhenAProductUrlTakesAQueryParameter(): void
-    {
-        $provider = $this->getProductRouteDefaultsProviderInstance(new Request(), 'variant');
-
-        $this->prepareProduct();
-
-        $result = $provider->getDefaults(new Route(ProductInterface::RESOURCE_KEY, '123-123-123', 'en', '/test-product'));
-
-        $this->assertSame(['canonicalUrl' => 'https://example.org/en/test-product'], $result['_seo']);
-    }
-
-    public function testGetDefaultsLeavesOutTheCanonicalUrlWhenNoUrlCanBeGenerated(): void
-    {
-        $routeGenerator = $this->createStub(RouteGeneratorInterface::class);
-        $routeGenerator->method('generate')->willThrowException(new MissingRequestContextParameterException('host'));
-        $provider = $this->getProductRouteDefaultsProviderInstance(new Request(), 'variant', $routeGenerator);
-
-        $this->prepareProduct();
-
-        $result = $provider->getDefaults(new Route(ProductInterface::RESOURCE_KEY, '123-123-123', 'en', '/test-product'));
-
-        $this->assertArrayNotHasKey('_seo', $result);
-    }
-
-    public function testGetDefaultsKeepsTheCanonicalUrlTheEditorSet(): void
-    {
-        $provider = $this->getProductRouteDefaultsProviderInstance(new Request(), 'variant');
-
-        [, $productContent] = $this->prepareProduct();
-        $productContent->setSeoData(['canonicalUrl' => 'https://example.org/own']);
-
-        $result = $provider->getDefaults(new Route(ProductInterface::RESOURCE_KEY, '123-123-123', 'en', '/test-product'));
-
         $this->assertArrayNotHasKey('_seo', $result);
     }
 
