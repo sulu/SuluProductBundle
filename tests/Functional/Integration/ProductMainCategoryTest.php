@@ -19,10 +19,10 @@ use Sulu\Bundle\CategoryBundle\Entity\Category;
 use Sulu\Bundle\CategoryBundle\Entity\CategoryTranslation;
 use Sulu\Bundle\TestBundle\Testing\SuluTestCase;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
-use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductMainCategoryDataMapper;
+use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductDetailsDataMapper;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 
-#[CoversClass(ProductMainCategoryDataMapper::class)]
+#[CoversClass(ProductDetailsDataMapper::class)]
 class ProductMainCategoryTest extends SuluTestCase
 {
     private KernelBrowser $client;

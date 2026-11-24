@@ -130,7 +130,6 @@ use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\AdditionalWebspacesDataM
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductAssociationsDataMapper;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductAttributesDataMapper;
 use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductDetailsDataMapper;
-use Sulu\Product\Infrastructure\Sulu\Content\DataMapper\ProductMainCategoryDataMapper;
 use Sulu\Product\Infrastructure\Sulu\Content\Merger\AdditionalWebspacesMerger;
 use Sulu\Product\Infrastructure\Sulu\Content\Merger\ProductAssociationsMerger;
 use Sulu\Product\Infrastructure\Sulu\Content\Merger\ProductAttributesMerger;
@@ -679,6 +678,9 @@ final class SuluProductBundle extends AbstractBundle
                 new Reference('sulu_product.product_family_repository'),
                 new Reference('sulu_product.product_repository'),
                 '%sulu_product.product_statuses%',
+                new Reference('sulu_content.category_factory'),
+                new Reference('sulu.repository.category'),
+                '%sulu_product.main_category.root_key%',
             ])
             ->tag('sulu_content.data_mapper', ['priority' => 10]);
 
@@ -687,15 +689,6 @@ final class SuluProductBundle extends AbstractBundle
             ->class(ProductAttributesDataMapper::class)
             ->args([
                 new Reference('sulu_product.attribute_value_converter'),
-            ])
-            ->tag('sulu_content.data_mapper', ['priority' => -10]);
-
-        $services->set('sulu_product.product_main_category_data_mapper')
-            ->class(ProductMainCategoryDataMapper::class)
-            ->args([
-                new Reference('sulu_content.category_factory'),
-                new Reference('sulu.repository.category'),
-                '%sulu_product.main_category.root_key%',
             ])
             ->tag('sulu_content.data_mapper', ['priority' => -10]);
 

@@ -15,14 +15,19 @@ namespace Sulu\Product\Infrastructure\Sulu\Content\DataMapper;
 
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\FormMetadata\FormMetadataLoaderInterface;
+use Sulu\Bundle\CategoryBundle\Entity\CategoryInterface;
+use Sulu\Bundle\CategoryBundle\Entity\CategoryRepositoryInterface;
 use Sulu\Content\Application\ContentDataMapper\DataMapper\DataMapperInterface;
+use Sulu\Content\Domain\Factory\CategoryFactoryInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Product\Domain\Exception\InvalidMainCategoryException;
 use Sulu\Product\Domain\Exception\InvalidProductStatusException;
 use Sulu\Product\Domain\Exception\ProductCodeNotUniqueException;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Webmozart\Assert\Assert;
 
 class ProductDetailsDataMapper implements DataMapperInterface
 {
@@ -34,6 +39,9 @@ class ProductDetailsDataMapper implements DataMapperInterface
         private readonly ProductFamilyRepositoryInterface $productFamilyRepository,
         private readonly ProductRepositoryInterface $productRepository,
         private readonly array $allowedStatuses,
+        private readonly CategoryFactoryInterface $categoryFactory,
+        private readonly CategoryRepositoryInterface $categoryRepository,
+        private readonly ?string $mainCategoryRootKey,
     ) {
     }
 
@@ -52,6 +60,12 @@ class ProductDetailsDataMapper implements DataMapperInterface
             /** @var string|null $title */
             $title = $data['title'];
             $localizedDimensionContent->setTitle($title);
+        }
+
+        if ($localizedDimensionContent instanceof ProductDimensionContentInterface
+            && \array_key_exists('mainCategory', $data)
+        ) {
+            $this->mapMainCategory($localizedDimensionContent, $data['mainCategory']);
         }
 
         if (\array_key_exists('code', $data)) {
@@ -88,6 +102,43 @@ class ProductDetailsDataMapper implements DataMapperInterface
         }
 
         $this->mapDetailsData($unlocalizedDimensionContent, $localizedDimensionContent, $data);
+    }
+
+    /**
+     * The taxonomy mapper (priority 63) runs before this mapper (priority 10) and replaces the excerpt categories.
+     * Mapping the main category after it keeps a removed main category from coming back with a stale list.
+     */
+    private function mapMainCategory(ProductDimensionContentInterface $localizedDimensionContent, mixed $mainCategoryId): void
+    {
+        Assert::nullOrInteger($mainCategoryId);
+
+        $mainCategory = null === $mainCategoryId
+            ? null
+            : ($this->categoryFactory->create([$mainCategoryId])[0] ?? null);
+
+        // A stored main category stays valid when the root key changes later, so publishing keeps working.
+        if (null !== $mainCategory && $mainCategory !== $localizedDimensionContent->getMainCategory()) {
+            $this->assertBelowRoot($mainCategory);
+        }
+
+        $localizedDimensionContent->setMainCategory($mainCategory);
+    }
+
+    private function assertBelowRoot(CategoryInterface $mainCategory): void
+    {
+        if (null === $this->mainCategoryRootKey) {
+            return;
+        }
+
+        /** @var CategoryInterface|null $root */
+        $root = $this->categoryRepository->findCategoryByKey($this->mainCategoryRootKey);
+
+        if (null === $root
+            || $mainCategory->getLft() <= $root->getLft()
+            || $mainCategory->getRgt() >= $root->getRgt()
+        ) {
+            throw new InvalidMainCategoryException($mainCategory->getId(), $this->mainCategoryRootKey);
+        }
     }
 
     /**
