@@ -13,10 +13,14 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Infrastructure\Symfony\HttpKernel;
 
+use Sulu\Bundle\AdminBundle\Application\BlockIdGenerator\BlockIdGeneratorInterface;
 use Sulu\Bundle\HttpCacheBundle\ReferenceStore\ReferenceStore;
 use Sulu\Bundle\PersistenceBundle\DependencyInjection\PersistenceExtensionTrait;
 use Sulu\Bundle\PersistenceBundle\PersistenceBundleTrait;
 use Sulu\Content\Infrastructure\Sulu\Preview\ContentObjectProvider;
+use Sulu\Mcp\Application\AdminLink\AdminLinkGeneratorInterface;
+use Sulu\Mcp\Application\Content\BlockDataValidator;
+use Sulu\Mcp\Application\Content\ContentMetadataMapper;
 use Sulu\Mcp\Domain\Content\ContentTypeExtensionInterface;
 use Sulu\Product\Application\Attribute\AttributeDisplayFormatter;
 use Sulu\Product\Application\Attribute\AttributeValueConverter;
@@ -1606,14 +1610,20 @@ final class SuluProductBundle extends AbstractBundle
     private function registerMcpIntegration(ServicesConfigurator $services): void
     {
         $services->set(ProductContentTypeExtension::class)
-            ->autowire()
+            ->args([new Reference('sulu_product.product_repository')])
             ->tag('sulu_mcp.content_type_extension');
 
         $services->set(VariantParentResolver::class)
-            ->autowire();
+            ->args([
+                new Reference('sulu_product.product_repository'),
+                new Reference('sulu_product.product_family_repository'),
+            ]);
 
         $services->set(ProductAssociationResolver::class)
-            ->autowire();
+            ->args([
+                new Reference('sulu_product.product_repository'),
+                new Reference('sulu_product.association_type_registry'),
+            ]);
 
         $services->set(ProjectLocales::class)
             ->arg('$webspaceManager', new Reference('sulu_core.webspace.webspace_manager'));
@@ -1633,29 +1643,108 @@ final class SuluProductBundle extends AbstractBundle
         // sulu_admin.view_registry only exists in the admin container.
         foreach ([McpProductAdminLinkProvider::class, McpProductVariantAdminLinkProvider::class] as $adminLinkProvider) {
             $services->set($adminLinkProvider)
-                ->autowire()
                 ->arg('$viewRegistry', new Reference('sulu_admin.view_registry'))
                 ->tag('sulu_mcp.admin_link_provider')
                 ->tag('sulu.context', ['context' => 'admin']);
         }
 
-        foreach ([
-            ProductGetTool::class,
-            ProductAssociationTypeListTool::class,
-            ProductListTool::class,
-            ProductCreateTool::class,
-            ProductUpdateTool::class,
-            ProductVariantListTool::class,
-            ProductVariantCreateTool::class,
-            ProductVariantUpdateTool::class,
-            ProductFamilyListTool::class,
-            AttributeListTool::class,
-        ] as $mcpTool) {
-            // autoconfigure() is what picks up #[McpTool]; this bundle does not enable it by default.
-            $services->set($mcpTool)
-                ->autowire()
-                ->autoconfigure();
-        }
+        // autoconfigure() is what picks up #[McpTool]; this bundle does not enable it by default.
+        $services->set(ProductGetTool::class)
+            ->autoconfigure()
+            ->args([
+                new Reference('sulu_product.product_repository'),
+                new Reference('sulu_content.content_manager'),
+                new Reference(ProductCompletenessChecker::class),
+                new Reference(ProjectLocales::class),
+            ]);
+
+        $services->set(ProductAssociationTypeListTool::class)
+            ->autoconfigure()
+            ->args([
+                new Reference('sulu_product.association_type_registry'),
+                new Reference('translator'),
+            ]);
+
+        $services->set(ProductListTool::class)
+            ->autoconfigure()
+            ->args([
+                new Reference('sulu_product.product_repository'),
+                new Reference('sulu_content.content_manager'),
+            ]);
+
+        $services->set(ProductCreateTool::class)
+            ->autoconfigure()
+            ->args([
+                new Reference('sulu_message_bus'),
+                new Reference('sulu_content.content_manager'),
+                new Reference(ContentMetadataMapper::class),
+                new Reference(BlockDataValidator::class),
+                new Reference(BlockIdGeneratorInterface::class),
+                new Reference(AdminLinkGeneratorInterface::class),
+                new Reference(ProductAssociationResolver::class),
+                new Reference(ProductCompletenessChecker::class),
+                new Reference(ProductUrlHelper::class),
+                new Reference(ProjectLocales::class),
+            ]);
+
+        $services->set(ProductUpdateTool::class)
+            ->autoconfigure()
+            ->args([
+                new Reference('sulu_message_bus'),
+                new Reference('sulu_content.content_manager'),
+                new Reference('sulu_product.product_repository'),
+                new Reference(ContentMetadataMapper::class),
+                new Reference(BlockDataValidator::class),
+                new Reference(BlockIdGeneratorInterface::class),
+                new Reference(AdminLinkGeneratorInterface::class),
+                new Reference(ProductAssociationResolver::class),
+                new Reference(ProductCompletenessChecker::class),
+                new Reference(ProductUrlHelper::class),
+                new Reference(ProjectLocales::class),
+            ]);
+
+        $services->set(ProductVariantListTool::class)
+            ->autoconfigure()
+            ->args([
+                new Reference('sulu_product.product_repository'),
+                new Reference('sulu_content.content_manager'),
+            ]);
+
+        $services->set(ProductVariantCreateTool::class)
+            ->autoconfigure()
+            ->args([
+                new Reference('sulu_message_bus'),
+                new Reference('sulu_content.content_manager'),
+                new Reference(VariantParentResolver::class),
+                new Reference(AdminLinkGeneratorInterface::class),
+                new Reference(ProjectLocales::class),
+                new Reference(ProductUrlHelper::class),
+            ]);
+
+        $services->set(ProductVariantUpdateTool::class)
+            ->autoconfigure()
+            ->args([
+                new Reference('sulu_message_bus'),
+                new Reference('sulu_content.content_manager'),
+                new Reference('sulu_product.product_repository'),
+                new Reference(VariantParentResolver::class),
+                new Reference(AdminLinkGeneratorInterface::class),
+                new Reference(ProjectLocales::class),
+            ]);
+
+        $services->set(ProductFamilyListTool::class)
+            ->autoconfigure()
+            ->args([
+                new Reference('sulu_product.product_family_repository'),
+                new Reference('sulu_core.list_builder.field_descriptor_factory'),
+                new Reference('sulu_core.doctrine_list_builder_factory'),
+            ]);
+
+        $services->set(AttributeListTool::class)
+            ->autoconfigure()
+            ->args([
+                new Reference('sulu_product.attribute_repository'),
+            ]);
 
         $services->set(McpGetProductsTool::class)
             ->autoconfigure()

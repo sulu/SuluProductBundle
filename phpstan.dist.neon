@@ -25,6 +25,9 @@ parameters:
         -
             method: 'Doctrine\Common\Collections\Collection::clear()'
             message: 'use add and removeElement methods instead of clear to avoid unintended data loss if domain event listeners reflush during postFlush event'
+        -
+            method: 'Symfony\Component\DependencyInjection\Loader\Configurator\Traits\AutowireTrait::autowire()'
+            message: 'do not autowire services in the bundle, pass every argument explicitly'
     symfony:
         containerXmlPath: %currentWorkingDirectory%/tests/Application/var/cache/admin/test/default/Sulu_Product_Tests_Application_KernelTestDebugContainer.xml
         consoleApplicationLoader: tests/phpstan/console-application.php
