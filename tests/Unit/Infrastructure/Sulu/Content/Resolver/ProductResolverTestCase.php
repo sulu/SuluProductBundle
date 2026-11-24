@@ -24,9 +24,6 @@ use Sulu\Content\Application\MetadataResolver\MetadataResolver;
 use Sulu\Content\Application\PropertyResolver\PropertyResolverProviderInterface;
 use Sulu\Content\Application\PropertyResolver\Resolver\DefaultPropertyResolver;
 use Sulu\Product\Application\Attribute\AttributeValueConverter;
-use Sulu\Product\Application\Routing\PerProductSlugProvider;
-use Sulu\Product\Application\Routing\PerVariantSlugProvider;
-use Sulu\Product\Application\Routing\ProductSlugProviderInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\Resolver\ProductResolver;
@@ -56,7 +53,7 @@ abstract class ProductResolverTestCase extends TestCase
         array $variantProperties = ['title' => 'product.title', 'url' => 'product.url', 'code' => 'product.code', 'status' => 'product.status', 'position' => 'product.position'],
         ?ProductDimensionContentInterface $currentVariant = null,
         ?AttributeValueConverter $attributeValueConverter = null,
-        ?ProductSlugProviderInterface $slugProvider = null,
+        bool $variantOwnsRoute = true,
     ): ProductResolver {
         $requestStack = new RequestStack();
         $requestStack->push(new Request(attributes: [ProductRouteDefaultsProvider::VARIANT_ATTRIBUTE => $currentVariant]));
@@ -70,14 +67,9 @@ abstract class ProductResolverTestCase extends TestCase
             $referenceStore ?? new ReferenceStore(),
             $attributeValueConverter ?? ProductAttributeFragmentLoader::converter(),
             AttributeTypes::formatter(),
-            $slugProvider ?? new PerVariantSlugProvider(),
+            $variantOwnsRoute,
             $variantProperties,
         );
-    }
-
-    protected function createPerProductSlugProvider(): ProductSlugProviderInterface
-    {
-        return new PerProductSlugProvider();
     }
 
     /**

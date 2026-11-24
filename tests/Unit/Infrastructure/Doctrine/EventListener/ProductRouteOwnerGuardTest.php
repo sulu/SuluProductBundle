@@ -22,8 +22,6 @@ use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
-use Sulu\Product\Application\Routing\PerProductSlugProvider;
-use Sulu\Product\Application\Routing\PerVariantSlugProvider;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductInterface;
@@ -162,11 +160,11 @@ class ProductRouteOwnerGuardTest extends TestCase
 
     private function guard(bool $perProduct = false): ProductRouteOwnerGuard
     {
-        $slugProvider = $perProduct
-            ? new PerProductSlugProvider()
-            : new PerVariantSlugProvider();
+        $variantOwnsRoute = $perProduct
+            ? false
+            : true;
 
-        return new ProductRouteOwnerGuard($slugProvider);
+        return new ProductRouteOwnerGuard($variantOwnsRoute);
     }
 
     private function createDimensionContent(string $type, ?Product $parent = null): ProductDimensionContent

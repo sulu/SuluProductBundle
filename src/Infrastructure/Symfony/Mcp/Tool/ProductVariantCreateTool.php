@@ -26,7 +26,6 @@ use Sulu\Mcp\Domain\Security\PermissionRequirement;
 use Sulu\Mcp\Domain\Security\RequiresPermission;
 use Sulu\Messenger\Infrastructure\Symfony\Messenger\FlushMiddleware\EnableFlushStamp;
 use Sulu\Product\Application\Message\CreateProductMessage;
-use Sulu\Product\Application\Routing\ProductSlugProviderInterface;
 use Sulu\Product\Domain\Exception\InvalidVariantParentException;
 use Sulu\Product\Domain\Exception\UnknownLocaleException;
 use Sulu\Product\Domain\Model\ProductInterface;
@@ -53,7 +52,7 @@ final class ProductVariantCreateTool
         private readonly AdminLinkGeneratorInterface $adminLinkGenerator,
         private readonly ProjectLocales $projectLocales,
         private readonly ProductUrlHelper $urlHelper,
-        private readonly ProductSlugProviderInterface $slugProvider,
+        private readonly bool $variantOwnsRoute,
     ) {
         $this->messageBus = $messageBus;
     }
@@ -109,8 +108,6 @@ final class ProductVariantCreateTool
             ];
         }
 
-        $ownsRoute = $this->slugProvider->ownsRoute(ProductInterface::TYPE_VARIANT);
-
         try {
             $data = [
                 'locale' => $locale,
@@ -129,14 +126,14 @@ final class ProductVariantCreateTool
             if (null !== $details) {
                 $data['details'] = $details;
             }
-            if (null !== $url && $ownsRoute) {
+            if (null !== $url && $this->variantOwnsRoute) {
                 $data['url'] = $url;
             }
             if (null !== $attributes) {
                 $data['attributes'] = $this->variantParentResolver->stripInheritedAttributes($family, $attributes);
             }
 
-            if ($ownsRoute) {
+            if ($this->variantOwnsRoute) {
                 $data = $this->urlHelper->completeUrl($data, $locale, ProductInterface::FORM_KEY_VARIANT);
             }
 
@@ -159,7 +156,7 @@ final class ProductVariantCreateTool
                 'data' => $this->contentManager->normalize($dimensionContent),
             ];
 
-            if (null !== $url && !$ownsRoute) {
+            if (null !== $url && !$this->variantOwnsRoute) {
                 $result['warning'] = 'The variant has no URL of its own with per_product routing, so "url" was ignored.';
             }
 

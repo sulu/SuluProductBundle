@@ -29,8 +29,6 @@ use Sulu\Content\Application\ContentAggregator\ContentAggregatorInterface;
 use Sulu\Content\Domain\Exception\ContentNotFoundException;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Content\Domain\Model\WorkflowInterface;
-use Sulu\Product\Application\Routing\PerProductSlugProvider;
-use Sulu\Product\Application\Routing\PerVariantSlugProvider;
 use Sulu\Product\Domain\Event\ProductRemovedEvent;
 use Sulu\Product\Domain\Event\ProductWorkflowTransitionAppliedEvent;
 use Sulu\Product\Domain\Model\Product;
@@ -104,7 +102,7 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
             $this->webspaceManager->reveal(),
             $this->productRepository->reveal(),
             $this->referenceRepository->reveal(),
-            new PerProductSlugProvider(),
+            false,
         );
     }
 
@@ -168,7 +166,7 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
             $this->webspaceManager->reveal(),
             $this->productRepository->reveal(),
             $this->referenceRepository->reveal(),
-            new PerVariantSlugProvider(),
+            true,
         );
         $product = new Product('variant-uuid');
         $product->setParent(new Product('parent-uuid'));
@@ -609,7 +607,7 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
             $this->webspaceManager->reveal(),
             $this->productRepository->reveal(),
             $this->referenceRepository->reveal(),
-            new PerVariantSlugProvider(),
+            true,
         );
 
         $product = new Product('product-uuid-123');
@@ -636,7 +634,7 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
             $this->webspaceManager->reveal(),
             $this->productRepository->reveal(),
             $this->referenceRepository->reveal(),
-            new PerVariantSlugProvider(),
+            true,
         );
 
         $event = new ProductRemovedEvent(

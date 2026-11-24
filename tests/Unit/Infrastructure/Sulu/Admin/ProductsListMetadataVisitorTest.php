@@ -17,8 +17,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Sulu\Bundle\AdminBundle\Metadata\ListMetadata\FieldMetadata;
 use Sulu\Bundle\AdminBundle\Metadata\ListMetadata\ListMetadata;
-use Sulu\Product\Application\Routing\PerProductSlugProvider;
-use Sulu\Product\Application\Routing\PerVariantSlugProvider;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Infrastructure\Sulu\Admin\ProductsListMetadataVisitor;
 
@@ -33,7 +31,7 @@ class ProductsListMetadataVisitorTest extends TestCase
         $listMetadata->addField($statusField);
         $listMetadata->addField($this->createTypeField());
 
-        $visitor = new ProductsListMetadataVisitor(['announced', 'available'], new PerVariantSlugProvider());
+        $visitor = new ProductsListMetadataVisitor(['announced', 'available'], true);
         $visitor->visitListMetadata($listMetadata, ProductInterface::LIST_KEY, 'en');
 
         $this->assertSame(
@@ -52,7 +50,7 @@ class ProductsListMetadataVisitorTest extends TestCase
         $listMetadata->addField(new FieldMetadata('status'));
         $listMetadata->addField($typeField);
 
-        $visitor = new ProductsListMetadataVisitor([], new PerVariantSlugProvider());
+        $visitor = new ProductsListMetadataVisitor([], true);
         $visitor->visitListMetadata($listMetadata, ProductInterface::LIST_KEY, 'en');
 
         $this->assertSame(
@@ -68,7 +66,7 @@ class ProductsListMetadataVisitorTest extends TestCase
         $listMetadata->addField(new FieldMetadata('status'));
         $listMetadata->addField($typeField);
 
-        $visitor = new ProductsListMetadataVisitor([], new PerProductSlugProvider());
+        $visitor = new ProductsListMetadataVisitor([], false);
         $visitor->visitListMetadata($listMetadata, ProductInterface::LIST_KEY, 'en');
 
         $this->assertSame(
@@ -84,7 +82,7 @@ class ProductsListMetadataVisitorTest extends TestCase
         $listMetadata->addField(new FieldMetadata('status'));
         $listMetadata->addField($typeField);
 
-        $visitor = new ProductsListMetadataVisitor([], new PerVariantSlugProvider());
+        $visitor = new ProductsListMetadataVisitor([], true);
         $visitor->visitListMetadata($listMetadata, ProductInterface::LIST_KEY, 'en', ['excludeVariants' => 'true']);
 
         $this->assertSame(
@@ -100,7 +98,7 @@ class ProductsListMetadataVisitorTest extends TestCase
         $listMetadata = new ListMetadata();
         $listMetadata->addField($statusField);
 
-        $visitor = new ProductsListMetadataVisitor(['announced', 'available'], new PerVariantSlugProvider());
+        $visitor = new ProductsListMetadataVisitor(['announced', 'available'], true);
         $visitor->visitListMetadata($listMetadata, ProductInterface::LIST_KEY_VARIANTS, 'en');
 
         $this->assertNull($statusField->getFilterTypeParameters());
