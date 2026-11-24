@@ -84,7 +84,7 @@ final readonly class ProductCompletenessChecker
             $recommendations[] = 'No code. Pass code with the SKU from the datasheet. If there is none, derive one that follows the pattern of the codes of existing products (sulu_product_list) and is not taken yet.';
         }
 
-        if ($product->getType() !== (VariantRoutingEnum::PER_VARIANT === $this->variantRouting ? ProductInterface::TYPE_PRODUCT_WITH_VARIANTS : ProductInterface::TYPE_VARIANT) && !self::hasUrl($normalized)) {
+        if ($this->variantRouting->ownsRoute($product->getType()) && !self::hasUrl($normalized)) {
             $recommendations[] = 'No url. ' . $this->urlHelper->instruction($normalized, $locale, $product->getUuid());
         }
 

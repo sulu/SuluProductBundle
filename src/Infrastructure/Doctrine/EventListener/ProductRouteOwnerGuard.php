@@ -15,7 +15,6 @@ namespace Sulu\Product\Infrastructure\Doctrine\EventListener;
 
 use Doctrine\ORM\Event\OnFlushEventArgs;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
-use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Value\VariantRoutingEnum;
 use Sulu\Route\Domain\Model\Route;
 
@@ -52,7 +51,7 @@ class ProductRouteOwnerGuard
                 continue;
             }
 
-            if ($entity->getResource()->getType() !== (VariantRoutingEnum::PER_VARIANT === $this->variantRouting ? ProductInterface::TYPE_PRODUCT_WITH_VARIANTS : ProductInterface::TYPE_VARIANT)) {
+            if ($this->variantRouting->ownsRoute($entity->getResource()->getType())) {
                 continue;
             }
 
