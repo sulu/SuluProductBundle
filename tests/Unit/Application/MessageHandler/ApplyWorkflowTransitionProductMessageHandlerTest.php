@@ -19,8 +19,10 @@ use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
 use Sulu\Content\Application\ContentWorkflow\ContentWorkflowInterface;
+use Sulu\Content\Application\WorkflowTransitionRequest\ActiveWorkflowTransitionRequestProviderInterface;
 use Sulu\Content\Domain\Exception\UnavailableContentTransitionException;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Content\Domain\Model\WorkflowTransitionRequest\WorkflowTransitionRequest;
 use Sulu\Product\Application\Message\ApplyWorkflowTransitionProductMessage;
 use Sulu\Product\Application\MessageHandler\ApplyWorkflowTransitionProductMessageHandler;
 use Sulu\Product\Application\Workflow\ProductVariantUnpublisher;
@@ -43,15 +45,85 @@ class ApplyWorkflowTransitionProductMessageHandlerTest extends TestCase
     /** @var ObjectProphecy<DomainEventCollectorInterface> */
     private ObjectProphecy $domainEventCollector;
 
+    /** @var ObjectProphecy<ActiveWorkflowTransitionRequestProviderInterface> */
+    private ObjectProphecy $requestProvider;
+
     private ApplyWorkflowTransitionProductMessageHandler $handler;
 
     protected function setUp(): void
     {
+        $this->requestProvider = $this->prophesize(ActiveWorkflowTransitionRequestProviderInterface::class);
         $this->productRepository = $this->prophesize(ProductRepositoryInterface::class);
         $this->contentWorkflow = $this->prophesize(ContentWorkflowInterface::class);
         $this->domainEventCollector = $this->prophesize(DomainEventCollectorInterface::class);
 
-        $this->handler = new ApplyWorkflowTransitionProductMessageHandler(
+        $this->handler = $this->createHandler($this->requestProvider->reveal());
+    }
+
+    public function testPublishWhileTheRequestIsNotApprovedCollectsTheEventThatMarksTheBypass(): void
+    {
+        $request = new WorkflowTransitionRequest(ProductInterface::RESOURCE_KEY, 'prod-uuid', 'en', 'default');
+        $this->requestProvider->find(ProductInterface::RESOURCE_KEY, 'prod-uuid', 'en')->willReturn($request);
+        $this->givenTheWorkflowApplies(static function() use ($request): void {
+            $request->bypass();
+        });
+
+        ($this->handler)(new ApplyWorkflowTransitionProductMessage(['uuid' => 'prod-uuid'], 'en', 'publish'));
+
+        $this->assertCollectedEvent('workflow_transition.publish_without_review', true);
+    }
+
+    public function testPublishOfAnApprovedRequestCollectsThePlainPublishEvent(): void
+    {
+        $request = new WorkflowTransitionRequest(ProductInterface::RESOURCE_KEY, 'prod-uuid', 'en', 'default');
+        $this->requestProvider->find(ProductInterface::RESOURCE_KEY, 'prod-uuid', 'en')->willReturn($request);
+        $this->givenTheWorkflowApplies(static function() use ($request): void {
+            $request->publish();
+        });
+
+        ($this->handler)(new ApplyWorkflowTransitionProductMessage(['uuid' => 'prod-uuid'], 'en', 'publish'));
+
+        $this->assertCollectedEvent('workflow_transition.publish', false);
+    }
+
+    public function testPublishWithoutARequestCollectsThePlainPublishEvent(): void
+    {
+        $this->requestProvider->find(ProductInterface::RESOURCE_KEY, 'prod-uuid', 'en')->willReturn(null);
+        $this->givenTheWorkflowApplies(static function(): void {
+        });
+
+        ($this->handler)(new ApplyWorkflowTransitionProductMessage(['uuid' => 'prod-uuid'], 'en', 'publish'));
+
+        $this->assertCollectedEvent('workflow_transition.publish', false);
+    }
+
+    /**
+     * The website context has no request services, so the handler gets no provider there.
+     */
+    public function testPublishWithoutAProviderCollectsThePlainPublishEvent(): void
+    {
+        $this->givenTheWorkflowApplies(static function(): void {
+        });
+
+        $this->createHandler(null)(new ApplyWorkflowTransitionProductMessage(['uuid' => 'prod-uuid'], 'en', 'publish'));
+
+        $this->assertCollectedEvent('workflow_transition.publish', false);
+    }
+
+    public function testAnotherTransitionNeverLooksForARequest(): void
+    {
+        $this->requestProvider->find(Argument::cetera())->shouldNotBeCalled();
+        $this->givenTheWorkflowApplies(static function(): void {
+        }, 'remove_draft');
+
+        ($this->handler)(new ApplyWorkflowTransitionProductMessage(['uuid' => 'prod-uuid'], 'en', 'remove_draft'));
+
+        $this->assertCollectedEvent('workflow_transition.remove_draft', false);
+    }
+
+    private function createHandler(?ActiveWorkflowTransitionRequestProviderInterface $requestProvider): ApplyWorkflowTransitionProductMessageHandler
+    {
+        return new ApplyWorkflowTransitionProductMessageHandler(
             $this->productRepository->reveal(),
             $this->contentWorkflow->reveal(),
             $this->domainEventCollector->reveal(),
@@ -60,7 +132,33 @@ class ApplyWorkflowTransitionProductMessageHandlerTest extends TestCase
                 $this->contentWorkflow->reveal(),
                 $this->domainEventCollector->reveal(),
             ),
+            $requestProvider,
         );
+    }
+
+    private function givenTheWorkflowApplies(callable $effect, string $transition = 'publish'): void
+    {
+        $product = new Product('prod-uuid');
+        $dimensionContent = new ProductDimensionContent($product);
+        $dimensionContent->setLocale('en');
+        $dimensionContent->setStage(DimensionContentInterface::STAGE_DRAFT);
+
+        $this->productRepository->getOneBy(['uuid' => 'prod-uuid'], Argument::type('array'))->willReturn($product);
+        $this->contentWorkflow->apply($product, ['locale' => 'en'], $transition)->will(
+            static function() use ($effect, $dimensionContent): ProductDimensionContent {
+                $effect();
+
+                return $dimensionContent;
+            },
+        );
+    }
+
+    private function assertCollectedEvent(string $expectedType, bool $expectedBypass): void
+    {
+        $this->domainEventCollector
+            ->collect(Argument::that(static fn (ProductWorkflowTransitionAppliedEvent $event): bool => $expectedType === $event->getEventType()
+                && $expectedBypass === $event->isReviewBypassed()))
+            ->shouldBeCalledOnce();
     }
 
     public function testApplyWorkflowTransition(): void

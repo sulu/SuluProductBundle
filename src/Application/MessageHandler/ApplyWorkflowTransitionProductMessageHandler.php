@@ -13,9 +13,11 @@ namespace Sulu\Product\Application\MessageHandler;
 
 use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
 use Sulu\Content\Application\ContentWorkflow\ContentWorkflowInterface;
+use Sulu\Content\Application\WorkflowTransitionRequest\ActiveWorkflowTransitionRequestProviderInterface;
 use Sulu\Content\Domain\Exception\UnavailableContentTransitionException;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Sulu\Content\Domain\Model\WorkflowInterface;
+use Sulu\Content\Domain\Value\WorkflowTransitionRequest\WorkflowTransitionRequestPlaceEnum;
 use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
 use Sulu\Product\Application\Message\ApplyWorkflowTransitionProductMessage;
 use Sulu\Product\Application\Workflow\ProductVariantUnpublisher;
@@ -34,6 +36,7 @@ final class ApplyWorkflowTransitionProductMessageHandler
         private ContentWorkflowInterface $contentWorkflow,
         private DomainEventCollectorInterface $domainEventCollector,
         private ProductVariantUnpublisher $variantUnpublisher,
+        private ?ActiveWorkflowTransitionRequestProviderInterface $activeWorkflowTransitionRequestProvider,
     ) {
     }
 
@@ -67,9 +70,19 @@ final class ApplyWorkflowTransitionProductMessageHandler
             $this->assertParentIsPublished($product, $locale);
         }
 
+        // The publish closes the request, so it is looked up before and read again afterwards.
+        $request = WorkflowInterface::WORKFLOW_TRANSITION_PUBLISH === $transitionName
+            ? $this->activeWorkflowTransitionRequestProvider?->find(ProductInterface::RESOURCE_KEY, (string) $product->getUuid(), $locale)
+            : null;
+
         $this->contentWorkflow->apply($product, ['locale' => $locale], $transitionName);
 
-        $this->domainEventCollector->collect(new ProductWorkflowTransitionAppliedEvent($product, $transitionName, $locale));
+        $this->domainEventCollector->collect(new ProductWorkflowTransitionAppliedEvent(
+            $product,
+            $transitionName,
+            $locale,
+            WorkflowTransitionRequestPlaceEnum::BYPASSED === $request?->getPlace(),
+        ));
 
         // publishing the product leaves its variants as they are
         if (WorkflowInterface::WORKFLOW_TRANSITION_UNPUBLISH === $transitionName) {
