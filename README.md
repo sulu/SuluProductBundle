@@ -110,8 +110,7 @@ A variant has no content of its own, so its page renders its product. With `per_
 variant's URL does so: the route passes the product as the page's `object` and the variant as the
 `variant` route default, and `localizations` link the variant's own URLs in the other locales. With
 `per_product` the product's URL does so and `?variant=<code>` sets the `variant` route default;
-`localizations` link the product's URLs plus the parameter in the locales the variant is
-published in. `resource`, `content` and `extension` are the product's.
+`localizations` link the product's URLs. `resource`, `content` and `extension` are the product's.
 `sulu_product.product_localizations_resolver` builds the localizations for the `products` resource
 key; a project changes them by decorating that service. The `product` namespace carries:
 

@@ -1490,6 +1490,7 @@ final class SuluProductBundle extends AbstractBundle
             ->args([
                 new Reference('sulu_content.route_localizations_resolver'),
                 new Reference('sulu_product.current_variant_provider'),
+                $variantRouting,
             ])
             ->tag('sulu_content.content_localizations_resolver', ['resource_key' => ProductInterface::RESOURCE_KEY]);
 
