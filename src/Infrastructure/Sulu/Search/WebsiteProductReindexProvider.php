@@ -36,6 +36,7 @@ use Sulu\Product\Infrastructure\Sulu\Search\Visitor\WebsiteProductReindexProvide
  *     code: string|null,
  *     mainWebspace: string|null,
  *     slug: string|null,
+ *     parentSlug: string|null,
  *     authored: \DateTimeImmutable|null,
  *     changed: \DateTimeImmutable,
  * }
@@ -107,7 +108,7 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
      */
     private function createDocument(array $row, array $webspaces): array
     {
-        // A variant owns its route, but its webspaces are the parent's.
+        // A variant's webspaces are the parent's.
         $webspaceKey = ($row['parentId'] ?? $row['productId']) . '__' . $row['locale'];
 
         return [
@@ -121,8 +122,30 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
             'content' => null !== $row['code'] && '' !== $row['code'] ? [$row['code']] : [],
             'mediaId' => '',
             'authoredAt' => ($row['authored'] ?? $row['changed'])->format('c'),
-            'metadata' => [],
+            'metadata' => $this->createMetadata($row),
         ];
+    }
+
+    /**
+     * The code and the parent's url, so a template can link a variant that owns no route.
+     *
+     * @param Product $row
+     *
+     * @return array<string, string>
+     */
+    private function createMetadata(array $row): array
+    {
+        $metadata = [];
+
+        if (null !== $row['code'] && '' !== $row['code']) {
+            $metadata['code'] = $row['code'];
+        }
+
+        if (null !== $row['parentSlug'] && '' !== $row['parentSlug']) {
+            $metadata['parentUrl'] = $row['parentSlug'];
+        }
+
+        return $metadata;
     }
 
     /**
@@ -153,6 +176,16 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
                 . ' AND unlocalizedDimensionContent.version = dimensionContent.version',
             )
             ->leftJoin('dimensionContent.route', 'route')
+            ->leftJoin(
+                $this->dimensionContentRepository->getClassName(),
+                'parentDimensionContent',
+                'WITH',
+                'parentDimensionContent.product = product.parent'
+                . ' AND parentDimensionContent.locale = dimensionContent.locale'
+                . ' AND parentDimensionContent.stage = dimensionContent.stage'
+                . ' AND parentDimensionContent.version = dimensionContent.version',
+            )
+            ->leftJoin('parentDimensionContent.route', 'parentRoute')
             ->select('product.uuid AS productId')
             ->addSelect('IDENTITY(product.parent) AS parentId')
             ->addSelect('dimensionContent.id AS dimensionContentId')
@@ -161,6 +194,7 @@ final class WebsiteProductReindexProvider implements ReindexProviderInterface
             ->addSelect('unlocalizedDimensionContent.code')
             ->addSelect('dimensionContent.mainWebspace')
             ->addSelect('route.slug')
+            ->addSelect('parentRoute.slug AS parentSlug')
             ->addSelect('dimensionContent.authored')
             ->addSelect('dimensionContent.changed')
             ->where('dimensionContent.id IN (:dimensionContentIds)')

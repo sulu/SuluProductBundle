@@ -235,8 +235,19 @@ the website each family resolves to the shape of a product's `productFamily`:
 A product is indexed into Sulu's shared `website` index, next to pages and articles. Only leaves
 become documents: a product without variants, and the variants of a product that has them. A product
 with variants is represented by its variants and gets no document of its own. A variant document
-carries its own title and its parent's webspaces, and the `url` the "Variant URLs" section above
-describes. The product code is searchable through the document's `content`.
+carries its own title and its parent's webspaces, and the `url` of its own route, which is empty
+with `per_product`. The product code is searchable through the document's `content`.
+
+`metadata.code` holds the code and `metadata.parentUrl` the url of the parent's route, when there
+is one. With `per_product` a search result template links a variant through them:
+
+```twig
+{% set url = hit.url ?: hit.metadata.parentUrl|default(null) %}
+{% if not hit.url and hit.metadata.code is defined %}
+    {% set url = url ~ '?' ~ {variant: hit.metadata.code}|url_encode %}
+{% endif %}
+<a href="{{ sulu_content_path(url) }}">{{ hit.title }}</a>
+```
 
 The admin index keeps the opposite rule: it holds the parent, because the edit view belongs to it,
 and skips variants.

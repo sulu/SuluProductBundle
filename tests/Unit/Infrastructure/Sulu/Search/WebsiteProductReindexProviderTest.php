@@ -143,6 +143,7 @@ class WebsiteProductReindexProviderTest extends TestCase
                     'mainWebspace' => 'main',
                     'dimensionContentId' => 7,
                     'slug' => '/sample',
+                    'parentSlug' => null,
                 ],
             ],
         );
@@ -161,7 +162,8 @@ class WebsiteProductReindexProviderTest extends TestCase
         $this->assertSame('/sample', $results[0]['url']);
         $this->assertSame(['main', 'extra'], $results[0]['webspaces']);
         $this->assertSame(ProductInterface::RESOURCE_KEY, $results[0]['resourceKey']);
-        $this->assertSame(['NC3'], $results[0]['content'], 'The code is only searchable, not a field of its own.');
+        $this->assertSame(['NC3'], $results[0]['content'], 'The code is searchable through the content.');
+        $this->assertSame(['code' => 'NC3'], $results[0]['metadata'], 'Without a parent there is no parent url.');
         $this->assertArrayNotHasKey('product', $results[0], 'The product field belongs to the attributes enhancer.');
     }
 
@@ -178,6 +180,7 @@ class WebsiteProductReindexProviderTest extends TestCase
             'mainWebspace' => null,
             'dimensionContentId' => $dimensionContentId,
             'slug' => '/s' . $productId,
+            'parentSlug' => null,
         ];
 
         $this->dimensionQuery->getSingleColumnResult()->willReturn(['3', '8'], ['12'], []);
@@ -212,6 +215,7 @@ class WebsiteProductReindexProviderTest extends TestCase
                     'mainWebspace' => null,
                     'dimensionContentId' => 9,
                     'slug' => '/s',
+                    'parentSlug' => null,
                 ],
             ],
         );
@@ -262,6 +266,7 @@ class WebsiteProductReindexProviderTest extends TestCase
                     'mainWebspace' => 'main',
                     'dimensionContentId' => 5,
                     'slug' => '/match',
+                    'parentSlug' => null,
                 ],
             ],
         );
@@ -292,6 +297,7 @@ class WebsiteProductReindexProviderTest extends TestCase
                     'mainWebspace' => 'main',
                     'dimensionContentId' => 11,
                     'slug' => '/only-main',
+                    'parentSlug' => null,
                 ],
             ],
         );
