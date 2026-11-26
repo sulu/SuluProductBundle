@@ -22,6 +22,7 @@ use Sulu\Product\Domain\Model\AttributeInterface;
 use Sulu\Product\Domain\Model\AttributeOption;
 use Sulu\Product\Domain\Model\AttributeOptionTranslation;
 use Sulu\Product\Domain\Model\AttributeTranslation;
+use Sulu\Product\Domain\Model\ProductFamily;
 use Sulu\Product\Domain\Model\ProductFamilyAttribute;
 use Sulu\Product\Domain\Model\ProductFamilyInterface;
 use Sulu\Product\Domain\Model\ProductFamilyTranslation;
@@ -34,6 +35,7 @@ use Sulu\Product\Tests\Functional\CountsSelectQueriesTrait;
 use Symfony\Component\Uid\Uuid;
 
 #[CoversClass(ProductFamilyRepository::class)]
+#[CoversClass(ProductFamily::class)]
 class ProductFamilyRepositoryTest extends SuluTestCase
 {
     use CountsSelectQueriesTrait;
@@ -106,6 +108,33 @@ class ProductFamilyRepositoryTest extends SuluTestCase
         $loaded = $this->repository->findOneBy(['uuid' => $uuid]);
         $this->assertInstanceOf(ProductFamilyInterface::class, $loaded);
         $this->assertSame('My Family', $loaded->getTranslation('en')?->getName());
+    }
+
+    /** Every product of a family shares the loaded family, so its name is read once, not once per product. */
+    public function testALoadedFamilyLoadsItsTranslationsOnce(): void
+    {
+        $family = $this->repository->createNew();
+        $family->setKey(\uniqid('family-'));
+        $family->addTranslation(new ProductFamilyTranslation($family, 'en', 'Sofa'));
+        $family->addTranslation(new ProductFamilyTranslation($family, 'de', 'Couch'));
+        $this->repository->add($family);
+        $this->entityManager->flush();
+
+        $uuid = $family->getUuid();
+        $this->entityManager->clear();
+
+        $loaded = $this->repository->findOneBy(['uuid' => $uuid]);
+        $this->assertInstanceOf(ProductFamilyInterface::class, $loaded);
+
+        $queriesBefore = $this->countSelectQueries();
+
+        $names = [];
+        foreach (['en', 'de', 'en', 'fr'] as $locale) {
+            $names[] = $loaded->getTranslation($locale)?->getName();
+        }
+
+        $this->assertSame(['Sofa', 'Couch', 'Sofa', null], $names);
+        $this->assertSame($queriesBefore + 1, $this->countSelectQueries());
     }
 
     public function testFindOneByExternalIdentifierReturnsFamily(): void
