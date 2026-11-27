@@ -46,6 +46,18 @@ interface ProductRepositoryInterface
      */
     public const SELECT_PRODUCT_ATTRIBUTES = 'with-product-attributes';
 
+    /**
+     * Load the associations, respectively the additional webspaces, of the product's dimension
+     * contents in one own query each, for every product at once.
+     */
+    public const SELECT_PRODUCT_ASSOCIATIONS = 'with-product-associations';
+    public const SELECT_PRODUCT_ADDITIONAL_WEBSPACES = 'with-product-additional-webspaces';
+
+    /**
+     * Loads the families of the product's dimension contents with their translations in one own query.
+     */
+    public const SELECT_PRODUCT_FAMILY_TRANSLATIONS = 'with-product-family-translations';
+
     public function createNew(?string $uuid = null): ProductInterface;
 
     /**
@@ -65,6 +77,9 @@ interface ProductRepositoryInterface
      *     with-product-content?: bool|array<string, mixed>,
      *     with-product-family?: bool,
      *     with-product-attributes?: bool|array{translations?: bool, group?: bool, options?: bool},
+     *     with-product-associations?: bool,
+     *     with-product-additional-webspaces?: bool,
+     *     with-product-family-translations?: bool,
      * }|array<string, mixed> $selects
      *
      * @throws ProductNotFoundException
@@ -87,6 +102,9 @@ interface ProductRepositoryInterface
      *     with-product-content?: bool|array<string, mixed>,
      *     with-product-family?: bool,
      *     with-product-attributes?: bool|array{translations?: bool, group?: bool, options?: bool},
+     *     with-product-associations?: bool,
+     *     with-product-additional-webspaces?: bool,
+     *     with-product-family-translations?: bool,
      * }|array<string, mixed> $selects
      */
     public function findOneBy(array $filters, array $selects = []): ?ProductInterface;
@@ -139,6 +157,9 @@ interface ProductRepositoryInterface
      *     with-product-content?: bool|array<string, mixed>,
      *     with-product-family?: bool,
      *     with-product-attributes?: bool|array{translations?: bool, group?: bool, options?: bool},
+     *     with-product-associations?: bool,
+     *     with-product-additional-webspaces?: bool,
+     *     with-product-family-translations?: bool,
      * }|array<string, mixed> $selects
      *
      * @return iterable<ProductInterface>

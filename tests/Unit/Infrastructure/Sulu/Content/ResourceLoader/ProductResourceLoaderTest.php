@@ -17,6 +17,7 @@ use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Infrastructure\Sulu\Content\ResourceLoader\ProductResourceLoader;
@@ -49,11 +50,51 @@ class ProductResourceLoaderTest extends TestCase
         $this->productRepository->findBy(
             ['uuids' => ['1', '3'], 'locale' => 'en', 'stage' => DimensionContentInterface::STAGE_LIVE],
             [],
-            [ProductRepositoryInterface::GROUP_SELECT_PRODUCT_WEBSITE => true]
+            $this->expectedSelects(true),
         )->willReturn([$product1, $product2])->shouldBeCalled();
 
         $result = $this->loader->load(['1', '3'], 'en');
         $this->assertSame(['1' => $product1, '3' => $product2], $result);
+    }
+
+    public function testLoadForAListWithoutAttributesLoadsOnlyTheAttributeValues(): void
+    {
+        $this->productRepository->findBy(
+            ['uuids' => ['1'], 'locale' => 'en', 'stage' => DimensionContentInterface::STAGE_LIVE],
+            [],
+            $this->expectedSelects(['translations' => false]),
+        )->willReturn([])->shouldBeCalled();
+
+        $this->loader->load(['1'], 'en', ['properties' => ['title' => 'product.title', 'parentAttributes' => 'product.parent.attributes']]);
+    }
+
+    public function testLoadForAListWithAttributesLoadsTheirLabels(): void
+    {
+        $this->productRepository->findBy(
+            ['uuids' => ['1'], 'locale' => 'en', 'stage' => DimensionContentInterface::STAGE_LIVE],
+            [],
+            $this->expectedSelects(true),
+        )->willReturn([])->shouldBeCalled();
+
+        $this->loader->load(['1'], 'en', ['properties' => ['specs' => 'product.attributes']]);
+    }
+
+    public function testLoadWithAudienceTargetingLoadsTheTargetGroups(): void
+    {
+        $loader = new ProductResourceLoader($this->productRepository->reveal(), true);
+
+        $this->productRepository->findBy(
+            ['uuids' => ['1'], 'locale' => 'en', 'stage' => DimensionContentInterface::STAGE_LIVE],
+            [],
+            [
+                ...$this->expectedSelects(true),
+                ProductRepositoryInterface::SELECT_PRODUCT_CONTENT => [
+                    DimensionContentQueryEnhancer::SELECT_EXCERPT_AUDIENCE_TARGET_GROUPS => true,
+                ],
+            ],
+        )->willReturn([])->shouldBeCalled();
+
+        $loader->load(['1'], 'en');
     }
 
     public function testLoadReturnsEmptyArrayWhenLocaleIsNull(): void
@@ -62,6 +103,22 @@ class ProductResourceLoaderTest extends TestCase
 
         $result = $this->loader->load(['1', '2'], null);
         $this->assertSame([], $result);
+    }
+
+    /**
+     * @param bool|array<string, bool> $attributes
+     *
+     * @return array<string, mixed>
+     */
+    private function expectedSelects(bool|array $attributes): array
+    {
+        return [
+            ProductRepositoryInterface::GROUP_SELECT_PRODUCT_WEBSITE => true,
+            ProductRepositoryInterface::SELECT_PRODUCT_ATTRIBUTES => $attributes,
+            ProductRepositoryInterface::SELECT_PRODUCT_ASSOCIATIONS => true,
+            ProductRepositoryInterface::SELECT_PRODUCT_ADDITIONAL_WEBSPACES => true,
+            ProductRepositoryInterface::SELECT_PRODUCT_FAMILY_TRANSLATIONS => true,
+        ];
     }
 
     private static function createProduct(string $uuid): Product
