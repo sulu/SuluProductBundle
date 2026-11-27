@@ -25,11 +25,12 @@ use Prophecy\Prophecy\ObjectProphecy;
 use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductInterface;
-use Sulu\Product\Infrastructure\Doctrine\EventListener\ProductWithVariantsRouteGuard;
+use Sulu\Product\Domain\Value\VariantRoutingEnum;
+use Sulu\Product\Infrastructure\Doctrine\EventListener\ProductRouteOwnerGuard;
 use Sulu\Route\Domain\Model\Route;
 
-#[CoversClass(ProductWithVariantsRouteGuard::class)]
-class ProductWithVariantsRouteGuardTest extends TestCase
+#[CoversClass(ProductRouteOwnerGuard::class)]
+class ProductRouteOwnerGuardTest extends TestCase
 {
     use ProphecyTrait;
 
@@ -115,6 +116,39 @@ class ProductWithVariantsRouteGuardTest extends TestCase
         $this->assertNull($dimensionContent->getRoute());
     }
 
+    public function testDropsTheRouteOfAVariantWhenTheProductOwnsTheRoute(): void
+    {
+        $parent = new Product();
+        $parent->setType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $dimensionContent = $this->createDimensionContent(ProductInterface::TYPE_VARIANT, $parent);
+        $route = $this->createRoute();
+        $dimensionContent->setRoute($route);
+
+        $this->schedule(insertions: [$dimensionContent]);
+        $this->unitOfWork->isScheduledForInsert($route)->willReturn(true);
+        $this->unitOfWork->recomputeSingleEntityChangeSet(Argument::any(), $dimensionContent)->shouldBeCalled();
+        $this->entityManager->detach($route)->shouldBeCalled();
+
+        $this->guard(true)->onFlush(new OnFlushEventArgs($this->entityManager->reveal()));
+
+        $this->assertNull($dimensionContent->getRoute());
+    }
+
+    public function testKeepsTheRouteOfAProductWithVariantsWhenTheProductOwnsTheRoute(): void
+    {
+        $dimensionContent = $this->createDimensionContent(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $route = $this->createRoute();
+        $dimensionContent->setRoute($route);
+
+        $this->schedule(updates: [$dimensionContent]);
+        $this->unitOfWork->recomputeSingleEntityChangeSet(Argument::cetera())->shouldNotBeCalled();
+        $this->entityManager->detach(Argument::any())->shouldNotBeCalled();
+
+        $this->guard(true)->onFlush(new OnFlushEventArgs($this->entityManager->reveal()));
+
+        $this->assertSame($route, $dimensionContent->getRoute());
+    }
+
     public function testIgnoresOtherEntities(): void
     {
         $this->schedule(insertions: [new \stdClass()], updates: [$this->createRoute()]);
@@ -125,15 +159,20 @@ class ProductWithVariantsRouteGuardTest extends TestCase
         $this->addToAssertionCount(1);
     }
 
-    private function guard(): ProductWithVariantsRouteGuard
+    private function guard(bool $perProduct = false): ProductRouteOwnerGuard
     {
-        return new ProductWithVariantsRouteGuard();
+        $variantRouting = $perProduct
+            ? VariantRoutingEnum::PER_PRODUCT
+            : VariantRoutingEnum::PER_VARIANT;
+
+        return new ProductRouteOwnerGuard($variantRouting);
     }
 
-    private function createDimensionContent(string $type): ProductDimensionContent
+    private function createDimensionContent(string $type, ?Product $parent = null): ProductDimensionContent
     {
         $product = new Product();
         $product->setType($type);
+        $product->setParent($parent);
 
         $dimensionContent = new ProductDimensionContent($product);
         $dimensionContent->setLocale('en');

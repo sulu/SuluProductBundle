@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Sulu\Product\Tests\Unit\Infrastructure\Sulu\Route;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
@@ -38,6 +39,8 @@ use Sulu\Product\Infrastructure\Sulu\Route\ProductRouteDefaultsProvider;
 use Sulu\Route\Application\Routing\Matcher\RouteDefaultsProviderInterface;
 use Sulu\Route\Domain\Model\Route;
 use Symfony\Component\DependencyInjection\Container;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class ProductRouteDefaultsProviderTest extends TestCase
@@ -64,13 +67,20 @@ class ProductRouteDefaultsProviderTest extends TestCase
         $this->metadataProviderRegistry = new MetadataProviderRegistry($container);
     }
 
-    protected function getProductRouteDefaultsProviderInstance(): RouteDefaultsProviderInterface
+    protected function getProductRouteDefaultsProviderInstance(?Request $request = null, ?string $variantQueryParameter = null): RouteDefaultsProviderInterface
     {
+        $requestStack = new RequestStack();
+        if (null !== $request) {
+            $requestStack->push($request);
+        }
+
         return new ProductRouteDefaultsProvider(
             $this->productRepository->reveal(),
             $this->contentAggregator->reveal(),
             $this->metadataProviderRegistry,
             $this->cacheLifetimeResolver,
+            $requestStack,
+            $variantQueryParameter,
         );
     }
 
@@ -270,6 +280,108 @@ class ProductRouteDefaultsProviderTest extends TestCase
         $provider->getDefaults(new Route(ProductInterface::RESOURCE_KEY, '123-123-123', 'en', '/test-variant'));
     }
 
+    public function testGetDefaultsRendersTheVariantNamedByTheQueryParameter(): void
+    {
+        $provider = $this->getProductRouteDefaultsProviderInstance(new Request(query: ['variant' => 'RED']), 'variant');
+
+        [$product, $productContent] = $this->prepareProduct();
+        $variant = new Product('variant-uuid');
+        $variant->setParent($product);
+        $variantContent = new ProductDimensionContent($variant);
+
+        $dimensionAttributes = ['locale' => 'en', 'stage' => 'live', 'version' => 0];
+        $this->productRepository->findBy(
+            ['parent' => '123-123-123', 'code' => 'RED', 'locale' => 'en', 'stage' => 'live'],
+            [],
+            [ProductRepositoryInterface::SELECT_PRODUCT_CONTENT => ['dimensionAttributes' => $dimensionAttributes]],
+        )->willReturn([$variant])->shouldBeCalledOnce();
+        $this->contentAggregator->aggregate($variant, $dimensionAttributes)->willReturn($variantContent);
+
+        $result = $provider->getDefaults(new Route(ProductInterface::RESOURCE_KEY, '123-123-123', 'en', '/test-product'));
+
+        $this->assertSame($productContent, $result['object']);
+        $this->assertSame($variantContent, $result[ProductRouteDefaultsProvider::VARIANT_ATTRIBUTE]);
+    }
+
+    public function testGetDefaultsReadsTheConfiguredQueryParameter(): void
+    {
+        $provider = $this->getProductRouteDefaultsProviderInstance(new Request(query: ['variant' => 'RED', 'sku' => 'BLUE']), 'sku');
+
+        $this->prepareProduct();
+        $this->productRepository->findBy(['parent' => '123-123-123', 'code' => 'BLUE', 'locale' => 'en', 'stage' => 'live'], [], Argument::type('array'))
+            ->willReturn([])->shouldBeCalledOnce();
+
+        $result = $provider->getDefaults(new Route(ProductInterface::RESOURCE_KEY, '123-123-123', 'en', '/test-product'));
+
+        $this->assertArrayNotHasKey(ProductRouteDefaultsProvider::VARIANT_ATTRIBUTE, $result);
+    }
+
+    public function testGetDefaultsIgnoresAVariantWithoutPublishedContent(): void
+    {
+        $provider = $this->getProductRouteDefaultsProviderInstance(new Request(query: ['variant' => 'RED']), 'variant');
+
+        [$product] = $this->prepareProduct();
+        $variant = new Product('variant-uuid');
+        $variant->setParent($product);
+        $this->productRepository->findBy(Argument::cetera())->willReturn([$variant]);
+        $this->contentAggregator->aggregate($variant, Argument::type('array'))->willThrow(ContentNotFoundException::class);
+
+        $result = $provider->getDefaults(new Route(ProductInterface::RESOURCE_KEY, '123-123-123', 'en', '/test-product'));
+
+        $this->assertArrayNotHasKey(ProductRouteDefaultsProvider::VARIANT_ATTRIBUTE, $result);
+    }
+
+    /**
+     * @return iterable<string, array{array<string, mixed>}>
+     */
+    public static function provideQueriesWithoutAVariant(): iterable
+    {
+        yield 'no parameter' => [[]];
+        yield 'empty code' => [['variant' => '']];
+        yield 'array' => [['variant' => ['RED']]];
+    }
+
+    /**
+     * @param array<string, mixed> $query
+     */
+    #[DataProvider('provideQueriesWithoutAVariant')]
+    public function testGetDefaultsWithoutAUsableQueryParameterLoadsNoVariant(array $query): void
+    {
+        $provider = $this->getProductRouteDefaultsProviderInstance(new Request(query: $query), 'variant');
+
+        $this->prepareProduct();
+        $this->productRepository->findBy(Argument::cetera())->shouldNotBeCalled();
+
+        $result = $provider->getDefaults(new Route(ProductInterface::RESOURCE_KEY, '123-123-123', 'en', '/test-product'));
+
+        $this->assertArrayNotHasKey(ProductRouteDefaultsProvider::VARIANT_ATTRIBUTE, $result);
+    }
+
+    public function testGetDefaultsWithoutARequestLoadsNoVariant(): void
+    {
+        $provider = $this->getProductRouteDefaultsProviderInstance(null, 'variant');
+
+        $this->prepareProduct();
+        $this->productRepository->findBy(Argument::cetera())->shouldNotBeCalled();
+
+        $result = $provider->getDefaults(new Route(ProductInterface::RESOURCE_KEY, '123-123-123', 'en', '/test-product'));
+
+        $this->assertArrayNotHasKey(ProductRouteDefaultsProvider::VARIANT_ATTRIBUTE, $result);
+    }
+
+    public function testGetDefaultsIgnoresTheQueryParameterWhenVariantsHaveRoutes(): void
+    {
+        $provider = $this->getProductRouteDefaultsProviderInstance(new Request(query: ['variant' => 'RED']), null);
+
+        $this->prepareProduct();
+        $this->productRepository->findBy(Argument::cetera())->shouldNotBeCalled();
+
+        $result = $provider->getDefaults(new Route(ProductInterface::RESOURCE_KEY, '123-123-123', 'en', '/test-product'));
+
+        $this->assertArrayNotHasKey(ProductRouteDefaultsProvider::VARIANT_ATTRIBUTE, $result);
+        $this->assertArrayNotHasKey('_seo', $result);
+    }
+
     public function testGetDefaultsThrowsWhenNoContentLocale(): void
     {
         $provider = $this->getProductRouteDefaultsProviderInstance();
@@ -449,6 +561,23 @@ class ProductRouteDefaultsProviderTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
 
         $provider->getDefaults(new Route(ProductInterface::RESOURCE_KEY, '123-123-123', $locale, $slug));
+    }
+
+    /**
+     * @return array{Product, ProductDimensionContent} the live product "123-123-123" and its content in "en"
+     */
+    private function prepareProduct(): array
+    {
+        $product = new Product('123-123-123');
+        $productContent = new ProductDimensionContent($product);
+        $productContent->setLocale('en');
+        $productContent->setTemplateKey('default');
+
+        $this->productRepository->findOneBy(['uuid' => '123-123-123'], Argument::type('array'))->willReturn($product);
+        $this->contentAggregator->aggregate($product, ['locale' => 'en', 'stage' => 'live', 'version' => 0])->willReturn($productContent);
+        $this->prepareTemplateMetadata('ProductController::indexAction', 'product.html.twig', 'seconds', '3600');
+
+        return [$product, $productContent];
     }
 
     private function prepareTemplateMetadata(

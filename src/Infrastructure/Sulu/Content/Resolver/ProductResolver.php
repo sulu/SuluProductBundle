@@ -30,6 +30,7 @@ use Sulu\Product\Domain\Model\ProductAssociationInterface;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Domain\Value\VariantRoutingEnum;
 use Sulu\Product\Infrastructure\Sulu\Content\ProductFamilyContentViewFactory;
 use Sulu\Product\Infrastructure\Sulu\Content\ResourceLoader\ProductResourceLoader;
 use Sulu\Product\Infrastructure\Sulu\Route\CurrentVariantProvider;
@@ -62,6 +63,7 @@ class ProductResolver implements ResolverInterface
         private readonly ReferenceStoreInterface $referenceStore,
         private readonly AttributeValueConverterInterface $attributeValueConverter,
         private readonly ProductAttributeValueFormatter $attributeValueFormatter,
+        private readonly VariantRoutingEnum $variantRouting,
         private readonly array $variantProperties = [],
     ) {
     }
@@ -301,8 +303,8 @@ class ProductResolver implements ResolverInterface
             $masterData['mainCategory'] = $this->resolveMainCategory($dimensionContent, $locale);
         }
 
-        // A product with variants owns no route, it is reached through its variants.
-        if ($dimensionContent->getResource()->isType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS)) {
+        // A type that owns no route is reached through another type.
+        if (!$this->variantRouting->ownsRoute($dimensionContent->getResource()->getType())) {
             unset($masterData['url']);
         }
 

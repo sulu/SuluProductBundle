@@ -81,6 +81,7 @@ class WebsiteProductReindexProviderTest extends SuluTestCase
         $content = $secondVariant['content'];
         $this->assertIsArray($content);
         $this->assertContains('SEARCH-SECOND-VARIANT', $content, 'The code is searchable through the content.');
+        $this->assertSame(['code' => 'SEARCH-SECOND-VARIANT'], $secondVariant['metadata'], 'The parent owns no route, so there is no parent url.');
 
         $this->expectException(DocumentNotFoundException::class);
         $engine->getDocument('website', 'products__' . $parentId . '__en');

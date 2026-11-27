@@ -19,6 +19,7 @@ use Sulu\Component\Localization\Localization;
 use Sulu\Component\Webspace\Manager\WebspaceCollection;
 use Sulu\Component\Webspace\Manager\WebspaceManagerInterface;
 use Sulu\Component\Webspace\Webspace;
+use Sulu\Product\Domain\Value\VariantRoutingEnum;
 use Sulu\Product\Infrastructure\Symfony\Mcp\ProductCompletenessChecker;
 
 /**
@@ -29,7 +30,7 @@ final class CompletenessCheckerFactory
     /**
      * @param list<string> $projectLocales
      */
-    public static function create(?MetadataProviderInterface $metadataProvider = null, array $projectLocales = ['en']): ProductCompletenessChecker
+    public static function create(?MetadataProviderInterface $metadataProvider = null, array $projectLocales = ['en'], VariantRoutingEnum $variantRouting = VariantRoutingEnum::PER_VARIANT): ProductCompletenessChecker
     {
         $webspace = new Webspace();
         $webspace->setKey('website');
@@ -41,6 +42,6 @@ final class CompletenessCheckerFactory
         $webspaceManager = (new Prophet())->prophesize(WebspaceManagerInterface::class);
         $webspaceManager->getWebspaceCollection()->willReturn(new WebspaceCollection(['website' => $webspace]));
 
-        return new ProductCompletenessChecker($metadataProvider ?? new ArrayMetadataProvider(), $webspaceManager->reveal(), ProductUrlHelperFactory::create());
+        return new ProductCompletenessChecker($metadataProvider ?? new ArrayMetadataProvider(), $webspaceManager->reveal(), ProductUrlHelperFactory::create(), $variantRouting);
     }
 }

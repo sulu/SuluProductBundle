@@ -34,6 +34,7 @@ use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Domain\Value\VariantRoutingEnum;
 use Sulu\Product\Infrastructure\Symfony\Mcp\ProductAssociationResolver;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductUpdateTool;
 use Sulu\Product\Tests\Unit\Fixture\ArrayMetadataProvider;
@@ -79,6 +80,7 @@ final class ProductUpdateToolTest extends TestCase
             CompletenessCheckerFactory::create(),
             ProductUrlHelperFactory::create(),
             ProjectLocalesFactory::create(),
+            VariantRoutingEnum::PER_VARIANT,
         );
     }
 
@@ -363,6 +365,27 @@ final class ProductUpdateToolTest extends TestCase
         $this->assertArrayNotHasKey('warning', $result);
     }
 
+    public function testUpdateProductWarnsForAProductWithVariantsWhenTheProductOwnsTheRoute(): void
+    {
+        $product = new Product('uuid-1');
+        $product->setType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $this->productRepository->getOneBy(Argument::cetera())->willReturn($product);
+        $this->contentManager->resolve(Argument::cetera())->willReturn(new ProductDimensionContent(new Product()));
+        $this->contentManager->normalize(Argument::cetera())->willReturn(['title' => 'Shirt']);
+        $this->messageBus->dispatch(Argument::type(Envelope::class), Argument::cetera())
+            ->will(function(array $args) use ($product): Envelope {
+                /** @var Envelope $envelope */
+                $envelope = $args[0];
+
+                return $envelope->with(new HandledStamp($product, 'handler'));
+            });
+
+        $result = $this->toolWithVariantOwnsRoute(VariantRoutingEnum::PER_PRODUCT)->updateProduct('uuid-1', 'en', title: 'Shirt');
+
+        $this->assertTrue($result['success']);
+        $this->assertStringContainsString('sulu_product_update', \is_string($result['warning'] ?? null) ? $result['warning'] : '');
+    }
+
     public function testUpdateProductListsRecommendationsForAnIncompleteProduct(): void
     {
         $this->givenProduct(['title' => 'Shirt']);
@@ -429,6 +452,7 @@ final class ProductUpdateToolTest extends TestCase
             CompletenessCheckerFactory::create(),
             ProductUrlHelperFactory::create(takenSlugs: ['/shirt'], ownProductUuid: 'uuid-1'),
             ProjectLocalesFactory::create(),
+            VariantRoutingEnum::PER_VARIANT,
         );
         $captured = $this->givenProduct(['title' => 'Shirt']);
 
@@ -467,6 +491,24 @@ final class ProductUpdateToolTest extends TestCase
         $this->assertNotEmpty($result['hint']);
     }
 
+    private function toolWithVariantOwnsRoute(VariantRoutingEnum $variantRouting): ProductUpdateTool
+    {
+        return new ProductUpdateTool(
+            $this->messageBus->reveal(),
+            $this->contentManager->reveal(),
+            $this->productRepository->reveal(),
+            new ContentMetadataMapper(new ArrayMetadataProvider(), CoreExtensionFormKeys::create()),
+            new BlockDataValidator($this->formMetadataProvider(), new MetadataLocaleResolver(new TokenStorage(), 'en')),
+            FixedBlockIdGenerator::returning('b1', 'b2', 'b3'),
+            $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
+            $this->associationResolver(),
+            CompletenessCheckerFactory::create(),
+            ProductUrlHelperFactory::create(),
+            ProjectLocalesFactory::create(),
+            $variantRouting,
+        );
+    }
+
     private function toolWithContentMetadata(?AdminLinkGeneratorInterface $adminLinkGenerator = null): ProductUpdateTool
     {
         return new ProductUpdateTool(
@@ -481,6 +523,7 @@ final class ProductUpdateToolTest extends TestCase
             CompletenessCheckerFactory::create(),
             ProductUrlHelperFactory::create(),
             ProjectLocalesFactory::create(),
+            VariantRoutingEnum::PER_VARIANT,
         );
     }
 

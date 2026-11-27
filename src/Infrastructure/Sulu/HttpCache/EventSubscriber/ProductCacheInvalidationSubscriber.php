@@ -26,6 +26,7 @@ use Sulu\Product\Domain\Event\ProductWorkflowTransitionAppliedEvent;
 use Sulu\Product\Domain\Model\ProductDimensionContentInterface;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Domain\Value\VariantRoutingEnum;
 use Sulu\Route\Application\Routing\Generator\RouteGeneratorInterface;
 use Sulu\Route\Domain\Repository\RouteRepositoryInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -44,7 +45,8 @@ class ProductCacheInvalidationSubscriber implements EventSubscriberInterface
         private RouteGeneratorInterface $routeGenerator,
         private WebspaceManagerInterface $webspaceManager,
         private ProductRepositoryInterface $productRepository,
-        private ReferenceRepositoryInterface $referenceRepository
+        private ReferenceRepositoryInterface $referenceRepository,
+        private VariantRoutingEnum $variantRouting,
     ) {
     }
 
@@ -74,8 +76,18 @@ class ProductCacheInvalidationSubscriber implements EventSubscriberInterface
 
         $this->cacheManager->invalidateTag($product->getUuid());
 
+        // The page of the parent can list a variant that was not live when it was cached.
+        $parent = $this->variantRouting->ownsRoute(ProductInterface::TYPE_VARIANT) ? null : $product->getParent();
+        if (null !== $parent) {
+            $this->cacheManager->invalidateTag($parent->getUuid());
+        }
+
         if (!$this->cacheManager->supportsTags()) {
             $this->invalidateProductPaths($product->getUuid(), $event->getResourceLocale());
+            if (null !== $parent) {
+                $this->invalidateProductPaths($parent->getUuid(), $event->getResourceLocale());
+            }
+
             $this->invalidateReferringProductPaths($product, $event->getResourceLocale());
         }
 

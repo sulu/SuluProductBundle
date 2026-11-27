@@ -32,6 +32,7 @@ use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Domain\Value\VariantRoutingEnum;
 use Sulu\Product\Infrastructure\Symfony\Mcp\ProductAssociationResolver;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductCreateTool;
 use Sulu\Product\Tests\Unit\Fixture\ArrayMetadataProvider;
@@ -73,6 +74,7 @@ final class ProductCreateToolTest extends TestCase
             CompletenessCheckerFactory::create(),
             ProductUrlHelperFactory::create(),
             ProjectLocalesFactory::create(),
+            VariantRoutingEnum::PER_VARIANT,
         );
     }
 
@@ -257,6 +259,15 @@ final class ProductCreateToolTest extends TestCase
         $this->assertArrayNotHasKey('url', $this->capturedData($captured));
     }
 
+    public function testCreateProductWithVariantsGetsAUrlWhenTheProductOwnsTheRoute(): void
+    {
+        $captured = $this->captureMessage(new Product('new-uuid'));
+
+        $this->toolWithRouteType(VariantRoutingEnum::PER_PRODUCT)->createProduct('en', 'family-uuid', 'Shirt', type: ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+
+        $this->assertSame('/products/shirt', $this->capturedData($captured)['url']);
+    }
+
     public function testCreateProductWithAPageTreeRouteGetsNoUrlFromTheTitle(): void
     {
         $captured = $this->captureMessage(new Product('new-uuid'));
@@ -279,7 +290,7 @@ final class ProductCreateToolTest extends TestCase
         return $message->getData();
     }
 
-    private function toolWithRouteType(): ProductCreateTool
+    private function toolWithRouteType(VariantRoutingEnum $variantRouting = VariantRoutingEnum::PER_VARIANT): ProductCreateTool
     {
         return new ProductCreateTool(
             $this->messageBus->reveal(),
@@ -292,6 +303,7 @@ final class ProductCreateToolTest extends TestCase
             CompletenessCheckerFactory::create(),
             ProductUrlHelperFactory::create('route'),
             ProjectLocalesFactory::create(),
+            $variantRouting,
         );
     }
 
@@ -372,6 +384,18 @@ final class ProductCreateToolTest extends TestCase
 
         $this->assertTrue($result['success']);
         $this->assertArrayNotHasKey('warning', $result);
+    }
+
+    public function testCreateProductWarnsForAProductWithVariantsWhenTheProductOwnsTheRoute(): void
+    {
+        $product = new Product('new-uuid');
+        $product->setType(ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+        $this->captureMessage($product);
+
+        $result = $this->toolWithRouteType(VariantRoutingEnum::PER_PRODUCT)->createProduct('en', 'family-uuid', 'Shirt', type: ProductInterface::TYPE_PRODUCT_WITH_VARIANTS);
+
+        $this->assertTrue($result['success']);
+        $this->assertStringContainsString('sulu_product_update', \is_string($result['warning'] ?? null) ? $result['warning'] : '');
     }
 
     public function testCreateProductDoesNotWarnWhenTheProductHasAUrl(): void
@@ -592,6 +616,7 @@ final class ProductCreateToolTest extends TestCase
             CompletenessCheckerFactory::create(),
             ProductUrlHelperFactory::create(),
             ProjectLocalesFactory::create(),
+            VariantRoutingEnum::PER_VARIANT,
         );
     }
 

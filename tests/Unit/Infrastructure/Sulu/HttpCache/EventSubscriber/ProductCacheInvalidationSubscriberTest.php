@@ -35,6 +35,7 @@ use Sulu\Product\Domain\Model\Product;
 use Sulu\Product\Domain\Model\ProductDimensionContent;
 use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
+use Sulu\Product\Domain\Value\VariantRoutingEnum;
 use Sulu\Product\Infrastructure\Sulu\HttpCache\EventSubscriber\ProductCacheInvalidationSubscriber;
 use Sulu\Product\Infrastructure\Sulu\Reference\ProductAssociationReferenceCleanupSubscriber;
 use Sulu\Route\Application\Routing\Generator\RouteGeneratorInterface;
@@ -101,7 +102,8 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
             $this->routeGenerator->reveal(),
             $this->webspaceManager->reveal(),
             $this->productRepository->reveal(),
-            $this->referenceRepository->reveal()
+            $this->referenceRepository->reveal(),
+            VariantRoutingEnum::PER_PRODUCT,
         );
     }
 
@@ -128,6 +130,98 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
 
         $this->cacheManager->invalidateTag('product-uuid-123')
             ->shouldBeCalled();
+
+        $this->subscriber->onWorkflowTransition($event);
+    }
+
+    public function testInvalidateTagOfTheParentOnVariantPublish(): void
+    {
+        $product = new Product('variant-uuid');
+        $product->setParent(new Product('parent-uuid'));
+
+        $event = new ProductWorkflowTransitionAppliedEvent(
+            $product,
+            WorkflowInterface::WORKFLOW_TRANSITION_PUBLISH,
+            'en'
+        );
+
+        $this->routeRepository->findBy(Argument::cetera())->willReturn([]);
+        $this->contentAggregator->aggregate($product, [
+            'locale' => 'en',
+            'stage' => 'live',
+        ])->willThrow(ContentNotFoundException::class);
+
+        $this->cacheManager->invalidateTag('variant-uuid')->shouldBeCalled();
+        $this->cacheManager->invalidateTag('parent-uuid')->shouldBeCalled();
+
+        $this->subscriber->onWorkflowTransition($event);
+    }
+
+    public function testDoesNotInvalidateTheParentOnVariantPublishWhenVariantsOwnTheirRoutes(): void
+    {
+        $subscriber = new ProductCacheInvalidationSubscriber(
+            $this->cacheManager->reveal(),
+            $this->routeRepository->reveal(),
+            $this->contentAggregator->reveal(),
+            $this->routeGenerator->reveal(),
+            $this->webspaceManager->reveal(),
+            $this->productRepository->reveal(),
+            $this->referenceRepository->reveal(),
+            VariantRoutingEnum::PER_VARIANT,
+        );
+        $product = new Product('variant-uuid');
+        $product->setParent(new Product('parent-uuid'));
+
+        $this->routeRepository->findBy(Argument::cetera())->willReturn([]);
+        $this->productRepository->findBy(Argument::cetera())->willReturn([]);
+        $this->contentAggregator->aggregate($product, Argument::cetera())->willThrow(ContentNotFoundException::class);
+        $this->cacheManager->supportsTags()->willReturn(false);
+        $this->webspaceManager->getWebspaceCollection()->willReturn(new WebspaceCollection([]));
+
+        $this->cacheManager->invalidateTag('variant-uuid')->shouldBeCalled();
+        $this->cacheManager->invalidateTag('parent-uuid')->shouldNotBeCalled();
+        $this->routeRepository->findBy(['resourceKey' => ProductInterface::RESOURCE_KEY, 'resourceId' => 'parent-uuid', 'locale' => 'en'])->shouldNotBeCalled();
+
+        $subscriber->onWorkflowTransition(new ProductWorkflowTransitionAppliedEvent($product, WorkflowInterface::WORKFLOW_TRANSITION_PUBLISH, 'en'));
+    }
+
+    public function testInvalidatePathsOfTheParentOnVariantPublishWhenCacheDoesNotSupportTags(): void
+    {
+        $product = new Product('variant-uuid');
+        $product->setParent(new Product('parent-uuid'));
+
+        $event = new ProductWorkflowTransitionAppliedEvent(
+            $product,
+            WorkflowInterface::WORKFLOW_TRANSITION_PUBLISH,
+            'en'
+        );
+
+        $this->routeRepository->findBy([
+            'resourceKey' => ProductInterface::RESOURCE_KEY,
+            'resourceId' => 'variant-uuid',
+            'locale' => 'en',
+        ])->willReturn([]);
+        $this->routeRepository->findBy([
+            'resourceKey' => ProductInterface::RESOURCE_KEY,
+            'resourceId' => 'parent-uuid',
+            'locale' => 'en',
+        ])->willReturn([new Route(ProductInterface::RESOURCE_KEY, 'parent-uuid', 'en', '/en/shop/t-shirt')]);
+        $this->productRepository->findBy(Argument::cetera())->willReturn([]);
+        $this->contentAggregator->aggregate($product, ['locale' => 'en', 'stage' => 'live'])->willThrow(ContentNotFoundException::class);
+
+        $this->cacheManager->supportsTags()->willReturn(false);
+
+        $localization = $this->prophesize(Localization::class);
+        $webspace = $this->prophesize(Webspace::class);
+        $webspace->getLocalization('en')->willReturn($localization->reveal());
+        $webspace->getKey()->willReturn('sulu_io');
+        $this->webspaceManager->getWebspaceCollection()->willReturn(new WebspaceCollection(['sulu_io' => $webspace->reveal()]));
+
+        $this->routeGenerator->generate('/en/shop/t-shirt', 'en', 'sulu_io', UrlGeneratorInterface::ABSOLUTE_URL)
+            ->willReturn('https://sulu.io/en/shop/t-shirt');
+
+        $this->cacheManager->invalidateTag(Argument::any())->shouldBeCalled();
+        $this->cacheManager->invalidatePath('https://sulu.io/en/shop/t-shirt')->shouldBeCalled();
 
         $this->subscriber->onWorkflowTransition($event);
     }
@@ -513,7 +607,8 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
             $this->routeGenerator->reveal(),
             $this->webspaceManager->reveal(),
             $this->productRepository->reveal(),
-            $this->referenceRepository->reveal()
+            $this->referenceRepository->reveal(),
+            VariantRoutingEnum::PER_VARIANT,
         );
 
         $product = new Product('product-uuid-123');
@@ -539,7 +634,8 @@ class ProductCacheInvalidationSubscriberTest extends TestCase
             $this->routeGenerator->reveal(),
             $this->webspaceManager->reveal(),
             $this->productRepository->reveal(),
-            $this->referenceRepository->reveal()
+            $this->referenceRepository->reveal(),
+            VariantRoutingEnum::PER_VARIANT,
         );
 
         $event = new ProductRemovedEvent(

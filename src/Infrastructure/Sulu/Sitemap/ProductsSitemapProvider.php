@@ -166,7 +166,7 @@ class ProductsSitemapProvider extends AbstractSitemapProvider
             AND unLocalizedDimensionContent.version = :version
             AND unLocalizedDimensionContent.seoHideInSitemap = :hide
         ')
-            ->leftJoin('dimensionContent.route', 'route')
+            ->innerJoin('dimensionContent.route', 'route')
             ->andWhere('dimensionContent.mainWebspace = :webspaceKey OR additionalWebspace.additionalWebspace = :webspaceKey')
             ->setParameter('locale', $locale)
             ->setParameter('stage', DimensionContentInterface::STAGE_LIVE)
@@ -207,7 +207,7 @@ class ProductsSitemapProvider extends AbstractSitemapProvider
             AND dimensionContent.seoHideInSitemap = :hide
         ')
             ->leftJoin('dimensionContent.additionalWebspaces', 'additionalWebspace')
-            ->leftJoin('dimensionContent.route', 'route')
+            ->innerJoin('dimensionContent.route', 'route')
             ->andWhere('dimensionContent.mainWebspace = :webspaceKey OR additionalWebspace.additionalWebspace = :webspaceKey')
             ->setParameter('locale', $locale)
             ->setParameter('stage', DimensionContentInterface::STAGE_LIVE)

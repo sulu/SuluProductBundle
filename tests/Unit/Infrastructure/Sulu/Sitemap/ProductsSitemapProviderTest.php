@@ -370,6 +370,7 @@ class ProductsSitemapProviderTest extends TestCase
         $productsQb = $this->prophesize(QueryBuilder::class);
         $productsQb->distinct()->willReturn($productsQb->reveal());
         $productsQb->join(Argument::cetera())->willReturn($productsQb->reveal());
+        $productsQb->innerJoin(Argument::cetera())->willReturn($productsQb->reveal());
         $productsQb->leftJoin(Argument::cetera())->willReturn($productsQb->reveal());
         $productsQb->andWhere(Argument::cetera())->willReturn($productsQb->reveal());
         $productsQb->setParameter(Argument::cetera())->willReturn($productsQb->reveal());
@@ -386,6 +387,7 @@ class ProductsSitemapProviderTest extends TestCase
         $alternateQb = $this->prophesize(QueryBuilder::class);
         $alternateQb->distinct()->willReturn($alternateQb->reveal());
         $alternateQb->join(Argument::cetera())->willReturn($alternateQb->reveal());
+        $alternateQb->innerJoin(Argument::cetera())->willReturn($alternateQb->reveal());
         $alternateQb->leftJoin(Argument::cetera())->willReturn($alternateQb->reveal());
         $alternateQb->andWhere(Argument::cetera())->willReturn($alternateQb->reveal());
         $alternateQb->setParameter(Argument::cetera())->willReturn($alternateQb->reveal());

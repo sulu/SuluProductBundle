@@ -49,10 +49,35 @@ category that was stored before the root key changed stays valid as long as it i
 
 ## Variant URLs
 
-A variant owns its route: the URL field is mandatory on the variant overlay, so every variant
-carries an address of its own. A product with variants owns none, it is reached through its
-variants, which is why the field is hidden for that type and the route guard drops one that
-reaches such a product programmatically.
+Who owns the route of a product with variants is set once for the project:
+
+```yaml
+sulu_product:
+    variants:
+        routing: per_variant # default, or "per_product"
+        query_parameter: variant # per_product only
+```
+
+With `per_variant` a variant owns its route: the URL field is mandatory on the variant overlay, so
+every variant carries an address of its own. A product with variants owns none, it is reached
+through its variants, which is why the field is hidden for that type and the route guard drops one
+that reaches such a product programmatically.
+
+With `per_product` the product with variants owns the route, edited on its details tab, and a
+variant has none: the field is removed from the variant overlay and the route guard drops a
+variant's route. A variant is reached as `<product URL>?variant=<code>`, which renders the product
+with the variant as `product.currentVariant`. `query_parameter` renames the parameter. Without the
+parameter, or with a code that names no published variant of the product, the page renders the
+product with `currentVariant` null. The bundle generates no `?variant=` URL: building the link to a
+variant is up to the project.
+
+The MCP tools follow the mode: the create and update tools complete the URL of a product with
+variants and warn when it has none, the variant create tool ignores `url` and says so, and the
+completeness hints ask a variant for no URL. A product selection offers only the types that own a
+route.
+
+The mode is chosen when a project is set up. Switching it later leaves the existing routes as they
+are, so the project migrates them itself.
 
 ## Variant publishing
 
@@ -81,15 +106,17 @@ the product type.
 
 ## Product in the website
 
-A variant has a route but no content of its own, so its URL renders its product: the route passes
-the product as the page's `object` and the variant as the `variant` route default. `resource`,
-`content` and `extension` are the product's, `localizations` link the variant's own URLs in the
-other locales. `sulu_product.product_localizations_resolver` builds them for the `products`
-resource key; a project changes them by decorating that service. The `product` namespace carries:
+A variant has no content of its own, so its page renders its product. With `per_variant` the
+variant's URL does so: the route passes the product as the page's `object` and the variant as the
+`variant` route default, and `localizations` link the variant's own URLs in the other locales. With
+`per_product` the product's URL does so and `?variant=<code>` sets the `variant` route default;
+`localizations` link the product's URLs. `resource`, `content` and `extension` are the product's.
+`sulu_product.product_localizations_resolver` builds the localizations for the `products` resource
+key; a project changes them by decorating that service. The `product` namespace carries:
 
 - `product`: the parent, with `product.title`, the master data (`code`, `status`, ...),
-  `product.attributes` (its own values), `product.associations` and `product.variants`. A product
-  with variants owns no route, so it has no `product.url`.
+  `product.attributes` (its own values), `product.associations` and `product.variants`. With
+  `per_variant` a product with variants owns no route, so it has no `product.url`.
 - `product.currentVariant`: the variant the URL asked for: `title`, `url`, `code`, ...,
   `attributes` (the variant's own values), `associations`.
 - `product.variants`: every published variant of the parent with `title`, `url`, `code`, `status`
@@ -207,8 +234,19 @@ the website each family resolves to the shape of a product's `productFamily`:
 A product is indexed into Sulu's shared `website` index, next to pages and articles. Only leaves
 become documents: a product without variants, and the variants of a product that has them. A product
 with variants is represented by its variants and gets no document of its own. A variant document
-carries its own title and its parent's webspaces, and the `url` the "Variant URLs" section above
-describes. The product code is searchable through the document's `content`.
+carries its own title and its parent's webspaces, and the `url` of its own route, which is empty
+with `per_product`. The product code is searchable through the document's `content`.
+
+`metadata.code` holds the code and `metadata.parentUrl` the url of the parent's route, when there
+is one. With `per_product` a search result template links a variant through them:
+
+```twig
+{% set url = hit.url ?: hit.metadata.parentUrl|default(null) %}
+{% if not hit.url and hit.metadata.code is defined %}
+    {% set url = url ~ '?' ~ {variant: hit.metadata.code}|url_encode %}
+{% endif %}
+<a href="{{ sulu_content_path(url) }}">{{ hit.title }}</a>
+```
 
 The admin index keeps the opposite rule: it holds the parent, because the edit view belongs to it,
 and skips variants.

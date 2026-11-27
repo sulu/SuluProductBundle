@@ -33,6 +33,7 @@ use Sulu\Product\Domain\Model\ProductInterface;
 use Sulu\Product\Domain\Repository\ProductFamilyRepositoryInterface;
 use Sulu\Product\Domain\Repository\ProductRepositoryInterface;
 use Sulu\Product\Domain\Value\ProductFamilyAttributeModeEnum;
+use Sulu\Product\Domain\Value\VariantRoutingEnum;
 use Sulu\Product\Infrastructure\Symfony\Mcp\Tool\ProductVariantCreateTool;
 use Sulu\Product\Infrastructure\Symfony\Mcp\VariantParentResolver;
 use Sulu\Product\Tests\Unit\Fixture\ProductUrlHelperFactory;
@@ -73,6 +74,7 @@ final class ProductVariantCreateToolTest extends TestCase
             $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
             ProjectLocalesFactory::create(),
             ProductUrlHelperFactory::create('route'),
+            VariantRoutingEnum::PER_VARIANT,
         );
     }
 
@@ -84,6 +86,41 @@ final class ProductVariantCreateToolTest extends TestCase
         $this->tool->createProductVariant('en', 'parent-uuid', 'Red XL');
 
         $this->assertSame('/products/red-xl', $this->capturedData($captured)['url'] ?? null);
+    }
+
+    public function testCreateVariantIgnoresTheUrlInPerProductRouting(): void
+    {
+        $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => ['axis-uuid' => ProductFamilyAttributeModeEnum::VARIANT_SPECIFIC]]));
+        $captured = $this->captureDispatchedMessage(new Product('variant-uuid'));
+
+        $result = $this->perProductTool()->createProductVariant('en', 'parent-uuid', 'Red XL', url: '/shop/red-xl');
+
+        $this->assertArrayNotHasKey('url', $this->capturedData($captured));
+        $this->assertArrayHasKey('warning', $result);
+    }
+
+    public function testCreateVariantGeneratesNoUrlInPerProductRouting(): void
+    {
+        $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => ['axis-uuid' => ProductFamilyAttributeModeEnum::VARIANT_SPECIFIC]]));
+        $captured = $this->captureDispatchedMessage(new Product('variant-uuid'));
+
+        $result = $this->perProductTool()->createProductVariant('en', 'parent-uuid', 'Red XL');
+
+        $this->assertArrayNotHasKey('url', $this->capturedData($captured));
+        $this->assertArrayNotHasKey('warning', $result);
+    }
+
+    private function perProductTool(): ProductVariantCreateTool
+    {
+        return new ProductVariantCreateTool(
+            $this->messageBus->reveal(),
+            $this->contentManager->reveal(),
+            new VariantParentResolver($this->productRepository->reveal(), $this->productFamilyRepository->reveal()),
+            $this->prophesize(AdminLinkGeneratorInterface::class)->reveal(),
+            ProjectLocalesFactory::create(),
+            ProductUrlHelperFactory::create('route'),
+            VariantRoutingEnum::PER_PRODUCT,
+        );
     }
 
     public function testCreateVariantKeepsAnExplicitUrl(): void
@@ -296,6 +333,7 @@ final class ProductVariantCreateToolTest extends TestCase
             $adminLinkGenerator->reveal(),
             ProjectLocalesFactory::create(),
             ProductUrlHelperFactory::create('route'),
+            VariantRoutingEnum::PER_VARIANT,
         );
 
         $this->givenParentWithVariants('parent-uuid', $this->familyWithAttributes(['family-uuid' => ['shared-uuid' => ProductFamilyAttributeModeEnum::SHARED]]));
